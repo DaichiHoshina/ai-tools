@@ -1,0 +1,18 @@
+# Claude Code @symbol search optimization
+# Only include essential files for development
+
+# Include specific directories (override gitignore)
+!claude-code/guidelines/**
+!claude-code/skills/**
+!claude-code/commands/**
+!codex/**
+
+# Exclude examples and archives
+claude-code/templates/
+claude-code/skills-archive/
+claude-code/scripts/
+
+# Exclude docs that aren't guidelines
+*.md
+!claude-code/guidelines/**/*.md
+!codex/**/*.md

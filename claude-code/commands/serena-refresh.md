@@ -1,0 +1,36 @@
+---
+allowed-tools: mcp__serena__activate_project, mcp__serena__get_current_config, mcp__serena__check_onboarding_performed, mcp__serena__onboarding, mcp__serena__get_symbols_overview, mcp__serena__list_memories, mcp__serena__read_memory, mcp__serena__delete_memory, mcp__serena__write_memory, Bash, Read, AskUserQuestion
+description: Serenaデータとメモリーを最新化・整理
+---
+
+## /serena-refresh
+
+大規模変更後に serena のシンボルデータベースとメモリーを最新化。
+
+## 使用タイミング
+
+- 大規模リファクタリング後
+- 多数のファイル追加・削除後
+- シンボル検索で期待結果が得られない場合
+- 古いメモリーを整理したい場合
+
+## フロー
+
+1. **状態確認** - `pwd`, `ls -la .serena`
+2. **再アクティベート** - `mcp__serena__activate_project(project=".")`
+3. **オンボーディング確認** - 未実施なら実行
+4. **シンボル更新** - 主要ファイルで `get_symbols_overview` 実行
+5. **メモリー整理**
+   - 一覧取得 → 内容確認 → 不要なもの特定
+   - **ユーザー確認後に削除**（勝手に削除しない）
+   - 関連メモリーの統合提案
+6. **完了報告**
+
+## メモリー整理基準
+
+- タスク完了済みで不要
+- 重複情報
+- 古くなった情報
+- 統合可能なもの
+
+**コードファイルは変更しない。.serena のデータベースとメモリーのみ更新。**

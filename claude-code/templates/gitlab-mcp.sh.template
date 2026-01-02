@@ -1,0 +1,6 @@
+#!/bin/bash
+set -a
+source ~/.env
+set +a
+export GITLAB_API_URL="__GITLAB_API_URL__"
+exec npx -y @zereight/mcp-gitlab

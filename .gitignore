@@ -1,0 +1,33 @@
+# Serena プロジェクト固有ファイル（個人情報・機密情報を含む可能性）
+.serena/
+
+# 環境変数ファイル
+.env
+.env.local
+.env.*.local
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
+
+# エディタ設定
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ログファイル
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 一時ファイル
+tmp/
+temp/
+*.tmp
+
+# バックアップファイル
+*.backup
+*.bak

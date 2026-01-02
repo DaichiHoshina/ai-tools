@@ -1,0 +1,58 @@
+{
+  "statusline": {
+    "type": "command",
+    "command": "__HOME__/.claude/statusline.js"
+  },
+  "model": "opusplan",
+  "env": {
+    "CLAUDE_CODE_AUTO_CONNECT_IDE": false,
+    "CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL": true,
+    "CLAUDE_CODE_IDE_SKIP_VALID_CHECK": true,
+    "CLAUDE_CODE_ENABLE_TELEMETRY": false,
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": true,
+    "DISABLE_ERROR_REPORTING": true,
+    "DISABLE_TELEMETRY": true,
+    "DISABLE_AUTOUPDATER": true,
+    "DISABLE_MICROCOMPACT": false,
+    "MAX_THINKING_TOKENS": 1024,
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": 8192,
+    "BASH_DEFAULT_TIMEOUT_MS": "300000"
+  },
+  "mcpServers": {
+    "serena": {
+      "command": "uvx",
+      "args": ["--from", "serena-mcp", "serena"],
+      "env": {}
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    },
+    "gitlab": {
+      "command": "/bin/bash",
+      "args": ["__HOME__/.claude/gitlab-mcp.sh"],
+      "env": {
+        "GITLAB_API_URL": "__GITLAB_API_URL__"
+      }
+    },
+    "confluence": {
+      "command": "__NODE_PATH__/../bin/node",
+      "args": ["__NODE_PATH__/../lib/node_modules/mcp-confluence-server/dist/index.js"],
+      "env": {
+        "CONFLUENCE_URL": "__CONFLUENCE_URL__",
+        "CONFLUENCE_EMAIL": "__CONFLUENCE_EMAIL__",
+        "CONFLUENCE_API_TOKEN": "__CONFLUENCE_API_TOKEN__"
+      }
+    },
+    "jira": {
+      "command": "__NODE_PATH__/../bin/node",
+      "args": ["__NODE_PATH__/../lib/node_modules/mcp-jira-server/dist/index.js"],
+      "env": {
+        "JIRA_URL": "__JIRA_URL__",
+        "JIRA_EMAIL": "__JIRA_EMAIL__",
+        "JIRA_API_TOKEN": "__JIRA_API_TOKEN__"
+      }
+    }
+  }
+}

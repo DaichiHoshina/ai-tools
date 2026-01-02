@@ -1,0 +1,50 @@
+# Codex MCP 設定サンプル
+# このファイルを ~/.codex/config.toml にコピーして使用してください
+
+# プロンプトサイズ最適化プロファイル（推奨）
+[profiles.compact]
+# グローバルCLAUDE.mdを使わず、最小限の指示のみを使用
+base-instructions = """
+You are a helpful coding assistant. Follow these core principles:
+- Write clean, readable code
+- Use existing libraries and standard patterns
+- Keep solutions simple and focused
+- Ask for clarification when needed
+- Follow the project's existing code style
+"""
+# プランツールを無効化してプロンプトを削減
+include-plan-tool = false
+
+# カスタムプロファイル例
+[profiles.detailed]
+# より詳細な指示が必要な場合
+base-instructions = """
+You are an experienced software engineer. Follow these principles:
+- Write clean, maintainable, and testable code
+- Apply SOLID principles and design patterns
+- Prefer composition over inheritance
+- Write comprehensive tests
+- Document complex logic
+- Follow the project's coding standards
+"""
+include-plan-tool = true
+
+# デフォルト設定（すべての新規プロジェクトに適用）
+[defaults]
+# デフォルトで compact プロファイルを使用
+profile = "compact"
+
+# プロジェクト別設定例
+[projects."/Users/your-username/ai-tools"]
+trust_level = "trusted"
+profile = "compact"
+
+# ホームディレクトリ全体にデフォルト適用する場合
+# [projects."/Users/your-username"]
+# trust_level = "trusted"
+# profile = "compact"
+
+# 特定のプロジェクトで詳細プロファイルを使用する例
+# [projects."/Users/your-username/important-project"]
+# trust_level = "trusted"
+# profile = "detailed"

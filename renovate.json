@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^claude-code-version$"],
+      "matchStrings": [
+        "@anthropic-ai\\/claude-code@(?<currentValue>.*)"
+      ],
+      "datasourceTemplate": "npm",
+      "depNameTemplate": "@anthropic-ai/claude-code"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["npm"],
+      "matchPackageNames": ["@anthropic-ai/claude-code"],
+      "minimumReleaseAge": "3 days"
+    }
+  ],
+  "ignoreDeps": [],
+  "timezone": "Asia/Tokyo",
+  "schedule": ["before 10am on monday"]
+}
