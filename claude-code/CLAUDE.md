@@ -29,11 +29,23 @@
 
 <!-- 🔒 END PROTECTED SECTION -->
 
+## Planモード活用（Boris推奨）🔒
+
+> **重要**: ほとんどのセッションは Plan モード（Shift + Tab 2回）から開始すること
+
+- 目的がPRなら、Plan モードで計画を詰める
+- 納得できる計画 → auto-accept edits モードで一発（1-shot）で仕上げ
+- **良い計画は本当に重要！**（Boris: Claude Code開発者）
+
+### 使い分け
+- Plan モード → 複数ファイル修正、新機能実装、リファクタリング
+- 通常モード → 1-2ファイルの単純修正、質問応答
+
 ## 概要
 
 Claude Code の設定を一元管理するリポジトリ。
 
-## コマンド（14個）
+## コマンド（15個）
 
 | コマンド | 説明 |
 |---------|------|
@@ -46,6 +58,7 @@ Claude Code の設定を一元管理するリポジトリ。
 | `/debug` | デバッグ支援 |
 | `/docs` | ドキュメント作成 |
 | `/commit` | コミットメッセージ提案 |
+| `/commit-push-pr` | コミット・プッシュ・PR作成を一括実行（Boris流） |
 | `/explore` | 並列探索 |
 | `/retrospective` | 振り返り（過去分析→改善提案） |
 | `/serena` | Serena MCP操作 |
@@ -63,6 +76,19 @@ Claude Code の設定を一元管理するリポジトリ。
 **ユーティリティ**: load-guidelines, ai-tools-sync, cleanup-enforcement, guideline-maintenance, mcp-setup-guide
 
 **退避中** (`skills-archive/`): ecommerce, shopify-app-bridge, gitlab-cicd
+
+## エージェント（2個）
+
+| エージェント | 説明 |
+|-------------|------|
+| `code-simplifier` | コード簡素化専門（複雑度削減、リファクタリング提案） |
+| `verify-app` | アプリケーション検証専門（動作確認、統合テスト） |
+
+## フック（1個）
+
+| フック | 説明 |
+|--------|------|
+| `post-tool-use` | ツール使用後の自動処理（エラー検出、品質チェック） |
 
 ## コマンド・スキル・ガイドラインの関係
 

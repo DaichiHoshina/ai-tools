@@ -47,25 +47,32 @@ Hooks は Claude Code のイベント（セッション開始、ツール実行�
 }
 ```
 
-### 3. pre-tool-use.sh
-**トリガー**: ツール実行直前
+$1### 4. post-tool-use.sh
+**トリガー**: ツール実行後
 
 **機能**:
-- 危険な自動整形コマンドの検出（8原則: 自動処理禁止）
-- ファイル編集時の型安全性リマインダー
-- Serena MCP 使用時のメモリ更新リマインダー
+- 編集後の自動フォーマット（Go/TypeScript/JavaScript）
+- CIでフォーマットエラー防止
+- Boris: "最後の10%を仕上げる"
 
-**検出パターン**:
-- `npm run lint`, `prettier`, `eslint --fix`, `go fmt` など
+**対象ツール**:
+- `Edit`, `Write`
+
+**フォーマッタ**:
+- **Go** (`.go`): `gofmt -w $FILE_PATH`
+- **TypeScript/JavaScript** (`.ts`, `.tsx`, `.js`, `.jsx`): `npx prettier --write $FILE_PATH`
+
+**エラーハンドリング**:
+- フォーマット失敗は無視（警告のみ、non-blocking）
 
 **出力例**:
 ```json
 {
-  "systemMessage": "⚠️  Auto-formatting detected. 8原則: 自動処理禁止 - User confirmation recommended."
+  "systemMessage": "✅ Auto-formatted (Go): /path/to/file.go"
 }
 ```
 
-### 4. pre-compact.sh
+### 5. pre-compact.sh
 **トリガー**: コンテキスト圧縮前
 
 **機能**:
@@ -81,7 +88,7 @@ Hooks は Claude Code のイベント（セッション開始、ツール実行�
 }
 ```
 
-### 5. stop.sh
+### 6. stop.sh
 **トリガー**: タスク完了時
 
 **機能**:
@@ -95,7 +102,7 @@ Hooks は Claude Code のイベント（セッション開始、ツール実行�
 }
 ```
 
-### 6. session-end.sh
+### 7. session-end.sh
 **トリガー**: セッション終了時
 
 **機能**:
@@ -129,6 +136,9 @@ Hooks は Claude Code のイベント（セッション開始、ツール実行�
     "PreToolUse": {
       "command": "~/.claude/hooks/pre-tool-use.sh"
     },
+    "PostToolUse": {
+      "command": "~/.claude/hooks/post-tool-use.sh"
+    },
     "PreCompact": {
       "command": "~/.claude/hooks/pre-compact.sh"
     },
@@ -160,7 +170,11 @@ echo '{"prompt": "Go APIのバグを修正してください"}' | ~/.claude/hook
 echo '{"prompt": "TypeScriptとReactでコンポーネントを作成"}' | ~/.claude/hooks/user-prompt-submit.sh
 
 # ツール実行前フックのテスト
-echo '{"tool_name": "Bash", "tool_input": {"command": "npm run lint"}}' | ~/.claude/hooks/pre-tool-use.sh
+echo '{\"tool_name\": \"Bash\", \"tool_input\": {\"command\": \"npm run lint\"}}' | ~/.claude/hooks/pre-tool-use.sh
+
+# ツール実行後フックのテスト（PostToolUse）
+echo '{\"tool_name\": \"Write\", \"tool_input\": {\"file_path\": \"/tmp/test.go\"}}' | ~/.claude/hooks/post-tool-use.sh
+echo '{\"tool_name\": \"Edit\", \"tool_input\": {\"file_path\": \"/tmp/test.ts\"}}' | ~/.claude/hooks/post-tool-use.sh
 
 # コンパクション前フックのテスト
 echo '{"session_id": "test", "workspace": {"current_dir": "/Users/daichi/ai-tools"}, "current_tokens": 150000, "mcp_servers": {"serena": {}}}' | ~/.claude/hooks/pre-compact.sh
