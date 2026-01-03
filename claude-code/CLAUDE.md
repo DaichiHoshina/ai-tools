@@ -66,9 +66,9 @@ Claude Code の設定を一元管理するリポジトリ。
 | `/serena-refresh` | Serenaデータ更新 |
 | `/reload` | CLAUDE.md再読込 |
 
-## スキル（25個）
+## スキル（20個）
 
-**レビュー系**: architecture-review, code-smell-review, documentation-review, error-handling-review, performance-review, security-review, test-quality-review, type-safety-review, uiux-design
+**レビュー系**: code-quality-review, security-error-review, docs-test-review, uiux-review（4個、旧9個を統合）
 
 **開発系**: go-backend, typescript-backend, react-nextjs, api-design, clean-architecture-ddd, grpc-protobuf
 
@@ -76,21 +76,31 @@ Claude Code の設定を一元管理するリポジトリ。
 
 **ユーティリティ**: load-guidelines, ai-tools-sync, cleanup-enforcement, guideline-maintenance, mcp-setup-guide
 
-**退避中** (`skills-archive/`): ecommerce, shopify-app-bridge, gitlab-cicd
+**退避中** (`skills-archive/`): ecommerce, shopify-app-bridge, gitlab-cicd, review-skills（旧レビュー系9個）
 
-## エージェント（3個）
+## エージェント（7個）
 
 | エージェント | 説明 |
 |-------------|------|
-| `code-simplifier` | コード簡素化専門（複雑度削減、リファクタリング提案） |
-| `verify-app` | アプリケーション検証専門（動作確認、統合テスト） |
-| `workflow-orchestrator` | ワークフロー自動化（タスク判定、最適フロー実行） |
+| `po-agent` | 戦略決定・Worktree管理 |
+| `manager-agent` | タスク分割・配分計画 |
+| `developer-agent` | 実装担当（dev1-4） |
+| `explore-agent` | 探索・分析担当（explore1-4） |
+| `code-simplifier` | コード簡素化専門 |
+| `verify-app` | アプリ検証専門 |
+| `workflow-orchestrator` | ワークフロー自動化 |
 
-## フック（1個）
+## フック（7個）
 
-| フック | 説明 |
-|--------|------|
-| `post-tool-use` | ツール使用後の自動処理（エラー検出、品質チェック） |
+| フック | タイミング | 用途 |
+|--------|-----------|------|
+| session-start | セッション開始時 | Serena接続・ガイドライン確認 |
+| user-prompt-submit | プロンプト送信時 | 技術スタック検出・スキル推奨 |
+| pre-tool-use | ツール実行前 | 自動処理禁止チェック |
+| post-tool-use | ツール実行後 | 自動フォーマット（Go/TypeScript） |
+| pre-compact | コンパクション前 | 自動バックアップ |
+| stop | 停止時 | 統計保存 |
+| session-end | セッション終了時 | 完了通知・Git変更検出 |
 
 ## コマンド・スキル・ガイドラインの関係
 
@@ -122,24 +132,25 @@ Claude Code の設定を一元管理するリポジトリ。
 | `/debug` | （エラー種別で判断） | Docker系→docker-troubleshoot等 |
 | `/test` | load-guidelines, test-quality-review | テスト品質基準を適用 |
 
-### レビュースキル選択基準
+### レビュースキル選択基準（統合版）
 
 | 問題タイプ | 使用スキル |
 |-----------|-----------|
-| 設計・構造 | architecture-review |
-| 重複・複雑度 | code-smell-review |
-| エラー処理 | error-handling-review |
-| パフォーマンス | performance-review |
-| セキュリティ | security-review |
-| 型安全性 | type-safety-review |
-| テスト | test-quality-review |
-| ドキュメント | documentation-review |
-| UI/UX | uiux-design |
+| 設計・構造・複雑度・パフォーマンス・型安全性 | code-quality-review（4-in-1統合） |
+| セキュリティ・エラー処理 | security-error-review（2-in-1統合） |
+| ドキュメント・テスト | docs-test-review（2-in-1統合） |
+| UI/UX | uiux-review |
+
+**統合の詳細**:
+- `code-quality-review`: architecture + code-smell + performance + type-safety
+- `security-error-review`: security + error-handling
+- `docs-test-review`: documentation + test-quality
+- `uiux-review`: uiux-design を改名
 
 ## ガイドライン構成
 
-### languages/ (3ファイル)
-golang.md, typescript.md, nextjs-react.md
+### languages/ (6ファイル)
+golang.md, typescript.md, nextjs-react.md, tailwind.md, shadcn.md, eslint.md
 
 ### common/ (10ファイル)
 claude-code-tips.md, code-quality-design.md, development-process.md, document-management.md, emergency-parallel-work.md, error-handling-patterns.md, technical-pitfalls.md, testing-guidelines.md, type-safety-principles.md, unused-code-detection.md
