@@ -43,10 +43,47 @@ else
   NOTIFICATION_STATUS="⚠️  Notification file not found at ~/notification.mp3"
 fi
 
+# Git変更確認（Boris流: 自動commit-push-pr提案）
+GIT_CHANGES=""
+GIT_REMINDER=""
+
+cd "$PROJECT_DIR" 2>/dev/null || true
+
+if git rev-parse --git-dir > /dev/null 2>&1; then
+  # Git リポジトリ内
+  CHANGED_FILES=$(git status --short 2>/dev/null | wc -l | tr -d ' ')
+  
+  if [ "$CHANGED_FILES" -gt 0 ]; then
+    GIT_CHANGES=$(git status --short 2>/dev/null | head -10)
+    GIT_REMINDER="
+
+💡 **Git Changes Detected** (${CHANGED_FILES} files)
+
+"
+    GIT_REMINDER="${GIT_REMINDER}\`\`\`
+${GIT_CHANGES}
+\`\`\`
+
+"
+    GIT_REMINDER="${GIT_REMINDER}**Recommended**: Use \`/commit-push-pr\` to commit and create PR automatically
+"
+    GIT_REMINDER="${GIT_REMINDER}\`\`\`
+/commit-push-pr
+\`\`\`
+"
+    GIT_REMINDER="${GIT_REMINDER}Or use \`/flow\` to run full workflow"
+  fi
+fi
+
 # Serena memory更新推奨（重要な情報がある場合）
 SERENA_REMINDER=""
 if [ "$TOTAL_MESSAGES" -gt 20 ] || [ "$TOTAL_TOKENS" -gt 50000 ]; then
-  SERENA_REMINDER="\n\n💡 **Tip**: This was a long session. Consider saving important insights to Serena memory:\n\`\`\`\n/serena write-memory <name> <content>\n\`\`\`"
+  SERENA_REMINDER="
+
+💾 **Tip**: This was a long session. Consider saving important insights to Serena memory:
+\`\`\`
+/serena write-memory <name> <content>
+\`\`\`"
 fi
 
 # 統計サマリー
@@ -57,6 +94,10 @@ SUMMARY="${SUMMARY}- **Messages**: $TOTAL_MESSAGES\n"
 SUMMARY="${SUMMARY}- **Tokens**: $TOTAL_TOKENS\n"
 SUMMARY="${SUMMARY}- **Duration**: ${DURATION}s\n"
 SUMMARY="${SUMMARY}- **Log**: $LOG_FILE\n"
+
+if [ -n "$GIT_REMINDER" ]; then
+  SUMMARY="${SUMMARY}${GIT_REMINDER}"
+fi
 
 if [ -n "$SERENA_REMINDER" ]; then
   SUMMARY="${SUMMARY}${SERENA_REMINDER}"
