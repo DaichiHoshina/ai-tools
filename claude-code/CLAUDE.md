@@ -45,7 +45,7 @@
 
 Claude Code の設定を一元管理するリポジトリ。
 
-## コマンド（16個）
+## コマンド（17個）
 
 | コマンド | 説明 |
 |---------|------|
@@ -65,8 +65,9 @@ Claude Code の設定を一元管理するリポジトリ。
 | `/serena` | Serena MCP操作 |
 | `/serena-refresh` | Serenaデータ更新 |
 | `/reload` | CLAUDE.md再読込 |
+| `/mode` | セッションモード切替（strict/normal/fast） |
 
-## スキル（20個）
+## スキル（21個）
 
 **レビュー系**: code-quality-review, security-error-review, docs-test-review, uiux-review（4個、旧9個を統合）
 
@@ -74,7 +75,7 @@ Claude Code の設定を一元管理するリポジトリ。
 
 **インフラ系**: dockerfile-best-practices, kubernetes, terraform, microservices-monorepo, docker-troubleshoot
 
-**ユーティリティ**: load-guidelines, ai-tools-sync, cleanup-enforcement, guideline-maintenance, mcp-setup-guide
+**ユーティリティ**: load-guidelines, ai-tools-sync, cleanup-enforcement, guideline-maintenance, mcp-setup-guide, session-mode
 
 **退避中** (`skills-archive/`): ecommerce, shopify-app-bridge, gitlab-cicd, review-skills（旧レビュー系9個）
 
