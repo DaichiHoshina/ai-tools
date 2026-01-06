@@ -86,14 +86,14 @@
 
 ---
 
-## モード切替
+## 思考法ロード
 
 ```
-/mode           # 現在のモードを確認
-/mode strict    # 厳格モードに切替
-/mode normal    # 通常モードに切替
-/mode fast      # 高速モードに切替
+/kenron        # 基本（Guard関手 + 3層分類）
+/kenron full   # フル（+ モード定義）
 ```
+
+モードは思考の厳格さの目安。`/kenron` でガイドラインを読み込むと、状況に応じた判断が可能になる。
 
 ---
 
@@ -131,4 +131,4 @@ content:
 ## 関連
 
 - `guardrails.md` - 操作の分類（Safe/Boundary/Forbidden）
-- `/mode` コマンド - モード切替（strict 時にガイドライン自動読み込み）
+- `/kenron` コマンド - 圏論的思考法ロード

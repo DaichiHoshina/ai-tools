@@ -158,7 +158,7 @@ afplay ~/notification.mp3
 ### Boundary 操作が拒否された場合
 - ユーザーに理由を説明
 - 代替案を提案
-- 必要に応じて `/mode strict` での再実行を案内
+- 必要に応じて `/kenron` で思考法を再確認
 
 ### Forbidden 操作が検出された場合
 - 即座に拒否
@@ -170,5 +170,5 @@ afplay ~/notification.mp3
 ## 関連
 
 - `session-modes.md` - モード定義
-- `/mode` コマンド - モード切替
+- `/kenron` コマンド - 圏論的思考法ロード
 - 8原則 - 基本動作原則

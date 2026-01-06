@@ -45,7 +45,7 @@
 
 Claude Code の設定を一元管理するリポジトリ。
 
-## コマンド（18個）
+## コマンド（17個）
 
 | コマンド | 説明 |
 |---------|------|
@@ -65,7 +65,6 @@ Claude Code の設定を一元管理するリポジトリ。
 | `/serena` | Serena MCP操作 |
 | `/serena-refresh` | Serenaデータ更新 |
 | `/reload` | CLAUDE.md再読込 |
-| `/mode` | セッションモード切替（strict/normal/fast） |
 | `/kenron` | 圏論的思考法ロード（Guard関手・3層分類） |
 
 ## スキル（21個）
