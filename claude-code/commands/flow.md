@@ -46,8 +46,8 @@ git status --short
 git diff --name-only
 ```
 
-- 変更ファイルあり → 既存作業の続き
-- 変更なし → 新規タスク
+- **変更ファイルあり** → 既存作業の続きと判断。/prd をスキップして /dev から開始を提案
+- **変更なし** → 新規タスクとして最初から実行
 
 ### Step 3: Plan モード判断
 
@@ -72,20 +72,14 @@ git diff --name-only
 ```bash
 # 実行されるコマンド
 1. /prd {タスク}                  # 要件整理
-2. Shift+Tab 2回                  # Plan モード開始
-3. /plan {PRD}                    # 設計
-4. /dev {設計}                    # 実装
-5. code-simplifier {変更ファイル} # 簡素化
-6. /test {機能}                   # テスト作成
-7. /review                        # レビュー
-8. verify-app                     # 検証
-9. /commit-push-pr                # PR作成
+2. /plan {PRD}                    # 設計（Plan モード推奨をユーザーに通知）
+3. /dev {設計}                    # 実装
+4. code-simplifier {変更ファイル} # 簡素化
+5. /test {機能}                   # テスト作成
+6. /review                        # レビュー
+7. verify-app                     # 検証
+8. /commit-push-pr                # PR作成
 
-# ユーザーへの確認ポイント
-- PRD内容確認
-- Plan内容確認
-- 実装後の簡素化確認
-- PR作成前の最終確認
 ```
 
 ### 2. バグ修正（高速）
@@ -98,29 +92,19 @@ git diff --name-only
 3. verify-app テストのみ          # テスト確認
 4. /commit-push-pr -m "fix: ..."  # PR作成
 
-# ユーザーへの確認ポイント
-- 修正内容確認
-- テスト結果確認
-- コミットメッセージ確認
 ```
 
 ### 3. リファクタリング（品質重視）
 
 ```bash
 # 実行されるコマンド
-1. Shift+Tab 2回                  # Plan モード開始
-2. /plan {リファクタリング内容}   # 計画
-3. /refactor {計画}               # リファクタリング実行
-4. code-simplifier 全ファイル     # 簡素化（重要）
-5. /review                        # アーキテクチャレビュー
-6. verify-app                     # 検証
-7. /commit-push-pr --draft        # ドラフトPR
+1. /plan {リファクタリング内容}   # 計画（Plan モード推奨をユーザーに通知）
+2. /refactor {計画}               # リファクタリング実行
+3. code-simplifier 全ファイル     # 簡素化（重要）
+4. /review                        # アーキテクチャレビュー
+5. verify-app                     # 検証
+6. /commit-push-pr --draft        # ドラフトPR
 
-# ユーザーへの確認ポイント
-- Plan内容確認
-- 簡素化結果確認
-- レビュー結果確認
-- ドラフトPR作成確認
 ```
 
 ### 4. ドキュメント整備
@@ -132,9 +116,6 @@ git diff --name-only
 3. /review                        # ドキュメントレビュー
 4. /commit-push-pr -m "docs: ..." # PR作成
 
-# ユーザーへの確認ポイント
-- ドキュメント内容確認
-- コミットメッセージ確認
 ```
 
 ### 5. 緊急対応（最速）
@@ -146,9 +127,6 @@ git diff --name-only
 3. verify-app テストのみ          # 最小限の検証
 4. /commit-push-pr -m "hotfix: ..." # 即座にPR
 
-# ユーザーへの確認ポイント
-- 修正内容確認（簡潔に）
-- PR作成確認
 ```
 
 ### 6. テスト作成
@@ -160,9 +138,6 @@ git diff --name-only
 3. verify-app テストのみ          # テスト実行確認
 4. /commit-push-pr -m "test: ..." # PR作成
 
-# ユーザーへの確認ポイント
-- テスト内容確認
-- テスト結果確認
 ```
 
 ## オプション
@@ -187,25 +162,74 @@ git diff --name-only
 /flow {タスク} --auto
 ```
 
-## 実装ロジック
+## 実装ロジック（AIへの実行指示）
 
-### workflow-orchestrator エージェント使用
+このコマンドを受け取ったら、以下を順次実行する。
 
-`workflow-orchestrator` エージェントが以下を担当:
+### 1. オプション解析
 
-1. **タスクタイプ判定** - プロンプト分析
-2. **ワークフロー選択** - 最適なワークフロー決定
-3. **Plan モード判断** - 必要に応じてPlan モード推奨
-4. **ステップ実行** - 各コマンド/スキルを順次実行
-5. **進捗管理** - TodoWrite で進捗可視化
-6. **エラーハンドリング** - 失敗時のリトライ/スキップ判断
+引数から以下を抽出:
 
-### Boris流の統合
+```
+入力: "/flow ユーザー認証機能を追加 --skip-test --interactive"
 
-- **Plan モード自動判断**: 複雑なタスクでは自動でPlan モード推奨
-- **code-simplifier 自動実行**: 実装/リファクタリング後は必ず実行
-- **verify-app 自動実行**: PR前の品質保証
-- **/commit-push-pr 自動実行**: ワークフロー完了後に自動でPR作成
+解析結果:
+- タスク: "ユーザー認証機能を追加"
+- skip: ["test"]
+- mode: "interactive" (default: "normal")
+```
+
+オプション一覧:
+- `--skip-prd`, `--skip-test`, `--skip-review`, `--skip-simplify`: 該当ステップをスキップ
+- `--interactive`: 各ステップでユーザー確認
+- `--auto`: 確認なしで実行（上級者向け）
+
+### 2. タスクタイプ判定
+
+以下のキーワードで判定（複数該当時は先頭優先）:
+
+| 優先度 | キーワード（正規表現） | タスクタイプ |
+|--------|----------------------|------------|
+| 1 | `緊急\|hotfix\|本番\|production` | 緊急対応 |
+| 2 | `修正\|fix\|バグ\|エラー\|不具合` | バグ修正 |
+| 3 | `リファクタ\|改善\|整理\|見直し` | リファクタリング |
+| 4 | `ドキュメント\|仕様書\|README\|docs` | ドキュメント |
+| 5 | `テスト\|test\|spec` | テスト作成 |
+| 6 | `追加\|実装\|作成\|新規\|機能` | 新機能実装 |
+| 7 | （上記に該当しない） | 新機能実装（デフォルト） |
+
+### 3. Task tool で workflow-orchestrator を起動
+
+```
+Task(
+  subagent_type: "workflow-orchestrator",
+  prompt: """
+    タスク: {タスク内容}
+    タスクタイプ: {判定結果}
+    オプション: {解析結果}
+
+    上記に基づいてワークフローを実行してください。
+  """
+)
+```
+
+### 4. workflow-orchestrator の動作
+
+エージェントは以下を実行:
+
+1. **TodoWrite でワークフロー計画を作成**
+2. **各ステップを Skill tool で順次実行**
+   - `/prd`, `/plan`, `/dev` 等
+3. **Plan モード推奨時はユーザーに通知**（切り替えはユーザー操作）
+4. **進捗を TodoWrite で更新**
+5. **エラー時は AskUserQuestion でリトライ/スキップを確認**
+
+### Boris流の統合ルール
+
+- **Plan モード推奨**: 新機能実装・リファクタリング時にユーザーへ通知
+- **code-simplifier**: 実装・リファクタリング後に必ず実行（--skip-simplify除く）
+- **verify-app**: PR作成前に必ず実行
+- **/commit-push-pr**: ワークフロー最終ステップで実行
 
 ## 例
 
@@ -225,7 +249,7 @@ Claude:
 
 # 以下、自動実行
 ✓ /prd 実行中...
-✓ Plan モード開始...
+⚠️ Plan モード推奨: 複雑なタスクです。Shift+Tab 2回でPlan モードに切り替えてください
 ✓ /plan 実行中...
 ✓ /dev 実行中...
 ✓ code-simplifier 実行中...
@@ -237,37 +261,6 @@ Claude:
 🎉 ワークフロー完了！
 PR: https://github.com/user/repo/pull/123
 ```
-
-### 例2: バグ修正
-
-```bash
-ユーザー: /flow この認証エラーを修正
-
-Claude:
-📊 タスクタイプ判定: バグ修正
-📋 ワークフロー: Debug → Dev → Verify(test) → PR
-⚠️ Plan モード推奨: いいえ
-
-実行してよろしいですか？ [y/n]
-
-→ y
-
-# 以下、自動実行
-✓ /debug 実行中...
-✓ /dev 実行中...
-✓ verify-app テストのみ実行中...
-✓ /commit-push-pr 実行中...
-
-🎉 ワークフロー完了！
-```
-
-## Boris流の活用
-
-- **"良い計画は本当に重要"** → 複雑なタスクで自動的にPlan モード推奨
-- **"Claude に検証手段を与える"** → 常に verify-app を実行
-- **"毎日何十回も使用"** → /commit-push-pr を自動実行
-- **"最後の10%を仕上げる"** → PostToolUse フックで自動フォーマット
-- **"簡素化で品質向上"** → code-simplifier を自動実行
 
 ## 注意事項
 

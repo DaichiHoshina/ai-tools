@@ -135,6 +135,7 @@ sync_settings_template() {
 
     content=$(echo "$content" | sed -E 's/ATATT3x[A-Za-z0-9_=-]+/__CONFLUENCE_API_TOKEN__/g')
     content=$(echo "$content" | sed -E 's/sk-proj-[A-Za-z0-9_-]+/__OPENAI_API_KEY__/g')
+    content=$(echo "$content" | sed -E 's/BSA[A-Za-z0-9_-]+/__BRAVE_API_KEY__/g')
 
     mkdir -p "$SCRIPT_DIR/templates"
     echo "$content" > "$SCRIPT_DIR/templates/settings.json.template"
