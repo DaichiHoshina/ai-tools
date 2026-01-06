@@ -1,6 +1,5 @@
 ---
 allowed-tools: Read, mcp__serena__read_memory, mcp__serena__write_memory, mcp__serena__list_memories
-model: haiku
 description: セッションモード切替 - strict/normal/fast で確認レベルを変更
 ---
 

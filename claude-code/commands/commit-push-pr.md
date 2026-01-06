@@ -1,6 +1,5 @@
 ---
 allowed-tools: Bash, Read, Grep, Glob, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__search_for_pattern, mcp__serena__read_memory
-model: haiku
 description: Git統合ヘルパー - commit → push → PR作成を1コマンドで実行（Boris流）
 ---
 

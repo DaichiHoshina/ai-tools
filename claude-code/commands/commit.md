@@ -1,6 +1,5 @@
 ---
 allowed-tools: Bash, Read, Grep, Glob, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__search_for_pattern, mcp__serena__read_memory
-model: haiku
 description: Git コミットヘルパー - 差分を分析して適切なコミットメッセージを提案
 ---
 

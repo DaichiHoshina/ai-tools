@@ -1,6 +1,5 @@
 ---
 allowed-tools: Read
-model: haiku
 description: CLAUDE.mdを再読み込みしてcompaction後のコンテキストを復元
 ---
 
