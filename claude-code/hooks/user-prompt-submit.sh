@@ -44,17 +44,17 @@ if echo "$PROMPT" | grep -qiE 'terraform|\.tf\b|tfvars'; then
   DETECTED_SKILLS="${DETECTED_SKILLS}terraform,"
 fi
 
-# レビュー系検出
+# レビュー系検出（統合後のスキル名を使用）
 if echo "$PROMPT" | grep -qiE 'review|レビュー|確認して'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}code-smell-review,type-safety-review,"
+  DETECTED_SKILLS="${DETECTED_SKILLS}code-quality-review,"
 fi
 
-if echo "$PROMPT" | grep -qiE 'security|セキュリティ|脆弱性'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}security-review,"
+if echo "$PROMPT" | grep -qiE 'security|セキュリティ|脆弱性|error|エラー'; then
+  DETECTED_SKILLS="${DETECTED_SKILLS}security-error-review,"
 fi
 
-if echo "$PROMPT" | grep -qiE 'performance|パフォーマンス|遅い|高速化'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}performance-review,"
+if echo "$PROMPT" | grep -qiE 'test|テスト|doc|ドキュメント'; then
+  DETECTED_SKILLS="${DETECTED_SKILLS}docs-test-review,"
 fi
 
 # 設計系検出
@@ -95,23 +95,15 @@ if [ -n "$DETECTED_SKILLS" ]; then
   CONTEXT_MESSAGE="${CONTEXT_MESSAGE}Consider using appropriate skills for this task.\n\n"
 fi
 
-# 8原則リマインダー（常に表示）
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}# 8 Principles Checklist\n\n"
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}1. ✅ **mem**: Check Serena memory for related information\n"
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}2. ✅ **serena**: Use /serena commands for project operations\n"
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}3. ✅ **guidelines**: Load language guidelines before implementation\n"
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}4. ⚠️  **自動処理禁止**: Never auto-format/lint/build without permission\n"
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}5. 🔔 **完了通知**: Task completion will trigger notification\n"
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}6. 🔒 **型安全**: Avoid \`any\`, minimize \`as\` usage\n"
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}7. 💡 **コマンド提案**: Suggest appropriate commands (/dev, /review, /plan)\n"
-CONTEXT_MESSAGE="${CONTEXT_MESSAGE}8. ✋ **確認済**: Confirm unclear points before execution\n"
+# 8原則リマインダーは session-start.sh で表示済みのため、ここでは省略
+# トークン節約: 毎プロンプトでの重複表示を防止
 
 # 追加コンテキスト
 if [ -n "$ADDITIONAL_CONTEXT" ]; then
   CONTEXT_MESSAGE="${CONTEXT_MESSAGE}\n${ADDITIONAL_CONTEXT}"
 fi
 
-# JSON出力
+# JSON出力（検出があった場合のみ）
 if [ -n "$SYSTEM_MESSAGE" ]; then
   cat <<EOF
 {
@@ -119,11 +111,12 @@ if [ -n "$SYSTEM_MESSAGE" ]; then
   "additionalContext": "$CONTEXT_MESSAGE"
 }
 EOF
-else
-  # 検出なしの場合は8原則のみ表示
+elif [ -n "$CONTEXT_MESSAGE" ]; then
+  # 追加コンテキストのみある場合
   cat <<EOF
 {
   "additionalContext": "$CONTEXT_MESSAGE"
 }
 EOF
 fi
+# 検出なしの場合は何も出力しない（トークン節約）
