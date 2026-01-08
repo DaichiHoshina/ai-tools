@@ -184,3 +184,13 @@ common-summary.md, golang-summary.md, nextjs-react-summary.md, typescript-summar
 
 - `./claude-code/install.sh` - 初回インストール
 - `./claude-code/sync.sh` - リポジトリ ↔ ~/.claude 同期
+
+## トークン節約ルール
+
+| 場面 | 推奨アクション |
+|------|---------------|
+| コードベース把握 | `summaries/*.md` を先に読む |
+| 詳細確認 | summaryで不足時のみ本体を読む |
+| ガイドライン | load-guidelinesで必要なもののみ |
+| kenron | 初回のみファイル読み込み、以降はmemory参照 |
+| 大きなファイル | 必要な部分のみoffset/limitで読む |
