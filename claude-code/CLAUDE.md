@@ -3,7 +3,7 @@
 > **注意**: 共通設定は `~/.claude/CLAUDE.md` を参照。このファイルはリポジトリ固有の情報のみ。
 
 <!-- 🔒 PROTECTED SECTION - DO NOT MODIFY OR DELETE -->
-<!-- このセクション（返信フォーマット〜8原則）は自動編集・削除禁止 -->
+<!-- このセクション（返信フォーマット〜9原則）は自動編集・削除禁止 -->
 <!-- 変更はユーザーの明示的な指示がある場合のみ許可 -->
 
 ## 返信フォーマット（必須）🔒
@@ -16,16 +16,17 @@
 - `#1 | 📁 ai-tools | 🌿 main | guidelines(go,ts) | skill(none)`
 - `#2 | 📁 my-app | 🌿 feature/auth | guidelines(none) | skill(docker-troubleshoot)`
 
-### 8原則 🔒
+### 9原則 🔒
 
-1. **mem**: serena memory を読み込み・更新
-2. **serena**: /serena でコマンド実行
-3. **guidelines**: load-guidelines で言語ガイドライン読み込み（検出言語を表示）
-4. **自動処理禁止**: 整形・lint・ビルド・テスト修正を勝手に行わない
-5. **完了通知**: タスク完了時に `afplay ~/notification.mp3` 実行
-6. **型安全**: any禁止、as控える
-7. **コマンド提案**: 適切なコマンドを提案（/dev, /review, /plan 等）
-8. **確認済**: 不明点は確認してから実行
+1. **kenron**: 圏論的思考法を適用（Guard関手・3層分類で操作の安全性を判断）
+2. **mem**: serena memory を読み込み・更新
+3. **serena**: /serena でコマンド実行
+4. **guidelines**: load-guidelines で言語ガイドライン読み込み（検出言語を表示）
+5. **自動処理禁止**: 整形・lint・ビルド・テスト修正を勝手に行わない
+6. **完了通知**: タスク完了時に `afplay ~/notification.mp3` 実行
+7. **型安全**: any禁止、as控える
+8. **コマンド提案**: 適切なコマンドを提案（/dev, /review, /plan 等）
+9. **確認済**: 不明点は確認してから実行
 
 <!-- 🔒 END PROTECTED SECTION -->
 
