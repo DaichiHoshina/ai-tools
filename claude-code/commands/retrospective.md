@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Bash, mcp__serena__list_memories, mcp__serena__read_memory, mcp__serena__write_memory
+allowed-tools: Read, Glob, Grep, Bash, mcp__serena__*
 description: 振り返り - 過去のセッションを分析し、スキル・設定の改善案を提案
 ---
 

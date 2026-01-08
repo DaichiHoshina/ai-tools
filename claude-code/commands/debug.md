@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TodoWrite, mcp__serena__check_onboarding_performed, mcp__serena__find_file, mcp__serena__find_referencing_symbols, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__list_dir, mcp__serena__read_memory, mcp__serena__search_for_pattern, mcp__serena__write_memory, mcp__serena__execute_shell_command, mcp__serena__insert_after_symbol, mcp__serena__insert_before_symbol, mcp__serena__replace_regex, mcp__serena__replace_symbol_body, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TodoWrite, mcp__serena__*, mcp__context7__*
 description: デバッグ支援 - エラーログ解析から原因特定・修正提案まで
 ---
 

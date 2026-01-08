@@ -1,5 +1,5 @@
 ---
-allowed-tools: mcp__serena__activate_project, mcp__serena__get_current_config, mcp__serena__check_onboarding_performed, mcp__serena__onboarding, mcp__serena__get_symbols_overview, mcp__serena__list_memories, mcp__serena__read_memory, mcp__serena__delete_memory, mcp__serena__write_memory, Bash, Read, AskUserQuestion
+allowed-tools: Bash, Read, AskUserQuestion, mcp__serena__*
 description: Serenaデータとメモリーを最新化・整理
 ---
 

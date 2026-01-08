@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestion, Task, mcp__serena__read_file, mcp__serena__list_dir, mcp__serena__find_file, mcp__serena__search_for_pattern, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__list_memories, mcp__serena__read_memory, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__confluence__conf_get, mcp__jira__jira_get_issue, mcp__jira__jira_search_issues
+allowed-tools: Read, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestion, Task, mcp__serena__*, mcp__context7__*, mcp__confluence__*, mcp__jira__*
 description: PRD作成 - 対話式で要件整理、数学的定式化（オプション）、10の専門家視点で厳格レビュー
 ---
 

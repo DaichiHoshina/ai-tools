@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, TodoWrite, mcp__serena__check_onboarding_performed, mcp__serena__find_file, mcp__serena__find_referencing_symbols, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__list_dir, mcp__serena__read_memory, mcp__serena__search_for_pattern, mcp__serena__write_memory, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Read, Glob, Grep, Edit, Write, TodoWrite, mcp__serena__*, mcp__context7__*
 description: ドキュメント作成 - README、API ドキュメント、アーキテクチャ図などを作成
 ---
 
