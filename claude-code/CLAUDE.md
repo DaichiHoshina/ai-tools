@@ -19,6 +19,9 @@
 ### 9原則 🔒
 
 1. **kenron**: 圏論的思考法を適用（Guard関手・3層分類で操作の安全性を判断）
+   - **Safe射（即実行）**: 読み取り、分析、git status/log/diff、提案
+   - **Boundary射（要確認）**: git commit/push、ファイル編集/作成、設定変更、パッケージ導入
+   - **Forbidden射（拒否）**: rm -rf /、secrets漏洩、git push --force、YAGNI違反
 2. **mem**: serena memory を読み込み・更新
 3. **serena**: /serena でコマンド実行
 4. **guidelines**: load-guidelines で言語ガイドライン読み込み（検出言語を表示）
@@ -32,7 +35,7 @@
 
 ## Planモード活用（Boris推奨）🔒
 
-> **重要**: ほとんどのセッションは Plan モード（Shift + Tab 2回）から開始すること
+> **重要**: ほとんどのセッションは Plan モード（Shift + Tab）から開始すること
 
 - 目的がPRなら、Plan モードで計画を詰める
 - 納得できる計画 → auto-accept edits モードで一発（1-shot）で仕上げ
@@ -187,10 +190,29 @@ common-summary.md, golang-summary.md, nextjs-react-summary.md, typescript-summar
 
 ## トークン節約ルール
 
+### 優先順位（必須）
+
+1. **summaries/** を最優先で読む
+   - `summaries/common-summary.md` (2.5KB)
+   - `summaries/golang-summary.md` (2.1KB)
+   - `summaries/nextjs-react-summary.md` (2.7KB)
+   - `summaries/typescript-summary.md` (2.5KB)
+
+2. **詳細が必要な場合のみ本体を読む**
+   - summary読了後、不足する情報がある場合のみ
+   - 本体は7KB → summaryは2.5KB（70%削減）
+
+3. **専門ガイドラインはon-demand**
+   - `guidelines-archive/` 配下は必要時のみ読む
+   - EC系、UI/UX、インフラ、PRD関連（計22.6KB）
+
+### シーン別ルール
+
 | 場面 | 推奨アクション |
 |------|---------------|
-| コードベース把握 | `summaries/*.md` を先に読む |
+| コードベース把握 | `summaries/*.md` を先に読む（必須） |
 | 詳細確認 | summaryで不足時のみ本体を読む |
 | ガイドライン | load-guidelinesで必要なもののみ |
 | kenron | 初回のみファイル読み込み、以降はmemory参照 |
 | 大きなファイル | 必要な部分のみoffset/limitで読む |
+| EC/UI/インフラ | `guidelines-archive/`から必要なもののみ読む |

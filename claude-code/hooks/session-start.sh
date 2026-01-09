@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart Hook - ai-tools 8原則対応
+# SessionStart Hook - ai-tools 9原則対応
 # セッション開始時にSerena memoryリストを確認
 
 set -euo pipefail
@@ -13,7 +13,7 @@ if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
   cat <<EOF
 {
   "systemMessage": "📋 Serena MCP is active. Use /serena to access project memory.",
-  "additionalContext": "# Available Tools\n- Serena MCP: Project-specific memory and code analysis\n- Context7: Latest tech documentation\n- Playwright: Browser automation\n\n# 8 Principles Reminder\n1. **mem**: Read/update serena memory\n2. **serena**: Use /serena commands\n3. **guidelines**: Auto-load language guidelines\n4. **自動処理禁止**: Ask before auto-formatting\n5. **完了通知**: afplay on completion\n6. **型安全**: Avoid any/as\n7. **コマンド提案**: Suggest /dev, /review, /plan\n8. **確認済**: Confirm before executing"
+  "additionalContext": "# Available Tools\n- Serena MCP: Project-specific memory and code analysis\n- Context7: Latest tech documentation\n- Playwright: Browser automation\n\n# 9 Principles Reminder\n1. **kenron**: Safe(即実行)/Boundary(要確認)/Forbidden(拒否)\n2. **mem**: Read/update serena memory\n3. **serena**: Use /serena commands\n4. **guidelines**: Auto-load language guidelines\n5. **自動処理禁止**: Ask before auto-formatting\n6. **完了通知**: afplay on completion\n7. **型安全**: Avoid any/as\n8. **コマンド提案**: Suggest /dev, /review, /plan\n9. **確認済**: Confirm before executing"
 }
 EOF
 else
