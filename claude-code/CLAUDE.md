@@ -135,7 +135,7 @@ Claude Code の設定を一元管理するリポジトリ。
 | `/review` | （状況判断） | 問題タイプに応じて*-review系を1-3個選択 |
 | `/refactor` | load-guidelines, clean-architecture-ddd | アーキテクチャ原則に基づく |
 | `/debug` | （エラー種別で判断） | Docker系→docker-troubleshoot等 |
-| `/test` | load-guidelines, test-quality-review | テスト品質基準を適用 |
+| `/test` | load-guidelines, docs-test-review | テスト品質基準を適用 |
 
 ### レビュースキル選択基準（統合版）
 

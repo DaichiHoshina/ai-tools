@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# UserPromptSubmit Hook - 8原則自動化の中核
+# UserPromptSubmit Hook - 9原則自動化の中核
 # プロンプトから技術スタックを自動検出し、適切なガイドライン・スキルを推奨
 
 set -euo pipefail
@@ -95,7 +95,7 @@ if [ -n "$DETECTED_SKILLS" ]; then
   CONTEXT_MESSAGE="${CONTEXT_MESSAGE}Consider using appropriate skills for this task.\n\n"
 fi
 
-# 8原則リマインダーは session-start.sh で表示済みのため、ここでは省略
+# 9原則リマインダーは session-start.sh で表示済みのため、ここでは省略
 # トークン節約: 毎プロンプトでの重複表示を防止
 
 # 追加コンテキスト

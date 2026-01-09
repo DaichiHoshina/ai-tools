@@ -26,11 +26,11 @@ requires-guidelines:
 
 ### C. Skill連携
 以下のSkillが自動的にガイドラインを読み込み:
-- `test-quality-review` - テスト品質チェック
-- `type-safety-review` - テスト型安全性
+- `docs-test-review` - テスト・ドキュメント品質チェック
+- `code-quality-review` - テスト型安全性・構造品質
 
 **自動レビュー:**
-テスト作成後、`test-quality-review` Skillを自動実行:
+テスト作成後、`docs-test-review` Skillを自動実行:
 - テストの意味チェック
 - カバレッジ分析
 - モック適切性
