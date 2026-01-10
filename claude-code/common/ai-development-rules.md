@@ -21,9 +21,7 @@
 ```typescript
 // ❌ 悪い例: 過度な汎用化
 class GenericDataProcessor<T, U, V> {
-  process(data: T, transformer: (t: T) => U, validator: (u: U) => V): V
-
- {
+  process(data: T, transformer: (t: T) => U, validator: (u: U) => V): V {
     // 複雑な汎用ロジック
   }
 }

@@ -154,19 +154,24 @@ Claude Code の設定を一元管理するリポジトリ。
 
 ## ガイドライン構成
 
-### languages/ (6ファイル)
+### common/ - AI開発ルール (2ファイル)
+ai-development-rules.md, guardrails-theory.md
+**※ iguchi版から抽出した圏論ベースのルール（YAGNI原則、Guard関手の理論的定義）**
+
+### guidelines/languages/ (6ファイル)
 golang.md, typescript.md, nextjs-react.md, tailwind.md, shadcn.md, eslint.md
 
-### common/ (10ファイル)
-claude-code-tips.md, code-quality-design.md, development-process.md, document-management.md, emergency-parallel-work.md, error-handling-patterns.md, technical-pitfalls.md, testing-guidelines.md, type-safety-principles.md, unused-code-detection.md
+### guidelines/common/ (12ファイル)
+claude-code-tips.md, code-quality-design.md, development-process.md, document-management.md, emergency-parallel-work.md, error-handling-patterns.md, guardrails.md, session-modes.md, technical-pitfalls.md, testing-guidelines.md, type-safety-principles.md, unused-code-detection.md
 
-### design/ (6ファイル)
+### guidelines/design/ (6ファイル)
 clean-architecture.md, domain-driven-design.md, ecommerce-platforms.md, microservices-kubernetes.md, requirements-engineering.md, ui-ux-guidelines.md
 
-### infrastructure/ (5ファイル)
-aws-ec2.md, aws-ecs-fargate.md, aws-eks.md, aws-lambda.md, terraform.md
+### guidelines/infrastructure/ (4ファイル)
+aws-ec2.md, aws-ecs-fargate.md, aws-eks.md, terraform.md
+**※ aws-lambda.mdは guidelines-archive/infrastructure/ に移動**
 
-### summaries/ (4ファイル)
+### guidelines/summaries/ (4ファイル)
 common-summary.md, golang-summary.md, nextjs-react-summary.md, typescript-summary.md
 
 ## 自動スキル適用ルール

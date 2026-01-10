@@ -139,3 +139,4 @@ Boundary射 → ユーザー確認 → 承認後実行
 
 - 詳細な圏論的定義: iguchi版 `category-theory/GUARDRAILS.md`
 - CLAUDE.mdの9原則「1. kenron」にも記載
+- モード別の確認レベル: `guidelines/common/guardrails.md`
