@@ -26,41 +26,50 @@ async function displayStatusLine(data) {
     // Extract values
     const model = data.model?.display_name || "Unknown";
     const currentDir = path.basename(
-      data.workspace?.current_dir || data.cwd || "."
+      data.workspace?.current_dir || data.cwd || ".",
     );
     const sessionId = data.session_id;
 
-    // Calculate token usage for current session
+    // Try to use context_window data from Claude Code 2.1.6+
+    const contextWindow = data.context_window || {};
+    let percentage = 0;
     let totalTokens = 0;
 
-    if (sessionId) {
-      // Find all transcript files
-      const projectsDir = path.join(process.env.HOME, ".claude", "projects");
+    if (contextWindow.used_percentage !== undefined) {
+      // Use official context_window data (Claude Code 2.1.6+)
+      percentage = Math.round(contextWindow.used_percentage);
 
-      if (fs.existsSync(projectsDir)) {
-        // Get all project directories
-        const projectDirs = fs
-          .readdirSync(projectsDir)
-          .map((dir) => path.join(projectsDir, dir))
-          .filter((dir) => fs.statSync(dir).isDirectory());
+      // Calculate approximate total tokens from percentage
+      if (contextWindow.total !== undefined && percentage > 0) {
+        totalTokens = Math.round((contextWindow.total * percentage) / 100);
+      }
+    } else {
+      // Fallback: Calculate token usage from transcript (legacy method)
+      if (sessionId) {
+        const projectsDir = path.join(process.env.HOME, ".claude", "projects");
 
-        // Search for the current session's transcript file
-        for (const projectDir of projectDirs) {
-          const transcriptFile = path.join(projectDir, `${sessionId}.jsonl`);
+        if (fs.existsSync(projectsDir)) {
+          const projectDirs = fs
+            .readdirSync(projectsDir)
+            .map((dir) => path.join(projectsDir, dir))
+            .filter((dir) => fs.statSync(dir).isDirectory());
 
-          if (fs.existsSync(transcriptFile)) {
-            totalTokens = await calculateTokensFromTranscript(transcriptFile);
-            break;
+          for (const projectDir of projectDirs) {
+            const transcriptFile = path.join(projectDir, `${sessionId}.jsonl`);
+
+            if (fs.existsSync(transcriptFile)) {
+              totalTokens = await calculateTokensFromTranscript(transcriptFile);
+              break;
+            }
           }
         }
       }
-    }
 
-    // Calculate percentage
-    const percentage = Math.min(
-      100,
-      Math.round((totalTokens / COMPACTION_THRESHOLD) * 100)
-    );
+      percentage = Math.min(
+        100,
+        Math.round((totalTokens / COMPACTION_THRESHOLD) * 100),
+      );
+    }
 
     // Format token display
     const tokenDisplay = formatTokenCount(totalTokens);
@@ -74,14 +83,14 @@ async function displayStatusLine(data) {
     const fullPath = data.workspace?.current_dir || data.cwd || ".";
     const homePath = process.env.HOME;
     let displayPath = fullPath;
-    
+
     if (fullPath.startsWith(homePath)) {
       displayPath = "~" + fullPath.slice(homePath.length);
     }
-    
+
     // Get username and hostname
     const username = process.env.USER || "user";
-    const hostname = os.hostname().split('.')[0]; // Short hostname
+    const hostname = os.hostname().split(".")[0]; // Short hostname
 
     // Get git branch
     const gitBranch = await getGitBranch(fullPath);
