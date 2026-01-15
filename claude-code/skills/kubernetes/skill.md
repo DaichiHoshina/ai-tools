@@ -2,6 +2,7 @@
 name: kubernetes
 description: Kubernetes設計・運用 - デプロイメント、スケーリング、ネットワーキング、セキュリティ
 requires-guidelines:
+  - kubernetes
   - common
 ---
 

@@ -2,6 +2,7 @@
 name: terraform
 description: Terraform IaC設計 - モジュール設計、状態管理、セキュリティベストプラクティス
 requires-guidelines:
+  - terraform
   - common
 ---
 

@@ -117,6 +117,8 @@ requires-guidelines:
 | `ddd` | `~/.claude/guidelines/design/domain-driven-design.md` |
 | `microservices` | `~/.claude/guidelines/design/microservices-kubernetes.md` |
 | `uiux` | `~/.claude/guidelines/design/ui-ux-guidelines.md` |
+| `tailwind` | `~/.claude/guidelines/languages/tailwind.md` |
+| `shadcn` | `~/.claude/guidelines/languages/shadcn.md` |
 
 ### 自動読み込みフロー
 

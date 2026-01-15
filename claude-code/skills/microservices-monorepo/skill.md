@@ -2,6 +2,7 @@
 name: microservices-monorepo
 description: マイクロサービス・モノレポ設計 - サービス分割、通信パターン、モノレポ構成
 requires-guidelines:
+  - microservices
   - common
 ---
 
