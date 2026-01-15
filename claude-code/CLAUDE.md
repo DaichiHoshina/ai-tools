@@ -79,7 +79,7 @@ Claude Code の設定を一元管理するリポジトリ。
 
 **レビュー系**: code-quality-review, security-error-review, docs-test-review, uiux-review（4個、旧9個を統合）
 
-**開発系**: go-backend, typescript-backend, react-nextjs, api-design, clean-architecture-ddd, grpc-protobuf
+**開発系**: go-backend, typescript-backend, react-best-practices, api-design, clean-architecture-ddd, grpc-protobuf
 
 **インフラ系**: dockerfile-best-practices, kubernetes, terraform, microservices-monorepo, docker-troubleshoot
 

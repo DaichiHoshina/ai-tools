@@ -28,7 +28,7 @@ fi
 
 if echo "$PROMPT" | grep -qiE 'react|next\.js|nextjs|\.jsx\b'; then
   DETECTED_LANGS="${DETECTED_LANGS}react,"
-  DETECTED_SKILLS="${DETECTED_SKILLS}react-nextjs,"
+  DETECTED_SKILLS="${DETECTED_SKILLS}react-best-practices,"
 fi
 
 # インフラ検出
