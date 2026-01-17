@@ -13,6 +13,7 @@
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16384"
   },
   "model": "opusplan",
+  "plansDirectory": "~/.claude/plans",
   "language": "japanese",
   "1feedbackSurveyState": {
     "lastShownTime": 1753938733414

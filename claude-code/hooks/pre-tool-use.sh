@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse Hook - ツール実行前のチェック
-# 8原則: 自動処理禁止、確認済
+# 9原則: 自動処理禁止、確認済
+# v2.1.9対応: additionalContext でモデルに追加コンテキストを提供可能
 
 set -euo pipefail
 
@@ -13,6 +14,7 @@ TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
 # デフォルト: ツール実行を許可
 ALLOW=true
 MESSAGE=""
+ADDITIONAL_CONTEXT=""
 
 case "$TOOL_NAME" in
   "Bash")
@@ -33,11 +35,19 @@ case "$TOOL_NAME" in
   "mcp__serena__"*)
     # Serena MCP使用時のリマインダー
     MESSAGE="🧠 Using Serena MCP: Remember to update memory after significant changes."
+    ADDITIONAL_CONTEXT="Serena MCPを使用中。重要な変更後はmemoryを更新すること。"
     ;;
 esac
 
-# JSON出力
-if [ -n "$MESSAGE" ]; then
+# JSON出力 (v2.1.9対応: additionalContext)
+if [ -n "$ADDITIONAL_CONTEXT" ]; then
+  cat <<EOF
+{
+  "systemMessage": "$MESSAGE",
+  "additionalContext": "$ADDITIONAL_CONTEXT"
+}
+EOF
+elif [ -n "$MESSAGE" ]; then
   cat <<EOF
 {
   "systemMessage": "$MESSAGE"

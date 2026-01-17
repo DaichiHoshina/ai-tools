@@ -38,6 +38,10 @@ async function displayStatusLine(data) {
     if (contextWindow.used_percentage !== undefined) {
       // Use official context_window data (Claude Code 2.1.6+)
       percentage = Math.round(contextWindow.used_percentage);
+      // v2.1.6+: remaining_percentage も利用可能
+      const remainingPercentage = contextWindow.remaining_percentage !== undefined
+        ? Math.round(contextWindow.remaining_percentage)
+        : 100 - percentage;
 
       // Calculate approximate total tokens from percentage
       if (contextWindow.total !== undefined && percentage > 0) {
