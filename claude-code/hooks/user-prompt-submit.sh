@@ -1,71 +1,64 @@
 #!/usr/bin/env bash
 # UserPromptSubmit Hook - 9原則自動化の中核
 # プロンプトから技術スタックを自動検出し、適切なガイドライン・スキルを推奨
+# 最適化: 検出パターンを1パス処理に統合
 
 set -euo pipefail
 
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# プロンプトを取得
+# プロンプトを取得（小文字変換で1回のみ処理）
 PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty')
+PROMPT_LOWER=$(echo "$PROMPT" | tr '[:upper:]' '[:lower:]')
 
-# 技術スタック検出
+# 技術スタック検出（統合パターンマッチング）
 DETECTED_LANGS=""
 DETECTED_SKILLS=""
 ADDITIONAL_CONTEXT=""
 
-# 言語検出
-if echo "$PROMPT" | grep -qiE '\bgo\b|golang|\.go\b|go\.mod'; then
-  DETECTED_LANGS="${DETECTED_LANGS}go,"
-  DETECTED_SKILLS="${DETECTED_SKILLS}go-backend,"
-fi
-
-if echo "$PROMPT" | grep -qiE 'typescript|\.ts\b|\.tsx\b|tsconfig'; then
-  DETECTED_LANGS="${DETECTED_LANGS}ts,"
-  DETECTED_SKILLS="${DETECTED_SKILLS}typescript-backend,"
-fi
-
-if echo "$PROMPT" | grep -qiE 'react|next\.js|nextjs|\.jsx\b'; then
-  DETECTED_LANGS="${DETECTED_LANGS}react,"
-  DETECTED_SKILLS="${DETECTED_SKILLS}react-best-practices,"
-fi
+# 言語検出（1パス処理）
+case "$PROMPT_LOWER" in
+  *go*|*golang*|*.go*|*go.mod*) DETECTED_LANGS="${DETECTED_LANGS}go," ; DETECTED_SKILLS="${DETECTED_SKILLS}go-backend," ;;
+esac
+case "$PROMPT_LOWER" in
+  *typescript*|*.ts*|*.tsx*|*tsconfig*) DETECTED_LANGS="${DETECTED_LANGS}ts," ; DETECTED_SKILLS="${DETECTED_SKILLS}typescript-backend," ;;
+esac
+case "$PROMPT_LOWER" in
+  *react*|*next.js*|*nextjs*|*.jsx*) DETECTED_LANGS="${DETECTED_LANGS}react," ; DETECTED_SKILLS="${DETECTED_SKILLS}react-best-practices," ;;
+esac
 
 # インフラ検出
-if echo "$PROMPT" | grep -qiE 'docker|dockerfile|docker-compose'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}docker-troubleshoot,"
-fi
+case "$PROMPT_LOWER" in
+  *docker*|*dockerfile*|*docker-compose*) DETECTED_SKILLS="${DETECTED_SKILLS}docker-troubleshoot," ;;
+esac
+case "$PROMPT_LOWER" in
+  *kubernetes*|*k8s*|*kubectl*|*deployment.yaml*) DETECTED_SKILLS="${DETECTED_SKILLS}kubernetes," ;;
+esac
+case "$PROMPT_LOWER" in
+  *terraform*|*.tf*|*tfvars*) DETECTED_SKILLS="${DETECTED_SKILLS}terraform," ;;
+esac
 
-if echo "$PROMPT" | grep -qiE 'kubernetes|k8s|kubectl|deployment\.yaml'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}kubernetes,"
-fi
-
-if echo "$PROMPT" | grep -qiE 'terraform|\.tf\b|tfvars'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}terraform,"
-fi
-
-# レビュー系検出（統合後のスキル名を使用）
-if echo "$PROMPT" | grep -qiE 'review|レビュー|確認して'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}code-quality-review,"
-fi
-
-if echo "$PROMPT" | grep -qiE 'security|セキュリティ|脆弱性|error|エラー'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}security-error-review,"
-fi
-
-if echo "$PROMPT" | grep -qiE 'test|テスト|doc|ドキュメント'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}docs-test-review,"
-fi
+# レビュー系検出（統合後のスキル名）
+case "$PROMPT_LOWER" in
+  *review*|*レビュー*|*確認して*) DETECTED_SKILLS="${DETECTED_SKILLS}code-quality-review," ;;
+esac
+case "$PROMPT_LOWER" in
+  *security*|*セキュリティ*|*脆弱性*|*error*|*エラー*) DETECTED_SKILLS="${DETECTED_SKILLS}security-error-review," ;;
+esac
+case "$PROMPT_LOWER" in
+  *test*|*テスト*|*doc*|*ドキュメント*) DETECTED_SKILLS="${DETECTED_SKILLS}docs-test-review," ;;
+esac
 
 # 設計系検出
-if echo "$PROMPT" | grep -qiE 'architecture|アーキテクチャ|設計'; then
-  DETECTED_SKILLS="${DETECTED_SKILLS}clean-architecture-ddd,"
-fi
+case "$PROMPT_LOWER" in
+  *architecture*|*アーキテクチャ*|*設計*) DETECTED_SKILLS="${DETECTED_SKILLS}clean-architecture-ddd," ;;
+esac
 
 # Serena検出
-if echo "$PROMPT" | grep -qiE '/serena|serena mcp|memory'; then
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}\n- 🧠 Serena MCP detected: Use mcp__serena__* tools for project analysis"
-fi
+case "$PROMPT_LOWER" in
+  */serena*|*serena*mcp*|*memory*) ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}\n- 🧠 Serena MCP detected: Use mcp__serena__* tools for project analysis" ;;
+esac
 
 # 結果生成
 SYSTEM_MESSAGE=""
@@ -95,9 +88,6 @@ if [ -n "$DETECTED_SKILLS" ]; then
   CONTEXT_MESSAGE="${CONTEXT_MESSAGE}Consider using appropriate skills for this task.\n\n"
 fi
 
-# 9原則リマインダーは session-start.sh で表示済みのため、ここでは省略
-# トークン節約: 毎プロンプトでの重複表示を防止
-
 # 追加コンテキスト
 if [ -n "$ADDITIONAL_CONTEXT" ]; then
   CONTEXT_MESSAGE="${CONTEXT_MESSAGE}\n${ADDITIONAL_CONTEXT}"
@@ -112,7 +102,6 @@ if [ -n "$SYSTEM_MESSAGE" ]; then
 }
 EOF
 elif [ -n "$CONTEXT_MESSAGE" ]; then
-  # 追加コンテキストのみある場合
   cat <<EOF
 {
   "additionalContext": "$CONTEXT_MESSAGE"

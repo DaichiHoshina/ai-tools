@@ -35,10 +35,15 @@ color: blue
 - 型定義 → 実装の依存関係
 - API → クライアントの依存関係
 
-## 使用可能ツール
+## 使用可能ツール（Serena MCP 必須）
 
-- **serena MCP** - コードベース詳細分析（最優先）
-- **Read/Glob/Grep** - 情報収集
+> **⚠️ 重要**: タスク分割前に必ず `mcp__serena__find_symbol` または `mcp__serena__search_for_pattern` でコードベースを分析すること
+
+- **serena MCP（必須）** - コードベース詳細分析
+  - `find_symbol`: 依存関係・影響範囲を特定
+  - `search_for_pattern`: 変更対象の網羅的検索
+  - `read_memory`: プロジェクト固有の制約を確認
+- **Read/Glob/Grep** - 情報収集（補助的）
 - **Bash** - 読み取り専用
 
 ## 絶対禁止

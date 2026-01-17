@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SessionEnd Hook - セッション終了時の自動処理
-# 8原則: 完了通知（より確実な実装）+ 統計ログ保存
+# 9原則: 完了通知（より確実な実装）+ 統計ログ保存
 
 set -euo pipefail
 
@@ -50,11 +50,12 @@ GIT_REMINDER=""
 cd "$PROJECT_DIR" 2>/dev/null || true
 
 if git rev-parse --git-dir > /dev/null 2>&1; then
-  # Git リポジトリ内
-  CHANGED_FILES=$(git status --short 2>/dev/null | wc -l | tr -d ' ')
+  # Git リポジトリ内（最適化: git status を1回のみ実行）
+  GIT_STATUS_OUTPUT=$(git status --short 2>/dev/null || true)
+  CHANGED_FILES=$(echo "$GIT_STATUS_OUTPUT" | grep -c . 2>/dev/null || echo "0")
   
   if [ "$CHANGED_FILES" -gt 0 ]; then
-    GIT_CHANGES=$(git status --short 2>/dev/null | head -10)
+    GIT_CHANGES=$(echo "$GIT_STATUS_OUTPUT" | head -10)
     GIT_REMINDER="
 
 💡 **Git Changes Detected** (${CHANGED_FILES} files)

@@ -80,6 +80,24 @@ requires-guidelines:
 3. **設計ドキュメント作成** - ガイドライン準拠の設計
 4. **次アクション提案** - `/dev` での実装計画
 
+## 計画保存（v2.1.9新機能）
+
+設計ドキュメントは `plansDirectory`（デフォルト: `~/.claude/plans`）に自動保存:
+
+```
+~/.claude/plans/
+  ├── YYYY-MM-DD_[project]_[feature].md  # 計画ファイル
+  └── ...
+```
+
+**保存コマンド例:**
+```bash
+mkdir -p ~/.claude/plans
+cat > ~/.claude/plans/$(date +%Y-%m-%d)_${PROJECT}_${FEATURE}.md
+```
+
+計画はセッション間で参照可能。`/reload` で以前の計画を読み込み可能。
+
 ## 出力フォーマット
 
 ```
