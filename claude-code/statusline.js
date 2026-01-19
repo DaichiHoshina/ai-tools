@@ -127,9 +127,44 @@ async function getResponseCounter(sessionId) {
   try {
     if (!sessionId) return 1;
 
-    // Find transcript file for session
+    const stateFile = path.join(process.env.HOME, ".claude", "state", "session-counter.json");
+    const stateDir = path.dirname(stateFile);
+
+    // Ensure state directory exists
+    if (!fs.existsSync(stateDir)) {
+      fs.mkdirSync(stateDir, { recursive: true });
+    }
+
+    // Get total assistant count from transcript
+    const totalCount = await getTotalAssistantCount(sessionId);
+
+    // Read or initialize state
+    let state = { sessionId: null, startCount: 0 };
+    if (fs.existsSync(stateFile)) {
+      try {
+        state = JSON.parse(fs.readFileSync(stateFile, "utf8"));
+      } catch (e) {
+        // Invalid state file, reset
+      }
+    }
+
+    // If session changed, reset counter
+    if (state.sessionId !== sessionId) {
+      state = { sessionId, startCount: totalCount };
+      fs.writeFileSync(stateFile, JSON.stringify(state));
+    }
+
+    // Return counter relative to session start (1-based)
+    return Math.max(1, totalCount - state.startCount + 1);
+  } catch (error) {
+    return 1;
+  }
+}
+
+async function getTotalAssistantCount(sessionId) {
+  try {
     const projectsDir = path.join(process.env.HOME, ".claude", "projects");
-    if (!fs.existsSync(projectsDir)) return 1;
+    if (!fs.existsSync(projectsDir)) return 0;
 
     const projectDirs = fs
       .readdirSync(projectsDir)
@@ -140,29 +175,25 @@ async function getResponseCounter(sessionId) {
       const transcriptFile = path.join(projectDir, `${sessionId}.jsonl`);
 
       if (fs.existsSync(transcriptFile)) {
-        // Count assistant messages in transcript
         const content = fs.readFileSync(transcriptFile, "utf8");
         const lines = content.trim().split("\n");
-        let assistantCount = 0;
+        let count = 0;
 
         for (const line of lines) {
           try {
             const entry = JSON.parse(line);
             if (entry.type === "assistant") {
-              assistantCount++;
+              count++;
             }
           } catch (e) {
             // Skip invalid JSON lines
           }
         }
-
-        // Next response counter is assistantCount + 1
-        return assistantCount + 1;
+        return count;
       }
     }
-
-    return 1;
+    return 0;
   } catch (error) {
-    return 1;
+    return 0;
   }
 }
