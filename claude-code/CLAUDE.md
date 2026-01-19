@@ -192,6 +192,17 @@ ecommerce-platforms.md, microservices-kubernetes.md, requirements-engineering.md
 - **オンボーディングは1回のみ**: `/serena オンボーディング`実行前に`mcp__serena__check_onboarding_performed`を確認
 - **同じ質問は避ける**: 「〇〇の仕様は？」→ まずSerena memory検索
 
+### 手動実行用スキル
+
+以下のスキルは自動適用されず、必要時に手動で使用:
+
+| スキル | 用途 |
+|--------|------|
+| ai-tools-sync | リポジトリ ↔ ~/.claude 同期 |
+| grpc-protobuf | gRPC/Protobuf 専門開発ワークフロー |
+| guideline-maintenance | ガイドライン更新・メンテナンス |
+| mcp-setup-guide | MCP初期設定ガイド |
+
 ## 同期コマンド
 
 - `./claude-code/install.sh` - 初回インストール

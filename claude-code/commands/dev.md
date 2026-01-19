@@ -33,6 +33,9 @@ description: 実装用コマンド - Agent階層で実行（複雑なタスク�
 **Skill連携:**
 選択されたSkillの `requires-guidelines` に基づき未読ガイドライン（サマリー）を自動読み込み
 
+**UI開発時（Tailwind/React検出時）:**
+- `ui-skills` スキル推奨（Tailwind CSS + motion/react + アクセシブルコンポーネント特化）
+
 ## Agent 使用判断（重要）
 
 ### Agent 階層を使用（PO → Manager → Developer）

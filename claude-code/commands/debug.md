@@ -21,6 +21,14 @@ description: デバッグ支援 - エラーログ解析から原因特定・修�
 | ランタイム | null/undefined、境界値、データ検証 |
 | ロジック | 条件分岐、データフロー、期待値比較 |
 | パフォーマンス | ボトルネック、N+1、メモリリーク |
+| Docker関連 | `docker-troubleshoot` + `dockerfile-best-practices` |
+
+## Docker関連エラー検出時
+
+Dockerに関連するエラーの場合、以下のスキルを適用:
+
+1. **docker-troubleshoot** - lima/Docker Desktop接続エラー、daemonの状態診断・修復
+2. **dockerfile-best-practices** - Dockerfileの改善（マルチステージビルド、キャッシュ最適化、セキュリティ強化）
 
 ## 出力フォーマット
 

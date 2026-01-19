@@ -63,6 +63,8 @@ mypy . 2>&1 | head -50
 | `*_test.{ts,go}`, `*.test.ts`, `*.spec.ts` | docs-test-review |
 | `README.md`, JSDoc/GoDoc 変更 | docs-test-review |
 | `handler/*`, `controller/*`, `api/*` | （security-error-review で対応済み） |
+| `components/*`, `*.tsx`（UI関連） | uiux-review |
+| Tailwind/shadcn使用ファイル | ui-skills |
 
 #### 🔹 変更内容による追加
 
@@ -81,7 +83,8 @@ mypy . 2>&1 | head -50
 | code-quality-review | typescript, golang, common |
 | security-error-review | common |
 | docs-test-review | common |
-| uiux-review | uiux, nextjs-react, tailwind, shadcn |
+| uiux-review | ui-ux, nextjs-react, tailwind, shadcn |
+| ui-skills | nextjs-react, tailwind |
 
 **読み込み処理**:
 - セッション内で既読のガイドラインはスキップ

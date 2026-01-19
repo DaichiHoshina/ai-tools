@@ -115,8 +115,9 @@ requires-guidelines:
 | `kubernetes` | `~/.claude/guidelines/infrastructure/aws-eks.md` |
 | `clean-architecture` | `~/.claude/guidelines/design/clean-architecture.md` |
 | `ddd` | `~/.claude/guidelines/design/domain-driven-design.md` |
-| `microservices` | `~/.claude/guidelines/design/microservices-kubernetes.md` |
-| `uiux` | `~/.claude/guidelines/design/ui-ux-guidelines.md` |
+| `microservices-kubernetes` | `~/.claude/guidelines-archive/design/microservices-kubernetes.md` |
+| `ui-ux` | `~/.claude/guidelines-archive/design/ui-ux-guidelines.md` |
+| `requirements-engineering` | `~/.claude/guidelines-archive/design/requirements-engineering.md` |
 | `tailwind` | `~/.claude/guidelines/languages/tailwind.md` |
 | `shadcn` | `~/.claude/guidelines/languages/shadcn.md` |
 

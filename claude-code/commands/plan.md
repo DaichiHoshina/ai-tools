@@ -14,13 +14,12 @@ description: 設計・計画用コマンド - PO Agent で戦略策定（読み�
 requires-guidelines:
   - clean-architecture
   - ddd
-  - requirements-engineering
 ```
 
 **読み込み:**
 - `~/.claude/guidelines/design/clean-architecture.md` - クリーンアーキテクチャ原則
 - `~/.claude/guidelines/design/domain-driven-design.md` - DDD戦術・戦略パターン
-- `~/.claude/guidelines/design/requirements-engineering.md` - 要件定義手法
+- `~/.claude/guidelines-archive/design/requirements-engineering.md` - 要件定義手法（必要時のみ）
 
 ### B. 言語ガイドライン
 `load-guidelines` スキルで自動検出:
@@ -31,19 +30,20 @@ requires-guidelines:
 ### C. プロジェクト種別別ガイドライン
 
 **マイクロサービス:**
-- `design/microservices-kubernetes.md` - サービス分割、通信パターン
+- `guidelines-archive/design/microservices-kubernetes.md` - サービス分割、通信パターン（必要時のみ）
 
 **インフラ計画:**
 - `infrastructure/terraform.md` - IaC設計
 - `infrastructure/aws-eks.md` - Kubernetes運用
 
 **UI/UX設計:**
-- `design/ui-ux-guidelines.md` - ユーザビリティ、アクセシビリティ
+- `guidelines-archive/design/ui-ux-guidelines.md` - ユーザビリティ、アクセシビリティ（必要時のみ）
 
 ### D. Skill連携
 以下のSkillが自動的にガイドラインを読み込み:
 - `clean-architecture-ddd` - アーキテクチャ設計支援
 - `api-design` - API設計原則
+- `microservices-monorepo` - マイクロサービス・モノレポ設計（検出時）
 
 ## Agent 使用判断
 
