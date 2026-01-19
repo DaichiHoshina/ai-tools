@@ -177,12 +177,27 @@ async function getTotalUserCount(sessionId) {
       if (fs.existsSync(transcriptFile)) {
         const content = fs.readFileSync(transcriptFile, "utf8");
         const lines = content.trim().split("\n");
-        let count = 0;
 
-        for (const line of lines) {
+        // 最後のsummaryエントリ（compact結果）の位置を探す
+        let lastSummaryIndex = -1;
+        for (let i = lines.length - 1; i >= 0; i--) {
           try {
-            const entry = JSON.parse(line);
-            // ユーザーメッセージをカウント
+            const entry = JSON.parse(lines[i]);
+            if (entry.type === "summary") {
+              lastSummaryIndex = i;
+              break;
+            }
+          } catch (e) {
+            // Skip invalid JSON lines
+          }
+        }
+
+        // summary以降のユーザーメッセージのみカウント
+        let count = 0;
+        const startIndex = lastSummaryIndex + 1;
+        for (let i = startIndex; i < lines.length; i++) {
+          try {
+            const entry = JSON.parse(lines[i]);
             if (entry.type === "user") {
               count++;
             }
