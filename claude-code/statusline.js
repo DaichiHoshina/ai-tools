@@ -78,8 +78,12 @@ async function displayStatusLine(data) {
     // Get current skill from state file
     const currentSkill = getCurrentSkill();
 
-    // 右2つのみ（トークン数・パーセンテージ）、数値のみ表示
-    console.log(`${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m${contextWarning}`);
+    // 右寄せ表示（ターミナル幅に合わせてパディング）
+    const statusText = `${tokenDisplay} | ${percentage}%${contextWarning}`;
+    const termWidth = process.stdout.columns || 80;
+    const visibleLength = statusText.replace(/\x1b\[[0-9;]*m/g, '').length;
+    const padding = Math.max(0, termWidth - visibleLength - 2);
+    console.log(`${' '.repeat(padding)}${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m${contextWarning}`);
   } catch (error) {
     // Fallback status line on error
     console.log("[Error] 📁 . | 🪙 0 | 0%");
