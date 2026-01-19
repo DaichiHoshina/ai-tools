@@ -78,9 +78,8 @@ async function displayStatusLine(data) {
     // Get current skill from state file
     const currentSkill = getCurrentSkill();
 
-    // Claude Code は最初の1行のみ表示するため、統合して1行で出力
-    // Format: #N | 📁 dir | 🌿 branch | skill | 🪙 tokens | percentage%
-    console.log(`#${responseCounter} | 📁 ${currentDir} | 🌿 ${gitBranch} | ${currentSkill} | 🪙 ${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m${contextWarning}`);
+    // 右2つのみ（トークン数・パーセンテージ）、数値のみ表示
+    console.log(`${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m${contextWarning}`);
   } catch (error) {
     // Fallback status line on error
     console.log("[Error] 📁 . | 🪙 0 | 0%");
@@ -101,12 +100,7 @@ function getCurrentSkill() {
 }
 
 function formatTokenCount(tokens) {
-  if (tokens >= 1000000) {
-    return `${(tokens / 1000000).toFixed(1)}M`;
-  } else if (tokens >= 1000) {
-    return `${(tokens / 1000).toFixed(1)}K`;
-  }
-  return tokens.toString();
+  return tokens.toLocaleString();
 }
 
 async function getGitBranch(cwd) {
