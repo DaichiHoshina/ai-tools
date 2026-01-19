@@ -3,7 +3,7 @@
 > **注意**: 共通設定は `~/.claude/CLAUDE.md` を参照。このファイルはリポジトリ固有の情報のみ。
 
 <!-- 🔒 PROTECTED SECTION - DO NOT MODIFY OR DELETE -->
-<!-- このセクション（返信フォーマット〜9原則）は自動編集・削除禁止 -->
+<!-- このセクション（返信フォーマット〜10原則）は自動編集・削除禁止 -->
 <!-- 変更はユーザーの明示的な指示がある場合のみ許可 -->
 
 ## 返信フォーマット（必須）🔒
@@ -26,7 +26,7 @@
 3. **serena**: /serena でコマンド実行
 4. **guidelines**: load-guidelines で言語ガイドライン読み込み（検出言語を表示）
 5. **自動処理禁止**: 整形・lint・ビルド・テスト修正を勝手に行わない
-6. **完了通知**: タスク完了時に `afplay ~/notification.mp3` 実行
+6. **完了通知**: session-endフックで自動実行（手動実行不要）
 7. **型安全**: any禁止、as控える
 8. **コマンド提案**: 適切なコマンドを提案（/dev, /review, /plan 等）
 9. **確認済**: 不明点は確認してから実行
@@ -75,9 +75,9 @@ Claude Code の設定を一元管理するリポジトリ。
 | `/reload` | CLAUDE.md再読込 |
 | `/kenron` | 圏論的思考法ロード（Guard関手・3層分類） |
 
-## スキル（21個）
+## スキル（22個）
 
-**レビュー系**: code-quality-review, security-error-review, docs-test-review, uiux-review（4個、旧9個を統合）
+**レビュー系**: code-quality-review, security-error-review, docs-test-review, uiux-review, ui-skills（5個、旧9個を統合）
 
 **開発系**: go-backend, typescript-backend, react-best-practices, api-design, clean-architecture-ddd, grpc-protobuf
 
@@ -148,13 +148,15 @@ Claude Code の設定を一元管理するリポジトリ。
 | 設計・構造・複雑度・パフォーマンス・型安全性 | code-quality-review（4-in-1統合） |
 | セキュリティ・エラー処理 | security-error-review（2-in-1統合） |
 | ドキュメント・テスト | docs-test-review（2-in-1統合） |
-| UI/UX | uiux-review |
+| UI/UX（汎用） | uiux-review |
+| Tailwind/React特化UI制約 | ui-skills |
 
 **統合の詳細**:
 - `code-quality-review`: architecture + code-smell + performance + type-safety
 - `security-error-review`: security + error-handling
 - `docs-test-review`: documentation + test-quality
-- `uiux-review`: uiux-design を改名
+- `uiux-review`: Material Design 3 + WCAG 2.2 AA + Nielsen 10原則
+- `ui-skills`: Tailwind CSS + motion/react + アクセシブルコンポーネントプリミティブ特化
 
 ## ガイドライン構成
 
