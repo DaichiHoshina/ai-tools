@@ -79,18 +79,28 @@ async function displayStatusLine(data) {
     // Get response counter from session
     const responseCounter = await getResponseCounter(sessionId);
 
-    // Build CLAUDE.md format status line
-    // Format: #N | 📁 directory | 🌿 branch | guidelines(lang) | skill(name)
-    const claudeMdLine = `#${responseCounter} | 📁 ${currentDir} | 🌿 ${gitBranch} | guidelines(none) | skill(none)`;
-
-    // Build shell PS1 style: username@hostname:path $ [tokens|percentage|warning]
-    const shellLine = `${username}@${hostname}:${displayPath} $ [🪙 ${tokenDisplay}|${percentageColor}${percentage}%\x1b[0m${contextWarning}]`;
+    // Get current skill from state file
+    const currentSkill = getCurrentSkill();
 
     // Claude Code は最初の1行のみ表示するため、統合して1行で出力
-    console.log(`#${responseCounter} | 📁 ${currentDir} | 🌿 ${gitBranch} | 🪙 ${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m${contextWarning}`);
+    // Format: #N | 📁 dir | 🌿 branch | skill | 🪙 tokens | percentage%
+    console.log(`#${responseCounter} | 📁 ${currentDir} | 🌿 ${gitBranch} | ${currentSkill} | 🪙 ${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m${contextWarning}`);
   } catch (error) {
     // Fallback status line on error
     console.log("[Error] 📁 . | 🪙 0 | 0%");
+  }
+}
+
+function getCurrentSkill() {
+  try {
+    const stateFile = path.join(process.env.HOME, ".claude", "state", "current-skill.txt");
+    if (fs.existsSync(stateFile)) {
+      const skill = fs.readFileSync(stateFile, "utf8").trim();
+      return skill || "none";
+    }
+    return "none";
+  } catch (error) {
+    return "none";
   }
 }
 
