@@ -135,8 +135,8 @@ async function getResponseCounter(sessionId) {
       fs.mkdirSync(stateDir, { recursive: true });
     }
 
-    // Get total assistant count from transcript
-    const totalCount = await getTotalAssistantCount(sessionId);
+    // Get total user message count from transcript
+    const totalCount = await getTotalUserCount(sessionId);
 
     // Read or initialize state
     let state = { sessionId: null, startCount: 0 };
@@ -161,7 +161,7 @@ async function getResponseCounter(sessionId) {
   }
 }
 
-async function getTotalAssistantCount(sessionId) {
+async function getTotalUserCount(sessionId) {
   try {
     const projectsDir = path.join(process.env.HOME, ".claude", "projects");
     if (!fs.existsSync(projectsDir)) return 0;
@@ -182,7 +182,8 @@ async function getTotalAssistantCount(sessionId) {
         for (const line of lines) {
           try {
             const entry = JSON.parse(line);
-            if (entry.type === "assistant") {
+            // ユーザーメッセージをカウント
+            if (entry.type === "user") {
               count++;
             }
           } catch (e) {
