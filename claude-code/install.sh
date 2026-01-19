@@ -228,6 +228,10 @@ install_settings() {
     mkdir -p "$CLAUDE_DIR"
     mkdir -p "$CLAUDE_DIR/guidelines/common"
     mkdir -p "$CLAUDE_DIR/guidelines/languages"
+    mkdir -p "$CLAUDE_DIR/guidelines/design"
+    mkdir -p "$CLAUDE_DIR/guidelines/infrastructure"
+    mkdir -p "$CLAUDE_DIR/guidelines/summaries"
+    mkdir -p "$CLAUDE_DIR/guidelines-archive/design"
     mkdir -p "$CLAUDE_DIR/scripts"
     mkdir -p "$CLAUDE_DIR/commands"
     mkdir -p "$CLAUDE_DIR/agents"
@@ -258,17 +262,9 @@ install_settings() {
         generate_settings_json "$node_bin_path"
     fi
 
-    # Copy CLAUDE.md
-    if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
-        print_warning "CLAUDE.md が既に存在します"
-        if confirm "上書きしますか？"; then
-            cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
-            print_success "CLAUDE.md を更新しました"
-        fi
-    else
-        cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
-        print_success "CLAUDE.md をコピーしました"
-    fi
+    # Copy CLAUDE.md (always overwrite)
+    cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+    print_success "CLAUDE.md をコピーしました"
 
     # Copy guidelines (common)
     for file in "$SCRIPT_DIR/guidelines/common/"*.md; do
@@ -288,6 +284,42 @@ install_settings() {
     done
     print_success "guidelines/languages をコピーしました"
 
+    # Copy guidelines (design)
+    for file in "$SCRIPT_DIR/guidelines/design/"*.md; do
+        if [ -f "$file" ]; then
+            local filename=$(basename "$file")
+            cp "$file" "$CLAUDE_DIR/guidelines/design/$filename"
+        fi
+    done
+    print_success "guidelines/design をコピーしました"
+
+    # Copy guidelines (infrastructure)
+    for file in "$SCRIPT_DIR/guidelines/infrastructure/"*.md; do
+        if [ -f "$file" ]; then
+            local filename=$(basename "$file")
+            cp "$file" "$CLAUDE_DIR/guidelines/infrastructure/$filename"
+        fi
+    done
+    print_success "guidelines/infrastructure をコピーしました"
+
+    # Copy guidelines (summaries)
+    for file in "$SCRIPT_DIR/guidelines/summaries/"*.md; do
+        if [ -f "$file" ]; then
+            local filename=$(basename "$file")
+            cp "$file" "$CLAUDE_DIR/guidelines/summaries/$filename"
+        fi
+    done
+    print_success "guidelines/summaries をコピーしました"
+
+    # Copy guidelines-archive (design)
+    for file in "$SCRIPT_DIR/guidelines-archive/design/"*.md; do
+        if [ -f "$file" ]; then
+            local filename=$(basename "$file")
+            cp "$file" "$CLAUDE_DIR/guidelines-archive/design/$filename"
+        fi
+    done
+    print_success "guidelines-archive/design をコピーしました"
+
     # Copy commands
     for file in "$SCRIPT_DIR/commands/"*.md; do
         if [ -f "$file" ]; then
@@ -306,13 +338,9 @@ install_settings() {
     done
     print_success "agents をコピーしました"
 
-    # Copy skills
-    for file in "$SCRIPT_DIR/skills/"*; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/skills/$filename"
-        fi
-    done
+    # Copy skills (directory structure)
+    rm -rf "$CLAUDE_DIR/skills"
+    cp -r "$SCRIPT_DIR/skills" "$CLAUDE_DIR/skills"
     print_success "skills をコピーしました"
 
     # Copy scripts
