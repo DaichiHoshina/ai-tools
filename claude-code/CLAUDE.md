@@ -163,17 +163,20 @@ Claude Code の設定を一元管理するリポジトリ。
 ### languages/ (6ファイル)
 golang.md, typescript.md, nextjs-react.md, tailwind.md, shadcn.md, eslint.md
 
-### common/ (10ファイル)
-claude-code-tips.md, code-quality-design.md, development-process.md, document-management.md, emergency-parallel-work.md, error-handling-patterns.md, technical-pitfalls.md, testing-guidelines.md, type-safety-principles.md, unused-code-detection.md
+### common/ (12ファイル)
+claude-code-tips.md, code-quality-design.md, development-process.md, document-management.md, emergency-parallel-work.md, error-handling-patterns.md, guardrails.md, session-modes.md, technical-pitfalls.md, testing-guidelines.md, type-safety-principles.md, unused-code-detection.md
 
-### design/ (6ファイル)
-clean-architecture.md, domain-driven-design.md, ecommerce-platforms.md, microservices-kubernetes.md, requirements-engineering.md, ui-ux-guidelines.md
+### design/ (2ファイル)
+clean-architecture.md, domain-driven-design.md
 
 ### infrastructure/ (5ファイル)
 aws-ec2.md, aws-ecs-fargate.md, aws-eks.md, aws-lambda.md, terraform.md
 
 ### summaries/ (4ファイル)
 common-summary.md, golang-summary.md, nextjs-react-summary.md, typescript-summary.md
+
+### guidelines-archive/ (アーカイブ)
+ecommerce-platforms.md, microservices-kubernetes.md, requirements-engineering.md, ui-ux-guidelines.md（必要時のみ読み込み）
 
 ## 自動スキル適用ルール
 
