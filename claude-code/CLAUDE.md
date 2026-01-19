@@ -85,7 +85,7 @@ Claude Code の設定を一元管理するリポジトリ。
 
 **ユーティリティ**: load-guidelines, ai-tools-sync, cleanup-enforcement, guideline-maintenance, mcp-setup-guide, session-mode
 
-**廃止予定** (`skills-archive/`): 使用禁止。詳細は `skills-archive/README.md` を参照
+**Note**: 旧スキル（9個）はcode-quality-review等に統合済み
 
 ## エージェント（7個）
 
@@ -216,7 +216,13 @@ ecommerce-platforms.md, microservices-kubernetes.md, requirements-engineering.md
 
 ## トークン節約ルール
 
-### 優先順位（必須）
+### 絶対ルール（必須）
+
+1. **summaries/ 必須優先**: 詳細ガイドラインを読む前に必ずsummary読了
+2. **Context7 活用**: 詳細コード例はContext7から取得（skill.md内に書かない）
+3. **300行超ファイルは分割読み込み**: offset/limitを使用
+
+### 優先順位
 
 1. **summaries/** を最優先で読む
    - `summaries/common-summary.md` (2.5KB)
@@ -230,7 +236,6 @@ ecommerce-platforms.md, microservices-kubernetes.md, requirements-engineering.md
 
 3. **専門ガイドラインはon-demand**
    - `guidelines-archive/` 配下は必要時のみ読む
-   - EC系、UI/UX、インフラ、PRD関連（計22.6KB）
 
 ### シーン別ルール
 

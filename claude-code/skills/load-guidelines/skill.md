@@ -12,6 +12,11 @@ description: ガイドライン自動読み込み - プロジェクトの技術�
 /load-guidelines full   # サマリー + 詳細ガイドライン
 ```
 
+> **⚠️ トークン節約注意**
+> - デフォルト（サマリーのみ）を推奨。ほとんどの作業はサマリーで十分
+> - `full`オプションは追加で約5,500トークン消費
+> - 詳細なコード例が必要な場合はContext7を活用
+
 ## 使用タイミング
 
 - 開発作業開始時（プロジェクトモード）
@@ -105,21 +110,22 @@ requires-guidelines:
 
 ### ガイドライン識別子マッピング
 
-| 識別子 | ガイドラインパス |
-|--------|-----------------|
-| `common` | `~/.claude/guidelines/common/*.md`（主要3ファイル） |
-| `typescript` | `~/.claude/guidelines/languages/typescript.md` |
-| `golang` | `~/.claude/guidelines/languages/golang.md` |
-| `nextjs-react` | `~/.claude/guidelines/languages/nextjs-react.md` |
-| `terraform` | `~/.claude/guidelines/infrastructure/terraform.md` |
-| `kubernetes` | `~/.claude/guidelines/infrastructure/aws-eks.md` |
-| `clean-architecture` | `~/.claude/guidelines/design/clean-architecture.md` |
-| `ddd` | `~/.claude/guidelines/design/domain-driven-design.md` |
-| `microservices-kubernetes` | `~/.claude/guidelines-archive/design/microservices-kubernetes.md` |
-| `ui-ux` | `~/.claude/guidelines-archive/design/ui-ux-guidelines.md` |
-| `requirements-engineering` | `~/.claude/guidelines-archive/design/requirements-engineering.md` |
-| `tailwind` | `~/.claude/guidelines/languages/tailwind.md` |
-| `shadcn` | `~/.claude/guidelines/languages/shadcn.md` |
+**共通**: `common` → `common/*.md`
+
+**言語別**:
+| 識別子 | パス |
+|--------|------|
+| `typescript` | `languages/typescript.md` |
+| `golang` | `languages/golang.md` |
+| `nextjs-react` | `languages/nextjs-react.md` |
+| `tailwind` | `languages/tailwind.md` |
+| `shadcn` | `languages/shadcn.md` |
+
+**インフラ**: `terraform`, `kubernetes` → `infrastructure/`
+
+**設計**: `clean-architecture`, `ddd` → `design/`
+
+**アーカイブ**: `microservices-kubernetes`, `ui-ux`, `requirements-engineering` → `guidelines-archive/`
 
 ### 自動読み込みフロー
 
