@@ -33,15 +33,11 @@ async function displayStatusLine(data) {
 
     if (contextWindow.used_percentage !== undefined) {
       percentage = Math.round(contextWindow.used_percentage);
-      // v2.1.6+: remaining_percentage も利用可能
-      const remainingPercentage = contextWindow.remaining_percentage !== undefined
-        ? Math.round(contextWindow.remaining_percentage)
-        : 100 - percentage;
 
-      // Calculate approximate total tokens from percentage
-      if (contextWindow.total !== undefined && percentage > 0) {
-        totalTokens = Math.round((contextWindow.total * percentage) / 100);
-      }
+      // トークン計算: total_input_tokens + total_output_tokens を使用
+      const inputTokens = contextWindow.total_input_tokens || 0;
+      const outputTokens = contextWindow.total_output_tokens || 0;
+      totalTokens = inputTokens + outputTokens;
     }
     // Note: Legacy fallback removed - Claude Code 2.1.6+ required
 
