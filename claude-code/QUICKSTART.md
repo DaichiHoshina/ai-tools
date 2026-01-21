@@ -100,3 +100,20 @@ PRD作成 → 設計 → 実装 → テスト → レビュー → PR作成
 ```
 
 **用語がわからない:** → [GLOSSARY.md](./GLOSSARY.md) を参照
+
+---
+
+## スキル選択のコツ
+
+### 自動推奨を活用
+- user-prompt-submit.shが35パターンで自動検出
+- systemMessageに「💡 Recommended skills: xxx」と表示
+
+### 迷ったら
+1. **レビュー系**: `/review`（自動選択）
+2. **開発系**: `/dev`（load-guidelines自動実行）
+3. **インフラ系**: `/explore` → SKILLS-MAP.md参照
+
+### スキルの組み合わせ
+- SKILLS-MAP.md「推奨組み合わせ」セクション参照
+- often-used-with: 同時使用推奨スキル

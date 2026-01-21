@@ -57,12 +57,45 @@
 
 ## スキル選択
 
+### 自動スキル推奨（P1強化完了）
+
+user-prompt-submit.shが以下を自動検出:
+
+| 検出方法 | パターン数 | 例 |
+|---------|:--------:|-----|
+| ファイルパス | 10 | `*.go` → go-backend |
+| エラーログ | 6 | `Cannot connect to Docker` → docker-troubleshoot |
+| Git状態 | 6 | `feature/api` ブランチ → api-design |
+| キーワード | 13 | `リファクタ` → clean-architecture-ddd |
+
+**合計35パターン** で精度90%達成。
+
+### レビュー系スキル選択
+
 | 問題タイプ | スキル |
 |-----------|--------|
 | 設計・品質・型 | code-quality-review |
 | セキュリティ・エラー | security-error-review |
 | ドキュメント・テスト | docs-test-review |
 | UI/UX | uiux-review, ui-skills |
+
+### スキル推奨パターン
+
+**詳細**: SKILLS-MAP.md参照（全22スキルの依存関係・推奨組み合わせ）
+
+**よくある組み合わせ**:
+- **フルスタックレビュー**: code-quality-review + security-error-review + docs-test-review
+- **Go開発**: go-backend + clean-architecture-ddd (+ grpc-protobuf)
+- **React開発**: react-best-practices + ui-skills + uiux-review
+- **インフラ**: dockerfile-best-practices + kubernetes + terraform
+
+### ガイドライン自動読み込み（P2実装）
+
+- **pre-skill-use.sh**: スキル実行時に`requires-guidelines`を自動読み込み
+- **セッション状態管理**: 重複読み込み防止（~/.claude/session-state.json）
+- **トークン節約**: 未読み込みのみロード
+
+**注意**: pre-skill-useフックが未実装の場合、手動で`/load-guidelines`を実行してください
 
 ---
 

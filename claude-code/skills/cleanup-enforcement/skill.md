@@ -1,6 +1,8 @@
 ---
 name: cleanup-enforcement
 description: コードクリーンアップ強制 - 後方互換残骸・未使用コード・進捗コメントを徹底削除
+requires-guidelines:
+  - common
 ---
 
 # cleanup-enforcement - クリーンアップ強制Skill
