@@ -34,6 +34,24 @@
 
 ---
 
+## ComplexityCheck射（タスク判定）
+
+タスク受領時に複雑度を判定し、適切な実装手法を選択：
+
+```
+ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
+```
+
+| 条件 | 判定 | アクション |
+|------|------|-----------|
+| ファイル数<5 AND 行数<300 | **Simple** | 直接実装 |
+| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | 5フェーズワークフロー |
+| 複数プロジェクト横断 | **AgentHierarchy** | PO/Manager/Developer |
+
+**詳細**: `claude-code/references/AI-THINKING-ESSENTIALS.md`, `/kenron` 参照
+
+---
+
 ## 構成サマリー
 
 | カテゴリ | 件数 | 主要項目 |

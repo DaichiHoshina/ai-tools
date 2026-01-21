@@ -68,4 +68,33 @@ Guard_M : Mode × Action → {Allow, AskUser, Deny}
 
 ---
 
+## ComplexityCheck射（タスク判定）
+
+```
+ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
+```
+
+### 判定基準
+
+| 条件 | 判定 | アクション |
+|------|------|-----------|
+| ファイル数<5 AND 行数<300 | **Simple** | 直接実装 |
+| ファイル数≥5 OR 独立機能≥3 OR 行数≥300 | **TaskDecomposition** | 5フェーズワークフロー |
+| 複数プロジェクト横断 OR 戦略的判断 | **AgentHierarchy** | PO/Manager/Developer |
+
+### 5フェーズワークフロー（TaskDecomposition時）
+
+| Phase | 目的 | 不変条件（違反時は次フェーズ不可） |
+|-------|------|----------------------------------|
+| 0 | 要求分析 | 必須要件に説明・受け入れ条件あり |
+| 1 | タスク分解 | カバレッジ = 100% |
+| 2 | ファイル作成 | トレーサビリティ完全 |
+| 3 | 依存整理 | 循環依存なし |
+| 4 | Agent起動 | 全タスク成功完了 |
+| 5 | 統合検証 | 未実装要件 = ∅ |
+
+**詳細**: `claude-code/references/AI-THINKING-ESSENTIALS.md` 参照
+
+---
+
 ARGUMENTS: $ARGUMENTS

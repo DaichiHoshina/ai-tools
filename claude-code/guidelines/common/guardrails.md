@@ -4,6 +4,23 @@
 
 ---
 
+## Guard関手（圏論的定義）
+
+```
+Guard : Action → {Allow, AskUser, Deny}
+
+Guard(a) = Allow   ⟺ a ∈ Mor(Safe)
+Guard(a) = AskUser ⟺ a ∈ Mor(Boundary)
+Guard(a) = Deny    ⟺ a ∈ Mor(Forbidden)
+```
+
+**安全性定理**:
+- Safe圏は常に安全: `∀f ∈ Mor(Safe), ¬causes_harm(f)`
+- Boundary圏はユーザー承認で安全: `user_approval(f) ⟹ ¬causes_harm(f)`
+- Forbidden圏は実行不可能: `f ∉ Mor(Claude圏) ⟹ ¬executable(f)`
+
+---
+
 ## 3層分類
 
 | 層 | 処理 | 説明 |
@@ -171,4 +188,5 @@ afplay ~/notification.mp3
 
 - `session-modes.md` - モード定義
 - `/kenron` コマンド - 圏論的思考法ロード
-- 8原則 - 基本動作原則
+- `claude-code/references/AI-THINKING-ESSENTIALS.md` - 思考法エッセンス（5フェーズワークフロー含む）
+- 10原則 - 基本動作原則
