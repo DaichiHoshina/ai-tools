@@ -42,8 +42,25 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 | 条件 | 判定 | アクション |
 |------|------|-----------|
 | ファイル数<5 AND 行数<300 | **Simple** | 直接実装 |
-| ファイル数≥5 OR 独立機能≥3 OR 行数≥300 | **TaskDecomposition** | PRACTICAL_GUIDE.md読込 |
-| 複数プロジェクト横断 OR 戦略的判断 | **AgentHierarchy** | AGENTS.md読込 |
+| ファイル数≥5 OR 独立機能≥3 OR 行数≥300 | **TaskDecomposition** | Kanban + 5フェーズ |
+| 複数プロジェクト横断 OR 戦略的判断 | **AgentHierarchy** | PO/Manager/Developer階層 |
+
+#### Kanban連携（TaskDecomposition時）
+
+```bash
+# 1. Kanbanボード初期化
+kanban init "タスク名"
+
+# 2. タスク分解・追加
+kanban add "サブタスク1" --priority=high
+kanban add "サブタスク2" --priority=medium
+
+# 3. 進捗管理
+kanban start <id>  # In Progressに移動（ロック取得）
+kanban done <id>   # 完了（ロック解放）
+```
+
+**詳細**: `claude-code/skills/kanban/skill.md` 参照
 
 ---
 

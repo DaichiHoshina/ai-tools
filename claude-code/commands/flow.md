@@ -61,16 +61,44 @@ Guard関手による操作分類:
 - 変更ファイルあり → /prdスキップ、/devから開始を提案
 - 変更なし → 新規タスクとして最初から実行
 
-### 3. Plan モード判断
+### 3. ComplexityCheck射（Kanban自動化）
+
+```
+ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
+```
+
+| 条件 | 判定 | Kanbanアクション |
+|------|------|-----------------|
+| ファイル数<5 AND 行数<300 | **Simple** | Kanban不使用 |
+| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | **kanban init → add → start/done 自動** |
+| 複数プロジェクト横断 | **AgentHierarchy** | PO経由でKanban管理 |
+
+**TaskDecomposition時の自動フロー**:
+```bash
+# 1. ボード初期化
+kanban init "{タスク名}"
+
+# 2. サブタスク自動分解・追加
+kanban add "サブタスク1" --priority=high
+kanban add "サブタスク2" --priority=medium
+...
+
+# 3. 各ステップ実行時
+kanban start {id}  # 開始
+# ... 実行 ...
+kanban done {id}   # 完了
+```
+
+### 4. Plan モード判断
 - **Plan必須**: 新機能実装, リファクタリング, 複雑なバグ修正
 - **通常モード**: 単純なバグ修正, ドキュメント, テスト
 
-### 4. workflow-orchestrator起動
+### 5. workflow-orchestrator起動
 
 ```
 Task(
   subagent_type: "workflow-orchestrator",
-  prompt: "タスク: {内容}, タイプ: {判定結果}, オプション: {解析結果}"
+  prompt: "タスク: {内容}, タイプ: {判定結果}, 複雑度: {ComplexityCheck結果}, オプション: {解析結果}"
 )
 ```
 

@@ -31,6 +31,27 @@ git diff --name-only
 - package.json / go.mod 等
 - テストファイルの有無
 - CI/CD設定の有無
+
+# 4. ComplexityCheck射（Kanban判定）
+ファイル数<5 AND 行数<300 → Simple（Kanban不使用）
+ファイル数≥5 OR 独立機能≥3 → TaskDecomposition（Kanban自動化）
+複数プロジェクト横断 → AgentHierarchy（PO経由）
+```
+
+#### Kanban自動初期化（TaskDecomposition時）
+
+```bash
+# ボード作成
+node ~/ai-tools/tools/kanban/dist/cli.js init "{タスク名}"
+
+# サブタスク分解・追加（ワークフローステップを登録）
+node ~/ai-tools/tools/kanban/dist/cli.js add "PRD作成" --priority=high
+node ~/ai-tools/tools/kanban/dist/cli.js add "設計" --priority=high
+node ~/ai-tools/tools/kanban/dist/cli.js add "実装" --priority=high
+node ~/ai-tools/tools/kanban/dist/cli.js add "テスト" --priority=medium
+node ~/ai-tools/tools/kanban/dist/cli.js add "レビュー" --priority=medium
+node ~/ai-tools/tools/kanban/dist/cli.js add "検証" --priority=high
+node ~/ai-tools/tools/kanban/dist/cli.js add "PR作成" --priority=high
 ```
 
 ### Phase 2: ワークフロー決定（3秒）
@@ -188,15 +209,46 @@ workflows:
 ### Phase 4: ワークフロー実行
 
 ```bash
-# TodoWrite で進捗管理
+# Kanban（TaskDecomposition時）またはTodoWrite（Simple時）で進捗管理
+
+# === TaskDecomposition時（Kanban使用） ===
+# 各ステップ開始時
+node ~/ai-tools/tools/kanban/dist/cli.js start {task_id}
+# ステップ実行...
+# 各ステップ完了時
+node ~/ai-tools/tools/kanban/dist/cli.js done {task_id}
+
+# 進捗確認
+node ~/ai-tools/tools/kanban/dist/cli.js list
+
+# === Simple時（TodoWrite使用） ===
 [1/9] /prd 実行中...
 [2/9] Plan モード開始...
-[3/9] /plan 実行中...
 ...
 
 # 各ステップでのエラーハンドリング
 - エラー発生時: ユーザーに通知 → リトライ/スキップ/中断を選択
 - 警告のみ: 自動で継続
+```
+
+#### Kanban進捗管理の自動化
+
+```typescript
+// 各ステップ実行時の自動処理
+async function executeStep(step: WorkflowStep, kanbanTaskId: number) {
+  // 1. Kanbanで開始マーク
+  await exec(`kanban start ${kanbanTaskId}`);
+
+  // 2. ステップ実行
+  const result = await executeCommand(step.command);
+
+  // 3. Kanbanで完了マーク
+  if (result.success) {
+    await exec(`kanban done ${kanbanTaskId}`);
+  }
+
+  return result;
+}
 ```
 
 ### Phase 5: 完了報告

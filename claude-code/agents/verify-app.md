@@ -189,6 +189,174 @@ brew install golangci-lint
 - **実用性**: 修正可能な提案を提示
 - **効率性**: 不要な実行を避ける
 
+## 5段階検証（リリース前）
+
+リリース前の包括的な品質検証を実行する際は、以下の5段階を順次実行:
+
+### Stage 1: Lint検証
+
+```bash
+# Node.js/TypeScript
+npm run lint
+
+# Go
+golangci-lint run
+
+# Python
+ruff check .
+```
+
+**判定基準**:
+- ✅ 通過: エラー0件
+- ⚠️ 警告: 警告のみ
+- ❌ 失敗: エラーあり
+
+### Stage 2: Type Check検証
+
+```bash
+# TypeScript
+npx tsc --noEmit
+
+# Python (with mypy)
+mypy .
+```
+
+**判定基準**:
+- ✅ 通過: 型エラー0件
+- ❌ 失敗: 型エラーあり
+
+### Stage 3: Test実行
+
+```bash
+# Node.js
+npm test -- --coverage
+
+# Go
+go test ./... -cover
+
+# Python
+pytest --cov
+```
+
+**判定基準**:
+- ✅ 通過: 全テスト成功 AND カバレッジ≥70%
+- ⚠️ 警告: 全テスト成功 AND カバレッジ<70%
+- ❌ 失敗: テスト失敗あり
+
+### Stage 4: Security Scan
+
+```bash
+# Node.js
+npm audit
+
+# Go
+govulncheck ./...
+
+# Python
+pip-audit
+```
+
+**判定基準**:
+- ✅ 通過: Critical/High=0
+- ⚠️ 警告: Medium以下のみ
+- ❌ 失敗: Critical/Highあり
+
+### Stage 5: Performance Check（オプション）
+
+```bash
+# Bundle size check
+npm run build && du -sh dist/
+
+# Lighthouse (Web)
+lighthouse --output=json
+```
+
+**判定基準**:
+- ✅ 通過: 基準値以内
+- ⚠️ 警告: 基準値超過（軽微）
+- ❌ 失敗: 基準値大幅超過
+
+## リリース判定
+
+5段階検証の結果に基づき、最終判定を出力:
+
+### ✅ Approved（リリース可）
+
+```
+条件: 全Stage通過（✅のみ）
+
+判定: ✅ APPROVED
+理由: 全ての品質基準を満たしています
+推奨: リリースを進めてください
+```
+
+### ⚠️ Conditional（条件付き承認）
+
+```
+条件: 必須Stage通過 + 警告あり
+
+判定: ⚠️ CONDITIONAL
+理由: 軽微な警告がありますが、リリースは可能です
+警告:
+  - [Stage X]: [警告内容]
+推奨: 警告を確認し、必要に応じて対応後リリース
+```
+
+### ❌ Rejected（リリース不可）
+
+```
+条件: 必須Stage（1-4）で失敗あり
+
+判定: ❌ REJECTED
+理由: 必須の品質基準を満たしていません
+失敗:
+  - [Stage X]: [失敗内容]
+推奨: 問題を修正し、再検証を実行してください
+```
+
+## 検証レポートフォーマット
+
+```markdown
+# 🔍 リリース前検証レポート
+
+## 検証日時
+YYYY-MM-DD HH:MM
+
+## 検証結果サマリー
+
+| Stage | 項目 | 結果 |
+|-------|------|------|
+| 1 | Lint | ✅/⚠️/❌ |
+| 2 | Type Check | ✅/⚠️/❌ |
+| 3 | Test | ✅/⚠️/❌ (カバレッジ: XX%) |
+| 4 | Security | ✅/⚠️/❌ |
+| 5 | Performance | ✅/⚠️/❌ |
+
+## 最終判定
+
+**[✅ APPROVED / ⚠️ CONDITIONAL / ❌ REJECTED]**
+
+## 詳細
+
+### Stage 1: Lint
+[詳細結果]
+
+### Stage 2: Type Check
+[詳細結果]
+
+### Stage 3: Test
+[詳細結果]
+
+### Stage 4: Security
+[詳細結果]
+
+### Stage 5: Performance
+[詳細結果]
+
+## 推奨アクション
+[次のステップ]
+```
+
 ## 完了報告フォーマット
 
 ```

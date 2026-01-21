@@ -45,8 +45,10 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 | 条件 | 判定 | アクション |
 |------|------|-----------|
 | ファイル数<5 AND 行数<300 | **Simple** | 直接実装 |
-| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | 5フェーズワークフロー |
+| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | Kanban + 5フェーズ |
 | 複数プロジェクト横断 | **AgentHierarchy** | PO/Manager/Developer |
+
+**Kanban**: `kanban init/add/start/done` でタスク管理（トークン38%削減）
 
 **詳細**: `claude-code/references/AI-THINKING-ESSENTIALS.md`, `/kenron` 参照
 
@@ -57,7 +59,7 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 | カテゴリ | 件数 | 主要項目 |
 |---------|:----:|----------|
 | コマンド | 17 | `/flow`（万能）, `/dev`, `/review`, `/commit-push-pr` |
-| スキル | 22 | レビュー系5, 開発系6, インフラ系5, ユーティリティ6 |
+| スキル | 23 | レビュー系5, 開発系6, インフラ系5, ユーティリティ7 |
 | エージェント | 7 | po/manager/developer/explore/code-simplifier/verify-app/workflow |
 | フック | 7 | session-start/end, user-prompt-submit, pre/post-tool-use, stop, pre-compact |
 | ガイドライン | 29 | summaries/4, languages/6, common/12, design/2, infrastructure/5 |

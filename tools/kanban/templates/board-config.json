@@ -1,0 +1,11 @@
+{
+  "id": "",
+  "name": "",
+  "project_path": "",
+  "created_at": 0,
+  "updated_at": 0,
+  "wip_limit": {
+    "in_progress": 1
+  },
+  "archive_after_days": 7
+}
