@@ -4,6 +4,12 @@
 
 set -euo pipefail
 
+# jq前提条件チェック
+if ! command -v jq &> /dev/null; then
+    echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+    exit 1
+fi
+
 # JSON入力を読み込む
 INPUT=$(cat)
 
@@ -24,9 +30,15 @@ mkdir -p "$LOG_DIR"
 # セッションログファイル
 LOG_FILE="$LOG_DIR/$(date +%Y%m%d).log"
 
-# ログエントリ作成
+# パフォーマンス指標計算
+TOKENS_PER_MINUTE=0
+if [ "$DURATION" -gt 0 ]; then
+  TOKENS_PER_MINUTE=$(echo "scale=1; $TOTAL_TOKENS * 60 / $DURATION" | bc 2>/dev/null || echo "0")
+fi
+
+# ログエントリ作成（パフォーマンス指標追加）
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-LOG_ENTRY="[$TIMESTAMP] Session: $SESSION_ID | Project: $PROJECT_NAME | Messages: $TOTAL_MESSAGES | Tokens: $TOTAL_TOKENS | Duration: ${DURATION}s"
+LOG_ENTRY="[$TIMESTAMP] Session: $SESSION_ID | Project: $PROJECT_NAME | Messages: $TOTAL_MESSAGES | Tokens: $TOTAL_TOKENS | Duration: ${DURATION}s | TPM: ${TOKENS_PER_MINUTE}"
 
 # ログに追記
 echo "$LOG_ENTRY" >> "$LOG_FILE"

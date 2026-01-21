@@ -5,6 +5,12 @@
 
 set -euo pipefail
 
+# jq前提条件チェック
+if ! command -v jq &> /dev/null; then
+    echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+    exit 1
+fi
+
 # JSON入力を読み込む
 INPUT=$(cat)
 

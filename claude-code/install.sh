@@ -157,7 +157,8 @@ setup_env_interactive() {
         update_env_var "GITLAB_API_URL" "$gitlab_url"
     fi
 
-    read -p "GITLAB_PERSONAL_ACCESS_TOKEN: " gitlab_token
+    read -srp "GITLAB_PERSONAL_ACCESS_TOKEN: " gitlab_token
+    echo
     if [ -n "$gitlab_token" ]; then
         update_env_var "GITLAB_PERSONAL_ACCESS_TOKEN" "$gitlab_token"
     fi
@@ -173,7 +174,8 @@ setup_env_interactive() {
         update_env_var "CONFLUENCE_EMAIL" "$confluence_email"
     fi
 
-    read -p "CONFLUENCE_API_TOKEN: " confluence_token
+    read -srp "CONFLUENCE_API_TOKEN: " confluence_token
+    echo
     if [ -n "$confluence_token" ]; then
         update_env_var "CONFLUENCE_API_TOKEN" "$confluence_token"
     fi
@@ -189,13 +191,15 @@ setup_env_interactive() {
         update_env_var "JIRA_EMAIL" "$jira_email"
     fi
 
-    read -p "JIRA_API_TOKEN: " jira_token
+    read -srp "JIRA_API_TOKEN: " jira_token
+    echo
     if [ -n "$jira_token" ]; then
         update_env_var "JIRA_API_TOKEN" "$jira_token"
     fi
 
     # OpenAI
-    read -p "OPENAI_API_KEY (o3 search 用): " openai_key
+    read -srp "OPENAI_API_KEY (o3 search 用): " openai_key
+    echo
     if [ -n "$openai_key" ]; then
         update_env_var "OPENAI_API_KEY" "$openai_key"
     fi

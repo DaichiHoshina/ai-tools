@@ -65,6 +65,14 @@ color: orange
 - **Read/Bash/Glob/Grep** - 情報収集
 - **TodoWrite** - 進捗管理
 
+## Timeout/Retry 仕様
+
+| 項目 | 値 |
+|------|-----|
+| タイムアウト | 30分 |
+| リトライ | 2回 |
+| 理由 | 実装タスクは時間がかかる。失敗時は2回までリトライ |
+
 ## 絶対禁止
 
 - ❌ Git書き込み操作（add/commit/push）
@@ -77,6 +85,52 @@ color: orange
 - **型安全**: any型禁止、strict mode
 - **SOLID原則**: 単一責任、依存性注入
 - **テスト**: AAA パターン、カバレッジ意識
+
+## Worktree共有メカニズム
+
+PO→Manager→Developer間のデータ引き継ぎはJSON形式で行う。
+
+### 受け取るコンテキスト（promptに含まれる）
+
+```json
+{
+  "developer_id": "dev1",
+  "worktree": {
+    "path": "/path/to/wt-feat-xxx",
+    "branch": "feature/xxx",
+    "base_branch": "main"
+  },
+  "task": {
+    "id": "task-001",
+    "title": "LoginButton実装",
+    "description": "ログインボタンコンポーネントを作成",
+    "files": ["src/components/LoginButton.tsx"],
+    "dependencies": []
+  },
+  "constraints": {
+    "timeout_minutes": 30,
+    "max_retries": 2
+  }
+}
+```
+
+### フィールド説明
+
+| フィールド | 説明 |
+|-----------|------|
+| `developer_id` | 割り当てられたID（dev1-4） |
+| `worktree.path` | 作業ディレクトリの絶対パス |
+| `worktree.branch` | 作業ブランチ名 |
+| `task.id` | タスク識別子（ログ用） |
+| `task.files` | 変更対象ファイル一覧 |
+| `task.dependencies` | 依存する他タスクID（あれば待機） |
+| `constraints` | タイムアウト・リトライ制約 |
+
+### Worktree未指定時の動作
+
+`worktree` が未指定の場合、現在のディレクトリで作業する。
+
+---
 
 ## 完了報告フォーマット
 

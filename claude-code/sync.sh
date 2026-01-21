@@ -17,6 +17,17 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 
+# jq存在チェック（settings.json処理に必要）
+check_jq() {
+    if ! command -v jq &> /dev/null; then
+        print_warning "jq がインストールされていません（brew install jq）"
+        print_info "sed fallback モードで動作します"
+        return 1
+    fi
+    return 0
+}
+HAS_JQ=$(check_jq && echo "true" || echo "false")
+
 # =============================================================================
 # Utility Functions
 # =============================================================================
@@ -31,6 +42,11 @@ confirm() {
     local message="$1"
     read -p "$message [y/N]: " answer
     [[ "$answer" =~ ^[Yy]$ ]]
+}
+
+# sed特殊文字エスケープ関数
+escape_for_sed() {
+    printf '%s\n' "$1" | sed 's/[&/\]/\\&/g'
 }
 
 # =============================================================================
@@ -136,6 +152,21 @@ sync_settings_template() {
     content=$(echo "$content" | sed -E 's/ATATT3x[A-Za-z0-9_=-]+/__CONFLUENCE_API_TOKEN__/g')
     content=$(echo "$content" | sed -E 's/sk-proj-[A-Za-z0-9_-]+/__OPENAI_API_KEY__/g')
     content=$(echo "$content" | sed -E 's/BSA[A-Za-z0-9_-]+/__BRAVE_API_KEY__/g')
+
+    # 秘密情報マスク強化: .envからキー名ベースで検出（*_KEY, *_TOKEN, *_SECRET, *_PASSWORD）
+    if [ -f "$HOME/.env" ]; then
+        while IFS='=' read -r key value; do
+            # コメント行と空行をスキップ
+            [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+            # 機密キー名パターンをチェック
+            if [[ "$key" =~ _(KEY|TOKEN|SECRET|PASSWORD)$ ]] && [ -n "$value" ]; then
+                local escaped_value
+                escaped_value=$(escape_for_sed "$value")
+                local placeholder="__${key}__"
+                content=$(echo "$content" | sed "s|$escaped_value|$placeholder|g")
+            fi
+        done < "$HOME/.env"
+    fi
 
     mkdir -p "$SCRIPT_DIR/templates"
     echo "$content" > "$SCRIPT_DIR/templates/settings.json.template"

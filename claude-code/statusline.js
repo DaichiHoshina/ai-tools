@@ -1,9 +1,15 @@
 #!/usr/bin/env node
-// statusline.js - Claude Code 2.1.6+ 対応版（legacy fallback削除）
+// statusline.js - Claude Code 2.1.6+ 対応版（P2改善: キャッシュ＆フォールバック強化）
 
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+
+// キャッシュ設定（5秒TTL）
+const CACHE_TTL_MS = 5000;
+let cache = {
+  userCount: { value: 0, timestamp: 0, sessionId: null },
+};
 
 // Read JSON from stdin
 let input = "";
@@ -19,17 +25,15 @@ process.stdin.on("end", async () => {
 });
 
 async function displayStatusLine(data) {
-  try {
-    // Extract values
-    const currentDir = path.basename(
-      data.workspace?.current_dir || data.cwd || ".",
-    );
-    const sessionId = data.session_id;
+  // 部分的な情報でも表示できるようにフォールバック値を設定
+  let tokenDisplay = "0";
+  let percentage = 0;
+  let percentageColor = "\x1b[32m";
+  let contextWarning = "";
 
+  try {
     // Use context_window data (Claude Code 2.1.6+ required)
     const contextWindow = data.context_window || {};
-    let percentage = 0;
-    let totalTokens = 0;
 
     if (contextWindow.used_percentage !== undefined) {
       percentage = Math.round(contextWindow.used_percentage);
@@ -37,16 +41,15 @@ async function displayStatusLine(data) {
       // トークン計算: total_input_tokens + total_output_tokens を使用
       const inputTokens = contextWindow.total_input_tokens || 0;
       const outputTokens = contextWindow.total_output_tokens || 0;
-      totalTokens = inputTokens + outputTokens;
+      const totalTokens = inputTokens + outputTokens;
+      tokenDisplay = formatTokenCount(totalTokens);
     }
-    // Note: Legacy fallback removed - Claude Code 2.1.6+ required
+  } catch (e) {
+    // トークン取得失敗時はデフォルト値を使用
+  }
 
-    // Format token display
-    const tokenDisplay = formatTokenCount(totalTokens);
-
+  try {
     // Color coding for percentage (v2.1.6+: remaining_percentage aware)
-    let percentageColor = "\x1b[32m"; // Green (remaining > 30%)
-    let contextWarning = "";
     if (percentage >= 70) {
       percentageColor = "\x1b[33m"; // Yellow (remaining 30-10%)
       contextWarning = " ⚠️";
@@ -56,37 +59,17 @@ async function displayStatusLine(data) {
       contextWarning = " 🔴/reload";
     }
 
-    // Get current directory path relative to home
-    const fullPath = data.workspace?.current_dir || data.cwd || ".";
-    const homePath = process.env.HOME;
-    let displayPath = fullPath;
-
-    if (fullPath.startsWith(homePath)) {
-      displayPath = "~" + fullPath.slice(homePath.length);
-    }
-
-    // Get username and hostname
-    const username = process.env.USER || "user";
-    const hostname = os.hostname().split(".")[0]; // Short hostname
-
-    // Get git branch
-    const gitBranch = await getGitBranch(fullPath);
-
-    // Get response counter from session
-    const responseCounter = await getResponseCounter(sessionId);
-
-    // Get current skill from state file
-    const currentSkill = getCurrentSkill();
-
     // 右寄せ表示（ターミナル幅に合わせてパディング）
     const statusText = `${tokenDisplay} | ${percentage}%${contextWarning}`;
     const termWidth = process.stdout.columns || 80;
-    const visibleLength = statusText.replace(/\x1b\[[0-9;]*m/g, '').length;
+    const visibleLength = statusText.replace(/\x1b\[[0-9;]*m/g, "").length;
     const padding = Math.max(0, termWidth - visibleLength - 2);
-    console.log(`${' '.repeat(padding)}${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m${contextWarning}`);
+    console.log(
+      `${" ".repeat(padding)}${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m${contextWarning}`,
+    );
   } catch (error) {
-    // Fallback status line on error
-    console.log("[Error] 📁 . | 🪙 0 | 0%");
+    // 最終フォールバック
+    console.log(`${tokenDisplay} | ${percentage}%`);
   }
 }
 
@@ -125,7 +108,21 @@ async function getResponseCounter(sessionId) {
   try {
     if (!sessionId) return 1;
 
-    const stateFile = path.join(process.env.HOME, ".claude", "state", "session-counter.json");
+    // キャッシュチェック（5秒TTL）
+    const now = Date.now();
+    if (
+      cache.userCount.sessionId === sessionId &&
+      now - cache.userCount.timestamp < CACHE_TTL_MS
+    ) {
+      return cache.userCount.value;
+    }
+
+    const stateFile = path.join(
+      process.env.HOME,
+      ".claude",
+      "state",
+      "session-counter.json",
+    );
     const stateDir = path.dirname(stateFile);
 
     // Ensure state directory exists
@@ -153,7 +150,12 @@ async function getResponseCounter(sessionId) {
     }
 
     // Return counter relative to session start (1-based)
-    return Math.max(1, totalCount - state.startCount + 1);
+    const counter = Math.max(1, totalCount - state.startCount + 1);
+
+    // キャッシュ更新
+    cache.userCount = { value: counter, timestamp: now, sessionId };
+
+    return counter;
   } catch (error) {
     return 1;
   }
