@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/opt/homebrew/bin/bash
 # UserPromptSubmit Hook - スキル推奨精度70%→90%強化版
 # プロンプト + ファイルパス + エラーログから技術スタックを階層的に検出
 # P1実装: ファイルパス検出・エラーログ検出・階層的優先度制御
@@ -43,6 +43,12 @@ detect_from_files() {
     ['tailwind\\.config\\.(js|ts)$']="tailwind:"
     ['openapi\\.ya?ml$|swagger\\.ya?ml$']=":api-design"
     ['_test\\.go$|\\.test\\.(ts|tsx)$|\\.spec\\.(ts|tsx)$']=":docs-test-review"
+    # Phase 1-1: 追加パターン
+    ['\\.py$|requirements\\.txt$|pyproject\\.toml$']="python:python-backend"
+    ['\\.rs$|Cargo\\.toml$']="rust:rust-backend"
+    ['\\.java$|pom\\.xml$|build\\.gradle$']="java:java-backend"
+    ['\\.vue$|nuxt\\.config\\.(js|ts)$']="vue:vue-best-practices"
+    ['\\.svelte$|svelte\\.config\\.js$']="svelte:svelte-best-practices"
   )
 
   for pattern in "${!file_patterns[@]}"; do
@@ -72,6 +78,12 @@ detect_from_keywords() {
     ['architecture|アーキテクチャ|設計|ddd|domain']=":clean-architecture-ddd"
     ['api.*design|rest.*api|graphql']=":api-design"
     ['microservices|マイクロサービス|monorepo']=":microservices-monorepo"
+    # Phase 1-1: 追加キーワードパターン
+    ['python|django|flask|fastapi|\\.py|pip|poetry']="python:python-backend"
+    ['rust|cargo|rustc|\\.rs']="rust:rust-backend"
+    ['java|spring|maven|gradle|\\.java|jvm']="java:java-backend"
+    ['vue|vuex|pinia|nuxt|\\.vue']="vue:vue-best-practices"
+    ['svelte|sveltekit|\\.svelte']="svelte:svelte-best-practices"
   )
 
   for keywords in "${!keyword_patterns[@]}"; do
@@ -120,6 +132,25 @@ detect_from_errors() {
   if echo "$prompt" | grep -qiE 'undefined:.*|cannot use.*as.*in|go build.*failed'; then
     detected_skills["go-backend"]=1
     additional_context="${additional_context}\\n- ⚠️ Go compilation error detected"
+  fi
+
+  # Phase 1-1: 追加エラーパターン
+  # Python エラー
+  if echo "$prompt" | grep -qiE 'modulenotfounderror|importerror|syntaxerror.*python|indentationerror|pip.*error'; then
+    detected_skills["python-backend"]=1
+    additional_context="${additional_context}\\n- ⚠️ Python error detected"
+  fi
+
+  # Rust エラー
+  if echo "$prompt" | grep -qiE 'cargo build.*failed|rustc.*error|cannot find.*crate|borrow checker'; then
+    detected_skills["rust-backend"]=1
+    additional_context="${additional_context}\\n- ⚠️ Rust compilation error detected"
+  fi
+
+  # Java エラー
+  if echo "$prompt" | grep -qiE 'java\\.lang\\.|maven.*error|gradle.*failed|nullpointerexception|classnotfoundexception'; then
+    detected_skills["java-backend"]=1
+    additional_context="${additional_context}\\n- ⚠️ Java error detected"
   fi
 
   # セキュリティ関連エラー
