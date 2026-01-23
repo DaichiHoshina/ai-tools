@@ -11,6 +11,31 @@ let cache = {
   userCount: { value: 0, timestamp: 0, sessionId: null },
 };
 
+// Material Design 3 準拠: 8状態定義（色覚障害対応: 色+シンボル併用）
+const STATUS_STATES = {
+  normal: { color: "\x1b[32m", icon: "◯", label: "Ready", threshold: 0 },
+  info: { color: "\x1b[34m", icon: "ℹ", label: "Info", threshold: 0 },
+  success: { color: "\x1b[32m", icon: "✓", label: "Success", threshold: 0 },
+  warning: { color: "\x1b[33m", icon: "▲", label: "Warning", threshold: 70 },
+  critical: { color: "\x1b[31m", icon: "✕", label: "Critical", threshold: 90 },
+  error: { color: "\x1b[31m", icon: "❌", label: "Error", threshold: 0 },
+  loading: { color: "\x1b[36m", icon: "⏳", label: "Loading", threshold: 0 },
+  disabled: { color: "\x1b[90m", icon: "⊗", label: "Disabled", threshold: 0 },
+};
+
+// ANSI Reset
+const RESET = "\x1b[0m";
+
+// 状態判定関数
+function getStatusState(percentage) {
+  if (percentage >= STATUS_STATES.critical.threshold) {
+    return STATUS_STATES.critical;
+  } else if (percentage >= STATUS_STATES.warning.threshold) {
+    return STATUS_STATES.warning;
+  }
+  return STATUS_STATES.normal;
+}
+
 // Read JSON from stdin
 let input = "";
 process.stdin.on("data", (chunk) => (input += chunk));
@@ -66,19 +91,31 @@ async function displayStatusLine(data) {
   }
 
   try {
-    // Color coding for percentage (v2.1.6+: remaining_percentage aware)
-    if (percentage >= 70) {
-      percentageColor = "\x1b[33m"; // Yellow (remaining 30-10%)
-      contextWarning = " ⚠️";
-    }
-    if (percentage >= 90) {
-      percentageColor = "\x1b[31m"; // Red (remaining < 10%)
-      contextWarning = " 🔴/reload";
+    // Material Design 3: 状態判定（色+シンボル併用で色覚障害対応）
+    const state = getStatusState(percentage);
+    percentageColor = state.color;
+
+    // シンボルと警告メッセージを状態に応じて設定
+    let stateIcon = state.icon;
+    if (state === STATUS_STATES.warning) {
+      contextWarning = ` ${stateIcon} Warning`;
+    } else if (state === STATUS_STATES.critical) {
+      contextWarning = ` ${stateIcon} /reload`;
     }
 
     // 右寄せ表示（ターミナル幅に合わせてパディング）
-    const statusText = `${tokenDisplay} | ${percentage}%${contextWarning}`;
+    // レスポンシブ対応: 幅60未満の場合はコンパクト表示
     const termWidth = process.stdout.columns || 80;
+    let statusText;
+
+    if (termWidth < 60) {
+      // コンパクト表示（小画面対応）
+      statusText = `${percentage}%${contextWarning ? " " + stateIcon : ""}`;
+    } else {
+      // 通常表示
+      statusText = `${tokenDisplay} | ${percentage}%${contextWarning}`;
+    }
+
     const visibleLength = statusText.replace(/\x1b\[[0-9;]*m/g, "").length;
     const padding = Math.max(0, termWidth - visibleLength - 2);
     console.log(

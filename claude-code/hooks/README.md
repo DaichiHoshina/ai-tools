@@ -6,6 +6,97 @@ Claude Code 1.0.82+ の Hooks 機能を活用した自動化スクリプト群�
 
 Hooks は Claude Code のイベント（セッション開始、ツール実行前、完了時など）に自動的にスクリプトを実行できる機能です。
 
+## JSON Schema 定義
+
+### 入力スキーマ（stdin から受け取る JSON）
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HookInput",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "現在のセッションID"
+    },
+    "prompt": {
+      "type": "string",
+      "description": "ユーザーが入力したプロンプト（UserPromptSubmit時）"
+    },
+    "tool_name": {
+      "type": "string",
+      "description": "実行されるツール名（PreToolUse/PostToolUse時）"
+    },
+    "tool_input": {
+      "type": "object",
+      "description": "ツールへの入力パラメータ"
+    },
+    "mcp_servers": {
+      "type": "object",
+      "description": "有効なMCPサーバー情報（SessionStart時）"
+    }
+  }
+}
+```
+
+### 出力スキーマ（stdout に出力する JSON）
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HookOutput",
+  "type": "object",
+  "required": ["systemMessage"],
+  "properties": {
+    "systemMessage": {
+      "type": "string",
+      "minLength": 1,
+      "description": "ユーザーに表示されるメッセージ（1行推奨）"
+    },
+    "additionalContext": {
+      "type": "string",
+      "description": "Claude AIに渡される追加コンテキスト（Markdown形式、改行区切りセクション）"
+    }
+  },
+  "additionalProperties": false
+}
+```
+
+### エラーレスポンススキーマ
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HookError",
+  "type": "object",
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "type": "string",
+      "description": "エラーメッセージ"
+    }
+  }
+}
+```
+
+### 出力例
+
+**成功時**:
+```json
+{
+  "systemMessage": "🔍 Tech stack detected: go | Skills: go-backend",
+  "additionalContext": "# Auto-Detected Configuration\n\n**Languages**: go"
+}
+```
+
+**エラー時**:
+```json
+{
+  "error": "jq not installed. Please run: brew install jq"
+}
+```
+
 ## 実装済みフック
 
 ### 1. session-start.sh

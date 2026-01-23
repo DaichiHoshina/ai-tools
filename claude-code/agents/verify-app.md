@@ -99,6 +99,73 @@ go build -v ./... 2>&1 | tee build-output.txt
 - ✅ `mcp__serena__read_file` でプロジェクトファイル確認
 - ✅ `mcp__serena__execute_shell_command` でコマンド実行
 
+## テストカバレッジ基準
+
+### 判定基準（定量）
+
+| 結果 | テスト | カバレッジ | 判定 |
+|------|--------|----------|------|
+| ✅ 通過 | 100% 成功 | ≥70% | Approved |
+| ⚠️ 警告 | 100% 成功 | 50-70% | Conditional |
+| ❌ 失敗 | 失敗あり | <50% | Rejected |
+
+### 測定コマンド
+
+**Node.js / TypeScript**:
+```bash
+# カバレッジ付きテスト実行
+npm test -- --coverage --coverageReporters json
+
+# カバレッジ取得（coverage/coverage-summary.json）
+COVERAGE=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+echo "Coverage: ${COVERAGE}%"
+
+# 判定
+if (( $(echo "$COVERAGE >= 70" | bc -l) )); then
+    echo "✅ Passed"
+elif (( $(echo "$COVERAGE >= 50" | bc -l) )); then
+    echo "⚠️ Warning: Coverage below 70%"
+else
+    echo "❌ Failed: Coverage below 50%"
+fi
+```
+
+**Go**:
+```bash
+# カバレッジ付きテスト実行
+go test ./... -coverprofile=coverage.out
+
+# カバレッジ取得
+COVERAGE=$(go tool cover -func=coverage.out | tail -n 1 | awk '{print $3}' | sed 's/%//')
+echo "Coverage: ${COVERAGE}%"
+
+# 判定
+if (( $(echo "$COVERAGE >= 70" | bc -l) )); then
+    echo "✅ Passed"
+elif (( $(echo "$COVERAGE >= 50" | bc -l) )); then
+    echo "⚠️ Warning: Coverage below 70%"
+else
+    echo "❌ Failed: Coverage below 50%"
+fi
+```
+
+**Python**:
+```bash
+# カバレッジ付きテスト実行
+pytest --cov=. --cov-report=json
+
+# カバレッジ取得（coverage.json）
+COVERAGE=$(jq '.totals.percent_covered' coverage.json)
+echo "Coverage: ${COVERAGE}%"
+```
+
+### カバレッジ例外（許容ケース）
+
+以下は70%基準の例外として扱う：
+- テストコード自体（`*_test.go`, `*.test.ts`）
+- 生成コード（`*.gen.go`, `*.generated.ts`）
+- 外部連携コード（API クライアント等）
+
 ## 出力フォーマット
 
 ### 検証開始時
