@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TodoWrite, Task, AskUserQuestion, Skill, mcp__serena__*
+allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Task, AskUserQuestion, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*
 model: sonnet
 description: ワークフロー自動化 - タスクタイプを自動判定して最適なワークフローを実行
 ---
@@ -61,32 +61,34 @@ Guard関手による操作分類:
 - 変更ファイルあり → /prdスキップ、/devから開始を提案
 - 変更なし → 新規タスクとして最初から実行
 
-### 3. ComplexityCheck射（Kanban自動化）
+### 3. ComplexityCheck射（Tasks自動化）
 
 ```
 ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 ```
 
-| 条件 | 判定 | Kanbanアクション |
+| 条件 | 判定 | Tasksアクション |
 |------|------|-----------------|
-| ファイル数<5 AND 行数<300 | **Simple** | Kanban不使用 |
-| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | **kanban init → add → start/done 自動** |
-| 複数プロジェクト横断 | **AgentHierarchy** | PO経由でKanban管理 |
+| ファイル数<5 AND 行数<300 | **Simple** | Tasks不使用 |
+| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | **TaskCreate → TaskUpdate(in_progress/completed)** |
+| 複数プロジェクト横断 | **AgentHierarchy** | PO経由でTasks管理 |
 
 **TaskDecomposition時の自動フロー**:
-```bash
-# 1. ボード初期化
-kanban init "{タスク名}"
+```
+# 1. サブタスク作成（依存関係付き）
+TaskCreate(subject: "サブタスク1", description: "詳細", activeForm: "サブタスク1を実行中")
+TaskCreate(subject: "サブタスク2", description: "詳細", activeForm: "サブタスク2を実行中")
 
-# 2. サブタスク自動分解・追加
-kanban add "サブタスク1" --priority=high
-kanban add "サブタスク2" --priority=medium
-...
+# 2. 依存関係設定
+TaskUpdate(taskId: "2", addBlockedBy: ["1"])
 
 # 3. 各ステップ実行時
-kanban start {id}  # 開始
+TaskUpdate(taskId: "1", status: "in_progress")  # 開始
 # ... 実行 ...
-kanban done {id}   # 完了
+TaskUpdate(taskId: "1", status: "completed")    # 完了
+
+# セッション間共有（任意）
+CLAUDE_CODE_TASK_LIST_ID=xxx で複数セッション間で共有可能
 ```
 
 ### 4. Plan モード判断

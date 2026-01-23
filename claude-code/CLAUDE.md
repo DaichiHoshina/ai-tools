@@ -45,10 +45,14 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 | 条件 | 判定 | アクション |
 |------|------|-----------|
 | ファイル数<5 AND 行数<300 | **Simple** | 直接実装 |
-| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | Kanban + 5フェーズ |
+| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | Tasks + 5フェーズ |
 | 複数プロジェクト横断 | **AgentHierarchy** | PO/Manager/Developer |
 
-**Kanban**: `kanban init/add/start/done` でタスク管理（トークン38%削減）
+**Tasks**: Claude Codeネイティブのタスク管理機能
+- `TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet` で操作
+- 依存関係: `blockedBy` / `blocks` でタスク間の順序を管理
+- セッション共有: `CLAUDE_CODE_TASK_LIST_ID=xxx` で複数セッション間で共有可能
+- UI表示: `ctrl+t` で表示/非表示を切替
 
 **詳細**: `claude-code/references/AI-THINKING-ESSENTIALS.md`, `/kenron` 参照
 
