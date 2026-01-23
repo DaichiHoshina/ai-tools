@@ -19,8 +19,25 @@ process.stdin.on("end", async () => {
     const data = JSON.parse(input);
     await displayStatusLine(data);
   } catch (error) {
-    // Fallback status line on error
-    console.log("[Error] 📁 . | 🪙 0 | 0%");
+    // 3段階エラーハンドリング（Critical #3対策）
+
+    // Level 1: ユーザーフレンドリーなメッセージ（stdout）
+    console.log("[Status Unavailable]");
+
+    // Level 2: デバッグ情報（stderr、DEBUG_STATUSLINE環境変数時）
+    if (process.env.DEBUG_STATUSLINE) {
+      console.error(`[DEBUG] Error: ${error.message}`);
+      console.error(`[DEBUG] Stack: ${error.stack}`);
+      console.error(`[DEBUG] Input length: ${input.length} bytes`);
+    }
+
+    // Level 3: 復旧ステップ提案（SUPPRESS_HINTS未設定時）
+    if (!process.env.SUPPRESS_HINTS) {
+      console.error("💡 復旧方法:");
+      console.error("  1. /reload を実行");
+      console.error("  2. ~/.claude/sync.sh from-local で更新");
+      console.error("  3. Claude Code を再起動");
+    }
   }
 });
 
@@ -75,7 +92,12 @@ async function displayStatusLine(data) {
 
 function getCurrentSkill() {
   try {
-    const stateFile = path.join(process.env.HOME, ".claude", "state", "current-skill.txt");
+    const stateFile = path.join(
+      process.env.HOME,
+      ".claude",
+      "state",
+      "current-skill.txt",
+    );
     if (fs.existsSync(stateFile)) {
       const skill = fs.readFileSync(stateFile, "utf8").trim();
       return skill || "none";

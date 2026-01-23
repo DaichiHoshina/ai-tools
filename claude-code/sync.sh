@@ -17,6 +17,16 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 
+# Load security library (Critical #4, #7対策)
+LIB_DIR="${SCRIPT_DIR}/lib"
+# shellcheck source=lib/security-functions.sh
+source "${LIB_DIR}/security-functions.sh" 2>/dev/null || {
+    # Fallback: escape_for_sed を直接定義
+    escape_for_sed() {
+        printf '%s\n' "$1" | sed 's/[&/\]/\\&/g'
+    }
+}
+
 # jq存在チェック（settings.json処理に必要）
 check_jq() {
     if ! command -v jq &> /dev/null; then
@@ -44,10 +54,12 @@ confirm() {
     [[ "$answer" =~ ^[Yy]$ ]]
 }
 
-# sed特殊文字エスケープ関数
-escape_for_sed() {
-    printf '%s\n' "$1" | sed 's/[&/\]/\\&/g'
-}
+# sed特殊文字エスケープ関数（セキュリティライブラリで定義済みの場合はスキップ）
+if ! command -v escape_for_sed &> /dev/null; then
+    escape_for_sed() {
+        printf '%s\n' "$1" | sed 's/[&/\]/\\&/g'
+    }
+fi
 
 # =============================================================================
 # Sync: to-local (リポジトリ → ローカル)
@@ -74,10 +86,20 @@ sync_to_local() {
 
         if [ -e "$src" ]; then
             if [ -d "$src" ]; then
-                rm -rf "$dst"
-                cp -r "$src" "$dst"
+                # 例外伝播の明示化（Critical #7対策）
+                if ! rm -rf "$dst"; then
+                    print_error "削除失敗: $dst"
+                    return 1
+                fi
+                if ! cp -r "$src" "$dst"; then
+                    print_error "コピー失敗: $src -> $dst"
+                    return 1
+                fi
             else
-                cp "$src" "$dst"
+                if ! cp "$src" "$dst"; then
+                    print_error "コピー失敗: $src -> $dst"
+                    return 1
+                fi
             fi
             print_success "$item"
         else
@@ -97,7 +119,10 @@ sync_from_local() {
 
     # CLAUDE.md
     if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
-        cp "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/CLAUDE.md"
+        if ! cp "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/CLAUDE.md"; then
+            print_error "コピー失敗: CLAUDE.md"
+            return 1
+        fi
         print_success "CLAUDE.md"
     fi
 
@@ -105,8 +130,15 @@ sync_from_local() {
     local dirs=("commands" "guidelines" "skills" "agents" "scripts" "output-styles" "hooks")
     for dir in "${dirs[@]}"; do
         if [ -d "$CLAUDE_DIR/$dir" ]; then
-            rm -rf "$SCRIPT_DIR/$dir"
-            cp -r "$CLAUDE_DIR/$dir" "$SCRIPT_DIR/$dir"
+            # 例外伝播の明示化（Critical #7対策）
+            if ! rm -rf "$SCRIPT_DIR/$dir"; then
+                print_error "削除失敗: $SCRIPT_DIR/$dir"
+                return 1
+            fi
+            if ! cp -r "$CLAUDE_DIR/$dir" "$SCRIPT_DIR/$dir"; then
+                print_error "コピー失敗: $dir"
+                return 1
+            fi
             print_success "$dir/"
         fi
     done

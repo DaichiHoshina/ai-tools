@@ -18,6 +18,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 ENV_FILE="$HOME/.env"
 
+# Load security and i18n libraries (Critical #1, #2対策)
+LIB_DIR="${SCRIPT_DIR}/lib"
+# shellcheck source=lib/security-functions.sh
+source "${LIB_DIR}/security-functions.sh" 2>/dev/null || true
+# shellcheck source=lib/i18n.sh
+source "${LIB_DIR}/i18n.sh" 2>/dev/null || true
+
 # =============================================================================
 # Utility Functions
 # =============================================================================
@@ -222,13 +229,13 @@ update_env_var() {
 }
 
 # =============================================================================
-# Install Claude Code Settings
+# Install Claude Code Settings (分割リファクタリング版 - Critical #1, #2対策)
 # =============================================================================
 
-install_settings() {
-    print_header "Claude Code 設定のインストール"
+# 1. ディレクトリ構造のセットアップ
+setup_directories() {
+    print_info "ディレクトリ構造を作成中..."
 
-    # Create .claude directory if not exists
     mkdir -p "$CLAUDE_DIR"
     mkdir -p "$CLAUDE_DIR/guidelines/common"
     mkdir -p "$CLAUDE_DIR/guidelines/languages"
@@ -240,11 +247,80 @@ install_settings() {
     mkdir -p "$CLAUDE_DIR/commands"
     mkdir -p "$CLAUDE_DIR/agents"
     mkdir -p "$CLAUDE_DIR/skills"
+    mkdir -p "$CLAUDE_DIR/lib"
 
-    # Detect node path
-    local node_bin_path
-    node_bin_path="$(dirname "$(which node)")"
-    print_info "Node.js パス: $node_bin_path"
+    print_success "ディレクトリ構造を作成しました"
+}
+
+# 2. ディレクトリコンテンツのコピー（重複削減 - Critical #2対策）
+copy_directory_contents() {
+    print_info "ファイルをコピー中..."
+
+    # 共通関数: ディレクトリ内の全ファイルをコピー
+    copy_files() {
+        local src_dir="$1"
+        local dst_dir="$2"
+        local label="$3"
+
+        for file in "$src_dir"/*; do
+            if [ -f "$file" ]; then
+                local filename=$(basename "$file")
+                cp "$file" "$dst_dir/$filename"
+            fi
+        done
+        print_success "${label} をコピーしました"
+    }
+
+    # CLAUDE.md（常に上書き）
+    cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+    print_success "CLAUDE.md をコピーしました"
+
+    # Guidelines（各カテゴリ）
+    copy_files "$SCRIPT_DIR/guidelines/common" "$CLAUDE_DIR/guidelines/common" "guidelines/common"
+    copy_files "$SCRIPT_DIR/guidelines/languages" "$CLAUDE_DIR/guidelines/languages" "guidelines/languages"
+    copy_files "$SCRIPT_DIR/guidelines/design" "$CLAUDE_DIR/guidelines/design" "guidelines/design"
+    copy_files "$SCRIPT_DIR/guidelines/infrastructure" "$CLAUDE_DIR/guidelines/infrastructure" "guidelines/infrastructure"
+    copy_files "$SCRIPT_DIR/guidelines/summaries" "$CLAUDE_DIR/guidelines/summaries" "guidelines/summaries"
+    copy_files "$SCRIPT_DIR/guidelines-archive/design" "$CLAUDE_DIR/guidelines-archive/design" "guidelines-archive/design"
+
+    # Commands
+    copy_files "$SCRIPT_DIR/commands" "$CLAUDE_DIR/commands" "commands"
+
+    # Agents
+    copy_files "$SCRIPT_DIR/agents" "$CLAUDE_DIR/agents" "agents"
+
+    # Skills（ディレクトリ構造ごとコピー）
+    rm -rf "$CLAUDE_DIR/skills"
+    cp -r "$SCRIPT_DIR/skills" "$CLAUDE_DIR/skills"
+    print_success "skills をコピーしました"
+
+    # Scripts
+    for file in "$SCRIPT_DIR/scripts/"*; do
+        if [ -f "$file" ]; then
+            local filename=$(basename "$file")
+            cp "$file" "$CLAUDE_DIR/scripts/$filename"
+            chmod +x "$CLAUDE_DIR/scripts/$filename"
+        fi
+    done
+    print_success "scripts をコピーしました"
+
+    # Lib（セキュリティライブラリ・i18n）
+    if [ -d "$SCRIPT_DIR/lib" ]; then
+        copy_files "$SCRIPT_DIR/lib" "$CLAUDE_DIR/lib" "lib"
+        chmod +x "$CLAUDE_DIR/lib/"*.sh 2>/dev/null || true
+    fi
+
+    # statusline.js
+    cp "$SCRIPT_DIR/statusline.js" "$CLAUDE_DIR/statusline.js"
+    chmod +x "$CLAUDE_DIR/statusline.js"
+    print_success "statusline.js をコピーしました"
+}
+
+# 3. settings.json の設定
+configure_settings_json() {
+    local node_bin_path="$1"
+
+    print_info "settings.json を設定中..."
 
     # Load environment variables
     if [ -f "$ENV_FILE" ]; then
@@ -266,104 +342,41 @@ install_settings() {
         generate_settings_json "$node_bin_path"
     fi
 
-    # Copy CLAUDE.md (always overwrite)
-    cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
-    print_success "CLAUDE.md をコピーしました"
+    print_success "settings.json を設定しました"
+}
 
-    # Copy guidelines (common)
-    for file in "$SCRIPT_DIR/guidelines/common/"*.md; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/guidelines/common/$filename"
-        fi
-    done
-    print_success "guidelines/common をコピーしました"
-
-    # Copy guidelines (languages)
-    for file in "$SCRIPT_DIR/guidelines/languages/"*.md; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/guidelines/languages/$filename"
-        fi
-    done
-    print_success "guidelines/languages をコピーしました"
-
-    # Copy guidelines (design)
-    for file in "$SCRIPT_DIR/guidelines/design/"*.md; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/guidelines/design/$filename"
-        fi
-    done
-    print_success "guidelines/design をコピーしました"
-
-    # Copy guidelines (infrastructure)
-    for file in "$SCRIPT_DIR/guidelines/infrastructure/"*.md; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/guidelines/infrastructure/$filename"
-        fi
-    done
-    print_success "guidelines/infrastructure をコピーしました"
-
-    # Copy guidelines (summaries)
-    for file in "$SCRIPT_DIR/guidelines/summaries/"*.md; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/guidelines/summaries/$filename"
-        fi
-    done
-    print_success "guidelines/summaries をコピーしました"
-
-    # Copy guidelines-archive (design)
-    for file in "$SCRIPT_DIR/guidelines-archive/design/"*.md; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/guidelines-archive/design/$filename"
-        fi
-    done
-    print_success "guidelines-archive/design をコピーしました"
-
-    # Copy commands
-    for file in "$SCRIPT_DIR/commands/"*.md; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/commands/$filename"
-        fi
-    done
-    print_success "commands をコピーしました"
-
-    # Copy agents
-    for file in "$SCRIPT_DIR/agents/"*; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/agents/$filename"
-        fi
-    done
-    print_success "agents をコピーしました"
-
-    # Copy skills (directory structure)
-    rm -rf "$CLAUDE_DIR/skills"
-    cp -r "$SCRIPT_DIR/skills" "$CLAUDE_DIR/skills"
-    print_success "skills をコピーしました"
-
-    # Copy scripts
-    for file in "$SCRIPT_DIR/scripts/"*; do
-        if [ -f "$file" ]; then
-            local filename=$(basename "$file")
-            cp "$file" "$CLAUDE_DIR/scripts/$filename"
-            chmod +x "$CLAUDE_DIR/scripts/$filename"
-        fi
-    done
-    print_success "scripts をコピーしました"
-
-    # Copy statusline.js
-    cp "$SCRIPT_DIR/statusline.js" "$CLAUDE_DIR/statusline.js"
-    chmod +x "$CLAUDE_DIR/statusline.js"
-    print_success "statusline.js をコピーしました"
+# 4. 最終処理
+finalize_installation() {
+    print_info "最終処理を実行中..."
 
     # Generate gitlab-mcp.sh
     generate_gitlab_mcp_sh
+
+    print_success "最終処理が完了しました"
+}
+
+# メイン関数（統合版 - 複雑度5以下）
+install_settings() {
+    print_header "Claude Code 設定のインストール"
+
+    # Detect node path
+    local node_bin_path
+    node_bin_path="$(dirname "$(which node)")"
+    if [ "${DEBUG:-0}" = "1" ]; then
+        print_info "Node.js パス: $node_bin_path"
+    fi
+
+    # 1. ディレクトリ作成
+    setup_directories
+
+    # 2. ファイルコピー
+    copy_directory_contents
+
+    # 3. settings.json設定
+    configure_settings_json "$node_bin_path"
+
+    # 4. 最終処理
+    finalize_installation
 
     print_success "Claude Code 設定のインストール完了"
 }

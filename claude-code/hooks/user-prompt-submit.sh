@@ -5,14 +5,28 @@
 
 set -euo pipefail
 
+# セキュリティ共通ライブラリ読み込み（Critical #6対策）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/../lib"
+# shellcheck source=../lib/security-functions.sh
+source "${LIB_DIR}/security-functions.sh" 2>/dev/null || true
+
 # jq前提条件チェック
 if ! command -v jq &> /dev/null; then
     echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
     exit 1
 fi
 
-# JSON入力を読み込む
-input=$(cat)
+# JSON入力を読み込む（DoS攻撃防止: 1MB制限）
+if ! input=$(read_stdin_with_limit 1048576); then
+    echo '{"error": "Input size exceeds limit (1MB)"}' >&2
+    exit 1
+fi
+
+# JSON形式検証
+if ! validate_json "$input"; then
+    exit 1
+fi
 
 # プロンプトを取得（小文字変換で1回のみ処理）
 prompt=$(echo "$input" | jq -r '.prompt // empty')
