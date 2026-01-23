@@ -104,9 +104,44 @@ Task(
 
 ## 統合ルール
 
-- **code-simplifier**: 実装・リファクタリング後に必ず実行
-- **verify-app**: PR作成前に必ず実行
-- **/commit-push-pr**: 最終ステップで実行
+### 必須フロー
+
+```
+実装完了 → code-simplifier → verify-app → verify成功 → commit-push-pr
+                                        → verify失敗 → 修正 → 再verify
+```
+
+### 各ステップの役割
+
+- **code-simplifier**: 実装・リファクタリング後に**必ず実行**（複雑度削減・重複統合）
+- **verify-app**: PR作成前に**必ず実行**（ビルド・テスト・lint を包括検証）
+- **commit-push-pr**: 検証合格後の最終ステップ（verify-app通過が前提）
+
+### 失敗時の対応
+
+**2回失敗ルール**: 同じアプローチで2回失敗 → `/clear` → 問題再整理 → 新アプローチ
+
+---
+
+## Writer/Reviewer並列パターン（大規模変更時）
+
+**適用条件**:
+- 10ファイル以上 OR 500行以上の変更
+- 重要機能の実装（認証、決済、データ移行）
+- アーキテクチャ変更
+
+**実行方法**:
+```
+# Developer（実装） + Reviewer（レビュー）並列実行
+Task(subagent_type: "developer-agent", prompt: "{実装内容}")
+Task(subagent_type: "reviewer-agent", prompt: "実装完了後にレビュー")
+```
+
+**フロー**:
+```
+Developer実装 → Reviewer検証 → 問題あり → Developer修正
+                              → 問題なし → verify-app → PR
+```
 
 ---
 

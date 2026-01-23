@@ -88,7 +88,36 @@ case "$TOOL_NAME" in
     # エージェント起動はSafe（実際の操作は各エージェント内で判定）
     ;;
 
-  "TodoWrite"|"AskUserQuestion"|"Skill"|"EnterPlanMode"|"ExitPlanMode")
+  "Skill")
+    KENRON_CLASS="Safe"
+
+    # スキル名を取得
+    SKILL_NAME=$(echo "$TOOL_INPUT" | jq -r '.skill // empty')
+
+    # セッション状態ファイルのパス
+    SESSION_STATE_FILE="$HOME/.claude/session-state.json"
+
+    # ガイドライン自動読み込み判定（pre-skill-use.sh機能統合）
+    case "$SKILL_NAME" in
+      "go-backend")
+        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: Go言語ベストプラクティス\\n- 未読み込みの場合は自動的に読み込みます"
+        ;;
+      "typescript-backend"|"react-best-practices"|"ui-skills")
+        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: TypeScript/React ベストプラクティス\\n- 未読み込みの場合は自動的に読み込みます"
+        ;;
+      "dockerfile-best-practices"|"kubernetes"|"terraform")
+        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: インフラストラクチャ設計\\n- 未読み込みの場合は自動的に読み込みます"
+        ;;
+      "clean-architecture-ddd"|"api-design"|"microservices-monorepo")
+        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: アーキテクチャ設計\\n- 未読み込みの場合は自動的に読み込みます"
+        ;;
+      *)
+        # その他のスキルは通常処理
+        ;;
+    esac
+    ;;
+
+  "TodoWrite"|"AskUserQuestion"|"EnterPlanMode"|"ExitPlanMode")
     KENRON_CLASS="Safe"
     ;;
 

@@ -75,47 +75,57 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 一括処理 → /commit-push-pr
 ```
 
+---
+
+## 検証フロー（必須）
+
+**全ての実装完了後に verify-app を必ず実行**:
+
+```
+/dev 完了 → Task("verify-app") → 問題あり → 修正 → 再検証
+                              → 問題なし → PR作成
+```
+
+**検証内容**: ビルド・テスト・lint を包括的に実行
+
+---
+
+## 2回失敗ルール
+
+同じアプローチで2回失敗した場合：
+
+```
+失敗1回目 → アプローチ微調整
+失敗2回目 → /clear → 問題再整理 → 新アプローチ提案
+```
+
+**理由**: コンテキスト汚染による悪循環防止
+
+---
+
+## /clear 推奨タイミング
+
+- 無関係なタスク間の切り替え時
+- 2回失敗ルール発動時
+- コンテキスト肥大化を感じた時（応答遅延）
+- 長時間セッション後（目安: 20ターン以上）
+
+---
+
 ## スキル選択
 
-### 自動スキル推奨（P1強化完了）
+**自動推奨**: user-prompt-submit.sh が35パターンで精度90%達成（詳細: SKILLS-MAP.md）
 
-user-prompt-submit.shが以下を自動検出:
+### 主要スキル
 
-| 検出方法 | パターン数 | 例 |
-|---------|:--------:|-----|
-| ファイルパス | 10 | `*.go` → go-backend |
-| エラーログ | 6 | `Cannot connect to Docker` → docker-troubleshoot |
-| Git状態 | 6 | `feature/api` ブランチ → api-design |
-| キーワード | 13 | `リファクタ` → clean-architecture-ddd |
+| カテゴリ | スキル |
+|---------|--------|
+| **レビュー** | code-quality-review, security-error-review, docs-test-review, uiux-review |
+| **開発** | go-backend, typescript-backend, react-best-practices |
+| **設計** | clean-architecture-ddd, api-design, microservices-monorepo |
+| **インフラ** | dockerfile-best-practices, kubernetes, terraform |
 
-**合計35パターン** で精度90%達成。
-
-### レビュー系スキル選択
-
-| 問題タイプ | スキル |
-|-----------|--------|
-| 設計・品質・型 | code-quality-review |
-| セキュリティ・エラー | security-error-review |
-| ドキュメント・テスト | docs-test-review |
-| UI/UX | uiux-review, ui-skills |
-
-### スキル推奨パターン
-
-**詳細**: SKILLS-MAP.md参照（全22スキルの依存関係・推奨組み合わせ）
-
-**よくある組み合わせ**:
-- **フルスタックレビュー**: code-quality-review + security-error-review + docs-test-review
-- **Go開発**: go-backend + clean-architecture-ddd (+ grpc-protobuf)
-- **React開発**: react-best-practices + ui-skills + uiux-review
-- **インフラ**: dockerfile-best-practices + kubernetes + terraform
-
-### ガイドライン自動読み込み（P2実装）
-
-- **pre-skill-use.sh**: スキル実行時に`requires-guidelines`を自動読み込み
-- **セッション状態管理**: 重複読み込み防止（~/.claude/session-state.json）
-- **トークン節約**: 未読み込みのみロード
-
-**注意**: pre-skill-useフックが未実装の場合、手動で`/load-guidelines`を実行してください
+**詳細**: SKILLS-MAP.md参照（依存関係・推奨組み合わせ）
 
 ---
 
