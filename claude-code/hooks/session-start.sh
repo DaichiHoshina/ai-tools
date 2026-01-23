@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SessionStart Hook - ai-tools 10原則対応（kenron必須）
-# セッション開始時にSerena memoryリストを確認
+# セッション開始時にSerena memoryリストを確認 + compact-restore読み込み
 
 set -euo pipefail
 
@@ -16,10 +16,11 @@ INPUT=$(cat)
 # Serena MCPが有効かチェック
 if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
   # additionalContextを最小化（詳細はCLAUDE.md参照）
+  # compact-restore memoryの確認も追加
   cat <<EOF
 {
   "systemMessage": "📋 Serena active",
-  "additionalContext": "Run: mcp__serena__list_memories, mcp__serena__check_onboarding_performed. See CLAUDE.md for 10 principles & kenron."
+  "additionalContext": "Run: mcp__serena__list_memories, mcp__serena__check_onboarding_performed. **MANDATORY**: Always check and reload compact-restore-* memory immediately to restore previous context. Failure to restore will cause context loss. See CLAUDE.md for 10 principles & kenron."
 }
 EOF
 else

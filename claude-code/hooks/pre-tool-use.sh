@@ -117,7 +117,7 @@ case "$TOOL_NAME" in
     esac
     ;;
 
-  "TodoWrite"|"AskUserQuestion"|"EnterPlanMode"|"ExitPlanMode")
+  "TaskCreate"|"TaskUpdate"|"TaskList"|"TaskGet"|"AskUserQuestion"|"EnterPlanMode"|"ExitPlanMode")
     KENRON_CLASS="Safe"
     ;;
 
