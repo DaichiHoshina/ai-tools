@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: Claude Code Hooks & Agents API
+  description: |
+    Claude Code の Hooks と Agents の API仕様書。
+    
+    ## Hooks
+    Claude Code のライフサイクルイベントに応答するスクリプト。
+    JSON入力を受け取り、JSON出力を返す。
+    
+    ## Agents
+    タスクを自律的に実行する専用エージェント。
+    Serena MCP ツールを使用してコード操作を実施。
+  version: 1.0.0
+  contact:
+    name: ai-tools
+    url: https://github.com/yourusername/ai-tools
+
+servers:
+  - url: file://~/.claude/hooks
+    description: Hooks実行環境
+  - url: file://~/.claude/agents
+    description: Agents実行環境
+
+paths:
+  /hooks/session-start:
+    post:
+      summary: SessionStart Hook
+      description: セッション開始時に実行されるフック
+      operationId: sessionStart
+      tags:
+        - Hooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionStartInput'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HookOutput'
+
+  /hooks/user-prompt-submit:
+    post:
+      summary: UserPromptSubmit Hook
+      description: ユーザープロンプト送信時に実行されるフック（技術スタック自動検出）
+      operationId: userPromptSubmit
+      tags:
+        - Hooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPromptSubmitInput'
+      responses:
+        '200':
+          description: 成功（検出結果を返す）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HookOutput'
+              examples:
+                go-detected:
+                  summary: Go言語検出
+                  value:
+                    systemMessage: "🔍 Tech stack detected: golang | Skills: go-backend"
+                    additionalContext: |
+                      # Auto-Detected Configuration
+                      
+                      **Languages**: golang
+                      **Skills**: go-backend
+                      **Recommendation**: Run `/load-guidelines` to load Go-specific guidelines
+
+  /hooks/pre-tool-use:
+    post:
+      summary: PreToolUse Hook
+      description: ツール実行直前に実行されるフック（危険操作検出）
+      operationId: preToolUse
+      tags:
+        - Hooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreToolUseInput'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HookOutput'
+
+  /hooks/pre-compact:
+    post:
+      summary: PreCompact Hook
+      description: コンテキスト圧縮前に実行されるフック（バックアップ保存）
+      operationId: preCompact
+      tags:
+        - Hooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreCompactInput'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HookOutput'
+
+  /hooks/session-end:
+    post:
+      summary: SessionEnd Hook
+      description: セッション終了時に実行されるフック（統計ログ保存）
+      operationId: sessionEnd
+      tags:
+        - Hooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionEndInput'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HookOutput'
+
+  /agents/workflow-orchestrator:
+    post:
+      summary: Workflow Orchestrator Agent
+      description: タスクタイプを自動判定し、最適なワークフローを実行
+      operationId: workflowOrchestrator
+      tags:
+        - Agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentInput'
+      responses:
+        '200':
+          description: ワークフロー完了
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentOutput'
+
+  /agents/verify-app:
+    post:
+      summary: Verify App Agent
+      description: ビルド・テスト・lintを包括的に検証
+      operationId: verifyApp
+      tags:
+        - Agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentInput'
+      responses:
+        '200':
+          description: 検証結果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyAppOutput'
+
+  /agents/code-simplifier:
+    post:
+      summary: Code Simplifier Agent
+      description: 実装後のコード簡素化を実施（複雑度削減・重複統合）
+      operationId: codeSimplifier
+      tags:
+        - Agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentInput'
+      responses:
+        '200':
+          description: 簡素化完了
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentOutput'
+
+components:
+  schemas:
+    # Hook Input Schemas
+    SessionStartInput:
+      type: object
+      properties:
+        mcp_servers:
+          type: object
+          description: 有効なMCPサーバー一覧
+          additionalProperties: true
+        hook_event_name:
+          type: string
+          example: "SessionStart"
+
+    UserPromptSubmitInput:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: ユーザーが入力したプロンプト
+          example: "Go言語でREST APIを実装してください"
+        hook_event_name:
+          type: string
+          example: "UserPromptSubmit"
+
+    PreToolUseInput:
+      type: object
+      required:
+        - tool_name
+        - tool_input
+      properties:
+        tool_name:
+          type: string
+          description: 実行するツール名
+          example: "Bash"
+        tool_input:
+          type: object
+          description: ツールへの入力
+          properties:
+            command:
+              type: string
+              example: "npm run lint"
+        hook_event_name:
+          type: string
+          example: "PreToolUse"
+
+    PreCompactInput:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: セッションID
+        workspace:
+          type: object
+          properties:
+            current_dir:
+              type: string
+              example: "/Users/daichi/ai-tools"
+        current_tokens:
+          type: integer
+          description: 現在のトークン数
+          example: 150000
+        mcp_servers:
+          type: object
+          additionalProperties: true
+        hook_event_name:
+          type: string
+          example: "PreCompact"
+
+    SessionEndInput:
+      type: object
+      properties:
+        session_id:
+          type: string
+        workspace:
+          type: object
+          properties:
+            current_dir:
+              type: string
+        total_tokens:
+          type: integer
+          example: 50000
+        total_messages:
+          type: integer
+          example: 25
+        duration:
+          type: integer
+          description: セッション時間（秒）
+          example: 1200
+        hook_event_name:
+          type: string
+          example: "SessionEnd"
+
+    # Hook Output Schema
+    HookOutput:
+      type: object
+      properties:
+        systemMessage:
+          type: string
+          description: ユーザーに表示されるメッセージ
+          example: "🔍 Tech stack detected: golang"
+        additionalContext:
+          type: string
+          description: AIに渡される追加コンテキスト
+          example: "# Auto-Detected Configuration\n\n**Languages**: golang"
+        error:
+          type: string
+          description: エラーメッセージ（エラー時のみ）
+          example: "jq not installed"
+
+    # Agent Input/Output Schemas
+    AgentInput:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: エージェントへのタスク指示
+          example: "タスク: ユーザー認証機能を追加, タイプ: feature, 複雑度: TaskDecomposition"
+        mode:
+          type: string
+          enum: [plan, default]
+          description: 実行モード
+          default: default
+
+    AgentOutput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, failure]
+          description: 実行結果
+        summary:
+          type: string
+          description: 実行サマリー
+        files_created:
+          type: array
+          items:
+            type: string
+          description: 作成されたファイル一覧
+        files_modified:
+          type: array
+          items:
+            type: string
+          description: 変更されたファイル一覧
+
+    VerifyAppOutput:
+      allOf:
+        - $ref: '#/components/schemas/AgentOutput'
+        - type: object
+          properties:
+            lint_result:
+              type: object
+              properties:
+                passed:
+                  type: boolean
+                errors:
+                  type: integer
+                warnings:
+                  type: integer
+            test_result:
+              type: object
+              properties:
+                passed:
+                  type: boolean
+                total:
+                  type: integer
+                success:
+                  type: integer
+                failed:
+                  type: integer
+            build_result:
+              type: object
+              properties:
+                passed:
+                  type: boolean
+                message:
+                  type: string
+
+tags:
+  - name: Hooks
+    description: Claude Code ライフサイクルフック
+  - name: Agents
+    description: 自律実行エージェント

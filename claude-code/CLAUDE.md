@@ -79,6 +79,19 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 一括処理 → /commit-push-pr
 ```
 
+### エイリアス（短縮コマンド）
+
+| エイリアス | フルコマンド | 頻度 |
+|-----------|-------------|------|
+| `/cpr` | `/commit-push-pr` | ⭐⭐⭐⭐⭐ |
+| `/sk` | `/load-guidelines` | ⭐⭐⭐⭐ |
+| `/br` | `/superpowers:brainstorm` | ⭐⭐⭐⭐ |
+| `/rv` | `/review` | ⭐⭐⭐⭐ |
+| `/tdd` | `/superpowers:test-driven-development` | ⭐⭐⭐ |
+| `/dbg` | `/superpowers:systematic-debugging` | ⭐⭐⭐ |
+
+**詳細**: `commands/aliases.md` 参照（全11エイリアス）
+
 ---
 
 ## 検証フロー（必須）
