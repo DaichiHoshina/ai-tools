@@ -32,26 +32,59 @@ git diff --name-only
 - テストファイルの有無
 - CI/CD設定の有無
 
-# 4. ComplexityCheck射（Kanban判定）
-ファイル数<5 AND 行数<300 → Simple（Kanban不使用）
-ファイル数≥5 OR 独立機能≥3 → TaskDecomposition（Kanban自動化）
+# 4. ComplexityCheck射（Tasks判定）
+ファイル数<5 AND 行数<300 → Simple（Tasks不使用）
+ファイル数≥5 OR 独立機能≥3 → TaskDecomposition（Tasks自動化）
 複数プロジェクト横断 → AgentHierarchy（PO経由）
 ```
 
-#### Kanban自動初期化（TaskDecomposition時）
+#### Tasks自動初期化（TaskDecomposition時）
 
-```bash
-# ボード作成
-node ~/ai-tools/tools/kanban/dist/cli.js init "{タスク名}"
+```typescript
+// サブタスク分解・追加（ワークフローステップを登録）
+TaskCreate({
+  subject: "PRD作成",
+  description: "要件定義ドキュメントを作成",
+  activeForm: "PRD作成中"
+});
+TaskCreate({
+  subject: "設計",
+  description: "アーキテクチャ設計とプラン作成",
+  activeForm: "設計中"
+});
+TaskCreate({
+  subject: "実装",
+  description: "機能実装",
+  activeForm: "実装中"
+});
+TaskCreate({
+  subject: "テスト",
+  description: "テストコード作成",
+  activeForm: "テスト作成中"
+});
+TaskCreate({
+  subject: "レビュー",
+  description: "コードレビュー実施",
+  activeForm: "レビュー中"
+});
+TaskCreate({
+  subject: "検証",
+  description: "verify-appで品質検証",
+  activeForm: "検証中"
+});
+TaskCreate({
+  subject: "PR作成",
+  description: "プルリクエスト作成とpush",
+  activeForm: "PR作成中"
+});
 
-# サブタスク分解・追加（ワークフローステップを登録）
-node ~/ai-tools/tools/kanban/dist/cli.js add "PRD作成" --priority=high
-node ~/ai-tools/tools/kanban/dist/cli.js add "設計" --priority=high
-node ~/ai-tools/tools/kanban/dist/cli.js add "実装" --priority=high
-node ~/ai-tools/tools/kanban/dist/cli.js add "テスト" --priority=medium
-node ~/ai-tools/tools/kanban/dist/cli.js add "レビュー" --priority=medium
-node ~/ai-tools/tools/kanban/dist/cli.js add "検証" --priority=high
-node ~/ai-tools/tools/kanban/dist/cli.js add "PR作成" --priority=high
+// 依存関係設定（例: 設計は PRD完了後）
+TaskUpdate({ taskId: "2", addBlockedBy: ["1"] });
+TaskUpdate({ taskId: "3", addBlockedBy: ["2"] });
+TaskUpdate({ taskId: "4", addBlockedBy: ["3"] });
+TaskUpdate({ taskId: "5", addBlockedBy: ["4"] });
+TaskUpdate({ taskId: "6", addBlockedBy: ["5"] });
+TaskUpdate({ taskId: "7", addBlockedBy: ["6"] });
 ```
 
 ### Phase 2: ワークフロー決定（3秒）
@@ -209,42 +242,38 @@ workflows:
 ### Phase 4: ワークフロー実行
 
 ```bash
-# Kanban（TaskDecomposition時）またはTodoWrite（Simple時）で進捗管理
+# Tasks（TaskDecomposition時）で進捗管理
 
-# === TaskDecomposition時（Kanban使用） ===
+# === TaskDecomposition時（Tasks使用） ===
 # 各ステップ開始時
-node ~/ai-tools/tools/kanban/dist/cli.js start {task_id}
+TaskUpdate({ taskId: "{task_id}", status: "in_progress" });
 # ステップ実行...
 # 各ステップ完了時
-node ~/ai-tools/tools/kanban/dist/cli.js done {task_id}
+TaskUpdate({ taskId: "{task_id}", status: "completed" });
 
 # 進捗確認
-node ~/ai-tools/tools/kanban/dist/cli.js list
+TaskList();
 
-# === Simple時（TodoWrite使用） ===
+# === Simple時（進捗表示のみ） ===
 [1/9] /prd 実行中...
 [2/9] Plan モード開始...
 ...
-
-# 各ステップでのエラーハンドリング
-- エラー発生時: ユーザーに通知 → リトライ/スキップ/中断を選択
-- 警告のみ: 自動で継続
 ```
 
-#### Kanban進捗管理の自動化
+#### Tasks進捗管理の自動化
 
 ```typescript
 // 各ステップ実行時の自動処理
-async function executeStep(step: WorkflowStep, kanbanTaskId: number) {
-  // 1. Kanbanで開始マーク
-  await exec(`kanban start ${kanbanTaskId}`);
+async function executeStep(step: WorkflowStep, taskId: string) {
+  // 1. Tasksで開始マーク
+  TaskUpdate({ taskId, status: "in_progress" });
 
   // 2. ステップ実行
   const result = await executeCommand(step.command);
 
-  // 3. Kanbanで完了マーク
+  // 3. Tasksで完了マーク
   if (result.success) {
-    await exec(`kanban done ${kanbanTaskId}`);
+    TaskUpdate({ taskId, status: "completed" });
   }
 
   return result;
