@@ -4,7 +4,9 @@
 
 set -euo pipefail
 
-HOOK_SCRIPT="/Users/daichi/ai-tools/claude-code/hooks/user-prompt-submit.sh"
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HOOK_SCRIPT="${SCRIPT_DIR}/user-prompt-submit.sh"
 TEST_PASSED=0
 TEST_FAILED=0
 
@@ -22,12 +24,12 @@ run_test() {
 
   if echo "$output" | grep -qE "$expected_pattern"; then
     echo "✅ PASS"
-    ((TEST_PASSED++))
+    TEST_PASSED=$((TEST_PASSED + 1))
   else
     echo "❌ FAIL"
     echo "Expected pattern: $expected_pattern"
     echo "Actual output: $output"
-    ((TEST_FAILED++))
+    TEST_FAILED=$((TEST_FAILED + 1))
   fi
   echo ""
 }
