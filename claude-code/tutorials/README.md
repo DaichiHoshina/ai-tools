@@ -134,7 +134,7 @@ claude --version
 ```
 ComplexityCheck が自動判定：
 - Simple: 直接実装
-- TaskDecomposition: Kanban + 5フェーズ
+- TaskDecomposition: Tasks + 5フェーズ
 - AgentHierarchy: PO/Manager/Developer
 ```
 

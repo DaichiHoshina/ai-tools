@@ -112,13 +112,46 @@ if [ -z "$unloaded" ]; then
 fi
 
 # 自動読み込み実行
-unloaded_list=$(echo "$unloaded" | tr '\n' ',' | sed 's/,$//')
+unloaded_list=$(echo "$unloaded" | tr '
+' ',' | sed 's/,$//')
+
+# summariesファイルパスを生成
+summary_paths=""
+for guideline in $unloaded; do
+    case "$guideline" in
+        common)
+            summary_paths="$summary_paths ~/.claude/guidelines/summaries/common-summary.md"
+            ;;
+        typescript)
+            summary_paths="$summary_paths ~/.claude/guidelines/summaries/typescript-summary.md"
+            ;;
+        golang)
+            summary_paths="$summary_paths ~/.claude/guidelines/summaries/golang-summary.md"
+            ;;
+        nextjs-react)
+            summary_paths="$summary_paths ~/.claude/guidelines/summaries/nextjs-react-summary.md"
+            ;;
+        design|clean-architecture|ddd)
+            summary_paths="$summary_paths ~/.claude/guidelines/summaries/design-summary.md"
+            ;;
+        infrastructure|terraform|kubernetes|aws-*)
+            summary_paths="$summary_paths ~/.claude/guidelines/summaries/infrastructure-summary.md"
+            ;;
+        security|error-handling)
+            summary_paths="$summary_paths ~/.claude/guidelines/summaries/security-summary.md"
+            ;;
+        *)
+            # summaryがない場合は詳細ガイドライン参照
+            summary_paths="$summary_paths ~/.claude/guidelines/**/$guideline.md"
+            ;;
+    esac
+done
 
 record_loaded_guidelines "$unloaded"
 
 cat <<EOF
 {
-  "systemMessage": "📚 Auto-loading guidelines: $unloaded_list",
-  "additionalContext": "Required by skill: $SKILL_NAME. Loading summaries first (see summaries/*.md). Use load-guidelines skill if detailed docs needed."
+  "systemMessage": "📚 Auto-loading guidelines: $unloaded_list (summaries優先)",
+  "additionalContext": "Required by skill: $SKILL_NAME\n\n**トークン効率化**: summariesを優先的に読み込んでください:\n$(echo $summary_paths | tr ' ' '\n' | sed 's/^/- /')\n\n詳細が必要な場合のみ: /load-guidelines full"
 }
 EOF

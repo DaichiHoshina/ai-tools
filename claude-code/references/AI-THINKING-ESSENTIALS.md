@@ -42,25 +42,32 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 | 条件 | 判定 | アクション |
 |------|------|-----------|
 | ファイル数<5 AND 行数<300 | **Simple** | 直接実装 |
-| ファイル数≥5 OR 独立機能≥3 OR 行数≥300 | **TaskDecomposition** | Kanban + 5フェーズ |
+| ファイル数≥5 OR 独立機能≥3 OR 行数≥300 | **TaskDecomposition** | Tasks + 5フェーズ |
 | 複数プロジェクト横断 OR 戦略的判断 | **AgentHierarchy** | PO/Manager/Developer階層 |
 
-#### Kanban連携（TaskDecomposition時）
+#### Tasks連携（TaskDecomposition時）
 
-```bash
-# 1. Kanbanボード初期化
-kanban init "タスク名"
+```typescript
+// 1. サブタスク作成（依存関係付き）
+TaskCreate({ subject: "サブタスク1", description: "詳細", activeForm: "サブタスク1を実行中" });
+TaskCreate({ subject: "サブタスク2", description: "詳細", activeForm: "サブタスク2を実行中" });
 
-# 2. タスク分解・追加
-kanban add "サブタスク1" --priority=high
-kanban add "サブタスク2" --priority=medium
+// 2. 依存関係設定
+TaskUpdate({ taskId: "2", addBlockedBy: ["1"] });
 
-# 3. 進捗管理
-kanban start <id>  # In Progressに移動（ロック取得）
-kanban done <id>   # 完了（ロック解放）
+// 3. 各ステップ実行時
+TaskUpdate({ taskId: "1", status: "in_progress" });  // 開始
+// ... 実行 ...
+TaskUpdate({ taskId: "1", status: "completed" });    // 完了
 ```
 
-**詳細**: `claude-code/skills/kanban/skill.md` 参照
+**Claude Code Tasks機能**:
+- TaskCreate/TaskUpdate/TaskList/TaskGetで操作
+- 依存関係: blockedBy/blocksでタスク間の順序を管理
+- セッション共有: CLAUDE_CODE_TASK_LIST_ID=xxxで複数セッション間で共有可能
+- UI表示: ctrl+tで表示/非表示を切替
+
+**詳細**: `claude-code/commands/flow.md` 参照
 
 ---
 

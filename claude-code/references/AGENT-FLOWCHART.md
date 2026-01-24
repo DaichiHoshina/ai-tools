@@ -17,8 +17,8 @@ flowchart TD
 
     Simple --> Done[完了]
 
-    TD --> Kanban[Kanban管理]
-    Kanban --> Phase1[Phase1: 探索]
+    TD --> Tasks[Tasks管理]
+    Tasks --> Phase1[Phase1: 探索]
     Phase1 --> Phase2[Phase2: 設計]
     Phase2 --> Phase3[Phase3: 実装]
     Phase3 --> Phase4[Phase4: 検証]
@@ -97,75 +97,9 @@ flowchart LR
     Type -->|"テスト作成"| Test
 ```
 
-## Kanban 5フェーズ
+## Tasks 5フェーズ
 
-```mermaid
-flowchart LR
-    subgraph "Phase 1"
-        P1[探索<br/>コードベース理解]
-    end
-
-    subgraph "Phase 2"
-        P2[設計<br/>アーキテクチャ決定]
-    end
-
-    subgraph "Phase 3"
-        P3[実装<br/>コード作成]
-    end
-
-    subgraph "Phase 4"
-        P4[検証<br/>テスト・レビュー]
-    end
-
-    subgraph "Phase 5"
-        P5[完了<br/>ドキュメント・PR]
-    end
-
-    P1 --> P2 --> P3 --> P4 --> P5
-```
-
-## エージェント特性一覧
-
-| エージェント | 役割 | ツール | 特徴 |
-|-------------|------|--------|------|
-| **po-agent** | 戦略決定 | All tools | 実装は一切行わない |
-| **manager-agent** | タスク分割 | All tools | 実装は一切行わない |
-| **developer-agent** | 実装担当 | All tools + Serena MCP | Serena必須 |
-| **explore-agent** | 探索・分析 | All tools + Serena MCP | 読み取り専用 |
-| **verify-app** | 包括検証 | All tools | ビルド・テスト・lint |
-| **code-simplifier** | 簡素化 | All tools | 複雑度削減・重複統合 |
-| **workflow-orchestrator** | 自動化 | All tools | タスクタイプ判定 |
-
-## 並列実行パターン
-
-```mermaid
-flowchart TD
-    subgraph "並列実行可能"
-        A[Developer 1: Feature A]
-        B[Developer 2: Feature B]
-        C[Explore 1: 調査]
-        D[Explore 2: 分析]
-    end
-
-    subgraph "同期ポイント"
-        Sync[Manager: 統合]
-    end
-
-    A & B & C & D --> Sync
-```
-
-## 使用例
-
-### Simple タスク
-```
-ユーザー: "この関数のバグを修正して"
-→ 直接実装（エージェント不要）
-```
-
-### TaskDecomposition タスク
-```
-ユーザー: "ユーザー認証機能を追加して"
-→ Kanban + 5フェーズで管理
+→ Tasks + 5フェーズで管理
 → Developer 1-2 が並列実装
 ```
 

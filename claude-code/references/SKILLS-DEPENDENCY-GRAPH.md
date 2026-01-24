@@ -44,7 +44,7 @@ flowchart TB
     end
 
     subgraph "ユーティリティ"
-        KB[kanban]
+        Tasks[Claude Code Tasks]
         SM[session-mode]
         GM[guideline-maintenance]
         CE[cleanup-enforcement]

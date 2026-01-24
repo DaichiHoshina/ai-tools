@@ -110,7 +110,9 @@ requires-guidelines:
 
 ### ガイドライン識別子マッピング
 
-**共通**: `common` → `common/*.md`
+**🎯 トークン効率化**: 全ての識別子は自動的にsummariesを優先読み込み
+
+**共通**: `common` → `summaries/common-summary.md` (詳細: `common/*.md`)
 
 **言語別**:
 | 識別子 | パス |
@@ -118,8 +120,8 @@ requires-guidelines:
 | `typescript` | `languages/typescript.md` |
 | `golang` | `languages/golang.md` |
 | `nextjs-react` | `languages/nextjs-react.md` |
-| `tailwind` | `languages/tailwind.md` |
-| `shadcn` | `languages/shadcn.md` |
+| `tailwind` | - | `languages/tailwind.md` |
+| `shadcn` | - | `languages/shadcn.md` |
 
 **インフラ**: `terraform`, `kubernetes` → `infrastructure/`
 

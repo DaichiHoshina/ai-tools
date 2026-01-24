@@ -95,6 +95,11 @@ sync_to_local() {
                     print_error "コピー失敗: $src -> $dst"
                     return 1
                 fi
+                # hooksディレクトリの場合、テストファイルを除外
+                if [ "$item" = "hooks" ]; then
+                    rm -f "$dst"/test-*.sh 2>/dev/null || true
+                    print_info "  → テストファイル(test-*.sh)を除外"
+                fi
             else
                 if ! cp "$src" "$dst"; then
                     print_error "コピー失敗: $src -> $dst"
@@ -138,6 +143,11 @@ sync_from_local() {
             if ! cp -r "$CLAUDE_DIR/$dir" "$SCRIPT_DIR/$dir"; then
                 print_error "コピー失敗: $dir"
                 return 1
+            fi
+            # hooksディレクトリの場合、テストファイルを除外
+            if [ "$dir" = "hooks" ]; then
+                rm -f "$SCRIPT_DIR/$dir"/test-*.sh 2>/dev/null || true
+                print_info "  → テストファイル(test-*.sh)を除外"
             fi
             print_success "$dir/"
         fi
