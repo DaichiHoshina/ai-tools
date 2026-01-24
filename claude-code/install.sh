@@ -352,15 +352,6 @@ finalize_installation() {
     # Generate gitlab-mcp.sh
     generate_gitlab_mcp_sh
 
-    # Install pre-commit hook (if in git repository)
-    if [ -d .git ] && [ -f "$SCRIPT_DIR/templates/pre-commit.template" ]; then
-        print_info "Pre-commit hook をインストール中..."
-        mkdir -p .git/hooks
-        cp "$SCRIPT_DIR/templates/pre-commit.template" .git/hooks/pre-commit
-        chmod +x .git/hooks/pre-commit
-        print_success "Pre-commit hook をインストールしました"
-    fi
-
     print_success "最終処理が完了しました"
 }
 
