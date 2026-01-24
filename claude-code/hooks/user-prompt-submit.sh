@@ -86,6 +86,9 @@ detect_from_keywords() {
     ['architecture|アーキテクチャ|設計|ddd|domain']=":clean-architecture-ddd"
     ['api.*design|rest.*api|graphql']=":api-design"
     ['microservices|マイクロサービス|monorepo']=":microservices-monorepo"
+    ['brainstorm|ブレスト|設計相談|アイデア出し']=":superpowers:brainstorm"
+    ['tdd|test.*driven|red.*green.*refactor|テスト駆動']=":superpowers:test-driven-development"
+    ['systematic.*debug|根本原因|デバッグ.*体系']=":superpowers:systematic-debugging"
   )
 
   for keywords in "${!keyword_patterns[@]}"; do

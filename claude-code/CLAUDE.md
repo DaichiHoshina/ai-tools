@@ -154,3 +154,34 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 ./claude-code/install.sh   # 初回
 ./claude-code/sync.sh      # 更新
 ```
+
+---
+
+## Superpowers統合
+
+**方針**: ai-tools固有機能を維持しつつ、Superpowersの優位機能を補完的に活用
+
+### kenronとの関係
+
+| 観点 | kenron（圏論的思考法） | Superpowers |
+|------|----------------------|-------------|
+| **目的** | 個別操作の安全性制御 | 開発プロセス全体の強制 |
+| **対象** | git, ファイル操作など個別アクション | brainstorm→plan→implement全体 |
+| **レイヤー** | **ミクロ**（個別操作） | **マクロ**（ワークフロー） |
+
+**補完関係**: Superpowersでマクロワークフロー制御し、各操作にkenronのGuard関手を適用
+
+### 使用可能コマンド
+
+| 目的 | 推奨コマンド |
+|------|-------------|
+| 設計相談・ブレスト | `/superpowers:brainstorm` |
+| TDD開発 | `/tdd` |
+| 体系的デバッグ | `/superpowers:systematic-debugging` |
+| 通常開発 | `/flow` |
+
+### 無効機能（ai-tools優先）
+
+- **worktree管理** → PO Agent使用
+- **並列エージェント** → Manager/Developer階層使用
+- **品質検証** → verify-app使用
