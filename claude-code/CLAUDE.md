@@ -62,11 +62,11 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 
 | カテゴリ | 件数 | 主要項目 |
 |---------|:----:|----------|
-| コマンド | 17 | `/flow`（万能）, `/dev`, `/review`, `/commit-push-pr` |
+| コマンド | 19 | `/flow`（万能）, `/dev`, `/review`, `/commit-push-pr`, `/brainstorm`, `/tdd` |
 | スキル | 23 | レビュー系5, 開発系6, インフラ系5, ユーティリティ7 |
-| エージェント | 7 | po/manager/developer/explore/code-simplifier/verify-app/workflow |
+| エージェント | 8 | po/manager/developer/explore/code-simplifier/verify-app/workflow/reviewer |
 | フック | 7 | session-start/end, user-prompt-submit, pre/post-tool-use, stop, pre-compact |
-| ガイドライン | 29 | summaries/4, languages/6, common/12, design/2, infrastructure/5 |
+| ガイドライン | 29 | summaries/7, languages/6, common/12, design/2, infrastructure/5 |
 
 ---
 
@@ -136,6 +136,11 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 ## トークン節約（必須）
 
 1. **summaries/優先**: 詳細読む前にsummary読了（70%削減）
+   - common-summary.md: 共通ガイドライン統合
+   - infrastructure-summary.md: Terraform, AWS統合
+   - design-summary.md: Clean Architecture, DDD統合
+   - security-summary.md: OWASP対策、Guard関手統合
+   - golang-summary.md, typescript-summary.md, nextjs-react-summary.md
 2. **Context7活用**: コード例はContext7から取得
 3. **300行超は分割**: offset/limit使用
 

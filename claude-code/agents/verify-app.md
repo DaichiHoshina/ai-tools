@@ -312,9 +312,11 @@ pytest --cov
 
 ### Stage 4: Security Scan
 
+#### 4.1 依存関係の脆弱性スキャン
+
 ```bash
 # Node.js
-npm audit
+npm audit --audit-level=moderate
 
 # Go
 govulncheck ./...
@@ -327,6 +329,27 @@ pip-audit
 - ✅ 通過: Critical/High=0
 - ⚠️ 警告: Medium以下のみ
 - ❌ 失敗: Critical/Highあり
+
+#### 4.2 秘密情報スキャン（gitleaks）
+
+```bash
+# gitleaksがインストールされている場合のみ実行
+if command -v gitleaks &> /dev/null; then
+    gitleaks detect --no-git --verbose
+else
+    echo "⚠️ gitleaks未インストール（インストール推奨: brew install gitleaks）"
+fi
+```
+
+**判定基準**:
+- ✅ 通過: 秘密情報検出0件
+- ❌ 失敗: 秘密情報検出あり（.env, トークン, パスワード等）
+
+**検出対象**:
+- API キー、トークン
+- パスワード、秘密鍵
+- .envファイルの誤コミット
+- ハードコードされた認証情報
 
 ### Stage 5: Performance Check（オプション）
 
