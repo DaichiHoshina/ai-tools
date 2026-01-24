@@ -13,26 +13,89 @@
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16384"
   },
   "model": "opusplan",
-  "plansDirectory": "~/.claude/plans",
-  "language": "japanese",
-  "1feedbackSurveyState": {
-    "lastShownTime": 1753938733414
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/user-prompt-submit.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/pre-tool-use.sh"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/pre-compact.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/stop.sh"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/session-end.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-tool-use.sh"
+          }
+        ]
+      }
+    ]
   },
-  "statusline": {
+  "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.js"
   },
   "enabledPlugins": {
-    "gopls-lsp@claude-plugins-official": true
+    "gopls-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true
   },
-  "hooks": {
-    "SessionStart": [{ "hooks": [{ "type": "command", "command": "~/.claude/hooks/session-start.sh" }] }],
-    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "~/.claude/hooks/user-prompt-submit.sh" }] }],
-    "PreToolUse": [{ "hooks": [{ "type": "command", "command": "~/.claude/hooks/pre-tool-use.sh" }] }],
-    "PreCompact": [{ "hooks": [{ "type": "command", "command": "~/.claude/hooks/pre-compact.sh" }] }],
-    "Stop": [{ "hooks": [{ "type": "command", "command": "~/.claude/hooks/stop.sh" }] }],
-    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "~/.claude/hooks/session-end.sh" }] }],
-    "PostToolUse": [{ "hooks": [{ "type": "command", "command": "~/.claude/hooks/post-tool-use.sh" }] }]
-  },
-  "outputStyle": "ai-tools-format"
+  "outputStyle": "ai-tools-format",
+  "language": "japanese",
+  "1feedbackSurveyState": {
+    "lastShownTime": 1753938733414
+  }
 }
