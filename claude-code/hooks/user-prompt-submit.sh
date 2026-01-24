@@ -2,6 +2,12 @@
 # UserPromptSubmit Hook - スキル推奨精度70%→90%強化版
 # プロンプト + ファイルパス + エラーログから技術スタックを階層的に検出
 # P1実装: ファイルパス検出・エラーログ検出・階層的優先度制御
+#
+# テクニック自動選択:
+#   タスク特性(purpose/complexity/difficulty/volume)に応じた
+#   最適テクニック選択については guidelines/common/technique-selection.md を参照
+#   - 圏論、形式手法、DDD、プロパティベーステストなど10種類
+#   - Progressive Disclosure統合(Level 1/2/3)
 
 set -euo pipefail
 

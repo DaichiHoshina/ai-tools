@@ -95,6 +95,10 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 
 **詳細**: `claude-code/references/AI-THINKING-ESSENTIALS.md` 参照
 
+**大規模作業向け**: `guidelines/common/large-scale-workflow.md` 参照
+- 10ファイル以上、500行以上、60分以上の作業に適用
+- Phase 0-5の詳細ワークフロー、チェックポイント、並列実行戦略
+
 ---
 
 ARGUMENTS: $ARGUMENTS
