@@ -26,10 +26,6 @@
         "@playwright/mcp@latest"
       ],
       "env": {}
-    },
-    "o3": {
-      "type": "sse",
-      "url": "https://mcp.o3.ee/sse"
     }
   }
 }
