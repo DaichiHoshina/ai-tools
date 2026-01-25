@@ -216,7 +216,7 @@ workflows:
 **タスクタイプ**: 新機能実装
 **技術スタック**: TypeScript, Next.js
 **対象範囲**: 複数ファイル（3-5ファイル予想）
-**Plan モード**: 推奨
+**Plan モード**: 推奨 ✅
 
 📋 実行予定ワークフロー
 
@@ -231,6 +231,10 @@ workflows:
 9. ✓ /commit-push-pr - PR作成
 
 ⏱ 予想所要時間: 15-20分
+
+⚠️ **Planモード切り替えが必要です**:
+   → Shift+Tab を2回押してPlanモードに入ってください
+   → （Planモード確認後、Enterキーで続行）
 
 実行してよろしいですか？
 [y] はい、実行
@@ -265,6 +269,13 @@ TaskList();
 ```typescript
 // 各ステップ実行時の自動処理
 async function executeStep(step: WorkflowStep, taskId: string) {
+  // 0. Planモード切り替え確認（mode: plan の場合）
+  if (step.mode === 'plan') {
+    console.log('⚠️  Planモードに切り替えてください（Shift+Tab を2回）');
+    console.log('   切り替え完了後、Enterキーを押してください...');
+    await waitForUserConfirmation();
+  }
+
   // 1. Tasksで開始マーク
   TaskUpdate({ taskId, status: "in_progress" });
 
@@ -300,6 +311,9 @@ async function executeStep(step: WorkflowStep, taskId: string) {
 - Lint: ✅ 0エラー
 - Test: ✅ 15/15 パス
 - Build: ✅ 成功
+
+✅ **Planモードを終了してください**:
+   → Shift+Tab を押して通常モードに戻ってください
 
 💡 次のアクション
 - PRレビュー待ち
