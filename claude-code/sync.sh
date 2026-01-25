@@ -75,6 +75,7 @@ sync_to_local() {
         "skills"
         "agents"
         "scripts"
+        "lib"
         "statusline.js"
         "output-styles"
         "hooks"
@@ -132,7 +133,7 @@ sync_from_local() {
     fi
 
     # Directories
-    local dirs=("commands" "guidelines" "skills" "agents" "scripts" "output-styles" "hooks")
+    local dirs=("commands" "guidelines" "skills" "agents" "scripts" "lib" "output-styles" "hooks")
     for dir in "${dirs[@]}"; do
         if [ -d "$CLAUDE_DIR/$dir" ]; then
             # 例外伝播の明示化（Critical #7対策）
