@@ -15,16 +15,16 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 
 ## 前提条件（必須）
 
-**kenron読み込み**: `/kenron` または `Skill("kenron")` で圏論的思考法を適用
+**kenron読み込み**: `/kenron` または `Skill("kenron")` で操作チェッカーを適用
 
 ```
-Guard関手による操作分類:
-- Safe射（即実行）: 読み取り、分析、git status/log/diff
-- Boundary射（要確認）: git commit/push、ファイル編集、設定変更
-- Forbidden射（拒否）: rm -rf /、secrets漏洩、YAGNI違反
+操作チェッカーによる分類:
+- ✅ 安全操作（即実行）: 読み取り、分析、git status/log/diff
+- ⚠️ 要確認操作（確認必要）: git commit/push、ファイル編集、設定変更
+- 🚫 禁止操作（拒否）: rm -rf /、secrets漏洩、YAGNI違反
 ```
 
-**ワークフロー内で常に意識**: 各操作実行前にGuard関手で分類し、Boundary射は必ず確認を取る
+**ワークフロー内で常に意識**: 各操作実行前に分類し、要確認操作は必ず確認を取る
 
 ## タスクタイプ判定
 
@@ -62,10 +62,10 @@ Guard関手による操作分類:
 - 変更ファイルあり → /prdスキップ、/devから開始を提案
 - 変更なし → 新規タスクとして最初から実行
 
-### 3. ComplexityCheck射（Tasks自動化）
+### 3. 複雑度判定（Tasks自動化）
 
 ```
-ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
+複雑度判定: UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 ```
 
 | 条件 | 判定 | Tasksアクション |

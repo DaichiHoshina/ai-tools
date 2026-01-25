@@ -15,15 +15,20 @@
 ## セッション開始時の自動実行 🔒
 
 以下は `session-start.sh` により自動実行されます：
-- ✅ **kenron**（Guard関手・圏論的思考法）
+- ✅ **kenron**（操作チェッカー・安全性分類）
 - ✅ **serena memory確認**（onboarding, compact-restore）
 - ✅ **load-guidelines推奨**（プロジェクト検出時）
 
 ## 開発原則 🔒
 
-1. **Boundary射確認**: git操作・ファイル編集は事前確認（Guard関手）
-2. **型安全**: any禁止、as控える
-3. **確認優先**: 不明点は確認してから実行
+**操作チェッカー**により、全ての操作を自動分類：
+- ✅ **安全操作**: 即実行（読み取り、分析、git status/log/diff）
+- ⚠️ **要確認操作**: 事前確認（git commit/push、ファイル編集、設定変更）
+- 🚫 **禁止操作**: 拒否（rm -rf /、secrets漏洩、YAGNI違反）
+
+**その他の原則**:
+1. **型安全**: any禁止、as控える
+2. **確認優先**: 不明点は確認してから実行
 
 <!-- 🔒 END PROTECTED SECTION -->
 
@@ -34,12 +39,12 @@
 
 ---
 
-## ComplexityCheck射（タスク判定）
+## 複雑度判定（タスク分類）
 
 タスク受領時に複雑度を判定し、適切な実装手法を選択：
 
 ```
-ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
+複雑度判定: UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 ```
 
 | 条件 | 判定 | アクション |

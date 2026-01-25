@@ -18,14 +18,15 @@ if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
   cat <<EOF
 {
   "systemMessage": "✅ Session initialized: kenron + guidelines loaded",
-  "additionalContext": "**Auto-loaded**: kenron (Guard関手), load-guidelines will be suggested based on project detection.
+  "additionalContext": "**Auto-loaded**: kenron (操作チェッカー), load-guidelines will be suggested based on project detection.
 
 Run: mcp__serena__list_memories, mcp__serena__check_onboarding_performed. **MANDATORY**: Always check and reload compact-restore-* memory immediately to restore previous context.
 
 **Development Principles**:
-1. Boundary射確認: git/file operations require confirmation
-2. Type safety: Avoid 'any', minimize 'as'
-3. Confirm first: Ask before executing unclear operations
+- ✅ 安全操作: 即実行
+- ⚠️ 要確認操作: git/file operations require confirmation
+- 🚫 禁止操作: dangerous operations blocked
+- Type safety: Avoid 'any', minimize 'as'
 
 See CLAUDE.md for details."
 }
@@ -34,12 +35,13 @@ else
   cat <<EOF
 {
   "systemMessage": "⚠️ Serena not configured - basic mode",
-  "additionalContext": "**Auto-loaded**: kenron (Guard関手)
+  "additionalContext": "**Auto-loaded**: kenron (操作チェッカー)
 
 **Development Principles**:
-1. Boundary射確認: git/file operations require confirmation
-2. Type safety: Avoid 'any', minimize 'as'
-3. Confirm first: Ask before executing unclear operations"
+- ✅ 安全操作: 即実行
+- ⚠️ 要確認操作: git/file operations require confirmation
+- 🚫 禁止操作: dangerous operations blocked
+- Type safety: Avoid 'any', minimize 'as'"
 }
 EOF
 fi
