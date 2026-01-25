@@ -1,0 +1,109 @@
+#!/bin/bash
+# Codex PreToolUse Hook - Protection Mode (Operation Checker)
+# Simplified version for Codex integration
+
+set -euo pipefail
+
+# Read JSON input
+INPUT=$(cat)
+
+# Extract tool name and parameters
+TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null || echo "")
+TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {}' 2>/dev/null || echo "{}")
+
+# Classification variables
+KENRON_CLASS=""  # Safe, Boundary, Forbidden
+MESSAGE=""
+ADDITIONAL_CONTEXT=""
+
+# ====================================
+# 3-Layer Classification
+# ====================================
+
+case "$TOOL_NAME" in
+  # === Safe Operations (Immediate Execution) ===
+  "Read"|"Glob"|"Grep"|"WebFetch"|"WebSearch"|"ListMcpResourcesTool"|"ReadMcpResourceTool")
+    KENRON_CLASS="Safe"
+    ;;
+
+  "mcp__serena__read_file"|"mcp__serena__list_dir"|"mcp__serena__find_file"|"mcp__serena__search_for_pattern"|"mcp__serena__get_symbols_overview"|"mcp__serena__find_symbol"|"mcp__serena__find_referencing_symbols"|"mcp__serena__list_memories"|"mcp__serena__read_memory"|"mcp__serena__check_onboarding_performed"|"mcp__serena__get_current_config")
+    KENRON_CLASS="Safe"
+    ;;
+
+  # === Boundary Operations (Require Confirmation) ===
+  "Edit"|"Write"|"MultiEdit")
+    KENRON_CLASS="Boundary"
+    MESSAGE="🔶 Protection Mode: Boundary - File Edit"
+    ADDITIONAL_CONTEXT="【Protection Mode】Boundary (Requires Confirmation)\\n- Operation: File Edit\\n- Check: Type safety (no 'any'/'as'), guideline compliance"
+    ;;
+
+  "Bash")
+    COMMAND=$(echo "$TOOL_INPUT" | jq -r '.command // empty' 2>/dev/null || echo "")
+
+    # Forbidden Operations (Dangerous Commands)
+    if echo "$COMMAND" | grep -qE '(rm -rf /|rm -rf \*|> /dev/|:(){:|sudo rm|git push --force|git push -f)'; then
+      KENRON_CLASS="Forbidden"
+      MESSAGE="🔴 Protection Mode: Forbidden - Dangerous Command Detected!"
+      ADDITIONAL_CONTEXT="【Protection Mode】Forbidden (Execution Prohibited)\\n- Detected: Destructive command\\n- Action: Stop execution and suggest safe alternatives"
+
+    # Auto-format prohibition
+    elif echo "$COMMAND" | grep -qE '(npm run lint|prettier|eslint --fix|go fmt|autopep8|black )'; then
+      KENRON_CLASS="Boundary"
+      MESSAGE="🔶 Protection Mode: Boundary - Auto-format (Requires Approval)"
+      ADDITIONAL_CONTEXT="【Protection Mode】Boundary (Requires Confirmation)\\n- Operation: Auto-format\\n- Principle: No automatic processing without user approval"
+
+    # Change operations
+    elif echo "$COMMAND" | grep -qE '(git commit|git push|git merge|git rebase|npm install|pip install|go mod|docker build|docker push)'; then
+      KENRON_CLASS="Boundary"
+      MESSAGE="🔶 Protection Mode: Boundary - Change Command"
+      ADDITIONAL_CONTEXT="【Protection Mode】Boundary (Requires Confirmation)\\n- Operation: $(echo "$COMMAND" | head -c 50)...\\n- Check: User approval recommended before execution"
+
+    # Read-only commands
+    elif echo "$COMMAND" | grep -qE '^(git status|git log|git diff|git branch|ls |pwd|echo |cat |which |type )'; then
+      KENRON_CLASS="Safe"
+
+    else
+      # Other Bash commands are Boundary
+      KENRON_CLASS="Boundary"
+      MESSAGE="🔶 Protection Mode: Boundary - Bash Command"
+    fi
+    ;;
+
+  "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol"|"mcp__serena__write_memory"|"mcp__serena__delete_memory"|"mcp__serena__execute_shell_command")
+    KENRON_CLASS="Boundary"
+    MESSAGE="🔶 Protection Mode: Boundary - Serena MCP Change"
+    ADDITIONAL_CONTEXT="【Protection Mode】Boundary (Requires Confirmation)\\n- Operation: Serena MCP change\\n- Check: Consider memory update after important changes"
+    ;;
+
+  "Task"|"Skill"|"TaskCreate"|"TaskUpdate"|"TaskList"|"TaskGet"|"AskUserQuestion"|"EnterPlanMode"|"ExitPlanMode")
+    KENRON_CLASS="Safe"
+    ;;
+
+  *)
+    # Unknown tools are Boundary
+    KENRON_CLASS="Boundary"
+    MESSAGE="🔶 Protection Mode: Boundary - Unclassified Tool: $TOOL_NAME"
+    ;;
+esac
+
+# ====================================
+# JSON Output
+# ====================================
+
+if [ -n "$ADDITIONAL_CONTEXT" ]; then
+  cat <<EOF
+{
+  "systemMessage": "$MESSAGE",
+  "additionalContext": "$ADDITIONAL_CONTEXT"
+}
+EOF
+elif [ -n "$MESSAGE" ]; then
+  cat <<EOF
+{
+  "systemMessage": "$MESSAGE"
+}
+EOF
+else
+  # Safe operations: no message (token saving)
+  echo "{}"
+fi

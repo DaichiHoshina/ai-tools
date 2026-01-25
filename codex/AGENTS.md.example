@@ -37,9 +37,34 @@
 
 ---
 
-## 利用可能なコマンド
+## Claude Code リソース統合（Level 4）
 
-ai-toolsリポジトリの`claude-code/commands/`からコマンドが利用可能です（シンボリックリンク経由）。
+**シンボリックリンク方式**: 以下のリソースがClaude Codeと完全同期されます。
+
+| リソース | パス | 内容 |
+|---------|------|------|
+| **agents** | `~/.codex/agents/` → `~/ai-tools/claude-code/agents/` | 8種類のエージェント定義 |
+| **skills** | `~/.codex/skills/` → `~/ai-tools/claude-code/skills/` | 24種類のスキル定義 |
+| **guidelines** | `~/.codex/guidelines/` → `~/ai-tools/claude-code/guidelines/` | 29種類のガイドライン |
+| **commands** | `~/.codex/commands/` → `~/ai-tools/claude-code/commands/` | 19種類のコマンド |
+| **lib** | `~/.codex/lib/` → `~/ai-tools/claude-code/lib/` | 共通ライブラリ |
+
+### セットアップ
+
+初回セットアップ:
+```bash
+cd ~/ai-tools
+./codex/install.sh
+```
+
+更新時（Claude Code側の変更を反映）:
+```bash
+# シンボリックリンクのため自動反映
+# install.sh 再実行でテンプレートファイルも更新
+./codex/install.sh
+```
+
+### 利用可能なコマンド
 
 詳細は `COMMANDS.md` を参照してください。
 

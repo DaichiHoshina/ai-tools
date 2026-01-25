@@ -1,0 +1,60 @@
+#!/bin/bash
+# Codex PreCompact Hook - Auto Serena Memory Save Before Context Compression
+# REQUIRED: Save to Serena memory before compact, load after compact
+
+set -euo pipefail
+
+# Read JSON input
+INPUT=$(cat)
+
+# Extract session information
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
+PROJECT_DIR=$(echo "$INPUT" | jq -r '.workspace.current_dir // "."' 2>/dev/null || echo ".")
+PROJECT_NAME=$(basename "$PROJECT_DIR")
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+
+# Check if Serena MCP is available
+SERENA_AVAILABLE=false
+if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
+  SERENA_AVAILABLE=true
+fi
+
+# Build message
+if [ "$SERENA_AVAILABLE" = true ]; then
+  SYSTEM_MESSAGE="🔴 COMPACT DETECTED - Execute Serena memory save"
+  # Mandatory instruction: Claude Code must save to Serena memory
+  ADDITIONAL_CONTEXT="# ⚠️ MANDATORY: Pre-Compact Serena Memory Save\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}**MUST DO NOW** (before compact):\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}1. Save current work state with \`mcp__serena__write_memory\`:\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}   - memory_file_name: \`compact-restore-${TIMESTAMP}\`\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}   - content: Current task, progress, next actions, important context\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. Content template:\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}\`\`\`markdown\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}# Compact Restore Point - ${TIMESTAMP}\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}## Current Task\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}<task description>\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}## Progress\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}<completed work, remaining work>\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}## Important Context\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}<file paths, design decisions, notes>\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}## Next Actions\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}<what to do first after compact>\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}\`\`\`\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}---\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}## Post-Compact Recovery (auto-execute after compact)\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}After compact, execute in first response:\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}1. \`mcp__serena__list_memories\` to check memory list\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. Load \`compact-restore-*\` memory\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. Resume work based on loaded context\n"
+else
+  SYSTEM_MESSAGE="⚠️ COMPACT DETECTED - Serena MCP is disabled"
+  ADDITIONAL_CONTEXT="Enable Serena MCP to use context preservation feature."
+fi
+
+# JSON output
+cat <<EOF
+{
+  "systemMessage": "$SYSTEM_MESSAGE",
+  "additionalContext": "$ADDITIONAL_CONTEXT"
+}
+EOF

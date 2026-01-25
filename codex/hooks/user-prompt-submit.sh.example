@@ -1,0 +1,136 @@
+#!/bin/bash
+# Codex UserPromptSubmit Hook - Skill Recommendation
+# Simplified version for Codex integration with Claude Code resources
+
+set -euo pipefail
+
+# Read JSON input
+input=$(cat)
+
+# Extract prompt
+prompt=$(echo "$input" | jq -r '.prompt // empty' 2>/dev/null || echo "$input")
+prompt_lower=$(echo "$prompt" | tr '[:upper:]' '[:lower:]')
+
+# Detection arrays
+declare -A detected_skills
+additional_context=""
+
+# ========================================
+# Keyword-based Detection
+# ========================================
+detect_skills() {
+  # Development skills
+  if echo "$prompt_lower" | grep -qE 'go|golang|\.go'; then
+    detected_skills["go-backend"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'typescript|\.ts|\.tsx'; then
+    detected_skills["typescript-backend"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'react|next\.js|nextjs|\.jsx'; then
+    detected_skills["react-best-practices"]=1
+  fi
+
+  # Review skills
+  if echo "$prompt_lower" | grep -qE 'review|レビュー|確認して|refactor|リファクタ'; then
+    detected_skills["code-quality-review"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'security|セキュリティ|脆弱性'; then
+    detected_skills["security-error-review"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'test|テスト|doc|ドキュメント'; then
+    detected_skills["docs-test-review"]=1
+  fi
+
+  # Design skills
+  if echo "$prompt_lower" | grep -qE 'architecture|アーキテクチャ|設計|ddd|domain'; then
+    detected_skills["clean-architecture-ddd"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'api.*design|rest.*api|graphql'; then
+    detected_skills["api-design"]=1
+  fi
+
+  # Infrastructure skills
+  if echo "$prompt_lower" | grep -qE 'docker|dockerfile'; then
+    detected_skills["dockerfile-best-practices"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'kubernetes|k8s|kubectl'; then
+    detected_skills["kubernetes"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'terraform|\.tf'; then
+    detected_skills["terraform"]=1
+  fi
+
+  # Superpowers skills
+  if echo "$prompt_lower" | grep -qE 'brainstorm|ブレスト|設計相談'; then
+    detected_skills["superpowers:brainstorm"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'tdd|test.*driven'; then
+    detected_skills["superpowers:test-driven-development"]=1
+  fi
+
+  if echo "$prompt_lower" | grep -qE 'systematic.*debug|根本原因'; then
+    detected_skills["superpowers:systematic-debugging"]=1
+  fi
+}
+
+# ========================================
+# Error-based Detection
+# ========================================
+detect_errors() {
+  # Docker errors
+  if echo "$prompt" | grep -qiE 'cannot connect to.*docker daemon|docker.*connection refused'; then
+    detected_skills["docker-troubleshoot"]=1
+    additional_context="${additional_context}\n- ⚠️ Docker connection error detected"
+  fi
+
+  # Kubernetes errors
+  if echo "$prompt" | grep -qiE 'crashloopbackoff|imagepullbackoff|kubectl.*error'; then
+    detected_skills["kubernetes"]=1
+    additional_context="${additional_context}\n- ⚠️ Kubernetes error detected"
+  fi
+}
+
+# ========================================
+# Build Recommendation
+# ========================================
+build_recommendation() {
+  local skill_list=""
+
+  # Convert detected skills to comma-separated list
+  for skill in "${!detected_skills[@]}"; do
+    if [ -n "$skill_list" ]; then
+      skill_list="${skill_list}, ${skill}"
+    else
+      skill_list="$skill"
+    fi
+  done
+
+  # Build output message
+  if [ -n "$skill_list" ]; then
+    echo -n "**Recommended Skills**: $skill_list"
+    if [ -n "$additional_context" ]; then
+      echo -e "\n\n$additional_context"
+    fi
+  else
+    echo ""  # No recommendation
+  fi
+}
+
+# ========================================
+# Main
+# ========================================
+
+# Run detection
+detect_skills
+detect_errors
+
+# Output recommendation
+build_recommendation

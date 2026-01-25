@@ -1,0 +1,29 @@
+#!/bin/bash
+# Codex Stop Hook - Task Completion Notification
+# Plays notification sound when task is completed
+
+set -euo pipefail
+
+# Read JSON input
+INPUT=$(cat)
+
+# Notification sound file
+NOTIFICATION_FILE="$HOME/notification.mp3"
+
+if [ -f "$NOTIFICATION_FILE" ]; then
+  # Play notification sound (background)
+  afplay "$NOTIFICATION_FILE" &
+
+  cat <<EOF
+{
+  "systemMessage": "🔔 Task completed. Notification sound played."
+}
+EOF
+else
+  # Notification file not found
+  cat <<EOF
+{
+  "systemMessage": "⚠️  Notification file not found at ~/notification.mp3"
+}
+EOF
+fi
