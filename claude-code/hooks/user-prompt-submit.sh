@@ -14,8 +14,15 @@ set -euo pipefail
 # セキュリティ共通ライブラリ読み込み（Critical #6対策）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="${SCRIPT_DIR}/../lib"
-# shellcheck source=../lib/security-functions.sh
-source "${LIB_DIR}/security-functions.sh" 2>/dev/null || true
+
+# source のエラーハンドリング改善
+if [ -f "${LIB_DIR}/security-functions.sh" ]; then
+    # shellcheck source=../lib/security-functions.sh
+    source "${LIB_DIR}/security-functions.sh"
+else
+    echo '{"error": "security-functions.sh not found"}' >&2
+    exit 1
+fi
 
 # jq前提条件チェック
 if ! command -v jq &> /dev/null; then
@@ -24,7 +31,11 @@ if ! command -v jq &> /dev/null; then
 fi
 
 # JSON入力を読み込む（DoS攻撃防止: 1MB制限）
-if ! input=$(read_stdin_with_limit 1048576); then
+# stdin から直接読み込み（read_stdin_with_limitは別のコンテキストで使用）
+input=$(cat)
+
+# サイズチェック（1MB = 1048576バイト）
+if [ ${#input} -ge 1048576 ]; then
     echo '{"error": "Input size exceeds limit (1MB)"}' >&2
     exit 1
 fi
@@ -77,8 +88,10 @@ detect_from_files() {
 detect_from_keywords() {
   # キーワードパターンテーブル（pattern → language:skill）
   declare -A keyword_patterns=(
-    ['go|golang|\\.go|go\\.mod']="golang:go-backend"
-    ['typescript|\\.ts|\\.tsx|tsconfig']="typescript:typescript-backend"
+    ['go|golang|\.go|go\.mod']="golang:go-backend"
+    ['python|\.py|pip|poetry|pyproject\.toml|requirements\.txt|django|fastapi']="python:"
+    ['rust|\.rs|cargo|cargo\.toml|tokio|axum']="rust:"
+    ['typescript|\.ts|\.tsx|tsconfig']="typescript:typescript-backend"
     ['react|next\\.js|nextjs|\\.jsx']="react:react-best-practices"
     ['tailwind']="tailwind:"
     ['docker|dockerfile|docker-compose']=":dockerfile-best-practices"

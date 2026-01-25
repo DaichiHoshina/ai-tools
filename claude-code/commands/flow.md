@@ -30,6 +30,7 @@ Guard関手による操作分類:
 
 | 優先度 | キーワード | タスクタイプ | ワークフロー |
 |--------|-----------|------------|------------|
+| 0 | 相談, アイデア, 設計検討, ブレスト, brainstorm | **設計相談** | Brainstorm → PRD → Plan → ... |
 | 1 | 緊急, hotfix, 本番 | **緊急対応** | Debug → Dev → Verify → PR |
 | 2 | 修正, fix, バグ, エラー | **バグ修正** | Debug → Dev → Verify → PR |
 | 3 | リファクタ, 改善, 整理 | **リファクタリング** | Plan → Refactor → Simplify → Review → Verify → PR(draft) |
