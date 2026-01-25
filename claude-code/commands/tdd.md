@@ -51,10 +51,10 @@ description: TDD開発モード（RED-GREEN-REFACTOR強制）
                               → 問題なし → PR作成
 ```
 
-## kenronとの関係
+## protection-modeとの関係
 
 - **Superpowers（マクロ）**: TDDサイクル全体の強制
-- **kenron（ミクロ）**: テスト実行、ファイル編集などの個別操作の安全性制御
+- **protection-mode（ミクロ）**: テスト実行、ファイル編集などの個別操作の安全性制御
 
 ## 実行方法
 
@@ -81,5 +81,5 @@ description: TDD開発モード（RED-GREEN-REFACTOR強制）
 
 - Superpowersプラグインのインストールが必要
 - Claude Code再起動後に有効化
-- kenronのGuard関手は引き続き各操作に適用される
+- protection-modeのGuard関手は引き続き各操作に適用される
 - テストファーストを徹底すること（実装コードを先に書かない）

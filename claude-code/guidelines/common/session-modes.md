@@ -89,11 +89,11 @@
 ## 思考法ロード
 
 ```
-/kenron        # 基本（Guard関手 + 3層分類）
-/kenron full   # フル（+ モード定義）
+/protection-mode        # 基本（Guard関手 + 3層分類）
+/protection-mode full   # フル（+ モード定義）
 ```
 
-モードは思考の厳格さの目安。`/kenron` でガイドラインを読み込むと、状況に応じた判断が可能になる。
+モードは思考の厳格さの目安。`/protection-mode` でガイドラインを読み込むと、状況に応じた判断が可能になる。
 
 ---
 
@@ -167,4 +167,4 @@ F_Memory: ∅ → Context
 ## 関連
 
 - `guardrails.md` - 操作の分類（Safe/Boundary/Forbidden）
-- `/kenron` コマンド - 圏論的思考法ロード
+- `/protection-mode` コマンド - 圏論的思考法ロード

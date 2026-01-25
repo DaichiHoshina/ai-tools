@@ -15,7 +15,7 @@
 ## セッション開始時の自動実行 🔒
 
 以下は `session-start.sh` により自動実行されます：
-- ✅ **kenron**（操作チェッカー・安全性分類）
+- ✅ **protection-mode**（操作チェッカー・安全性分類）
 - ✅ **serena memory確認**（onboarding, compact-restore）
 - ✅ **load-guidelines推奨**（プロジェクト検出時）
 
@@ -59,7 +59,7 @@
 - セッション共有: `CLAUDE_CODE_TASK_LIST_ID=xxx` で複数セッション間で共有可能
 - UI表示: `ctrl+t` で表示/非表示を切替
 
-**詳細**: `claude-code/references/AI-THINKING-ESSENTIALS.md`, `/kenron` 参照
+**詳細**: `claude-code/references/AI-THINKING-ESSENTIALS.md`, `/protection-mode` 参照
 
 ---
 
@@ -184,15 +184,15 @@
 
 **方針**: ai-tools固有機能を維持しつつ、Superpowersの優位機能を補完的に活用
 
-### kenronとの関係
+### protection-modeとの関係
 
-| 観点 | kenron（圏論的思考法） | Superpowers |
+| 観点 | protection-mode（圏論的思考法） | Superpowers |
 |------|----------------------|-------------|
 | **目的** | 個別操作の安全性制御 | 開発プロセス全体の強制 |
 | **対象** | git, ファイル操作など個別アクション | brainstorm→plan→implement全体 |
 | **レイヤー** | **ミクロ**（個別操作） | **マクロ**（ワークフロー） |
 
-**補完関係**: Superpowersでマクロワークフロー制御し、各操作にkenronのGuard関手を適用
+**補完関係**: Superpowersでマクロワークフロー制御し、各操作にprotection-modeのGuard関手を適用
 
 ### 使用可能コマンド
 

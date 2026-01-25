@@ -33,10 +33,10 @@ description: 対話的設計精緻化（Superpowers統合）
    - `/dev` で直接実装
    - `/flow` でワークフロー全体実行
 
-## kenronとの関係
+## protection-modeとの関係
 
 - **Superpowers（マクロ）**: brainstorm → plan → implement のワークフロー制御
-- **kenron（ミクロ）**: 各操作（git, ファイル編集など）の安全性制御
+- **protection-mode（ミクロ）**: 各操作（git, ファイル編集など）の安全性制御
 
 両者は補完関係にあり、競合しません。
 
@@ -56,4 +56,4 @@ description: 対話的設計精緻化（Superpowers統合）
 
 - Superpowersプラグインのインストールが必要
 - Claude Code再起動後に有効化
-- kenronのGuard関手は引き続き各操作に適用される
+- protection-modeのGuard関手は引き続き各操作に適用される

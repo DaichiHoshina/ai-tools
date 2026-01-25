@@ -88,7 +88,7 @@ Claude Codeが外部ツールと連携するためのプロトコル。
 
 ---
 
-## kenron（圏論的思考法）
+## protection-mode（Protection Mode（操作保護モード））
 
 操作の安全性を3層で分類する思考フレームワーク。
 

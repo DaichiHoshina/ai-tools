@@ -199,7 +199,7 @@ afplay ~/notification.mp3
 ### Boundary 操作が拒否された場合
 - ユーザーに理由を説明
 - 代替案を提案
-- 必要に応じて `/kenron` で思考法を再確認
+- 必要に応じて `/protection-mode` で思考法を再確認
 
 ### Forbidden 操作が検出された場合
 - 即座に拒否
@@ -211,6 +211,6 @@ afplay ~/notification.mp3
 ## 関連
 
 - `session-modes.md` - モード定義
-- `/kenron` コマンド - 圏論的思考法ロード
+- `/protection-mode` コマンド - 圏論的思考法ロード
 - `claude-code/references/AI-THINKING-ESSENTIALS.md` - 思考法エッセンス（5フェーズワークフロー含む）
 - 10原則 - 基本動作原則

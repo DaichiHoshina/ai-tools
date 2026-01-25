@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# PreToolUse Hook - kenron（圏論的思考法）必須チェック
-# 10原則: kenron判定、自動処理禁止、確認済
+# PreToolUse Hook - protection-mode（圏論的思考法）必須チェック
+# 10原則: protection-mode判定、自動処理禁止、確認済
 # v2.1.9対応: additionalContext でモデルに追加コンテキストを提供
 
 set -euo pipefail
@@ -12,13 +12,13 @@ INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
 TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {}')
 
-# kenron判定変数
+# protection-mode判定変数
 KENRON_CLASS=""  # Safe, Boundary, Forbidden
 MESSAGE=""
 ADDITIONAL_CONTEXT=""
 
 # ====================================
-# kenron 3層分類判定
+# protection-mode 3層分類判定
 # ====================================
 
 case "$TOOL_NAME" in
@@ -39,8 +39,8 @@ case "$TOOL_NAME" in
   # === Boundary射（要確認・警告） ===
   "Edit"|"Write"|"MultiEdit")
     KENRON_CLASS="Boundary"
-    MESSAGE="🔶 kenron:Boundary射 - ファイル編集"
-    ADDITIONAL_CONTEXT="【kenron判定】Boundary射（要確認）\\n- 操作: ファイル編集\\n- 確認: 型安全性（any/as禁止）、ガイドライン準拠"
+    MESSAGE="🔶 protection-mode:Boundary射 - ファイル編集"
+    ADDITIONAL_CONTEXT="【protection-mode判定】Boundary射（要確認）\\n- 操作: ファイル編集\\n- 確認: 型安全性（any/as禁止）、ガイドライン準拠"
     ;;
 
   "Bash")
@@ -49,38 +49,38 @@ case "$TOOL_NAME" in
     # Forbidden射チェック（危険なコマンド）
     if echo "$COMMAND" | grep -qE '(rm -rf /|rm -rf \*|> /dev/|:(){:|sudo rm|git push --force|git push -f)'; then
       KENRON_CLASS="Forbidden"
-      MESSAGE="🔴 kenron:Forbidden射 - 危険なコマンド検出！実行禁止"
-      ADDITIONAL_CONTEXT="【kenron判定】Forbidden射（実行禁止）\\n- 検出: 破壊的コマンド\\n- 対応: 実行を中止し、安全な代替手段を提案"
+      MESSAGE="🔴 protection-mode:Forbidden射 - 危険なコマンド検出！実行禁止"
+      ADDITIONAL_CONTEXT="【protection-mode判定】Forbidden射（実行禁止）\\n- 検出: 破壊的コマンド\\n- 対応: 実行を中止し、安全な代替手段を提案"
     # 自動処理禁止チェック
     elif echo "$COMMAND" | grep -qE '(npm run lint|prettier|eslint --fix|go fmt|autopep8|black )'; then
       KENRON_CLASS="Boundary"
-      MESSAGE="🔶 kenron:Boundary射 - 自動整形（10原則:自動処理禁止）"
-      ADDITIONAL_CONTEXT="【kenron判定】Boundary射（要確認）\\n- 操作: 自動整形\\n- 10原則: 自動処理禁止 - ユーザー確認必須"
+      MESSAGE="🔶 protection-mode:Boundary射 - 自動整形（10原則:自動処理禁止）"
+      ADDITIONAL_CONTEXT="【protection-mode判定】Boundary射（要確認）\\n- 操作: 自動整形\\n- 10原則: 自動処理禁止 - ユーザー確認必須"
     # 変更系コマンド
     elif echo "$COMMAND" | grep -qE '(git commit|git push|git merge|git rebase|npm install|pip install|go mod|docker build|docker push)'; then
       KENRON_CLASS="Boundary"
-      MESSAGE="🔶 kenron:Boundary射 - 変更系コマンド"
-      ADDITIONAL_CONTEXT="【kenron判定】Boundary射（要確認）\\n- 操作: $(echo "$COMMAND" | head -c 50)...\\n- 確認: 実行前にユーザー承認を推奨"
+      MESSAGE="🔶 protection-mode:Boundary射 - 変更系コマンド"
+      ADDITIONAL_CONTEXT="【protection-mode判定】Boundary射（要確認）\\n- 操作: $(echo "$COMMAND" | head -c 50)...\\n- 確認: 実行前にユーザー承認を推奨"
     # 読み取り系コマンド
     elif echo "$COMMAND" | grep -qE '^(git status|git log|git diff|git branch|ls |pwd|echo |cat |which |type )'; then
       KENRON_CLASS="Safe"
     else
       # その他のBashコマンドはBoundary扱い
       KENRON_CLASS="Boundary"
-      MESSAGE="🔶 kenron:Boundary射 - Bashコマンド"
+      MESSAGE="🔶 protection-mode:Boundary射 - Bashコマンド"
     fi
     ;;
 
   "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol"|"mcp__serena__write_memory"|"mcp__serena__delete_memory"|"mcp__serena__execute_shell_command")
     KENRON_CLASS="Boundary"
-    MESSAGE="🔶 kenron:Boundary射 - Serena MCP変更操作"
-    ADDITIONAL_CONTEXT="【kenron判定】Boundary射（要確認）\\n- 操作: Serena MCP変更\\n- 確認: 重要な変更後はmemory更新を検討"
+    MESSAGE="🔶 protection-mode:Boundary射 - Serena MCP変更操作"
+    ADDITIONAL_CONTEXT="【protection-mode判定】Boundary射（要確認）\\n- 操作: Serena MCP変更\\n- 確認: 重要な変更後はmemory更新を検討"
     ;;
 
   "mcp__jira__jira_post"|"mcp__jira__jira_put"|"mcp__jira__jira_patch"|"mcp__jira__jira_delete"|"mcp__confluence__conf_post"|"mcp__confluence__conf_put"|"mcp__confluence__conf_patch"|"mcp__confluence__conf_delete")
     KENRON_CLASS="Boundary"
-    MESSAGE="🔶 kenron:Boundary射 - 外部サービス変更"
-    ADDITIONAL_CONTEXT="【kenron判定】Boundary射（要確認）\\n- 操作: Jira/Confluence変更\\n- 確認: 外部サービスへの書き込み操作"
+    MESSAGE="🔶 protection-mode:Boundary射 - 外部サービス変更"
+    ADDITIONAL_CONTEXT="【protection-mode判定】Boundary射（要確認）\\n- 操作: Jira/Confluence変更\\n- 確認: 外部サービスへの書き込み操作"
     ;;
 
   "Task")
@@ -124,7 +124,7 @@ case "$TOOL_NAME" in
   *)
     # 未知のツールはBoundary扱い
     KENRON_CLASS="Boundary"
-    MESSAGE="🔶 kenron:Boundary射 - 未分類ツール: $TOOL_NAME"
+    MESSAGE="🔶 protection-mode:Boundary射 - 未分類ツール: $TOOL_NAME"
     ;;
 esac
 

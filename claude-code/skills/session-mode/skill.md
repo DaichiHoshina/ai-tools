@@ -150,7 +150,7 @@ schema:
 
 ## 関連コマンド
 
-- `/kenron` - 圏論的思考法ロード（このスキル + guardrails.md を読み込み）
+- `/protection-mode` - 圏論的思考法ロード（このスキル + guardrails.md を読み込み）
 
 ---
 

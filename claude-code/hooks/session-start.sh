@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart Hook - kenron + guidelines 自動読み込み
+# SessionStart Hook - protection-mode + guidelines 自動読み込み
 # セッション開始時にSerena memoryリストを確認 + compact-restore読み込み
 
 set -euo pipefail
@@ -17,8 +17,8 @@ INPUT=$(cat)
 if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
   cat <<EOF
 {
-  "systemMessage": "✅ Session initialized: kenron + guidelines loaded",
-  "additionalContext": "**Auto-loaded**: kenron (操作チェッカー), load-guidelines will be suggested based on project detection.
+  "systemMessage": "✅ Session initialized: protection-mode + guidelines loaded",
+  "additionalContext": "**Auto-loaded**: protection-mode (操作チェッカー), load-guidelines will be suggested based on project detection.
 
 Run: mcp__serena__list_memories, mcp__serena__check_onboarding_performed. **MANDATORY**: Always check and reload compact-restore-* memory immediately to restore previous context.
 
@@ -35,7 +35,7 @@ else
   cat <<EOF
 {
   "systemMessage": "⚠️ Serena not configured - basic mode",
-  "additionalContext": "**Auto-loaded**: kenron (操作チェッカー)
+  "additionalContext": "**Auto-loaded**: protection-mode (操作チェッカー)
 
 **Development Principles**:
 - ✅ 安全操作: 即実行

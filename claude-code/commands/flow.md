@@ -15,7 +15,7 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 
 ## 前提条件（必須）
 
-**kenron読み込み**: `/kenron` または `Skill("kenron")` で操作チェッカーを適用
+**protection-mode読み込み**: `/protection-mode` または `Skill("protection-mode")` で操作チェッカーを適用
 
 ```
 操作チェッカーによる分類:
@@ -52,8 +52,8 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 
 ## 実行ロジック
 
-### 0. kenron読み込み（必須）
-`Skill("kenron")` でGuard関手・3層分類をセッションに適用
+### 0. protection-mode読み込み（必須）
+`Skill("protection-mode")` で操作チェッカー・安全性分類をセッションに適用
 
 ### 1. オプション解析
 引数からタスク内容とオプションを抽出
