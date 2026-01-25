@@ -1,0 +1,35 @@
+{
+  "_comment": "See README.md and claude-code/QUICKSTART.md for setup instructions",
+  "mcpServers": {
+    "serena": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/path/to/serena",
+        "serena-mcp-server",
+        "--project",
+        "/path/to/ai-tools"
+      ],
+      "env": {},
+      "_comment": "Replace /path/to/serena with your serena installation directory, and /path/to/ai-tools with the absolute path to this repository"
+    },
+    "context7": {
+      "type": "sse",
+      "url": "https://mcp.context7.com/sse"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "o3": {
+      "type": "sse",
+      "url": "https://mcp.o3.ee/sse"
+    }
+  }
+}

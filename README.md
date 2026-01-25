@@ -57,7 +57,11 @@ cd ~/ai-tools
 ls ~/.claude/hooks/          # 6つのHook確認
 jq '.hooks' ~/.claude/settings.json
 
-# 4. Claude Code起動
+# 4. MCP設定（Serena）
+cp .mcp.json.example .mcp.json
+# パスを編集: /path/to/serena と /path/to/ai-tools を実際のパスに変更
+
+# 5. Claude Code起動
 claude
 ```
 

@@ -1,6 +1,9 @@
 # Serena プロジェクト固有ファイル（個人情報・機密情報を含む可能性）
 .serena/
 
+# MCP設定（環境依存のため除外、.mcp.json.exampleを参照）
+.mcp.json
+
 # 環境変数ファイル
 .env
 .env.local

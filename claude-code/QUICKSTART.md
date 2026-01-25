@@ -103,6 +103,39 @@ PRD作成 → 設計 → 実装 → テスト → レビュー → PR作成
 
 ---
 
+## 初回セットアップ
+
+### MCP設定（Serena）
+
+1. **`.mcp.json`を作成**：
+
+```bash
+cp .mcp.json.example .mcp.json
+```
+
+2. **パスを環境に合わせて編集**：
+
+```json
+{
+  "mcpServers": {
+    "serena": {
+      "args": [
+        "--directory",
+        "/path/to/serena",    // ← あなたのSerenaディレクトリ
+        "--project",
+        "/path/to/ai-tools"   // ← このリポジトリの絶対パス
+      ]
+    }
+  }
+}
+```
+
+3. **Claude Code再起動**で設定を反映
+
+**注意**: `.mcp.json`は環境依存のためgit管理外。テンプレートの`.mcp.json.example`のみcommit対象。
+
+---
+
 ## スキル選択のコツ
 
 ### 自動推奨を活用
