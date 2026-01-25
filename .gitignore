@@ -4,6 +4,13 @@
 # MCP設定（環境依存のため除外、.mcp.json.exampleを参照）
 .mcp.json
 
+# Codex設定（テンプレートのみ管理、実ファイルは除外）
+codex/AGENTS.md
+codex/config.toml
+codex/hooks/*.sh
+!codex/*.example
+!codex/COMMANDS.md
+
 # 環境変数ファイル
 .env
 .env.local

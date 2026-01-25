@@ -186,7 +186,7 @@ Guard(a) = Deny    ⟺ a ∈ Mor(Forbidden)
 
 ```bash
 # 確認が必要な場合
-afplay ~/notification_confirm.mp3
+afplay ~/notification.mp3
 
 # 完了時
 afplay ~/notification.mp3

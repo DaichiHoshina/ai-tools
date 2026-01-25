@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# SessionEnd Hook for .codex
+# セッション終了時の自動処理
+
+set -euo pipefail
+
+# jq前提条件チェック
+if ! command -v jq &> /dev/null; then
+    echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+    exit 1
+fi
+
+# JSON入力を読み込む
+INPUT=$(cat)
+
+# セッション情報を取得
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"')
+TOTAL_TOKENS=$(echo "$INPUT" | jq -r '.total_tokens // 0')
+TOTAL_MESSAGES=$(echo "$INPUT" | jq -r '.total_messages // 0')
+DURATION=$(echo "$INPUT" | jq -r '.duration // 0')
+
+# ログディレクトリ
+LOG_DIR="$HOME/.codex/log"
+mkdir -p "$LOG_DIR"
+
+# セッションログファイル
+LOG_FILE="$LOG_DIR/$(date +%Y%m%d).log"
+
+# ログエントリ作成
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+LOG_ENTRY="[$TIMESTAMP] Session: $SESSION_ID | Messages: $TOTAL_MESSAGES | Tokens: $TOTAL_TOKENS | Duration: ${DURATION}s"
+
+# ログに追記
+echo "$LOG_ENTRY" >> "$LOG_FILE"
+
+# 通知音再生（AI運用7原則 第5原則）
+NOTIFICATION_FILE="$HOME/notification.mp3"
+NOTIFICATION_STATUS=""
+
+if [ -f "$NOTIFICATION_FILE" ]; then
+  afplay "$NOTIFICATION_FILE" &
+  NOTIFICATION_STATUS="🔔 Session completed"
+else
+  NOTIFICATION_STATUS="⚠️ Notification file not found"
+fi
+
+# 統計サマリー
+SUMMARY="# .codex Session Summary\\n\\n"
+SUMMARY="${SUMMARY}- **Session ID**: $SESSION_ID\\n"
+SUMMARY="${SUMMARY}- **Messages**: $TOTAL_MESSAGES\\n"
+SUMMARY="${SUMMARY}- **Tokens**: $TOTAL_TOKENS\\n"
+SUMMARY="${SUMMARY}- **Duration**: ${DURATION}s\\n"
+SUMMARY="${SUMMARY}- **Log**: $LOG_FILE\\n"
+
+# メモリー保存推奨（長いセッションの場合）
+if [ "$TOTAL_MESSAGES" -gt 20 ] || [ "$TOTAL_TOKENS" -gt 50000 ]; then
+  SUMMARY="${SUMMARY}\\n💾 **Tip**: Consider saving insights to Serena memory\\n"
+fi
+
+# JSON出力
+cat <<EOF
+{
+  "systemMessage": "$NOTIFICATION_STATUS | Logged to $LOG_FILE",
+  "additionalContext": "$SUMMARY"
+}
+EOF

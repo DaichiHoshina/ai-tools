@@ -67,6 +67,56 @@ claude
 
 ---
 
+## 🔧 Codex (gpt-5.2-codex) セットアップ
+
+このリポジトリはCodexにも対応しています。
+
+### 手動セットアップ
+
+```bash
+# 1. Codex設定ディレクトリの作成
+mkdir -p ~/.codex/hooks
+
+# 2. テンプレートファイルをコピー
+cp ~/ai-tools/codex/config.toml.example ~/.codex/config.toml
+cp ~/ai-tools/codex/AGENTS.md.example ~/.codex/AGENTS.md
+cp ~/ai-tools/codex/hooks/*.example ~/.codex/hooks/
+
+# 3. hooksファイルをリネーム（.exampleを削除）
+cd ~/.codex/hooks
+for f in *.example; do mv "$f" "${f%.example}"; done
+
+# 4. 共有リソースのシンボリックリンク作成
+ln -sf ~/ai-tools/claude-code/commands ~/.codex/commands
+ln -sf ~/ai-tools/claude-code/skills ~/.codex/skills
+ln -sf ~/ai-tools/claude-code/guidelines ~/.codex/guidelines
+
+# 5. config.tomlのパスを編集
+# $HOME、$HOME/serena、$HOME/ai-tools を実際のパスに変更
+nano ~/.codex/config.toml
+
+# 6. Codex起動
+codex mcp
+```
+
+### 設定ファイルの説明
+
+| ファイル | 用途 | 編集が必要 |
+|---------|------|-----------|
+| `config.toml` | メイン設定（MCPサーバー、プロファイル等） | ✅ パス変更必須 |
+| `AGENTS.md` | Codex運用ガイド | ❌ そのまま使用可 |
+| `hooks/*.sh` | セッション開始/終了時の処理 | ❌ そのまま使用可 |
+
+### 共有リソース
+
+Commands、Skills、Guidelinesは Claude Code と共有されます：
+
+- **Commands**: `/flow`, `/dev`, `/review` 等
+- **Skills**: `go-backend`, `typescript-backend` 等
+- **Guidelines**: 開発原則、型安全性ガイド等
+
+---
+
 ## 💡 具体的な使い方（シーン別ガイド）
 
 ### 🐛 シーン1: バグ修正

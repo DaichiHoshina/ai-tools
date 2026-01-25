@@ -1,0 +1,115 @@
+# ═══════════════════════════════════════════════════════════
+# Core Configuration
+# ═══════════════════════════════════════════════════════════
+
+# Model configuration
+model = "gpt-5.2-codex"
+hide_agent_reasoning = true
+network_access = true
+
+# Notification settings (macOS)
+notify = ["zsh", "-lc", "afplay ~/notification.mp3"]
+
+# ═══════════════════════════════════════════════════════════
+# Profiles
+# ═══════════════════════════════════════════════════════════
+
+# Compact profile: Prompt size optimized (recommended)
+[profiles.compact]
+base-instructions = """
+You are a helpful coding assistant. Follow these core principles:
+- Write clean, readable code
+- Use existing libraries and standard patterns
+- Keep solutions simple and focused
+- Ask for clarification when needed
+- Follow the project's existing code style
+"""
+include-plan-tool = false
+
+# Detailed profile: Comprehensive approach with ai-tools principles
+[profiles.detailed]
+base-instructions = """
+You are an experienced software engineer following ai-tools principles:
+
+**Core Principles**:
+- Write clean, maintainable, testable code
+- Type safety: Avoid 'any', minimize 'as'
+- Follow project's coding standards
+- Apply SOLID principles and design patterns
+
+**Task Complexity**:
+- Simple (<5 files, <300 lines): Direct implementation
+- TaskDecomposition (≥5 files OR ≥3 features): Staged with Tasks
+- AgentHierarchy (cross-project): PO/Manager/Developer
+
+**Quality Gates**:
+- verify-app before PR
+- Two-failure rule: Reorganize after 2 failed attempts
+
+**Commands**: /flow (auto), /dev (direct), /review, /cpr (commit-push-pr)
+"""
+include-plan-tool = true
+
+# Default profile selection
+[defaults]
+profile = "compact"
+
+# ═══════════════════════════════════════════════════════════
+# MCP Servers Configuration
+# ═══════════════════════════════════════════════════════════
+
+# ═══════════════════════════════════════════════════════════
+# NOTE: codex MCP is removed - 'codex mcp' is a management command, not an MCP server
+# ═══════════════════════════════════════════════════════════
+
+# Serena: セマンティックコード解析（高優先度）
+# Note: uvの初回起動は依存関係のダウンロードに時間がかかる
+# Note: パスは環境に合わせて変更してください
+[mcp_servers.serena]
+command = "uv"
+args = [
+  "run",
+  "--directory",
+  "$HOME/serena",
+  "serena-mcp-server",
+  "--project",
+  "$HOME"
+]
+env = {}
+startup_timeout_sec = 90
+
+# Context7: 最新ドキュメント取得（計画時に必須）
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp@latest"]
+env = {}
+startup_timeout_sec = 20
+
+# Playwright: ブラウザ自動化（任意）
+# 公式パッケージ: @playwright/mcp
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+env = {}
+startup_timeout_sec = 20
+
+# ═══════════════════════════════════════════════════════════
+# Trusted Projects
+# ═══════════════════════════════════════════════════════════
+# Note: パスは環境に合わせて変更してください
+
+# Home directory (全般的な信頼）
+[projects."$HOME"]
+trust_level = "trusted"
+
+# ai-tools: Codex設定リポジトリ（compact推奨）
+[projects."$HOME/ai-tools"]
+trust_level = "trusted"
+profile = "compact"
+
+# ═══════════════════════════════════════════════════════════
+# Model Migrations
+# ═══════════════════════════════════════════════════════════
+
+[notice.model_migrations]
+gpt-5 = "gpt-5.2-codex"
