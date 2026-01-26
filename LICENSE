@@ -1,21 +1,37 @@
-MIT License
+非商用ライセンス (Non-Commercial License)
 
 Copyright (c) 2025 AI Tools Contributors
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+本ソフトウェアおよび関連ドキュメントファイル（以下「本ソフトウェア」）は、以下の条件に従う限りにおいて、
+無償で複製、使用、変更、配布することができます。
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## 許可される用途
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+- 個人利用
+- 研究目的
+- 教育目的
+- 学習目的
+- 非営利活動
+
+## 禁止事項
+
+以下の用途での使用は禁止されます：
+
+- 商用利用（営利目的での使用、販売、サービス提供など）
+- 本ソフトウェアを組み込んだ商用製品の開発・販売
+- 本ソフトウェアを使用した有償サービスの提供
+
+## 条件
+
+上記の著作権表示および本許諾表示を、本ソフトウェアのすべての複製または重要な部分に記載するものとします。
+
+## 免責事項
+
+本ソフトウェアは「現状のまま」で提供され、明示的または黙示的な保証は一切ありません。
+著者または著作権者は、本ソフトウェアの使用またはその他の取り扱いに起因または関連して生じる
+いかなるクレーム、損害、その他の責任についても一切責任を負いません。
+
+## サードパーティコンポーネント
+
+本リポジトリには、異なるライセンス下にあるサードパーティコンポーネントが含まれています。
+詳細は README.md の Attribution セクションを参照してください。

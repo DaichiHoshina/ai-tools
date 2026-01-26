@@ -1,5 +1,9 @@
 # AI Tools - Claude Code 設定リポジトリ
 
+> 🌟 **オープンソースプロジェクト** - AI開発環境の研究・実験・共有を目的としたリポジトリです。
+>
+> Claude Code を用いた開発ワークフローの最適化、AI支援開発の効率化手法、プロンプトエンジニアリングのベストプラクティスを研究・公開しています。
+
 Claude Code の設定を一元管理し、複数PCで同じ環境を再現するためのリポジトリ。
 
 **最新の Claude Code 1.0.82 機能をフル活用**:
@@ -452,10 +456,20 @@ ai-tools/
 
 ### 他のPCから最新設定を取得
 
+#### Claude Code
+
 ```bash
 cd ~/ai-tools
 git pull
 ./claude-code/install.sh
+```
+
+#### Codex
+
+```bash
+cd ~/ai-tools
+git pull
+./codex/install.sh
 ```
 
 ### ローカルの変更をリポジトリに反映
@@ -529,6 +543,32 @@ daichi@DaichiMac:~/ai-tools $ [🪙 50.0K|30%]
 
 ---
 
+## 📜 Attribution
+
+このプロジェクトには以下のオープンソースコードが含まれています：
+
+- **[Claude Code Superpowers](https://github.com/anthropics/claude-code-superpowers)** - Apache License 2.0
+  - `claude-code/skills/.system/skill-installer/`
+  - `claude-code/skills/.system/skill-creator/`
+
+---
+
 ## ライセンス
 
-個人利用のためのリポジトリです。
+### オープンソースライセンス（非商用）
+
+このリポジトリは **非商用ライセンス** の下で公開されています。
+
+- 📄 **ライセンス全文**: [LICENSE](./LICENSE)
+- ✅ **許可される用途**: 個人利用、研究、教育、学習
+- 🔓 **自由な利用**: 非商用目的であれば自由に利用・改変・配布可能
+- ❌ **禁止**: 商用利用（営利目的での使用・販売・サービス提供）
+- 📚 **推奨用途**: AI支援開発の研究、プロンプトエンジニアリングの学習に最適
+
+### サードパーティコンポーネント
+
+サードパーティコンポーネントは各自のライセンスに従います（上記 Attribution セクション参照）。
+
+### 免責事項
+
+本リポジトリは研究・実験目的で提供されています。本番環境での利用は自己責任でお願いします。

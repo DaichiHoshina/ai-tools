@@ -1,5 +1,5 @@
 {
-  "_comment": "See README.md and claude-code/QUICKSTART.md for setup instructions",
+  "_comment": "See README.md and claude-code/QUICKSTART.md for setup instructions. Note: context7 and playwright should be configured globally in ~/.claude/settings.json for use across all projects",
   "mcpServers": {
     "serena": {
       "type": "stdio",
@@ -14,18 +14,6 @@
       ],
       "env": {},
       "_comment": "Replace /path/to/serena with your serena installation directory, and /path/to/ai-tools with the absolute path to this repository"
-    },
-    "context7": {
-      "type": "sse",
-      "url": "https://mcp.context7.com/sse"
-    },
-    "playwright": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ],
-      "env": {}
     }
   }
 }
