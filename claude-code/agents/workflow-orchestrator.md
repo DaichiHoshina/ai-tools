@@ -208,6 +208,47 @@ workflows:
         required: true
 ```
 
+### Phase 2.5: Guard関手適用（自動）
+
+すべての操作実行前にGuard関手を適用:
+
+```typescript
+// Guard関手による操作分類
+function classifyAndExecute(action: Action, mode: Mode = 'normal') {
+  const classification = Guard_M(mode, action);
+  
+  switch (classification) {
+    case 'Allow':   // Safe射
+      return execute(action);
+    case 'AskUser': // Boundary射
+      return confirm(action) ? execute(action) : skip(action);
+    case 'Deny':    // Forbidden射
+      return reject(action, '禁止操作です');
+  }
+}
+
+// 分類マッピング
+const Guard_M = (mode: Mode, action: Action): Classification => {
+  // Safe射（即座実行）
+  const safeActions = ['read_file', 'find_symbol', 'git_status', 'git_log', 'git_diff', 'search'];
+  if (safeActions.some(a => action.type.includes(a))) return 'Allow';
+  
+  // Forbidden射（拒否）
+  const forbiddenActions = ['rm_rf_root', 'secrets_leak', 'force_push_main', 'yagni_violation'];
+  if (forbiddenActions.some(a => action.type.includes(a))) return 'Deny';
+  
+  // Boundary射（確認）- モード依存
+  if (mode === 'strict') return 'AskUser';  // strict: すべて確認
+  if (mode === 'fast' && action.type === 'git_commit') return 'Allow';  // fast: commit自動
+  
+  // normal: git push, 設定変更は確認
+  const boundaryActions = ['git_push', 'git_commit', 'config_change'];
+  if (boundaryActions.some(a => action.type.includes(a))) return 'AskUser';
+  
+  return 'Allow';  // デフォルト: 許可
+};
+```
+
 ### Phase 3: ユーザー確認（10秒）
 
 ```markdown
@@ -216,12 +257,12 @@ workflows:
 **タスクタイプ**: 新機能実装
 **技術スタック**: TypeScript, Next.js
 **対象範囲**: 複数ファイル（3-5ファイル予想）
-**Plan モード**: 推奨 ✅
+**Plan モード**: 推奨 ✅（自動移行）
 
 📋 実行予定ワークフロー
 
 1. ✓ /prd - 要件整理
-2. ✓ Plan モード開始
+2. ✓ Plan モード開始（EnterPlanMode自動実行）
 3. ✓ /plan - 設計
 4. ✓ /dev - 実装
 5. ✓ code-simplifier - コード簡素化
@@ -229,12 +270,6 @@ workflows:
 7. ⚪ /review - レビュー（スキップ可）
 8. ✓ verify-app - 検証
 9. ✓ /commit-push-pr - PR作成
-
-⏱ 予想所要時間: 15-20分
-
-⚠️ **Planモード切り替えが必要です**:
-   → Shift+Tab を2回押してPlanモードに入ってください
-   → （Planモード確認後、Enterキーで続行）
 
 実行してよろしいですか？
 [y] はい、実行
@@ -269,22 +304,38 @@ TaskList();
 ```typescript
 // 各ステップ実行時の自動処理
 async function executeStep(step: WorkflowStep, taskId: string) {
-  // 0. Planモード切り替え確認（mode: plan の場合）
-  if (step.mode === 'plan') {
-    console.log('⚠️  Planモードに切り替えてください（Shift+Tab を2回）');
-    console.log('   切り替え完了後、Enterキーを押してください...');
-    await waitForUserConfirmation();
+  // 0. Guard関手による分類チェック
+  const classification = classifyAndExecute(step, getCurrentMode());
+  if (classification === 'Deny') {
+    throw new Error(`禁止操作: ${step.command}`);
+  }
+  if (classification === 'AskUser') {
+    const confirmed = await askUserConfirmation(step);
+    if (!confirmed) return { success: false, skipped: true };
   }
 
-  // 1. Tasksで開始マーク
+  // 1. Planモード自動移行（mode: plan の場合）
+  if (step.mode === 'plan') {
+    // EnterPlanMode toolで自動移行
+    await EnterPlanMode();
+    console.log('✅ Planモードに自動移行しました');
+  }
+
+  // 2. Tasksで開始マーク
   TaskUpdate({ taskId, status: "in_progress" });
 
-  // 2. ステップ実行
+  // 3. ステップ実行
   const result = await executeCommand(step.command);
 
-  // 3. Tasksで完了マーク
+  // 4. Tasksで完了マーク
   if (result.success) {
     TaskUpdate({ taskId, status: "completed" });
+  }
+
+  // 5. Planモード終了（plan完了後は自動でExitPlanMode）
+  if (step.mode === 'plan' && result.success) {
+    await ExitPlanMode();
+    console.log('✅ Planモードを終了しました');
   }
 
   return result;
@@ -312,8 +363,7 @@ async function executeStep(step: WorkflowStep, taskId: string) {
 - Test: ✅ 15/15 パス
 - Build: ✅ 成功
 
-✅ **Planモードを終了してください**:
-   → Shift+Tab を押して通常モードに戻ってください
+✅ Guard関手適用: 全操作が分類に従って実行されました
 
 💡 次のアクション
 - PRレビュー待ち

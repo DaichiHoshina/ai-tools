@@ -55,6 +55,15 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 ### 0. protection-mode読み込み（必須）
 `Skill("protection-mode")` で操作チェッカー・安全性分類をセッションに適用
 
+**Guard関手が各操作に自動適用**:
+```
+Guard_M : Mode × Action → {Allow, AskUser, Deny}
+
+- Allow（Safe射）: 読み取り、分析 → 即座実行
+- AskUser（Boundary射）: git push、設定変更 → 確認後実行
+- Deny（Forbidden射）: rm -rf /、secrets漏洩 → 拒否
+```
+
 ### 1. オプション解析
 引数からタスク内容とオプションを抽出
 
@@ -92,8 +101,9 @@ TaskUpdate(taskId: "1", status: "completed")    # 完了
 CLAUDE_CODE_TASK_LIST_ID=xxx で複数セッション間で共有可能
 ```
 
-### 4. Plan モード判断
+### 4. Plan モード判断（自動移行）
 - **Plan必須**: 新機能実装, リファクタリング, 複雑なバグ修正
+  - → `EnterPlanMode()` で自動移行、完了後 `ExitPlanMode()` で自動終了
 - **通常モード**: 単純なバグ修正, ドキュメント, テスト
 
 ### 5. workflow-orchestrator起動
