@@ -59,7 +59,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/stop.sh"
+            "command": "~/.claude/hooks/stop.sh",
+            "async": true
           }
         ]
       }
@@ -69,7 +70,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/session-end.sh"
+            "command": "~/.claude/hooks/session-end.sh",
+            "async": true
           }
         ]
       }
@@ -79,7 +81,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/post-tool-use.sh"
+            "command": "~/.claude/hooks/post-tool-use.sh",
+            "async": true
           }
         ]
       }
