@@ -27,16 +27,10 @@ source "${LIB_DIR}/security-functions.sh" 2>/dev/null || {
     }
 }
 
-# jq存在チェック（settings.json処理に必要）
+# jq存在チェック（将来の拡張用）
 check_jq() {
-    if ! command -v jq &> /dev/null; then
-        print_warning "jq がインストールされていません（brew install jq）"
-        print_info "sed fallback モードで動作します"
-        return 1
-    fi
-    return 0
+    command -v jq &> /dev/null
 }
-HAS_JQ=$(check_jq && echo "true" || echo "false")
 
 # =============================================================================
 # Utility Functions
@@ -187,7 +181,7 @@ sync_settings_template() {
         while IFS='=' read -r key value; do
             [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
             # ホワイトリストにあるキーのみexport
-            if [[ " $allowed_keys " =~ " $key " ]] && [ -n "$value" ]; then
+            if [[ " $allowed_keys " =~ " ${key} " ]] && [ -n "$value" ]; then
                 local escaped_val
                 escaped_val=$(escape_for_sed "$value")
                 content=$(echo "$content" | sed "s|${escaped_val}|__${key}__|g")
