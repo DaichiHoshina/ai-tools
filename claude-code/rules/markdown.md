@@ -1,5 +1,6 @@
 ---
-paths: "**/*.md"
+paths:
+  - "**/*.md"
 ---
 # Markdown ルール
 

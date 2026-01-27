@@ -1,5 +1,6 @@
 ---
-paths: "**/*.go"
+paths:
+  - "**/*.go"
 ---
 # Golang ルール
 
