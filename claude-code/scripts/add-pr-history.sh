@@ -3,11 +3,12 @@
 # PR履歴追加スクリプト（汎用版）
 # 使用例: ~/.claude/scripts/add-pr-history.sh 123 "機能Xの実装" "https://example.com/issue/456"
 
-set -e
+set -euo pipefail
 
 # プロジェクトの.claudeディレクトリを探す
 find_claude_dir() {
-    local current_dir=$(pwd)
+    local current_dir
+    current_dir=$(pwd)
     while [ "$current_dir" != "/" ]; do
         if [ -d "$current_dir/.claude" ]; then
             echo "$current_dir/.claude"
@@ -19,8 +20,7 @@ find_claude_dir() {
 }
 
 # .claudeディレクトリを検出
-CLAUDE_DIR=$(find_claude_dir)
-if [ $? -ne 0 ]; then
+if ! CLAUDE_DIR=$(find_claude_dir); then
     echo "❌ エラー: プロジェクトの.claudeディレクトリが見つかりません"
     echo "💡 ヒント: プロジェクトルートで 'mkdir .claude' を実行してください"
     exit 1
@@ -67,7 +67,7 @@ mkdir -p "$HISTORY_DIR"
 # 既存ファイルがある場合は確認
 if [ -f "$TARGET_FILE" ]; then
     echo "⚠️  警告: $TARGET_FILE は既に存在します"
-    read -p "上書きしますか？ (y/N): " -n 1 -r
+    read -rp "上書きしますか？ (y/N): " -n 1
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "❌ 処理を中止しました"
@@ -123,7 +123,7 @@ echo "📝 [xxx] 部分を適切な内容に置き換えてください"
 # CLAUDE.mdへの追記を確認
 CLAUDE_MD="$CLAUDE_DIR/CLAUDE.md"
 if [ -f "$CLAUDE_MD" ]; then
-    read -p "CLAUDE.mdの実装履歴に追記しますか？ (y/N): " -n 1 -r
+    read -rp "CLAUDE.mdの実装履歴に追記しますか？ (y/N): " -n 1
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         # 実装履歴セクションを探して追記

@@ -1,6 +1,8 @@
 # スキル依存関係マップ
 
-全22スキルの依存関係（requires-guidelines）と推奨組み合わせ（often-used-with）を可視化。
+全26スキルの依存関係（requires-guidelines）と推奨組み合わせ（often-used-with）を可視化。
+
+> **関連ドキュメント**: [commands/](commands/) | [QUICKSTART.md](QUICKSTART.md) | [GLOSSARY.md](GLOSSARY.md)
 
 ## レビュー系（5スキル）
 

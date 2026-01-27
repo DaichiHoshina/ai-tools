@@ -50,7 +50,7 @@ print_info() { echo -e "${BLUE}ℹ $1${NC}"; }
 
 confirm() {
     local message="$1"
-    read -p "$message [y/N]: " answer
+    read -rp "$message [y/N]: " answer
     [[ "$answer" =~ ^[Yy]$ ]]
 }
 
@@ -89,7 +89,7 @@ sync_to_local() {
         if [ -e "$src" ]; then
             if [ -d "$src" ]; then
                 # 例外伝播の明示化（Critical #7対策）
-                if ! rm -rf "$dst"; then
+                if ! rm -rf "${dst:?}"; then
                     print_error "削除失敗: $dst"
                     return 1
                 fi
@@ -138,7 +138,7 @@ sync_from_local() {
     for dir in "${dirs[@]}"; do
         if [ -d "$CLAUDE_DIR/$dir" ]; then
             # 例外伝播の明示化（Critical #7対策）
-            if ! rm -rf "$SCRIPT_DIR/$dir"; then
+            if ! rm -rf "${SCRIPT_DIR:?}/${dir}"; then
                 print_error "削除失敗: $SCRIPT_DIR/$dir"
                 return 1
             fi
@@ -181,16 +181,18 @@ sync_settings_template() {
     node_path="$(dirname "$(which node)" 2>/dev/null || echo "/usr/local/bin")"
     content=$(echo "$content" | sed "s|$node_path|__NODE_PATH__|g")
 
+    # 環境変数をホワイトリスト方式で読み込み（セキュリティ対策）
     if [ -f "$HOME/.env" ]; then
-        set -a; source "$HOME/.env"; set +a
-        [ -n "$GITLAB_API_URL" ] && content=$(echo "$content" | sed "s|$GITLAB_API_URL|__GITLAB_API_URL__|g")
-        [ -n "$CONFLUENCE_URL" ] && content=$(echo "$content" | sed "s|$CONFLUENCE_URL|__CONFLUENCE_URL__|g")
-        [ -n "$CONFLUENCE_EMAIL" ] && content=$(echo "$content" | sed "s|$CONFLUENCE_EMAIL|__CONFLUENCE_EMAIL__|g")
-        [ -n "$CONFLUENCE_API_TOKEN" ] && content=$(echo "$content" | sed "s|$CONFLUENCE_API_TOKEN|__CONFLUENCE_API_TOKEN__|g")
-        [ -n "$JIRA_URL" ] && content=$(echo "$content" | sed "s|$JIRA_URL|__JIRA_URL__|g")
-        [ -n "$JIRA_EMAIL" ] && content=$(echo "$content" | sed "s|$JIRA_EMAIL|__JIRA_EMAIL__|g")
-        [ -n "$JIRA_API_TOKEN" ] && content=$(echo "$content" | sed "s|$JIRA_API_TOKEN|__JIRA_API_TOKEN__|g")
-        [ -n "$OPENAI_API_KEY" ] && content=$(echo "$content" | sed "s|$OPENAI_API_KEY|__OPENAI_API_KEY__|g")
+        local allowed_keys="GITLAB_API_URL CONFLUENCE_URL CONFLUENCE_EMAIL CONFLUENCE_API_TOKEN JIRA_URL JIRA_EMAIL JIRA_API_TOKEN OPENAI_API_KEY"
+        while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+            # ホワイトリストにあるキーのみexport
+            if [[ " $allowed_keys " =~ " $key " ]] && [ -n "$value" ]; then
+                local escaped_val
+                escaped_val=$(escape_for_sed "$value")
+                content=$(echo "$content" | sed "s|${escaped_val}|__${key}__|g")
+            fi
+        done < "$HOME/.env"
     fi
 
     content=$(echo "$content" | sed -E 's/ATATT3x[A-Za-z0-9_=-]+/__CONFLUENCE_API_TOKEN__/g')

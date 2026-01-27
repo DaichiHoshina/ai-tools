@@ -59,10 +59,10 @@ confirm() {
     local default="${2:-n}"
 
     if [ "$default" = "y" ]; then
-        read -p "$message [Y/n]: " answer
+        read -rp "$message [Y/n]: " answer
         answer="${answer:-y}"
     else
-        read -p "$message [y/N]: " answer
+        read -rp "$message [y/N]: " answer
         answer="${answer:-n}"
     fi
 
@@ -87,7 +87,8 @@ create_symlink() {
     elif [ -e "$target" ]; then
         print_warning "ファイル/ディレクトリ $name が既に存在します"
         if confirm "バックアップして上書きしますか？"; then
-            local backup="${target}.backup.$(date +%Y%m%d%H%M%S)"
+            local backup
+            backup="${target}.backup.$(date +%Y%m%d%H%M%S)"
             mv "$target" "$backup"
             print_info "バックアップ: $backup"
             ln -sf "$source" "$target"
@@ -159,7 +160,7 @@ setup_env_interactive() {
     echo ""
 
     # GitLab
-    read -p "GITLAB_API_URL (例: https://gitlab.example.com/api/v4): " gitlab_url
+    read -rp "GITLAB_API_URL (例: https://gitlab.example.com/api/v4): " gitlab_url
     if [ -n "$gitlab_url" ]; then
         update_env_var "GITLAB_API_URL" "$gitlab_url"
     fi
@@ -171,12 +172,12 @@ setup_env_interactive() {
     fi
 
     # Confluence
-    read -p "CONFLUENCE_URL (例: https://your-domain.atlassian.net): " confluence_url
+    read -rp "CONFLUENCE_URL (例: https://your-domain.atlassian.net): " confluence_url
     if [ -n "$confluence_url" ]; then
         update_env_var "CONFLUENCE_URL" "$confluence_url"
     fi
 
-    read -p "CONFLUENCE_EMAIL: " confluence_email
+    read -rp "CONFLUENCE_EMAIL: " confluence_email
     if [ -n "$confluence_email" ]; then
         update_env_var "CONFLUENCE_EMAIL" "$confluence_email"
     fi
@@ -188,12 +189,12 @@ setup_env_interactive() {
     fi
 
     # JIRA
-    read -p "JIRA_URL (例: https://your-domain.atlassian.net): " jira_url
+    read -rp "JIRA_URL (例: https://your-domain.atlassian.net): " jira_url
     if [ -n "$jira_url" ]; then
         update_env_var "JIRA_URL" "$jira_url"
     fi
 
-    read -p "JIRA_EMAIL: " jira_email
+    read -rp "JIRA_EMAIL: " jira_email
     if [ -n "$jira_email" ]; then
         update_env_var "JIRA_EMAIL" "$jira_email"
     fi
@@ -264,7 +265,8 @@ copy_directory_contents() {
 
         for file in "$src_dir"/*; do
             if [ -f "$file" ]; then
-                local filename=$(basename "$file")
+                local filename
+                filename=$(basename "$file")
                 cp "$file" "$dst_dir/$filename"
             fi
         done
@@ -297,7 +299,8 @@ copy_directory_contents() {
     # Scripts
     for file in "$SCRIPT_DIR/scripts/"*; do
         if [ -f "$file" ]; then
-            local filename=$(basename "$file")
+            local filename
+            filename=$(basename "$file")
             cp "$file" "$CLAUDE_DIR/scripts/$filename"
             chmod +x "$CLAUDE_DIR/scripts/$filename"
         fi
@@ -333,7 +336,8 @@ configure_settings_json() {
     if [ -f "$CLAUDE_DIR/settings.json" ]; then
         print_warning "settings.json が既に存在します"
         if confirm "上書きしますか？（既存はバックアップされます）"; then
-            local backup="$CLAUDE_DIR/settings.json.backup.$(date +%Y%m%d%H%M%S)"
+            local backup
+            backup="$CLAUDE_DIR/settings.json.backup.$(date +%Y%m%d%H%M%S)"
             cp "$CLAUDE_DIR/settings.json" "$backup"
             print_info "バックアップ: $backup"
             generate_settings_json "$node_bin_path"

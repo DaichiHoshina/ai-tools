@@ -3,24 +3,24 @@
 # ドキュメント自動更新スクリプト（汎用版）
 # 使用例: ~/.claude/scripts/update-docs.sh feature "ユーザー招待機能" "user-invitation"
 
-set -e
+set -euo pipefail
 
 # プロジェクトの.claudeディレクトリを探す
 find_claude_dir() {
-    local current_dir=$(pwd)
+    local current_dir
+    current_dir=$(pwd)
     while [ "$current_dir" != "/" ]; do
         if [ -d "$current_dir/.claude" ]; then
             echo "$current_dir/.claude"
             return 0
         fi
-        current_dir=$(dirname "$current_dir")
+        current_dir="$(dirname "$current_dir")"
     done
     return 1
 }
 
 # .claudeディレクトリを検出
-CLAUDE_DIR=$(find_claude_dir)
-if [ $? -ne 0 ]; then
+if ! CLAUDE_DIR=$(find_claude_dir); then
     echo "❌ エラー: プロジェクトの.claudeディレクトリが見つかりません"
     echo "💡 ヒント: プロジェクトルートで 'mkdir .claude' を実行してください"
     exit 1
