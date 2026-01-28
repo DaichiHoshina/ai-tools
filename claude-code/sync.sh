@@ -63,6 +63,7 @@ sync_to_local() {
     print_header "リポジトリ → ローカル 同期"
 
     local items=(
+        "VERSION"
         "CLAUDE.md"
         "commands"
         "guidelines"
@@ -117,6 +118,15 @@ sync_to_local() {
 
 sync_from_local() {
     print_header "ローカル → リポジトリ 同期"
+
+    # VERSION
+    if [ -f "$CLAUDE_DIR/VERSION" ]; then
+        if ! cp "$CLAUDE_DIR/VERSION" "$SCRIPT_DIR/VERSION"; then
+            print_error "コピー失敗: VERSION"
+            return 1
+        fi
+        print_success "VERSION"
+    fi
 
     # CLAUDE.md
     if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
@@ -240,7 +250,7 @@ sync_gitlab_mcp_template() {
 show_diff() {
     print_header "差分確認"
 
-    local items=("CLAUDE.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules")
+    local items=("VERSION" "CLAUDE.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules")
     local has_diff=false
 
     for item in "${items[@]}"; do
@@ -277,6 +287,29 @@ show_diff() {
 }
 
 # =============================================================================
+# Version Check
+# =============================================================================
+
+check_version() {
+    local repo_version
+    local local_version
+
+    repo_version=$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "unknown")
+    local_version=$(cat "$CLAUDE_DIR/VERSION" 2>/dev/null || echo "unknown")
+
+    if [ "$repo_version" != "$local_version" ]; then
+        print_warning "Version mismatch detected:"
+        echo "  Repository: $repo_version"
+        echo "  Local:      $local_version"
+        echo ""
+        if [ "$repo_version" != "unknown" ] && [ "$local_version" != "unknown" ]; then
+            print_info "Run 'git log --oneline' to see changes between versions"
+        fi
+        echo ""
+    fi
+}
+
+# =============================================================================
 # Main
 # =============================================================================
 
@@ -289,6 +322,11 @@ usage() {
 }
 
 main() {
+    # バージョンチェック（diff以外）
+    if [ "${1:-}" != "diff" ] && [ -n "${1:-}" ]; then
+        check_version
+    fi
+
     case "${1:-}" in
         to-local)
             show_diff

@@ -27,6 +27,11 @@ DURATION=$(echo "$INPUT" | jq -r '.duration // 0')
 LOG_DIR="$HOME/.claude/session-logs"
 mkdir -p "$LOG_DIR"
 
+# ログローテーション（7日以上古いログを自動削除）
+# セキュリティ: 機密情報の残留期間を7日に制限
+# ディスク管理: ログサイズを14MB以下に維持
+find "$LOG_DIR" -type f -name "*.log" -mtime +7 -delete 2>/dev/null || true
+
 # セッションログファイル
 LOG_FILE="$LOG_DIR/$(date +%Y%m%d).log"
 
