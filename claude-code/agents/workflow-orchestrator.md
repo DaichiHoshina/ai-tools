@@ -93,16 +93,21 @@ TaskUpdate({ taskId: "7", addBlockedBy: ["6"] });
 
 ```typescript
 function detectTaskType(prompt: string): TaskType {
+  // Priority順（0が最優先）
   const keywords = {
-    feature: ['追加', '実装', '作成', '新規', '機能', 'add', 'implement', 'create'],
-    bugfix: ['修正', 'fix', 'バグ', 'エラー', '不具合', 'bug', 'error'],
-    refactor: ['リファクタリング', '改善', '整理', '見直し', 'refactor', 'improve'],
-    docs: ['ドキュメント', '仕様書', 'README', 'docs', 'documentation'],
-    hotfix: ['緊急', 'hotfix', '本番', 'production', 'critical'],
-    test: ['テスト', 'test', 'spec', 'testing'],
+    design: ['相談', 'アイデア', '設計検討', 'ブレスト', 'brainstorm', '構想', '検討'],  // Priority 0
+    hotfix: ['緊急', 'hotfix', '本番', 'production', 'critical'],  // Priority 1
+    bugfix: ['修正', 'fix', 'バグ', 'エラー', '不具合', 'bug', 'error'],  // Priority 2
+    refactor: ['リファクタリング', '改善', '整理', '見直し', 'refactor', 'improve'],  // Priority 3
+    docs: ['ドキュメント', '仕様書', 'README', 'docs', 'documentation'],  // Priority 4
+    test: ['テスト', 'test', 'spec', 'testing'],  // Priority 5
+    feature: ['追加', '実装', '作成', '新規', '機能', 'add', 'implement', 'create'],  // Priority 6
   };
 
-  for (const [type, words] of Object.entries(keywords)) {
+  // Priority順にチェック
+  const priorityOrder = ['design', 'hotfix', 'bugfix', 'refactor', 'docs', 'test', 'feature'];
+  for (const type of priorityOrder) {
+    const words = keywords[type];
     if (words.some(word => prompt.includes(word))) {
       return type as TaskType;
     }
@@ -116,7 +121,22 @@ function detectTaskType(prompt: string): TaskType {
 
 ```yaml
 workflows:
-  feature:
+  design:  # Priority 0: 設計相談
+    steps:
+      - command: /brainstorm
+        required: true
+        description: 対話的に設計を精緻化
+      - command: /prd
+        required: false
+        description: 必要に応じて要件定義
+      - mode: plan
+        required: true
+      - command: /plan
+        required: true
+        description: 設計プランを作成
+    # 注: 実装は含まない（設計相談のみ）
+
+  feature:  # Priority 6: 新機能実装
     steps:
       - command: /prd
         required: true
@@ -401,8 +421,11 @@ project: my-app
 workflows:
   feature:
     steps:
-      # プロジェクト固有のステップ追加
-      - command: /e2e-test
+      # プロジェクト固有のステップ追加（例）
+      # - command: /your-custom-command
+      #   after: /test
+      - agent: verify-app
+        args: "--e2e"  # E2Eテスト込み検証
         after: /test
 ```
 
