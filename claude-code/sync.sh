@@ -65,6 +65,8 @@ sync_to_local() {
     local items=(
         "VERSION"
         "CLAUDE.md"
+        "CANONICAL.md"
+        "AGENTS.md"
         "commands"
         "guidelines"
         "skills"
@@ -135,6 +137,24 @@ sync_from_local() {
             return 1
         fi
         print_success "CLAUDE.md"
+    fi
+
+    # CANONICAL.md
+    if [ -f "$CLAUDE_DIR/CANONICAL.md" ]; then
+        if ! cp "$CLAUDE_DIR/CANONICAL.md" "$SCRIPT_DIR/CANONICAL.md"; then
+            print_error "コピー失敗: CANONICAL.md"
+            return 1
+        fi
+        print_success "CANONICAL.md"
+    fi
+
+    # AGENTS.md
+    if [ -f "$CLAUDE_DIR/AGENTS.md" ]; then
+        if ! cp "$CLAUDE_DIR/AGENTS.md" "$SCRIPT_DIR/AGENTS.md"; then
+            print_error "コピー失敗: AGENTS.md"
+            return 1
+        fi
+        print_success "AGENTS.md"
     fi
 
     # Directories
@@ -250,7 +270,7 @@ sync_gitlab_mcp_template() {
 show_diff() {
     print_header "差分確認"
 
-    local items=("VERSION" "CLAUDE.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules")
+    local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "AGENTS.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules")
     local has_diff=false
 
     for item in "${items[@]}"; do

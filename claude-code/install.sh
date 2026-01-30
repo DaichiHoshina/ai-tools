@@ -277,6 +277,18 @@ copy_directory_contents() {
     cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
     print_success "CLAUDE.md をコピーしました"
 
+    # CANONICAL.md（常に上書き）
+    if [ -f "$SCRIPT_DIR/CANONICAL.md" ]; then
+        cp "$SCRIPT_DIR/CANONICAL.md" "$CLAUDE_DIR/CANONICAL.md"
+        print_success "CANONICAL.md をコピーしました"
+    fi
+
+    # AGENTS.md（常に上書き）
+    if [ -f "$SCRIPT_DIR/AGENTS.md" ]; then
+        cp "$SCRIPT_DIR/AGENTS.md" "$CLAUDE_DIR/AGENTS.md"
+        print_success "AGENTS.md をコピーしました"
+    fi
+
     # Guidelines（各カテゴリ）
     copy_files "$SCRIPT_DIR/guidelines/common" "$CLAUDE_DIR/guidelines/common" "guidelines/common"
     copy_files "$SCRIPT_DIR/guidelines/languages" "$CLAUDE_DIR/guidelines/languages" "guidelines/languages"
