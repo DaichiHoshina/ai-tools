@@ -6,6 +6,10 @@ set -e
 # Claude Code Configuration Sync Script
 # ai-tools リポジトリと ~/.claude/ の双方向同期
 # =============================================================================
+# ⚠️ 注意: libファイルをsourceする際、変数名の衝突に注意
+# - 各libファイル内では _LIB_PREFIX_ 付きの変数名を使用すること
+# - 例: SCRIPT_DIR → _PRINT_LIB_DIR
+# =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"

@@ -36,3 +36,9 @@ claude-code/
 | QUICKSTART.md | 新規ユーザー向けクイックスタート |
 | SKILLS-MAP.md | スキル一覧と依存関係 |
 | GLOSSARY.md | 用語集 |
+
+## セッション効率化
+
+- 単純な修正（1-2ファイル）→ `/quick-fix` または直接実行
+- 複雑な実装（3ファイル以上）→ `/flow` でAgent階層使用
+- Boris流: 「fix」だけで修正、細かく指示しない
