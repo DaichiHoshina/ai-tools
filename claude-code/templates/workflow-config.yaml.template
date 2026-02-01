@@ -1,0 +1,44 @@
+# プロジェクト固有のワークフロー設定テンプレート
+# 使用方法: このファイルを .claude/workflow-config.yaml にコピーして編集
+
+# プロジェクト名（任意）
+project: <project-name>
+
+# カスタムワークフロー定義
+workflows:
+  # 機能開発ワークフローのカスタマイズ例
+  feature:
+    steps:
+      # 既存ステップの後にカスタムステップを追加
+      # - command: /your-custom-command
+      #   after: /test
+      #   required: false
+      
+      # verify-app の引数をカスタマイズ
+      - agent: verify-app
+        args: "--e2e"  # E2Eテストを含む検証
+        after: /test
+  
+  # バグ修正ワークフローのカスタマイズ例
+  # bugfix:
+  #   steps:
+  #     - agent: verify-app
+  #       args: "--unit-only"  # ユニットテストのみ
+
+# 必須ステップの指定（チーム標準化用）
+required_steps:
+  - /review       # コードレビュー必須
+  - verify-app    # 検証必須
+
+# スキップ可能なステップ（省略可）
+# optional_steps:
+#   - /prd
+#   - /review
+
+# ワークフロー履歴（自動記録・学習用、手動編集不要）
+# history:
+#   - task_type: feature
+#     duration: 1200
+#     steps_executed: 9
+#     success: true
+#     timestamp: 2024-01-01T12:00:00Z
