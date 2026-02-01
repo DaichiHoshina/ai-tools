@@ -1,0 +1,4 @@
+node_modules/
+.git/
+PRD-*.md
+PLAN-*.md
