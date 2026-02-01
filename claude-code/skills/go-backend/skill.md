@@ -4,6 +4,9 @@ description: Goバックエンド開発 - Goイディオム、並行処理、エ
 requires-guidelines:
   - golang
   - common
+hooks:
+  - event: PreSkillUse
+    command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
 # Goバックエンド開発

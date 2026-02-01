@@ -3,6 +3,9 @@ name: react-best-practices
 description: Vercel React/Next.jsパフォーマンス最適化 - 45ルール8カテゴリ、ウォーターフォール排除からバンドル最適化まで
 requires-guidelines:
   - nextjs-react
+hooks:
+  - event: PreSkillUse
+    command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
 # React Best Practices (Vercel Engineering)

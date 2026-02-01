@@ -4,6 +4,9 @@ description: Kubernetes設計・運用 - デプロイメント、スケーリン
 requires-guidelines:
   - kubernetes
   - common
+hooks:
+  - event: PreSkillUse
+    command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
 # Kubernetes設計・運用

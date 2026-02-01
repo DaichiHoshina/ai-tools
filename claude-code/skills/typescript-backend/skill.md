@@ -4,6 +4,9 @@ description: TypeScriptバックエンド開発 - 型安全、Node.js/Deno/Bun�
 requires-guidelines:
   - typescript
   - common
+hooks:
+  - event: PreSkillUse
+    command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
 # TypeScriptバックエンド開発
