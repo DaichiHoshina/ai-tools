@@ -1,0 +1,10 @@
+# shellcheck configuration for ai-tools
+
+# Exclude rules
+disable=SC1090  # Can't follow non-constant source (lib files)
+disable=SC1091  # Not following: file not found (CI environment)
+disable=SC2250  # Prefer ${var} over $var (style preference)
+disable=SC2292  # Prefer [[ ]] over [ ] (style preference)
+
+# Enable important checks
+enable=all
