@@ -10,6 +10,7 @@
 | `document-management.md` | ドキュメント作成方針、Markdown規約 |
 | `error-handling-patterns.md` | エラーハンドリング標準パターン |
 | `testing-guidelines.md` | テスト戦略、AAA/Given-When-Then、カバレッジ基準 |
+| `token-management.md` | トークン使用量統一ルール、予算ポリシー |
 | `type-safety-principles.md` | 型安全性原則、any禁止、型ガード活用 |
 | `unused-code-detection.md` | 未使用コード検出・削除ポリシー |
 
@@ -61,3 +62,18 @@
 | **ブランチ戦略** | Git Flow または GitHub Flow |
 | **コミットメッセージ** | `feat:`, `fix:`, `docs:` など接頭辞必須 |
 | **PR** | レビュー必須、自動テスト通過後マージ |
+
+## トークン管理
+
+| 項目 | 制限 |
+|------|------|
+| **コード例** | 5行以内 |
+| **説明文** | 1行まで |
+| **ファイル読み込み** | 500行以下 or limit指定 |
+| **Serena max_answer_chars** | 5K〜10K（探索時） |
+| **警告閾値** | 80%で警告、90%で/reload推奨 |
+
+節約パターン:
+- `get_symbols_overview` → `find_symbol(depth=1)` → `find_symbol(include_body=true)`
+- Safe操作はメッセージなし
+- 探索は`Task(Explore)`に委譲
