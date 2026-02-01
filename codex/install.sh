@@ -6,60 +6,51 @@ set -e
 # Codex Configuration Installer (Level 4: Full Sync with Claude Code)
 # =============================================================================
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
 # Directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AI_TOOLS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 CODEX_DIR="$HOME/.codex"
 
+# Load print functions from claude-code lib (with fallback)
+# shellcheck source=../claude-code/lib/print-functions.sh
+if ! source "${SCRIPT_DIR}/../claude-code/lib/print-functions.sh" 2>/dev/null; then
+    # Fallback: define minimal print functions
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'
+    NC='\033[0m'
+    
+    print_header() {
+        echo ""
+        echo -e "${BLUE}========================================${NC}"
+        echo -e "${BLUE}$1${NC}"
+        echo -e "${BLUE}========================================${NC}"
+        echo ""
+    }
+    
+    print_success() { echo -e "${GREEN}✓ $1${NC}"; }
+    print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
+    print_error() { echo -e "${RED}✗ $1${NC}"; }
+    print_info() { echo -e "${BLUE}ℹ $1${NC}"; }
+    
+    confirm() {
+        local message="$1"
+        local default="${2:-n}"
+        if [ "$default" = "y" ]; then
+            read -rp "$message [Y/n]: " answer
+            answer="${answer:-y}"
+        else
+            read -rp "$message [y/N]: " answer
+            answer="${answer:-n}"
+        fi
+        [[ "$answer" =~ ^[Yy]$ ]]
+    }
+fi
+
 # =============================================================================
 # Utility Functions
 # =============================================================================
-
-print_header() {
-    echo ""
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}$1${NC}"
-    echo -e "${BLUE}========================================${NC}"
-    echo ""
-}
-
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}ℹ $1${NC}"
-}
-
-confirm() {
-    local message="$1"
-    local default="${2:-n}"
-
-    if [ "$default" = "y" ]; then
-        read -p "$message [Y/n]: " answer
-        answer="${answer:-y}"
-    else
-        read -p "$message [y/N]: " answer
-        answer="${answer:-n}"
-    fi
-
-    [[ "$answer" =~ ^[Yy]$ ]]
-}
 
 # Create symlink with backup
 create_symlink() {

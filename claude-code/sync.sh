@@ -7,13 +7,6 @@ set -e
 # ai-tools リポジトリと ~/.claude/ の双方向同期
 # =============================================================================
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 
@@ -26,6 +19,8 @@ source "${LIB_DIR}/security-functions.sh" 2>/dev/null || {
         printf '%s\n' "$1" | sed 's/[&/\]/\\&/g'
     }
 }
+# shellcheck source=lib/print-functions.sh
+source "${LIB_DIR}/print-functions.sh"
 
 # jq存在チェック（将来の拡張用）
 check_jq() {
@@ -35,18 +30,6 @@ check_jq() {
 # =============================================================================
 # Utility Functions
 # =============================================================================
-
-print_header() { echo -e "\n${BLUE}=== $1 ===${NC}\n"; }
-print_success() { echo -e "${GREEN}✓ $1${NC}"; }
-print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
-print_error() { echo -e "${RED}✗ $1${NC}"; }
-print_info() { echo -e "${BLUE}ℹ $1${NC}"; }
-
-confirm() {
-    local message="$1"
-    read -rp "$message [y/N]: " answer
-    [[ "$answer" =~ ^[Yy]$ ]]
-}
 
 # sed特殊文字エスケープ関数（セキュリティライブラリで定義済みの場合はスキップ）
 if ! command -v escape_for_sed &> /dev/null; then

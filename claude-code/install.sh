@@ -6,13 +6,6 @@ set -e
 # Claude Code Configuration Installer
 # =============================================================================
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
@@ -24,50 +17,12 @@ LIB_DIR="${SCRIPT_DIR}/lib"
 source "${LIB_DIR}/security-functions.sh" 2>/dev/null || true
 # shellcheck source=lib/i18n.sh
 source "${LIB_DIR}/i18n.sh" 2>/dev/null || true
+# shellcheck source=lib/print-functions.sh
+source "${LIB_DIR}/print-functions.sh"
 
 # =============================================================================
 # Utility Functions
 # =============================================================================
-
-print_header() {
-    echo ""
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}$1${NC}"
-    echo -e "${BLUE}========================================${NC}"
-    echo ""
-}
-
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}ℹ $1${NC}"
-}
-
-# Prompt for confirmation
-confirm() {
-    local message="$1"
-    local default="${2:-n}"
-
-    if [ "$default" = "y" ]; then
-        read -rp "$message [Y/n]: " answer
-        answer="${answer:-y}"
-    else
-        read -rp "$message [y/N]: " answer
-        answer="${answer:-n}"
-    fi
-
-    [[ "$answer" =~ ^[Yy]$ ]]
-}
 
 # Create symlink with backup
 create_symlink() {

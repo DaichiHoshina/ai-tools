@@ -4,12 +4,10 @@
 # 共通の出力関数（DRY化）
 # =============================================================================
 
-# 色定義
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# カラーコードを読み込み
+_PRINT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=colors.sh
+source "${_PRINT_LIB_DIR}/colors.sh"
 
 # 出力関数
 print_header() {

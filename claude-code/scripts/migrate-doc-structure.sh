@@ -4,22 +4,10 @@
 
 set -e
 
-# 色付き出力用の関数
-print_success() {
-    echo -e "\033[0;32m✅ $1\033[0m"
-}
-
-print_error() {
-    echo -e "\033[0;31m❌ $1\033[0m"
-}
-
-print_info() {
-    echo -e "\033[0;36m📌 $1\033[0m"
-}
-
-print_warning() {
-    echo -e "\033[0;33m⚠️  $1\033[0m"
-}
+# Load print functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/print-functions.sh
+source "${SCRIPT_DIR}/../lib/print-functions.sh"
 
 # .claudeディレクトリの確認
 if [ ! -d ".claude" ]; then
