@@ -132,19 +132,19 @@ esac
 # JSON出力
 # ====================================
 
-if [ -n "$ADDITIONAL_CONTEXT" ]; then
-  cat <<EOF
-{
-  "systemMessage": "$MESSAGE",
-  "additionalContext": "$ADDITIONAL_CONTEXT"
-}
-EOF
+if [ -n "$MESSAGE" ] && [ -n "$ADDITIONAL_CONTEXT" ]; then
+  jq -n \
+    --arg sm "$MESSAGE" \
+    --arg ac "$ADDITIONAL_CONTEXT" \
+    '{systemMessage: $sm, additionalContext: $ac}'
 elif [ -n "$MESSAGE" ]; then
-  cat <<EOF
-{
-  "systemMessage": "$MESSAGE"
-}
-EOF
+  jq -n \
+    --arg sm "$MESSAGE" \
+    '{systemMessage: $sm}'
+elif [ -n "$ADDITIONAL_CONTEXT" ]; then
+  jq -n \
+    --arg ac "$ADDITIONAL_CONTEXT" \
+    '{additionalContext: $ac}'
 else
   # Safe射はメッセージなし（トークン節約）
   echo "{}"

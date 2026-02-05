@@ -58,15 +58,15 @@ else
   RECENT_COUNT=0
 fi
 
-# 結果を返す
-cat <<EOF
-{
-  "systemMessage": "✅ Subagent completed: ${AGENT_TYPE}",
-  "additionalContext": "**Agent ID**: ${AGENT_ID}
+# 結果を返す（jqで安全にJSON生成）
+AC_MSG="**Agent ID**: ${AGENT_ID}
 **Type**: ${AGENT_TYPE}
 **Duration**: ${DURATION}
 **Recent Activity**: ${RECENT_COUNT} subagents completed in last 24h
 
 Subagent logs: ~/.claude/logs/subagent-events.log"
-}
-EOF
+
+jq -n \
+  --arg sm "✅ Subagent completed: ${AGENT_TYPE}" \
+  --arg ac "$AC_MSG" \
+  '{systemMessage: $sm, additionalContext: $ac}'

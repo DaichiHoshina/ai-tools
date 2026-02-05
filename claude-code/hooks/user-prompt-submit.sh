@@ -280,18 +280,19 @@ if [ -n "$additional_context" ]; then
 fi
 
 # JSON出力（検出があった場合のみ）
-if [ -n "$system_message" ]; then
-  cat <<EOF
-{
-  "systemMessage": "$system_message",
-  "additionalContext": "$context_message"
-}
-EOF
+# jqで安全にJSON生成（特殊文字エスケープ対応）
+if [ -n "$system_message" ] && [ -n "$context_message" ]; then
+  jq -n \
+    --arg sm "$system_message" \
+    --arg ac "$context_message" \
+    '{systemMessage: $sm, additionalContext: $ac}'
+elif [ -n "$system_message" ]; then
+  jq -n \
+    --arg sm "$system_message" \
+    '{systemMessage: $sm}'
 elif [ -n "$context_message" ]; then
-  cat <<EOF
-{
-  "additionalContext": "$context_message"
-}
-EOF
+  jq -n \
+    --arg ac "$context_message" \
+    '{additionalContext: $ac}'
 fi
 # 検出なしの場合は何も出力しない（トークン節約）

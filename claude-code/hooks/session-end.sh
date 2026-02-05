@@ -121,10 +121,15 @@ if [ -n "$SERENA_REMINDER" ]; then
   SUMMARY="${SUMMARY}${SERENA_REMINDER}"
 fi
 
-# JSON出力
-cat <<EOF
-{
-  "systemMessage": "$NOTIFICATION_STATUS | Session logged to $LOG_FILE",
-  "additionalContext": "$SUMMARY"
-}
-EOF
+# JSON出力（jqで安全にJSON生成）
+SM_MSG="${NOTIFICATION_STATUS} | Session logged to ${LOG_FILE}"
+if [ -n "$SUMMARY" ]; then
+  jq -n \
+    --arg sm "$SM_MSG" \
+    --arg ac "$SUMMARY" \
+    '{systemMessage: $sm, additionalContext: $ac}'
+else
+  jq -n \
+    --arg sm "$SM_MSG" \
+    '{systemMessage: $sm}'
+fi

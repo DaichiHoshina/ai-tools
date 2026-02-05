@@ -59,14 +59,9 @@ case "$TOOL_NAME" in
     ;;
 esac
 
-# JSON出力
+# JSON出力（jqで安全にJSON生成）
 if [ -n "$MESSAGE" ]; then
-  cat <<EOF
-{
-  "systemMessage": "$MESSAGE"
-}
-EOF
+  jq -n --arg sm "$MESSAGE" '{systemMessage: $sm}'
 else
-  # メッセージがない場合は空のJSONを返す
   echo "{}"
 fi
