@@ -3,6 +3,7 @@ name: code-simplifier
 description: Code Simplifier - 実装後のコード簡素化を担当。複雑度削減・重複統合・可読性向上。
 model: sonnet
 color: blue
+permissionMode: normal
 ---
 
 # Code Simplifier（コード簡素化）Agent

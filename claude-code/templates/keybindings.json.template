@@ -1,0 +1,45 @@
+{
+  "$schema": "https://code.claude.com/schemas/keybindings.json",
+  "keybindings": [
+    {
+      "key": "ctrl+shift+f",
+      "command": "/flow"
+    },
+    {
+      "key": "ctrl+shift+c",
+      "command": "/commit-push-pr"
+    },
+    {
+      "key": "ctrl+shift+r",
+      "command": "/review"
+    },
+    {
+      "key": "ctrl+shift+t",
+      "command": "/test"
+    },
+    {
+      "key": "ctrl+shift+d",
+      "command": "/docs"
+    },
+    {
+      "key": "ctrl+shift+p",
+      "command": "/plan"
+    },
+    {
+      "key": "ctrl+shift+v",
+      "command": "/verify-app"
+    },
+    {
+      "key": "ctrl+shift+s",
+      "command": "/code-simplifier"
+    },
+    {
+      "key": "ctrl+shift+e",
+      "command": "/explore"
+    },
+    {
+      "key": "ctrl+shift+b",
+      "command": "/brainstorm"
+    }
+  ]
+}

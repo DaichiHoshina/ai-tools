@@ -3,6 +3,7 @@ name: verify-app
 description: Application Verification Agent - ビルド・テスト・lintの包括的検証
 model: sonnet
 color: green
+permissionMode: fast
 ---
 
 # Verify-App（検証エージェント）Agent

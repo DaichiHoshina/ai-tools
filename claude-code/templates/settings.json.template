@@ -1,4 +1,11 @@
 {
+  "instructions": [
+    "日本語で回答すること",
+    "Guard関手: Safe射(読み取り)→即実行、Boundary射(編集)→確認必要、Forbidden射(破壊)→拒否",
+    "any型禁止、as控える",
+    "実装完了後は必ずverify-app実行",
+    "2回同じアプローチで失敗したら/clearして再整理"
+  ],
   "env": {
     "CLAUDE_CODE_AUTO_CONNECT_IDE": "false",
     "CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL": "true",
@@ -8,9 +15,9 @@
     "DISABLE_ERROR_REPORTING": "true",
     "DISABLE_TELEMETRY": "true",
     "DISABLE_AUTOUPDATER": "true",
-    "DISABLE_MICROCOMPACT": "true",
-    "MAX_THINKING_TOKENS": "1024",
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16384"
+    "DISABLE_MICROCOMPACT": "false",
+    "MAX_THINKING_TOKENS": "16000",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "32000"
   },
   "permissions": {
     "allow": [
@@ -20,7 +27,9 @@
       "Bash(*--help*)",
       "Bash(*--version*)"
     ],
-    "deny": []
+    "deny": [
+      "NotebookEdit"
+    ]
   },
   "model": "opusplan",
   "hooks": {
@@ -37,6 +46,7 @@
     ],
     "SessionStart": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
@@ -47,6 +57,7 @@
     ],
     "UserPromptSubmit": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
@@ -57,6 +68,7 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
@@ -65,8 +77,21 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-tool-use.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
@@ -75,19 +100,31 @@
         ]
       }
     ],
-    "Stop": [
+    "SubagentStart": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/stop.sh",
-            "async": true
+            "command": "~/.claude/hooks/subagent-start.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/subagent-stop.sh"
           }
         ]
       }
     ],
     "SessionEnd": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
@@ -97,28 +134,34 @@
         ]
       }
     ],
-    "PostToolUse": [
+    "Stop": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/post-tool-use.sh",
+            "command": "~/.claude/hooks/stop.sh",
             "async": true
           }
         ]
       }
     ]
   },
+  "language": "japanese",
+  "spinnerVerbs": {
+    "mode": "append",
+    "verbs": ["考え中", "分析中", "構築中", "熟考中"]
+  },
+  "showTurnDuration": true,
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline.js"
+    "command": "~/.claude/statusline.sh"
   },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true
   },
   "outputStyle": "ai-tools-format",
-  "language": "japanese",
   "1feedbackSurveyState": {
     "lastShownTime": 1753938733414
   }

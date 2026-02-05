@@ -3,6 +3,7 @@ name: workflow-orchestrator
 description: ワークフロー自動化エージェント - タスクタイプを判定し最適なワークフローを実行
 model: sonnet
 color: purple
+permissionMode: normal
 ---
 
 # Workflow Orchestrator Agent

@@ -3,6 +3,7 @@ name: manager-agent
 description: Manager agent - タスク分割と配分計画を担当。実装は一切行わない。
 model: opus
 color: blue
+permissionMode: normal
 ---
 
 # Manager（プロジェクトマネージャー）Agent

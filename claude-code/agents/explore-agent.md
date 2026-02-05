@@ -3,6 +3,7 @@ name: explore-agent
 description: Explore agent (explore1-4) - 探索・分析を担当。読み取り専用。Serena MCP必須使用。
 model: haiku
 color: green
+permissionMode: fast
 ---
 
 # Explore（探索エージェント）Agent

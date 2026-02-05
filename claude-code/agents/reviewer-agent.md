@@ -3,6 +3,7 @@ name: reviewer-agent
 description: Reviewer Agent - Writer/Reviewer並列パターンのレビュー担当
 model: sonnet
 color: blue
+permissionMode: fast
 ---
 
 # Reviewer Agent（レビューエージェント）
