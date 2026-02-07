@@ -3,9 +3,13 @@ name: security-error-review
 description: セキュリティ・エラーハンドリングレビュー - OWASP Top 10、エラー処理、ログ管理を統合評価
 requires-guidelines:
   - common
+internal: true
 ---
 
 # セキュリティ・エラーハンドリングレビュー（統合版）
+
+> **注**: このスキルは `comprehensive-review` から内部的に呼び出されます。
+> 直接使用する代わりに `/review` コマンドまたは `comprehensive-review` スキルを推奨します。
 
 ## 統合スコープ
 

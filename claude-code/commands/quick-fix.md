@@ -1,28 +1,37 @@
 ---
 model: haiku
-description: 単純な1-2ファイル修正を高速実行（Agent不使用）
+description: ⚠️ 非推奨 - /dev --quick を使用してください
+deprecated: true
+redirect: /dev --quick
 ---
 
-# /quick-fix - 高速修正コマンド
+# /quick-fix - 高速修正コマンド（非推奨）
 
-## 用途
-- 1-2ファイルの単純な修正
-- typo修正
-- 小さなバグ修正
+> **⚠️ 非推奨**: このコマンドは `/dev --quick` に統合されました。
+>
+> 今後は以下を使用してください：
+> ```
+> /dev --quick <task>
+> ```
 
-## 特徴
-- Agent階層を使用しない（直接実行）
-- haiku modelで高速・低コスト
-- 確認最小限
+## 移行理由
 
-## 実行フロー
-1. 対象ファイル特定
-2. 修正実行（Serena MCP使用）
-3. verify（lint/type check）
-4. commit提案
+- コマンド数削減（22→21）
+- `/dev`コマンドへの統合により一貫性向上
+- 機能は完全に保持（haiku、Agent不使用、高速実行）
 
-## 使用例
+## 使用例（移行後）
+
+**旧**:
 ```
 /quick-fix typoを修正
-/quick-fix この関数のバグを直して
 ```
+
+**新**:
+```
+/dev --quick typoを修正
+```
+
+---
+
+詳細は [/dev コマンド](./dev.md#--quick-モード旧-quick-fix) を参照してください。

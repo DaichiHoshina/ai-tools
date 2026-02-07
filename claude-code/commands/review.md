@@ -3,134 +3,71 @@ allowed-tools: Read, Glob, Grep, Bash, Skill
 description: コードレビュー用コマンド（状況に応じて適切なSkillを動的選択）
 ---
 
-## /review - 動的Skill選択型コードレビュー
+## /review - 包括的コードレビュー
 
-> **重要**: ファイル種別・言語・変更内容に応じて適切なSkillを自動選択
+> **新**: `comprehensive-review` スキルで品質・セキュリティ・ドキュメント/テストを統合レビュー
 
-## 1. レビュー手順
-
-### Step 1: 変更ファイル取得
-```bash
-git diff --name-only
-```
-
-### Step 2: 静的解析ツール実行（必須）
-
-レビュー前に静的解析を実行し、自動検出可能な問題を先に洗い出す:
-
-```bash
-# TypeScript
-npm run lint 2>&1 | head -50
-npx tsc --noEmit 2>&1 | head -50
-
-# Go
-golangci-lint run 2>&1 | head -50
-go vet ./... 2>&1 | head -50
-
-# Python
-ruff check . 2>&1 | head -50
-mypy . 2>&1 | head -50
-```
-
-**静的解析でエラーがある場合:**
-- 先に修正を提案（Skill実行前）
-- 軽微なものは自動修正可能: `npm run lint -- --fix`, `ruff check --fix`
-
-### Step 3: cleanup-enforcement 確認
-
-`cleanup-enforcement` Skill を適用し、以下を確認:
-- 未使用の import/変数/関数
-- 後方互換残骸（`_deprecated_*`, 旧名re-export）
-- 進捗コメント（「実装した」「完了」等）
-
-### Step 4: コンテキスト分析
-
-変更ファイルから以下を判断：
-- 言語（TypeScript/Go/その他）
-- ファイル種別（テスト/API/インフラ/ドキュメント）
-- 変更規模（小/中/大）
-
-### Step 5: Skill 動的選択
-
-#### 🔹 基本セット（必ず実行）
-- **code-quality-review**: 全ての場合（型安全性・アーキテクチャ・パフォーマンス・コード臭を統合評価）
-- **security-error-review**: 全ての場合（セキュリティ・エラーハンドリングを統合評価）
-
-#### 🔹 ファイル種別による追加
-
-| ファイル種別 | 追加Skill |
-|-------------|----------|
-| `*_test.{ts,go}`, `*.test.ts`, `*.spec.ts` | docs-test-review |
-| `README.md`, JSDoc/GoDoc 変更 | docs-test-review |
-| `handler/*`, `controller/*`, `api/*` | （security-error-review で対応済み） |
-| `components/*`, `*.tsx`（UI関連） | uiux-review |
-| Tailwind/shadcn使用ファイル | ui-skills |
-
-#### 🔹 変更内容による追加
-
-| 変更内容 | 追加Skill |
-|---------|----------|
-| 50行以上の関数追加・修正 | （code-quality-review で対応済み） |
-| DB クエリ追加・修正 | （code-quality-review で対応済み） |
-| リファクタリング | （code-quality-review で対応済み） |
-
-### Step 6: ガイドライン自動読み込み
-
-選択されたSkillの`requires-guidelines`を確認し、未読み込みのガイドラインがあれば読み込む：
-
-| Skill | requires-guidelines |
-|-------|---------------------|
-| code-quality-review | typescript, golang, common |
-| security-error-review | common |
-| docs-test-review | common |
-| uiux-review | ui-ux, nextjs-react, tailwind, shadcn |
-| ui-skills | nextjs-react, tailwind |
-
-**読み込み処理**:
-- セッション内で既読のガイドラインはスキップ
-- 未読のガイドラインのみ読み込み（トークン節約）
-
-### Step 7: Skill実行（並列）
-
-選択されたSkillを**1メッセージで同時に**実行：
-
-- 並列実行により大幅な時間短縮（4倍高速）
-- 1つのSkillが失敗しても他の結果は取得可能
-- エラー時は部分的成功として報告
-
-**順次実行**: ユーザーが明示的に指定した場合のみ
-
-### Step 8: 結果集約
-
-実行されたSkillの結果をまとめて報告。成功/失敗の状態を明示：
+## 実行方法
 
 ```
-## レビュー結果
+/review
+```
+
+**自動実行される内容**:
+```
+Skill("comprehensive-review")
+```
+
+comprehensive-reviewスキルが内部で以下を実行：
+1. 静的解析ツール（lint/tsc/go vet等）
+2. cleanup-enforcement（未使用コード検出）
+3. 専門スキル並列実行：
+   - code-quality-review（品質全般）
+   - security-error-review（セキュリティ）
+   - docs-test-review（ドキュメント・テスト、該当時）
+   - uiux-review（UI変更時）
+
+## レビュー観点
+
+### 🎯 品質（code-quality-review）
+- アーキテクチャ（依存逆転、ロジック配置）
+- コード臭（長い関数、マジックナンバー）
+- パフォーマンス（N+1問題、メモリリーク）
+- 型安全性（any使用、無検証as）
+
+### 🛡️ セキュリティ（security-error-review）
+- OWASP Top 10（SQLインジェクション、XSS等）
+- 認証・認可不備
+- エラーハンドリング（エラー握りつぶし）
+- 機密情報ログ
+
+### 📝 ドキュメント・テスト（docs-test-review）
+- コメント品質（公開API説明）
+- テストの意味（振る舞いテスト）
+- モック適切性
+- カバレッジ
+
+## 出力形式
+
+```markdown
+## 📊 包括的レビュー結果
 
 ### 実行したレビュー
-- ✅ code-quality-review（成功）
-- ✅ security-error-review（成功）
-- ✅ docs-test-review（成功）
+- ✅ code-quality-review（品質）
+- ✅ security-error-review（セキュリティ）
+- ✅ docs-test-review（ドキュメント・テスト）
 
-### 📊 コード品質（型安全性・アーキテクチャ・パフォーマンス）
-🔴 Critical: X件
-🟡 Warning: Y件
+### 🔴 Critical（修正必須）
+- [品質] Domain→Infrastructure参照
+- [セキュリティ] SQLインジェクション脆弱性
 
-### 🛡️ セキュリティ・エラーハンドリング
-🔴 Critical: X件
-🟡 Warning: Y件
-
-### 📝 ドキュメント・テスト
-🟡 Warning: Y件
+### 🟡 Warning（要改善）
+- [品質] 長い関数（150行）
+- [セキュリティ] レート制限なし
 
 ---
-📊 Total: Critical X件 / Warning Y件
+📊 Total: Critical 2件 / Warning 2件
 ```
-
-**部分的成功時の対応:**
-- 成功したSkillの結果は通常通り表示
-- 失敗したSkillについては理由を記載
-- 再実行または個別Skill実行を提案
 
 ## 2. 選択ロジック例
 

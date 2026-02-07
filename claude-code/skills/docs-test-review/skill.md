@@ -3,9 +3,13 @@ name: docs-test-review
 description: ドキュメント・テスト品質レビュー - コメント品質、API仕様、テストの意味、カバレッジを統合評価
 requires-guidelines:
   - common
+internal: true
 ---
 
 # ドキュメント・テスト品質レビュー（統合版）
+
+> **注**: このスキルは `comprehensive-review` から内部的に呼び出されます。
+> 直接使用する代わりに `/review` コマンドまたは `comprehensive-review` スキルを推奨します。
 
 ## 統合スコープ
 

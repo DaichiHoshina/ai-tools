@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TodoWrite, Task, AskUserQuestion, mcp__serena__*, mcp__context7__*
-description: 実装用コマンド - Agent階層で実行（複雑なタスク）または直接実行（単純なタスク）
+description: 実装用コマンド - Agent階層で実行（複雑なタスク）または直接実行（単純なタスク）。--quickオプションでhaiku高速実行。
 ---
 
 ## /dev - 実装モード
@@ -9,6 +9,39 @@ description: 実装用コマンド - Agent階層で実行（複雑なタスク�
 > - `/dev`: 実装フェーズのみ実行（タスク内容が明確な場合）
 > - `/flow`: タスク自動判定 → 最適なワークフロー全体を実行（PRD→Plan→Dev→Test→Review→PR）
 > - 迷ったら `/flow` を使用
+
+## オプション
+
+```bash
+/dev --quick <task>    # 高速モード（haiku、Agent不使用、1-2ファイル修正専用）
+/dev <task>            # 通常モード（sonnet、Agent階層使用、複雑なタスク対応）
+```
+
+### --quick モード（旧 /quick-fix）
+
+**用途**:
+- 1-2ファイルの単純な修正
+- typo修正、小さなバグ修正
+- 軽微な変更（数行程度）
+
+**特徴**:
+- **haiku model**使用（高速・低コスト）
+- **Agent階層不使用**（直接実行）
+- 確認最小限
+
+**実行フロー**:
+1. 対象ファイル特定
+2. 修正実行（Serena MCP使用）
+3. verify（lint/type check）
+4. commit提案
+
+**使用例**:
+```
+/dev --quick typoを修正
+/dev --quick この関数のバグを直して
+```
+
+**注意**: 複雑なタスクには不向き。3ファイル以上の変更や設計判断が必要な場合は通常の `/dev` または `/flow` を使用。
 
 ## 思考モード（重要）
 

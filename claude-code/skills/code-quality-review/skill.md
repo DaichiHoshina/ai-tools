@@ -4,9 +4,13 @@ description: コード品質レビュー - アーキテクチャ、コード臭�
 requires-guidelines:
   - common
   - typescript
+internal: true
 ---
 
 # コード品質レビュー（統合版）
+
+> **注**: このスキルは `comprehensive-review` から内部的に呼び出されます。
+> 直接使用する代わりに `/review` コマンドまたは `comprehensive-review` スキルを推奨します。
 
 ## 統合スコープ
 
