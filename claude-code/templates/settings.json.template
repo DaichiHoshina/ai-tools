@@ -177,7 +177,7 @@
   "showTurnDuration": true,
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline.sh"
+    "command": "~/.claude/statusline.js"
   },
   "autocompact": true,
   "enabledPlugins": {
