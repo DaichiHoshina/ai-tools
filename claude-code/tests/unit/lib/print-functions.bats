@@ -133,7 +133,7 @@ setup() {
 
 @test "integration: all print functions can be called sequentially" {
   run bash -c '
-    source claude-code/lib/print-functions.sh
+    source "${LIB_PATH}"
     print_header "Test"
     print_success "Success"
     print_warning "Warning"
