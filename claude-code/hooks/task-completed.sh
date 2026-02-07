@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+# Nerd Fonts icon
+ICON_SUCCESS=$'\u2713'  # check-circle
+
 # jq前提条件チェック
 if ! command -v jq &> /dev/null; then
     echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
@@ -32,5 +35,5 @@ COMPLETED_TODAY=$(grep -c "${TODAY}.*COMPLETED" "$LOG_FILE" 2>/dev/null || echo 
 
 # 結果を返す
 jq -n \
-  --arg sm "✅ Task completed: ${AGENT_TYPE} (${AGENT_ID}) | Today: ${COMPLETED_TODAY} tasks done" \
+  --arg sm "${ICON_SUCCESS} Task completed: ${AGENT_TYPE} (${AGENT_ID}) | Today: ${COMPLETED_TODAY} tasks done" \
   '{systemMessage: $sm}'

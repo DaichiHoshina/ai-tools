@@ -57,7 +57,7 @@ if [ -f "$NOTIFICATION_FILE" ]; then
   afplay "$NOTIFICATION_FILE" &
   NOTIFICATION_STATUS="🔔 Notification sound played"
 else
-  NOTIFICATION_STATUS="⚠️  Notification file not found at ~/notification.mp3"
+  NOTIFICATION_STATUS="  Notification file not found at ~/notification.mp3"
 fi
 
 # Git変更確認（Boris流: 自動commit-push-pr提案）
@@ -121,15 +121,10 @@ if [ -n "$SERENA_REMINDER" ]; then
   SUMMARY="${SUMMARY}${SERENA_REMINDER}"
 fi
 
-# JSON出力（jqで安全にJSON生成）
-SM_MSG="${NOTIFICATION_STATUS} | Session logged to ${LOG_FILE}"
-if [ -n "$SUMMARY" ]; then
-  jq -n \
-    --arg sm "$SM_MSG" \
-    --arg ac "$SUMMARY" \
-    '{systemMessage: $sm, additionalContext: $ac}'
-else
-  jq -n \
-    --arg sm "$SM_MSG" \
-    '{systemMessage: $sm}'
-fi
+# JSON出力
+cat <<EOF
+{
+  "systemMessage": "$NOTIFICATION_STATUS | Session logged to $LOG_FILE",
+  "additionalContext": "$SUMMARY"
+}
+EOF

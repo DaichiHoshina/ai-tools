@@ -23,7 +23,7 @@ else
   # 通知音ファイルが存在しない場合
   cat <<EOF
 {
-  "systemMessage": "⚠️  Notification file not found at ~/notification.mp3"
+  "systemMessage": "  Notification file not found at ~/notification.mp3"
 }
 EOF
 fi

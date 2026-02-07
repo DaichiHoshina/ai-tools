@@ -28,9 +28,9 @@ case "$TOOL_NAME" in
           # Go: gofmt で自動フォーマット
           if command -v gofmt &> /dev/null; then
             if gofmt -w "$FILE_PATH" 2>/dev/null; then
-              MESSAGE="✅ Auto-formatted (Go): $FILE_PATH"
+              MESSAGE=" Auto-formatted (Go): $FILE_PATH"
             else
-              MESSAGE="⚠️  gofmt warning: $FILE_PATH (non-blocking)"
+              MESSAGE="  gofmt warning: $FILE_PATH (non-blocking)"
             fi
           fi
           ;;
@@ -40,9 +40,9 @@ case "$TOOL_NAME" in
           if command -v npx &> /dev/null; then
             # prettier がプロジェクトにあるかチェック
             if npx prettier --write "$FILE_PATH" 2>/dev/null; then
-              MESSAGE="✅ Auto-formatted (Prettier): $FILE_PATH"
+              MESSAGE=" Auto-formatted (Prettier): $FILE_PATH"
             else
-              MESSAGE="⚠️  prettier warning: $FILE_PATH (non-blocking)"
+              MESSAGE="  prettier warning: $FILE_PATH (non-blocking)"
             fi
           fi
           ;;
@@ -59,9 +59,14 @@ case "$TOOL_NAME" in
     ;;
 esac
 
-# JSON出力（jqで安全にJSON生成）
+# JSON出力
 if [ -n "$MESSAGE" ]; then
-  jq -n --arg sm "$MESSAGE" '{systemMessage: $sm}'
+  cat <<EOF
+{
+  "systemMessage": "$MESSAGE"
+}
+EOF
 else
+  # メッセージがない場合は空のJSONを返す
   echo "{}"
 fi

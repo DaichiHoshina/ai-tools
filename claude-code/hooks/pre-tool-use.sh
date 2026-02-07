@@ -5,6 +5,10 @@
 
 set -euo pipefail
 
+# Nerd Fonts icons
+ICON_CRITICAL=$'\u25c9'   # exclamation-circle (critical/forbidden)
+ICON_WARNING=$'\u25b2'    # exclamation-triangle (boundary)
+
 # JSON入力を読み込む
 INPUT=$(cat)
 
@@ -49,12 +53,12 @@ case "$TOOL_NAME" in
     # Forbidden射チェック（危険なコマンド）
     if echo "$COMMAND" | grep -qE '(rm -rf /|rm -rf \*|> /dev/|:(){:|sudo rm|git push --force|git push -f)'; then
       KENRON_CLASS="Forbidden"
-      MESSAGE="🔴 protection-mode:Forbidden射 - 危険なコマンド検出！実行禁止"
+      MESSAGE="${ICON_CRITICAL} protection-mode:Forbidden射 - 危険なコマンド検出！実行禁止"
       ADDITIONAL_CONTEXT="【protection-mode判定】Forbidden射（実行禁止）\\n- 検出: 破壊的コマンド\\n- 対応: 実行を中止し、安全な代替手段を提案"
     # 自動処理禁止チェック
     elif echo "$COMMAND" | grep -qE '(npm run lint|prettier|eslint --fix|go fmt|autopep8|black )'; then
       KENRON_CLASS="Boundary"
-      MESSAGE="🔶 protection-mode:Boundary射 - 自動整形（10原則:自動処理禁止）"
+      MESSAGE="${ICON_WARNING} protection-mode:Boundary射 - 自動整形（10原則:自動処理禁止）"
       ADDITIONAL_CONTEXT="【protection-mode判定】Boundary射（要確認）\\n- 操作: 自動整形\\n- 10原則: 自動処理禁止 - ユーザー確認必須"
     # 変更系コマンド
     elif echo "$COMMAND" | grep -qE '(git commit|git push|git merge|git rebase|npm install|pip install|go mod|docker build|docker push)'; then
@@ -132,19 +136,19 @@ esac
 # JSON出力
 # ====================================
 
-if [ -n "$MESSAGE" ] && [ -n "$ADDITIONAL_CONTEXT" ]; then
-  jq -n \
-    --arg sm "$MESSAGE" \
-    --arg ac "$ADDITIONAL_CONTEXT" \
-    '{systemMessage: $sm, additionalContext: $ac}'
+if [ -n "$ADDITIONAL_CONTEXT" ]; then
+  cat <<EOF
+{
+  "systemMessage": "$MESSAGE",
+  "additionalContext": "$ADDITIONAL_CONTEXT"
+}
+EOF
 elif [ -n "$MESSAGE" ]; then
-  jq -n \
-    --arg sm "$MESSAGE" \
-    '{systemMessage: $sm}'
-elif [ -n "$ADDITIONAL_CONTEXT" ]; then
-  jq -n \
-    --arg ac "$ADDITIONAL_CONTEXT" \
-    '{additionalContext: $ac}'
+  cat <<EOF
+{
+  "systemMessage": "$MESSAGE"
+}
+EOF
 else
   # Safe射はメッセージなし（トークン節約）
   echo "{}"

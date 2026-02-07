@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+# Nerd Fonts icon
+ICON_IDLE=$'\u263e'  # moon (idle/sleep)
+
 # jq前提条件チェック
 if ! command -v jq &> /dev/null; then
     echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
@@ -28,5 +31,5 @@ echo "[${TIMESTAMP}] IDLE | agent_id=${AGENT_ID} | type=${AGENT_TYPE}" >> "$LOG_
 
 # 結果を返す
 jq -n \
-  --arg sm "💤 Teammate idle: ${AGENT_TYPE} (${AGENT_ID})" \
+  --arg sm "${ICON_IDLE} Teammate idle: ${AGENT_TYPE} (${AGENT_ID})" \
   '{systemMessage: $sm}'

@@ -46,14 +46,14 @@ fi
 if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
   cat <<EOF
 {
-  "systemMessage": "✅ Setup完了 (Serena enabled)",
+  "systemMessage": " Setup完了 (Serena enabled)",
   "additionalContext": "依存関係チェック完了: git, jq\n\n推奨:\n- /load-guidelines でガイドライン読込\n- Serenaメモリ確認: mcp__serena__list_memories\n- オンボーディング確認: mcp__serena__check_onboarding_performed\n\nProject directory: ${PROJECT_DIR}"
 }
 EOF
 else
   cat <<EOF
 {
-  "systemMessage": "✅ Setup完了 (Basic mode)",
+  "systemMessage": " Setup完了 (Basic mode)",
   "additionalContext": "依存関係チェック完了: git, jq\n\n推奨:\n- /load-guidelines でガイドライン読込\n\nProject directory: ${PROJECT_DIR}"
 }
 EOF

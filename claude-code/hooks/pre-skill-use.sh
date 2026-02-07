@@ -79,7 +79,7 @@ if [ ! -f "$SKILL_FILE" ]; then
     # スキルファイルが見つからない場合は警告のみ（スキル実行は継続）
     cat <<EOF
 {
-  "systemMessage": "⚠️ Skill file not found: $SKILL_NAME/skill.md"
+  "systemMessage": " Skill file not found: $SKILL_NAME/skill.md"
 }
 EOF
     exit 0
