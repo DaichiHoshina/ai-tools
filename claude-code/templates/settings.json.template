@@ -182,6 +182,9 @@
   "autocompact": true,
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "python-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true
   },
   "outputStyle": "ai-tools-format",
