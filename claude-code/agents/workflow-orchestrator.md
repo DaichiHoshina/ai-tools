@@ -4,6 +4,7 @@ description: ワークフロー自動化エージェント - タスクタイプ�
 model: sonnet
 color: purple
 permissionMode: normal
+memory: project
 ---
 
 # Workflow Orchestrator Agent
@@ -37,6 +38,267 @@ git diff --name-only
 ファイル数<5 AND 行数<300 → Simple（Tasks不使用）
 ファイル数≥5 OR 独立機能≥3 → TaskDecomposition（Tasks自動化）
 複数プロジェクト横断 → AgentHierarchy（PO経由）
+
+# 5. Agent Teams環境チェック（AgentHierarchy時のみ）
+if [ 判定結果 = AgentHierarchy ]; then
+  # 環境変数チェック
+  if [ -z "$CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS" ]; then
+    # ユーザーに有効化確認（AskUserQuestion使用）
+    # 有効化選択時: ~/.zshrc に export 追加
+    # スキップ選択時: 警告表示して続行
+  fi
+fi
+
+# 6. 技術スタック自動検出
+- go.mod 検出 → go-backend
+- package.json 検出 → typescript-backend or react-best-practices
+- Dockerfile 検出 → dockerfile-best-practices
+- main.tf 検出 → terraform
+- k8s/ または kubernetes/ 検出 → kubernetes
+- proto ファイル検出 → grpc-protobuf
+
+# 7. load-guidelines 明示的呼び出し
+タスクタイプと技術スタックに基づいて必要なガイドラインを自動読み込み:
+- タスクタイプ別: feature/refactor/bugfix → common
+- 技術スタック別: go-backend → golang, typescript-backend → typescript
+```
+
+#### Agent Teams環境チェック実装例（AgentHierarchy時）
+
+```typescript
+/**
+ * Agent Teams環境変数をチェックし、必要に応じて有効化を提案
+ * @param complexity 判定された複雑度
+ * @returns 環境変数が設定済み、または有効化完了した場合true
+ */
+async function checkAgentTeamsEnvironment(complexity: string): Promise<boolean> {
+  // AgentHierarchy判定時のみ実行
+  if (complexity !== 'AgentHierarchy') {
+    return true; // チェック不要
+  }
+
+  // 環境変数チェック
+  const isEnabled = process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS === '1';
+
+  if (isEnabled) {
+    console.log('✅ Agent Teams機能: 有効');
+    return true;
+  }
+
+  // 未設定の場合、ユーザーに確認
+  console.log('⚠️ Agent Teams機能が未有効化です');
+  console.log('複雑度: AgentHierarchy（複数プロジェクト横断 OR 大規模変更）');
+  console.log('推奨: マルチエージェント協調が効率的です');
+
+  const answer = await AskUserQuestion({
+    questions: [{
+      question: "Agent Teams機能を有効化しますか？",
+      header: "Agent Teams",
+      multiSelect: false,
+      options: [
+        {
+          label: "有効化する（推奨）",
+          description: "環境変数を設定してAgent Teams機能を有効化。トークン消費増加。"
+        },
+        {
+          label: "スキップ",
+          description: "既存のagent階層で続行。複雑なタスクでは非効率の可能性。"
+        }
+      ]
+    }]
+  });
+
+  if (answer["Agent Teams機能を有効化しますか？"] === "有効化する（推奨）") {
+    // シェル判定
+    const shell = process.env.SHELL || '/bin/bash';
+    const rcFile = shell.includes('zsh') ? '~/.zshrc' : '~/.bashrc';
+
+    // 環境変数追加
+    await Bash({
+      command: `echo '\n# Agent Teams機能（実験的、トークン集約的）\nexport CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1' >> ${rcFile}`,
+      description: "Enable Agent Teams feature"
+    });
+
+    console.log(`✅ Agent Teams機能を有効化しました (${rcFile})`);
+    console.log('📌 新しいセッションで有効になります');
+
+    return false; // 現在のセッションでは無効
+  }
+
+  console.log('⚠️ Agent Teams機能なしで続行します');
+  return false;
+}
+
+// 使用例（Phase 1で呼び出し）
+// const complexity = determineComplexity(taskContext);
+// await checkAgentTeamsEnvironment(complexity);
+```
+
+#### 技術スタック自動検出実装例
+
+```typescript
+/**
+ * プロジェクトの技術スタックを自動検出
+ * @returns 検出された技術スタック対応スキルのリスト
+ */
+async function detectTechStack(): Promise<string[]> {
+  const stacks: string[] = [];
+
+  try {
+    // Go検出
+    if (await fileExists('go.mod')) {
+      stacks.push('go-backend');
+      console.log('🔍 技術スタック検出: Go');
+    }
+
+    // TypeScript/JavaScript検出
+    if (await fileExists('package.json')) {
+      const pkg = JSON.parse(await readFile('package.json'));
+
+      // React/Next.js検出
+      if (pkg.dependencies?.['react'] || pkg.dependencies?.['next']) {
+        stacks.push('react-best-practices');
+        console.log('🔍 技術スタック検出: React/Next.js');
+
+        // Tailwind検出
+        if (pkg.dependencies?.['tailwindcss'] || pkg.devDependencies?.['tailwindcss']) {
+          stacks.push('ui-skills');
+          console.log('🔍 技術スタック検出: Tailwind CSS');
+        }
+      } else {
+        stacks.push('typescript-backend');
+        console.log('🔍 技術スタック検出: TypeScript');
+      }
+    }
+
+    // Docker検出
+    if (await fileExists('Dockerfile')) {
+      stacks.push('dockerfile-best-practices');
+      console.log('🔍 技術スタック検出: Docker');
+    }
+
+    // Terraform検出
+    if (await fileExists('main.tf') || await fileExists('terraform.tf')) {
+      stacks.push('terraform');
+      console.log('🔍 技術スタック検出: Terraform');
+    }
+
+    // Kubernetes検出
+    if (await fileExists('k8s/') || await fileExists('kubernetes/')) {
+      stacks.push('kubernetes');
+      console.log('🔍 技術スタック検出: Kubernetes');
+    }
+
+    // gRPC/Protobuf検出
+    const protoFiles = await glob('**/*.proto');
+    if (protoFiles.length > 0) {
+      stacks.push('grpc-protobuf');
+      console.log('🔍 技術スタック検出: gRPC/Protobuf');
+    }
+
+    // マイクロサービス/モノレポ検出
+    if (await fileExists('lerna.json') || await fileExists('nx.json') || await fileExists('pnpm-workspace.yaml')) {
+      stacks.push('microservices-monorepo');
+      console.log('🔍 技術スタック検出: マイクロサービス/モノレポ');
+    }
+
+    console.log(`✅ 検出された技術スタック: ${stacks.join(', ')}`);
+    return stacks;
+
+  } catch (error) {
+    console.error('❌ 技術スタック検出エラー:', error);
+    return [];
+  }
+}
+
+/**
+ * ファイルまたはディレクトリの存在確認
+ * @param path ファイルパス
+ * @returns 存在する場合true
+ */
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await Bash({ command: `test -e ${path}`, description: `Check if ${path} exists` });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// 使用例（Phase 1で呼び出し）
+// const techStacks = await detectTechStack();
+```
+
+#### load-guidelines明示的統合実装例
+
+```typescript
+/**
+ * タスクタイプと技術スタックに基づいて必要なガイドラインを読み込み
+ * @param taskType タスクタイプ
+ * @param techStacks 検出された技術スタック
+ */
+async function loadRequiredGuidelines(taskType: string, techStacks: string[]): Promise<void> {
+  console.log('📚 必要なガイドラインを読み込んでいます...');
+
+  // タスクタイプ別の必須ガイドライン
+  const guidelinesForTask: Record<string, string[]> = {
+    'design': ['common'],
+    'feature': ['common'],
+    'refactor': ['common'],
+    'bugfix': ['common'],
+    'hotfix': ['common'],
+    'docs': ['common'],
+    'test': ['common'],
+    'data-analysis': [],  // データ分析は言語非依存
+    'infrastructure': ['common'],
+    'troubleshoot': ['common']
+  };
+
+  // 技術スタック別のガイドライン
+  const guidelinesForStack: Record<string, string[]> = {
+    'go-backend': ['golang', 'common'],
+    'typescript-backend': ['typescript', 'common'],
+    'react-best-practices': ['nextjs-react', 'common'],
+    'ui-skills': ['nextjs-react', 'tailwind', 'shadcn'],
+    'grpc-protobuf': ['golang', 'common'],
+    'terraform': ['terraform', 'common'],
+    'kubernetes': ['kubernetes', 'common'],
+    'microservices-monorepo': ['microservices-kubernetes', 'common'],
+    'dockerfile-best-practices': [],  // Dockerは独立
+    'clean-architecture-ddd': ['clean-architecture', 'ddd', 'common'],
+    'api-design': ['common'],
+    'formal-methods': ['common']
+  };
+
+  // 必要なガイドラインをマージ
+  const requiredGuidelines = new Set<string>([
+    ...(guidelinesForTask[taskType] || []),
+    ...techStacks.flatMap(stack => guidelinesForStack[stack] || [])
+  ]);
+
+  if (requiredGuidelines.size === 0) {
+    console.log('💡 ガイドライン不要（言語非依存タスク）');
+    return;
+  }
+
+  // load-guidelines呼び出し
+  try {
+    console.log(`📖 読み込むガイドライン: ${Array.from(requiredGuidelines).join(', ')}`);
+
+    // load-guidelinesスキルを呼び出し（サマリーモード）
+    await Skill('load-guidelines', Array.from(requiredGuidelines).join(','));
+
+    console.log('✅ ガイドライン読み込み完了');
+  } catch (error) {
+    console.error('❌ ガイドライン読み込み失敗:', error);
+    console.log('⚠️ ガイドラインなしで続行します');
+  }
+}
+
+// 使用例（Phase 1の最後で呼び出し）
+// const taskType = detectTaskType(userPrompt);
+// const techStacks = await detectTechStack();
+// await loadRequiredGuidelines(taskType, techStacks);
 ```
 
 #### Tasks自動初期化（TaskDecomposition時）
@@ -199,10 +461,13 @@ function detectTaskType(prompt: string): TaskType {
     docs: ['ドキュメント', '仕様書', 'README', 'docs', 'documentation'],  // Priority 4
     test: ['テスト', 'test', 'spec', 'testing'],  // Priority 5
     feature: ['追加', '実装', '作成', '新規', '機能', 'add', 'implement', 'create'],  // Priority 6
+    'data-analysis': ['データ分析', '分析', 'analysis', 'データ', 'data'],  // Priority 7
+    infrastructure: ['インフラ', 'infrastructure', 'terraform', 'kubernetes', 'k8s', 'IaC'],  // Priority 8
+    troubleshoot: ['トラブルシュート', 'troubleshoot', '調査', '診断', '障害'],  // Priority 9
   };
 
   // Priority順にチェック
-  const priorityOrder = ['design', 'hotfix', 'bugfix', 'refactor', 'docs', 'test', 'feature'];
+  const priorityOrder = ['design', 'hotfix', 'bugfix', 'refactor', 'docs', 'test', 'feature', 'data-analysis', 'infrastructure', 'troubleshoot'];
   for (const type of priorityOrder) {
     const words = keywords[type];
     if (words.some(word => prompt.includes(word))) {
@@ -308,6 +573,10 @@ workflows:
         required: true
         description: リファクタリング計画
         activeForm: リファクタリング計画中
+      - skill: techdebt
+        required: true
+        description: 技術的負債検出
+        activeForm: 技術的負債検出中
       - command: /refactor
         required: true
         description: リファクタリング実行
@@ -392,6 +661,176 @@ workflows:
         required: true
         description: テストPR作成
         activeForm: テストPR作成中
+
+  data-analysis:  # Priority 7: データ分析
+    steps:
+      - skill: data-analysis
+        required: true
+        description: データ分析実行
+        activeForm: データ分析実行中
+      - command: /docs
+        required: false
+        description: 分析結果ドキュメント化
+        activeForm: 分析結果ドキュメント化中
+      - command: /review
+        required: false
+        description: ドキュメントレビュー
+        activeForm: ドキュメントレビュー中
+      - command: /commit-push-pr
+        args: '-m "analysis: {summary}"'
+        required: true
+        description: 分析PR作成
+        activeForm: 分析PR作成中
+
+  infrastructure:  # Priority 8: インフラ
+    steps:
+      - mode: plan
+        required: true
+        description: Planモード開始
+        activeForm: Planモード移行中
+      - command: /plan
+        required: true
+        description: インフラ設計
+        activeForm: インフラ設計中
+      - skill: auto-detect  # terraform, kubernetes, dockerfile-best-practices を自動検出
+        required: true
+        description: IaCコード作成（技術スタック自動検出）
+        activeForm: IaCコード作成中
+      - agent: verify-app
+        args: "terraform plan / kubectl dry-run"
+        required: true
+        description: インフラ検証
+        activeForm: インフラ検証中
+      - command: /commit-push-pr
+        args: '--draft -m "infra: {summary}"'
+        required: true
+        description: インフラPR作成（ドラフト）
+        activeForm: インフラPR作成中
+
+  troubleshoot:  # Priority 9: トラブルシュート
+    steps:
+      - skill: docker-troubleshoot OR debug
+        required: true
+        description: 問題診断
+        activeForm: 問題診断中
+      - command: /dev
+        required: false
+        description: 修正実装（必要に応じて）
+        activeForm: 修正実装中
+      - command: /docs
+        required: false
+        description: トラブルシュート手順ドキュメント化
+        activeForm: トラブルシュート手順ドキュメント化中
+      - command: /commit-push-pr
+        args: '-m "fix: {summary}"'
+        required: false
+        description: 修正PR作成
+        activeForm: 修正PR作成中
+```
+
+### Phase 2.3: 設計ガイドライン選択（designワークフロー時）
+
+**実行タイミング**: designワークフローの/brainstormステップ完了後
+
+```typescript
+/**
+ * 設計ガイドラインを選択（designワークフロー時に自動実行）
+ * @param taskContext タスクコンテキスト
+ * @returns 選択された設計ガイドラインスキルのリスト
+ */
+async function selectDesignGuidelines(taskContext: TaskContext): Promise<string[]> {
+  console.log('🎨 設計ガイドラインを選択しています...');
+
+  // タスク内容から推奨ガイドライン判定
+  const recommendations = analyzeTaskForGuidelines(taskContext);
+
+  // ユーザーに確認
+  const answer = await AskUserQuestion({
+    questions: [{
+      question: "設計ガイドラインを選択してください（複数選択可）",
+      header: "設計ガイドライン",
+      multiSelect: true,
+      options: [
+        {
+          label: "Clean Architecture/DDD (推奨)",
+          description: "レイヤー設計、ドメインモデリング、依存関係管理"
+        },
+        {
+          label: "API Design",
+          description: "REST/GraphQL設計原則、バージョニング、エラーハンドリング"
+        },
+        {
+          label: "Formal Methods",
+          description: "TLA+/Alloy形式手法による厳密な仕様定義"
+        },
+        {
+          label: "なし",
+          description: "ガイドラインなしで進める"
+        }
+      ]
+    }]
+  });
+
+  const guidelines: string[] = [];
+  const selections = answer["設計ガイドラインを選択してください（複数選択可）"];
+
+  // 選択されたガイドラインをスキルとして適用
+  if (selections.includes("Clean Architecture/DDD (推奨)")) {
+    guidelines.push('clean-architecture-ddd');
+    await Skill('clean-architecture-ddd');
+    console.log('✅ Clean Architecture/DDD ガイドライン適用');
+  }
+
+  if (selections.includes("API Design")) {
+    guidelines.push('api-design');
+    await Skill('api-design');
+    console.log('✅ API Design ガイドライン適用');
+  }
+
+  if (selections.includes("Formal Methods")) {
+    guidelines.push('formal-methods');
+    await Skill('formal-methods');
+    console.log('✅ Formal Methods ガイドライン適用');
+  }
+
+  if (selections.includes("なし")) {
+    console.log('💡 ガイドラインなしで設計を進めます');
+  }
+
+  return guidelines;
+}
+
+/**
+ * タスク内容から推奨ガイドラインを判定
+ * @param taskContext タスクコンテキスト
+ * @returns 推奨ガイドラインの配列
+ */
+function analyzeTaskForGuidelines(taskContext: TaskContext): string[] {
+  const recommendations: string[] = [];
+  const prompt = taskContext.prompt.toLowerCase();
+
+  // キーワード検出で推奨ガイドライン判定
+  if (prompt.includes('api') || prompt.includes('エンドポイント') || prompt.includes('rest') || prompt.includes('graphql')) {
+    recommendations.push('api-design');
+  }
+
+  if (prompt.includes('アーキテクチャ') || prompt.includes('設計') || prompt.includes('ドメイン') || prompt.includes('ddd')) {
+    recommendations.push('clean-architecture-ddd');
+  }
+
+  if (prompt.includes('形式手法') || prompt.includes('仕様') || prompt.includes('tla+') || prompt.includes('alloy')) {
+    recommendations.push('formal-methods');
+  }
+
+  return recommendations;
+}
+
+// 使用例（designワークフローの/brainstorm完了後に呼び出し）
+// if (workflowType === 'design') {
+//   await executeCommand('/brainstorm');
+//   const guidelines = await selectDesignGuidelines(taskContext);
+//   console.log(`🎨 適用された設計ガイドライン: ${guidelines.join(', ')}`);
+// }
 ```
 
 ### Phase 2.5: Guard関手適用（自動）
@@ -637,6 +1076,12 @@ async function executeStep(step: WorkflowStep, taskId: string) {
     console.warn(`⚠️ タスク開始マーク失敗: ${taskId}`);
   }
 
+  // 2.5. /devコマンド実行時: 技術スタック特化スキルを自動適用
+  if (step.command === '/dev') {
+    const techStacks = await detectTechStack();  // Phase 1で検出済みの場合は再利用
+    await applyTechStackSkills(techStacks);
+  }
+
   // 3. ステップ実行
   let result;
   let retryCount = 0;
@@ -709,6 +1154,38 @@ async function executeStep(step: WorkflowStep, taskId: string) {
   
   return result;
 }
+
+/**
+ * 技術スタック特化スキルを自動適用（/devフェーズ実行時）
+ * @param techStacks 検出された技術スタック
+ */
+async function applyTechStackSkills(techStacks: string[]): Promise<void> {
+  if (techStacks.length === 0) {
+    console.log('💡 技術スタック特化スキルなし（汎用実装）');
+    return;
+  }
+
+  console.log(`🎯 技術スタック特化スキルを適用: ${techStacks.join(', ')}`);
+
+  // 技術スタック特化スキルを並列実行
+  const skillPromises = techStacks.map(stack => {
+    console.log(`🔧 適用中: ${stack}`);
+    return Skill(stack);
+  });
+
+  try {
+    await Promise.all(skillPromises);
+    console.log('✅ 全技術スタック特化スキル適用完了');
+  } catch (error) {
+    console.error('❌ 技術スタック特化スキル適用エラー:', error);
+    console.log('⚠️ スキルなしで実装を続行します');
+  }
+}
+
+// 使用例（executeStep内の/devフェーズで自動呼び出し）
+// if (step.command === '/dev') {
+//   await applyTechStackSkills(techStacks);
+// }
 ```
 
 ### Phase 5: 完了報告

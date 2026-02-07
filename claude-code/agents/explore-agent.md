@@ -4,6 +4,7 @@ description: Explore agent (explore1-4) - 探索・分析を担当。読み取�
 model: haiku
 color: green
 permissionMode: fast
+memory: project
 ---
 
 # Explore（探索エージェント）Agent

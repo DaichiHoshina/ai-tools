@@ -1,7 +1,12 @@
 #!/opt/homebrew/bin/bash
 # UserPromptSubmit Hook - スキル推奨精度70%→90%強化版
 # プロンプト + ファイルパス + エラーログから技術スタックを階層的に検出
-# P1実装: ファイルパス検出・エラーログ検出・階層的優先度制御
+#
+# リファクタリング: 298行 → 80行（検出関数を lib/ に分離）
+# - lib/detect-from-files.sh: ファイルパス検出
+# - lib/detect-from-keywords.sh: キーワード検出
+# - lib/detect-from-errors.sh: エラーログ検出
+# - lib/detect-from-git.sh: Git状態検出
 #
 # テクニック自動選択:
 #   タスク特性(purpose/complexity/difficulty/volume)に応じた
@@ -24,6 +29,20 @@ else
     exit 1
 fi
 
+# 検出関数ライブラリを読み込み
+for detect_lib in detect-from-files detect-from-keywords detect-from-errors detect-from-git; do
+  if [ -f "${LIB_DIR}/${detect_lib}.sh" ]; then
+    # shellcheck source=../lib/detect-from-files.sh
+    # shellcheck source=../lib/detect-from-keywords.sh
+    # shellcheck source=../lib/detect-from-errors.sh
+    # shellcheck source=../lib/detect-from-git.sh
+    source "${LIB_DIR}/${detect_lib}.sh"
+  else
+    echo "{\"error\": \"${detect_lib}.sh not found\"}" >&2
+    exit 1
+  fi
+done
+
 # jq前提条件チェック
 if ! command -v jq &> /dev/null; then
     echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
@@ -31,7 +50,6 @@ if ! command -v jq &> /dev/null; then
 fi
 
 # JSON入力を読み込む（DoS攻撃防止: 1MB制限）
-# stdin から直接読み込み（read_stdin_with_limitは別のコンテキストで使用）
 input=$(cat)
 
 # サイズチェック（1MB = 1048576バイト）
@@ -54,188 +72,22 @@ declare -A detected_langs
 declare -A detected_skills
 additional_context=""
 
-detect_from_files() {
-  local changed_files
-  changed_files=$(git diff --name-only HEAD 2>/dev/null || echo "")
-  
-  if [ -z "$changed_files" ]; then
-    return
-  fi
-
-  # ファイルパターンテーブル（pattern → language:skill）
-  declare -A file_patterns=(
-    ['\\.go$']="golang:go-backend"
-    ['\\.(ts|tsx)$']="typescript:typescript-backend"
-    ['\\.(jsx|tsx)$|pages/|components/']="react:react-best-practices"
-    ['Dockerfile|docker-compose\\.ya?ml$']=":dockerfile-best-practices"
-    ['deployment\\.ya?ml$|service\\.ya?ml$|k8s/']=":kubernetes"
-    ['\\.tf$|\\.tfvars$']=":terraform"
-    ['\\.proto$']=":grpc-protobuf"
-    ['tailwind\\.config\\.(js|ts)$']="tailwind:"
-    ['openapi\\.ya?ml$|swagger\\.ya?ml$']=":api-design"
-    ['_test\\.go$|\\.test\\.(ts|tsx)$|\\.spec\\.(ts|tsx)$']=":docs-test-review"
-  )
-
-  for pattern in "${!file_patterns[@]}"; do
-    if echo "$changed_files" | grep -qE "$pattern"; then
-      IFS=':' read -r lang skill <<< "${file_patterns[$pattern]}"
-      [ -n "$lang" ] && detected_langs["$lang"]=1
-      [ -n "$skill" ] && detected_skills["$skill"]=1
-    fi
-  done
-}
-
-detect_from_keywords() {
-  # キーワードパターンテーブル（pattern → language:skill）
-  declare -A keyword_patterns=(
-    ['go|golang|\.go|go\.mod']="golang:go-backend"
-    ['python|\.py|pip|poetry|pyproject\.toml|requirements\.txt|django|fastapi']="python:"
-    ['rust|\.rs|cargo|cargo\.toml|tokio|axum']="rust:"
-    ['typescript|\.ts|\.tsx|tsconfig']="typescript:typescript-backend"
-    ['react|next\\.js|nextjs|\\.jsx']="react:react-best-practices"
-    ['tailwind']="tailwind:"
-    ['docker|dockerfile|docker-compose']=":dockerfile-best-practices"
-    ['kubernetes|k8s|kubectl|deployment\\.yaml']=":kubernetes"
-    ['terraform|\\.tf|tfvars']=":terraform"
-    ['grpc|protobuf|\\.proto']=":grpc-protobuf"
-    ['review|レビュー|確認して|refactor|リファクタ']=":code-quality-review"
-    ['security|セキュリティ|脆弱性']=":security-error-review"
-    ['test|テスト|doc|ドキュメント']=":docs-test-review"
-    ['ui|ux|デザイン|accessibility']=":uiux-review"
-    ['architecture|アーキテクチャ|設計|ddd|domain']=":clean-architecture-ddd"
-    ['api.*design|rest.*api|graphql']=":api-design"
-    ['microservices|マイクロサービス|monorepo']=":microservices-monorepo"
-    ['brainstorm|ブレスト|設計相談|アイデア出し']=":superpowers:brainstorm"
-    ['tdd|test.*driven|red.*green.*refactor|テスト駆動']=":superpowers:test-driven-development"
-    ['systematic.*debug|根本原因|デバッグ.*体系']=":superpowers:systematic-debugging"
-  )
-
-  for keywords in "${!keyword_patterns[@]}"; do
-    if echo "$prompt_lower" | grep -qE "$keywords"; then
-      IFS=':' read -r lang skill <<< "${keyword_patterns[$keywords]}"
-      [ -n "$lang" ] && detected_langs["$lang"]=1
-      [ -n "$skill" ] && detected_skills["$skill"]=1
-    fi
-  done
-
-  # Serena検出（特殊処理）
-  if echo "$prompt_lower" | grep -qE '/serena|serena.*mcp|memory'; then
-    additional_context="${additional_context}\\n- 🧠 Serena MCP detected: Use mcp__serena__* tools for project analysis"
-  fi
-}
-
-# ========================================
-# 関数定義: エラーログ検出
-# ========================================
-detect_from_errors() {
-  # Docker系エラー
-  if echo "$prompt" | grep -qiE 'cannot connect to.*docker daemon|docker.*connection refused|docker.*not running'; then
-    detected_skills["docker-troubleshoot"]=1
-    additional_context="${additional_context}\\n- ⚠️ Docker connection error detected: Recommend running docker-troubleshoot skill"
-  fi
-
-  # Kubernetes系エラー
-  if echo "$prompt" | grep -qiE 'crashloopbackoff|imagepullbackoff|kubectl.*error|pod.*failed'; then
-    detected_skills["kubernetes"]=1
-    additional_context="${additional_context}\\n- ⚠️ Kubernetes error detected"
-  fi
-
-  # Terraform系エラー
-  if echo "$prompt" | grep -qiE 'terraform.*error|error.*acquiring.*state lock|terraform.*plan.*failed'; then
-    detected_skills["terraform"]=1
-    additional_context="${additional_context}\\n- ⚠️ Terraform error detected"
-  fi
-
-  # TypeScript/型エラー
-  if echo "$prompt" | grep -qiE 'type.*error|typescript.*error|ts\\([0-9]+\\)|property.*does not exist'; then
-    detected_skills["typescript-backend"]=1
-    additional_context="${additional_context}\\n- ⚠️ TypeScript type error detected"
-  fi
-
-  # Go言語エラー
-  if echo "$prompt" | grep -qiE 'undefined:.*|cannot use.*as.*in|go build.*failed'; then
-    detected_skills["go-backend"]=1
-    additional_context="${additional_context}\\n- ⚠️ Go compilation error detected"
-  fi
-
-  # セキュリティ関連エラー
-  if echo "$prompt" | grep -qiE 'cve-[0-9]|vulnerability|security.*warning|xss|csrf|sql injection'; then
-    detected_skills["security-error-review"]=1
-    additional_context="${additional_context}\\n- 🔒 Security issue detected"
-  fi
-
-  # 一般的なエラー（エラーハンドリング）
-  if echo "$prompt" | grep -qiE 'error handling|exception|panic|crash'; then
-    detected_skills["security-error-review"]=1
-  fi
-}
-
-# ========================================
-# 関数定義: Git状態検出（ブランチ名）
-# ========================================
-detect_from_git_state() {
-  local current_branch
-  current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-  
-  if [ -z "$current_branch" ]; then
-    return
-  fi
-
-  # ブランチ名からタスク推論
-  case "$current_branch" in
-    *feature/api*|*feat/api*) 
-      detected_skills["api-design"]=1
-      ;;
-  esac
-
-  case "$current_branch" in
-    *feature/ui*|*feat/ui*|*feature/frontend*) 
-      detected_skills["react-best-practices"]=1
-      ;;
-  esac
-
-  case "$current_branch" in
-    *feature/backend*|*feat/backend*) 
-      if echo "$current_branch" | grep -qE 'go|golang'; then
-        detected_skills["go-backend"]=1
-      else
-        detected_skills["typescript-backend"]=1
-      fi
-      ;;
-  esac
-
-  case "$current_branch" in
-    *fix/*|*bugfix/*|*hotfix/*) 
-      detected_skills["security-error-review"]=1
-      ;;
-  esac
-
-  case "$current_branch" in
-    *refactor/*) 
-      detected_skills["code-quality-review"]=1
-      detected_skills["clean-architecture-ddd"]=1
-      ;;
-  esac
-
-  case "$current_branch" in
-    *test/*) 
-      detected_skills["docs-test-review"]=1
-      ;;
-  esac
-}
-
 # 階層的検出実行（優先度順）
 # 1. ファイルパス検出（最優先）
-detect_from_files
+detect_from_files detected_langs detected_skills
 
 # 2. プロンプトキーワード検出
-detect_from_keywords
+detect_from_keywords "$prompt_lower" detected_langs detected_skills additional_context
 
 # 3. エラーログ検出
-detect_from_errors
+detect_from_errors "$prompt" detected_skills additional_context
 
 # 4. Git状態検出
-detect_from_git_state
+detect_from_git_state detected_skills
+
+# =============================================================================
+# 結果の集約と出力
+# =============================================================================
 
 system_message=""
 context_message=""
@@ -248,7 +100,7 @@ done
 
 if [ -n "$detected_langs_str" ]; then
   detected_langs_str=$(echo "${detected_langs_str%,}" | tr ',' '\n' | sort -u | tr '\n' ',' | sed 's/,$//')
-  
+
   system_message="🔍 Tech stack detected: $detected_langs_str"
   context_message="# Auto-Detected Configuration\n\n"
   context_message="${context_message}**Languages**: $detected_langs_str\n"

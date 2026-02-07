@@ -33,11 +33,14 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 | 0 | 相談, アイデア, 設計検討, ブレスト, brainstorm, 構想, 検討 | **設計相談** | Brainstorm → PRD → Plan → ... |
 | 1 | 緊急, hotfix, 本番, production, critical | **緊急対応** | Debug → Dev → Verify → PR |
 | 2 | 修正, fix, バグ, エラー, 不具合, bug, error | **バグ修正** | Debug → Dev → Verify → PR |
-| 3 | リファクタリング, 改善, 整理, 見直し, refactor, improve | **リファクタリング** | Plan → Refactor → Simplify → Review → Verify → PR(draft) |
+| 3 | リファクタリング, 改善, 整理, 見直し, refactor, improve | **リファクタリング** | Plan → Refactor → Techdebt → Simplify → Review → Verify → PR(draft) |
 | 4 | ドキュメント, 仕様書, README, docs, documentation | **ドキュメント** | Explore → Docs → Review → PR |
 | 5 | テスト, test, spec, testing | **テスト作成** | Test → Review → Verify → PR |
 | 6 | 追加, 実装, 作成, 新規, 機能, add, implement, create | **新機能実装** | PRD → Plan → Dev → Simplify → Test → Review → Verify → PR |
-| 7 | その他 | **新機能実装** | （デフォルト） |
+| 7 | データ分析, 分析, analysis, データ, data | **データ分析** | データ分析 → ドキュメント化 → PR |
+| 8 | インフラ, infrastructure, terraform, kubernetes, k8s, IaC | **インフラ** | Plan → インフラコード → Verify → PR |
+| 9 | トラブルシュート, troubleshoot, 調査, 診断, 障害 | **トラブルシュート** | 診断 → 修正 → ドキュメント化 |
+| 10 | その他 | **新機能実装** | （デフォルト） |
 
 ## オプション
 
@@ -101,12 +104,37 @@ TaskUpdate(taskId: "1", status: "completed")    # 完了
 CLAUDE_CODE_TASK_LIST_ID=xxx で複数セッション間で共有可能
 ```
 
-### 4. Plan モード判断（自動移行）
+### 4. Agent Teams判定（AgentHierarchy時のみ）
+
+**実行条件**: ステップ3で `AgentHierarchy` と判定された場合のみ
+
+```bash
+# 1. 環境変数チェック
+if [ -z "$CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS" ]; then
+  echo "⚠️ Agent Teams機能が未有効化です"
+  echo "複雑度: AgentHierarchy（複数プロジェクト横断 OR 大規模変更）"
+  # AskUserQuestion で有効化確認
+fi
+
+# 2. 有効化が必要な場合
+if [ 有効化選択 ]; then
+  # ~/.zshrc または ~/.bashrc に追加
+  echo 'export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1' >> ~/.zshrc
+  echo "✅ Agent Teams機能を有効化しました"
+  echo "📌 新しいセッションで有効になります"
+fi
+```
+
+**スキップ条件**:
+- 複雑度が `Simple` または `TaskDecomposition` の場合
+- 環境変数が既に設定済みの場合
+
+### 5. Plan モード判断（自動移行）
 - **Plan必須**: 新機能実装, リファクタリング, 複雑なバグ修正
   - → `EnterPlanMode()` で自動移行、完了後 `ExitPlanMode()` で自動終了
 - **通常モード**: 単純なバグ修正, ドキュメント, テスト
 
-### 5. workflow-orchestrator起動
+### 6. workflow-orchestrator起動
 
 ```
 Task(

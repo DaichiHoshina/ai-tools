@@ -4,6 +4,7 @@ description: Developer agent (dev1-4) - 実装を担当。Serena MCP必須使用
 model: sonnet
 color: orange
 permissionMode: normal
+memory: project
 ---
 
 # Developer（実行エージェント）Agent

@@ -4,6 +4,7 @@ description: Code Simplifier - 実装後のコード簡素化を担当。複雑�
 model: sonnet
 color: blue
 permissionMode: normal
+memory: project
 ---
 
 # Code Simplifier（コード簡素化）Agent

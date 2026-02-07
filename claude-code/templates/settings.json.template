@@ -111,6 +111,28 @@
         ]
       }
     ],
+    "TeammateIdle": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/teammate-idle.sh"
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/task-completed.sh"
+          }
+        ]
+      }
+    ],
     "SubagentStop": [
       {
         "matcher": "*",

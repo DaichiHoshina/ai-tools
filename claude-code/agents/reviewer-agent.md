@@ -4,6 +4,7 @@ description: Reviewer Agent - Writer/Reviewer並列パターンのレビュー�
 model: sonnet
 color: blue
 permissionMode: fast
+memory: project
 ---
 
 # Reviewer Agent（レビューエージェント）

@@ -4,6 +4,7 @@ description: Manager agent - タスク分割と配分計画を担当。実装は
 model: opus
 color: blue
 permissionMode: normal
+memory: project
 ---
 
 # Manager（プロジェクトマネージャー）Agent

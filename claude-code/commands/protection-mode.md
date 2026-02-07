@@ -58,6 +58,79 @@ mcp__serena__write_memory("protection-mode-loaded", {
 | **Boundary** | 確認後実行 | git commit/push, 設定変更 |
 | **Forbidden** | 拒否 | rm -rf /, secrets漏洩 |
 
+### 3層分類の可視化
+
+```mermaid
+graph TB
+    subgraph "Guard関手: Mode × Action → Decision"
+        A[Action 入力] --> B{操作分類}
+
+        B -->|Safe射| C[✅ Allow<br/>即座実行]
+        B -->|Boundary射| D[⚠️ AskUser<br/>確認後実行]
+        B -->|Forbidden射| E[🚫 Deny<br/>拒否]
+
+        C --> F1[Read File]
+        C --> F2[git status]
+        C --> F3[分析・提案]
+
+        D --> G1[git commit/push]
+        D --> G2[設定変更]
+        D --> G3[ファイル編集]
+
+        E --> H1[rm -rf /]
+        E --> H2[secrets漏洩]
+        E --> H3[YAGNI違反]
+    end
+
+    subgraph "Mode: セッションモード"
+        M1[strict<br/>全Boundary確認]
+        M2[normal<br/>重要Boundary確認]
+        M3[fast<br/>最重要Boundary確認]
+    end
+
+    M1 -.影響.-> D
+    M2 -.影響.-> D
+    M3 -.影響.-> D
+
+    style C fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style D fill:#fff3cd,stroke:#ffc107,stroke-width:2px
+    style E fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+```
+
+### 操作分類の判定フロー
+
+```mermaid
+flowchart TD
+    Start([Operation Request]) --> Read{読み取り専用?}
+
+    Read -->|Yes| Analysis{分析・提案のみ?}
+    Analysis -->|Yes| Safe1[✅ Safe射<br/>即座実行]
+    Analysis -->|No| Git{git status/log/diff?}
+    Git -->|Yes| Safe2[✅ Safe射<br/>即座実行]
+    Git -->|No| Boundary1
+
+    Read -->|No| Write{書き込み操作?}
+    Write -->|Yes| Destruct{破壊的?}
+    Destruct -->|Yes| Forbidden1[🚫 Forbidden射<br/>拒否]
+    Destruct -->|No| Boundary1[⚠️ Boundary射<br/>確認後実行]
+
+    Write -->|No| Config{設定変更?}
+    Config -->|Yes| Boundary2[⚠️ Boundary射<br/>確認後実行]
+    Config -->|No| Other{その他の操作}
+    Other -->|YAGNI違反| Forbidden2[🚫 Forbidden射<br/>拒否]
+    Other -->|セキュリティ侵害| Forbidden3[🚫 Forbidden射<br/>拒否]
+    Other -->|Normal| Boundary3[⚠️ Boundary射<br/>確認後実行]
+
+    style Safe1 fill:#d4edda,stroke:#28a745,stroke-width:3px
+    style Safe2 fill:#d4edda,stroke:#28a745,stroke-width:3px
+    style Boundary1 fill:#fff3cd,stroke:#ffc107,stroke-width:3px
+    style Boundary2 fill:#fff3cd,stroke:#ffc107,stroke-width:3px
+    style Boundary3 fill:#fff3cd,stroke:#ffc107,stroke-width:3px
+    style Forbidden1 fill:#f8d7da,stroke:#dc3545,stroke-width:3px
+    style Forbidden2 fill:#f8d7da,stroke:#dc3545,stroke-width:3px
+    style Forbidden3 fill:#f8d7da,stroke:#dc3545,stroke-width:3px
+```
+
 ---
 
 ## Guard関手
@@ -65,6 +138,13 @@ mcp__serena__write_memory("protection-mode-loaded", {
 ```
 Guard_M : Mode × Action → {Allow, AskUser, Deny}
 ```
+
+**数学的定義**:
+- `Guard_M(strict, Boundary) = AskUser` （全Boundary確認）
+- `Guard_M(normal, Boundary) = AskUser` （重要Boundary確認）
+- `Guard_M(fast, Boundary) = AskUser | Allow` （最重要Boundaryのみ確認）
+- `Guard_M(_, Safe) = Allow` （モード不問で許可）
+- `Guard_M(_, Forbidden) = Deny` （モード不問で拒否）
 
 ---
 

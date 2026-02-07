@@ -4,6 +4,7 @@ description: Application Verification Agent - ビルド・テスト・lintの包
 model: sonnet
 color: green
 permissionMode: fast
+memory: project
 ---
 
 # Verify-App（検証エージェント）Agent

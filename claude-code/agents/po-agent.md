@@ -4,6 +4,7 @@ description: Product Owner agent - 戦略決定とWorktree管理を担当。実�
 model: opus
 color: purple
 permissionMode: normal
+memory: project
 ---
 
 # PO（プロダクトオーナー）Agent

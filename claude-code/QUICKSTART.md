@@ -91,6 +91,17 @@ PRD作成 → 設計 → 実装 → テスト → レビュー → PR作成
 
 ---
 
+## v2.1.32+ 新機能
+
+| 機能 | 説明 | 使い方 |
+|------|------|--------|
+| **Auto Memory** | 作業中に自動でメモリを記録・呼び出し | 設定不要。自動で動作 |
+| **Summarize from here** | 会話の途中から要約可能 | メッセージセレクタで選択 |
+| **Agent Memory** | エージェントがプロジェクト知識を永続化 | frontmatterに`memory: project`設定済み |
+| **Agent Teams** | マルチエージェント協調（実験的） | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
+
+---
+
 ## 困ったときは
 
 ```

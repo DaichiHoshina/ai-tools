@@ -328,6 +328,79 @@ echo '{"session_id": "test", "workspace": {"current_dir": "/Users/daichi/ai-tool
 }
 ```
 
+## エラーケース一覧
+
+各フックで発生する可能性のあるエラーケースと対処方法を一覧化。
+
+### session-start.sh
+
+| エラーケース | 原因 | 対処方法 |
+|------------|------|---------|
+| `security-functions.sh not found` | lib/ ディレクトリ不在 | install.sh を実行 |
+| `jq not installed` | jq コマンド不在 | `brew install jq` |
+| JSON パースエラー | 不正な JSON 入力 | 入力形式を確認 |
+| 出力なし | MCP サーバー未検出（正常） | 問題なし（検出時のみ出力） |
+
+### user-prompt-submit.sh
+
+| エラーケース | 原因 | 対処方法 |
+|------------|------|---------|
+| `detect-from-*.sh not found` | lib/ ディレクトリ不在 | install.sh を実行、または chmod +x 確認 |
+| `Input size exceeds limit (1MB)` | プロンプトサイズ超過 | プロンプトを分割 |
+| JSON パースエラー | 不正な JSON 入力 | 入力形式を確認 |
+| git diff エラー | git リポジトリ外 | git init または無視 |
+| 出力なし | 技術スタック未検出（正常） | 問題なし（検出時のみ出力） |
+
+### pre-tool-use.sh
+
+| エラーケース | 原因 | 対処方法 |
+|------------|------|---------|
+| `security-functions.sh not found` | lib/ ディレクトリ不在 | install.sh を実行 |
+| JSON パースエラー | 不正な JSON 入力 | 入力形式を確認 |
+| `tool_name` 不在 | 入力に `tool_name` フィールドなし | 入力形式を確認 |
+| 危険なコマンド検出 | `rm -rf /` などを検出 | 警告メッセージを表示（正常動作） |
+
+### post-tool-use.sh
+
+| エラーケース | 原因 | 対処方法 |
+|------------|------|---------|
+| フック未実装 | post-tool-use.sh がない | 将来実装予定（現時点では任意） |
+
+### pre-compact.sh
+
+| エラーケース | 原因 | 対処方法 |
+|------------|------|---------|
+| `security-functions.sh not found` | lib/ ディレクトリ不在 | install.sh を実行 |
+| バックアップディレクトリ作成失敗 | 権限エラー | `mkdir -p ~/.claude/pre-compact-backups` |
+| JSON パースエラー | 不正な JSON 入力 | 入力形式を確認 |
+
+### stop.sh
+
+| エラーケース | 原因 | 対処方法 |
+|------------|------|---------|
+| `afplay` コマンド失敗 | notification.mp3 不在 | `~/notification.mp3` を配置 |
+| 通知音再生できない | macOS 以外の OS | Linux/Windows 用コマンドに変更 |
+
+### session-end.sh
+
+| エラーケース | 原因 | 対処方法 |
+|------------|------|---------|
+| `security-functions.sh not found` | lib/ ディレクトリ不在 | install.sh を実行 |
+| ログディレクトリ作成失敗 | 権限エラー | `mkdir -p ~/.claude/session-logs` |
+| `afplay` コマンド失敗 | notification.mp3 不在 | `~/notification.mp3` を配置 |
+| JSON パースエラー | 不正な JSON 入力 | 入力形式を確認 |
+
+### 共通エラー
+
+| エラーケース | 原因 | 対処方法 |
+|------------|------|---------|
+| `bash: command not found` | Bash バージョン不一致 | shebang を `/usr/bin/env bash` に変更 |
+| 実行権限エラー | chmod +x されていない | `chmod +x ~/.claude/hooks/*.sh` |
+| JSON 出力が壊れる | jq エラー | jq の `-n` と `--arg` を使用 |
+| パフォーマンス低下 | 検出ロジックが遅い | Phase 3 のキャッシング実装を適用 |
+
+---
+
 ## トラブルシューティング
 
 ### フックが実行されない
