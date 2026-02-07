@@ -4,8 +4,8 @@
 # =============================================================================
 
 setup() {
-  # テスト用のライブラリをロード
-  load '../../../lib/hook-utils'
+  # PROJECT_ROOT を設定
+  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
 
   # テスト用のJSON入力
   TEST_JSON='{"field1": "value1", "field2": "value2", "workspace": {"current_dir": "/test/path"}}'
