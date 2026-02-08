@@ -263,7 +263,10 @@ esac
 
 ## 参照
 
-- [code-quality-review](../code-quality-review/SKILL.md): 品質詳細
-- [security-error-review](../security-error-review/SKILL.md): セキュリティ詳細
-- [docs-test-review](../docs-test-review/SKILL.md): ドキュメント・テスト詳細
+- [SKILL-MIGRATION.md](../../SKILL-MIGRATION.md): スキル統合ガイド（Phase 2-5で統合済み）
 - [/review コマンド](../../commands/review.md): コマンド仕様
+
+**旧スキル参照**（Phase 2-5で統合済み、旧スキル名も動作）:
+- `code-quality-review` → `comprehensive-review --focus=quality`
+- `security-error-review` → `comprehensive-review --focus=security`
+- `docs-test-review` → `comprehensive-review --focus=docs`

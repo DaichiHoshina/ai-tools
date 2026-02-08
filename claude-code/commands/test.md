@@ -26,11 +26,13 @@ requires-guidelines:
 
 ### C. Skill連携
 以下のSkillが自動的にガイドラインを読み込み:
-- `docs-test-review` - テスト・ドキュメント品質チェック
-- `code-quality-review` - テスト型安全性・構造品質
+- `comprehensive-review --focus=docs` - テスト・ドキュメント品質チェック（Phase 2-5で統合済み、旧スキル名も動作）
+- `comprehensive-review --focus=quality` - テスト型安全性・構造品質（Phase 2-5で統合済み、旧スキル名も動作）
+
+詳細は [SKILL-MIGRATION.md](../SKILL-MIGRATION.md) 参照。
 
 **自動レビュー:**
-テスト作成後、`docs-test-review` Skillを自動実行:
+テスト作成後、`comprehensive-review --focus=docs` Skillを自動実行:
 - テストの意味チェック
 - カバレッジ分析
 - モック適切性

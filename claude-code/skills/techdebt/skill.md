@@ -358,8 +358,10 @@ function processOrder(order: Order, operation: 'create' | 'update') {
 ## 参考
 
 - Boris氏ヒント#4: 「1日2回以上実行するタスクはスキル化」
-- `code-quality-review` スキル（アーキテクチャ・型安全性レビュー）
+- `comprehensive-review --focus=quality` スキル（アーキテクチャ・型安全性レビュー）（Phase 2-5で統合済み、旧スキル名も動作）
 - `cleanup-enforcement` スキル（未使用コード削除）
+
+詳細は [SKILL-MIGRATION.md](../../SKILL-MIGRATION.md) 参照。
 
 ---
 

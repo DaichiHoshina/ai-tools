@@ -33,7 +33,9 @@ requires-guidelines:
 ### C. Skill連携
 以下のSkillが自動的にガイドラインを読み込み:
 - `clean-architecture-ddd` - クリーンアーキテクチャ・DDD原則
-- `code-quality-review` - 設計・コード品質・型安全性の統合チェック（旧: code-smell-review, type-safety-review 等を統合）
+- `comprehensive-review --focus=quality` - 設計・コード品質・型安全性の統合チェック（Phase 2-5で統合済み、旧スキル名も動作）
+
+詳細は [SKILL-MIGRATION.md](../SKILL-MIGRATION.md) 参照。
 
 ## フロー
 

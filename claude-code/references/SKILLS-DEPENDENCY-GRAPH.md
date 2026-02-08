@@ -2,6 +2,8 @@
 
 > スキル間の依存関係と推奨組み合わせを可視化
 
+**注記**: Phase 2-5でスキル統合を実施（24スキル→18スキル）。本ドキュメントは新スキル名で更新済み。旧スキル名も動作します。詳細は [SKILL-MIGRATION.md](../SKILL-MIGRATION.md) 参照。
+
 ## スキル依存関係全体図
 
 ```mermaid
@@ -36,9 +38,9 @@ flowchart TB
     end
 
     subgraph "レビュースキル"
-        CQ[code-quality-review]
-        SE[security-error-review]
-        DT2[docs-test-review]
+        CQ[comprehensive-review --focus=quality]
+        SE[comprehensive-review --focus=security]
+        DT2[comprehensive-review --focus=docs]
         UI[uiux-review]
         UIS[ui-skills]
     end
@@ -146,9 +148,9 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph "レビューフロー"
-        R_CQ[code-quality-review]
-        R_SE[security-error-review]
-        R_DT[docs-test-review]
+        R_CQ[comprehensive-review --focus=quality]
+        R_SE[comprehensive-review --focus=security]
+        R_DT[comprehensive-review --focus=docs]
     end
 
     R_CQ --> R_SE --> R_DT
@@ -180,9 +182,9 @@ flowchart LR
 
 | 用途 | スキル組み合わせ |
 |------|-----------------|
-| **コード品質** | `code-quality-review` |
-| **セキュリティ** | `code-quality-review` → `security-error-review` |
-| **フルレビュー** | `code-quality-review` → `security-error-review` → `docs-test-review` |
+| **コード品質** | `comprehensive-review --focus=quality` |
+| **セキュリティ** | `comprehensive-review --focus=quality` → `comprehensive-review --focus=security` |
+| **フルレビュー** | `comprehensive-review --focus=quality` → `comprehensive-review --focus=security` → `comprehensive-review --focus=docs` |
 | **UI/UX** | `uiux-review` → `ui-skills` |
 
 ## スキル自動選択フロー
@@ -205,8 +207,8 @@ flowchart TD
     FileCheck -->|"Dockerfile"| Docker[dockerfile-best-practices]
 
     KeywordCheck -->|"リファクタ"| CA[clean-architecture-ddd]
-    KeywordCheck -->|"セキュリティ"| SE[security-error-review]
-    KeywordCheck -->|"テスト"| DT[docs-test-review]
+    KeywordCheck -->|"セキュリティ"| SE[comprehensive-review --focus=security]
+    KeywordCheck -->|"テスト"| DT[comprehensive-review --focus=docs]
 
     ErrorCheck -->|"Docker接続"| DT2[docker-troubleshoot]
     ErrorCheck -->|"型エラー"| TS2[typescript-backend]

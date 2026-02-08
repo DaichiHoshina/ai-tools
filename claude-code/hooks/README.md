@@ -130,6 +130,15 @@ Hooks は Claude Code のイベント（セッション開始、ツール実行�
 - **レビュー**: security, performance, architecture
 - **設計**: clean-architecture, DDD
 
+**Phase 2での技術的改善**:
+
+user-prompt-submit.shは、複数の検出関数を統合して技術スタックを自動検出します:
+- `detect-from-keywords.sh`: プロンプト内のキーワードから検出
+- `detect-from-errors.sh`: エラーログから検出
+- `detect-from-context.sh`: git diffや作業ディレクトリから検出
+
+この統合により、単一のフック内で複数の観点から技術スタックを判断し、より正確なスキル推奨が可能になりました。各detect関数は独立してテスト可能で、保守性も向上しています（BATS単体テスト151件中、detect関数関連14件）。
+
 **出力例**:
 ```json
 {

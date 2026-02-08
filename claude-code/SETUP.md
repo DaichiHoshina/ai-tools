@@ -139,7 +139,7 @@ afplay ~/notification.mp3
 - macOS システムサウンド: `/System/Library/Sounds/`
 - 短い音（1-2秒）を推奨
 
-## 6. Serena オンボーディング
+## 5. Serena オンボーディング
 
 Claude Code で実行:
 
@@ -152,13 +152,30 @@ Claude Code で実行:
 - プロジェクト構造の分析
 - 初期メモリー作成
 
-## 5. 定期更新
+## 6. 定期更新
 
 ```bash
 cd ~/ai-tools
 git pull origin main
 ./claude-code/sync.sh
 ```
+
+## 7. テスト実行（オプション）
+
+Phase 2-3で追加された単体テスト（BATS）を実行:
+
+```bash
+# BATSインストール（未インストールの場合）
+brew install bats-core
+
+# 全テスト実行（9ファイル、151テスト）
+cd ~/ai-tools/claude-code
+bats tests/
+
+# 期待結果: 135/151テスト成功（89.4%）
+```
+
+詳細は [tests/README.md](./tests/README.md) 参照。
 
 ---
 
