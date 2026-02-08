@@ -7,8 +7,17 @@ Claude Code設定に使用されるテンプレートファイルの説明。
 | ファイル | 用途 | 自動処理 |
 |---------|------|---------|
 | **settings.json.template** | ~/.claude/settings.json のテンプレート | install.sh で自動生成 |
+| **.mcp.json.template** | プロジェクト固有のMCP設定 | install.sh で envsubst により自動生成 |
 | **gitlab-mcp.sh.template** | GitLab MCP統合スクリプト | install.sh で自動生成 |
 | **.env.example** | 環境変数テンプレート | install.sh で ~/.env にコピー |
+
+### MCP設定のモジュール化
+
+`settings/mcp-servers/` ディレクトリに MCP サーバー設定がモジュール化されています:
+
+- **serena.json.template**: Serena MCP設定（envsubst形式）
+
+将来的に他の MCP サーバーを追加する場合は、このディレクトリに `*.json.template` を追加してください。
 
 ## 手動使用テンプレート（必要に応じてコピー）
 

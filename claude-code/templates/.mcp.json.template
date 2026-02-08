@@ -1,0 +1,19 @@
+{
+  "_comment": "See README.md and claude-code/QUICKSTART.md for setup instructions. This file is auto-generated from templates/.mcp.json.template",
+  "mcpServers": {
+    "serena": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${SERENA_PATH}",
+        "serena-mcp-server",
+        "--project",
+        "${PROJECT_ROOT}"
+      ],
+      "env": {},
+      "_comment": "Serena MCP - Symbolic code analysis and project memory management (project-specific)"
+    }
+  }
+}

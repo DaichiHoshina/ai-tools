@@ -22,7 +22,31 @@ chmod +x ./claude-code/install.sh
 cd ~
 git clone https://github.com/clippy-ai/serena.git
 cd serena && uv sync
+
+# ~/.env に SERENA_PATH を設定
+echo "SERENA_PATH=$HOME/serena" >> ~/.env
 ```
+
+### 自動生成された .mcp.json
+
+`install.sh` を実行すると、`templates/.mcp.json.template` から `.mcp.json` が自動生成されます。環境変数 `SERENA_PATH` と `PROJECT_ROOT` が展開されます。
+
+**生成例**:
+```json
+{
+  "mcpServers": {
+    "serena": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/you/serena", "serena-mcp-server", "--project", "/Users/you/ai-tools"]
+    }
+  }
+}
+```
+
+### モジュール式 MCP 設定
+
+MCP 設定は `settings/mcp-servers/*.json.template` でモジュール化されています。将来的に他のMCPサーバーを追加する場合は、このディレクトリにテンプレートを追加してください。
 
 ### Codex（必須）
 

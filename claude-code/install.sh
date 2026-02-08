@@ -175,6 +175,12 @@ setup_env_interactive() {
     if [ -n "$openai_key" ]; then
         update_env_var "OPENAI_API_KEY" "$openai_key"
     fi
+    
+    # Serena
+    read -rp "SERENA_PATH (Serena インストールパス、例: $HOME/serena): " serena_path
+    if [ -n "$serena_path" ]; then
+        update_env_var "SERENA_PATH" "$serena_path"
+    fi
 
     print_success "環境変数の設定完了"
 }
@@ -331,6 +337,11 @@ finalize_installation() {
 
     # Generate gitlab-mcp.sh
     generate_gitlab_mcp_sh
+    
+    # Generate .mcp.json for ai-tools project
+    if [ -d "$SCRIPT_DIR" ]; then
+        generate_mcp_json "$SCRIPT_DIR"
+    fi
 
     print_success "最終処理が完了しました"
 }
@@ -394,6 +405,43 @@ generate_gitlab_mcp_sh() {
     print_success "gitlab-mcp.sh を生成しました"
 }
 
+generate_mcp_json() {
+    local project_root="$1"
+    
+    print_info ".mcp.json を生成中..."
+    
+    # Check if template exists
+    if [ ! -f "$SCRIPT_DIR/templates/.mcp.json.template" ]; then
+        print_warning ".mcp.json.template が見つかりません。スキップします。"
+        return
+    fi
+    
+    # Detect Serena path
+    local serena_path="${SERENA_PATH:-}"
+    if [ -z "$serena_path" ]; then
+        # Try common locations
+        for path in "$HOME/serena" "$HOME/projects/serena" "$HOME/workspace/serena"; do
+            if [ -d "$path" ]; then
+                serena_path="$path"
+                break
+            fi
+        done
+    fi
+    
+    if [ -z "$serena_path" ]; then
+        print_warning "Serena のパスが見つかりません。SERENA_PATH 環境変数を設定してください。"
+        serena_path="/path/to/serena"
+    fi
+    
+    # Generate .mcp.json using envsubst
+    export SERENA_PATH="$serena_path"
+    export PROJECT_ROOT="$project_root"
+    
+    envsubst < "$SCRIPT_DIR/templates/.mcp.json.template" > "$project_root/.mcp.json"
+    
+    print_success ".mcp.json を生成しました (PROJECT_ROOT=$project_root, SERENA_PATH=$serena_path)"
+}
+
 
 # =============================================================================
 # Install MCP Servers
@@ -429,6 +477,12 @@ verify_installation() {
     else
         print_error "settings.json が見つかりません"
         ((errors++))
+    fi
+    
+    if [ -f "$SCRIPT_DIR/.mcp.json" ]; then
+        print_success ".mcp.json が存在します"
+    else
+        print_warning ".mcp.json が見つかりません（後で手動で作成してください）"
     fi
 
     if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then

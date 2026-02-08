@@ -1,0 +1,16 @@
+{
+  "serena": {
+    "type": "stdio",
+    "command": "uv",
+    "args": [
+      "run",
+      "--directory",
+      "${SERENA_PATH}",
+      "serena-mcp-server",
+      "--project",
+      "${PROJECT_ROOT}"
+    ],
+    "env": {},
+    "_comment": "Serena MCP - Symbolic code analysis and project memory management (project-specific)"
+  }
+}
