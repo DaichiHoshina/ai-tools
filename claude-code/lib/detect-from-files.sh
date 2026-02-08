@@ -20,7 +20,6 @@ detect_from_files() {
   fi
 
   # ファイルパターンテーブル（pattern → language:skill）
-  # 注: シングルクォート内ではバックスラッシュ1つで十分
   declare -A file_patterns=(
     ['\.go$']="golang:go-backend"
     ['\.(ts|tsx)$']="typescript:typescript-backend"
@@ -44,6 +43,11 @@ detect_from_files() {
     fi
   done
   set -u
+  
+  # スキルエイリアス変換適用（detect-from-keywords.shの_apply_skill_aliasesを使用）
+  if declare -f _apply_skill_aliases &>/dev/null; then
+    _apply_skill_aliases _skills
+  fi
 }
 
 # Export function
