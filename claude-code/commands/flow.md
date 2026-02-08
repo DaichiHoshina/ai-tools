@@ -51,49 +51,9 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 --skip-simplify # 簡素化スキップ
 --interactive   # 各ステップで確認
 --auto          # 確認なし（上級者向け）
---autonomous    # 自律継続実行モード（実験的機能）
---fast          # 高速フィードバックモード（テスト10%サンプリング）
 ```
 
-## 自律実行機能（実験的）
-
-### `--autonomous`: 自律継続実行モード
-
-**用途**: 大規模リファクタリングや型移行を長時間実行
-
-**動作**:
-- 最大10ループまで自律的に継続
-- 各ループで `progress/README.md` から状態復元
-- ブロック検出（3回連続失敗）で自動停止
-
-**タイムアウト制御**:
-- **セッションタイムアウト**: 2時間（`TIMEOUT_SESSION_SECONDS=7200`）
-- **タスクタイムアウト**: 30分（`TIMEOUT_TASK_SECONDS=1800`）
-- **ループ最小間隔**: 5分（`TIMEOUT_LOOP_MIN_INTERVAL=300`）
-
-タイムアウト時は `ERROR [E1001]: Session timeout` または `ERROR [E1002]: Task timeout` を出力して停止。
-
-### `--fast`: 高速フィードバックモード
-
-**用途**: テストが1000件以上ある場合の方向性確認
-
-**サンプリングアルゴリズム**:
-```
-Fisher-Yates shuffle with seeded PRNG
-→ シャッフル後の先頭N件（N = total × rate）を選択
-```
-
-**境界値**:
-- **サンプリング率**: 10%（`SAMPLE_RATE=0.1`）
-- **最小サンプルサイズ**: 1件
-- **シード**: エージェントID → MD5 → 数値（決定的サンプリング）
-
-**特性**:
-- 同じエージェントは常に同じテストセットを実行（再現性）
-- 異なるエージェント間ではランダム（全体でカバレッジ確保）
-- 空リスト入力 → 空出力（エラーなし）
-
-**実行時間**: 通常の1/10に短縮
+**注意**: `--autonomous` / `--fast` オプションは廃止されました。代わりに、複雑度に応じて自動的に適切な機能が有効化されます。
 
 ## 実行ロジック
 
@@ -116,35 +76,107 @@ Guard_M : Mode × Action → {Allow, AskUser, Deny}
 - 変更ファイルあり → /prdスキップ、/devから開始を提案
 - 変更なし → 新規タスクとして最初から実行
 
-### 3. 複雑度判定（Tasks自動化）
+### 3. 複雑度判定と自動機能適用
+
+`/flow` コマンドは、タスクの複雑度を自動判定し、必要な機能を**自動的に有効化**します。
 
 ```
 複雑度判定: UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
+             ↓
+         自動機能適用
 ```
 
-| 条件 | 判定 | Tasksアクション |
-|------|------|-----------------|
-| ファイル数<5 AND 行数<300 | **Simple** | Tasks不使用 |
-| ファイル数≥5 OR 独立機能≥3 | **TaskDecomposition** | **TaskCreate → TaskUpdate(in_progress/completed)** |
-| 複数プロジェクト横断 | **AgentHierarchy** | PO経由でTasks管理 |
+| 複雑度 | 判定条件 | 自動適用機能 |
+|--------|----------|--------------|
+| **Simple** | ファイル数<5 AND 行数<300 | • 通常実行<br>• タイムアウト: なし<br>• Tasks: 不使用 |
+| **TaskDecomposition** | ファイル数≥5 OR 独立機能≥3 OR 行数≥300 | • TaskCreate/Update 自動化<br>• **セッションタイムアウト: 2時間**<br>• **進捗追跡**: `progress/` 自動作成・更新<br>• テスト多数時: サンプリング推奨通知 |
+| **AgentHierarchy** | 複数プロジェクト横断 OR 大規模変更 | • PO/Manager/Developer階層<br>• **タスクロック**: `current_tasks/` 自動作成<br>• **全タイムアウト有効**（セッション2h、タスク30m、ループ5m）<br>• **進捗集約**: `aggregate_progress()` 実行<br>• **テストサンプリング**: 10%自動有効化 |
 
-**TaskDecomposition時の自動フロー**:
-```
-# 1. サブタスク作成（依存関係付き）
+#### TaskDecomposition時の自動フロー（中規模タスク）
+
+**自動的に実行される処理**:
+```bash
+# 進捗ディレクトリ初期化
+load_lib "progress.sh"
+init_progress_dir()
+update_session_progress "$SESSION_ID" "planning" 0 "Task decomposition started"
+
+# サブタスク作成（依存関係付き）
 TaskCreate(subject: "サブタスク1", description: "詳細", activeForm: "サブタスク1を実行中")
 TaskCreate(subject: "サブタスク2", description: "詳細", activeForm: "サブタスク2を実行中")
-
-# 2. 依存関係設定
 TaskUpdate(taskId: "2", addBlockedBy: ["1"])
 
-# 3. 各ステップ実行時
-TaskUpdate(taskId: "1", status: "in_progress")  # 開始
-# ... 実行 ...
-TaskUpdate(taskId: "1", status: "completed")    # 完了
+# セッションタイムアウト監視開始
+load_lib "timeout.sh"
+session_start=$(get_epoch)
+
+# 各ステップ実行時
+TaskUpdate(taskId: "1", status: "in_progress")
+update_session_progress "$SESSION_ID" "implementation" 50 "Implementing feature X"
+
+# タイムアウトチェック（各ステップで自動実行）
+if check_session_timeout "$session_start"; then
+    load_lib "error-codes.sh"
+    emit_error "E1001" "Session exceeded 2 hours"
+    exit 1
+fi
+
+TaskUpdate(taskId: "1", status: "completed")
 
 # セッション間共有（任意）
 CLAUDE_CODE_TASK_LIST_ID=xxx で複数セッション間で共有可能
 ```
+
+**ユーザーへの通知**:
+- 開始時: "中規模タスク検出（ファイル8件）。進捗追跡とタイムアウト（2時間）を有効化"
+- 1時間経過時: "⏰ セッション残り1時間"
+- テスト多数時: "💡 大量のテスト検出（500件）。次回以降10%サンプリングで高速化されます"
+
+#### AgentHierarchy時の自動フロー（大規模タスク）
+
+**自動的に実行される処理**:
+```bash
+# 全機能フル有効化
+load_lib "timeout.sh"
+load_lib "progress.sh"
+load_lib "task-lock.sh"
+load_lib "sampling.sh"
+load_lib "error-codes.sh"
+
+init_progress_dir()
+session_start=$(get_epoch)
+
+# Agent Teams起動
+TeamCreate(team_name: "project-refactor")
+
+# タスクロック取得（並列実行時の重複防止）
+if acquire_lock "task-123" "$AGENT_ID"; then
+    task_start=$(get_epoch)
+    update_session_progress "$SESSION_ID" "implementation" 60 "Task-123"
+    
+    # タスクタイムアウトチェック
+    if check_task_timeout "$task_start"; then
+        emit_error "E1002" "Task exceeded 30 minutes"
+        release_lock "task-123" "$AGENT_ID"
+        exit 1
+    fi
+    
+    release_lock "task-123" "$AGENT_ID"
+fi
+
+# テスト自動サンプリング（10%、決定的）
+if [ $TEST_COUNT -gt 100 ]; then
+    seed=$(generate_seed "$AGENT_ID")
+    find . -name "*.test.js" | sample_items 0.1 "$seed" | xargs jest
+fi
+
+# 進捗集約（複数セッション時）
+aggregate_progress()
+```
+
+**ユーザーへの通知**:
+- 開始時: "大規模タスク検出（20ファイル）。Agent Teams、タスクロック、全タイムアウト、テストサンプリング(10%)を有効化"
+- 並列セッション検出時: "他のセッションと並列実行中。タスクロックで重複を防止"
 
 ### 4. Agent Teams判定（AgentHierarchy時のみ）
 
