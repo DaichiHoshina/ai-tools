@@ -2,18 +2,8 @@
 
 set -e
 
-# =============================================================================
 # Claude Code Configuration Installer
 # 初回セットアップ専用 - ~/.claude/ディレクトリ作成とシンボリックリンク設定
-#
-# 実行タイミング:
-#   - 新しいPC・環境での初回セットアップ時のみ
-#   - ~/.claude/が存在しない、または再インストールが必要な場合
-#
-# 使い分け:
-#   install.sh: 初回セットアップ（ディレクトリ作成・シンボリックリンク）
-#   sync.sh:    設定変更後の同期（to-local/from-local）
-# =============================================================================
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,9 +15,15 @@ LIB_DIR="${SCRIPT_DIR}/lib"
 # shellcheck source=lib/common.sh
 source "${LIB_DIR}/common.sh"
 
-# =============================================================================
+# Load modular libraries
+# shellcheck source=lib/validator.sh
+source "${LIB_DIR}/validator.sh"
+# shellcheck source=lib/mcp-installer.sh
+source "${LIB_DIR}/mcp-installer.sh"
+# shellcheck source=lib/env-configurator.sh
+source "${LIB_DIR}/env-configurator.sh"
+
 # Utility Functions
-# =============================================================================
 
 # Create symlink with backup
 create_symlink() {
@@ -62,141 +58,11 @@ create_symlink() {
     fi
 }
 
-# =============================================================================
-# Check Prerequisites
-# =============================================================================
+# Environment Variables (lib/env-configurator.sh)
 
-check_prerequisites() {
-    print_header "前提条件のチェック"
+# setup_env_file, setup_env_interactive, update_env_var は lib/env-configurator.sh にて定義
 
-    local missing=()
-
-    # Check for required commands
-    if ! command -v node &> /dev/null; then
-        missing+=("node")
-    fi
-
-    if ! command -v npx &> /dev/null; then
-        missing+=("npx")
-    fi
-
-    if ! command -v uv &> /dev/null; then
-        print_warning "uv がインストールされていません（Serena MCP に必要）"
-    fi
-
-    if [ ${#missing[@]} -gt 0 ]; then
-        print_error "以下のコマンドがインストールされていません: ${missing[*]}"
-        print_info "インストール方法:"
-        echo "  Node.js: https://nodejs.org/ または nvm/nodenv を使用"
-        echo "  jq: brew install jq (macOS) / apt install jq (Ubuntu)"
-        exit 1
-    fi
-
-    print_success "前提条件のチェック完了"
-}
-
-# =============================================================================
-# Setup Environment Variables
-# =============================================================================
-
-setup_env_file() {
-    print_header "環境変数の設定"
-
-    if [ -f "$ENV_FILE" ]; then
-        print_info "既存の .env ファイルが見つかりました: $ENV_FILE"
-        if confirm "環境変数を追加/更新しますか？"; then
-            setup_env_interactive
-        fi
-    else
-        print_info ".env ファイルを作成します"
-        cp "$SCRIPT_DIR/templates/.env.example" "$ENV_FILE"
-        setup_env_interactive
-    fi
-}
-
-setup_env_interactive() {
-    echo ""
-    print_info "環境変数を設定します（空欄でスキップ）"
-    echo ""
-
-    # GitLab
-    read -rp "GITLAB_API_URL (例: https://gitlab.example.com/api/v4): " gitlab_url
-    if [ -n "$gitlab_url" ]; then
-        update_env_var "GITLAB_API_URL" "$gitlab_url"
-    fi
-
-    read -srp "GITLAB_PERSONAL_ACCESS_TOKEN: " gitlab_token
-    echo
-    if [ -n "$gitlab_token" ]; then
-        update_env_var "GITLAB_PERSONAL_ACCESS_TOKEN" "$gitlab_token"
-    fi
-
-    # Confluence
-    read -rp "CONFLUENCE_URL (例: https://your-domain.atlassian.net): " confluence_url
-    if [ -n "$confluence_url" ]; then
-        update_env_var "CONFLUENCE_URL" "$confluence_url"
-    fi
-
-    read -rp "CONFLUENCE_EMAIL: " confluence_email
-    if [ -n "$confluence_email" ]; then
-        update_env_var "CONFLUENCE_EMAIL" "$confluence_email"
-    fi
-
-    read -srp "CONFLUENCE_API_TOKEN: " confluence_token
-    echo
-    if [ -n "$confluence_token" ]; then
-        update_env_var "CONFLUENCE_API_TOKEN" "$confluence_token"
-    fi
-
-    # JIRA
-    read -rp "JIRA_URL (例: https://your-domain.atlassian.net): " jira_url
-    if [ -n "$jira_url" ]; then
-        update_env_var "JIRA_URL" "$jira_url"
-    fi
-
-    read -rp "JIRA_EMAIL: " jira_email
-    if [ -n "$jira_email" ]; then
-        update_env_var "JIRA_EMAIL" "$jira_email"
-    fi
-
-    read -srp "JIRA_API_TOKEN: " jira_token
-    echo
-    if [ -n "$jira_token" ]; then
-        update_env_var "JIRA_API_TOKEN" "$jira_token"
-    fi
-
-    # OpenAI
-    read -srp "OPENAI_API_KEY (o3 search 用): " openai_key
-    echo
-    if [ -n "$openai_key" ]; then
-        update_env_var "OPENAI_API_KEY" "$openai_key"
-    fi
-    
-    # Serena
-    read -rp "SERENA_PATH (Serena インストールパス、例: $HOME/serena): " serena_path
-    if [ -n "$serena_path" ]; then
-        update_env_var "SERENA_PATH" "$serena_path"
-    fi
-
-    print_success "環境変数の設定完了"
-}
-
-update_env_var() {
-    local key="$1"
-    local value="$2"
-
-    if grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
-        # Update existing
-        sed_inplace "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
-    else
-        # Add new
-        echo "${key}=${value}" >> "$ENV_FILE"
-    fi
-}
-
-# =============================================================================
-# Install Claude Code Settings (分割リファクタリング版 - Critical #1, #2対策)
-# =============================================================================
+# Install Claude Code Settings
 
 # 1. ディレクトリ構造のセットアップ
 setup_directories() {
@@ -297,32 +163,7 @@ copy_directory_contents() {
 }
 
 # 3. settings.json の設定
-configure_settings_json() {
-    print_info "settings.json を設定中..."
-
-    # Load environment variables
-    if [ -f "$ENV_FILE" ]; then
-        set -a
-        source "$ENV_FILE"
-        set +a
-    fi
-
-    # Generate settings.json from template
-    if [ -f "$CLAUDE_DIR/settings.json" ]; then
-        print_warning "settings.json が既に存在します"
-        if confirm "上書きしますか？（既存はバックアップされます）"; then
-            local backup
-            backup="$CLAUDE_DIR/settings.json.backup.$(date +%Y%m%d%H%M%S)"
-            cp "$CLAUDE_DIR/settings.json" "$backup"
-            print_info "バックアップ: $backup"
-            generate_settings_json
-        fi
-    else
-        generate_settings_json
-    fi
-
-    print_success "settings.json を設定しました"
-}
+# configure_settings_json は lib/env-configurator.sh にて定義
 
 # 4. 最終処理
 finalize_installation() {
@@ -365,150 +206,17 @@ install_settings() {
     print_success "Claude Code 設定のインストール完了"
 }
 
-generate_settings_json() {
-    print_info "settings.json を生成中..."
-    
-    # Check if template exists
-    if [ ! -f "$SCRIPT_DIR/templates/settings.json.template" ]; then
-        print_error "settings.json.template が見つかりません。"
-        return 1
-    fi
-    
-    # Phase 2でMCP設定は.mcp.jsonに分離済みのため、単純コピーで十分
-    if cp "$SCRIPT_DIR/templates/settings.json.template" "$CLAUDE_DIR/settings.json"; then
-        print_success "settings.json を生成しました"
-    else
-        print_error "settings.json の生成に失敗しました"
-        return 1
-    fi
-}
+# generate_settings_json は lib/env-configurator.sh にて定義
+# generate_gitlab_mcp_sh は lib/mcp-installer.sh にて定義
+#
+# 以下の関数も lib/mcp-installer.sh にて定義:
+#   - generate_mcp_json
+#   - install_mcp_servers
 
-generate_gitlab_mcp_sh() {
-    local template
-    template=$(cat "$SCRIPT_DIR/templates/gitlab-mcp.sh.template")
+# 以下の関数は lib/validator.sh にて定義:
+#   - verify_installation
 
-    template="${template//__GITLAB_API_URL__/${GITLAB_API_URL:-https://gitlab.example.com/api/v4}}"
-
-    echo "$template" > "$CLAUDE_DIR/gitlab-mcp.sh"
-    chmod +x "$CLAUDE_DIR/gitlab-mcp.sh"
-    print_success "gitlab-mcp.sh を生成しました"
-}
-
-generate_mcp_json() {
-    local project_root="$1"
-    
-    print_info ".mcp.json を生成中..."
-    
-    # Check if template exists
-    if [ ! -f "$SCRIPT_DIR/templates/.mcp.json.template" ]; then
-        print_warning ".mcp.json.template が見つかりません。スキップします。"
-        return
-    fi
-    
-    # Detect Serena path
-    local serena_path="${SERENA_PATH:-}"
-    if [ -z "$serena_path" ]; then
-        # Try common locations
-        for path in "$HOME/serena" "$HOME/projects/serena" "$HOME/workspace/serena"; do
-            if [ -d "$path" ]; then
-                serena_path="$path"
-                break
-            fi
-        done
-    fi
-    
-    if [ -z "$serena_path" ]; then
-        print_warning "Serena のパスが見つかりません。SERENA_PATH 環境変数を設定してください。"
-        serena_path="/path/to/serena"
-    fi
-    
-    # Generate .mcp.json using envsubst
-    export SERENA_PATH="$serena_path"
-    export PROJECT_ROOT="$project_root"
-    
-    envsubst < "$SCRIPT_DIR/templates/.mcp.json.template" > "$project_root/.mcp.json"
-    
-    print_success ".mcp.json を生成しました (PROJECT_ROOT=$project_root, SERENA_PATH=$serena_path)"
-}
-
-
-# =============================================================================
-# Install MCP Servers
-# =============================================================================
-
-install_mcp_servers() {
-    print_header "MCP サーバーのインストール"
-
-    if confirm "グローバル MCP サーバーをインストールしますか？"; then
-        print_info "MCP サーバーをインストール中..."
-
-        # Install global npm packages
-        npm install -g mcp-confluence-server mcp-jira-server @anthropic-ai/claude-code 2>/dev/null || {
-            print_warning "一部の npm パッケージのインストールに失敗しました"
-        }
-
-        print_success "MCP サーバーのインストール完了"
-    fi
-}
-
-# =============================================================================
-# Verify Installation
-# =============================================================================
-
-verify_installation() {
-    print_header "インストールの確認"
-
-    local errors=0
-
-    # Check files
-    if [ -f "$CLAUDE_DIR/settings.json" ]; then
-        print_success "settings.json が存在します"
-    else
-        print_error "settings.json が見つかりません"
-        ((errors++))
-    fi
-    
-    if [ -f "$SCRIPT_DIR/.mcp.json" ]; then
-        print_success ".mcp.json が存在します"
-    else
-        print_warning ".mcp.json が見つかりません（後で手動で作成してください）"
-    fi
-
-    if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
-        print_success "CLAUDE.md が存在します"
-    else
-        print_error "CLAUDE.md が見つかりません"
-        ((errors++))
-    fi
-
-    if [ -f "$CLAUDE_DIR/statusline.js" ]; then
-        print_success "statusline.js が存在します"
-    else
-        print_error "statusline.js が見つかりません"
-        ((errors++))
-    fi
-
-    # Check directories
-    for dir in guidelines scripts commands agents skills; do
-        if [ -d "$CLAUDE_DIR/$dir" ]; then
-            print_success "$dir/ が存在します"
-        else
-            print_warning "$dir/ が見つかりません"
-        fi
-    done
-
-    if [ $errors -eq 0 ]; then
-        echo ""
-        print_success "インストールが正常に完了しました！"
-    else
-        echo ""
-        print_error "インストールに問題があります。エラーを確認してください。"
-    fi
-}
-
-# =============================================================================
 # Main
-# =============================================================================
 
 main() {
     print_header "Claude Code Configuration Installer"
