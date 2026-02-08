@@ -74,11 +74,12 @@ detect_from_git_state detected_skills
 
 # === 結果集約・JSON出力 ===
 
-# 検出結果カウント（set -u + 空配列対応）
-lang_count=0
-skill_count=0
-(( lang_count = ${#detected_langs[@]} )) 2>/dev/null || true
-(( skill_count = ${#detected_skills[@]} )) 2>/dev/null || true
+# 検出結果カウント（set -u + set -e対応）
+# 注: (( x = 0 )) はステータスコード1を返すため set -e でエラーになる
+set +u
+lang_count=${#detected_langs[@]}
+skill_count=${#detected_skills[@]}
+set -u
 
 # 検出されたスキル・言語がない場合は空オブジェクトを返す
 if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ]; then
