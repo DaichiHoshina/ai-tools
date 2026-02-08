@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 # UserPromptSubmit Hook - スキル推奨精度70%→90%強化版
 # プロンプト + ファイルパス + エラーログから技術スタックを階層的に検出
 # P1実装: ファイルパス検出・エラーログ検出・階層的優先度制御

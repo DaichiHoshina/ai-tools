@@ -75,11 +75,16 @@ record_loaded_guidelines() {
 # スキルメタデータ読み取り
 SKILL_FILE="$HOME/.claude/skills/$SKILL_NAME/skill.md"
 
+# skill.mdが見つからない場合、SKILL.mdをフォールバック探索
 if [ ! -f "$SKILL_FILE" ]; then
-    # スキルファイルが見つからない場合は警告のみ（スキル実行は継続）
+    SKILL_FILE="$HOME/.claude/skills/$SKILL_NAME/SKILL.md"
+fi
+
+if [ ! -f "$SKILL_FILE" ]; then
+    # どちらも見つからない場合は警告のみ（スキル実行は継続）
     cat <<EOF
 {
-  "systemMessage": " Skill file not found: $SKILL_NAME/skill.md"
+  "systemMessage": "⚠️ Skill file not found: $SKILL_NAME/skill.md or $SKILL_NAME/SKILL.md"
 }
 EOF
     exit 0
