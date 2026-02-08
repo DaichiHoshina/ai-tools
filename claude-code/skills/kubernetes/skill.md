@@ -1,12 +1,31 @@
 ---
 name: kubernetes
-description: Kubernetes設計・運用 - デプロイメント、スケーリング、ネットワーキング、セキュリティ
+description: 【統合済み】container-ops --platform=kubernetes を使用してください
 requires-guidelines:
   - kubernetes
   - common
+deprecated: true
+redirect: container-ops --platform=kubernetes
 hooks:
   - event: PreSkillUse
     command: "~/.claude/hooks/pre-skill-use.sh"
+---
+
+> **⚠️ このスキルはcontainer-opsに統合されました**
+>
+> **新しい使用方法**:
+> ```bash
+> /skill container-ops --platform=kubernetes
+> ```
+>
+> または自動検出（k8sマニフェストを変更している場合）:
+> ```bash
+> /skill container-ops
+> ```
+>
+> このスキル名は後方互換性のために残されています。
+> detect-from-*.shが自動的に新スキル名に変換します。
+
 ---
 
 # Kubernetes設計・運用

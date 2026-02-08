@@ -1,15 +1,42 @@
 ---
 name: typescript-backend
-description: TypeScriptバックエンド開発 - 型安全、Node.js/Deno/Bun、フレームワーク活用
+description: 【統合済み】backend-dev --lang=typescript を使用してください
 requires-guidelines:
   - typescript
   - common
+deprecated: true
+redirect: backend-dev --lang=typescript
 hooks:
   - event: PreSkillUse
     command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
 # TypeScriptバックエンド開発
+
+> **⚠️ このスキルはbackend-devに統合されました**
+>
+> **新しい使用方法**:
+> ```bash
+> /skill backend-dev --lang=typescript
+> ```
+>
+> または環境変数で指定:
+> ```bash
+> export BACKEND_LANG=typescript
+> /skill backend-dev
+> ```
+>
+> または自動検出（`.ts`/`.tsx`ファイルを変更している場合）:
+> ```bash
+> /skill backend-dev
+> ```
+>
+> このスキル名は後方互換性のために残されています。
+> detect-from-*.shが自動的に新スキル名に変換します。
+
+---
+
+# TypeScriptバックエンド開発（旧内容）
 
 ## 使用タイミング
 

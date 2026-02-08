@@ -1,16 +1,30 @@
 ---
 name: code-quality-review
-description: コード品質レビュー - アーキテクチャ、コード臭、パフォーマンス、型安全性を統合評価
+description: 【統合済み】comprehensive-review --focus=quality を使用してください
 requires-guidelines:
   - common
   - typescript
-internal: true
+deprecated: true
+redirect: comprehensive-review --focus=quality
 ---
 
 # コード品質レビュー（統合版）
 
-> **注**: このスキルは `comprehensive-review` から内部的に呼び出されます。
-> 直接使用する代わりに `/review` コマンドまたは `comprehensive-review` スキルを推奨します。
+> **⚠️ このスキルはcomprehensive-reviewに統合されました**
+>
+> **新しい使用方法**:
+> ```bash
+> /skill comprehensive-review --focus=quality
+> ```
+>
+> または環境変数で指定:
+> ```bash
+> export REVIEW_FOCUS=quality
+> /skill comprehensive-review
+> ```
+>
+> このスキル名は後方互換性のために残されています。
+> detect-from-*.shが自動的に新スキル名に変換します。
 
 ## 統合スコープ
 

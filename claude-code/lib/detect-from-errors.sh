@@ -4,6 +4,9 @@
 # user-prompt-submit.sh から分離（保守性向上）
 # =============================================================================
 
+# スキルエイリアス変換をインポート（detect-from-keywords.shで定義済み）
+# Phase2-5 スキル統合で追加
+
 # エラーログから技術スタックを検出
 # Args:
 #   $1: prompt (original prompt)
@@ -53,6 +56,11 @@ detect_from_errors() {
   # 一般的なエラー（エラーハンドリング）
   if echo "$prompt" | grep -qiE 'error handling|exception|panic|crash'; then
     _skills["security-error-review"]=1
+  fi
+  
+  # スキルエイリアス変換適用（detect-from-keywords.shの_apply_skill_aliasesを使用）
+  if declare -f _apply_skill_aliases &>/dev/null; then
+    _apply_skill_aliases _skills
   fi
 }
 

@@ -1,15 +1,42 @@
 ---
 name: go-backend
-description: Goバックエンド開発 - Goイディオム、並行処理、エラーハンドリング、テスト
+description: 【統合済み】backend-dev --lang=go を使用してください
 requires-guidelines:
   - golang
   - common
+deprecated: true
+redirect: backend-dev --lang=go
 hooks:
   - event: PreSkillUse
     command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
 # Goバックエンド開発
+
+> **⚠️ このスキルはbackend-devに統合されました**
+>
+> **新しい使用方法**:
+> ```bash
+> /skill backend-dev --lang=go
+> ```
+>
+> または環境変数で指定:
+> ```bash
+> export BACKEND_LANG=go
+> /skill backend-dev
+> ```
+>
+> または自動検出（`.go`ファイルを変更している場合）:
+> ```bash
+> /skill backend-dev
+> ```
+>
+> このスキル名は後方互換性のために残されています。
+> detect-from-*.shが自動的に新スキル名に変換します。
+
+---
+
+# Goバックエンド開発（旧内容）
 
 ## 使用タイミング
 

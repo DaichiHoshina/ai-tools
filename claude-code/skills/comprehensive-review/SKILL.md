@@ -1,25 +1,59 @@
 ---
 name: comprehensive-review
-description: 包括的コードレビュー - 品質・セキュリティ・ドキュメント/テストを統合評価（wrapper型）
+description: 包括的コードレビュー - 品質・セキュリティ・ドキュメント/テストを統合評価（パラメータ化対応）
 requires-guidelines:
   - common
   - typescript
+parameters:
+  focus:
+    type: enum
+    values: [all, quality, security, docs]
+    default: all
+    description: レビュー観点のフォーカス（all=全観点、quality=品質、security=セキュリティ、docs=ドキュメント/テスト）
 ---
 
 # Comprehensive Review - 包括的コードレビュー
 
 ## 概要
 
-3つの専門レビュースキルを統合した包括的レビューを提供します：
+3つの専門レビュー観点を統合した包括的レビューを提供します：
 
-1. **code-quality-review** - アーキテクチャ、コード臭、パフォーマンス、型安全性
-2. **security-error-review** - OWASP Top 10、エラーハンドリング、ログ管理
-3. **docs-test-review** - ドキュメント品質、テスト品質、カバレッジ
+1. **quality（品質）** - アーキテクチャ、コード臭、パフォーマンス、型安全性
+2. **security（セキュリティ）** - OWASP Top 10、エラーハンドリング、ログ管理
+3. **docs（ドキュメント/テスト）** - ドキュメント品質、テスト品質、カバレッジ
+
+## パラメータ
+
+### `--focus` オプション
+
+レビュー範囲を指定します（デフォルト: all）
+
+```bash
+# 全観点レビュー（デフォルト）
+/skill comprehensive-review
+/skill comprehensive-review --focus=all
+
+# 品質のみ
+/skill comprehensive-review --focus=quality
+
+# セキュリティのみ
+/skill comprehensive-review --focus=security
+
+# ドキュメント/テストのみ
+/skill comprehensive-review --focus=docs
+```
+
+**環境変数での指定**:
+```bash
+export REVIEW_FOCUS=quality
+/skill comprehensive-review
+```
 
 ## 使用タイミング
 
 - `/review` コマンド実行時（自動選択）
 - 包括的なコードレビューが必要な時
+- 特定観点に絞ったレビュー時（`--focus`指定）
 
 ---
 
@@ -57,36 +91,53 @@ go vet ./... 2>&1 | head -50
 - 後方互換残骸（`_deprecated_*`、旧名re-export）
 - 進捗コメント（「実装した」「完了」等）
 
-### Step 4: 専門スキル実行（並列）
+### Step 4: レビュー観点の選択と実行
 
-**基本セット（必ず実行）**:
+**パラメータに基づく観点選択**:
+
+```bash
+# 環境変数から取得（デフォルト: all）
+FOCUS=${REVIEW_FOCUS:-all}
+
+case "$FOCUS" in
+  quality)
+    # 品質のみレビュー
+    ;;
+  security)
+    # セキュリティのみレビュー
+    ;;
+  docs)
+    # ドキュメント/テストのみレビュー
+    ;;
+  all|*)
+    # 全観点レビュー
+    ;;
+esac
 ```
-Skill("code-quality-review")    # 品質全般
-Skill("security-error-review")  # セキュリティ
-```
 
-**ファイル種別による追加**:
+**ファイル種別による自動追加**:
 
-| 条件 | 追加スキル |
-|------|-----------|
-| テストファイル（`*_test.*`, `*.spec.*`） | `docs-test-review` |
-| ドキュメント（`README.md`, JSDoc/GoDoc変更） | `docs-test-review` |
-| UIファイル（`components/*`, `*.tsx`） | `uiux-review` |
+| 条件 | 追加観点 |
+|------|---------|
+| テストファイル（`*_test.*`, `*.spec.*`） | `docs`（focus=allの場合） |
+| ドキュメント（`README.md`, JSDoc/GoDoc変更） | `docs`（focus=allの場合） |
+| UIファイル（`components/*`, `*.tsx`） | `uiux-review`（別スキル） |
 
 **実行方法**:
-- 選択されたスキルを1メッセージで並列実行
-- 4倍高速化（順次実行との比較）
-- 1つが失敗しても他の結果は取得可能
+- 選択された観点のみレビュー実行
+- focus=allの場合は全観点を並列実行（4倍高速化）
+- 1つの観点が失敗しても他の結果は取得可能
 
 ### Step 5: 結果集約
 
+**focus=allの場合**:
 ```markdown
 ## 📊 包括的レビュー結果
 
-### 実行したレビュー
-- ✅ code-quality-review（品質）
-- ✅ security-error-review（セキュリティ）
-- ✅ docs-test-review（ドキュメント・テスト）
+### 実行した観点
+- ✅ quality（品質）
+- ✅ security（セキュリティ）
+- ✅ docs（ドキュメント・テスト）
 
 ### 🔴 Critical（修正必須）
 - [品質] Domain→Infrastructure参照（src/domain/user.ts:45）
@@ -100,6 +151,20 @@ Skill("security-error-review")  # セキュリティ
 
 ---
 📊 **Total**: Critical 3件 / Warning 3件
+```
+
+**focus=quality/security/docsの場合**:
+```markdown
+## 📊 品質レビュー結果
+
+### 🔴 Critical（修正必須）
+- Domain→Infrastructure参照（src/domain/user.ts:45）
+
+### 🟡 Warning（要改善）
+- 長い関数（150行）（src/services/user.ts:50）
+
+---
+📊 **Total**: Critical 1件 / Warning 1件
 ```
 
 ---

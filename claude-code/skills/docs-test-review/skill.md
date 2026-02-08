@@ -1,15 +1,29 @@
 ---
 name: docs-test-review
-description: ドキュメント・テスト品質レビュー - コメント品質、API仕様、テストの意味、カバレッジを統合評価
+description: 【統合済み】comprehensive-review --focus=docs を使用してください
 requires-guidelines:
   - common
-internal: true
+deprecated: true
+redirect: comprehensive-review --focus=docs
 ---
 
 # ドキュメント・テスト品質レビュー（統合版）
 
-> **注**: このスキルは `comprehensive-review` から内部的に呼び出されます。
-> 直接使用する代わりに `/review` コマンドまたは `comprehensive-review` スキルを推奨します。
+> **⚠️ このスキルはcomprehensive-reviewに統合されました**
+>
+> **新しい使用方法**:
+> ```bash
+> /skill comprehensive-review --focus=docs
+> ```
+>
+> または環境変数で指定:
+> ```bash
+> export REVIEW_FOCUS=docs
+> /skill comprehensive-review
+> ```
+>
+> このスキル名は後方互換性のために残されています。
+> detect-from-*.shが自動的に新スキル名に変換します。
 
 ## 統合スコープ
 

@@ -142,7 +142,8 @@ get_additional_context() {
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  [[ "$system_msg" =~ "typescript" ]]
+  # スキル統合後: typescript-backend → backend-dev (BACKEND_LANG=typescript)
+  [[ "$system_msg" =~ "backend-dev" ]] || [[ "$system_msg" =~ "typescript" ]]
 }
 
 # =============================================================================
@@ -168,8 +169,8 @@ get_additional_context() {
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  # fix/ ブランチでは security または error-review が検出される
-  [[ "$system_msg" =~ "security" ]] || [[ "$system_msg" =~ "error" ]] || [[ "$output" == "{}" ]]
+  # スキル統合後: security-error-review → comprehensive-review (REVIEW_FOCUS=security)
+  [[ "$system_msg" =~ "comprehensive-review" ]] || [[ "$system_msg" =~ "security" ]] || [[ "$output" == "{}" ]]
 }
 
 # =============================================================================

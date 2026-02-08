@@ -64,6 +64,11 @@ detect_from_git_state() {
       _skills["docs-test-review"]=1
       ;;
   esac
+  
+  # スキルエイリアス変換適用（detect-from-keywords.shの_apply_skill_aliasesを使用）
+  if declare -f _apply_skill_aliases &>/dev/null; then
+    _apply_skill_aliases _skills
+  fi
 }
 
 # Export function

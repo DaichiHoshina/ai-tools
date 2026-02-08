@@ -1,6 +1,25 @@
 ---
 name: docker-troubleshoot
-description: Dockerトラブルシュート - lima/Docker Desktop接続エラー、コンテナ起動失敗の診断・解決
+description: 【統合済み】container-ops --platform=docker --mode=troubleshoot を使用してください
+deprecated: true
+redirect: container-ops --platform=docker --mode=troubleshoot
+---
+
+> **⚠️ このスキルはcontainer-opsに統合されました**
+>
+> **新しい使用方法**:
+> ```bash
+> /skill container-ops --platform=docker --mode=troubleshoot
+> ```
+>
+> または自動検出（Dockerエラーが含まれる場合）:
+> ```bash
+> /skill container-ops
+> ```
+>
+> このスキル名は後方互換性のために残されています。
+> detect-from-*.shが自動的に新スキル名に変換します。
+
 ---
 
 ## 診断フロー

@@ -100,6 +100,52 @@ _save_to_cache() {
   echo "$updated_cache" > "$CACHE_FILE"
 }
 
+# スキル名マッピング（旧名→新名+パラメータ）
+# Phase2-5 スキル統合で追加
+declare -g -A SKILL_ALIASES=(
+  ["go-backend"]="backend-dev:BACKEND_LANG=go"
+  ["typescript-backend"]="backend-dev:BACKEND_LANG=typescript"
+  ["code-quality-review"]="comprehensive-review:REVIEW_FOCUS=quality"
+  ["security-error-review"]="comprehensive-review:REVIEW_FOCUS=security"
+  ["docs-test-review"]="comprehensive-review:REVIEW_FOCUS=docs"
+  ["docker-troubleshoot"]="container-ops:CONTAINER_PLATFORM=docker:CONTAINER_MODE=troubleshoot"
+  ["kubernetes"]="container-ops:CONTAINER_PLATFORM=kubernetes"
+)
+
+# スキルエイリアス変換関数
+_apply_skill_aliases() {
+  local -n _skills_ref=$1
+  local -A new_skills=()
+  
+  set +u
+  for skill in "${!_skills_ref[@]}"; do
+    if [[ -n "${SKILL_ALIASES[$skill]:-}" ]]; then
+      # エイリアス検出: 新スキル名+環境変数設定に変換
+      IFS=':' read -ra parts <<< "${SKILL_ALIASES[$skill]}"
+      local new_skill="${parts[0]}"
+      new_skills["$new_skill"]=1
+      
+      # 環境変数設定（パラメータ）
+      for ((i=1; i<${#parts[@]}; i++)); do
+        IFS='=' read -r var_name var_value <<< "${parts[$i]}"
+        export "$var_name=$var_value"
+      done
+    else
+      # エイリアスなし: そのまま保持
+      new_skills["$skill"]=1
+    fi
+  done
+  set -u
+  
+  # 元の配列を上書き
+  _skills_ref=()
+  set +u
+  for skill in "${!new_skills[@]}"; do
+    _skills_ref["$skill"]=1
+  done
+  set -u
+}
+
 # キーワードパターンから技術スタックを検出
 # Args:
 #   $1: prompt_lower (lowercase prompt)
@@ -115,7 +161,8 @@ detect_from_keywords() {
   # キャッシュチェック
   local prompt_hash=$(_hash_prompt "$prompt_lower")
   if _get_cached_result "$prompt_hash" _langs _skills; then
-    # キャッシュヒット
+    # キャッシュヒット → エイリアス変換適用
+    _apply_skill_aliases _skills
     return 0
   fi
 
@@ -177,10 +224,14 @@ detect_from_keywords() {
   skills_str="${skills_str%,}"
 
   _save_to_cache "$prompt_hash" "$langs_str" "$skills_str"
+  
+  # スキルエイリアス変換適用
+  _apply_skill_aliases _skills
 }
 
 # Export functions
 export -f detect_from_keywords
+export -f _apply_skill_aliases
 export -f _init_cache
 export -f _hash_prompt
 export -f _get_cached_result
