@@ -120,3 +120,31 @@ common_list_loaded() {
     echo "Loaded libraries:"
     declare -F | awk '{print $3}' | grep -E '^(print_|validate_|escape_|msg|load_lib|common_)' | sort | uniq
 }
+
+# =============================================================================
+# プラットフォーム互換性ヘルパー関数
+# =============================================================================
+
+# プラットフォーム検出
+# Returns: "macos" or "linux"
+detect_platform() {
+    if [[ "${OSTYPE}" == "darwin"* ]]; then
+        echo "macos"
+    else
+        echo "linux"
+    fi
+}
+
+# sed in-place wrapper (Linux/macOS互換)
+# Usage: sed_inplace 'pattern' file
+sed_inplace() {
+    local pattern="$1"
+    local file="$2"
+    
+    if [[ "$(detect_platform)" == "macos" ]]; then
+        sed -i.bak "$pattern" "$file"
+        rm -f "${file}.bak"
+    else
+        sed -i "$pattern" "$file"
+    fi
+}

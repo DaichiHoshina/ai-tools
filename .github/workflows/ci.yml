@@ -9,7 +9,10 @@ on:
 jobs:
   shellcheck:
     name: ShellCheck
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,7 +45,10 @@ jobs:
 
   bats-test:
     name: BATS Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

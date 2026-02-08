@@ -173,3 +173,71 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" =~ "version_ok" ]]
 }
+
+# =============================================================================
+# プラットフォーム検出テスト
+# =============================================================================
+
+@test "detect_platform: returns macos on macOS" {
+  run bash -c "
+    export OSTYPE='darwin19.0'
+    source '$LIB_FILE'
+    detect_platform
+  "
+  [ "$status" -eq 0 ]
+  [ "$output" = "macos" ]
+}
+
+@test "detect_platform: returns linux on Linux" {
+  run bash -c "
+    export OSTYPE='linux-gnu'
+    source '$LIB_FILE'
+    detect_platform
+  "
+  [ "$status" -eq 0 ]
+  [ "$output" = "linux" ]
+}
+
+# =============================================================================
+# sed_inplace テスト
+# =============================================================================
+
+@test "sed_inplace: replaces content correctly" {
+  local test_file="$TEST_TMPDIR/test.txt"
+  echo "foo=old_value" > "$test_file"
+  
+  run bash -c "
+    source '$LIB_FILE'
+    sed_inplace 's/old_value/new_value/' '$test_file'
+    cat '$test_file'
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "foo=new_value" ]]
+}
+
+@test "sed_inplace: does not leave .bak file on macOS" {
+  local test_file="$TEST_TMPDIR/test.txt"
+  echo "test_content" > "$test_file"
+  
+  run bash -c "
+    export OSTYPE='darwin19.0'
+    source '$LIB_FILE'
+    sed_inplace 's/test/modified/' '$test_file'
+    ls '$TEST_TMPDIR'
+  "
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ ".bak" ]]
+}
+
+@test "sed_inplace: handles file modification correctly" {
+  local test_file="$TEST_TMPDIR/test.txt"
+  echo "value=123" > "$test_file"
+  
+  run bash -c "
+    source '$LIB_FILE'
+    sed_inplace 's/123/456/' '$test_file'
+    cat '$test_file'
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "value=456" ]]
+}

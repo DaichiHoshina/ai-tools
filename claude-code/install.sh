@@ -20,14 +20,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 ENV_FILE="$HOME/.env"
 
-# Load security and i18n libraries (Critical #1, #2対策)
+# Load common library (includes security, i18n, print functions)
 LIB_DIR="${SCRIPT_DIR}/lib"
-# shellcheck source=lib/security-functions.sh
-source "${LIB_DIR}/security-functions.sh" 2>/dev/null || true
-# shellcheck source=lib/i18n.sh
-source "${LIB_DIR}/i18n.sh" 2>/dev/null || true
-# shellcheck source=lib/print-functions.sh
-source "${LIB_DIR}/print-functions.sh"
+# shellcheck source=lib/common.sh
+source "${LIB_DIR}/common.sh"
 
 # =============================================================================
 # Utility Functions
@@ -191,8 +187,7 @@ update_env_var() {
 
     if grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
         # Update existing
-        sed -i.bak "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
-        rm -f "${ENV_FILE}.bak"
+        sed_inplace "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
     else
         # Add new
         echo "${key}=${value}" >> "$ENV_FILE"

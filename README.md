@@ -1,5 +1,7 @@
 # AI Tools - Claude Code 設定リポジトリ
 
+[![CI](https://github.com/DaichiHoshina/ai-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/DaichiHoshina/ai-tools/actions/workflows/ci.yml)
+
 > 🌟 **オープンソースプロジェクト** - AI開発環境の研究・実験・共有を目的としたリポジトリです。
 >
 > Claude Code を用いた開発ワークフローの最適化、AI支援開発の効率化手法、プロンプトエンジニアリングのベストプラクティスを研究・公開しています。

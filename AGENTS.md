@@ -1,5 +1,8 @@
 # Repository Guidelines
 
+> **Note**: このファイルはリポジトリのビルド・テスト・開発ガイドラインです。
+> Claude Codeエージェントの定義については [`claude-code/agents/README.md`](claude-code/agents/README.md) を参照してください。
+
 ## Project Structure & Module Organization
 - `claude-code/`: Main Claude Code assets (hooks, commands, skills, guidelines, lib).
 - `claude-code/hooks/`: Shell hooks that run on session/tool events (plus `test-*.sh` for hook checks).

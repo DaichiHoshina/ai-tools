@@ -6,6 +6,9 @@
 setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
   export LIB_FILE="${PROJECT_ROOT}/lib/detect-from-keywords.sh"
+
+  # キャッシュをクリア（テスト間の干渉を防ぐ）
+  rm -f "${HOME}/.claude/cache/keyword-patterns.json"
 }
 
 # =============================================================================

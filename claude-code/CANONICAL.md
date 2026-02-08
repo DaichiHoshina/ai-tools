@@ -136,7 +136,6 @@ AI-THINKING-ESSENTIALS（拡張子なし）
 **主ドキュメント**: `claude-code/guidelines/common/guardrails.md`
 
 **補足ドキュメント**:
-- `claude-code/common/guardrails-theory.md` - 理論的背景（重複、統合予定）
 - `claude-code/references/AI-THINKING-ESSENTIALS.md` - Guard関手の概要
 
 **推奨読み込み順序**:
@@ -158,7 +157,7 @@ AI-THINKING-ESSENTIALS（拡張子なし）
 
 | ドキュメント | 理由 | 統合先 |
 |-------------|------|--------|
-| `claude-code/common/guardrails-theory.md` | 内容重複 | `guidelines/common/guardrails.md` |
+| `claude-code/common/guardrails-theory.md` | 内容重複（統合済み） | `guidelines/common/guardrails.md` |
 | `category-theory/GUARDRAILS.md` | 存在しない | （削除済み） |
 
 ---

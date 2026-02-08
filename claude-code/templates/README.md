@@ -104,4 +104,4 @@ cp ~/.claude/templates/serena-memories/*.template.md ~/.serena/memories/
 
 - [install.sh](../install.sh): 自動セットアップスクリプト
 - [sync.sh](../sync.sh): 双方向同期スクリプト
-- [Serena MCP](https://github.com/serena-mcp/serena): Serena MCPドキュメント
+- [Serena MCP](https://github.com/oraios/serena): Serena MCPドキュメント
