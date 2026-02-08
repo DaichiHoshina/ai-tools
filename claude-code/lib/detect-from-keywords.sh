@@ -136,10 +136,10 @@ _apply_skill_aliases() {
     fi
   done
   set -u
-  
+
   # 元の配列を上書き
-  _skills_ref=()
   set +u
+  _skills_ref=()
   for skill in "${!new_skills[@]}"; do
     _skills_ref["$skill"]=1
   done

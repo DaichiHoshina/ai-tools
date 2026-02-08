@@ -9,31 +9,63 @@ setup() {
 }
 
 # =============================================================================
+# ヘルパー関数: JSON出力形式でテスト
+# =============================================================================
+
+# detect_from_keywords を呼び出してJSON形式で結果を返す
+run_detect_from_keywords() {
+  local prompt="$1"
+  PROMPT_ARG="$prompt" bash -c '
+    source "$LIB_FILE"
+    declare -A langs skills
+    context=""
+    # プロンプトを小文字化（detect_from_keywordsの第1引数はprompt_lower）
+    prompt_lower=$(echo "$PROMPT_ARG" | tr "[:upper:]" "[:lower:]")
+    detect_from_keywords "$prompt_lower" langs skills context
+
+    # JSON形式で出力
+    printf "{\"langs\":["
+    first=1
+    for lang in "${!langs[@]}"; do
+      [ $first -eq 0 ] && printf ","
+      printf "\"%s\"" "$lang"
+      first=0
+    done
+    printf "],\"skills\":["
+    first=1
+    for skill in "${!skills[@]}"; do
+      [ $first -eq 0 ] && printf ","
+      printf "\"%s\"" "$skill"
+      first=0
+    done
+    printf "],\"context\":\"%s\"}" "$context"
+  '
+}
+
+# =============================================================================
 # 正常系テスト: Go/Golang検出
 # =============================================================================
 
 @test "detect-from-keywords: detects golang from 'go' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'goのコードを修正' langs skills context
-    echo \${langs[golang]:-0}:\${skills[go-backend]:-0}
-  "
+  run run_detect_from_keywords 'goのコードを修正'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1:1" ]]
+  echo "$output" | jq empty
+
+  local has_golang=$(echo "$output" | jq '.langs | contains(["golang"])')
+  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "go-backend")) | length > 0')
+  [ "$has_golang" = "true" ]
+  [ "$has_backend" = "true" ]
 }
 
 @test "detect-from-keywords: detects golang from 'golang' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'golang backend implementation' langs skills context
-    echo \${langs[golang]:-0}:\${skills[go-backend]:-0}
-  "
+  run run_detect_from_keywords 'golang backend implementation'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1:1" ]]
+  echo "$output" | jq empty
+
+  local has_golang=$(echo "$output" | jq '.langs | contains(["golang"])')
+  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "go-backend")) | length > 0')
+  [ "$has_golang" = "true" ]
+  [ "$has_backend" = "true" ]
 }
 
 # =============================================================================
@@ -41,15 +73,14 @@ setup() {
 # =============================================================================
 
 @test "detect-from-keywords: detects typescript from 'typescript' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'typescriptのコードレビュー' langs skills context
-    echo \${langs[typescript]:-0}:\${skills[typescript-backend]:-0}
-  "
+  run run_detect_from_keywords 'typescriptのコードレビュー'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1:1" ]]
+  echo "$output" | jq empty
+
+  local has_typescript=$(echo "$output" | jq '.langs | contains(["typescript"])')
+  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "typescript-backend")) | length > 0')
+  [ "$has_typescript" = "true" ]
+  [ "$has_backend" = "true" ]
 }
 
 # =============================================================================
@@ -57,15 +88,14 @@ setup() {
 # =============================================================================
 
 @test "detect-from-keywords: detects react from 'react' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'reactコンポーネント作成' langs skills context
-    echo \${langs[react]:-0}:\${skills[react-best-practices]:-0}
-  "
+  run run_detect_from_keywords 'reactコンポーネント作成'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1:1" ]]
+  echo "$output" | jq empty
+
+  local has_react=$(echo "$output" | jq '.langs | contains(["react"])')
+  local has_practices=$(echo "$output" | jq '.skills | contains(["react-best-practices"])')
+  [ "$has_react" = "true" ]
+  [ "$has_practices" = "true" ]
 }
 
 # =============================================================================
@@ -73,15 +103,12 @@ setup() {
 # =============================================================================
 
 @test "detect-from-keywords: detects docker from 'docker' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'dockerの設定を確認' langs skills context
-    echo \${skills[dockerfile-best-practices]:-0}
-  "
+  run run_detect_from_keywords 'dockerの設定を確認'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "dockerfile-best-practices")) | length > 0')
+  [ "$has_docker" = "true" ]
 }
 
 # =============================================================================
@@ -89,39 +116,30 @@ setup() {
 # =============================================================================
 
 @test "detect-from-keywords: detects code-quality-review from 'review' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'コードをレビューして' langs skills context
-    echo \${skills[code-quality-review]:-0}
-  "
+  run run_detect_from_keywords 'コードをレビューして'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_review=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "code-quality-review")) | length > 0')
+  [ "$has_review" = "true" ]
 }
 
 @test "detect-from-keywords: detects security-error-review from 'security' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'セキュリティチェック' langs skills context
-    echo \${skills[security-error-review]:-0}
-  "
+  run run_detect_from_keywords 'セキュリティチェック'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "security-error-review")) | length > 0')
+  [ "$has_security" = "true" ]
 }
 
 @test "detect-from-keywords: detects docs-test-review from 'test' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'テストコードのレビュー' langs skills context
-    echo \${skills[docs-test-review]:-0}
-  "
+  run run_detect_from_keywords 'テストコードのレビュー'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_test=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "docs-test-review")) | length > 0')
+  [ "$has_test" = "true" ]
 }
 
 # =============================================================================
@@ -129,15 +147,12 @@ setup() {
 # =============================================================================
 
 @test "detect-from-keywords: detects clean-architecture-ddd from 'architecture' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'アーキテクチャの設計相談' langs skills context
-    echo \${skills[clean-architecture-ddd]:-0}
-  "
+  run run_detect_from_keywords 'アーキテクチャの設計相談'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_arch=$(echo "$output" | jq '.skills | contains(["clean-architecture-ddd"])')
+  [ "$has_arch" = "true" ]
 }
 
 # =============================================================================
@@ -145,15 +160,12 @@ setup() {
 # =============================================================================
 
 @test "detect-from-keywords: detects api-design from 'api design' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'rest api design review' langs skills context
-    echo \${skills[api-design]:-0}
-  "
+  run run_detect_from_keywords 'rest api design review'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_api=$(echo "$output" | jq '.skills | contains(["api-design"])')
+  [ "$has_api" = "true" ]
 }
 
 # =============================================================================
@@ -161,15 +173,12 @@ setup() {
 # =============================================================================
 
 @test "detect-from-keywords: detects serena from 'serena mcp' keyword" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'serena mcp を使って分析' langs skills context
-    echo \"\$context\"
-  "
+  run run_detect_from_keywords 'serena mcp を使って分析'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "Serena MCP detected" ]]
+  echo "$output" | jq empty
+
+  local context=$(echo "$output" | jq -r '.context')
+  [[ "$context" =~ "Serena MCP detected" ]]
 }
 
 # =============================================================================
@@ -177,15 +186,14 @@ setup() {
 # =============================================================================
 
 @test "detect-from-keywords: returns nothing when no keywords match" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords '何もマッチしないプロンプト xyz123' langs skills context
-    echo \${#langs[@]}:\${#skills[@]}
-  "
+  run run_detect_from_keywords '何もマッチしないプロンプト xyz123'
   [ "$status" -eq 0 ]
-  [ "$output" = "0:0" ]
+  echo "$output" | jq empty
+
+  local langs_count=$(echo "$output" | jq '.langs | length')
+  local skills_count=$(echo "$output" | jq '.skills | length')
+  [ "$langs_count" -eq 0 ]
+  [ "$skills_count" -eq 0 ]
 }
 
 # =============================================================================
@@ -193,39 +201,36 @@ setup() {
 # =============================================================================
 
 @test "boundary: detects multiple keywords in single prompt" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'docker と kubernetes と terraform の設定' langs skills context
-    # Check multiple skills detected
-    [ \${skills[dockerfile-best-practices]:-0} -eq 1 ] && \
-    [ \${skills[kubernetes]:-0} -eq 1 ] && \
-    [ \${skills[terraform]:-0} -eq 1 ]
-  "
+  run run_detect_from_keywords 'docker と kubernetes と terraform の設定'
   [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  # 複数のスキルが検出されることを確認（エイリアス変換後）
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "dockerfile-best-practices")) | length > 0')
+  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "kubernetes")) | length > 0')
+  local has_terraform=$(echo "$output" | jq '.skills | contains(["terraform"])')
+
+  [ "$has_docker" = "true" ]
+  [ "$has_k8s" = "true" ]
+  [ "$has_terraform" = "true" ]
 }
 
 @test "boundary: handles case-insensitive matching" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords 'DOCKER SETUP' langs skills context
-    echo \${skills[dockerfile-best-practices]:-0}
-  "
+  run run_detect_from_keywords 'DOCKER SETUP'
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "dockerfile-best-practices")) | length > 0')
+  [ "$has_docker" = "true" ]
 }
 
 @test "boundary: handles empty prompt" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A langs skills
-    context=''
-    detect_from_keywords '' langs skills context
-    echo \${#langs[@]}:\${#skills[@]}
-  "
+  run run_detect_from_keywords ''
   [ "$status" -eq 0 ]
-  [ "$output" = "0:0" ]
+  echo "$output" | jq empty
+
+  local langs_count=$(echo "$output" | jq '.langs | length')
+  local skills_count=$(echo "$output" | jq '.skills | length')
+  [ "$langs_count" -eq 0 ]
+  [ "$skills_count" -eq 0 ]
 }

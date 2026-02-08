@@ -6,6 +6,34 @@
 setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
   export LIB_FILE="${PROJECT_ROOT}/lib/detect-from-errors.sh"
+  export KEYWORDS_FILE="${PROJECT_ROOT}/lib/detect-from-keywords.sh"
+}
+
+# =============================================================================
+# ヘルパー関数: JSON出力形式でテスト
+# =============================================================================
+
+# detect_from_errors を呼び出してJSON形式で結果を返す
+run_detect_from_errors() {
+  local prompt="$1"
+  PROMPT_ARG="$prompt" bash -c '
+    # _apply_skill_aliasesが必要なので両方sourceする
+    source "$KEYWORDS_FILE"
+    source "$LIB_FILE"
+    declare -A skills
+    context=""
+    detect_from_errors "$PROMPT_ARG" skills context
+
+    # JSON形式で出力
+    printf "{\"skills\":["
+    first=1
+    for skill in "${!skills[@]}"; do
+      [ $first -eq 0 ] && printf ","
+      printf "\"%s\"" "$skill"
+      first=0
+    done
+    printf "],\"context\":\"%s\"}" "$context"
+  '
 }
 
 # =============================================================================
@@ -13,45 +41,30 @@ setup() {
 # =============================================================================
 
 @test "detect-from-errors: detects docker-troubleshoot from docker daemon error" {
-  local prompt="Cannot connect to the Docker daemon at unix:///var/run/docker.sock"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[docker-troubleshoot]:-0}
-  "
+  run run_detect_from_errors "Cannot connect to the Docker daemon at unix:///var/run/docker.sock"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "docker-troubleshoot")) | length > 0')
+  [ "$has_docker" = "true" ]
 }
 
 @test "detect-from-errors: detects docker-troubleshoot from connection refused" {
-  local prompt="docker: connection refused error"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[docker-troubleshoot]:-0}
-  "
+  run run_detect_from_errors "docker: connection refused error"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "docker-troubleshoot")) | length > 0')
+  [ "$has_docker" = "true" ]
 }
 
 @test "detect-from-errors: includes context message for docker error" {
-  local prompt="docker not running"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \"\$context\"
-  "
+  run run_detect_from_errors "docker not running"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "Docker connection error detected" ]]
+  echo "$output" | jq empty
+
+  local context=$(echo "$output" | jq -r '.context')
+  [[ "$context" =~ "Docker connection error detected" ]]
 }
 
 # =============================================================================
@@ -59,31 +72,21 @@ setup() {
 # =============================================================================
 
 @test "detect-from-errors: detects kubernetes from CrashLoopBackOff" {
-  local prompt="pod is in CrashLoopBackOff state"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[kubernetes]:-0}
-  "
+  run run_detect_from_errors "pod is in CrashLoopBackOff state"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "kubernetes")) | length > 0')
+  [ "$has_k8s" = "true" ]
 }
 
 @test "detect-from-errors: detects kubernetes from ImagePullBackOff" {
-  local prompt="ImagePullBackOff: failed to pull image"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[kubernetes]:-0}
-  "
+  run run_detect_from_errors "ImagePullBackOff: failed to pull image"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "kubernetes")) | length > 0')
+  [ "$has_k8s" = "true" ]
 }
 
 # =============================================================================
@@ -91,31 +94,21 @@ setup() {
 # =============================================================================
 
 @test "detect-from-errors: detects terraform from state lock error" {
-  local prompt="Error acquiring the state lock"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[terraform]:-0}
-  "
+  run run_detect_from_errors "Error acquiring the state lock"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_terraform=$(echo "$output" | jq '.skills | contains(["terraform"])')
+  [ "$has_terraform" = "true" ]
 }
 
 @test "detect-from-errors: detects terraform from plan failed" {
-  local prompt="terraform plan failed with errors"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[terraform]:-0}
-  "
+  run run_detect_from_errors "terraform plan failed with errors"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_terraform=$(echo "$output" | jq '.skills | contains(["terraform"])')
+  [ "$has_terraform" = "true" ]
 }
 
 # =============================================================================
@@ -123,31 +116,21 @@ setup() {
 # =============================================================================
 
 @test "detect-from-errors: detects typescript-backend from type error" {
-  local prompt="Type error TS2304: Cannot find name 'foo'"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[typescript-backend]:-0}
-  "
+  run run_detect_from_errors "Type error TS2304: Cannot find name 'foo'"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_typescript=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "typescript-backend")) | length > 0')
+  [ "$has_typescript" = "true" ]
 }
 
 @test "detect-from-errors: detects typescript-backend from property error" {
-  local prompt="Property 'bar' does not exist on type 'Foo'"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[typescript-backend]:-0}
-  "
+  run run_detect_from_errors "Property 'bar' does not exist on type 'Foo'"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_typescript=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "typescript-backend")) | length > 0')
+  [ "$has_typescript" = "true" ]
 }
 
 # =============================================================================
@@ -155,31 +138,21 @@ setup() {
 # =============================================================================
 
 @test "detect-from-errors: detects go-backend from undefined error" {
-  local prompt="undefined: someFunction"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[go-backend]:-0}
-  "
+  run run_detect_from_errors "undefined: someFunction"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_go=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "go-backend")) | length > 0')
+  [ "$has_go" = "true" ]
 }
 
 @test "detect-from-errors: detects go-backend from build failed" {
-  local prompt="go build failed: cannot use x as y in assignment"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[go-backend]:-0}
-  "
+  run run_detect_from_errors "go build failed: cannot use x as y in assignment"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_go=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "go-backend")) | length > 0')
+  [ "$has_go" = "true" ]
 }
 
 # =============================================================================
@@ -187,45 +160,30 @@ setup() {
 # =============================================================================
 
 @test "detect-from-errors: detects security-error-review from CVE" {
-  local prompt="CVE-2023-12345: vulnerability detected"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[security-error-review]:-0}
-  "
+  run run_detect_from_errors "CVE-2023-12345: vulnerability detected"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "security-error-review")) | length > 0')
+  [ "$has_security" = "true" ]
 }
 
 @test "detect-from-errors: detects security-error-review from XSS" {
-  local prompt="XSS vulnerability found in user input"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[security-error-review]:-0}
-  "
+  run run_detect_from_errors "XSS vulnerability found in user input"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "security-error-review")) | length > 0')
+  [ "$has_security" = "true" ]
 }
 
 @test "detect-from-errors: includes security context message" {
-  local prompt="SQL injection vulnerability"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \"\$context\"
-  "
+  run run_detect_from_errors "SQL injection vulnerability"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "Security issue detected" ]]
+  echo "$output" | jq empty
+
+  local context=$(echo "$output" | jq -r '.context')
+  [[ "$context" =~ "Security issue detected" ]]
 }
 
 # =============================================================================
@@ -233,15 +191,12 @@ setup() {
 # =============================================================================
 
 @test "detect-from-errors: returns nothing when no error patterns match" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    context=''
-    detect_from_errors 'normal message without errors' skills context
-    echo \${#skills[@]}
-  "
+  run run_detect_from_errors 'normal message without errors'
   [ "$status" -eq 0 ]
-  [ "$output" = "0" ]
+  echo "$output" | jq empty
+
+  local skills_count=$(echo "$output" | jq '.skills | length')
+  [ "$skills_count" -eq 0 ]
 }
 
 # =============================================================================
@@ -249,28 +204,23 @@ setup() {
 # =============================================================================
 
 @test "boundary: detects multiple error types in single prompt" {
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    context=''
-    detect_from_errors 'Docker daemon error and CVE-2023-123 security warning' skills context
-    # Check multiple skills detected
-    [ \${skills[docker-troubleshoot]:-0} -eq 1 ] && \
-    [ \${skills[security-error-review]:-0} -eq 1 ]
-  "
+  run run_detect_from_errors 'Cannot connect to the Docker daemon and CVE-2023-123 security warning'
   [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  # 複数のスキルが検出されることを確認
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "docker-troubleshoot")) | length > 0')
+  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "security-error-review")) | length > 0')
+
+  [ "$has_docker" = "true" ]
+  [ "$has_security" = "true" ]
 }
 
 @test "boundary: handles case-insensitive error matching" {
-  local prompt="CANNOT CONNECT TO THE DOCKER DAEMON"
-
-  run bash -c "
-    source '$LIB_FILE'
-    declare -A skills
-    local context=''
-    detect_from_errors '$prompt' skills context
-    echo \${skills[docker-troubleshoot]:-0}
-  "
+  run run_detect_from_errors "CANNOT CONNECT TO THE DOCKER DAEMON"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "1" ]]
+  echo "$output" | jq empty
+
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "docker-troubleshoot")) | length > 0')
+  [ "$has_docker" = "true" ]
 }

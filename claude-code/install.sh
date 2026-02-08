@@ -303,8 +303,6 @@ copy_directory_contents() {
 
 # 3. settings.json の設定
 configure_settings_json() {
-    local node_bin_path="$1"
-
     print_info "settings.json を設定中..."
 
     # Load environment variables
@@ -322,10 +320,10 @@ configure_settings_json() {
             backup="$CLAUDE_DIR/settings.json.backup.$(date +%Y%m%d%H%M%S)"
             cp "$CLAUDE_DIR/settings.json" "$backup"
             print_info "バックアップ: $backup"
-            generate_settings_json "$node_bin_path"
+            generate_settings_json
         fi
     else
-        generate_settings_json "$node_bin_path"
+        generate_settings_json
     fi
 
     print_success "settings.json を設定しました"
@@ -364,7 +362,7 @@ install_settings() {
     copy_directory_contents
 
     # 3. settings.json設定
-    configure_settings_json "$node_bin_path"
+    configure_settings_json
 
     # 4. 最終処理
     finalize_installation
@@ -373,25 +371,21 @@ install_settings() {
 }
 
 generate_settings_json() {
-    local node_bin_path="$1"
-
-    # Read template and replace placeholders
-    local template
-    template=$(cat "$SCRIPT_DIR/templates/settings.json.template")
-
-    # Replace placeholders
-    template="${template//__HOME__/$HOME}"
-    template="${template//__NODE_PATH__/$node_bin_path}"
-    template="${template//__GITLAB_API_URL__/${GITLAB_API_URL:-https://gitlab.example.com/api/v4}}"
-    template="${template//__CONFLUENCE_URL__/${CONFLUENCE_URL:-https://your-domain.atlassian.net}}"
-    template="${template//__CONFLUENCE_EMAIL__/${CONFLUENCE_EMAIL:-your-email@example.com}}"
-    template="${template//__CONFLUENCE_API_TOKEN__/${CONFLUENCE_API_TOKEN:-your-token}}"
-    template="${template//__JIRA_URL__/${JIRA_URL:-https://your-domain.atlassian.net}}"
-    template="${template//__JIRA_EMAIL__/${JIRA_EMAIL:-your-email@example.com}}"
-    template="${template//__JIRA_API_TOKEN__/${JIRA_API_TOKEN:-your-token}}"
-
-    echo "$template" > "$CLAUDE_DIR/settings.json"
-    print_success "settings.json を生成しました"
+    print_info "settings.json を生成中..."
+    
+    # Check if template exists
+    if [ ! -f "$SCRIPT_DIR/templates/settings.json.template" ]; then
+        print_error "settings.json.template が見つかりません。"
+        return 1
+    fi
+    
+    # Phase 2でMCP設定は.mcp.jsonに分離済みのため、単純コピーで十分
+    if cp "$SCRIPT_DIR/templates/settings.json.template" "$CLAUDE_DIR/settings.json"; then
+        print_success "settings.json を生成しました"
+    else
+        print_error "settings.json の生成に失敗しました"
+        return 1
+    fi
 }
 
 generate_gitlab_mcp_sh() {
