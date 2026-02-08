@@ -21,27 +21,27 @@ Skill("comprehensive-review")
 comprehensive-reviewスキルが内部で以下を実行：
 1. 静的解析ツール（lint/tsc/go vet等）
 2. cleanup-enforcement（未使用コード検出）
-3. 専門スキル並列実行：
-   - code-quality-review（品質全般）
-   - security-error-review（セキュリティ）
-   - docs-test-review（ドキュメント・テスト、該当時）
+3. 専門スキル並列実行（パラメータ化対応、Phase 2-5統合）：
+   - `--focus=quality`（品質全般、旧 code-quality-review）
+   - `--focus=security`（セキュリティ、旧 security-error-review）
+   - `--focus=docs`（ドキュメント・テスト、該当時、旧 docs-test-review）
    - uiux-review（UI変更時）
 
 ## レビュー観点
 
-### 🎯 品質（code-quality-review）
+### 🎯 品質（--focus=quality）
 - アーキテクチャ（依存逆転、ロジック配置）
 - コード臭（長い関数、マジックナンバー）
 - パフォーマンス（N+1問題、メモリリーク）
 - 型安全性（any使用、無検証as）
 
-### 🛡️ セキュリティ（security-error-review）
+### 🛡️ セキュリティ（--focus=security）
 - OWASP Top 10（SQLインジェクション、XSS等）
 - 認証・認可不備
 - エラーハンドリング（エラー握りつぶし）
 - 機密情報ログ
 
-### 📝 ドキュメント・テスト（docs-test-review）
+### 📝 ドキュメント・テスト（--focus=docs）
 - コメント品質（公開API説明）
 - テストの意味（振る舞いテスト）
 - モック適切性

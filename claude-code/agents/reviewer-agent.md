@@ -69,21 +69,23 @@ git diff
 
 ### 2. 関連スキルの適用
 
-変更内容に応じて適切なレビュースキルを自動選択:
+変更内容に応じて適切なレビュースキルを自動選択（Phase 2-5統合対応）:
 
-- **設計・品質**: `code-quality-review`
-- **セキュリティ**: `security-error-review`
-- **ドキュメント・テスト**: `docs-test-review`
+- **設計・品質**: `comprehensive-review --focus=quality`（旧 code-quality-review）
+- **セキュリティ**: `comprehensive-review --focus=security`（旧 security-error-review）
+- **ドキュメント・テスト**: `comprehensive-review --focus=docs`（旧 docs-test-review）
 - **UI/UX**: `uiux-review`
+
+※ 旧スキル名も後方互換性のため使用可能
 
 ### 3. レビュー実行
 
 各スキルを順次実行し、問題を収集:
 
 ```
-Skill("code-quality-review")
-Skill("security-error-review")
-Skill("docs-test-review")
+Skill("comprehensive-review", "--focus=quality")
+Skill("comprehensive-review", "--focus=security")
+Skill("comprehensive-review", "--focus=docs")
 ```
 
 ### 4. 結果統合とレポート生成

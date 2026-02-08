@@ -55,9 +55,14 @@ Claude Codeが外部ツールと連携するためのプロトコル。
 特定の技術領域に関する専門知識セット。`/skill-name` で呼び出し可能。
 
 **カテゴリ:**
-- **レビュー系**: code-quality-review, security-error-review, docs-test-review, uiux-review, ui-skills
-- **開発系**: go-backend, typescript-backend, react-best-practices, api-design, clean-architecture-ddd
-- **インフラ系**: dockerfile-best-practices, kubernetes, terraform, docker-troubleshoot
+- **レビュー系**: comprehensive-review（統合スキル、`--focus={quality|security|docs}`）, uiux-review, ui-skills
+  - ※ code-quality-review, security-error-review, docs-test-reviewは統合済み（後方互換性あり）
+- **開発系**: backend-dev（統合スキル、`--lang={auto|go|typescript|python|rust}`）, react-best-practices, api-design, clean-architecture-ddd
+  - ※ go-backend, typescript-backendは統合済み（後方互換性あり）
+- **インフラ系**: container-ops（統合スキル、`--platform={docker|kubernetes|podman}`）, dockerfile-best-practices, terraform
+  - ※ kubernetes, docker-troubleshootは統合済み（後方互換性あり）
+
+**詳細**: [SKILL-MIGRATION.md](./SKILL-MIGRATION.md) 参照
 
 ---
 

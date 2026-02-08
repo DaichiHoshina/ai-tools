@@ -59,9 +59,11 @@ PRD作成 → 設計 → 実装 → テスト → レビュー → PR作成
 ```
 
 **自動選択されるスキル:**
-- 設計・構造問題 → `code-quality-review`
-- セキュリティ問題 → `security-error-review`
-- テスト不足 → `docs-test-review`
+- 設計・構造問題 → `comprehensive-review --focus=quality`（旧 code-quality-review）
+- セキュリティ問題 → `comprehensive-review --focus=security`（旧 security-error-review）
+- テスト不足 → `comprehensive-review --focus=docs`（旧 docs-test-review）
+
+※ Phase 2-5でスキル統合。旧スキル名も後方互換性のため動作可能
 
 ---
 

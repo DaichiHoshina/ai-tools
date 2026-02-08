@@ -195,11 +195,11 @@ sync_settings_template() {
 
     local content
     content=$(cat "$CLAUDE_DIR/settings.json")
-    content=$(echo "$content" | sed "s|$HOME|__HOME__|g")
+    content="${content//$HOME/__HOME__}"
 
     local node_path
     node_path="$(dirname "$(which node)" 2>/dev/null || echo "/usr/local/bin")"
-    content=$(echo "$content" | sed "s|$node_path|__NODE_PATH__|g")
+    content="${content//$node_path/__NODE_PATH__}"
 
     # 環境変数をホワイトリスト方式で読み込み（セキュリティ対策）
     if [ -f "$HOME/.env" ]; then
@@ -208,9 +208,8 @@ sync_settings_template() {
             [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
             # ホワイトリストにあるキーのみexport
             if [[ " $allowed_keys " =~ " ${key} " ]] && [ -n "$value" ]; then
-                local escaped_val
-                escaped_val=$(escape_for_sed "$value")
-                content=$(echo "$content" | sed "s|${escaped_val}|__${key}__|g")
+                # bash置換では特殊文字エスケープ不要
+                content="${content//$value/__${key}__}"
             fi
         done < "$HOME/.env"
     fi
@@ -226,10 +225,9 @@ sync_settings_template() {
             [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
             # 機密キー名パターンをチェック
             if [[ "$key" =~ _(KEY|TOKEN|SECRET|PASSWORD)$ ]] && [ -n "$value" ]; then
-                local escaped_value
-                escaped_value=$(escape_for_sed "$value")
+                # bash置換では特殊文字エスケープ不要
                 local placeholder="__${key}__"
-                content=$(echo "$content" | sed "s|$escaped_value|$placeholder|g")
+                content="${content//$value/$placeholder}"
             fi
         done < "$HOME/.env"
     fi
@@ -249,7 +247,7 @@ sync_gitlab_mcp_template() {
 
     if [ -f "$HOME/.env" ]; then
         set -a; source "$HOME/.env"; set +a
-        [ -n "$GITLAB_API_URL" ] && content=$(echo "$content" | sed "s|$GITLAB_API_URL|__GITLAB_API_URL__|g")
+        [ -n "$GITLAB_API_URL" ] && content="${content//$GITLAB_API_URL/__GITLAB_API_URL__}"
     fi
 
     content=$(echo "$content" | sed -E 's|https://[^/]+/api/v4|__GITLAB_API_URL__|g')

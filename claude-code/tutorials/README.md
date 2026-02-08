@@ -61,10 +61,12 @@ claude --version
 
 2. **実践課題**
    ```
-   > /go-backend でAPIを作成して
-   > /code-quality-review でレビューして
-   > /docs-test-review でテストカバレッジ確認
+   > /backend-dev --lang=go でAPIを作成して
+   > /comprehensive-review --focus=quality でレビューして
+   > /comprehensive-review --focus=docs でテストカバレッジ確認
    ```
+
+   ※ Phase 2-5でスキル統合。旧コマンド（/go-backend, /code-quality-review等）も使用可能
 
 ### 上級者（1ヶ月目）
 
