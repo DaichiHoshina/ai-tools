@@ -6,7 +6,7 @@
 setup() {
   # PROJECT_ROOT を設定
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
-  export HOOKS_DIR="${PROJECT_ROOT}/claude-code/hooks"
+  export HOOKS_DIR="${PROJECT_ROOT}/hooks"
 }
 
 # =============================================================================

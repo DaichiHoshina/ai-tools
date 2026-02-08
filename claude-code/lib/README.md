@@ -197,6 +197,159 @@ if [[ "${detected_langs[golang]}" == "1" ]]; then
 fi
 ```
 
+### Level 4: 自律実行ライブラリ（オプショナル）
+
+これらのライブラリは自律実行モード（`/flow --autonomous`）で使用されます。
+通常の操作では不要ですが、長時間実行タスクや並列実行時に有用です。
+
+#### timeout.sh
+
+タイムアウト機構（セッション・タスク・ループ制御）。
+
+**提供する関数**:
+- `get_epoch()` - Unix epoch秒取得
+- `is_timed_out(start, limit)` - タイムアウト判定
+- `get_remaining_seconds(start, limit)` - 残り時間取得
+- `format_remaining(seconds)` - 人間可読フォーマット（1h02m03s）
+- `check_session_timeout(start)` - セッションタイムアウト（デフォルト2時間）
+- `check_task_timeout(start)` - タスクタイムアウト（デフォルト30分）
+- `enforce_loop_interval(last)` - ループ間隔強制（デフォルト5分）
+- `timeout_status_json(session_start, task_start)` - JSON形式ステータス
+
+**環境変数**:
+- `TIMEOUT_SESSION_SECONDS=7200` - セッションタイムアウト秒数
+- `TIMEOUT_TASK_SECONDS=1800` - タスクタイムアウト秒数
+- `TIMEOUT_LOOP_MIN_INTERVAL=300` - ループ最小間隔秒数
+
+**使用例**:
+```bash
+load_lib "timeout.sh"
+
+start=$(get_epoch)
+if check_session_timeout "$start"; then
+    echo "Session timed out"
+    exit 1
+fi
+
+remaining=$(get_remaining_seconds "$start" 7200)
+echo "Remaining: $(format_remaining $remaining)"
+```
+
+#### error-codes.sh
+
+構造化エラーコード管理（カテゴリ別：E1xxx=タイムアウト、E2xxx=ロック、E3xxx=進捗、E4xxx=入力、E5xxx=サンプリング）。
+
+**提供する関数**:
+- `get_error_message(code)` - エラーメッセージ取得
+- `get_error_category(code)` - カテゴリ取得
+- `emit_error(code, detail)` - stderr出力（`ERROR [E1001]: message - detail`）
+- `error_json(code, detail)` - JSON形式エラー
+- `list_error_codes()` - エラーコード一覧表示
+
+**使用例**:
+```bash
+load_lib "error-codes.sh"
+
+if [[ $timeout -eq 1 ]]; then
+    emit_error "E1001" "Session exceeded 2 hours"
+    exit 1
+fi
+
+# JSON出力（フック連携）
+error_json "E2001" "Lock acquisition failed"
+```
+
+#### sampling.sh
+
+決定的サンプリング（Fisher-Yates shuffle with seeded PRNG）。
+
+**提供する関数**:
+- `calculate_sample_size(total, rate)` - サンプルサイズ計算（最小1）
+- `generate_seed(agent_id)` - 決定的シード生成（MD5→数値）
+- `sample_items(rate, seed)` - stdin→サンプリング→stdout
+- `sample_files(pattern, rate, agent_id)` - ファイルリストサンプリング
+
+**境界値**:
+- サンプリング率: 0.01〜1.0
+- 最小サンプルサイズ: 1
+- 空リスト: 空出力（エラーなし）
+
+**使用例**:
+```bash
+load_lib "sampling.sh"
+
+# テストファイルを10%サンプリング
+find . -name "*.test.js" | sample_items 0.1 $(generate_seed "$AGENT_ID")
+
+# 決定的サンプリング（同じエージェントは同じテストセット）
+sample_files "*.bats" 0.1 "$AGENT_ID"
+```
+
+#### progress.sh
+
+セッション別進捗追跡（複数セッション並列実行時のコンフリクト対策）。
+
+**提供する関数**:
+- `init_progress_dir()` - ディレクトリ初期化
+- `get_session_progress_path(id)` - パス取得（サニタイズ付き）
+- `update_session_progress(id, phase, pct, text)` - 進捗更新
+- `read_session_progress(id)` - 進捗読み取り
+- `aggregate_progress()` - 全セッション集約
+- `cleanup_session_progress(id)` - セッション削除
+- `cleanup_old_progress(days)` - 古いファイル削除（デフォルト7日）
+
+**環境変数**:
+- `PROGRESS_MAX_OUTPUT_BYTES=102400` - 最大出力サイズ（100KB）
+- `PROGRESS_DIR=progress` - 進捗ディレクトリ
+
+**使用例**:
+```bash
+load_lib "progress.sh"
+
+init_progress_dir
+update_session_progress "$SESSION_ID" "implementation" 60 "Implementing timeout.sh"
+
+# 別セッションから読み取り
+read_session_progress "$SESSION_ID"
+
+# 全セッション集約
+aggregate_progress
+```
+
+#### task-lock.sh
+
+TTL付きタスクロック（並列セッション実行時の重複防止、timeout.sh に依存）。
+
+**提供する関数**:
+- `acquire_lock(task_id, agent_id)` - ロック取得（冪等、TTLチェック付き）
+- `release_lock(task_id, agent_id)` - ロック解放（所有者チェック）
+- `check_lock(task_id)` - ロック状態確認（UNLOCKED/LOCKED/EXPIRED）
+- `cleanup_expired_locks()` - 期限切れロック一括削除
+- `list_locks()` - アクティブロック一覧
+
+**環境変数**:
+- `LOCK_TTL_SECONDS=3600` - ロックTTL（デフォルト1時間）
+- `LOCK_DIR=.locks` - ロックディレクトリ
+
+**使用例**:
+```bash
+load_lib "timeout.sh"
+load_lib "task-lock.sh"
+
+if acquire_lock "task-123" "$AGENT_ID"; then
+    # タスク実行
+    echo "Task running"
+    
+    # 完了後にロック解放
+    release_lock "task-123" "$AGENT_ID"
+else
+    echo "Task locked by another agent"
+fi
+
+# 期限切れロック削除
+cleanup_expired_locks
+```
+
 #### detect-from-keywords.sh
 
 プロンプトキーワードから技術スタックを検出（jq, md5sum に依存）。
@@ -248,7 +401,23 @@ common.sh を使用すると、以下の順序で自動読み込みされます�
 5. i18n.sh                (Level 2: オプション、COMMON_LOAD_I18N=true 時のみ)
 ```
 
-detect ライブラリは `load_lib()` で個別に読み込みます。
+detect ライブラリ（Level 3）と自律実行ライブラリ（Level 4）は `load_lib()` で個別に読み込みます。
+
+**自律実行ライブラリの読み込み例**:
+```bash
+source "${LIB_DIR}/common.sh"
+
+# timeout.sh（依存なし）
+load_lib "timeout.sh"
+
+# task-lock.sh（timeout.sh に依存）
+load_lib "task-lock.sh"
+
+# その他（独立）
+load_lib "error-codes.sh"
+load_lib "sampling.sh"
+load_lib "progress.sh"
+```
 
 ---
 

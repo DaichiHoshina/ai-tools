@@ -27,10 +27,24 @@ DURATION=$(echo "$INPUT" | jq -r '.duration // 0')
 LOG_DIR="$HOME/.claude/session-logs"
 mkdir -p "$LOG_DIR"
 
-# ログローテーション（7日以上古いログを自動削除）
+# ログローテーション（3日→gzip、7日→削除）
 # セキュリティ: 機密情報の残留期間を7日に制限
-# ディスク管理: ログサイズを14MB以下に維持
+# ディスク管理: ログサイズを削減（gzip圧縮で約10分の1）
+
+# Step 1: 3日超の.logファイルをgzip圧縮
+find "$LOG_DIR" -type f -name "*.log" -mtime +3 ! -mtime +7 -exec gzip {} \; 2>/dev/null || true
+
+# Step 2: 7日超のログファイル（.log と .log.gz）を削除
 find "$LOG_DIR" -type f -name "*.log" -mtime +7 -delete 2>/dev/null || true
+find "$LOG_DIR" -type f -name "*.log.gz" -mtime +7 -delete 2>/dev/null || true
+
+# Step 3: ~/.claude/logs/ にも同じローテーション適用
+CLAUDE_LOG_DIR="$HOME/.claude/logs"
+if [[ -d "$CLAUDE_LOG_DIR" ]]; then
+    find "$CLAUDE_LOG_DIR" -type f -name "*.log" -mtime +3 ! -mtime +7 -exec gzip {} \; 2>/dev/null || true
+    find "$CLAUDE_LOG_DIR" -type f -name "*.log" -mtime +7 -delete 2>/dev/null || true
+    find "$CLAUDE_LOG_DIR" -type f -name "*.log.gz" -mtime +7 -delete 2>/dev/null || true
+fi
 
 # セッションログファイル
 LOG_FILE="$LOG_DIR/$(date +%Y%m%d).log"
