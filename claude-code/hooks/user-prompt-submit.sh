@@ -74,15 +74,21 @@ detect_from_git_state detected_skills
 
 # === 結果集約・JSON出力 ===
 
+# 検出結果カウント（set -u + 空配列対応）
+lang_count=0
+skill_count=0
+(( lang_count = ${#detected_langs[@]} )) 2>/dev/null || true
+(( skill_count = ${#detected_skills[@]} )) 2>/dev/null || true
+
 # 検出されたスキル・言語がない場合は空オブジェクトを返す
-if [ ${#detected_langs[@]} -eq 0 ] && [ ${#detected_skills[@]} -eq 0 ]; then
+if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ]; then
   echo '{}'
   exit 0
 fi
 
 # systemMessage 生成
 system_message=""
-if [ ${#detected_langs[@]} -gt 0 ] || [ ${#detected_skills[@]} -gt 0 ]; then
+if [ "$lang_count" -gt 0 ] || [ "$skill_count" -gt 0 ]; then
   # 言語リスト
   langs_list=""
   for lang in "${!detected_langs[@]}"; do

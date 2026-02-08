@@ -20,19 +20,22 @@ detect_from_files() {
   fi
 
   # ファイルパターンテーブル（pattern → language:skill）
+  # 注: シングルクォート内ではバックスラッシュ1つで十分
   declare -A file_patterns=(
-    ['\\.go$']="golang:go-backend"
-    ['\\.(ts|tsx)$']="typescript:typescript-backend"
-    ['\\.(jsx|tsx)$|pages/|components/']="react:react-best-practices"
-    ['Dockerfile|docker-compose\\.ya?ml$']=":dockerfile-best-practices"
-    ['deployment\\.ya?ml$|service\\.ya?ml$|k8s/']=":kubernetes"
-    ['\\.tf$|\\.tfvars$']=":terraform"
-    ['\\.proto$']=":grpc-protobuf"
-    ['tailwind\\.config\\.(js|ts)$']="tailwind:"
-    ['openapi\\.ya?ml$|swagger\\.ya?ml$']=":api-design"
-    ['_test\\.go$|\\.test\\.(ts|tsx)$|\\.spec\\.(ts|tsx)$']=":docs-test-review"
+    ['\.go$']="golang:go-backend"
+    ['\.(ts|tsx)$']="typescript:typescript-backend"
+    ['\.(jsx|tsx)$|pages/|components/']="react:react-best-practices"
+    ['Dockerfile|docker-compose\.ya?ml$']=":dockerfile-best-practices"
+    ['deployment\.ya?ml$|service\.ya?ml$|k8s/']=":kubernetes"
+    ['\.tf$|\.tfvars$']=":terraform"
+    ['\.proto$']=":grpc-protobuf"
+    ['tailwind\.config\.(js|ts)$']="tailwind:"
+    ['openapi\.ya?ml$|swagger\.ya?ml$']=":api-design"
+    ['_test\.go$|\.test\.(ts|tsx)$|\.spec\.(ts|tsx)$']=":docs-test-review"
   )
 
+  # set -u対応: 連想配列のキー展開でエラーが出るため一時的に無効化
+  set +u
   for pattern in "${!file_patterns[@]}"; do
     if echo "$changed_files" | grep -qE "$pattern"; then
       IFS=':' read -r lang skill <<< "${file_patterns[$pattern]}"
@@ -40,6 +43,7 @@ detect_from_files() {
       [ -n "$skill" ] && _skills["$skill"]=1
     fi
   done
+  set -u
 }
 
 # Export function

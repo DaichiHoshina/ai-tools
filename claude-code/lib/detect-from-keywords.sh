@@ -143,6 +143,8 @@ detect_from_keywords() {
     ['systematic.*debug|根本原因|デバッグ.*体系']=":superpowers:systematic-debugging"
   )
 
+  # set -u対応
+  set +u
   for keywords in "${!keyword_patterns[@]}"; do
     if echo "$prompt_lower" | grep -qE "$keywords"; then
       IFS=':' read -r lang skill <<< "${keyword_patterns[$keywords]}"
@@ -150,23 +152,28 @@ detect_from_keywords() {
       [ -n "$skill" ] && _skills["$skill"]=1
     fi
   done
+  set -u
 
   # Serena検出（特殊処理）
   if echo "$prompt_lower" | grep -qE '/serena|serena.*mcp|memory'; then
     _context="${_context}\\n- 🧠 Serena MCP detected: Use mcp__serena__* tools for project analysis"
   fi
 
-  # 検出結果をキャッシュに保存
+  # 検出結果をキャッシュに保存（set -u対応）
   local langs_str=""
+  set +u
   for lang in "${!_langs[@]}"; do
     langs_str="${langs_str}${lang},"
   done
+  set -u
   langs_str="${langs_str%,}"
 
   local skills_str=""
+  set +u
   for skill in "${!_skills[@]}"; do
     skills_str="${skills_str}${skill},"
   done
+  set -u
   skills_str="${skills_str%,}"
 
   _save_to_cache "$prompt_hash" "$langs_str" "$skills_str"
