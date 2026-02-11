@@ -3,6 +3,7 @@ name: techdebt
 description: 技術的負債検出 - 重複コード、DRY原則違反を自動検出してリファクタリング提案
 requires-guidelines:
   - common
+  - clean-architecture
 ---
 
 # 技術的負債検出

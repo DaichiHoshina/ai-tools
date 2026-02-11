@@ -3,6 +3,8 @@ name: cleanup-enforcement
 description: コードクリーンアップ強制 - 後方互換残骸・未使用コード・進捗コメントを徹底削除
 requires-guidelines:
   - common
+  - typescript  # lang=typescript の場合
+  - golang  # lang=go の場合
 ---
 
 # cleanup-enforcement - クリーンアップ強制Skill

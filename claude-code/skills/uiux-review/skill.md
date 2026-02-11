@@ -2,7 +2,7 @@
 name: uiux-review
 description: UI/UXレビュー - Material Design 3 + WCAG 2.2 AA + Nielsen 10原則で実装に直結するレビュー
 requires-guidelines:
-  - ui-ux
+  - common
   - nextjs-react
   - tailwind
   - shadcn

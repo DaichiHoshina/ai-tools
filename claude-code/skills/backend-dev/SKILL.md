@@ -3,6 +3,8 @@ name: backend-dev
 description: バックエンド開発 - Go/TypeScript/Python/Rust対応（言語自動検出）
 requires-guidelines:
   - common
+  - clean-architecture
+  - ddd
   - golang  # lang=go の場合
   - typescript  # lang=typescript の場合
   - python  # lang=python の場合
