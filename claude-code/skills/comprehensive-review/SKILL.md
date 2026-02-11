@@ -1,27 +1,33 @@
 ---
 name: comprehensive-review
-description: 包括的コードレビュー - 品質・セキュリティ・ドキュメント/テストを統合評価（パラメータ化対応）
+description: 包括的コードレビュー - 設計・品質・可読性・セキュリティ・ドキュメント/テストを統合評価
 requires-guidelines:
   - common
+  - clean-architecture
+  - domain-driven-design
   - typescript  # lang=typescript の場合
   - golang  # lang=go の場合
+  - python  # lang=python の場合
+  - rust  # lang=rust の場合
 parameters:
   focus:
     type: enum
-    values: [all, quality, security, docs]
+    values: [all, architecture, quality, readability, security, docs]
     default: all
-    description: レビュー観点のフォーカス（all=全観点、quality=品質、security=セキュリティ、docs=ドキュメント/テスト）
+    description: レビュー観点のフォーカス
 ---
 
 # Comprehensive Review - 包括的コードレビュー
 
 ## 概要
 
-3つの専門レビュー観点を統合した包括的レビューを提供します：
+5つの専門レビュー観点を統合した包括的レビューを提供します：
 
-1. **quality（品質）** - アーキテクチャ、コード臭、パフォーマンス、型安全性
-2. **security（セキュリティ）** - OWASP Top 10、エラーハンドリング、ログ管理
-3. **docs（ドキュメント/テスト）** - ドキュメント品質、テスト品質、カバレッジ
+1. **architecture（設計）** - クリーンアーキテクチャ、DDD、依存関係、レイヤー違反
+2. **quality（品質）** - コード臭、パフォーマンス、型安全性、古いパターン
+3. **readability（可読性）** - 命名、構造、認知的複雑度、一貫性
+4. **security（セキュリティ）** - OWASP Top 10、エラーハンドリング、ログ管理
+5. **docs（ドキュメント/テスト）** - ドキュメント品質、テスト品質、カバレッジ
 
 ## パラメータ
 
@@ -30,24 +36,12 @@ parameters:
 レビュー範囲を指定します（デフォルト: all）
 
 ```bash
-# 全観点レビュー（デフォルト）
-/skill comprehensive-review
-/skill comprehensive-review --focus=all
-
-# 品質のみ
-/skill comprehensive-review --focus=quality
-
-# セキュリティのみ
-/skill comprehensive-review --focus=security
-
-# ドキュメント/テストのみ
-/skill comprehensive-review --focus=docs
-```
-
-**環境変数での指定**:
-```bash
-export REVIEW_FOCUS=quality
-/skill comprehensive-review
+/skill comprehensive-review                    # 全観点（デフォルト）
+/skill comprehensive-review --focus=architecture  # 設計のみ
+/skill comprehensive-review --focus=quality       # 品質のみ
+/skill comprehensive-review --focus=readability   # 可読性のみ
+/skill comprehensive-review --focus=security      # セキュリティのみ
+/skill comprehensive-review --focus=docs          # ドキュメント/テストのみ
 ```
 
 ## 使用タイミング
@@ -94,27 +88,7 @@ go vet ./... 2>&1 | head -50
 
 ### Step 4: レビュー観点の選択と実行
 
-**パラメータに基づく観点選択**:
-
-```bash
-# 環境変数から取得（デフォルト: all）
-FOCUS=${REVIEW_FOCUS:-all}
-
-case "$FOCUS" in
-  quality)
-    # 品質のみレビュー
-    ;;
-  security)
-    # セキュリティのみレビュー
-    ;;
-  docs)
-    # ドキュメント/テストのみレビュー
-    ;;
-  all|*)
-    # 全観点レビュー
-    ;;
-esac
-```
+focus パラメータで指定された観点のみ実行。`all` の場合は全5観点を並列実行。
 
 **ファイル種別による自動追加**:
 
@@ -124,151 +98,140 @@ esac
 | ドキュメント（`README.md`, JSDoc/GoDoc変更） | `docs`（focus=allの場合） |
 | UIファイル（`components/*`, `*.tsx`） | `uiux-review`（別スキル） |
 
-**実行方法**:
-- 選択された観点のみレビュー実行
-- focus=allの場合は全観点を並列実行（4倍高速化）
-- 1つの観点が失敗しても他の結果は取得可能
-
 ### Step 5: 結果集約
 
-**focus=allの場合**:
+**出力フォーマット**:
 ```markdown
-## 📊 包括的レビュー結果
+## 包括的レビュー結果
 
 ### 実行した観点
+- ✅ architecture（設計）
 - ✅ quality（品質）
+- ✅ readability（可読性）
 - ✅ security（セキュリティ）
 - ✅ docs（ドキュメント・テスト）
 
 ### 🔴 Critical（修正必須）
-- [品質] Domain→Infrastructure参照（src/domain/user.ts:45）
+- [設計] Domain→Infrastructure参照（src/domain/user.ts:45）
 - [セキュリティ] SQLインジェクション脆弱性（src/api/user.ts:120）
-- [ドキュメント] 公開APIに説明なし（src/api/types.ts:30）
+- [可読性] 関数名と振る舞いの不一致（src/services/user.ts:30）
 
 ### 🟡 Warning（要改善）
-- [品質] 長い関数（150行）（src/services/user.ts:50）
-- [セキュリティ] レート制限なし（src/api/auth.ts:10）
-- [テスト] 意味のないテスト（tests/user.spec.ts:25）
+- [品質] 古いパターン: sort.Slice → slices.Sort（pkg/sort.go:15）
+- [可読性] ネスト4階層、ガード節で改善可能（src/handlers/order.go:80）
+- [設計] Fat Service - UserService に5つの責務（src/services/user.ts:1）
 
----
-📊 **Total**: Critical 3件 / Warning 3件
-```
-
-**focus=quality/security/docsの場合**:
-```markdown
-## 📊 品質レビュー結果
-
-### 🔴 Critical（修正必須）
-- Domain→Infrastructure参照（src/domain/user.ts:45）
-
-### 🟡 Warning（要改善）
-- 長い関数（150行）（src/services/user.ts:50）
-
----
-📊 **Total**: Critical 1件 / Warning 1件
+Total: Critical 3件 / Warning 3件
 ```
 
 ---
 
 ## レビュー観点
 
-### 🎯 code-quality-review（品質）
+### 🏗️ architecture（設計） — 常にチェック
+
+クリーンアーキテクチャ・DDDの観点でレビュー。詳細は `design/clean-architecture.md`, `design/domain-driven-design.md` 参照。
 
 #### 🔴 Critical
-- **アーキテクチャ**: 依存逆転、ロジック配置、Fat Service
-- **コード臭**: 長い関数（100行超）、マジックナンバー
-- **パフォーマンス**: N+1問題、メモリリーク
-- **型安全性**: any使用、無検証as
+
+| チェック項目 | 説明 |
+|-------------|------|
+| レイヤー違反 | Domain → Infrastructure 参照、UseCase でフレームワーク固有処理 |
+| 依存方向の逆転不備 | Repository 実装に Domain が依存、DI 未使用 |
+| 貫通型アクセス | Controller → DB 直接、UseCase 未経由 |
+| ビジネスロジック配置ミス | Controller / Infrastructure にビジネスロジック |
+| 貧血ドメインモデル | Entity が getter/setter のみでロジック不在 |
+| 集約境界違反 | 集約ルート外からの直接アクセス、集約を超えたトランザクション |
 
 #### 🟡 Warning
-- 深いネスト（3階層以上）
-- 非効率アルゴリズム（O(n²)）
-- 冗長な型注釈
-- **Go古いパターン**: go.modバージョンに基づき、`ioutil`使用、`interface{}`、古いソート/ループ等を指摘（詳細は`golang`ガイドライン「古いパターン検出」セクション参照）
 
-### 🛡️ security-error-review（セキュリティ）
+| チェック項目 | 説明 |
+|-------------|------|
+| 過剰な抽象化 | 不要なインターフェース・レイヤー |
+| Fat Service | 1つのServiceに複数責務が集中 |
+| ユビキタス言語不一致 | コード上の命名がドメイン用語と乖離 |
+| 境界曖昧 | Bounded Context の境界が不明確 |
+
+### 🎯 quality（品質）
 
 #### 🔴 Critical
-- SQLインジェクション（文字列結合）
-- XSS（innerHTML直接代入）
-- 認証不備（パスワード平文）
-- セッション漏洩（URLにセッションID）
-- エラー握りつぶし（空catch）
-- 機密情報ログ（password/token出力）
+
+| チェック項目 | 説明 |
+|-------------|------|
+| 型安全性 | `any`使用、無検証`as`、`interface{}`（言語別ガイドライン参照） |
+| パフォーマンス | N+1問題、メモリリーク |
+| 古いパターン | 言語別ガイドラインの「古いパターン検出」セクション参照 |
 
 #### 🟡 Warning
-- セキュリティヘッダー不足（CSP/HSTS）
-- レート制限なし
-- リトライなし
 
-### 📝 docs-test-review（ドキュメント・テスト）
+| チェック項目 | 説明 |
+|-------------|------|
+| コード臭 | 長い関数（100行超）、マジックナンバー |
+| 非効率アルゴリズム | O(n²) で O(n) / O(n log n) が可能な場合 |
+| 古いパターン（Warning級） | 言語別ガイドラインの Warning 項目 |
+
+### 📖 readability（可読性）
 
 #### 🔴 Critical
-- 公開API・型に説明なし
-- 嘘のコメント（実装と不一致）
-- 意味のないテスト（`expect(user).toBeDefined()`のみ）
-- 過剰なモック（全モックで実際の動作なし）
+
+| チェック項目 | 説明 |
+|-------------|------|
+| 誤解を招く命名 | 名前と実際の振る舞いが異なる（`getUser` が副作用を持つ等） |
+| 暗号的コード | 意図が読み取れない複雑なワンライナー、正規表現の説明なし |
 
 #### 🟡 Warning
-- 自明なコメント
-- テスト独立性欠如（共有状態）
-- カバレッジ不足
 
----
+| チェック項目 | 説明 |
+|-------------|------|
+| 認知的複雑度 | 深いネスト（3階層超）、長い条件式、複数の早期リターンが絡むフロー |
+| 命名の質 | 省略しすぎ（`usr`, `tmp`, `d`）、長すぎ、対称性の欠如（`get`/`set`等） |
+| 関数の長さ・引数 | 関数50行超は分割検討、引数4個超はオブジェクト化検討 |
+| 一貫性 | 同一プロジェクト内で命名規則・パターンが不統一 |
+| 構造の明瞭さ | ガード節未使用（深いif-else）、否定条件の連鎖、bool引数（意味不明） |
+| コメントの質 | Whatコメント（コードを繰り返すだけ）、古くなったコメント |
 
-## 使用例
+### 🛡️ security（セキュリティ）
 
-### 例1: API実装レビュー
+#### 🔴 Critical
 
-```
-変更: src/api/handlers/user.ts (100行)
+| チェック項目 | 説明 |
+|-------------|------|
+| インジェクション | SQL（文字列結合）、XSS（innerHTML）、コマンドインジェクション |
+| 認証不備 | パスワード平文、セッション漏洩 |
+| エラー握りつぶし | 空catch、エラー無視 |
+| 機密情報漏洩 | password/token/secret のログ出力 |
 
-自動実行:
-1. npm run lint（静的解析）
-2. cleanup-enforcement（未使用コード）
-3. code-quality-review（品質）
-4. security-error-review（セキュリティ）
+#### 🟡 Warning
 
-結果: Critical 2件 / Warning 5件
-```
+| チェック項目 | 説明 |
+|-------------|------|
+| ヘッダー不足 | CSP/HSTS/X-Frame-Options |
+| レート制限なし | 公開APIにスロットリング未実装 |
+| リトライなし | 外部API呼び出しにリトライ・サーキットブレーカーなし |
 
-### 例2: テストファイルレビュー
+### 📝 docs（ドキュメント・テスト）
 
-```
-変更: user_service_test.go（新規）
+#### 🔴 Critical
 
-自動実行:
-1. go vet（静的解析）
-2. code-quality-review（型安全性）
-3. docs-test-review（テスト品質）
+| チェック項目 | 説明 |
+|-------------|------|
+| 公開APIに説明なし | exported な型・関数にドキュメントなし |
+| 嘘のコメント | 実装と不一致のコメント |
+| 意味のないテスト | `expect(user).toBeDefined()` のみ等 |
+| 過剰なモック | 全モックで実際の動作検証なし |
 
-結果: Critical 0件 / Warning 3件
-```
+#### 🟡 Warning
+
+| チェック項目 | 説明 |
+|-------------|------|
+| 自明なコメント | コードを繰り返すだけ |
+| テスト独立性欠如 | 共有状態、実行順序依存 |
+| カバレッジ不足 | 異常系・境界値テスト欠如 |
 
 ---
 
 ## 注意事項
 
-### 大量の差分
-- 1ファイルずつレビュー
-- 優先度順（Critical → Warning）
-
-### 具体的な修正案
-- 問題指摘だけでなく改善方法も提示
-- コード例を含める
-
-### 並列実行
-- デフォルトで並列実行（4倍高速）
-- 順次実行が必要な場合のみユーザーが明示
-
----
-
-## 参照
-
-- [SKILL-MIGRATION.md](../../SKILL-MIGRATION.md): スキル統合ガイド（Phase 2-5で統合済み）
-- [/review コマンド](../../commands/review.md): コマンド仕様
-
-**旧スキル参照**（Phase 2-5で統合済み、旧スキル名も動作）:
-- `code-quality-review` → `comprehensive-review --focus=quality`
-- `security-error-review` → `comprehensive-review --focus=security`
-- `docs-test-review` → `comprehensive-review --focus=docs`
+- 大量の差分 → 1ファイルずつ、Critical → Warning の優先度順
+- 問題指摘だけでなく具体的な修正案を提示
+- focus=all の場合は全5観点を並列実行
