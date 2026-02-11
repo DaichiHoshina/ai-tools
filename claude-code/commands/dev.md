@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TodoWrite, Task, AskUserQuestion, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: 実装用コマンド - Agent階層で実行（複雑なタスク）または直接実行（単純なタスク）。--quickオプションでhaiku高速実行。
 ---
 
@@ -129,7 +129,7 @@ Manager Agent完了後、以下の手順でDeveloperを並列起動:
 
 1. ガイドライン読込
 2. Serena MCP でコード分析
-3. TodoWrite で計画
+3. TaskCreate で計画
 4. ユーザー確認
 5. 実装
 6. lint/test 実行

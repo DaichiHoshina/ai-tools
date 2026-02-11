@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TodoWrite, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: デバッグ支援 - エラーログ解析から原因特定・修正提案まで
 ---
 

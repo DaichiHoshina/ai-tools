@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, TodoWrite, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, Write, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: ドキュメント作成 - README、API ドキュメント、アーキテクチャ図などを作成
 ---
 

@@ -5,6 +5,12 @@ model: opus
 color: blue
 permissionMode: normal
 memory: project
+tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash
+  - mcp__serena__*
 ---
 
 # Manager（プロジェクトマネージャー）Agent

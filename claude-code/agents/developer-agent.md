@@ -5,6 +5,17 @@ model: sonnet
 color: orange
 permissionMode: normal
 memory: project
+tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - TaskCreate
+  - TaskUpdate
+  - TaskList
+  - mcp__serena__*
 ---
 
 # Developer（実行エージェント）Agent
@@ -65,7 +76,7 @@ memory: project
 - **serena MCP** - コード編集（最優先）
 - **Write/Edit** - ファイル編集
 - **Read/Bash/Glob/Grep** - 情報収集
-- **TodoWrite** - 進捗管理
+- **TaskCreate/TaskUpdate/TaskList** - 進捗管理
 
 ## Timeout/Retry 仕様
 

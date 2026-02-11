@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TodoWrite, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: リファクタリング用コマンド（言語ガイドライン自動読み込み）
 ---
 
@@ -41,7 +41,7 @@ requires-guidelines:
 
 1. **ガイドライン読み込み** - 上記Step 0を実行
 2. **分析** - Serena MCP で品質問題特定、影響範囲分析
-3. **計画作成** - リファクタリング計画を TodoWrite で管理
+3. **計画作成** - リファクタリング計画を TaskCreate で管理
 4. **ユーザー確認**（必須）
 5. **実行** - 段階的にリファクタリング
 6. **テスト実行** - 動作が変わっていないことを確認

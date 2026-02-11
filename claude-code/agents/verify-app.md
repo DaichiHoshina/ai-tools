@@ -93,7 +93,7 @@ go build -v ./... 2>&1 | tee build-output.txt
 - **Bash** - コマンド実行（最優先）
 - **Read** - 出力ファイル読み取り
 - **Grep** - エラーパターン検索
-- **TodoWrite** - 検証進捗管理
+- **TaskCreate/TaskUpdate/TaskList** - 検証進捗管理
 
 ## Serena MCP の使用
 

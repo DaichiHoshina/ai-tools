@@ -5,6 +5,14 @@ model: opus
 color: purple
 permissionMode: normal
 memory: project
+tools:
+  - Task(manager-agent)
+  - Read
+  - Glob
+  - Grep
+  - Bash
+  - AskUserQuestion
+  - mcp__serena__*
 ---
 
 # PO（プロダクトオーナー）Agent

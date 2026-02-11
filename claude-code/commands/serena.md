@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TodoWrite, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: Token-efficient Serena MCP command for structured app development and problem-solving
 ---
 

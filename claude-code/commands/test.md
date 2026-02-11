@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TodoWrite, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: テスト作成専用モード - 既存コードに対するテストを作成
 ---
 

@@ -5,6 +5,15 @@ model: haiku
 color: green
 permissionMode: fast
 memory: project
+tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash
+  - TaskCreate
+  - TaskUpdate
+  - TaskList
+  - mcp__serena__*
 ---
 
 # Explore（探索エージェント）Agent
@@ -67,7 +76,7 @@ memory: project
 - **serena MCP（読み取り系）** - コード分析（最優先）
 - **Read/Glob/Grep** - 情報収集
 - **Bash（読み取り専用）** - git log, tree等の情報収集コマンド
-- **TodoWrite** - 進捗管理
+- **TaskCreate/TaskUpdate/TaskList** - 進捗管理
 
 ## 絶対禁止
 
