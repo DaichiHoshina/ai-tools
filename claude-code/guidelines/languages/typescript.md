@@ -103,46 +103,46 @@ TypeScript 5.9対応（2026年1月時点、安定版5.9.3）。共通ガイド�
 | `const user = data as User` | `if (isUser(data))` | ランタイム安全 |
 | `user.name!.toUpperCase()` | `user.name?.toUpperCase()` | null安全 |
 | `throw new Error()` | `Result<T, E>` 型 | 制御フロー明確化 |
-| `interface{}` 多用 | ジェネリクス | 型推論 |
 
 ---
 
-## TypeScript 5.7-5.9 新機能
+## 古いパターン検出（レビュー/実装時チェック）
 
-**5.8 (2025)**:
-- ビルド高速化 - パス正規化最適化
-- `--erasableSyntaxOnly` - ランタイム構文検出
-- `--module node18` - Node.js 18固定
+`tsconfig.json` の `target` と `package.json` の TypeScript バージョンを確認してから指摘する。
 
-**5.7**:
-- 未初期化変数検出
-- `--target es2024`
-- `Object.groupBy()`, `Map.groupBy()`
-- `--rewriteRelativeImportExtensions`
+### 🔴 Critical（必ず指摘）
 
-**5.6**:
-- Disallowed Nullish/Truthy Checks
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `enum Foo { ... }` (数値enum) | `as const` オブジェクト or ユニオン型 | TS全般 |
+| `namespace` | ES Modules (`import`/`export`) | TS全般 |
+| `/// <reference>` | `import` 文 | TS全般 |
+| `require()` | `import` (ESM) | ES2015+ |
+| `any` 型の使用 | `unknown` + 型ガード or ジェネリクス | strict |
 
-**5.0**:
-- Decorators (Stage 3)
+### 🟡 Warning（積極的に指摘）
 
-### 5.9（2026年1月時点の安定版）
-- **型推論改善**: より正確な型推論、特に条件型
-- **パフォーマンス向上**: ビルド時間・メモリ使用量の最適化
-- **エラーメッセージ改善**: より分かりやすいエラー表示
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `Promise.then().catch()` チェーン | `async`/`await` + `try`/`catch` | ES2017 |
+| `Object.assign({}, obj)` | スプレッド `{ ...obj }` | ES2018 |
+| `arr.indexOf(x) !== -1` | `arr.includes(x)` | ES2016 |
+| `Object.keys(obj).forEach(...)` | `Object.entries(obj)` / `for...of` | ES2017 |
+| `arr.filter(...)[0]` | `arr.find(...)` | ES2015 |
+| `arr.reduce` で配列グルーピング | `Object.groupBy()` / `Map.groupBy()` | ES2024/TS5.7 |
+| `lodash.get(obj, 'a.b.c')` | Optional chaining `obj?.a?.b?.c` | TS3.7/ES2020 |
+| `x === null \|\| x === undefined` | `x ?? fallback` (Nullish Coalescing) | TS3.7/ES2020 |
+| `x != null ? x : fallback` | `x ?? fallback` | TS3.7/ES2020 |
+| class component (`extends React.Component`) | 関数コンポーネント + Hooks | React 16.8+ |
+| `@decorator` (legacy/experimental) | Stage 3 Decorators | TS5.0 |
+| `typeof x === 'string'` 繰返し | `satisfies` で型保証 | TS4.9 |
 
----
+### ℹ️ Info（提案レベル）
 
-## 次期バージョン情報（2026年）
-
-| バージョン | リリース予定 | 主な変更 |
-|-----------|-------------|---------|
-| **6.0** | 2026年中 | JS版コンパイラ最終版<br>7.0への橋渡し<br>6.1はリリース予定なし |
-| **7.0** | 2026年中 | ネイティブコンパイラ（Project Corsa）<br>10倍高速化（フルビルド）<br>メモリ・並列性改善 |
-
-### 参考リンク
-- [Progress on TypeScript 7](https://devblogs.microsoft.com/typescript/progress-on-typescript-7-december-2025/)
-- [TypeScript Native Port](https://www.infoworld.com/article/4100582/microsoft-steers-native-port-of-typescript-to-early-2026-release.html)
+| 項目 | 内容 | Since |
+|------|------|-------|
+| TS 7.0 (Project Corsa) | ネイティブコンパイラで10倍高速化。6.0はJS版最終版 | 2026予定 |
+| `--erasableSyntaxOnly` | ランタイムに影響する構文を検出 | TS5.8 |
 
 ---
 

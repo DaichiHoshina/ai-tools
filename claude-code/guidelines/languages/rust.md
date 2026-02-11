@@ -92,8 +92,8 @@ Rust 2024 Edition対応。共通ガイドラインは `~/.claude/guidelines/comm
 
 ## よくあるミス
 
-| 避ける | 使う | 理由 |
-|-------|------|------|
+| ❌ 避ける | ✅ 使う | 理由 |
+|----------|---------|------|
 | `.unwrap()` 乱用 | `?` または `expect()` | パニック防止 |
 | `.clone()` 乱用 | 借用で解決 | パフォーマンス |
 | `unsafe` 多用 | 安全な代替 | メモリ安全性 |
@@ -102,72 +102,47 @@ Rust 2024 Edition対応。共通ガイドラインは `~/.claude/guidelines/comm
 
 ---
 
-## バージョン別新機能
+## 古いパターン検出（レビュー/実装時チェック）
 
-**Edition 2024**:
-- `gen` ブロック (ジェネレータ)
-- `async` クロージャ安定化
-- RPITIT (impl Trait in Trait)
-- `let chains` in if/while
+`Cargo.toml` の `edition` と `rust-version` を確認してから指摘する。
 
-**1.80+**:
-- `LazyCell`, `LazyLock` 安定化
-- `Box::leak` 改善
-- `#[diagnostic]` 属性
+### 🔴 Critical（必ず指摘）
+
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `#[async_trait]` マクロ（大半のケース） | ネイティブ `async fn` in trait (RPITIT) | Edition 2024 |
+| `impl Trait` 返却不可（トレイト内） | `fn f() -> impl Trait` in trait | 1.75 |
+| `lazy_static!` マクロ | `std::sync::LazyLock` / `std::cell::LazyCell` | 1.80 |
+| `once_cell::sync::Lazy` | `std::sync::LazyLock` | 1.80 |
+
+### 🟡 Warning（積極的に指摘）
+
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `Box<dyn Fn()>` クロージャ返却 | `impl Fn()` 返却（RPITIT） | 1.75 |
+| `if let Some(x) = a { if let Some(y) = b { } }` | `let chains`: `if let Some(x) = a && let Some(y) = b` | Edition 2024 |
+| 手動イテレータ実装 | `gen` ブロック（ジェネレータ） | Edition 2024 |
+| `async move \|\| { }` | `async \|\| { }` （asyncクロージャ安定化） | Edition 2024 |
+| `log` クレート | `tracing` クレート（構造化ログ + スパン） | 推奨 |
+| `failure` クレート | `thiserror` + `anyhow` | 推奨 |
+| `reqwest::blocking` | `reqwest` async + tokio | 推奨 |
+| `println!` デバッグ | `tracing::debug!` / `dbg!` | 推奨 |
+| `#[derive(Clone, Debug)]` 手動列挙 | `#[diagnostic]` 属性で改善されたエラーメッセージ活用 | 1.80 |
+
+### ℹ️ Info（提案レベル）
+
+| 項目 | 内容 | Since |
+|------|------|-------|
+| `cargo clippy --fix` | 多くの古いパターンを自動修正 | 常用 |
+| Edition 2024 移行 | `cargo fix --edition` で自動マイグレーション | 2024 |
 
 ---
 
 ## クレート推奨
 
-### 非同期
-- `tokio` - ランタイム
-- `async-trait` - 非同期トレイト
-- `futures` - ユーティリティ
-
-### Web
-- `axum` - Webフレームワーク
-- `reqwest` - HTTPクライアント
-- `serde` - シリアライズ
-
-### CLI
-- `clap` - 引数パーサ
-- `tracing` - ロギング
-- `color-eyre` - エラー表示
-
----
-
-## パターン例
-
-### Builder
-```rust
-#[derive(Default)]
-pub struct ConfigBuilder {
-    timeout: Option<Duration>,
-}
-
-impl ConfigBuilder {
-    pub fn timeout(mut self, t: Duration) -> Self {
-        self.timeout = Some(t);
-        self
-    }
-
-    pub fn build(self) -> Config {
-        Config {
-            timeout: self.timeout.unwrap_or(Duration::from_secs(30)),
-        }
-    }
-}
-```
-
-### Error型
-```rust
-use thiserror::Error;
-
-#[derive(Error, Debug)]
-pub enum AppError {
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("Not found: {0}")]
-    NotFound(String),
-}
-```
+| カテゴリ | クレート |
+|---------|---------|
+| 非同期 | `tokio`, `futures` |
+| Web | `axum`, `reqwest`, `serde` |
+| エラー | `thiserror` (ライブラリ), `anyhow` (アプリ) |
+| CLI | `clap`, `tracing`, `color-eyre` |

@@ -7,21 +7,6 @@
 | **最新安定版** | TypeScript 5.9.3 |
 | **次期予定** | TS 6.0（2026年Q2-Q3）、TS 7.0（2027年） |
 
-## TypeScript 5.9 新機能
-
-| 機能 | 概要 |
-|------|------|
-| 型推論改善 | `satisfies`演算子とジェネリクスの推論精度向上 |
-| パフォーマンス向上 | 大規模プロジェクトのコンパイル速度改善 |
-| エディタ連携強化 | 補完・リファクタリング機能向上 |
-
-## 次期バージョン展望
-
-| バージョン | 予定機能 |
-|-----------|---------|
-| **TS 6.0** | 型システム刷新、新構文導入 |
-| **TS 7.0** | ECMAScript最新仕様対応、破壊的変更 |
-
 ## 型安全性（最優先）
 
 | NG | OK |
@@ -80,10 +65,24 @@ function isString(value: unknown): value is string {
 | `instanceof` | クラスインスタンスチェック |
 | カスタム型ガード | 複雑な型判定 |
 
-## パフォーマンス
+## 古いパターン検出（レビュー/実装時）
 
-| 項目 | 推奨 |
-|------|------|
-| 不要な再レンダリング防止 | React: メモ化活用 |
-| メモ化 | useMemo, useCallback（必要時のみ） |
-| 遅延ロード | lazy import、dynamic import |
+### 必ず指摘
+
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `enum` (数値enum) | `as const` or ユニオン型 | 全般 |
+| `namespace` | ES Modules | 全般 |
+| `require()` | `import` (ESM) | ES2015 |
+| `any` 型 | `unknown` + 型ガード or ジェネリクス | strict |
+
+### 積極的に指摘
+
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `.then().catch()` | `async`/`await` | ES2017 |
+| `indexOf !== -1` | `includes()` | ES2016 |
+| `reduce` でグルーピング | `Object.groupBy()` | ES2024/TS5.7 |
+| `lodash.get` | Optional chaining `?.` | TS3.7 |
+| `x === null \|\| x === undefined` | `??` (Nullish Coalescing) | TS3.7 |
+| legacy `@decorator` | Stage 3 Decorators | TS5.0 |

@@ -3,7 +3,8 @@ name: comprehensive-review
 description: 包括的コードレビュー - 品質・セキュリティ・ドキュメント/テストを統合評価（パラメータ化対応）
 requires-guidelines:
   - common
-  - typescript
+  - typescript  # lang=typescript の場合
+  - golang  # lang=go の場合
 parameters:
   focus:
     type: enum
@@ -183,6 +184,7 @@ esac
 - 深いネスト（3階層以上）
 - 非効率アルゴリズム（O(n²)）
 - 冗長な型注釈
+- **Go古いパターン**: go.modバージョンに基づき、`ioutil`使用、`interface{}`、古いソート/ループ等を指摘（詳細は`golang`ガイドライン「古いパターン検出」セクション参照）
 
 ### 🛡️ security-error-review（セキュリティ）
 

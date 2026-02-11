@@ -60,6 +60,46 @@ Next.js 16.1 + React 19.2対応（2026年1月時点）。共通ガイドライ�
 | Context でグローバル状態 | Zustand/Jotai | パフォーマンス |
 | `useEffect` でデータフェッチ | Server Component or TanStack Query | サーバー側で完結 |
 
+---
+
+## 古いパターン検出（レビュー/実装時チェック）
+
+`package.json` の `next` / `react` バージョンを確認してから指摘する。
+
+### 🔴 Critical（必ず指摘）
+
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `pages/` ディレクトリ (Pages Router) | `app/` ディレクトリ (App Router) | Next.js 13 |
+| `getServerSideProps` / `getStaticProps` | Server Component で直接 `fetch` / DB呼び出し | Next.js 13 |
+| `getInitialProps` | Server Component or Server Actions | Next.js 13 |
+| class component (`extends React.Component`) | 関数コンポーネント + Hooks | React 16.8 |
+| `next/router` (Pages Router用) | `next/navigation` (`useRouter`, `usePathname`) | Next.js 13 |
+| `next.config.js` | `next.config.ts` (TypeScript設定) | Next.js 15 |
+
+### 🟡 Warning（積極的に指摘）
+
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `useMemo`/`useCallback` 多用 | React Compiler による自動最適化 | React 19 |
+| `useFormState` | `useActionState`（名称変更） | React 19 |
+| `forwardRef` | `ref` をpropsとして直接受け取り | React 19 |
+| `<Context.Provider>` | `<Context>` で直接提供 | React 19 |
+| `useContext(Ctx)` | `use(Ctx)` | React 19 |
+| Promise を `useEffect` で解決 | `use(promise)` でrender内読込 | React 19 |
+| `next/head` | `export const metadata` (App Router) | Next.js 13 |
+| `middleware.ts` でプロキシ処理 | `proxy.ts`（ネットワーク境界明確化） | Next.js 16 |
+| 手動キャッシュ制御 | `"use cache"` ディレクティブ | Next.js 16 |
+| CSS-in-JS (styled-components等) | Tailwind CSS / CSS Modules | Next.js 13+ (RSC非対応) |
+
+### ℹ️ Info（提案レベル）
+
+| 項目 | 内容 | Since |
+|------|------|-------|
+| Activity Component | `<Activity mode="hidden">` でコンポーネントの表示/非表示を制御 | React 19.2 |
+| useEffectEvent | 非リアクティブロジックをエフェクトから分離 | React 19.2 |
+| View Transitions | ナビゲーション時のアニメーション | Next.js 16 |
+
 ## コンポーネント設計
 
 ### Server Components（デフォルト）
@@ -148,59 +188,9 @@ export const appConfig = {
 
 ---
 
-## React 19.2 新機能
+## セキュリティ更新
 
-### Activity Component（19.2）
-- **visible mode**: 子要素表示、通常更新
-- **hidden mode**: 子要素非表示、エフェクトアンマウント、更新延期
-
-```ts
-<Activity mode="hidden">
-  <ExpensiveComponent />
-</Activity>
-```
-
-### useEffectEvent Hook（19.2）
-非リアクティブロジックをエフェクトイベントに抽出:
-```ts
-const onVisit = useEffectEvent(() => {
-  logAnalytics(url)
-})
-```
-
-### use API（19.0）
-render内でPromise/Context読込:
-```ts
-const user = use(userPromise)
-```
-
-### React Compiler（19.0）
-自動メモ化で`useMemo`/`useCallback`不要な場合多い。まずシンプル実装、問題時のみ最適化。
-
-### セキュリティ更新（19.2.3）
-- CVE-2025-55182（React2Shell）対応
-- 複数の脆弱性修正を19.0.3/19.1.4/19.2.3にバックポート
-
----
-
-## Next.js 16.1 新機能（2025年12月）
-
-| 機能 | 説明 |
-|------|------|
-| **Bundle Analyzer（実験的）** | Turbopack対応の新アナライザー |
-| **File System Cache改善** | キャッシュ効率向上 |
-| **Turbopack安定化** | 開発・本番ビルドでデフォルト有効<br>新プロジェクトの標準バンドラーに |
-
-### Next.js 16.0主要機能
-- **"use cache" Directive**: PPRと組合せ、コンポーネント/関数キャッシュ
-- **View Transitions**: ナビゲーション要素のアニメーション
-- **after() API**: レスポンスストリーミング完了後処理
-- **proxy.ts**: middlewareの後継（ネットワーク境界明確化）
-- **MCP統合**: デバッグ・ワークフロー改善
-
-### 参考リンク
-- [Next.js 16.1 Release](https://nextjs.org/blog/next-16-1)
-- [React 19.2 Release](https://react.dev/blog/2025/10/01/react-19-2)
+- CVE-2025-55182（React2Shell）対応済み（19.0.3/19.1.4/19.2.3）
 
 ---
 

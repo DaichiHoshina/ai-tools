@@ -154,101 +154,47 @@ export default [
 
 ## マイグレーション
 
-### 旧設定からの移行
-公式ツール使用:
-```bash
-npx @eslint/migrate-config .eslintrc.json
-```
-
-自動的に`eslint.config.js`生成
+旧設定からの移行: `npx @eslint/migrate-config .eslintrc.json`
 
 ---
 
-## ベストプラクティス
+## 古いパターン検出（レビュー/実装時チェック）
 
-### ファイル別設定
-```js
-export default [
-  {
-    files: ['**/*.ts', '**/*.tsx'],
-    // TypeScript設定
-  },
-  {
-    files: ['**/*.test.ts'],
-    // テストファイル設定
-  }
-]
-```
+`package.json` の `eslint` バージョンとプロジェクトの設定ファイル形式を確認してから指摘する。
 
-### 除外設定
-```js
-export default [
-  {
-    ignores: ['dist/**', 'node_modules/**', '.next/**']
-  }
-]
-```
+### 🔴 Critical（必ず指摘）
 
-### 段階的導入
-```js
-export default [
-  {
-    rules: {
-      // エラーから始める
-      'no-console': 'error',
-      // 徐々にwarningをerrorに
-      '@typescript-eslint/no-explicit-any': 'warn'
-    }
-  }
-]
-```
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `.eslintrc` / `.eslintrc.json` / `.eslintrc.js` | `eslint.config.js` (Flat Config) | v9 |
+| `extends: [...]` (旧形式) | `defineConfig()` + `extends` (新形式) | v9 |
+| `env: { browser: true, node: true }` | `languageOptions.globals` | v9 |
+| `parserOptions` トップレベル | `languageOptions.parserOptions` | v9 |
+| `plugins: ['@typescript-eslint']` (文字列) | `plugins: { '@typescript-eslint': tseslint }` (オブジェクト) | v9 |
+| `.eslintignore` ファイル | `ignores` プロパティ or `globalIgnores()` | v9 |
+| `overrides: [...]` | `files` パターンで複数設定オブジェクト | v9 |
 
----
+### 🟡 Warning（積極的に指摘）
 
-## v10.0（ベータ）
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `tslint` / `tslint.json` | ESLint + typescript-eslint | 2019年非推奨 |
+| `prettier` を ESLint ルールで実行 | `eslint-config-prettier` で競合無効化 + 別途 prettier 実行 | 推奨 |
+| `eslint-plugin-react` の `prop-types` ルール | TypeScript の Props 型で代替 | TS使用時 |
+| `@typescript-eslint/` v7以前の設定 | v8+ の `tseslint.config()` 形式 | v8 |
 
-2025年後半にv10.0ベータリリース予定:
-- Flat Config更なる改善
-- パフォーマンス向上
-- 新ルール追加
+### ℹ️ Info（提案レベル）
+
+| 項目 | 内容 | Since |
+|------|------|-------|
+| v10.0 | Flat Config改善、パフォーマンス向上 | ベータ |
+| `defineConfig()` | 型安全な設定記述 | v9 |
 
 ---
 
 ## 実行
 
-### コマンド
 ```bash
-# チェック
-npx eslint .
-
-# 自動修正
-npx eslint . --fix
-
-# 特定ファイル
-npx eslint src/**/*.ts
-```
-
-### package.json
-```json
-{
-  "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
-  }
-}
-```
-
----
-
-## エディタ統合
-
-### VS Code
-`.vscode/settings.json`:
-```json
-{
-  "eslint.enable": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  }
-}
+npx eslint .          # チェック
+npx eslint . --fix    # 自動修正
 ```

@@ -7,34 +7,7 @@
 | **Next.js** | 16.1（2025年12月リリース） |
 | **React** | 19.2（2026年1月予定） |
 
-## Next.js 16.1 新機能
-
-| 機能 | 概要 |
-|------|------|
-| Bundle Analyzer | ビルド最適化ツール統合 |
-| File System Cache改善 | ビルドキャッシュ効率化 |
-| Turbopack強化 | 開発サーバー高速化 |
-
-## React 19.2 新機能（予定）
-
-| 機能 | 概要 |
-|------|------|
-| Activity Component | 非同期コンポーネント簡易化 |
-| useEffectEvent Hook | イベントハンドラ最適化 |
-
 ## コンポーネント設計
-
-```typescript
-// ✅ 推奨パターン
-interface Props {
-  title: string;
-  onClick: () => void;
-}
-
-export function Button({ title, onClick }: Props) {
-  return <button onClick={onClick}>{title}</button>;
-}
-```
 
 | 原則 | 説明 |
 |------|------|
@@ -94,3 +67,24 @@ export function Button({ title, onClick }: Props) {
 | トップレベル | 条件分岐・ループ内で呼び出し禁止 |
 | 関数コンポーネント内 | カスタムHooksまたはコンポーネント内のみ |
 | 命名規則 | `use`で始める |
+
+## 古いパターン検出（レビュー/実装時）
+
+### 必ず指摘
+
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `pages/` (Pages Router) | `app/` (App Router) | Next.js 13 |
+| `getServerSideProps` / `getStaticProps` | Server Component で直接fetch | Next.js 13 |
+| class component | 関数コンポーネント + Hooks | React 16.8 |
+| `next/router` | `next/navigation` | Next.js 13 |
+
+### 積極的に指摘
+
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `useMemo`/`useCallback` 多用 | React Compiler 自動最適化 | React 19 |
+| `forwardRef` | `ref` をpropsで直接受取 | React 19 |
+| `useFormState` | `useActionState` | React 19 |
+| `useContext(Ctx)` | `use(Ctx)` | React 19 |
+| CSS-in-JS | Tailwind / CSS Modules | Next.js 13+ |

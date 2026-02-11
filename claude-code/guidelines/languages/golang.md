@@ -1,6 +1,6 @@
 # Golang ガイドライン
 
-Go 1.25対応（2025年8月リリース）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+Go 1.26対応（2026年2月リリース）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 
@@ -78,51 +78,48 @@ Go 1.25対応（2025年8月リリース）。共通ガイドラインは `~/.cla
 
 | ❌ 避ける | ✅ 使う | 理由 |
 |----------|---------|------|
-| `result, _ := db.Query()` | `result, err := ...; if err != nil { return err }` | エラー無視禁止 |
+| `result, _ := db.Query()` | エラーチェック必須 | エラー無視禁止 |
 | `go doWork()` (無制限) | `ctx` + `WaitGroup` でリーク防止 | リソース管理 |
-| `interface{}` | `[T any]` (1.18+) | 型安全性 |
-| `for i := 0; i < b.N; i++` | `for b.Loop()` (1.24+) | ベンチマーク最適化 |
 | `panic()` で通常エラー | `return err` | エラー処理の原則 |
 
-
-
 ---
 
-## バージョン別新機能
+## 古いパターン検出（レビュー/実装時チェック）
 
-**1.25 (2025/08)**:
-- `testing/synctest` - 並行コードテスト（仮想時間）
-- JSON v2 (experimental) - パフォーマンス向上
-- Green Tea GC - GC 10-40%削減
-- Flight Recorder - 軽量トレース
-- Core Types削除 - 仕様簡略化
-- `unique` パッケージ改善
+`go.mod` の `go` ディレクティブで対象バージョンを確認してから指摘する。
 
-**1.24**:
-- `for b.Loop()` - ベンチマーク高速化
-- Generic Type Aliases
-- Tool Dependencies - `go.mod`で実行ファイル管理
+### 🔴 Critical（必ず指摘）
 
-**1.21**:
-- `slog` - 構造化ログ
-- `min()`, `max()`, `clear()`
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `ioutil.ReadAll` | `io.ReadAll` | 1.16 |
+| `ioutil.ReadFile` / `WriteFile` | `os.ReadFile` / `os.WriteFile` | 1.16 |
+| `ioutil.ReadDir` | `os.ReadDir` | 1.16 |
+| `ioutil.TempDir` / `TempFile` | `os.MkdirTemp` / `os.CreateTemp` | 1.16 |
+| `ioutil.NopCloser` / `Discard` | `io.NopCloser` / `io.Discard` | 1.16 |
+| `interface{}` | `any`（またはジェネリクスで型安全に） | 1.18 |
 
-**1.18**:
-- ジェネリクス - `[T any]`
+### 🟡 Warning（積極的に指摘）
 
----
+| ❌ 古い | ✅ モダン | Since |
+|---------|----------|-------|
+| `sort.Slice` / `sort.Ints` / `sort.Strings` | `slices.Sort` / `slices.SortFunc` | 1.21 |
+| 手動スライスコピー `copy(dst, src)` | `slices.Clone(src)` | 1.21 |
+| 手動スライス検索ループ | `slices.Contains(s, v)` | 1.21 |
+| 手動マップコピーループ | `maps.Copy(dst, src)` | 1.21 |
+| 自前 `min`/`max` 関数定義 | ビルトイン `min()` / `max()` | 1.21 |
+| `log.Printf` (非構造化ログ) | `slog.Info` 等（構造化ログ） | 1.21 |
+| `for i := 0; i < n; i++`（単純カウント） | `for i := range n` | 1.22 |
+| ループ変数 `v := v` シャドーイング | 不要（イテレーション毎スコープ） | 1.22 |
+| カスタムコンテナで `[]T` 返却 | `iter.Seq[T]` でイテレータ提供 | 1.23 |
+| `for i := 0; i < b.N; i++` | `for b.Loop()` | 1.24 |
 
-## Go 1.26 予定機能（2026年2月リリース予定）
+### ℹ️ Info（提案レベル）
 
-| 機能 | 説明 | コード例 |
-|------|------|---------|
-| **new関数拡張** | 初期値指定可能に | `p := new(int, 42)` |
-| **Green Tea GCデフォルト化** | 小オブジェクト性能向上<br>CPU並列性・局所性改善 | 設定不要（自動有効） |
-| **go fix改善** | analysis framework使用<br>診断+修正提案を統合 | `go fix ./...` |
-
-### 参考リンク
-- [Go 1.26 Release Notes](https://go.dev/doc/go1.26)
-- [Release History](https://go.dev/doc/devel/release)
+| 項目 | 内容 | Since |
+|------|------|-------|
+| `go fix ./...` | 上記の多くを自動修正。大量検出時は個別修正より推奨 | 1.26 |
+| `new(T, val)` | 初期値付きnew | 1.26 |
 
 ---
 
