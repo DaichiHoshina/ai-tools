@@ -47,7 +47,7 @@ get_additional_context() {
 # 正常系テスト: ファイルパス検出
 # =============================================================================
 
-@test "user-prompt-submit: Goファイル変更でgolang+go-backend検出" {
+@test "user-prompt-submit: Goファイル変更でgolang+backend-dev検出" {
   cd "$TEST_TMPDIR"
   touch main.go
   git add main.go
@@ -60,7 +60,7 @@ get_additional_context() {
 
   # systemMessageにgolangが含まれる
   local system_msg=$(get_system_message "$output")
-  [[ "$system_msg" =~ "golang" ]] || [[ "$system_msg" =~ "go-backend" ]]
+  [[ "$system_msg" =~ "golang" ]] || [[ "$system_msg" =~ "backend-dev" ]]
 }
 
 @test "user-prompt-submit: TypeScriptファイル変更でtypescript検出" {
@@ -72,10 +72,10 @@ get_additional_context() {
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  [[ "$system_msg" =~ "typescript" ]] || [[ "$system_msg" =~ "typescript-backend" ]]
+  [[ "$system_msg" =~ "typescript" ]] || [[ "$system_msg" =~ "backend-dev" ]]
 }
 
-@test "user-prompt-submit: Dockerfileでdockerfile-best-practices検出" {
+@test "user-prompt-submit: Dockerfileでcontainer-ops検出" {
   cd "$TEST_TMPDIR"
   touch Dockerfile
   git add Dockerfile
@@ -84,7 +84,7 @@ get_additional_context() {
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  [[ "$system_msg" =~ "dockerfile" ]]
+  [[ "$system_msg" =~ "container-ops" ]] || [[ "$system_msg" =~ "dockerfile" ]]
 }
 
 # =============================================================================
@@ -101,48 +101,48 @@ get_additional_context() {
   [[ "$system_msg" =~ "go" ]] || [[ "$system_msg" =~ "golang" ]]
 }
 
-@test "user-prompt-submit: 'docker'キーワードでdockerfile-best-practices検出" {
+@test "user-prompt-submit: 'docker'キーワードでcontainer-ops検出" {
   cd "$TEST_TMPDIR"
 
   local input='{"prompt":"dockerの設定を確認"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  [[ "$system_msg" =~ "docker" ]]
+  [[ "$system_msg" =~ "container-ops" ]] || [[ "$system_msg" =~ "docker" ]]
 }
 
-@test "user-prompt-submit: 'review'キーワードでcode-quality-review検出" {
+@test "user-prompt-submit: 'review'キーワードでcomprehensive-review検出" {
   cd "$TEST_TMPDIR"
 
   local input='{"prompt":"コードをレビューして"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  [[ "$system_msg" =~ "review" ]] || [[ "$system_msg" =~ "quality" ]]
+  [[ "$system_msg" =~ "comprehensive-review" ]] || [[ "$system_msg" =~ "review" ]] || [[ "$system_msg" =~ "quality" ]]
 }
 
 # =============================================================================
 # 正常系テスト: エラーログ検出
 # =============================================================================
 
-@test "user-prompt-submit: Docker daemonエラーでdocker-troubleshoot検出" {
+@test "user-prompt-submit: Docker daemonエラーでcontainer-ops検出" {
   cd "$TEST_TMPDIR"
 
   local input='{"prompt":"Cannot connect to the Docker daemon"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  [[ "$system_msg" =~ "docker" ]] || [[ "$system_msg" =~ "troubleshoot" ]]
+  [[ "$system_msg" =~ "container-ops" ]] || [[ "$system_msg" =~ "docker" ]] || [[ "$system_msg" =~ "troubleshoot" ]]
 }
 
-@test "user-prompt-submit: TypeScript型エラーでtypescript-backend検出" {
+@test "user-prompt-submit: TypeScript型エラーでbackend-dev検出" {
   cd "$TEST_TMPDIR"
 
   local input='{"prompt":"Type error TS2304: Cannot find name"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  # スキル統合後: typescript-backend → backend-dev (BACKEND_LANG=typescript)
+  # スキル統合後: backend-dev (BACKEND_LANG=typescript)
   [[ "$system_msg" =~ "backend-dev" ]] || [[ "$system_msg" =~ "typescript" ]]
 }
 
@@ -161,7 +161,7 @@ get_additional_context() {
   [[ "$system_msg" =~ "api" ]]
 }
 
-@test "user-prompt-submit: fix/ブランチでsecurity-error-review検出" {
+@test "user-prompt-submit: fix/ブランチでcomprehensive-review検出" {
   cd "$TEST_TMPDIR"
   git checkout -b fix/security-issue
 
@@ -169,7 +169,7 @@ get_additional_context() {
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  # スキル統合後: security-error-review → comprehensive-review (REVIEW_FOCUS=security)
+  # スキル統合後: comprehensive-review (REVIEW_FOCUS=security)
   [[ "$system_msg" =~ "comprehensive-review" ]] || [[ "$system_msg" =~ "security" ]] || [[ "$output" == "{}" ]]
 }
 
@@ -210,7 +210,7 @@ get_additional_context() {
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  # golang, go-backend, dockerfile-best-practices のいずれかが検出される
+  # golang, backend-dev, container-ops のいずれかが検出される
   [[ "$system_msg" =~ "go" ]] || [[ "$system_msg" =~ "docker" ]]
 }
 

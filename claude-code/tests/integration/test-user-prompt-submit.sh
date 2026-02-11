@@ -45,11 +45,11 @@ echo ""
 
 run_test "キーワード検出: Go言語" \
   '{"prompt": "Go言語でAPIを実装してください"}' \
-  "go-backend|golang"
+  "backend-dev|golang"
 
 run_test "キーワード検出: TypeScript" \
   '{"prompt": "TypeScriptでバックエンドを作る"}' \
-  "typescript-backend|typescript"
+  "backend-dev|typescript"
 
 run_test "キーワード検出: React" \
   '{"prompt": "Reactコンポーネントを作成"}' \
@@ -57,7 +57,7 @@ run_test "キーワード検出: React" \
 
 run_test "キーワード検出: Docker" \
   '{"prompt": "Dockerfileを最適化したい"}' \
-  "dockerfile-best-practices"
+  "container-ops"
 
 run_test "キーワード検出: Kubernetes" \
   '{"prompt": "k8sのdeploymentを修正"}' \
@@ -65,11 +65,11 @@ run_test "キーワード検出: Kubernetes" \
 
 run_test "キーワード検出: レビュー" \
   '{"prompt": "コードレビューをお願いします"}' \
-  "code-quality-review"
+  "comprehensive-review"
 
 run_test "キーワード検出: セキュリティ" \
   '{"prompt": "セキュリティの脆弱性をチェック"}' \
-  "security-error-review"
+  "comprehensive-review"
 
 # ========================================
 # 2. エラーログ検出テスト（新機能）
@@ -77,7 +77,7 @@ run_test "キーワード検出: セキュリティ" \
 
 run_test "エラー検出: Docker接続エラー" \
   '{"prompt": "Cannot connect to the Docker daemon が出ます"}' \
-  "docker-troubleshoot"
+  "container-ops"
 
 run_test "エラー検出: Kubernetes Pod失敗" \
   '{"prompt": "CrashLoopBackOff エラーが発生しています"}' \
@@ -85,15 +85,15 @@ run_test "エラー検出: Kubernetes Pod失敗" \
 
 run_test "エラー検出: TypeScript型エラー" \
   '{"prompt": "Property does not exist on type エラー"}' \
-  "typescript-backend"
+  "backend-dev"
 
 run_test "エラー検出: Go未定義エラー" \
   '{"prompt": "undefined: myFunction というエラー"}' \
-  "go-backend"
+  "backend-dev"
 
 run_test "エラー検出: CVE脆弱性" \
   '{"prompt": "CVE-2024-1234 の対応が必要"}' \
-  "security-error-review"
+  "comprehensive-review"
 
 # ========================================
 # 3. 複合検出テスト
@@ -101,11 +101,11 @@ run_test "エラー検出: CVE脆弱性" \
 
 run_test "複合: Go + API設計" \
   '{"prompt": "Go言語でREST APIを設計"}' \
-  "go-backend.*api-design|api-design.*go-backend"
+  "backend-dev.*api-design|api-design.*backend-dev"
 
 run_test "複合: TypeScript + セキュリティ" \
   '{"prompt": "TypeScriptのセキュリティレビュー"}' \
-  "typescript.*security|security.*typescript"
+  "backend-dev.*security|security.*backend-dev"
 
 run_test "複合: React + テスト" \
   '{"prompt": "Reactコンポーネントのテストを追加"}' \

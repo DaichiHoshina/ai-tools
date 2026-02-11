@@ -103,11 +103,6 @@ _save_to_cache() {
 # スキル名マッピング（旧名→新名+パラメータ）
 # Phase2-5 スキル統合で追加
 declare -g -A SKILL_ALIASES=(
-  ["go-backend"]="backend-dev:BACKEND_LANG=go"
-  ["typescript-backend"]="backend-dev:BACKEND_LANG=typescript"
-  ["code-quality-review"]="comprehensive-review:REVIEW_FOCUS=quality"
-  ["security-error-review"]="comprehensive-review:REVIEW_FOCUS=security"
-  ["docs-test-review"]="comprehensive-review:REVIEW_FOCUS=docs"
   ["docker-troubleshoot"]="container-ops:CONTAINER_PLATFORM=docker:CONTAINER_MODE=troubleshoot"
   ["kubernetes"]="container-ops:CONTAINER_PLATFORM=kubernetes"
 )
@@ -168,19 +163,19 @@ detect_from_keywords() {
 
   # キーワードパターンテーブル（pattern → language:skill）
   declare -A keyword_patterns=(
-    ['go|golang|\.go|go\.mod']="golang:go-backend"
+    ['go|golang|\.go|go\.mod']="golang:backend-dev"
     ['python|\.py|pip|poetry|pyproject\.toml|requirements\.txt|django|fastapi']="python:"
     ['rust|\.rs|cargo|cargo\.toml|tokio|axum']="rust:"
-    ['typescript|\.ts|\.tsx|tsconfig']="typescript:typescript-backend"
+    ['typescript|\.ts|\.tsx|tsconfig']="typescript:backend-dev"
     ['react|next\\.js|nextjs|\\.jsx']="react:react-best-practices"
     ['tailwind']="tailwind:"
-    ['docker|dockerfile|docker-compose']=":dockerfile-best-practices"
+    ['docker|dockerfile|docker-compose']=":container-ops"
     ['kubernetes|k8s|kubectl|deployment\\.yaml']=":kubernetes"
     ['terraform|\\.tf|tfvars']=":terraform"
     ['grpc|protobuf|\\.proto']=":grpc-protobuf"
-    ['review|レビュー|確認して|refactor|リファクタ']=":code-quality-review"
-    ['security|セキュリティ|脆弱性']=":security-error-review"
-    ['test|テスト|doc|ドキュメント']=":docs-test-review"
+    ['review|レビュー|確認して|refactor|リファクタ']=":comprehensive-review"
+    ['security|セキュリティ|脆弱性']=":comprehensive-review"
+    ['test|テスト|doc|ドキュメント']=":comprehensive-review"
     ['ui|ux|デザイン|accessibility']=":uiux-review"
     ['architecture|アーキテクチャ|設計|ddd|domain']=":clean-architecture-ddd"
     ['api.*design|rest.*api|graphql']=":api-design"

@@ -184,6 +184,70 @@ RUN npm install
 COPY . .
 ```
 
+#### 4. .dockerignore（必須）
+
+プロジェクトルートに`.dockerignore`を必ず作成:
+
+```dockerignore
+.git
+node_modules
+.venv
+__pycache__
+dist
+build
+tests
+docs
+*.md
+!README.md
+.vscode
+.idea
+.env*
+!.env.example
+Dockerfile*
+docker-compose*
+.dockerignore
+```
+
+#### 5. Distrolessベースイメージ
+
+シェルやパッケージマネージャーを含まない最小イメージ:
+
+```dockerfile
+# 静的バイナリ用
+FROM gcr.io/distroless/static:nonroot
+
+# Node.js用
+FROM gcr.io/distroless/nodejs20:nonroot
+```
+
+#### 6. ENTRYPOINT vs CMD
+
+```dockerfile
+# ENTRYPOINT: 固定コマンド / CMD: デフォルト引数（実行時上書き可能）
+ENTRYPOINT ["python", "-m", "app"]
+CMD ["--port", "8080"]
+# docker run myapp --port 3000 → python -m app --port 3000
+```
+
+### 🟡 Warning
+
+#### 1. 脆弱性スキャン未実施
+
+```bash
+# Docker Scout
+docker scout cves myimage:latest
+
+# Trivy
+trivy image myimage:latest
+```
+
+#### 2. Hadolint未使用
+
+```bash
+# Dockerfileの静的解析
+docker run --rm -i hadolint/hadolint < Dockerfile
+```
+
 ---
 
 ## Kubernetes - トラブルシューティング

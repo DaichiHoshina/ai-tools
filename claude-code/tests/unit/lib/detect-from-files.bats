@@ -33,7 +33,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A langs skills
     detect_from_files langs skills
-    echo \${langs[golang]:-0}:\${skills[go-backend]:-0}
+    echo \${langs[golang]:-0}:\${skills[backend-dev]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1:1" ]]
@@ -52,7 +52,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A langs skills
     detect_from_files langs skills
-    echo \${langs[typescript]:-0}:\${skills[typescript-backend]:-0}
+    echo \${langs[typescript]:-0}:\${skills[backend-dev]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1:1" ]]
@@ -67,7 +67,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A langs skills
     detect_from_files langs skills
-    echo \${langs[typescript]:-0}:\${skills[typescript-backend]:-0}
+    echo \${langs[typescript]:-0}:\${skills[backend-dev]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1:1" ]]
@@ -121,7 +121,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A langs skills
     detect_from_files langs skills
-    echo \${skills[dockerfile-best-practices]:-0}
+    echo \${skills[container-ops]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
@@ -136,7 +136,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A langs skills
     detect_from_files langs skills
-    echo \${skills[dockerfile-best-practices]:-0}
+    echo \${skills[container-ops]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
@@ -146,7 +146,7 @@ teardown() {
 # 正常系テスト: Kubernetes検出
 # =============================================================================
 
-@test "detect-from-files: detects kubernetes from deployment.yaml" {
+@test "detect-from-files: detects container-ops from deployment.yaml" {
   cd "$TEST_TMPDIR"
   mkdir -p k8s
   touch k8s/deployment.yaml
@@ -156,7 +156,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A langs skills
     detect_from_files langs skills
-    echo \${skills[kubernetes]:-0}
+    echo \${skills[container-ops]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
@@ -194,7 +194,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A langs skills
     detect_from_files langs skills
-    echo \${skills[docs-test-review]:-0}
+    echo \${skills[comprehensive-review]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
@@ -234,7 +234,7 @@ teardown() {
     # Check that multiple languages/skills are detected
     [ \${langs[golang]:-0} -eq 1 ] && \
     [ \${langs[typescript]:-0} -eq 1 ] && \
-    [ \${skills[dockerfile-best-practices]:-0} -eq 1 ]
+    [ \${skills[container-ops]:-0} -eq 1 ]
   "
   [ "$status" -eq 0 ]
 }

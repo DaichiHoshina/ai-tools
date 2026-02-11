@@ -19,8 +19,8 @@ detect_from_errors() {
 
   # Docker系エラー
   if echo "$prompt" | grep -qiE 'cannot connect to.*docker daemon|docker.*connection refused|docker.*not running'; then
-    _skills["docker-troubleshoot"]=1
-    _context="${_context}\\n- ⚠️ Docker connection error detected: Recommend running docker-troubleshoot skill"
+    _skills["container-ops"]=1
+    _context="${_context}\\n- ⚠️ Docker connection error detected: Recommend running container-ops skill"
   fi
 
   # Kubernetes系エラー
@@ -37,25 +37,25 @@ detect_from_errors() {
 
   # TypeScript/型エラー
   if echo "$prompt" | grep -qiE 'type.*error|typescript.*error|ts\\([0-9]+\\)|property.*does not exist'; then
-    _skills["typescript-backend"]=1
+    _skills["backend-dev"]=1
     _context="${_context}\\n- ⚠️ TypeScript type error detected"
   fi
 
   # Go言語エラー
   if echo "$prompt" | grep -qiE 'undefined:.*|cannot use.*as.*in|go build.*failed'; then
-    _skills["go-backend"]=1
+    _skills["backend-dev"]=1
     _context="${_context}\\n- ⚠️ Go compilation error detected"
   fi
 
   # セキュリティ関連エラー
   if echo "$prompt" | grep -qiE 'cve-[0-9]|vulnerability|security.*warning|xss|csrf|sql injection'; then
-    _skills["security-error-review"]=1
+    _skills["comprehensive-review"]=1
     _context="${_context}\\n- 🔒 Security issue detected"
   fi
 
   # 一般的なエラー（エラーハンドリング）
   if echo "$prompt" | grep -qiE 'error handling|exception|panic|crash'; then
-    _skills["security-error-review"]=1
+    _skills["comprehensive-review"]=1
   fi
   
   # スキルエイリアス変換適用（detect-from-keywords.shの_apply_skill_aliasesを使用）

@@ -43,11 +43,11 @@ else
     echo "❌ FAIL: Expected '{}', got '$RESULT'"
 fi
 
-# ===== Test 2: go-backend スキル（初回読み込み） =====
-print_test "go-backend skill (first load)"
+# ===== Test 2: backend-dev スキル（初回読み込み） =====
+print_test "backend-dev skill (first load)"
 cleanup_session_state
 
-INPUT='{"skill": "go-backend"}'
+INPUT='{"skill": "backend-dev"}'
 RESULT=$(echo "$INPUT" | "$HOOK_SCRIPT")
 print_result "$RESULT"
 
@@ -72,10 +72,10 @@ else
     echo "❌ FAIL: session-state.json not created"
 fi
 
-# ===== Test 3: go-backend スキル（2回目読み込み - スキップされるべき） =====
-print_test "go-backend skill (second load - should skip)"
+# ===== Test 3: backend-dev スキル（2回目読み込み - スキップされるべき） =====
+print_test "backend-dev skill (second load - should skip)"
 
-INPUT='{"skill": "go-backend"}'
+INPUT='{"skill": "backend-dev"}'
 RESULT=$(echo "$INPUT" | "$HOOK_SCRIPT")
 print_result "$RESULT"
 

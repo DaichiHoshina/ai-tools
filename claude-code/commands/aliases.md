@@ -12,10 +12,8 @@ description: コマンドエイリアス定義
 | エイリアス | フルコマンド | 用途 |
 |-----------|-------------|------|
 | `/cpr` | `/commit-push-pr` | コミット→プッシュ→PR作成を一括 |
-| `/sk` | `/load-guidelines` | 技術スタック検出、ガイドライン読み込み |
-| `/br` | `/superpowers:brainstorm` | 設計相談・ブレインストーミング |
-| `/tdd` | `/superpowers:test-driven-development` | TDD開発モード |
-| `/dbg` | `/superpowers:systematic-debugging` | 体系的デバッグ |
+| `/br` | `/brainstorm` | 設計相談・ブレインストーミング |
+| `/dbg` | `/debug` | デバッグ支援 |
 | `/ref` | `/refactor` | リファクタリング |
 | `/doc` | `/docs` | ドキュメント作成 |
 | `/rv` | `/review` | コードレビュー |
@@ -31,11 +29,11 @@ description: コマンドエイリアス定義
 # 1. 一括コミット・PR作成
 /cpr
 
-# 2. 技術スタック自動検出
-/sk
-
-# 3. ブレインストーミング
+# 2. ブレインストーミング
 /br UI設計について相談したい
+
+# 3. レビュー
+/rv
 ```
 
 ### 開発フロー
@@ -60,7 +58,7 @@ description: コマンドエイリアス定義
 ### デバッグフロー
 
 ```bash
-# 体系的デバッグ
+# デバッグ
 /dbg CrashLoopBackOff エラーを解決
 
 # 修正後にレビュー
@@ -78,10 +76,8 @@ Claude Code設定に追加（`~/.claude/settings.json`）:
 {
   "aliases": {
     "cpr": "commit-push-pr",
-    "sk": "load-guidelines",
-    "br": "superpowers:brainstorm",
-    "tdd": "superpowers:test-driven-development",
-    "dbg": "superpowers:systematic-debugging",
+    "br": "brainstorm",
+    "dbg": "debug",
     "ref": "refactor",
     "doc": "docs",
     "rv": "review",
@@ -100,30 +96,18 @@ Claude Code設定に追加（`~/.claude/settings.json`）:
 {
   "aliases": {
     "myflow": "flow --skip-prd --skip-test",
-    "quick": "dev --auto",
+    "quick": "dev --quick",
     "safe": "flow --interactive"
   }
 }
 ```
-
-## 推奨使用頻度
-
-| エイリアス | 頻度 | 理由 |
-|-----------|------|------|
-| `/cpr` | ⭐⭐⭐⭐⭐ | 最頻出（毎PR作成時） |
-| `/sk` | ⭐⭐⭐⭐ | 各プロジェクト初回 |
-| `/br` | ⭐⭐⭐⭐ | 設計フェーズ |
-| `/rv` | ⭐⭐⭐⭐ | 実装完了後 |
-| `/tdd` | ⭐⭐⭐ | TDD採用時 |
-| `/dbg` | ⭐⭐⭐ | デバッグ時 |
-| `/ref` | ⭐⭐ | リファクタ時 |
-| その他 | ⭐⭐ | 必要に応じて |
 
 ## 注意事項
 
 - エイリアスは `/` プレフィックス必須
 - 大文字小文字を区別
 - 引数はフルコマンドと同様に指定可能
+- `/tdd`, `/flow`, `/dev` 等は既にコマンドとして存在するためエイリアス不要
 
 ## 関連
 

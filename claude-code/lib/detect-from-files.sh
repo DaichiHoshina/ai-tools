@@ -21,16 +21,16 @@ detect_from_files() {
 
   # ファイルパターンテーブル（pattern → language:skill）
   declare -A file_patterns=(
-    ['\.go$']="golang:go-backend"
-    ['\.(ts|tsx)$']="typescript:typescript-backend"
+    ['\.go$']="golang:backend-dev"
+    ['\.(ts|tsx)$']="typescript:backend-dev"
     ['\.(jsx|tsx)$|pages/|components/']="react:react-best-practices"
-    ['Dockerfile|docker-compose\.ya?ml$']=":dockerfile-best-practices"
+    ['Dockerfile|docker-compose\.ya?ml$']=":container-ops"
     ['deployment\.ya?ml$|service\.ya?ml$|k8s/']=":kubernetes"
     ['\.tf$|\.tfvars$']=":terraform"
     ['\.proto$']=":grpc-protobuf"
     ['tailwind\.config\.(js|ts)$']="tailwind:"
     ['openapi\.ya?ml$|swagger\.ya?ml$']=":api-design"
-    ['_test\.go$|\.test\.(ts|tsx)$|\.spec\.(ts|tsx)$']=":docs-test-review"
+    ['_test\.go$|\.test\.(ts|tsx)$|\.spec\.(ts|tsx)$']=":comprehensive-review"
   )
 
   # set -u対応: 連想配列のキー展開でエラーが出るため一時的に無効化

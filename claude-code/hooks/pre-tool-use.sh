@@ -103,13 +103,13 @@ case "$TOOL_NAME" in
 
     # ガイドライン自動読み込み判定（pre-skill-use.sh機能統合）
     case "$SKILL_NAME" in
-      "go-backend")
-        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: Go言語ベストプラクティス\\n- 未読み込みの場合は自動的に読み込みます"
+      "backend-dev")
+        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: Backend開発ベストプラクティス\\n- 未読み込みの場合は自動的に読み込みます"
         ;;
-      "typescript-backend"|"react-best-practices"|"ui-skills")
+      "react-best-practices"|"ui-skills")
         ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: TypeScript/React ベストプラクティス\\n- 未読み込みの場合は自動的に読み込みます"
         ;;
-      "dockerfile-best-practices"|"kubernetes"|"terraform")
+      "container-ops"|"terraform")
         ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: インフラストラクチャ設計\\n- 未読み込みの場合は自動的に読み込みます"
         ;;
       "clean-architecture-ddd"|"api-design"|"microservices-monorepo")

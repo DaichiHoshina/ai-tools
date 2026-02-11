@@ -88,7 +88,7 @@ teardown() {
 # 正常系テスト: Backend関連ブランチ検出
 # =============================================================================
 
-@test "detect-from-git: detects go-backend from feature/backend-go branch" {
+@test "detect-from-git: detects backend-dev from feature/backend-go branch" {
   cd "$TEST_TMPDIR"
   git checkout -b feature/backend-golang
 
@@ -96,13 +96,13 @@ teardown() {
     source '$LIB_FILE'
     declare -A skills
     detect_from_git_state skills
-    echo \${skills[go-backend]:-0}
+    echo \${skills[backend-dev]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
 }
 
-@test "detect-from-git: detects typescript-backend from feature/backend branch" {
+@test "detect-from-git: detects backend-dev from feature/backend branch" {
   cd "$TEST_TMPDIR"
   git checkout -b feature/backend-api
 
@@ -110,7 +110,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A skills
     detect_from_git_state skills
-    echo \${skills[typescript-backend]:-0}
+    echo \${skills[backend-dev]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
@@ -120,7 +120,7 @@ teardown() {
 # 正常系テスト: Fix関連ブランチ検出
 # =============================================================================
 
-@test "detect-from-git: detects security-error-review from fix/ branch" {
+@test "detect-from-git: detects comprehensive-review from fix/ branch" {
   cd "$TEST_TMPDIR"
   git checkout -b fix/security-issue
 
@@ -128,13 +128,13 @@ teardown() {
     source '$LIB_FILE'
     declare -A skills
     detect_from_git_state skills
-    echo \${skills[security-error-review]:-0}
+    echo \${skills[comprehensive-review]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
 }
 
-@test "detect-from-git: detects security-error-review from bugfix/ branch" {
+@test "detect-from-git: detects comprehensive-review from bugfix/ branch" {
   cd "$TEST_TMPDIR"
   git checkout -b bugfix/authentication-bug
 
@@ -142,13 +142,13 @@ teardown() {
     source '$LIB_FILE'
     declare -A skills
     detect_from_git_state skills
-    echo \${skills[security-error-review]:-0}
+    echo \${skills[comprehensive-review]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
 }
 
-@test "detect-from-git: detects security-error-review from hotfix/ branch" {
+@test "detect-from-git: detects comprehensive-review from hotfix/ branch" {
   cd "$TEST_TMPDIR"
   git checkout -b hotfix/critical-bug
 
@@ -156,7 +156,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A skills
     detect_from_git_state skills
-    echo \${skills[security-error-review]:-0}
+    echo \${skills[comprehensive-review]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
@@ -166,7 +166,7 @@ teardown() {
 # 正常系テスト: Refactor関連ブランチ検出
 # =============================================================================
 
-@test "detect-from-git: detects code-quality-review from refactor/ branch" {
+@test "detect-from-git: detects comprehensive-review from refactor/ branch" {
   cd "$TEST_TMPDIR"
   git checkout -b refactor/cleanup-code
 
@@ -174,7 +174,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A skills
     detect_from_git_state skills
-    echo \${skills[code-quality-review]:-0}
+    echo \${skills[comprehensive-review]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]
@@ -198,7 +198,7 @@ teardown() {
 # 正常系テスト: Test関連ブランチ検出
 # =============================================================================
 
-@test "detect-from-git: detects docs-test-review from test/ branch" {
+@test "detect-from-git: detects comprehensive-review from test/ branch" {
   cd "$TEST_TMPDIR"
   git checkout -b test/unit-tests
 
@@ -206,7 +206,7 @@ teardown() {
     source '$LIB_FILE'
     declare -A skills
     detect_from_git_state skills
-    echo \${skills[docs-test-review]:-0}
+    echo \${skills[comprehensive-review]:-0}
   "
   [ "$status" -eq 0 ]
   [[ "$output" =~ "1" ]]

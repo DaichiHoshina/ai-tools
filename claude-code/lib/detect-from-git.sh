@@ -38,30 +38,26 @@ detect_from_git_state() {
 
   case "$current_branch" in
     *feature/backend*|*feat/backend*)
-      if echo "$current_branch" | grep -qE 'go|golang'; then
-        _skills["go-backend"]=1
-      else
-        _skills["typescript-backend"]=1
-      fi
+      _skills["backend-dev"]=1
       ;;
   esac
 
   case "$current_branch" in
     *fix/*|*bugfix/*|*hotfix/*)
-      _skills["security-error-review"]=1
+      _skills["comprehensive-review"]=1
       ;;
   esac
 
   case "$current_branch" in
     *refactor/*)
-      _skills["code-quality-review"]=1
+      _skills["comprehensive-review"]=1
       _skills["clean-architecture-ddd"]=1
       ;;
   esac
 
   case "$current_branch" in
     *test/*)
-      _skills["docs-test-review"]=1
+      _skills["comprehensive-review"]=1
       ;;
   esac
   

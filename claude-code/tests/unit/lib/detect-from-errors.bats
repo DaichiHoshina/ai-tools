@@ -40,21 +40,21 @@ run_detect_from_errors() {
 # 正常系テスト: Docker エラー検出
 # =============================================================================
 
-@test "detect-from-errors: detects docker-troubleshoot from docker daemon error" {
+@test "detect-from-errors: detects container-ops from docker daemon error" {
   run run_detect_from_errors "Cannot connect to the Docker daemon at unix:///var/run/docker.sock"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "docker-troubleshoot")) | length > 0')
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
   [ "$has_docker" = "true" ]
 }
 
-@test "detect-from-errors: detects docker-troubleshoot from connection refused" {
+@test "detect-from-errors: detects container-ops from connection refused" {
   run run_detect_from_errors "docker: connection refused error"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "docker-troubleshoot")) | length > 0')
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
   [ "$has_docker" = "true" ]
 }
 
@@ -71,21 +71,21 @@ run_detect_from_errors() {
 # 正常系テスト: Kubernetes エラー検出
 # =============================================================================
 
-@test "detect-from-errors: detects kubernetes from CrashLoopBackOff" {
+@test "detect-from-errors: detects container-ops from CrashLoopBackOff" {
   run run_detect_from_errors "pod is in CrashLoopBackOff state"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "kubernetes")) | length > 0')
+  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
   [ "$has_k8s" = "true" ]
 }
 
-@test "detect-from-errors: detects kubernetes from ImagePullBackOff" {
+@test "detect-from-errors: detects container-ops from ImagePullBackOff" {
   run run_detect_from_errors "ImagePullBackOff: failed to pull image"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "kubernetes")) | length > 0')
+  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
   [ "$has_k8s" = "true" ]
 }
 
@@ -115,21 +115,21 @@ run_detect_from_errors() {
 # 正常系テスト: TypeScript エラー検出
 # =============================================================================
 
-@test "detect-from-errors: detects typescript-backend from type error" {
+@test "detect-from-errors: detects backend-dev from type error" {
   run run_detect_from_errors "Type error TS2304: Cannot find name 'foo'"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_typescript=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "typescript-backend")) | length > 0')
+  local has_typescript=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
   [ "$has_typescript" = "true" ]
 }
 
-@test "detect-from-errors: detects typescript-backend from property error" {
+@test "detect-from-errors: detects backend-dev from property error" {
   run run_detect_from_errors "Property 'bar' does not exist on type 'Foo'"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_typescript=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "typescript-backend")) | length > 0')
+  local has_typescript=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
   [ "$has_typescript" = "true" ]
 }
 
@@ -137,21 +137,21 @@ run_detect_from_errors() {
 # 正常系テスト: Go エラー検出
 # =============================================================================
 
-@test "detect-from-errors: detects go-backend from undefined error" {
+@test "detect-from-errors: detects backend-dev from undefined error" {
   run run_detect_from_errors "undefined: someFunction"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_go=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "go-backend")) | length > 0')
+  local has_go=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
   [ "$has_go" = "true" ]
 }
 
-@test "detect-from-errors: detects go-backend from build failed" {
+@test "detect-from-errors: detects backend-dev from build failed" {
   run run_detect_from_errors "go build failed: cannot use x as y in assignment"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_go=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "go-backend")) | length > 0')
+  local has_go=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
   [ "$has_go" = "true" ]
 }
 
@@ -159,21 +159,21 @@ run_detect_from_errors() {
 # 正常系テスト: セキュリティエラー検出
 # =============================================================================
 
-@test "detect-from-errors: detects security-error-review from CVE" {
+@test "detect-from-errors: detects comprehensive-review from CVE" {
   run run_detect_from_errors "CVE-2023-12345: vulnerability detected"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "security-error-review")) | length > 0')
+  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review")) | length > 0')
   [ "$has_security" = "true" ]
 }
 
-@test "detect-from-errors: detects security-error-review from XSS" {
+@test "detect-from-errors: detects comprehensive-review from XSS" {
   run run_detect_from_errors "XSS vulnerability found in user input"
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "security-error-review")) | length > 0')
+  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review")) | length > 0')
   [ "$has_security" = "true" ]
 }
 
@@ -209,8 +209,8 @@ run_detect_from_errors() {
   echo "$output" | jq empty
 
   # 複数のスキルが検出されることを確認
-  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "docker-troubleshoot")) | length > 0')
-  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "security-error-review")) | length > 0')
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
+  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review")) | length > 0')
 
   [ "$has_docker" = "true" ]
   [ "$has_security" = "true" ]
@@ -221,6 +221,6 @@ run_detect_from_errors() {
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "docker-troubleshoot")) | length > 0')
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
   [ "$has_docker" = "true" ]
 }

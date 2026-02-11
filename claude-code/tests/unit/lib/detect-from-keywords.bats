@@ -55,7 +55,7 @@ run_detect_from_keywords() {
   echo "$output" | jq empty
 
   local has_golang=$(echo "$output" | jq '.langs | contains(["golang"])')
-  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "go-backend")) | length > 0')
+  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
   [ "$has_golang" = "true" ]
   [ "$has_backend" = "true" ]
 }
@@ -66,7 +66,7 @@ run_detect_from_keywords() {
   echo "$output" | jq empty
 
   local has_golang=$(echo "$output" | jq '.langs | contains(["golang"])')
-  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "go-backend")) | length > 0')
+  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
   [ "$has_golang" = "true" ]
   [ "$has_backend" = "true" ]
 }
@@ -81,7 +81,7 @@ run_detect_from_keywords() {
   echo "$output" | jq empty
 
   local has_typescript=$(echo "$output" | jq '.langs | contains(["typescript"])')
-  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev" or . == "typescript-backend")) | length > 0')
+  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
   [ "$has_typescript" = "true" ]
   [ "$has_backend" = "true" ]
 }
@@ -110,7 +110,7 @@ run_detect_from_keywords() {
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "dockerfile-best-practices")) | length > 0')
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
   [ "$has_docker" = "true" ]
 }
 
@@ -118,30 +118,30 @@ run_detect_from_keywords() {
 # 正常系テスト: レビュー系スキル検出
 # =============================================================================
 
-@test "detect-from-keywords: detects code-quality-review from 'review' keyword" {
+@test "detect-from-keywords: detects comprehensive-review from 'review' keyword" {
   run run_detect_from_keywords 'コードをレビューして'
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_review=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "code-quality-review")) | length > 0')
+  local has_review=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review")) | length > 0')
   [ "$has_review" = "true" ]
 }
 
-@test "detect-from-keywords: detects security-error-review from 'security' keyword" {
+@test "detect-from-keywords: detects comprehensive-review from 'security' keyword" {
   run run_detect_from_keywords 'セキュリティチェック'
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "security-error-review")) | length > 0')
+  local has_security=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review")) | length > 0')
   [ "$has_security" = "true" ]
 }
 
-@test "detect-from-keywords: detects docs-test-review from 'test' keyword" {
+@test "detect-from-keywords: detects comprehensive-review from 'test' keyword" {
   run run_detect_from_keywords 'テストコードのレビュー'
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_test=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review" or . == "docs-test-review")) | length > 0')
+  local has_test=$(echo "$output" | jq '.skills | map(select(. == "comprehensive-review")) | length > 0')
   [ "$has_test" = "true" ]
 }
 
@@ -209,8 +209,8 @@ run_detect_from_keywords() {
   echo "$output" | jq empty
 
   # 複数のスキルが検出されることを確認（エイリアス変換後）
-  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "dockerfile-best-practices")) | length > 0')
-  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "kubernetes")) | length > 0')
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
+  local has_k8s=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
   local has_terraform=$(echo "$output" | jq '.skills | contains(["terraform"])')
 
   [ "$has_docker" = "true" ]
@@ -223,7 +223,7 @@ run_detect_from_keywords() {
   [ "$status" -eq 0 ]
   echo "$output" | jq empty
 
-  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops" or . == "dockerfile-best-practices")) | length > 0')
+  local has_docker=$(echo "$output" | jq '.skills | map(select(. == "container-ops")) | length > 0')
   [ "$has_docker" = "true" ]
 }
 
