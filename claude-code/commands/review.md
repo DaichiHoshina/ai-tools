@@ -1,11 +1,11 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Skill
-description: コードレビュー用コマンド（状況に応じて適切なSkillを動的選択）
+description: コードレビュー用コマンド（comprehensive-reviewスキルで5観点統合レビュー）
 ---
 
 ## /review - 包括的コードレビュー
 
-> **新**: `comprehensive-review` スキルで品質・セキュリティ・ドキュメント/テストを統合レビュー
+> comprehensive-reviewスキルで設計・品質・可読性・セキュリティ・ドキュメント/テストを統合レビュー
 
 ## 実行方法
 
@@ -14,111 +14,100 @@ description: コードレビュー用コマンド（状況に応じて適切なS
 ```
 
 **自動実行される内容**:
+
 ```
 Skill("comprehensive-review")
 ```
 
 comprehensive-reviewスキルが内部で以下を実行：
+
 1. 静的解析ツール（lint/tsc/go vet等）
 2. cleanup-enforcement（未使用コード検出）
-3. 専門スキル並列実行（パラメータ化対応、Phase 2-5統合）：
-   - `--focus=quality`（品質全般、旧 code-quality-review）
-   - `--focus=security`（セキュリティ、旧 security-error-review）
-   - `--focus=docs`（ドキュメント・テスト、該当時、旧 docs-test-review）
-   - uiux-review（UI変更時）
+3. 5観点の統合レビュー（`--focus`で絞り込み可能）：
+   - `--focus=architecture`（設計 — CA/DDD/依存関係）
+   - `--focus=quality`（品質 — 型安全性・パフォーマンス・古いパターン）
+   - `--focus=readability`（可読性 — 命名・構造・認知的複雑度）
+   - `--focus=security`（セキュリティ — OWASP Top 10・エラーハンドリング）
+   - `--focus=docs`（ドキュメント・テスト — 該当時）
+4. uiux-review（UI変更時、別スキル）
 
 ## レビュー観点
 
+### 🏗️ 設計（--focus=architecture）
+
+- レイヤー違反（Domain→Infrastructure参照）
+- 依存方向の逆転不備（DI未使用）
+- 貧血ドメインモデル（getter/setterのみ）
+- 集約境界違反
+
 ### 🎯 品質（--focus=quality）
-- アーキテクチャ（依存逆転、ロジック配置）
-- コード臭（長い関数、マジックナンバー）
-- パフォーマンス（N+1問題、メモリリーク）
+
 - 型安全性（any使用、無検証as）
+- パフォーマンス（N+1問題、メモリリーク）
+- 古いパターン（言語別ガイドラインの検出テーブル参照）
+- コード臭（長い関数、マジックナンバー）
+
+### 📖 可読性（--focus=readability）
+
+- 誤解を招く命名（名前と振る舞いの不一致）
+- 認知的複雑度（深いネスト、長い条件式）
+- 関数の長さ・引数（50行超、4引数超）
+- 構造の明瞭さ（ガード節未使用、否定条件の連鎖）
 
 ### 🛡️ セキュリティ（--focus=security）
+
 - OWASP Top 10（SQLインジェクション、XSS等）
 - 認証・認可不備
-- エラーハンドリング（エラー握りつぶし）
-- 機密情報ログ
+- エラー握りつぶし（空catch）
+- 機密情報ログ出力
 
 ### 📝 ドキュメント・テスト（--focus=docs）
-- コメント品質（公開API説明）
+
+- 公開APIのドキュメント不足
 - テストの意味（振る舞いテスト）
-- モック適切性
-- カバレッジ
+- 過剰なモック
+- カバレッジ不足
 
 ## 出力形式
 
 ```markdown
-## 📊 包括的レビュー結果
+## 包括的レビュー結果
 
-### 実行したレビュー
-- ✅ code-quality-review（品質）
-- ✅ security-error-review（セキュリティ）
-- ✅ docs-test-review（ドキュメント・テスト）
+### 実行した観点
+- ✅ architecture（設計）
+- ✅ quality（品質）
+- ✅ readability（可読性）
+- ✅ security（セキュリティ）
+- ✅ docs（ドキュメント・テスト）
 
 ### 🔴 Critical（修正必須）
-- [品質] Domain→Infrastructure参照
-- [セキュリティ] SQLインジェクション脆弱性
+- [設計] Domain→Infrastructure参照（src/domain/user.ts:45）
+- [セキュリティ] SQLインジェクション脆弱性（src/api/user.ts:120）
+- [可読性] 関数名と振る舞いの不一致（src/services/user.ts:30）
 
 ### 🟡 Warning（要改善）
-- [品質] 長い関数（150行）
-- [セキュリティ] レート制限なし
+- [品質] 古いパターン: sort.Slice → slices.Sort（pkg/sort.go:15）
+- [可読性] ネスト4階層（src/handlers/order.go:80）
 
----
-📊 Total: Critical 2件 / Warning 2件
+Total: Critical 3件 / Warning 2件
 ```
 
-## 2. 選択ロジック例
-
-### 例1: APIハンドラー修正（TypeScript）
-
-```
-変更ファイル: src/api/handlers/user.ts (100行)
-
-選択されるSkill:
-✅ code-quality-review（型安全性・アーキテクチャ・パフォーマンス統合）
-✅ security-error-review（セキュリティ・エラーハンドリング統合）
-
-実行方法: 2つのSkillを並列実行
-```
-
-### 例2: テストファイル追加（Go）
-
-```
-変更ファイル: user_service_test.go (新規)
-
-選択されるSkill:
-✅ code-quality-review（型安全性）
-✅ docs-test-review（テスト品質）
-```
-
-### 例3: 大規模リファクタリング
-
-```
-変更ファイル: 20ファイル、500行以上
-
-選択されるSkill:
-✅ code-quality-review（全観点）
-✅ security-error-review
-✅ docs-test-review（テストがある場合）
-```
-
-## 3. レビュー対象
+## レビュー対象
 
 ### 含める
+
 - 変更されたファイル（git diff）
 - 新規追加ファイル
 
 ### 除外
-- auto-generated ファイル
-- vendor/node_modules
-- lock ファイル
 
-## 4. 注意事項
+- auto-generatedファイル
+- vendor/node_modules
+- lockファイル
+
+## 注意事項
 
 - **大量の差分**: 1ファイルずつレビュー
 - **優先度**: Critical → Warning の順で報告
 - **具体的な修正案**: 問題指摘だけでなく改善方法も提示
-- **Skill選択理由**: どのSkillをなぜ選んだか説明
-- **並列実行がデフォルト**: 順次実行が必要な場合のみユーザーが明示的に指定
+- **並列実行がデフォルト**: 全5観点を並列で実行
