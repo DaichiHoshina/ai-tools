@@ -17,9 +17,17 @@ GitLab(glab)とGitHub(gh)を自動判定。
    git remote get-url origin
    ```
 
-2. **ブランチ作成**
-   - 現在mainにいる場合 → `git checkout -b <branch-name>`
-   - 既にfeature branchにいる場合 → そのまま使用
+2. **mainを最新化してブランチ作成**
+   ```bash
+   # 必ずmainから切る
+   git stash          # 未コミット変更を一時退避（あれば）
+   git checkout main
+   git pull origin main
+   git checkout -b <branch-name>
+   git stash pop      # 退避した変更を復元（あれば）
+   ```
+   - 現在mainにいる場合 → pull後にブランチ作成
+   - 既にfeature branchにいる場合 → mainに戻ってからブランチ作成（変更はstashで保持）
    - ブランチ名: 変更内容からConventional Branch名を自動生成
      - 例: `feat/add-auth`, `fix/login-error`, `refactor/cleanup-api`
    - 引数でブランチ名指定も可
@@ -68,8 +76,8 @@ type: feat, fix, refactor, docs, test, chore
 
 ## 注意
 
-- mainブランチ上で直接コミットしない（必ずブランチを切る）
-- 既にfeature branchにいる場合は新規ブランチ作成をスキップ
+- **必ずmainの最新から**ブランチを切る（mainをpull後にcheckout -b）
+- mainブランチ上で直接コミットしない
 - force pushは禁止
 
 ## エラーハンドリング
