@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash, Read, Grep, Glob, Skill
+allowed-tools: Bash, Read, Grep, Glob, Skill, mcp__serena__*
 description: GitLab MR / GitHub PR のURLを貼るだけでレビュー実行
 ---
 

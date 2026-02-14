@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Bash, Skill
+allowed-tools: Read, Glob, Grep, Bash, Skill, AskUserQuestion, mcp__serena__*
 description: コードレビュー用コマンド（comprehensive-reviewスキルで5観点統合レビュー）
 ---
 
@@ -9,9 +9,21 @@ description: コードレビュー用コマンド（comprehensive-reviewスキ�
 
 ## 実行方法
 
+```bash
+/review                # ローカル差分をレビュー（git diff）
+/review <url>          # MR/PR URLの差分をレビュー（= /mr-review）
+/review <number>       # 現在リポジトリのMR/PR番号でレビュー
+/review --focus=security  # 観点を絞ってレビュー
 ```
-/review
-```
+
+### 引数ルーティング
+
+| 引数 | 動作 |
+|------|------|
+| なし | `git diff` のローカル差分をレビュー |
+| URL（http...） | `gh pr diff` / `glab mr diff` で差分取得→レビュー |
+| 番号 | 現在リポジトリのMR/PR番号として差分取得→レビュー |
+| `--focus=<観点>` | 指定観点のみレビュー |
 
 **自動実行される内容**:
 

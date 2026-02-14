@@ -10,6 +10,10 @@ description: 実装用コマンド - Agent階層で実行（複雑なタスク�
 > - `/flow`: タスク自動判定 → 最適なワークフロー全体を実行（PRD→Plan→Dev→Test→Review→PR）
 > - 迷ったら `/flow` を使用
 
+## protection-mode
+
+`/flow` 経由時は自動適用。単独実行時もファイル変更を伴う場合は `Skill("protection-mode")` を推奨。
+
 ## オプション
 
 ```bash
@@ -163,7 +167,21 @@ ruff check . && mypy .
 
 ## 次のアクション
 
-- 成功 → `/test` or `/review`
-- エラー → `/debug`
+```
+/dev 完了
+  → /lint-test（品質チェック）
+  → /test（テスト作成・実行）
+  → /review（コードレビュー）
+  → /commit-push-pr or /commit-push-main（Git操作）
+  → エラー時: /debug
+```
+
+## 関連コマンド
+
+| コマンド | 関係 |
+|---------|------|
+| `/refactor` | 動作を変えずに構造改善。`/dev` の後に実行可能 |
+| `/tdd` | テスト駆動開発モード。`/dev` のテスト優先版 |
+| `/lint-test` | CI相当チェック。`/dev` 完了後に推奨 |
 
 **実装前はユーザー確認必須。Serena MCP でコード操作。**

@@ -1,9 +1,13 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: テスト作成専用モード - 既存コードに対するテストを作成
 ---
 
 ## /test - テスト作成モード
+
+## protection-mode
+
+`/flow` 経由時は自動適用。単独実行時もファイル変更を伴う場合は `Skill("protection-mode")` を推奨。
 
 ## Step 0: ガイドライン自動読み込み（必須）
 
@@ -66,8 +70,20 @@ test('should do something', () => {
 
 ## 次のアクション
 
-- 全テスト成功 → `/review` or `/commit`
-- テスト失敗 → `/debug` で原因特定
-- カバレッジ不足 → 追加テスト作成
+```
+/test 完了
+  → /review（コードレビュー）
+  → /commit-push-pr or /commit-push-main（Git操作）
+  → テスト失敗時: /debug
+  → カバレッジ不足: 追加テスト作成
+```
+
+## 関連コマンド
+
+| コマンド | 関係 |
+|---------|------|
+| `/dev` | 実装後にテスト作成する場合の前段 |
+| `/tdd` | テスト駆動開発。先にテストを書く場合はこちら |
+| `/lint-test` | CI相当チェック。テスト実行を含む |
 
 Serena MCP でコード分析。モックは必要最小限に。

@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash, Read, Glob
+allowed-tools: Bash, Read, Glob, Grep, mcp__serena__*
 description: CI相当のチェックをローカルで一括実行（build, lint, test, typecheck等）
 ---
 

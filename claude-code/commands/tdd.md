@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Task, AskUserQuestion, mcp__serena__*
+allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: TDD開発モード（RED-GREEN-REFACTOR強制）
 ---
 
