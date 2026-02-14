@@ -6,7 +6,7 @@ requires-guidelines:
   - clean-architecture
 ---
 
-# API設計
+# api-design - API設計
 
 ## 使用タイミング
 

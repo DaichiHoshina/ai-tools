@@ -6,7 +6,7 @@ requires-guidelines:
   - clean-architecture
 ---
 
-# 技術的負債検出
+# techdebt - 技術的負債検出
 
 > **出典**: Boris氏のヒント#4「スキル作成」 - 1日2回以上実行するタスクはスキル化
 

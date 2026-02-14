@@ -17,7 +17,7 @@ parameters:
     description: レビュー観点のフォーカス
 ---
 
-# Comprehensive Review - 包括的コードレビュー
+# comprehensive-review - 包括的コードレビュー
 
 ## 概要
 

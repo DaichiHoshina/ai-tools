@@ -3,7 +3,7 @@ name: session-mode
 description: セッションモード切替 - strict/normal/fast でGuard関手の動作を変更。Serena Memoryで状態永続化。
 ---
 
-# セッションモード切替スキル
+# session-mode - セッションモード切替
 
 ## 使用タイミング
 

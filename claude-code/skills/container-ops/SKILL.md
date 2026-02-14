@@ -17,7 +17,7 @@ parameters:
     description: 実行モード（troubleshoot=トラブルシュート、best-practices=ベストプラクティス、deploy=デプロイ）
 ---
 
-# Container Operations - コンテナ運用
+# container-ops - コンテナ運用
 
 ## 概要
 

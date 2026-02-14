@@ -3,7 +3,7 @@ name: ai-tools-sync
 description: ai-tools同期 - リポジトリと~/.claude/間の設定ファイル同期。to-local/from-local/diffモード。
 ---
 
-# ai-tools設定ファイル同期
+# ai-tools-sync - ai-tools同期
 
 ## 使用タイミング
 

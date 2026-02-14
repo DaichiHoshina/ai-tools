@@ -20,7 +20,7 @@ hooks:
     command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
-# Backend Development - バックエンド開発
+# backend-dev - バックエンド開発
 
 ## 概要
 

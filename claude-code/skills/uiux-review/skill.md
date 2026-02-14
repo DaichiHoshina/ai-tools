@@ -8,7 +8,7 @@ requires-guidelines:
   - shadcn
 ---
 
-# UI/UXデザインレビュー
+# uiux-review - UI/UXレビュー
 
 ## 使用タイミング
 

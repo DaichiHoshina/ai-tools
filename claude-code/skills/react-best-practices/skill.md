@@ -8,7 +8,7 @@ hooks:
     command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
-# React Best Practices (Vercel Engineering)
+# react-best-practices - React/Next.jsパフォーマンス最適化
 
 > **Version**: 0.1.0 | **Source**: [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills)
 

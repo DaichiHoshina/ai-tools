@@ -6,7 +6,7 @@ requires-guidelines:
   - common
 ---
 
-# Terraform IaC設計
+# terraform - Terraform IaC設計
 
 ## 使用タイミング
 

@@ -7,7 +7,7 @@ requires-guidelines:
   - golang  # lang=go の場合
 ---
 
-# cleanup-enforcement - クリーンアップ強制Skill
+# cleanup-enforcement - コードクリーンアップ強制
 
 ## 使用タイミング
 

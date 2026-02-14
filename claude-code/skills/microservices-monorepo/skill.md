@@ -7,7 +7,7 @@ requires-guidelines:
   - ddd
 ---
 
-# マイクロサービス・モノレポ設計
+# microservices-monorepo - マイクロサービス・モノレポ設計
 
 ## 使用タイミング
 

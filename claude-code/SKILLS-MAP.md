@@ -1,6 +1,6 @@
 # スキル依存関係マップ（統合後）
 
-全18スキルの依存関係と推奨組み合わせ（Phase2-5スキル統合完了）
+全19スキルの依存関係と推奨組み合わせ（Phase2-5スキル統合完了）
 
 > **関連ドキュメント**: [commands/](commands/) | [QUICKSTART.md](QUICKSTART.md) | [GLOSSARY.md](GLOSSARY.md)
 

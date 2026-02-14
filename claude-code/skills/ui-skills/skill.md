@@ -7,7 +7,7 @@ requires-guidelines:
   - shadcn
 ---
 
-# UI Skills: エージェント向けUI構築制約
+# ui-skills - UI構築制約
 
 ## 使用タイミング
 

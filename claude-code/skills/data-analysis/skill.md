@@ -8,7 +8,7 @@ hooks:
     command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
-# データ分析スキル
+# data-analysis - データ分析
 
 **目標**: 「6ヶ月以上SQLを1行も書いていない」を実現
 

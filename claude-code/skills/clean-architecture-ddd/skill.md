@@ -7,7 +7,7 @@ requires-guidelines:
   - ddd
 ---
 
-# クリーンアーキテクチャ・DDD設計
+# clean-architecture-ddd - クリーンアーキテクチャ・DDD設計
 
 ## 使用タイミング
 
