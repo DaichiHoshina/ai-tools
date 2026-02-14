@@ -99,9 +99,9 @@ Claude Codeが外部ツールと連携するためのプロトコル。
 
 | 層 | 分類 | 例 |
 |----|------|-----|
-| Safe射 | 即実行可 | Read, Glob, git status |
-| Boundary射 | 要確認 | Edit, Write, git commit |
-| Forbidden射 | 拒否 | rm -rf /, secrets漏洩 |
+| 安全操作 | 即実行可 | Read, Glob, git status |
+| 要確認操作 | 要確認 | Edit, Write, git commit |
+| 禁止操作 | 拒否 | rm -rf /, secrets漏洩 |
 
 ---
 

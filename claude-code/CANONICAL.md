@@ -43,11 +43,11 @@
 
 | 正式用語 | 英語表記 | 使用禁止 |
 |---------|---------|---------|
-| **Guard関手** | Guard Functor | guardrails, ガードレール（文脈外） |
-| **Safe射** | Safe morphism | Safe操作, Safe層 |
-| **Boundary射** | Boundary morphism | Boundary操作, Boundary層 |
-| **Forbidden射** | Forbidden morphism | Forbidden操作, Forbidden層 |
-| **ComplexityCheck射** | ComplexityCheck morphism | 複雑度判定, タスク判定 |
+| **操作ガード** | Operation Guard | guardrails, ガードレール（文脈外） |
+| **安全操作** | Safe operation | Safe操作, Safe層 |
+| **要確認操作** | Boundary operation | Boundary操作, Boundary層 |
+| **禁止操作** | Forbidden operation | Forbidden操作, Forbidden層 |
+| **複雑度判定** | Complexity Check | ComplexityCheck, タスク判定 |
 
 ### タスク分類
 
@@ -136,14 +136,14 @@ AI-THINKING-ESSENTIALS（拡張子なし）
 **主ドキュメント**: `claude-code/guidelines/common/guardrails.md`
 
 **補足ドキュメント**:
-- `claude-code/references/AI-THINKING-ESSENTIALS.md` - Guard関手の概要
+- `claude-code/references/AI-THINKING-ESSENTIALS.md` - 操作ガードの概要
 
 **推奨読み込み順序**:
 1. `claude-code/GLOSSARY.md` - 用語定義
 2. `claude-code/guidelines/common/guardrails.md` - 実践ガイド
 3. `claude-code/references/AI-THINKING-ESSENTIALS.md` - 全体像
 
-### ComplexityCheck射関連
+### 複雑度判定関連
 
 **主ドキュメント**: `claude-code/references/AI-THINKING-ESSENTIALS.md`
 

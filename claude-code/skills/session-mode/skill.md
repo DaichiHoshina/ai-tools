@@ -1,6 +1,6 @@
 ---
 name: session-mode
-description: セッションモード切替 - strict/normal/fast でGuard関手の動作を変更。Serena Memoryで状態永続化。
+description: セッションモード切替 - strict/normal/fast で操作ガードの動作を変更。Serena Memoryで状態永続化。
 ---
 
 # session-mode - セッションモード切替
@@ -14,7 +14,7 @@ description: セッションモード切替 - strict/normal/fast でGuard関手�
 ## 概要
 
 Claude Codeの動作モードをセッション単位で切り替える。
-モードに応じてGuard関手の挙動、読み込む仕様、確認フローが変化。
+モードに応じて操作ガードの挙動、読み込む仕様、確認フローが変化。
 
 ---
 
@@ -22,17 +22,17 @@ Claude Codeの動作モードをセッション単位で切り替える。
 
 ### strict モード（圏論的制約フル適用）
 
-**Guard関手**:
+**操作ガード**:
 ```
-Guard_strict : Action → {Allow, AskUser, Deny}
-Guard_strict(a) = AskUser  ⟺ a ∈ Mor(Boundary)  # 常に確認
+operationGuard_strict : Action → {Allow, AskUser, Deny}
+operationGuard_strict(a) = AskUser  ⟺ a ∈ Mor(Boundary)  # 常に確認
 ```
 
 **読み込むファイル**:
 - `~/.claude/guidelines/common/session-modes.md`
 - `~/.claude/guidelines/common/guardrails.md`
 
-**Boundary射の処理**:
+**要確認操作の処理**:
 - git commit/push: 必ず確認
 - 設定変更: 必ず確認
 - npm install: 必ず確認
@@ -43,16 +43,16 @@ Guard_strict(a) = AskUser  ⟺ a ∈ Mor(Boundary)  # 常に確認
 
 ### normal モード（デフォルト）
 
-**Guard関手**:
+**操作ガード**:
 ```
-Guard_normal : Action → {Allow, AskUser, Deny}
-Guard_normal(a) = AskUser  ⟺ a ∈ {git_操作, ファイル削除, 設定変更}
+operationGuard_normal : Action → {Allow, AskUser, Deny}
+operationGuard_normal(a) = AskUser  ⟺ a ∈ {git_操作, ファイル削除, 設定変更}
 ```
 
 **読み込むファイル**:
 - CLAUDE.md（8原則）のみ
 
-**Boundary射の処理**:
+**要確認操作の処理**:
 - git commit/push: 確認
 - 設定変更: 確認
 - npm install（安全）: 自動許可
@@ -63,10 +63,10 @@ Guard_normal(a) = AskUser  ⟺ a ∈ {git_操作, ファイル削除, 設定変�
 
 ### fast モード（確認最小化）
 
-**Guard関手**:
+**操作ガード**:
 ```
-Guard_fast : Action → {Allow, AskUser, Deny}
-Guard_fast(a) = Allow  ⟺ a ∈ Mor(Safe) ∪ Mor(SafeBoundary)
+operationGuard_fast : Action → {Allow, AskUser, Deny}
+operationGuard_fast(a) = Allow  ⟺ a ∈ Mor(Safe) ∪ Mor(SafeBoundary)
 ```
 
 **SafeBoundary**:
@@ -80,7 +80,7 @@ SafeBoundary = {
 }
 ```
 
-**Boundary射の処理**:
+**要確認操作の処理**:
 - git commit: 自動許可（ローカルのみ）
 - git push: feature branchは自動許可、main/masterは確認
 - npm install（安全）: 自動許可
@@ -99,20 +99,20 @@ SafeBoundary = {
 
 ---
 
-## Guard関手の数学的定義
+## 操作ガードの定義
 
-### モード依存Guard関手
+### モード依存操作ガード
 
 ```
-Guard_M : Mode × Action → {Allow, AskUser, Deny}
+operationGuard : Mode × Action → {Allow, AskUser, Deny}
 
-Guard_M(m, a) =
+operationGuard(m, a) =
   | Allow   if a ∈ Safe_m
   | AskUser if a ∈ Boundary_m
   | Deny    if a ∈ Forbidden
 ```
 
-### 各モードの射の分類
+### 各モードの分類ルール
 
 ```
 Safe_strict     = Mor(Safe)
@@ -179,15 +179,15 @@ schema:
 ```
 Mode圏:
   対象: {strict, normal, fast}
-  射: transition : Mode → Mode
-  恒等射: id_m : m → m
+  遷移: transition : Mode → Mode
+  恒等遷移: id_m : m → m
 ```
 
-### Guard関手の自然変換
+### 操作ガードのモード遷移
 
 ```
-η_mode : Guard_normal ⇒ Guard_mode
+η_mode : operationGuard_normal ⇒ operationGuard_mode
 
-η_strict : Guard_normal → Guard_strict  （制約強化）
-η_fast   : Guard_normal → Guard_fast    （制約緩和）
+η_strict : operationGuard_normal → operationGuard_strict  （制約強化）
+η_fast   : operationGuard_normal → operationGuard_fast    （制約緩和）
 ```

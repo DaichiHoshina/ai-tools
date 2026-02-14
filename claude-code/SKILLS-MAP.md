@@ -111,7 +111,7 @@
 ### session-mode
 - **requires-guidelines**: なし
 - **often-used-with**: なし（セッション設定）
-- **用途**: strict/normal/fast でGuard関手の動作を変更。Serena Memoryで状態永続化。
+- **用途**: strict/normal/fast で操作ガードの動作を変更。Serena Memoryで状態永続化。
 
 ### context7
 - **requires-guidelines**: なし

@@ -4,7 +4,7 @@
 
 ---
 
-## Guard関手（圏論的定義）
+## 操作ガード（定義）
 
 ```
 Guard : Action → {Allow, AskUser, Deny}

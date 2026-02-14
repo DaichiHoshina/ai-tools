@@ -322,7 +322,7 @@ LLMが生成するコードは同じ処理を再実装しがち。
 ### セキュリティ
 - `--dangerously-skip-permissions` は実装しない
 - 自律モードでも、破壊的操作は確認必須
-- protection-mode の Guard関手を常に適用
+- protection-mode の操作ガードを常に適用
 
 ### 可用性
 - ブロック検出: 3回連続失敗で停止

@@ -202,4 +202,4 @@ Stage2: Dev3, Dev4 並列  ← 並列性維持
 ## 関連ドキュメント
 
 - `claude-code/agents/manager-agent.md` - タスク配分の詳細
-- `claude-code/references/AI-THINKING-ESSENTIALS.md` - ComplexityCheck射
+- `claude-code/references/AI-THINKING-ESSENTIALS.md` - 複雑度判定

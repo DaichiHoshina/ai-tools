@@ -64,13 +64,13 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 ### 0. protection-mode読み込み（必須）
 `Skill("protection-mode")` で操作チェッカー・安全性分類をセッションに適用
 
-**Guard関手が各操作に自動適用**:
+**操作ガードが各操作に自動適用**:
 ```
-Guard_M : Mode × Action → {Allow, AskUser, Deny}
+operationGuard : Mode × Action → {Allow, AskUser, Deny}
 
-- Allow（Safe射）: 読み取り、分析 → 即座実行
-- AskUser（Boundary射）: git push、設定変更 → 確認後実行
-- Deny（Forbidden射）: rm -rf /、secrets漏洩 → 拒否
+- Allow（安全操作）: 読み取り、分析 → 即座実行
+- AskUser（要確認操作）: git push、設定変更 → 確認後実行
+- Deny（禁止操作）: rm -rf /、secrets漏洩 → 拒否
 ```
 
 ### 1. オプション解析

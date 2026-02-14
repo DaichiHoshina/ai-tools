@@ -61,7 +61,7 @@ claude-code/
 
 ### 具体的なパターン
 
-→ 詳細: `/protection-mode` の GuardQuality射を参照（Reject/ReviewRequired/Acceptの具体例）
+→ 詳細: `/protection-mode` の 品質ガードを参照（Reject/ReviewRequired/Acceptの具体例）
 
 ### 影響範囲による判断
 

@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 description: UIテーマ適用 + Playwrightビジュアル検証を一括実行
 ---
 
@@ -38,27 +38,11 @@ options:
 
 ### Step 3: テーマ適用
 
-#### 3a: フレームワーク自動検出
-
-```
-プロジェクトrootに components.json あり → shadcn/ui
-(a)に該当せず tailwind.config.{js,ts,mjs} あり → Tailwind CSS
-いずれも該当しない → tokens（JSON参照）
-```
-
-#### 3b: テーマファイルの適用
-
-テンプレートパス: `~/.claude/templates/ui-themes/{形式}/{テーマ名}.css`
-
-| 検出結果 | 適用方法 |
-|---------|---------|
-| shadcn/ui | `ui-themes/shadcn/{theme}.css` → `app/globals.css` に上書き |
-| Tailwind | `ui-themes/tailwind/{theme}.css` → `src/styles/theme.css` として作成、globals.cssで `@import` |
-| tokens | `ui-themes/tokens/{theme}.json` を参照してCSS変数を定義 |
+フレームワーク検出 → テーマファイル適用は `ui-skills` スキルの「フレームワーク自動検出」「テーマファイルの適用」に従う。
 
 **注意**: カスタムテーマが既にある場合はAskUserQuestionで上書き確認。
 
-#### 3c: 適用後の提案
+#### 適用後の提案
 
 AskUserQuestionで次のアクション提案:
 
@@ -72,40 +56,25 @@ options:
 
 ### Step 4: Playwrightビジュアル検証
 
-```
-dev server起動確認（デフォルト: http://localhost:3000）
-  ↓
-異なるポートの場合はAskUserQuestionで確認
-  ↓
-Playwright スクリーンショット撮影
-  npx tsx ~/.claude/templates/ui-themes/playwright-visual-check.ts
-  ↓
-/tmp/ui-visual-check/*.png を Read で読み込み
-  ↓
-5観点で視覚評価:
-  1. 視覚的階層: KPI数値が最も目立っているか
-  2. 余白バランス: 詰まりすぎ/スカスカすぎないか
-  3. 色の一貫性: テーマカラーが正しく適用されているか
-  4. タイポグラフィ: 見出し・本文・キャプションに明確な差があるか
-  5. アライメント: 要素が整列しているか
-  ↓
---fix時: 問題あり → 修正 → 再撮影（最大3回ループ）
-通常時: 問題点を報告して終了
+`ui-skills` スキルの「Playwrightビジュアル検証」セクションに従って実行。
+
+異なるポートの場合はAskUserQuestionで確認してから実行:
+
+```bash
+# デフォルト
+npx tsx ~/.claude/templates/ui-themes/playwright-visual-check.ts
+
+# カスタムポート
+BASE_URL=http://localhost:5173 npx tsx ~/.claude/templates/ui-themes/playwright-visual-check.ts
 ```
 
 前提条件:
 - dev server起動中であること
 - `npx playwright install chromium`（初回のみ）
 
-### Step 5: ダッシュボード実装時の自動適用ルール
+### Step 5: UI実装
 
-テーマ適用後のUI実装では、以下を自動で守る:
-
-- **3層構造**: Hero Metrics（text-4xl） → Trends（チャート） → Details（テーブル）
-- **グリッド強弱**: 均等分割禁止、col-span-2で1つだけ強調
-- **色の節約**: primaryカラーは1箇所だけ、他はmuted/secondary
-- **タイポグラフィ**: 最低3段階（text-2xl → text-lg → text-sm）
-- **数値表示**: `font-mono tabular-nums` 必須
+テーマ適用後のUI実装では `ui-skills` スキルの「ダッシュボード設計パターン」に従う（3層構造、グリッド強弱、色の節約等）。
 
 ## 依存スキル
 

@@ -33,7 +33,7 @@ mcp__serena__read_memory("protection-mode-loaded")
 ```
 mcp__serena__write_memory("protection-mode-loaded", {
   loaded_at: ISO8601,
-  summary: "Guard関手・3層分類適用済み"
+  summary: "操作ガード・3層分類適用済み"
 })
 ```
 
@@ -43,9 +43,9 @@ mcp__serena__write_memory("protection-mode-loaded", {
 ## Protection Modeを適用
 
 現在の制約:
-- Safe射: 自動許可（読み取り、分析、提案）
-- Boundary射: 確認必要（git操作、設定変更）
-- Forbidden射: 拒否（システム破壊、セキュリティ侵害）
+- 安全操作: 自動許可（読み取り、分析、提案）
+- 要確認操作: 確認必要（git操作、設定変更）
+- 禁止操作: 拒否（システム破壊、セキュリティ侵害）
 ```
 
 ---
@@ -62,12 +62,12 @@ mcp__serena__write_memory("protection-mode-loaded", {
 
 ```mermaid
 graph TB
-    subgraph "Guard関手: Mode × Action → Decision"
+    subgraph "操作ガード: Mode × Action → Decision"
         A[Action 入力] --> B{操作分類}
 
-        B -->|Safe射| C[✅ Allow<br/>即座実行]
-        B -->|Boundary射| D[⚠️ AskUser<br/>確認後実行]
-        B -->|Forbidden射| E[🚫 Deny<br/>拒否]
+        B -->|安全操作| C[✅ Allow<br/>即座実行]
+        B -->|要確認操作| D[⚠️ AskUser<br/>確認後実行]
+        B -->|禁止操作| E[🚫 Deny<br/>拒否]
 
         C --> F1[Read File]
         C --> F2[git status]
@@ -104,22 +104,22 @@ flowchart TD
     Start([Operation Request]) --> Read{読み取り専用?}
 
     Read -->|Yes| Analysis{分析・提案のみ?}
-    Analysis -->|Yes| Safe1[✅ Safe射<br/>即座実行]
+    Analysis -->|Yes| Safe1[✅ 安全操作<br/>即座実行]
     Analysis -->|No| Git{git status/log/diff?}
-    Git -->|Yes| Safe2[✅ Safe射<br/>即座実行]
+    Git -->|Yes| Safe2[✅ 安全操作<br/>即座実行]
     Git -->|No| Boundary1
 
     Read -->|No| Write{書き込み操作?}
     Write -->|Yes| Destruct{破壊的?}
-    Destruct -->|Yes| Forbidden1[🚫 Forbidden射<br/>拒否]
-    Destruct -->|No| Boundary1[⚠️ Boundary射<br/>確認後実行]
+    Destruct -->|Yes| Forbidden1[🚫 禁止操作<br/>拒否]
+    Destruct -->|No| Boundary1[⚠️ 要確認操作<br/>確認後実行]
 
     Write -->|No| Config{設定変更?}
-    Config -->|Yes| Boundary2[⚠️ Boundary射<br/>確認後実行]
+    Config -->|Yes| Boundary2[⚠️ 要確認操作<br/>確認後実行]
     Config -->|No| Other{その他の操作}
-    Other -->|YAGNI違反| Forbidden2[🚫 Forbidden射<br/>拒否]
-    Other -->|セキュリティ侵害| Forbidden3[🚫 Forbidden射<br/>拒否]
-    Other -->|Normal| Boundary3[⚠️ Boundary射<br/>確認後実行]
+    Other -->|YAGNI違反| Forbidden2[🚫 禁止操作<br/>拒否]
+    Other -->|セキュリティ侵害| Forbidden3[🚫 禁止操作<br/>拒否]
+    Other -->|Normal| Boundary3[⚠️ 要確認操作<br/>確認後実行]
 
     style Safe1 fill:#d4edda,stroke:#28a745,stroke-width:3px
     style Safe2 fill:#d4edda,stroke:#28a745,stroke-width:3px
@@ -133,22 +133,22 @@ flowchart TD
 
 ---
 
-## Guard関手
+## 操作ガード
 
 ```
-Guard_M : Mode × Action → {Allow, AskUser, Deny}
+operationGuard : Mode × Action → {Allow, AskUser, Deny}
 ```
 
 **数学的定義**:
-- `Guard_M(strict, Boundary) = AskUser` （全Boundary確認）
-- `Guard_M(normal, Boundary) = AskUser` （重要Boundary確認）
-- `Guard_M(fast, Boundary) = AskUser | Allow` （最重要Boundaryのみ確認）
-- `Guard_M(_, Safe) = Allow` （モード不問で許可）
-- `Guard_M(_, Forbidden) = Deny` （モード不問で拒否）
+- `operationGuard(strict, Boundary) = AskUser` （全Boundary確認）
+- `operationGuard(normal, Boundary) = AskUser` （重要Boundary確認）
+- `operationGuard(fast, Boundary) = AskUser | Allow` （最重要Boundaryのみ確認）
+- `operationGuard(_, Safe) = Allow` （モード不問で許可）
+- `operationGuard(_, Forbidden) = Deny` （モード不問で拒否）
 
 ---
 
-## ComplexityCheck射（タスク判定）
+## 複雑度判定（タスク判定）
 
 ```
 ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
@@ -177,7 +177,7 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 
 ---
 
-## GuardQuality射（実装品質チェック）
+## 品質ガード（実装品質チェック）
 
 ```
 GuardQuality : Implementation → {Accept, ReviewRequired, Reject}
@@ -233,15 +233,15 @@ function createUser(data: unknown): User {
 }
 ```
 
-### Guard関手との統合
+### 操作ガードとの統合
 
 ```
-Guard_M ∘ GuardQuality : Mode × Implementation → Decision
+operationGuard → 品質ガード : Mode × Implementation → Decision
 
 フロー:
   Implementation → GuardQuality → {Accept, ReviewRequired, Reject}
                                          ↓
-                                    Guard_M（Mode考慮）
+                                    operationGuard（Mode考慮）
                                          ↓
                               {Allow, AskUser, Deny}
 ```

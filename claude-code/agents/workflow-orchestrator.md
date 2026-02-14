@@ -34,7 +34,7 @@ git diff --name-only
 - テストファイルの有無
 - CI/CD設定の有無
 
-# 4. ComplexityCheck射（Tasks判定）
+# 4. 複雑度判定（Tasks判定）
 ファイル数<5 AND 行数<300 → Simple（Tasks不使用）
 ファイル数≥5 OR 独立機能≥3 → TaskDecomposition（Tasks自動化）
 複数プロジェクト横断 → AgentHierarchy（PO経由）
@@ -962,43 +962,43 @@ function analyzeTaskForGuidelines(taskContext: TaskContext): string[] {
 // }
 ```
 
-### Phase 2.5: Guard関手適用（自動）
+### Phase 2.5: 操作ガード適用（自動）
 
-すべての操作実行前にGuard関手を適用:
+すべての操作実行前に操作ガードを適用:
 
 ```typescript
-// Guard関手による操作分類
+// 操作ガードによる操作分類
 function classifyAndExecute(action: Action, mode: Mode = 'normal') {
-  const classification = Guard_M(mode, action);
-  
+  const classification = operationGuard(mode, action);
+
   switch (classification) {
-    case 'Allow':   // Safe射
+    case 'Allow':   // 安全操作
       return execute(action);
-    case 'AskUser': // Boundary射
+    case 'AskUser': // 要確認操作
       return confirm(action) ? execute(action) : skip(action);
-    case 'Deny':    // Forbidden射
+    case 'Deny':    // 禁止操作
       return reject(action, '禁止操作です');
   }
 }
 
 // 分類マッピング
-const Guard_M = (mode: Mode, action: Action): Classification => {
-  // Safe射（即座実行）
+const operationGuard = (mode: Mode, action: Action): Classification => {
+  // 安全操作（即座実行）
   const safeActions = ['read_file', 'find_symbol', 'git_status', 'git_log', 'git_diff', 'search'];
   if (safeActions.some(a => action.type.includes(a))) return 'Allow';
-  
-  // Forbidden射（拒否）
+
+  // 禁止操作（拒否）
   const forbiddenActions = ['rm_rf_root', 'secrets_leak', 'force_push_main', 'yagni_violation'];
   if (forbiddenActions.some(a => action.type.includes(a))) return 'Deny';
-  
-  // Boundary射（確認）- モード依存
+
+  // 要確認操作（確認）- モード依存
   if (mode === 'strict') return 'AskUser';  // strict: すべて確認
   if (mode === 'fast' && action.type === 'git_commit') return 'Allow';  // fast: commit自動
-  
+
   // normal: git push, 設定変更は確認
   const boundaryActions = ['git_push', 'git_commit', 'config_change'];
   if (boundaryActions.some(a => action.type.includes(a))) return 'AskUser';
-  
+
   return 'Allow';  // デフォルト: 許可
 };
 ```
@@ -1176,7 +1176,7 @@ async function shouldRetry(taskId: string, maxRetries: number = 2): Promise<{
 
 // 各ステップ実行時の自動処理（updateTaskProgress統合版）
 async function executeStep(step: WorkflowStep, taskId: string) {
-  // 0. Guard関手による分類チェック
+  // 0. 操作ガードによる分類チェック
   const classification = classifyAndExecute(step, getCurrentMode());
   if (classification === 'Deny') {
     await updateTaskProgress(taskId, 'in_progress', {
@@ -1338,7 +1338,7 @@ async function applyTechStackSkills(techStacks: string[]): Promise<void> {
 - Test: ✅ 15/15 パス
 - Build: ✅ 成功
 
-✅ Guard関手適用: 全操作が分類に従って実行されました
+✅ 操作ガード適用: 全操作が分類に従って実行されました
 
 💡 次のアクション
 - PRレビュー待ち
@@ -1785,7 +1785,7 @@ required_steps:
 `--auto` 指定時は以下の確認をすべてスキップ:
 - Phase 3のユーザー確認（ワークフロー確認画面）
 - 各ステップ間の確認
-- Guard関手のBoundary射確認（Safe射として扱う）
+- 操作ガードの要確認操作確認（安全操作として扱う）
 
 **注意**: --autoは上級者向け。誤操作のリスクあり。
 

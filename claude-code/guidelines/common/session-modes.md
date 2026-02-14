@@ -89,7 +89,7 @@
 ## 思考法ロード
 
 ```
-/protection-mode        # 基本（Guard関手 + 3層分類）
+/protection-mode        # 基本（操作ガード + 3層分類）
 /protection-mode full   # フル（+ モード定義）
 ```
 
@@ -150,7 +150,7 @@ tools:      < 50
 95%: 新セッション開始
 ```
 
-### Memory関手
+### メモリ管理
 
 ```
 F_Memory: ∅ → Context

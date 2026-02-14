@@ -8,7 +8,7 @@
 
 ## 🎯 3つの核心コンセプト
 
-### 1. Guard関手（3層分類）
+### 1. 操作ガード（3層分類）
 
 すべての操作を安全性で分類：
 
@@ -18,18 +18,18 @@ Guard : Action → {Allow, AskUser, Deny}
 
 | 層 | 処理 | 例 |
 |---|------|---|
-| **Safe射** | 即座に実行 | ファイル読み取り、git status、分析、提案 |
-| **Boundary射** | 確認後実行 | git commit/push、ファイル編集/削除、設定変更 |
-| **Forbidden射** | 実行不可 | rm -rf /、secrets漏洩、git push --force、YAGNI違反 |
+| **安全操作** | 即座に実行 | ファイル読み取り、git status、分析、提案 |
+| **要確認操作** | 確認後実行 | git commit/push、ファイル編集/削除、設定変更 |
+| **禁止操作** | 実行不可 | rm -rf /、secrets漏洩、git push --force、YAGNI違反 |
 
 **確認フロー**:
 ```
-Boundary射検出 → afplay(通知音) → ユーザー承認待ち → 実行 or キャンセル
+要確認操作検出 → afplay(通知音) → ユーザー承認待ち → 実行 or キャンセル
 ```
 
 ---
 
-### 2. ComplexityCheck射（タスク判定）
+### 2. 複雑度判定（タスク判定）
 
 タスクの複雑度で実装方法を選択：
 
@@ -84,7 +84,7 @@ TaskDecomposition判定時の必須プロセス：
 | **4. Agent起動** | 並列実行 | ✓ 全タスク成功完了 |
 | **5. 統合検証** | 完全性確認 | ✓ 未実装要件 = ∅ |
 
-**ExecutionGuard射**:
+**実行ガード**:
 ```
 各Phase完了時 → InvariantCheck → 違反あり → 強制停止 + 自動修正 or 質問
 ```
@@ -93,7 +93,7 @@ TaskDecomposition判定時の必須プロセス：
 
 ## 🤖 AI運用5原則
 
-### 1. ComplexityCheck射
+### 1. 複雑度判定
 ```
 タスク受領 → Simple/TaskDecomposition/AgentHierarchy判定
 → 適切な読み込みファイル選択
@@ -115,9 +115,9 @@ confirm(boundary_action) = (
 )
 ```
 
-### 4. Behavior関手
+### 4. 行動規範
 ```
-F_Behavior = clean ∘ careful ∘ cooperative
+行動規範 = clean → careful → cooperative
 ```
 
 ### 5. 応答フォーマット
@@ -141,7 +141,7 @@ UserRequest → [現在地] → 次のステップ
 
 ## 🛡️ ガードレール詳細
 
-### Forbidden射（絶対禁止）
+### 禁止操作（絶対禁止）
 
 **システム破壊**:
 - `rm -rf /`, `shutdown -h now`, `mkfs.*`
@@ -158,7 +158,7 @@ UserRequest → [現在地] → 次のステップ
 - 未使用コード生成
 - 「念のため」「将来使うかも」の実装
 
-### Boundary射の確認フロー
+### 要確認操作の確認フロー
 
 ```
 1. explain_impact（影響説明）
@@ -189,13 +189,13 @@ UserRequest → [現在地] → 次のステップ
 ## ✅ 実践チェックリスト
 
 ### タスク受領時
-- [ ] ComplexityCheck射で判定（Simple/TaskDecomposition/AgentHierarchy）
+- [ ] 複雑度判定で判定（Simple/TaskDecomposition/AgentHierarchy）
 - [ ] 必要なファイルを読み込み
 
 ### 操作実行前
-- [ ] Guard関手で分類（Safe/Boundary/Forbidden）
-- [ ] Boundary射の場合は確認音 + 承認待ち
-- [ ] Forbidden射は即座に拒否 + 理由説明
+- [ ] 操作ガードで分類（安全操作/要確認操作/禁止操作）
+- [ ] 要確認操作の場合は確認音 + 承認待ち
+- [ ] 禁止操作は即座に拒否 + 理由説明
 
 ### TaskDecomposition時
 - [ ] Phase 0: 要件明確化（受け入れ条件を定義）
@@ -215,19 +215,19 @@ UserRequest → [現在地] → 次のステップ
 
 ### 安全性定理
 
-**定理1**: Safe圏は常に安全
+**定理1**: 安全操作は常に安全
 ```
-∀f ∈ Mor(Safe), ¬causes_harm(f)
-```
-
-**定理2**: Boundary圏はユーザー承認で安全
-```
-∀f ∈ Mor(Boundary), user_approval(f) ⟹ ¬causes_harm(f)
+∀f ∈ Mor(安全操作), ¬causes_harm(f)
 ```
 
-**定理3**: Forbidden圏は実行不可能
+**定理2**: 要確認操作はユーザー承認で安全
 ```
-∀f ∈ Mor(Forbidden), f ∉ Mor(Claude圏) ⟹ ¬executable(f)
+∀f ∈ Mor(要確認操作), user_approval(f) ⟹ ¬causes_harm(f)
+```
+
+**定理3**: 禁止操作は実行不可能
+```
+∀f ∈ Mor(禁止操作), f ∉ Mor(Claude圏) ⟹ ¬executable(f)
 ```
 
 ### 完全性定理
@@ -236,7 +236,7 @@ UserRequest → [現在地] → 次のステップ
 ```
 各Phaseで不変条件チェック
 ∧ 違反時は強制停止
-∧ ExecutionGuard射を適用
+∧ 実行ガードを適用
 ⟹
 作業漏れゼロ ∧ 品質保証
 ```
@@ -249,7 +249,7 @@ UserRequest → [現在地] → 次のステップ
 
 - **ESSENTIALS-CORE.md** - 最小セット（セッション開始時必読）
 - **PRACTICAL_GUIDE.md** - TaskDecomposition時の実行ガイド
-- **GUARDRAILS.md** - Guard関手詳細定義
+- **GUARDRAILS.md** - 操作ガード詳細定義
 - **AGENTS.md** - AgentHierarchy構成
 - **ESSENTIALS.md** - 完全仕様
 
@@ -265,7 +265,7 @@ UserRequest → [現在地] → 次のステップ
 
 ### 最重要3ルール
 
-1. **Guard関手で安全性判定**: すべての操作をSafe/Boundary/Forbiddenに分類
+1. **操作ガードで安全性判定**: すべての操作を安全操作/要確認操作/禁止操作に分類
 2. **ComplexityCheckで適切な手法選択**: Simple/TaskDecomposition/AgentHierarchy
 3. **実行強制で品質保証**: 各Phase完了時に不変条件チェック、違反時は強制停止
 
@@ -274,19 +274,19 @@ UserRequest → [現在地] → 次のステップ
 ```
 タスク受領
   ↓
-ComplexityCheck射
+複雑度判定
   ↓
-├─ Simple → 直接実装（Guard関手適用）
+├─ Simple → 直接実装（操作ガード適用）
 ├─ TaskDecomposition → 5フェーズワークフロー
 └─ AgentHierarchy → PO/Manager/Developer階層
 
 各操作前
   ↓
-Guard関手
+操作ガード
   ↓
-├─ Safe → 即座実行
-├─ Boundary → 確認音 + 承認 + 実行
-└─ Forbidden → 拒否 + 理由説明
+├─ 安全操作 → 即座実行
+├─ 要確認操作 → 確認音 + 承認 + 実行
+└─ 禁止操作 → 拒否 + 理由説明
 
 完了時
   ↓

@@ -81,5 +81,5 @@ description: TDD開発モード（RED-GREEN-REFACTOR強制）
 
 - Superpowersプラグインのインストールが必要
 - Claude Code再起動後に有効化
-- protection-modeのGuard関手は引き続き各操作に適用される
+- protection-modeの操作ガードは引き続き各操作に適用される
 - テストファーストを徹底すること（実装コードを先に書かない）
