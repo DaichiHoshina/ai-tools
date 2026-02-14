@@ -251,9 +251,18 @@ operationGuard → 品質ガード : Mode × Implementation → Decision
 - `normal`: ReviewRequired → 警告表示（デフォルト）
 - `fast`: ReviewRequired → ログ記録のみ
 
+> **注**: 品質ガードは対症療法パターンの**検出**を担う。修正戦略（L1/L2/L3）の定義と選択は `/root-cause` スキルの責務。
+
 **大規模作業向け**: `guidelines/common/large-scale-workflow.md` 参照
 - 10ファイル以上、500行以上、60分以上の作業に適用
 - Phase 0-5の詳細ワークフロー、チェックポイント、並列実行戦略
+
+### 実装詳細
+
+実行時の分類判定は `hooks/pre-tool-use.sh` で実装:
+- 禁止パターン検出: 危険コマンド（rm -rf等）
+- 要確認パターン: 変更系コマンド、ファイル編集
+- 安全パターン: 読み取り系コマンド
 
 ---
 

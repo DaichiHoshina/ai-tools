@@ -770,12 +770,20 @@ workflows:
 ```typescript
 /**
  * バグの複雑度を判定
+ * @param bugDescription - バグの説明文。空文字列の場合はmediumを返す。
  * @returns 'low' | 'medium' | 'high'
  */
 async function assessBugComplexity(
   bugDescription: string
 ): Promise<'low' | 'medium' | 'high'> {
+  // 入力バリデーション: 空文字列・未定義はmedium扱い
+  if (!bugDescription || bugDescription.trim() === '') {
+    console.log('🟡 バグ説明なし → medium（デフォルト）');
+    return 'medium';
+  }
+
   // Low complexity indicators
+  // （flow.mdの複雑度判定基準と同期: タイポ、インポートミス、変数名ミス、単純な条件反転）
   const lowIndicators = [
     'typo', 'タイポ',
     'missing import', 'インポート',
@@ -784,6 +792,8 @@ async function assessBugComplexity(
   ];
 
   // High complexity indicators
+  // （flow.mdの複雑度判定基準と同期: 競合状態、メモリリーク、セキュリティ脆弱性、
+  //   データ破損、アーキテクチャ問題、繰り返し発生）
   const highIndicators = [
     'race condition', '競合',
     'memory leak', 'メモリリーク',
@@ -811,23 +821,17 @@ async function assessBugComplexity(
 }
 
 /**
- * RCA適用判定
- */
-function shouldApplyRCA(
-  complexity: 'low' | 'medium' | 'high'
-): boolean {
-  return complexity !== 'low';
-}
-
-/**
  * RCAワークフロー選択
  * bugfix_rcaタイプの場合は常にbugfix_with_rcaを使用
  * bugfixタイプの場合は複雑度に応じて自動切り替え
+ *
+ * @param taskType - 'bugfix' または 'bugfix_rca' のみ受け付ける
+ * @param bugDescription - バグの説明文
  */
 async function selectBugfixWorkflow(
-  taskType: string,
+  taskType: 'bugfix' | 'bugfix_rca',
   bugDescription: string
-): Promise<string> {
+): Promise<'bugfix' | 'bugfix_with_rca'> {
   // 明示的にRCA指定された場合
   if (taskType === 'bugfix_rca') {
     console.log('📋 明示的RCA指定 → bugfix_with_rca ワークフロー');
@@ -835,19 +839,15 @@ async function selectBugfixWorkflow(
   }
 
   // bugfixの場合は複雑度判定
-  if (taskType === 'bugfix') {
-    const complexity = await assessBugComplexity(bugDescription);
+  const complexity = await assessBugComplexity(bugDescription);
 
-    if (shouldApplyRCA(complexity)) {
-      console.log(`📋 複雑度${complexity} → bugfix_with_rca ワークフロー（RCA付き）`);
-      return 'bugfix_with_rca';
-    }
-
-    console.log('📋 低複雑度 → bugfix ワークフロー（シンプル）');
-    return 'bugfix';
+  if (complexity !== 'low') {
+    console.log(`📋 複雑度${complexity} → bugfix_with_rca ワークフロー（RCA付き）`);
+    return 'bugfix_with_rca';
   }
 
-  return taskType;
+  console.log('📋 低複雑度 → bugfix ワークフロー（シンプル）');
+  return 'bugfix';
 }
 
 // 使用例（Phase 2のワークフロー決定で呼び出し）

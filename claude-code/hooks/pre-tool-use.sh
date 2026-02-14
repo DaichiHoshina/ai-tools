@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# PreToolUse Hook - protection-mode（圏論的思考法）必須チェック
-# 10原則: protection-mode判定、自動処理禁止、確認済
-# v2.1.9対応: additionalContext でモデルに追加コンテキストを提供
+# PreToolUse Hook - protection-mode 必須チェック
+# 3層分類: Safe/Boundary/Forbidden
+# v2.2.0対応: jq安全出力、パターン検出強化
 
 set -euo pipefail
 
@@ -13,13 +13,58 @@ ICON_WARNING=$'\u25b2'    # exclamation-triangle (boundary)
 INPUT=$(cat)
 
 # ツール名とパラメータを取得
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
-TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {}')
+TOOL_NAME=$(jq -r '.tool_name // empty' <<< "$INPUT")
+TOOL_INPUT=$(jq -r '.tool_input // {}' <<< "$INPUT")
 
 # protection-mode判定変数
-KENRON_CLASS=""  # Safe, Boundary, Forbidden
+GUARD_CLASS=""  # Safe, Boundary, Forbidden
 MESSAGE=""
 ADDITIONAL_CONTEXT=""
+
+# ====================================
+# Bash コマンド分類ヘルパー関数
+# ====================================
+classify_bash_command() {
+  local cmd="$1"
+
+  # 禁止操作チェック（危険なコマンド）
+  # スペースの揺れ（\s+）とエスケープ（\\rm等）を考慮
+  if echo "$cmd" | grep -qE '(rm\s+-rf\s+/|rm\s+-rf\s+\*|>\s*/dev/|:\(\)\{|sudo\s+rm|git\s+push\s+--force|git\s+push\s+-f)'; then
+    GUARD_CLASS="Forbidden"
+    MESSAGE="${ICON_CRITICAL} protection-mode:禁止操作 - 危険なコマンド検出！実行禁止"
+    ADDITIONAL_CONTEXT="【protection-mode判定】禁止操作（実行禁止）\\n- 検出: 破壊的コマンド\\n- 対応: 実行を中止し、安全な代替手段を提案"
+    return
+  fi
+
+  # 自動処理禁止チェック
+  if echo "$cmd" | grep -qE '(npm run lint|prettier|eslint --fix|go fmt|autopep8|black )'; then
+    GUARD_CLASS="Boundary"
+    MESSAGE="${ICON_WARNING} protection-mode:要確認操作 - 自動整形（10原則:自動処理禁止）"
+    ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: 自動整形\\n- 10原則: 自動処理禁止 - ユーザー確認必須"
+    return
+  fi
+
+  # 変更系コマンド
+  if echo "$cmd" | grep -qE '(git commit|git push|git merge|git rebase|npm install|pip install|go mod|docker build|docker push)'; then
+    GUARD_CLASS="Boundary"
+    MESSAGE="🔶 protection-mode:要確認操作 - 変更系コマンド"
+    # コマンドプレビューからJSON unsafe文字を除去
+    local cmd_preview
+    cmd_preview=$(echo "$cmd" | tr -d '"\\' | head -c 50)
+    ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: ${cmd_preview}...\\n- 確認: 実行前にユーザー承認を推奨"
+    return
+  fi
+
+  # 読み取り系コマンド（チェーン・パイプを含まない単純コマンドのみ）
+  if echo "$cmd" | grep -qE '^(git (status|log|diff|branch)|ls |pwd$|echo |cat |which |type )' && ! echo "$cmd" | grep -qE '[;&|]'; then
+    GUARD_CLASS="Safe"
+    return
+  fi
+
+  # その他のBashコマンドはBoundary扱い
+  GUARD_CLASS="Boundary"
+  MESSAGE="🔶 protection-mode:要確認操作 - Bashコマンド"
+}
 
 # ====================================
 # protection-mode 3層分類判定
@@ -28,72 +73,49 @@ ADDITIONAL_CONTEXT=""
 case "$TOOL_NAME" in
   # === 安全操作（即実行可能） ===
   "Read"|"Glob"|"Grep"|"WebFetch"|"WebSearch"|"ListMcpResourcesTool"|"ReadMcpResourceTool")
-    KENRON_CLASS="Safe"
+    GUARD_CLASS="Safe"
     # 安全操作はメッセージなし（トークン節約）
     ;;
 
   "mcp__serena__read_file"|"mcp__serena__list_dir"|"mcp__serena__find_file"|"mcp__serena__search_for_pattern"|"mcp__serena__get_symbols_overview"|"mcp__serena__find_symbol"|"mcp__serena__find_referencing_symbols"|"mcp__serena__list_memories"|"mcp__serena__read_memory"|"mcp__serena__check_onboarding_performed"|"mcp__serena__get_current_config"|"mcp__serena__think_about_collected_information"|"mcp__serena__think_about_task_adherence"|"mcp__serena__think_about_whether_you_are_done")
-    KENRON_CLASS="Safe"
+    GUARD_CLASS="Safe"
     ;;
 
   "mcp__jira__jira_get"|"mcp__confluence__conf_get"|"mcp__context7__resolve-library-id"|"mcp__context7__query-docs")
-    KENRON_CLASS="Safe"
+    GUARD_CLASS="Safe"
     ;;
 
   # === 要確認操作（要確認・警告） ===
   "Edit"|"Write"|"MultiEdit")
-    KENRON_CLASS="Boundary"
+    GUARD_CLASS="Boundary"
     MESSAGE="🔶 protection-mode:要確認操作 - ファイル編集"
     ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: ファイル編集\\n- 確認: 型安全性（any/as禁止）、ガイドライン準拠"
     ;;
 
   "Bash")
-    COMMAND=$(echo "$TOOL_INPUT" | jq -r '.command // empty')
-    
-    # 禁止操作チェック（危険なコマンド）
-    if echo "$COMMAND" | grep -qE '(rm -rf /|rm -rf \*|> /dev/|:(){:|sudo rm|git push --force|git push -f)'; then
-      KENRON_CLASS="Forbidden"
-      MESSAGE="${ICON_CRITICAL} protection-mode:禁止操作 - 危険なコマンド検出！実行禁止"
-      ADDITIONAL_CONTEXT="【protection-mode判定】禁止操作（実行禁止）\\n- 検出: 破壊的コマンド\\n- 対応: 実行を中止し、安全な代替手段を提案"
-    # 自動処理禁止チェック
-    elif echo "$COMMAND" | grep -qE '(npm run lint|prettier|eslint --fix|go fmt|autopep8|black )'; then
-      KENRON_CLASS="Boundary"
-      MESSAGE="${ICON_WARNING} protection-mode:要確認操作 - 自動整形（10原則:自動処理禁止）"
-      ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: 自動整形\\n- 10原則: 自動処理禁止 - ユーザー確認必須"
-    # 変更系コマンド
-    elif echo "$COMMAND" | grep -qE '(git commit|git push|git merge|git rebase|npm install|pip install|go mod|docker build|docker push)'; then
-      KENRON_CLASS="Boundary"
-      MESSAGE="🔶 protection-mode:要確認操作 - 変更系コマンド"
-      ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: $(echo "$COMMAND" | head -c 50)...\\n- 確認: 実行前にユーザー承認を推奨"
-    # 読み取り系コマンド
-    elif echo "$COMMAND" | grep -qE '^(git status|git log|git diff|git branch|ls |pwd|echo |cat |which |type )'; then
-      KENRON_CLASS="Safe"
-    else
-      # その他のBashコマンドはBoundary扱い
-      KENRON_CLASS="Boundary"
-      MESSAGE="🔶 protection-mode:要確認操作 - Bashコマンド"
-    fi
+    COMMAND=$(jq -r '.command // empty' <<< "$TOOL_INPUT")
+    classify_bash_command "$COMMAND"
     ;;
 
-  "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol"|"mcp__serena__write_memory"|"mcp__serena__delete_memory"|"mcp__serena__execute_shell_command")
-    KENRON_CLASS="Boundary"
+  "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_content"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol"|"mcp__serena__write_memory"|"mcp__serena__delete_memory"|"mcp__serena__execute_shell_command"|"mcp__serena__rename_symbol")
+    GUARD_CLASS="Boundary"
     MESSAGE="🔶 protection-mode:要確認操作 - Serena MCP変更操作"
     ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: Serena MCP変更\\n- 確認: 重要な変更後はmemory更新を検討"
     ;;
 
   "mcp__jira__jira_post"|"mcp__jira__jira_put"|"mcp__jira__jira_patch"|"mcp__jira__jira_delete"|"mcp__confluence__conf_post"|"mcp__confluence__conf_put"|"mcp__confluence__conf_patch"|"mcp__confluence__conf_delete")
-    KENRON_CLASS="Boundary"
+    GUARD_CLASS="Boundary"
     MESSAGE="🔶 protection-mode:要確認操作 - 外部サービス変更"
     ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: Jira/Confluence変更\\n- 確認: 外部サービスへの書き込み操作"
     ;;
 
   "Task")
-    KENRON_CLASS="Safe"
+    GUARD_CLASS="Safe"
     # エージェント起動はSafe（実際の操作は各エージェント内で判定）
     ;;
 
   "Skill")
-    KENRON_CLASS="Safe"
+    GUARD_CLASS="Safe"
 
     # スキル名を取得
     SKILL_NAME=$(echo "$TOOL_INPUT" | jq -r '.skill // empty')
@@ -122,33 +144,26 @@ case "$TOOL_NAME" in
     ;;
 
   "TaskCreate"|"TaskUpdate"|"TaskList"|"TaskGet"|"AskUserQuestion"|"EnterPlanMode"|"ExitPlanMode")
-    KENRON_CLASS="Safe"
+    GUARD_CLASS="Safe"
     ;;
 
   *)
     # 未知のツールはBoundary扱い
-    KENRON_CLASS="Boundary"
+    GUARD_CLASS="Boundary"
     MESSAGE="🔶 protection-mode:要確認操作 - 未分類ツール: $TOOL_NAME"
     ;;
 esac
 
 # ====================================
-# JSON出力
+# JSON出力（jqで安全にエスケープ）
 # ====================================
 
 if [ -n "$ADDITIONAL_CONTEXT" ]; then
-  cat <<EOF
-{
-  "systemMessage": "$MESSAGE",
-  "additionalContext": "$ADDITIONAL_CONTEXT"
-}
-EOF
+  jq -n --arg msg "$MESSAGE" --arg ctx "$ADDITIONAL_CONTEXT" \
+    '{"systemMessage": $msg, "additionalContext": $ctx}'
 elif [ -n "$MESSAGE" ]; then
-  cat <<EOF
-{
-  "systemMessage": "$MESSAGE"
-}
-EOF
+  jq -n --arg msg "$MESSAGE" \
+    '{"systemMessage": $msg}'
 else
   # 安全操作はメッセージなし（トークン節約）
   echo "{}"
