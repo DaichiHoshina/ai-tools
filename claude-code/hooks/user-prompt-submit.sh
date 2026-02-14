@@ -20,6 +20,7 @@ load_lib "detect-from-files.sh" || exit 1
 load_lib "detect-from-keywords.sh" || exit 1
 load_lib "detect-from-errors.sh" || exit 1
 load_lib "detect-from-git.sh" || exit 1
+load_lib "detect-technique.sh" || exit 1
 
 # === 前提条件チェック ===
 if ! command -v jq &>/dev/null; then
@@ -72,6 +73,10 @@ detect_from_errors "$prompt" detected_skills additional_context
 # 4. Git状態検出
 detect_from_git_state detected_skills
 
+# === テクニック自動選択 ===
+technique_recommendation=""
+detect_technique_recommendation "$prompt_lower" technique_recommendation
+
 # === 結果集約・JSON出力 ===
 
 # 検出結果カウント（set -u + set -e対応）
@@ -81,8 +86,8 @@ lang_count=${#detected_langs[@]}
 skill_count=${#detected_skills[@]}
 set -u
 
-# 検出されたスキル・言語がない場合は空オブジェクトを返す
-if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ]; then
+# 検出されたスキル・言語・テクニックがない場合は空オブジェクトを返す
+if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ] && [ -z "$technique_recommendation" ]; then
   echo '{}'
   exit 0
 fi
@@ -117,6 +122,16 @@ if [ "$lang_count" -gt 0 ] || [ "$skill_count" -gt 0 ]; then
     system_message="🔍 Detected: Languages [${langs_list}]"
   elif [ -n "$skills_list" ]; then
     system_message="🔍 Detected: Skills [${skills_list}]"
+  fi
+fi
+
+# テクニック推奨を追加
+if [ -n "$technique_recommendation" ]; then
+  if [ -n "$system_message" ]; then
+    system_message="${system_message}
+🧪 ${technique_recommendation}"
+  else
+    system_message="🧪 ${technique_recommendation}"
   fi
 fi
 

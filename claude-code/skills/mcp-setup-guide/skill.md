@@ -3,6 +3,14 @@ name: mcp-setup-guide
 description: MCP設定ガイド - Claude Code向けMCPサーバーのセットアップ・トラブルシュート
 ---
 
+# mcp-setup-guide - MCP設定ガイド
+
+## 使用タイミング
+
+- MCPサーバーの新規セットアップ時
+- MCP接続のトラブルシュート時
+- MCPサーバーの設定変更時
+
 ## 設定ファイル
 
 | スコープ | パス |

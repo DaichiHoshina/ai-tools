@@ -5,6 +5,12 @@ description: Retrieve up-to-date documentation for software libraries, framework
 
 # Context7
 
+## 使用タイミング
+
+- ライブラリ・フレームワークのAPI仕様を確認する時
+- トレーニングデータより新しいドキュメントが必要な時
+- コード例を検索する時
+
 ## Overview
 
 This skill enables retrieval of current documentation for software libraries and components by querying the Context7 API via curl. Use it instead of relying on potentially outdated training data.
