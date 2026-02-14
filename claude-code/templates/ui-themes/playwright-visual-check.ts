@@ -1,11 +1,14 @@
 /**
- * Playwright Visual Check for shadcn Dashboard UI
+ * Playwright Visual Check for Dashboard UI
  *
- * Usage:
+ * Usage (recommended):
+ *   npx tsx ~/.claude/templates/ui-themes/playwright-visual-check.ts
+ *
+ * Or as Playwright test:
  *   npx playwright test playwright-visual-check.ts
  *
- * Or run directly:
- *   npx tsx playwright-visual-check.ts
+ * Custom port:
+ *   BASE_URL=http://localhost:5173 npx tsx playwright-visual-check.ts
  *
  * Prerequisites:
  *   npx playwright install chromium
@@ -19,9 +22,12 @@ import { chromium, type Browser, type Page } from "playwright";
 const SCREENSHOTS_DIR = "/tmp/ui-visual-check";
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
+const PAGE_LOAD_TIMEOUT_MS = 15000;
+const FONT_LOAD_WAIT_MS = 1000;
+
 // Target pages to capture (customize per project)
 const PAGES = [
-  { name: "dashboard", path: "/" },
+  { name: "home", path: "/" },
   { name: "dashboard", path: "/dashboard" },
 ];
 
@@ -44,14 +50,19 @@ async function captureScreenshots() {
       const url = `${BASE_URL}${target.path}`;
 
       try {
-        await page.goto(url, { waitUntil: "networkidle", timeout: 15000 });
-      } catch {
-        console.log(`Skip: ${url} (not reachable)`);
+        await page.goto(url, {
+          waitUntil: "networkidle",
+          timeout: PAGE_LOAD_TIMEOUT_MS,
+        });
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "Unknown error";
+        console.log(`Skip: ${url} (${message})`);
         continue;
       }
 
       // Wait for fonts and images to load
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(FONT_LOAD_WAIT_MS);
 
       const filename = `${SCREENSHOTS_DIR}/${target.name}-${viewport.name}.png`;
       await page.screenshot({
@@ -70,4 +81,10 @@ async function captureScreenshots() {
   console.log("Use Claude's Read tool to evaluate the screenshots.");
 }
 
-captureScreenshots().catch(console.error);
+captureScreenshots().catch((error: unknown) => {
+  console.error(
+    "Screenshot capture failed:",
+    error instanceof Error ? error.message : error,
+  );
+  process.exit(1);
+});

@@ -170,14 +170,50 @@ AIが生成するUIはデフォルトだとダサくなる。**必ずテーマ�
 
 ```
 UI実装リクエスト検出時:
-1. プロジェクトにカスタムテーマあり → そのまま使用
-2. テーマなし → フレームワーク検出:
-   a. components.json あり → shadcn/ui → ui-themes/shadcn/ から適用
-   b. tailwind.config あり → ui-themes/tailwind/ から適用
-   c. その他 → ui-themes/tokens/ のJSONを参照して手動適用
+1. カスタムテーマ検出:
+   globals.css等に --color-primary や --primary のCSS変数定義あり → そのまま使用
+2. テーマなし → フレームワーク検出（上から順に判定、最初にマッチした形式を使用）:
+   a. プロジェクトrootに components.json あり → shadcn/ui → ui-themes/shadcn/ から適用
+   b. (a)に該当せず tailwind.config.{js,ts,mjs} あり → ui-themes/tailwind/ から適用
+   c. いずれにも該当しない → ui-themes/tokens/ のJSONを参照
 3. AskUserQuestion でプリセット選択（または自動判定）
-4. 選択後 → テーマファイルをプロジェクトにコピー
+4. テーマファイルの適用:
+   - shadcn → app/globals.css に上書き
+   - tailwind → src/styles/theme.css として作成し、globals.cssで @import
+   - tokens → JSONを参照してプロジェクトのCSS/Sass変数に手動変換
 ```
+
+#### tokens版の使い方（非shadcn、非Tailwindプロジェクト）
+
+JSONトークンからCSS変数への変換例:
+
+```css
+/* tokens/corporate.json の値を手動でCSSに変換 */
+:root {
+  --color-primary: #4f46e5;  /* tokens.color.primary.light */
+  --color-bg: #fafaff;       /* tokens.color.bg.light */
+  --radius-lg: 0.5rem;       /* tokens.radius.lg */
+  --font-sans: system-ui, -apple-system, sans-serif; /* tokens.typography.fontFamily.sans */
+}
+```
+
+Styled Components等のJS-in-CSS:
+
+```typescript
+import tokens from './tokens/corporate.json';
+const theme = {
+  primary: tokens.color.primary.light,
+  bg: tokens.color.bg.light,
+};
+```
+
+#### テーマカスタマイズ
+
+適用後、ブランドカラー等を変更したい場合:
+
+- **shadcn版**: `globals.css` の `:root` / `.dark` セクションで `--primary` 等を上書き
+- **Tailwind版**: `--color-primary` 等のCSS変数を直接変更
+- **tokens版**: JSONを編集してCSS再生成
 
 ### テーマ自動判定ロジック
 
@@ -345,10 +381,14 @@ Claude が /tmp/ui-visual-check/*.png を Read で読み込み
 
 テンプレート: `~/.claude/templates/ui-themes/playwright-visual-check.ts`
 
+### 前提条件
+
+1. dev server起動（デフォルト: `http://localhost:3000`）
+2. 異なるポートの場合: `BASE_URL=http://localhost:5173 npx tsx ...`
+3. `npx playwright install chromium`（初回のみ）
+
 ### 注意事項
 
-- dev serverが起動している必要がある
-- `npx playwright install chromium` が事前に必要
 - スクリーンショットは `/tmp/ui-visual-check/` に保存
 - 3回修正しても改善しない場合はユーザーに相談
 
