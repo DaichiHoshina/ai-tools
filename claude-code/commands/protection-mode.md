@@ -175,6 +175,82 @@ ComplexityCheck : UserRequest → {Simple, TaskDecomposition, AgentHierarchy}
 
 **詳細**: `claude-code/references/AI-THINKING-ESSENTIALS.md` 参照
 
+---
+
+## GuardQuality射（実装品質チェック）
+
+```
+GuardQuality : Implementation → {Accept, ReviewRequired, Reject}
+```
+
+対症療法パターンを検出し、構造的な修正を推奨します。
+
+### 検出パターン
+
+#### Reject（自動拒否）
+
+```typescript
+// Pattern 1: 理由なきnull check
+if (user === null) return;  // なぜnullなのか？
+
+// Pattern 2: エラー握りつぶし
+try {
+  dangerousOperation();
+} catch {
+  /* ignore */
+}  // なぜ失敗するのか？
+
+// Pattern 3: 根拠なきタイムアウト増加
+setTimeout(() => fetch(), 10000);  // なぜ10秒必要か？
+```
+
+#### ReviewRequired（要レビュー）
+
+```typescript
+// 正当化されたworkaround
+// Root cause: 外部API不安定（documented）
+const retryWithBackoff = ...;  // レビュー推奨
+
+// TODO付き暫定対応
+// TODO: [RCA-123] Remove after upstream fix
+const temporaryFix = ...;  // レビュー推奨
+```
+
+#### Accept（許可）
+
+```typescript
+// 構造的修正
+class User {
+  constructor(name: string) {
+    this.name = name;  // 初期化保証
+  }
+}
+
+// 境界での検証
+function createUser(data: unknown): User {
+  const validated = UserSchema.parse(data);  // 型安全
+  return new User(validated.name);
+}
+```
+
+### Guard関手との統合
+
+```
+Guard_M ∘ GuardQuality : Mode × Implementation → Decision
+
+フロー:
+  Implementation → GuardQuality → {Accept, ReviewRequired, Reject}
+                                         ↓
+                                    Guard_M（Mode考慮）
+                                         ↓
+                              {Allow, AskUser, Deny}
+```
+
+**モード別の動作**:
+- `strict`: ReviewRequired → 必ず確認
+- `normal`: ReviewRequired → 警告表示（デフォルト）
+- `fast`: ReviewRequired → ログ記録のみ
+
 **大規模作業向け**: `guidelines/common/large-scale-workflow.md` 参照
 - 10ファイル以上、500行以上、60分以上の作業に適用
 - Phase 0-5の詳細ワークフロー、チェックポイント、並列実行戦略

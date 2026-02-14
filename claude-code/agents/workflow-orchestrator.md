@@ -245,6 +245,7 @@ async function loadRequiredGuidelines(taskType: string, techStacks: string[]): P
     'design': ['common'],
     'feature': ['common'],
     'refactor': ['common'],
+    'bugfix_rca': ['common'],
     'bugfix': ['common'],
     'hotfix': ['common'],
     'docs': ['common'],
@@ -456,18 +457,19 @@ function detectTaskType(prompt: string): TaskType {
   const keywords = {
     design: ['相談', 'アイデア', '設計検討', 'ブレスト', 'brainstorm', '構想', '検討'],  // Priority 0
     hotfix: ['緊急', 'hotfix', '本番', 'production', 'critical'],  // Priority 1
-    bugfix: ['修正', 'fix', 'バグ', 'エラー', '不具合', 'bug', 'error'],  // Priority 2
-    refactor: ['リファクタリング', '改善', '整理', '見直し', 'refactor', 'improve'],  // Priority 3
-    docs: ['ドキュメント', '仕様書', 'README', 'docs', 'documentation'],  // Priority 4
-    test: ['テスト', 'test', 'spec', 'testing'],  // Priority 5
-    feature: ['追加', '実装', '作成', '新規', '機能', 'add', 'implement', 'create'],  // Priority 6
-    'data-analysis': ['データ分析', '分析', 'analysis', 'データ', 'data'],  // Priority 7
-    infrastructure: ['インフラ', 'infrastructure', 'terraform', 'kubernetes', 'k8s', 'IaC'],  // Priority 8
-    troubleshoot: ['トラブルシュート', 'troubleshoot', '調査', '診断', '障害'],  // Priority 9
+    bugfix_rca: ['根本', '原因分析', 'root cause', 'rca'],  // Priority 2
+    bugfix: ['修正', 'fix', 'バグ', 'エラー', '不具合', 'bug', 'error'],  // Priority 3
+    refactor: ['リファクタリング', '改善', '整理', '見直し', 'refactor', 'improve'],  // Priority 4
+    docs: ['ドキュメント', '仕様書', 'README', 'docs', 'documentation'],  // Priority 5
+    test: ['テスト', 'test', 'spec', 'testing'],  // Priority 6
+    feature: ['追加', '実装', '作成', '新規', '機能', 'add', 'implement', 'create'],  // Priority 7
+    'data-analysis': ['データ分析', '分析', 'analysis', 'データ', 'data'],  // Priority 8
+    infrastructure: ['インフラ', 'infrastructure', 'terraform', 'kubernetes', 'k8s', 'IaC'],  // Priority 9
+    troubleshoot: ['トラブルシュート', 'troubleshoot', '調査', '診断', '障害'],  // Priority 10
   };
 
   // Priority順にチェック
-  const priorityOrder = ['design', 'hotfix', 'bugfix', 'refactor', 'docs', 'test', 'feature', 'data-analysis', 'infrastructure', 'troubleshoot'];
+  const priorityOrder = ['design', 'hotfix', 'bugfix_rca', 'bugfix', 'refactor', 'docs', 'test', 'feature', 'data-analysis', 'infrastructure', 'troubleshoot'];
   for (const type of priorityOrder) {
     const words = keywords[type];
     if (words.some(word => prompt.includes(word))) {
@@ -503,7 +505,7 @@ workflows:
         activeForm: 設計プラン作成中
     # 注: 実装は含まない（設計相談のみ）
 
-  feature:  # Priority 6: 新機能実装
+  feature:  # Priority 7: 新機能実装
     steps:
       - command: /prd
         required: true
@@ -562,6 +564,39 @@ workflows:
         required: true
         description: 修正PR作成
         activeForm: 修正PR作成中
+
+  bugfix_with_rca:
+    steps:
+      - command: /debug
+        required: true
+        description: 初期バグ調査
+        activeForm: バグ調査中
+      - decision: complexity_check
+        description: 複雑度判定
+      - command: /root-cause
+        required: conditional
+        condition: complexity == 'medium'
+        description: 根本原因分析（スキル）
+        activeForm: 根本原因分析中
+      - agent: root-cause-analyzer
+        required: conditional
+        condition: complexity == 'high'
+        description: 根本原因分析（エージェント）
+        activeForm: 根本原因分析中（深い分析）
+      - decision: strategy_selection
+        description: 修正戦略選択（L1/L2/L3）
+      - command: /dev
+        required: true
+        description: 修正実装
+        activeForm: 修正実装中
+      - agent: verify-app
+        required: true
+        description: 検証
+        activeForm: 検証中
+      - command: /commit-push-pr
+        required: true
+        description: PR作成
+        activeForm: PR作成中
 
   refactor:
     steps:
@@ -662,7 +697,7 @@ workflows:
         description: テストPR作成
         activeForm: テストPR作成中
 
-  data-analysis:  # Priority 7: データ分析
+  data-analysis:  # Priority 8: データ分析
     steps:
       - skill: data-analysis
         required: true
@@ -682,7 +717,7 @@ workflows:
         description: 分析PR作成
         activeForm: 分析PR作成中
 
-  infrastructure:  # Priority 8: インフラ
+  infrastructure:  # Priority 9: インフラ
     steps:
       - mode: plan
         required: true
@@ -707,7 +742,7 @@ workflows:
         description: インフラPR作成（ドラフト）
         activeForm: インフラPR作成中
 
-  troubleshoot:  # Priority 9: トラブルシュート
+  troubleshoot:  # Priority 10: トラブルシュート
     steps:
       - skill: docker-troubleshoot OR debug
         required: true
@@ -726,6 +761,100 @@ workflows:
         required: false
         description: 修正PR作成
         activeForm: 修正PR作成中
+```
+
+### Phase 2.2: バグ複雑度判定（bugfix時）
+
+**実行タイミング**: タスクタイプがbugfix/bugfix_rcaの場合、Phase 2開始時に実行
+
+```typescript
+/**
+ * バグの複雑度を判定
+ * @returns 'low' | 'medium' | 'high'
+ */
+async function assessBugComplexity(
+  bugDescription: string
+): Promise<'low' | 'medium' | 'high'> {
+  // Low complexity indicators
+  const lowIndicators = [
+    'typo', 'タイポ',
+    'missing import', 'インポート',
+    'wrong variable name', '変数名',
+    'simple condition', '条件反転'
+  ];
+
+  // High complexity indicators
+  const highIndicators = [
+    'race condition', '競合',
+    'memory leak', 'メモリリーク',
+    'security', 'セキュリティ',
+    'data corruption', 'データ破損',
+    'architectural', 'アーキテクチャ',
+    'recurring', '繰り返し', '再発'
+  ];
+
+  // High check（toLowerCase: 英語キーワードの大小区別排除。日本語キーワードには影響なし）
+  if (highIndicators.some(i => bugDescription.toLowerCase().includes(i))) {
+    console.log('🔴 高複雑度バグ検出 → RCA必須');
+    return 'high';
+  }
+
+  // Low check
+  if (lowIndicators.some(i => bugDescription.toLowerCase().includes(i))) {
+    console.log('🟢 低複雑度バグ → RCA不要');
+    return 'low';
+  }
+
+  // Default: medium
+  console.log('🟡 中複雑度バグ → RCA推奨');
+  return 'medium';
+}
+
+/**
+ * RCA適用判定
+ */
+function shouldApplyRCA(
+  complexity: 'low' | 'medium' | 'high'
+): boolean {
+  return complexity !== 'low';
+}
+
+/**
+ * RCAワークフロー選択
+ * bugfix_rcaタイプの場合は常にbugfix_with_rcaを使用
+ * bugfixタイプの場合は複雑度に応じて自動切り替え
+ */
+async function selectBugfixWorkflow(
+  taskType: string,
+  bugDescription: string
+): Promise<string> {
+  // 明示的にRCA指定された場合
+  if (taskType === 'bugfix_rca') {
+    console.log('📋 明示的RCA指定 → bugfix_with_rca ワークフロー');
+    return 'bugfix_with_rca';
+  }
+
+  // bugfixの場合は複雑度判定
+  if (taskType === 'bugfix') {
+    const complexity = await assessBugComplexity(bugDescription);
+
+    if (shouldApplyRCA(complexity)) {
+      console.log(`📋 複雑度${complexity} → bugfix_with_rca ワークフロー（RCA付き）`);
+      return 'bugfix_with_rca';
+    }
+
+    console.log('📋 低複雑度 → bugfix ワークフロー（シンプル）');
+    return 'bugfix';
+  }
+
+  return taskType;
+}
+
+// 使用例（Phase 2のワークフロー決定で呼び出し）
+// if (taskType === 'bugfix' || taskType === 'bugfix_rca') {
+//   const selectedWorkflow = await selectBugfixWorkflow(taskType, userPrompt);
+//   // selectedWorkflow に基づいてワークフロー実行
+// }
 ```
 
 ### Phase 2.3: 設計ガイドライン選択（designワークフロー時）

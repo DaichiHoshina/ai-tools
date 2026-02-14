@@ -32,15 +32,16 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 |--------|-----------|------------|------------|
 | 0 | 相談, アイデア, 設計検討, ブレスト, brainstorm, 構想, 検討 | **設計相談** | Brainstorm → PRD → Plan → ... |
 | 1 | 緊急, hotfix, 本番, production, critical | **緊急対応** | Debug → Dev → Verify → PR |
-| 2 | 修正, fix, バグ, エラー, 不具合, bug, error | **バグ修正** | Debug → Dev → Verify → PR |
-| 3 | リファクタリング, 改善, 整理, 見直し, refactor, improve | **リファクタリング** | Plan → Refactor → Techdebt → Simplify → Review → Verify → PR(draft) |
-| 4 | ドキュメント, 仕様書, README, docs, documentation | **ドキュメント** | Explore → Docs → Review → PR |
-| 5 | テスト, test, spec, testing | **テスト作成** | Test → Review → Verify → PR |
-| 6 | 追加, 実装, 作成, 新規, 機能, add, implement, create | **新機能実装** | PRD → Plan → Dev → Simplify → Test → Review → Verify → PR |
-| 7 | データ分析, 分析, analysis, データ, data | **データ分析** | データ分析 → ドキュメント化 → PR |
-| 8 | インフラ, infrastructure, terraform, kubernetes, k8s, IaC | **インフラ** | Plan → インフラコード → Verify → PR |
-| 9 | トラブルシュート, troubleshoot, 調査, 診断, 障害 | **トラブルシュート** | 診断 → 修正 → ドキュメント化 |
-| 10 | その他 | **新機能実装** | （デフォルト） |
+| 2 | 根本, 原因分析, root cause, rca | **バグ修正（RCA付き）** | Debug → RootCause → Dev → Verify → PR |
+| 3 | 修正, fix, バグ, エラー, 不具合, bug, error | **バグ修正（シンプル）** | Debug → Dev → Verify → PR |
+| 4 | リファクタリング, 改善, 整理, 見直し, refactor, improve | **リファクタリング** | Plan → Refactor → Techdebt → Simplify → Review → Verify → PR(draft) |
+| 5 | ドキュメント, 仕様書, README, docs, documentation | **ドキュメント** | Explore → Docs → Review → PR |
+| 6 | テスト, test, spec, testing | **テスト作成** | Test → Review → Verify → PR |
+| 7 | 追加, 実装, 作成, 新規, 機能, add, implement, create | **新機能実装** | PRD → Plan → Dev → Simplify → Test → Review → Verify → PR |
+| 8 | データ分析, 分析, analysis, データ, data | **データ分析** | データ分析 → ドキュメント化 → PR |
+| 9 | インフラ, infrastructure, terraform, kubernetes, k8s, IaC | **インフラ** | Plan → インフラコード → Verify → PR |
+| 10 | トラブルシュート, troubleshoot, 調査, 診断, 障害 | **トラブルシュート** | 診断 → 修正 → ドキュメント化 |
+| 11 | その他 | **新機能実装** | （デフォルト） |
 
 ## オプション
 
@@ -219,6 +220,40 @@ Task(
   prompt: "タスク: {内容}, タイプ: {判定結果}, 複雑度: {ComplexityCheck結果}, オプション: {解析結果}"
 )
 ```
+
+## バグ修正ワークフローの選択
+
+### 自動切り替え
+
+- `/flow バグ修正` → bugfix（シンプル版）
+- `/flow 根本原因を特定してバグ修正` → bugfix_with_rca
+
+### 複雑度による自動判定
+
+複雑度がMedium以上の場合、自動的にRCA付きワークフローに切り替わります。
+
+**複雑度判定基準**:
+- Low: タイポ、インポートミス、単純な条件反転
+- Medium: ロジックバグ、データ検証漏れ
+- High: 競合状態、メモリリーク、セキュリティ脆弱性、繰り返し発生
+
+### RCAフェーズの内容
+
+1. 5つのなぜ分析で根本原因を特定
+2. 修正戦略の比較（L1対症療法/L2部分治療/L3根本治療）
+3. 類似問題の検出
+4. ユーザーと戦略を協議（AskUserQuestion）
+
+### RCA適用フロー
+
+```
+バグ修正タスク → 複雑度判定
+  → Low: Debug → Dev → Verify → PR（従来通り）
+  → Medium: Debug → /root-cause → Dev → Verify → PR
+  → High: Debug → root-cause-analyzer Agent → Dev → Verify → PR
+```
+
+---
 
 ## 統合ルール
 
