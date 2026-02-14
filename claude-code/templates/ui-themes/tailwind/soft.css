@@ -1,0 +1,89 @@
+/*
+ * Theme: Soft (Plain Tailwind / CSS Custom Properties)
+ *
+ * Usage: Import in your global CSS file.
+ * Works with: Tailwind CSS, CSS Modules, vanilla CSS, any framework
+ *
+ * Inspired by: Notion, Loom, Cal.com
+ * Tone: Friendly, warm, approachable
+ */
+
+:root {
+  /* Primary */
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-light: #ede9fe;
+  --color-on-primary: #ffffff;
+
+  /* Neutral */
+  --color-bg: #fefcf9;
+  --color-surface: #ffffff;
+  --color-surface-alt: #faf8f5;
+  --color-text: #2e1065;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #ffffff;
+  --color-border: #e8e5e0;
+  --color-border-strong: #d6d3cd;
+
+  /* Semantic */
+  --color-success: #059669;
+  --color-success-light: #d1fae5;
+  --color-warning: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-destructive: #e11d48;
+  --color-destructive-light: #ffe4e6;
+  --color-info: #7c3aed;
+  --color-info-light: #ede9fe;
+
+  /* Chart */
+  --color-chart-1: #7c3aed;
+  --color-chart-2: #14b8a6;
+  --color-chart-3: #f59e0b;
+  --color-chart-4: #ec4899;
+  --color-chart-5: #3b82f6;
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 24px rgba(0,0,0,0.08);
+
+  /* Spacing rhythm */
+  --space-section: 2rem;
+  --space-card: 1.5rem;
+  --space-element: 0.75rem;
+}
+
+[data-theme="dark"], .dark {
+  --color-primary: #a78bfa;
+  --color-primary-hover: #c4b5fd;
+  --color-primary-light: #3b1e8f;
+  --color-on-primary: #1e1040;
+
+  --color-bg: #1a1625;
+  --color-surface: #231e30;
+  --color-surface-alt: #1e1a28;
+  --color-text: #f5f3ff;
+  --color-text-muted: #a1a1aa;
+  --color-text-inverse: #1a1625;
+  --color-border: rgba(255,255,255,0.1);
+  --color-border-strong: rgba(255,255,255,0.18);
+
+  --color-success: #34d399;
+  --color-success-light: #064e3b;
+  --color-warning: #fbbf24;
+  --color-warning-light: #78350f;
+  --color-destructive: #fb7185;
+  --color-destructive-light: #881337;
+  --color-info: #a78bfa;
+  --color-info-light: #2e1065;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.15);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.2);
+  --shadow-lg: 0 10px 24px rgba(0,0,0,0.3);
+}
