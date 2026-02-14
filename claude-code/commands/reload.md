@@ -1,38 +1,51 @@
 ---
-allowed-tools: Read
+allowed-tools: Read, mcp__serena__*
 description: CLAUDE.mdを再読み込みしてcompaction後のコンテキストを復元
 ---
 
-## 概要
-compaction（会話の圧縮）が走った後、CLAUDE.mdに記載された重要な指示やガイドラインが失われることがあります。
-このコマンドはCLAUDE.mdを再読み込みして、以下のコンテキストを復元します：
+# /reload - コンテキスト復元
 
-- Agent System利用ガイド（PO→Manager→Developerの階層）
-- MCPサーバー利用ガイドライン
-- コード設計の原則（SOLID原則、クリーンコード）
-- プロジェクト運用ルール
+compaction（会話の圧縮）後や「続き」と言いたい場面で使用。
+CLAUDE.md + Serena memoryの両方からコンテキストを復元する。
 
 ## 使い方
+
 ```bash
 /reload
 ```
 
-## 実行内容
-CLAUDE.mdファイル（`$HOME/.claude/CLAUDE.md`）を読み込み、その内容を表示します。
-これにより、compaction後も重要な指示とガイドラインを再確認できます。
-
 ## タスク実行
-以下の手順を実行してください：
 
-1. CLAUDE.mdファイル（`$HOME/.claude/CLAUDE.md`）を読み込む
-2. 読み込んだ内容を理解し、以降の作業で厳密に遵守する
+以下の手順を**すべて自動で**実行してください：
 
-**特に重要な遵守事項：**
-- **Agent System**: コード修正は必ずPO→Manager→Developerの階層で実行
-- **Worktree管理**: 新規作業時はユーザー確認後にworktree作成。PO AgentがWorktree管理を担当
-- **Git操作絶対禁止**: git add/commit/push等のGit操作は絶対に実行しない。Agentに任せる
-- **MCP使用**: serena優先
-- **コマンド実行**: grep/find/cat等はBashツールではなく専用ツール（Grep/Glob/Read）を使用
-- **設計原則**: SOLID原則、クリーンコード、テストファーストを徹底
+### 1. CLAUDE.md読み込み
 
-読み込み後、「CLAUDE.mdの指示を確認しました。以降これに従って動作します。」と応答してください。
+`$HOME/.claude/CLAUDE.md` を読み込み、指示を理解する。
+
+### 2. Serena memory復元（重要）
+
+```
+mcp__serena__list_memories
+→ compact-restore-* メモリがあれば読み込む（最新のもの）
+→ プロジェクト関連メモリも読み込む
+```
+
+### 3. プロジェクトCLAUDE.md読み込み
+
+カレントディレクトリに `CLAUDE.md` または `.claude/rules/` があれば読み込む。
+
+### 4. 状態復元サマリー
+
+復元した情報を簡潔に報告：
+- 読み込んだmemoryの一覧
+- 前回のタスク状態（compact-restoreから）
+- 次にやるべきこと
+
+## 「続き」の代替
+
+ユーザーが「続き」と入力する代わりに `/reload` を使うことで：
+- compaction後のコンテキスト消失を防げる
+- Serena memoryから作業状態を完全復元
+- 前回の作業を中断なく再開可能
+
+ARGUMENTS: $ARGUMENTS

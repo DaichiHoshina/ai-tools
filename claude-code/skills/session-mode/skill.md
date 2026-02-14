@@ -73,17 +73,29 @@ Guard_fast(a) = Allow  ⟺ a ∈ Mor(Safe) ∪ Mor(SafeBoundary)
 ```
 SafeBoundary = {
   git commit（ローカル）,
+  git push（feature branch）,
   npm install（安全なライブラリ）,
-  format(code)
+  format(code),
+  file_edit（既存ファイル）
 }
 ```
 
 **Boundary射の処理**:
 - git commit: 自動許可（ローカルのみ）
-- git push: 確認
+- git push: feature branchは自動許可、main/masterは確認
 - npm install（安全）: 自動許可
+- ファイル編集: 自動許可（削除のみ確認）
 
-**ユースケース**: プロトタイピング、探索的開発
+**Agent階層での確認削減**:
+- `/flow` 実行時: タスクタイプ判定後の確認をスキップ、即実行
+- `/dev` 実行時: Plan確認をスキップ、即実装開始
+- Agent Teams: サブエージェント起動の確認をスキップ
+- AskUserQuestion: 選択肢が1つの場合は自動選択
+
+**Boris流との相性**: fastモードはBoris流（短い指示で即実行）に最適化。
+「fix」「push」「review」等の短い指示で確認なしに即座実行。
+
+**ユースケース**: プロトタイピング、探索的開発、Boris流日常開発
 
 ---
 

@@ -50,8 +50,11 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 --skip-review   # レビュースキップ
 --skip-simplify # 簡素化スキップ
 --interactive   # 各ステップで確認
---auto          # 確認なし（上級者向け）
+--auto          # 確認なし（上級者向け）- session-mode fastと同等
 ```
+
+**session-modeとの連携**: session-modeが`fast`の場合、`--auto`が暗黙的に有効化される。
+これにより「yes」「y」「はい」の繰り返し入力が不要に。
 
 **注意**: `--autonomous` / `--fast` オプションは廃止されました。代わりに、複雑度に応じて自動的に適切な機能が有効化されます。
 
