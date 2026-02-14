@@ -34,7 +34,7 @@ declare -gA messages_ja=(
     # 警告メッセージ
     [WARN_TOKEN_HIGH]="⚠️ トークン使用率が高くなっています（%d%%）"
     [WARN_TOKEN_CRITICAL]="🔴 トークン使用率が危険域です（%d%%） - /reload を推奨"
-    [WARN_AUTO_FORMAT]="🔶 protection-mode:Boundary射 - 自動整形（10原則:自動処理禁止）"
+    [WARN_AUTO_FORMAT]="🔶 protection-mode:要確認操作 - 自動整形（10原則:自動処理禁止）"
     [WARN_DEPRECATED]="⚠️ 非推奨: %s は将来のバージョンで削除されます"
 
     # 確認メッセージ
