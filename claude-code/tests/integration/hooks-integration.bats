@@ -7,6 +7,19 @@ setup() {
   # PROJECT_ROOT を設定
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
   export HOOKS_DIR="${PROJECT_ROOT}/hooks"
+  # テスト用HOME（本番ログ汚染防止）
+  export ORIGINAL_HOME="$HOME"
+  export HOME="$(mktemp -d)"
+  mkdir -p "$HOME/.claude/logs"
+  mkdir -p "$HOME/.claude/session-logs"
+}
+
+teardown() {
+  # テスト用HOMEを削除して復元
+  if [[ "$HOME" != "$ORIGINAL_HOME" && "$HOME" == /tmp/* ]]; then
+    rm -rf "$HOME"
+  fi
+  export HOME="$ORIGINAL_HOME"
 }
 
 # =============================================================================
@@ -143,6 +156,135 @@ setup() {
   run bash -c "source ${PROJECT_ROOT}/claude-code/lib/print-functions.sh && declare -F print_success"
   [ "$status" -eq 0 ]
   [[ "$output" =~ "print_success" ]]
+}
+
+# =============================================================================
+# Setup Hook Tests
+# =============================================================================
+
+@test "hooks: setup accepts valid JSON input" {
+  local input='{"cwd": "/test", "mcp_servers": {"serena": {}}}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/setup.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq . >/dev/null
+}
+
+@test "hooks: setup handles missing cwd" {
+  local input='{}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/setup.sh"
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Subagent Start/Stop Hook Tests
+# =============================================================================
+
+@test "hooks: subagent-start accepts valid JSON input" {
+  local input='{"agent_id": "test-123", "agent_type": "developer-agent", "cwd": "/test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/subagent-start.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq . >/dev/null
+}
+
+@test "hooks: subagent-stop accepts valid JSON input" {
+  local input='{"agent_id": "test-123", "agent_type": "developer-agent", "cwd": "/test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/subagent-stop.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq . >/dev/null
+}
+
+@test "hooks: subagent-start handles unknown agent" {
+  local input='{"agent_id": "unknown", "agent_type": "unknown", "cwd": "."}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/subagent-start.sh"
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Pre-Skill-Use Hook Tests
+# =============================================================================
+
+@test "hooks: pre-skill-use accepts valid JSON input" {
+  local input='{"skill": "test-skill"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-skill-use.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "hooks: pre-skill-use handles empty skill name" {
+  local input='{"skill": ""}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-skill-use.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "hooks: pre-skill-use handles missing skill field" {
+  local input='{}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-skill-use.sh"
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Post-Tool-Use Hook Tests
+# =============================================================================
+
+@test "hooks: post-tool-use accepts valid JSON input" {
+  local input='{"tool_name": "Bash", "tool_input": {"command": "echo test"}}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/post-tool-use.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "hooks: post-tool-use handles Edit tool with nonexistent file" {
+  local input='{"tool_name": "Edit", "tool_input": {"file_path": "/nonexistent/file.ts"}}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/post-tool-use.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "hooks: post-tool-use handles unknown tool" {
+  local input='{"tool_name": "UnknownTool", "tool_input": {}}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/post-tool-use.sh"
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Task-Completed Hook Tests
+# =============================================================================
+
+@test "hooks: task-completed accepts valid JSON input" {
+  local input='{"agent_id": "test-456", "agent_type": "developer-agent"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/task-completed.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq . >/dev/null
+}
+
+@test "hooks: task-completed handles unknown agent" {
+  local input='{}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/task-completed.sh"
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Stop Hook Tests
+# =============================================================================
+
+@test "hooks: stop accepts valid JSON input" {
+  local input='{}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/stop.sh"
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Teammate-Idle Hook Tests
+# =============================================================================
+
+@test "hooks: teammate-idle accepts valid JSON input" {
+  local input='{"agent_id": "idle-789", "agent_type": "explorer-agent"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq . >/dev/null
+}
+
+@test "hooks: teammate-idle handles unknown agent" {
+  local input='{}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh"
+  [ "$status" -eq 0 ]
 }
 
 # =============================================================================
