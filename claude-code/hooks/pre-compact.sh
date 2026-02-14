@@ -86,10 +86,8 @@ else
   ADDITIONAL_CONTEXT="Serena MCPを有効にしてcontext preservation機能を使用してください。"
 fi
 
-# JSON出力
-cat <<EOF
-{
-  "systemMessage": "$SYSTEM_MESSAGE",
-  "additionalContext": "$ADDITIONAL_CONTEXT"
-}
-EOF
+# JSON出力（jqで安全にエスケープ）
+jq -n \
+  --arg sm "$SYSTEM_MESSAGE" \
+  --arg ac "$ADDITIONAL_CONTEXT" \
+  '{systemMessage: $sm, additionalContext: $ac}'

@@ -24,12 +24,12 @@ if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
     --arg sm "${ICON_SUCCESS} Session initialized: protection-mode + guidelines loaded" \
     --arg ac "**Auto-loaded**: protection-mode (操作チェッカー), load-guidelines will be suggested based on project detection.
 
-**MANDATORY Serena Auto-Init** (do ALL of these silently, no user confirmation needed):
-1. \`mcp__serena__check_onboarding_performed\` → if NOT performed, run \`mcp__serena__onboarding\` automatically
-2. \`mcp__serena__list_memories\` → check for compact-restore-* memories and load them
-3. Read relevant project memories based on their names
+**Serena Auto-Init** (read-only operations are Safe, execute without confirmation):
+1. \`mcp__serena__check_onboarding_performed\` → check status (Safe operation)
+2. If NOT onboarded: notify user and suggest running \`/serena オンボーディング\` (Boundary - requires confirmation)
+3. \`mcp__serena__list_memories\` → list and read relevant memories including compact-restore-* (Safe operation)
 
-This eliminates the need for manual \`/serena オンボーディング\` and \`/serena-refresh\`.
+This reduces manual \`/serena オンボーディング\` and \`/serena-refresh\` by automating Safe read operations.
 
 **Development Principles**:
 - ${ICON_SUCCESS} 安全操作: 即実行

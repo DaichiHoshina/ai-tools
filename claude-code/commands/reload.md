@@ -8,6 +8,9 @@ description: CLAUDE.mdを再読み込みしてcompaction後のコンテキスト
 compaction（会話の圧縮）後や「続き」と言いたい場面で使用。
 CLAUDE.md + Serena memoryの両方からコンテキストを復元する。
 
+**session-start.shとの違い**: session-startはセッション開始時にSerena状態チェックと
+memory読み込みを自動実行する。`/reload`はcompaction後の**再復元**専用。
+
 ## 使い方
 
 ```bash
