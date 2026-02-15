@@ -16,6 +16,10 @@ codex/hooks/*.sh
 .env.local
 .env.*.local
 
+# Node.js
+node_modules/
+package-lock.json
+
 # OS生成ファイル
 .DS_Store
 Thumbs.db
