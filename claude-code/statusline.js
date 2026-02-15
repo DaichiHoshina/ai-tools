@@ -43,7 +43,7 @@ const path = require("path");
 /** キャッシュTTL（ミリ秒） */
 const CACHE_TTL_MS = 5000;
 
-/** @type {{ userCount: CacheEntry }} */
+/** @type {{ userCount: CacheEntry }} キャッシュ（sessionId: null はセッション未設定を示す） */
 let cache = {
   userCount: { value: 0, timestamp: 0, sessionId: null },
 };

@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, Skill, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Skill, AskUserQuestion, mcp__serena__*, mcp__context7__*
 description: レビュー→修正→プッシュを1コマンドで実行。/review + /dev 全修正 + /commit-push-main の統合。
 ---
 
