@@ -12,7 +12,7 @@ description: 実装用コマンド - Agent階層で実行（複雑なタスク�
 
 ## protection-mode
 
-`/flow` 経由時は自動適用。単独実行時もファイル変更を伴う場合は `Skill("protection-mode")` を推奨。
+session-startで自動適用済み。再読み込み不要。
 
 ## オプション
 
@@ -51,27 +51,18 @@ description: 実装用コマンド - Agent階層で実行（複雑なタスク�
 
 **always ultrathink** - 複雑な実装では必ず深く思考してから実行。安易な実装を避け、設計意図を理解した上でコードを書く。
 
-## Step 0: ガイドライン自動読み込み（必須）
+## Step 0: ガイドライン読み込み（条件付き）
 
-実装開始前に `load-guidelines` スキルを実行:
+**判断基準**:
+- `--quick`モード → ガイドライン読み込みスキップ（トークン節約）
+- 1-2ファイルの軽微な修正 → スキップ可（既知のパターンなら不要）
+- 新機能実装・設計判断 → `load-guidelines` 実行（サマリーモード推奨）
+- UI開発（Tailwind/React検出時） → `ui-skills` スキル推奨
 
 ```
-/load-guidelines        # サマリーのみ（推奨、~2,500トークン）
+/load-guidelines        # サマリーのみ（~2,500トークン）
 /load-guidelines full   # 詳細ガイドライン込み（+~5,500トークン）
 ```
-
-**読み込み結果:**
-`guidelines(ts,react) [summary]` または `guidelines(ts,react) [full]` をステータスラインに表示
-
-**使い分け:**
-- 軽微な修正 → サマリーのみで十分
-- 新機能実装・設計判断 → `full` で詳細読み込み
-
-**Skill連携:**
-選択されたSkillの `requires-guidelines` に基づき未読ガイドライン（サマリー）を自動読み込み
-
-**UI開発時（Tailwind/React検出時）:**
-- `ui-skills` スキル推奨（Tailwind CSS + motion/react + アクセシブルコンポーネント特化）
 
 ## Agent 使用判断（重要）
 
