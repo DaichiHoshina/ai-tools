@@ -43,6 +43,25 @@ claude-code/
 - 複雑な実装（3ファイル以上）→ `/flow` でAgent階層使用
 - Boris流: 「fix」だけで修正、細かく指示しない
 
+## 自然言語トリガー
+
+以下のフレーズはコマンドとして解釈する:
+
+| ユーザー入力 | 実行コマンド |
+|-------------|-------------|
+| "main push", "mainにpush", "main pushして", "mainpush" | `/commit-push-main` |
+| "pushして", "push" | `/commit-push-main`（mainブランチの場合） |
+| "レビューして直してpush", "review fix push" | `/review-fix-push` |
+
+## 横並び作業（複数リポジトリ）
+
+「横並びで」「同じ修正を」と指示された場合:
+
+1. 対象リポジトリを確認（ユーザーに列挙を依頼）
+2. 1つ目のリポジトリで修正を実施
+3. 修正内容を確認後、残りのリポジトリに同様の修正を適用
+4. 各リポジトリでcommit-push-mainを実行
+
 ## 根本原因分析（Root Cause Analysis）原則
 
 ### 対症療法 vs 根本治療

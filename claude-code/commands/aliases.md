@@ -20,6 +20,8 @@ description: コマンドエイリアス定義
 | `/ts` | `/test` | テスト作成 |
 | `/cm` | `/commit` | コミットのみ |
 | `/pl` | `/plan` | 設計・計画 |
+| `/mp` | `/commit-push-main` | mainにコミット&プッシュ |
+| `/rfp` | `/review-fix-push` | レビュー→修正→プッシュ一括 |
 
 ## 使用例
 
