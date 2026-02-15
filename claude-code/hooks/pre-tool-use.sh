@@ -39,19 +39,14 @@ classify_bash_command() {
   # 自動処理禁止チェック
   if echo "$cmd" | grep -qE '(npm run lint|prettier|eslint --fix|go fmt|autopep8|black )'; then
     GUARD_CLASS="Boundary"
-    MESSAGE="${ICON_WARNING} protection-mode:要確認操作 - 自動整形（10原則:自動処理禁止）"
-    ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: 自動整形\\n- 10原則: 自動処理禁止 - ユーザー確認必須"
+    MESSAGE="${ICON_WARNING} 要確認: 自動整形"
     return
   fi
 
   # 変更系コマンド
   if echo "$cmd" | grep -qE '(git commit|git push|git merge|git rebase|npm install|pip install|go mod|docker build|docker push)'; then
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 protection-mode:要確認操作 - 変更系コマンド"
-    # コマンドプレビューからJSON unsafe文字を除去
-    local cmd_preview
-    cmd_preview=$(echo "$cmd" | tr -d '"\\' | head -c 50)
-    ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: ${cmd_preview}...\\n- 確認: 実行前にユーザー承認を推奨"
+    MESSAGE="🔶 要確認: 変更系コマンド"
     return
   fi
 
@@ -88,8 +83,8 @@ case "$TOOL_NAME" in
   # === 要確認操作（要確認・警告） ===
   "Edit"|"Write"|"MultiEdit")
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 protection-mode:要確認操作 - ファイル編集"
-    ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: ファイル編集\\n- 確認: 型安全性（any/as禁止）、ガイドライン準拠"
+    MESSAGE="🔶 要確認: ファイル編集"
+    # additionalContext省略（トークン節約）
     ;;
 
   "Bash")
@@ -99,14 +94,12 @@ case "$TOOL_NAME" in
 
   "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_content"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol"|"mcp__serena__write_memory"|"mcp__serena__delete_memory"|"mcp__serena__execute_shell_command"|"mcp__serena__rename_symbol")
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 protection-mode:要確認操作 - Serena MCP変更操作"
-    ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: Serena MCP変更\\n- 確認: 重要な変更後はmemory更新を検討"
+    MESSAGE="🔶 要確認: Serena変更操作"
     ;;
 
   "mcp__jira__jira_post"|"mcp__jira__jira_put"|"mcp__jira__jira_patch"|"mcp__jira__jira_delete"|"mcp__confluence__conf_post"|"mcp__confluence__conf_put"|"mcp__confluence__conf_patch"|"mcp__confluence__conf_delete")
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 protection-mode:要確認操作 - 外部サービス変更"
-    ADDITIONAL_CONTEXT="【protection-mode判定】要確認操作（要確認）\\n- 操作: Jira/Confluence変更\\n- 確認: 外部サービスへの書き込み操作"
+    MESSAGE="🔶 要確認: Jira/Confluence変更"
     ;;
 
   "Task")
@@ -117,30 +110,7 @@ case "$TOOL_NAME" in
   "Skill")
     GUARD_CLASS="Safe"
 
-    # スキル名を取得
-    SKILL_NAME=$(echo "$TOOL_INPUT" | jq -r '.skill // empty')
-
-    # セッション状態ファイルのパス
-    SESSION_STATE_FILE="$HOME/.claude/session-state.json"
-
-    # ガイドライン自動読み込み判定（pre-skill-use.sh機能統合）
-    case "$SKILL_NAME" in
-      "backend-dev")
-        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: Backend開発ベストプラクティス\\n- 未読み込みの場合は自動的に読み込みます"
-        ;;
-      "react-best-practices"|"ui-skills")
-        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: TypeScript/React ベストプラクティス\\n- 未読み込みの場合は自動的に読み込みます"
-        ;;
-      "container-ops"|"terraform")
-        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: インフラストラクチャ設計\\n- 未読み込みの場合は自動的に読み込みます"
-        ;;
-      "clean-architecture-ddd"|"api-design"|"microservices-monorepo")
-        ADDITIONAL_CONTEXT="【スキル実行】$SKILL_NAME\\n- 推奨ガイドライン: アーキテクチャ設計\\n- 未読み込みの場合は自動的に読み込みます"
-        ;;
-      *)
-        # その他のスキルは通常処理
-        ;;
-    esac
+    # ガイドラインは各スキル内で自動読み込み（additionalContext省略でトークン節約）
     ;;
 
   "TaskCreate"|"TaskUpdate"|"TaskList"|"TaskGet"|"AskUserQuestion"|"EnterPlanMode"|"ExitPlanMode")

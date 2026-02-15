@@ -5,42 +5,8 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-/**
- * @typedef {Object} CacheEntry
- * @property {number} value - Cached counter value
- * @property {number} timestamp - Cache timestamp (ms since epoch)
- * @property {string|null} sessionId - Associated session ID
- */
-
-/**
- * @typedef {Object} Cache
- * @property {CacheEntry} userCount - Cached user message count
- */
-
-/**
- * @typedef {Object} StatusState
- * @property {string} color - ANSI color escape code
- * @property {string} icon - Status icon character
- * @property {string} label - Human-readable label
- * @property {number} threshold - Percentage threshold for this state
- */
-
-/**
- * @typedef {Object} ContextWindow
- * @property {number} [used_percentage] - Percentage of context window used
- * @property {number} [total_input_tokens] - Total input tokens consumed
- * @property {number} [total_output_tokens] - Total output tokens consumed
- */
-
-/**
- * @typedef {Object} StatusLineData
- * @property {ContextWindow} [context_window] - Context window usage data
- * @property {string} [session_id] - Current session ID
- */
-
 // キャッシュ設定（5秒TTL）
 const CACHE_TTL_MS = 5000;
-/** @type {Cache} */
 let cache = {
   userCount: { value: 0, timestamp: 0, sessionId: null },
 };
@@ -60,11 +26,7 @@ const STATUS_STATES = {
 // ANSI Reset
 const RESET = "\x1b[0m";
 
-/**
- * Determine status state based on context window usage percentage.
- * @param {number} percentage - Context window usage (0-100)
- * @returns {StatusState} The matching status state
- */
+// 状態判定関数
 function getStatusState(percentage) {
   if (percentage >= STATUS_STATES.critical.threshold) {
     return STATUS_STATES.critical;
@@ -104,11 +66,6 @@ process.stdin.on("end", async () => {
   }
 });
 
-/**
- * Render the status line to stdout.
- * @param {StatusLineData} data - Input data from Claude Code
- * @returns {Promise<void>}
- */
 async function displayStatusLine(data) {
   // 部分的な情報でも表示できるようにフォールバック値を設定
   let tokenDisplay = "0";
@@ -170,10 +127,6 @@ async function displayStatusLine(data) {
   }
 }
 
-/**
- * Get the currently active skill name from state file.
- * @returns {string} Skill name or "none"
- */
 function getCurrentSkill() {
   try {
     const stateFile = path.join(
@@ -192,20 +145,10 @@ function getCurrentSkill() {
   }
 }
 
-/**
- * Format a token count with locale-aware thousands separators.
- * @param {number} tokens - Raw token count
- * @returns {string} Formatted string (e.g. "12,345")
- */
 function formatTokenCount(tokens) {
   return tokens.toLocaleString();
 }
 
-/**
- * Get the current git branch name.
- * @param {string} cwd - Working directory path
- * @returns {Promise<string>} Branch name or "unknown"
- */
 async function getGitBranch(cwd) {
   try {
     const { execSync } = require("child_process");
@@ -220,12 +163,6 @@ async function getGitBranch(cwd) {
   }
 }
 
-/**
- * Get the response counter for the current session (1-based).
- * Uses a 5-second TTL cache to reduce filesystem reads.
- * @param {string|undefined} sessionId - Current session ID
- * @returns {Promise<number>} Response count (minimum 1)
- */
 async function getResponseCounter(sessionId) {
   try {
     if (!sessionId) return 1;
@@ -283,12 +220,6 @@ async function getResponseCounter(sessionId) {
   }
 }
 
-/**
- * Count total user messages in the session transcript.
- * Counts only messages after the last summary (compact) entry.
- * @param {string} sessionId - Session ID to look up
- * @returns {Promise<number>} Total user message count
- */
 async function getTotalUserCount(sessionId) {
   try {
     const projectsDir = path.join(process.env.HOME, ".claude", "projects");

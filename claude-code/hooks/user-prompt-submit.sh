@@ -117,11 +117,11 @@ if [ "$lang_count" -gt 0 ] || [ "$skill_count" -gt 0 ]; then
 
   # メッセージ構築
   if [ -n "$langs_list" ] && [ -n "$skills_list" ]; then
-    system_message="🔍 Detected: Languages [${langs_list}], Skills [${skills_list}]"
+    system_message="🔍 ${langs_list} | ${skills_list}"
   elif [ -n "$langs_list" ]; then
-    system_message="🔍 Detected: Languages [${langs_list}]"
+    system_message="🔍 ${langs_list}"
   elif [ -n "$skills_list" ]; then
-    system_message="🔍 Detected: Skills [${skills_list}]"
+    system_message="🔍 ${skills_list}"
   fi
 fi
 

@@ -21,33 +21,12 @@ INPUT=$(cat)
 # Serena MCPが有効かチェック
 if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
   jq -n \
-    --arg sm "${ICON_SUCCESS} Session initialized: protection-mode + guidelines loaded" \
-    --arg ac "**Auto-loaded**: protection-mode (操作チェッカー), load-guidelines will be suggested based on project detection.
-
-**Serena Auto-Init** (read-only operations are Safe, execute without confirmation):
-1. \`mcp__serena__check_onboarding_performed\` → check status (Safe operation)
-2. If NOT onboarded: notify user and suggest running \`/serena オンボーディング\` (Boundary - requires confirmation)
-3. \`mcp__serena__list_memories\` → list and read relevant memories including compact-restore-* (Safe operation)
-
-This reduces manual \`/serena オンボーディング\` and \`/serena-refresh\` by automating Safe read operations.
-
-**Development Principles**:
-- ${ICON_SUCCESS} 安全操作: 即実行
-- ${ICON_WARNING} 要確認操作: git/file operations require confirmation
-- ${ICON_FORBIDDEN} 禁止操作: dangerous operations blocked
-- Type safety: Avoid 'any', minimize 'as'
-
-See CLAUDE.md for details." \
+    --arg sm "${ICON_SUCCESS} Session初期化完了" \
+    --arg ac "**自動**: protection-mode, Serena自動初期化（onboarding確認, memory読み込み）\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否" \
     '{systemMessage: $sm, additionalContext: $ac}'
 else
   jq -n \
-    --arg sm "${ICON_WARNING} Serena not configured - basic mode" \
-    --arg ac "**Auto-loaded**: protection-mode (操作チェッカー)
-
-**Development Principles**:
-- ${ICON_SUCCESS} 安全操作: 即実行
-- ${ICON_WARNING} 要確認操作: git/file operations require confirmation
-- ${ICON_FORBIDDEN} 禁止操作: dangerous operations blocked
-- Type safety: Avoid 'any', minimize 'as'" \
+    --arg sm "${ICON_WARNING} Serena未設定 - 基本モード" \
+    --arg ac "**自動**: protection-mode\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否" \
     '{systemMessage: $sm, additionalContext: $ac}'
 fi
