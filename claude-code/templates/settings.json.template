@@ -51,18 +51,6 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/post-tool-use.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
     "PreCompact": [
       {
         "matcher": "*",
@@ -119,13 +107,6 @@
     ]
   },
   "skipDangerousModePermissionPrompt": true,
-  "instructions": [
-    "日本語で回答すること",
-    "Guard関手: Safe射(読み取り)→即実行、Boundary射(編集)→確認必要、Forbidden射(破壊)→拒否",
-    "any型禁止、as控える",
-    "実装完了後は必ずverify-app実行",
-    "2回同じアプローチで失敗したら/clearして再整理"
-  ],
   "1feedbackSurveyState": {
     "lastShownTime": 1753938733414
   },
