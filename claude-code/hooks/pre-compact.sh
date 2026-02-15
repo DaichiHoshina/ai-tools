@@ -11,10 +11,6 @@ ICON_WARNING=$'\u25b2'   # exclamation-triangle
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# セッション情報を取得
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"')
-PROJECT_DIR=$(echo "$INPUT" | jq -r '.workspace.current_dir // "."')
-PROJECT_NAME=$(basename "$PROJECT_DIR")
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 
 # Serena MCP が利用可能かチェック

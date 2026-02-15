@@ -12,9 +12,8 @@ ICON_WARNING=$'\u25b2'    # exclamation-triangle (boundary)
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# ツール名とパラメータを取得
+# ツール名を取得
 TOOL_NAME=$(jq -r '.tool_name // empty' <<< "$INPUT")
-TOOL_INPUT=$(jq -r '.tool_input // {}' <<< "$INPUT")
 
 # protection-mode判定変数
 GUARD_CLASS=""  # Safe, Boundary, Forbidden
@@ -31,8 +30,8 @@ classify_bash_command() {
   # スペースの揺れ（\s+）とエスケープ（\\rm等）を考慮
   if echo "$cmd" | grep -qE '(rm\s+-rf\s+/|rm\s+-rf\s+\*|>\s*/dev/|:\(\)\{|sudo\s+rm|git\s+push\s+--force|git\s+push\s+-f)'; then
     GUARD_CLASS="Forbidden"
-    MESSAGE="${ICON_CRITICAL} protection-mode:禁止操作 - 危険なコマンド検出！実行禁止"
-    ADDITIONAL_CONTEXT="【protection-mode判定】禁止操作（実行禁止）\\n- 検出: 破壊的コマンド\\n- 対応: 実行を中止し、安全な代替手段を提案"
+    MESSAGE="${ICON_CRITICAL} 禁止: 危険なコマンド検出"
+    ADDITIONAL_CONTEXT="破壊的コマンド検出。実行を中止し安全な代替手段を提案"
     return
   fi
 
@@ -58,7 +57,7 @@ classify_bash_command() {
 
   # その他のBashコマンドはBoundary扱い
   GUARD_CLASS="Boundary"
-  MESSAGE="🔶 protection-mode:要確認操作 - Bashコマンド"
+  MESSAGE="🔶 要確認: Bashコマンド"
 }
 
 # ====================================
@@ -88,7 +87,7 @@ case "$TOOL_NAME" in
     ;;
 
   "Bash")
-    COMMAND=$(jq -r '.command // empty' <<< "$TOOL_INPUT")
+    COMMAND=$(jq -r '.tool_input.command // empty' <<< "$INPUT")
     classify_bash_command "$COMMAND"
     ;;
 
@@ -120,7 +119,7 @@ case "$TOOL_NAME" in
   *)
     # 未知のツールはBoundary扱い
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 protection-mode:要確認操作 - 未分類ツール: $TOOL_NAME"
+    MESSAGE="🔶 要確認: 未分類ツール: $TOOL_NAME"
     ;;
 esac
 
