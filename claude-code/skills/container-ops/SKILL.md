@@ -14,381 +14,53 @@ parameters:
     type: enum
     values: [auto, troubleshoot, best-practices, deploy]
     default: auto
-    description: 実行モード（troubleshoot=トラブルシュート、best-practices=ベストプラクティス、deploy=デプロイ）
+    description: 実行モード
 ---
 
 # container-ops - コンテナ運用
 
-## 概要
-
-Docker/Kubernetes/Podman に対応したコンテナ運用スキル。トラブルシューティングからベストプラクティス、デプロイまでをカバーします。
-
-## パラメータ
-
-### `--platform` オプション
-
-コンテナプラットフォームを指定します（デフォルト: auto）
-
-```bash
-# 自動検出（デフォルト）
-/skill container-ops
-
-# 明示的指定
-/skill container-ops --platform=docker
-/skill container-ops --platform=kubernetes
-/skill container-ops --platform=podman
-```
-
-### `--mode` オプション
-
-実行モードを指定します（デフォルト: auto）
-
-```bash
-# トラブルシューティング
-/skill container-ops --mode=troubleshoot
-
-# ベストプラクティスレビュー
-/skill container-ops --mode=best-practices
-
-# デプロイ支援
-/skill container-ops --mode=deploy
-```
-
-**環境変数での指定**:
-```bash
-export CONTAINER_PLATFORM=docker
-export CONTAINER_MODE=troubleshoot
-/skill container-ops
-```
-
-**自動検出ロジック**:
-```bash
-# エラーメッセージから検出
-"cannot connect to docker daemon" → platform=docker, mode=troubleshoot
-"CrashLoopBackOff" → platform=kubernetes, mode=troubleshoot
-
-# ファイル変更から検出
-git diff --name-only | grep -q 'Dockerfile' → platform=docker, mode=best-practices
-git diff --name-only | grep -q 'deployment.yaml' → platform=kubernetes, mode=deploy
-```
-
-## 使用タイミング
-
-- Dockerコンテナ起動エラー時
-- Kubernetes Pod障害時
-- Dockerfileレビュー時
-- マニフェストファイルレビュー時
-
----
+Docker/Kubernetes/Podman対応のコンテナ運用スキル。`--platform`と`--mode`で指定（デフォルト: エラーメッセージや変更ファイルから自動検出）。
 
 ## Docker - トラブルシューティング
 
-### 🔴 Critical
-
-#### 1. Docker Daemon接続エラー
-```bash
-# エラー: Cannot connect to the Docker daemon
-# 原因: Docker Desktopが起動していない、またはLima接続エラー
-
-# 診断
-docker version
-docker context ls
-
-# Lima使用時
-limactl list
-limactl start default
-docker context use lima-default
-```
-
-#### 2. コンテナ起動失敗
-```bash
-# ログ確認
-docker logs <container-id>
-docker logs --tail 100 <container-id>
-
-# 詳細情報
-docker inspect <container-id>
-docker events --filter container=<container-id>
-```
-
-### 🟡 Warning
-
-#### 1. ポートバインドエラー
-```bash
-# エラー: Bind for 0.0.0.0:8080 failed: port is already allocated
-# 診断
-lsof -i :8080
-netstat -an | grep 8080
-
-# 対策: 別ポートを使用
-docker run -p 8081:8080 myapp
-```
-
----
+| 問題 | 診断コマンド | 対策 |
+|------|------------|------|
+| Daemon接続エラー | `docker version`, `docker context ls` | Docker Desktop起動確認。Lima: `limactl start` |
+| コンテナ起動失敗 | `docker logs <id>`, `docker inspect <id>` | ログからエラー原因特定 |
+| ポートバインドエラー | `lsof -i :<port>` | 別ポート使用 or 競合プロセス停止 |
 
 ## Docker - ベストプラクティス
 
-### 🔴 Critical
-
-#### 1. マルチステージビルド
-```dockerfile
-# ❌ 単一ステージ（イメージサイズ大）
-FROM golang:1.21
-WORKDIR /app
-COPY . .
-RUN go build -o main .
-CMD ["./main"]
-
-# ✅ マルチステージビルド（イメージサイズ削減）
-FROM golang:1.21 AS builder
-WORKDIR /app
-COPY . .
-RUN go build -o main .
-
-FROM alpine:3.18
-RUN apk --no-cache add ca-certificates
-COPY --from=builder /app/main /main
-CMD ["/main"]
-```
-
-#### 2. セキュリティ強化
-```dockerfile
-# ❌ rootユーザーで実行
-FROM node:18
-WORKDIR /app
-COPY . .
-CMD ["node", "server.js"]
-
-# ✅ 非rootユーザーで実行
-FROM node:18
-WORKDIR /app
-COPY . .
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-CMD ["node", "server.js"]
-```
-
-#### 3. レイヤーキャッシュ最適化
-```dockerfile
-# ❌ キャッシュ効率悪い
-FROM node:18
-WORKDIR /app
-COPY . .
-RUN npm install
-
-# ✅ キャッシュ効率良い
-FROM node:18
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-```
-
-#### 4. .dockerignore（必須）
-
-プロジェクトルートに`.dockerignore`を必ず作成:
-
-```dockerignore
-.git
-node_modules
-.venv
-__pycache__
-dist
-build
-tests
-docs
-*.md
-!README.md
-.vscode
-.idea
-.env*
-!.env.example
-Dockerfile*
-docker-compose*
-.dockerignore
-```
-
-#### 5. Distrolessベースイメージ
-
-シェルやパッケージマネージャーを含まない最小イメージ:
-
-```dockerfile
-# 静的バイナリ用
-FROM gcr.io/distroless/static:nonroot
-
-# Node.js用
-FROM gcr.io/distroless/nodejs20:nonroot
-```
-
-#### 6. ENTRYPOINT vs CMD
-
-```dockerfile
-# ENTRYPOINT: 固定コマンド / CMD: デフォルト引数（実行時上書き可能）
-ENTRYPOINT ["python", "-m", "app"]
-CMD ["--port", "8080"]
-# docker run myapp --port 3000 → python -m app --port 3000
-```
-
-### 🟡 Warning
-
-#### 1. 脆弱性スキャン未実施
-
-```bash
-# Docker Scout
-docker scout cves myimage:latest
-
-# Trivy
-trivy image myimage:latest
-```
-
-#### 2. Hadolint未使用
-
-```bash
-# Dockerfileの静的解析
-docker run --rm -i hadolint/hadolint < Dockerfile
-```
-
----
+| 重要度 | ルール |
+|--------|--------|
+| Critical | マルチステージビルド（builder→alpine/distroless） |
+| Critical | 非rootユーザーで実行（`USER appuser`） |
+| Critical | レイヤーキャッシュ最適化（`package*.json` → `npm install` → `COPY .`） |
+| Critical | `.dockerignore`必須（.git, node_modules, .env*等） |
+| Critical | Distrolessベースイメージ推奨（`gcr.io/distroless/static:nonroot`） |
+| Warning | 脆弱性スキャン実施（`docker scout cves` or `trivy image`） |
+| Warning | Hadolint使用（`hadolint Dockerfile`） |
 
 ## Kubernetes - トラブルシューティング
 
-### 🔴 Critical
-
-#### 1. CrashLoopBackOff
-```bash
-# ログ確認
-kubectl logs <pod-name>
-kubectl logs <pod-name> --previous
-
-# イベント確認
-kubectl describe pod <pod-name>
-
-# 一般的な原因:
-# - アプリケーションクラッシュ
-# - 設定ミス（環境変数、ConfigMap）
-# - リソース不足（OOMKilled）
-```
-
-#### 2. ImagePullBackOff
-```bash
-# イメージ名確認
-kubectl describe pod <pod-name> | grep Image
-
-# Secretsconfirm
-kubectl get secret -n <namespace>
-
-# 対策:
-# - イメージ名・タグ確認
-# - プライベートレジストリの認証設定
-# - imagePullSecrets の設定
-```
-
-#### 3. Pending状態
-```bash
-# ノードリソース確認
-kubectl get nodes
-kubectl describe nodes
-
-# イベント確認
-kubectl get events --sort-by='.lastTimestamp'
-
-# 原因:
-# - リソース不足（CPU/Memory）
-# - PersistentVolume未作成
-# - NodeSelector/Taintsの不一致
-```
-
----
+| 問題 | 診断コマンド | 主な原因 |
+|------|------------|---------|
+| CrashLoopBackOff | `kubectl logs <pod> --previous`, `kubectl describe pod <pod>` | アプリクラッシュ、設定ミス、OOMKilled |
+| ImagePullBackOff | `kubectl describe pod <pod>`, `kubectl get secret` | イメージ名/タグ誤り、認証設定不足 |
+| Pending | `kubectl describe nodes`, `kubectl get events` | リソース不足、PV未作成、NodeSelector不一致 |
 
 ## Kubernetes - ベストプラクティス
 
-### 🔴 Critical
+| 重要度 | ルール |
+|--------|--------|
+| Critical | リソース制限必須（`resources.requests` + `resources.limits`） |
+| Critical | Liveness/Readiness Probe設定（`/healthz`, `/ready`） |
+| Critical | セキュリティコンテキスト（`runAsNonRoot: true`, `readOnlyRootFilesystem: true`） |
+| Warning | PodDisruptionBudget設定（本番環境） |
 
-#### 1. リソース制限
-```yaml
-# ❌ リソース制限なし
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: app
-    image: myapp:latest
+## Podman
 
-# ✅ リソース制限あり
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: app
-    image: myapp:latest
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
-```
-
-#### 2. Liveness/Readiness Probe
-```yaml
-# ✅ Probeの設定
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: app
-    image: myapp:latest
-    livenessProbe:
-      httpGet:
-        path: /healthz
-        port: 8080
-      initialDelaySeconds: 30
-      periodSeconds: 10
-    readinessProbe:
-      httpGet:
-        path: /ready
-        port: 8080
-      initialDelaySeconds: 5
-      periodSeconds: 5
-```
-
-#### 3. セキュリティコンテキスト
-```yaml
-# ✅ セキュリティ強化
-apiVersion: v1
-kind: Pod
-spec:
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    fsGroup: 1000
-  containers:
-  - name: app
-    image: myapp:latest
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-```
-
----
-
-## Podman - トラブルシューティング
-
-### 基本的な違い
-
-- Dockerデーモン不要（rootless）
-- コマンドは `podman` に置き換え
-- `docker-compose` → `podman-compose`
-
-```bash
-# Docker → Podman
-docker ps → podman ps
-docker run → podman run
-docker build → podman build
-```
-
----
+Dockerデーモン不要（rootless）。コマンドは`docker` → `podman`に置き換え。`docker-compose` → `podman-compose`。
 
 ## チェックリスト
 
@@ -396,42 +68,14 @@ docker build → podman build
 - [ ] マルチステージビルド使用
 - [ ] 非rootユーザーで実行
 - [ ] レイヤーキャッシュ最適化
-- [ ] イメージサイズ最小化
+- [ ] .dockerignore作成
 
 ### Kubernetes
 - [ ] リソース制限設定
 - [ ] Liveness/Readiness Probe設定
 - [ ] セキュリティコンテキスト設定
-- [ ] PodDisruptionBudget設定（本番）
-
----
 
 ## 外部リソース
 
 - **Context7**: Docker/Kubernetes公式ドキュメント
 - **Serena memory**: プロジェクト固有のデプロイ設定
-
----
-
-## 移行ガイド
-
-### 旧スキル名からの移行
-
-**docker-troubleshoot → container-ops**:
-```bash
-# 旧: /skill docker-troubleshoot
-# 新: /skill container-ops --platform=docker --mode=troubleshoot
-# または自動検出（Dockerエラーが含まれる場合）:
-/skill container-ops
-```
-
-**kubernetes → container-ops**:
-```bash
-# 旧: /skill kubernetes
-# 新: /skill container-ops --platform=kubernetes
-# または自動検出（k8sマニフェストを変更している場合）:
-/skill container-ops
-```
-
-**後方互換性**:
-旧スキル名（docker-troubleshoot, kubernetes）は detect-from-*.sh が自動的に新スキル名に変換します。
