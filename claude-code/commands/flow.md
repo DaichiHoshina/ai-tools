@@ -61,9 +61,16 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 
 | 複雑度 | 判定条件 | 適用機能 |
 |--------|----------|----------|
-| **Simple** | ファイル数<5 AND 行数<300 | 通常実行 |
-| **TaskDecomposition** | ファイル数>=5 OR 独立機能>=3 | TaskCreate/Update で進捗追跡 |
-| **AgentHierarchy** | 複数プロジェクト横断 OR 大規模変更 | PO/Manager/Developer階層（/dev参照） |
+| **Simple** | 設定ファイル・ドキュメントのみの変更 OR 行数<50 | 直接実行 |
+| **TaskDecomposition** | ファイル数3-5 OR 行数50-300 | TaskCreate/Update で進捗追跡 + 直接実行 |
+| **AgentHierarchy** | ファイル数>5 OR 行数>300 OR 新機能実装 OR リファクタリング | **必ず** Agent階層で実行 |
+
+**Agent階層の実行手順**（AgentHierarchy判定時、スキップ禁止）:
+```
+1. Task(po-agent) → 戦略決定・タスク定義
+2. Task(manager-agent) → タスク分割・Developer配分計画
+3. Task(developer-agent) × N → 並列実装（1メッセージで複数Task）
+```
 
 ### Step 3: Plan モード判断
 
