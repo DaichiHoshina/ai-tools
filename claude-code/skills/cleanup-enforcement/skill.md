@@ -68,32 +68,12 @@ export * from './legacy'
 
 以下は**過剰な実装**として削除対象：
 
-```typescript
-// ❌ 禁止: 1回だけ呼ばれるヘルパー
-function formatUserName(name: string) { return name.trim() }
-// → 呼び出し元で直接 name.trim() を使用
-
-// ❌ 禁止: 使われていない抽象化
-interface IUserRepository { /* 実装が1つだけ */ }
-// → 実装が1つだけなら interface 不要
-
-// ❌ 禁止: 過剰な設定可能性
-function createUser(config: { enableCache?: boolean, enableLog?: boolean })
-// → 現時点で使わない設定は削除
-
-// ❌ 禁止: 未来のための準備
-class UserService {
-  // future: support for multiple auth providers
-  async login(provider: 'google' | 'facebook') { /* google のみ実装 */ }
-}
-// → 現在サポートしていない機能は削除
-```
-
-**判断基準**:
-- ヘルパー関数が1箇所からのみ呼ばれている → インライン化
-- 抽象化（interface/abstract class）の実装が1つだけ → 削除
-- 設定オプションで未使用のもの → 削除
-- コメントで「将来」「予定」と書かれている機能 → 削除
+| パターン | 判断基準 | アクション |
+|---------|---------|-----------|
+| 1回だけ呼ばれるヘルパー | 呼び出し元が1箇所のみ | インライン化 |
+| 使われていない抽象化 | interface/abstract classの実装が1つだけ | 削除 |
+| 過剰な設定可能性 | 現時点で使われていないオプション | 削除 |
+| 未来のための準備 | コメントに「将来」「予定」「future」 | 削除 |
 
 ### 5. 削除すべきもの
 
