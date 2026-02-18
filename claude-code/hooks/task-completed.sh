@@ -16,9 +16,11 @@ fi
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# タスク情報を抽出
-AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // "unknown"')
-AGENT_TYPE=$(echo "$INPUT" | jq -r '.agent_type // "unknown"')
+# タスク情報を抽出（公式スキーマ準拠）
+TASK_ID=$(echo "$INPUT" | jq -r '.task_id // "unknown"')
+TASK_SUBJECT=$(echo "$INPUT" | jq -r '.task_subject // "unknown"')
+TEAMMATE_NAME=$(echo "$INPUT" | jq -r '.teammate_name // "unknown"')
+TEAM_NAME=$(echo "$INPUT" | jq -r '.team_name // "unknown"')
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # ログディレクトリ作成
@@ -27,7 +29,7 @@ mkdir -p "$LOG_DIR"
 
 # ログファイルに記録
 LOG_FILE="${LOG_DIR}/agent-team-events.log"
-echo "[${TIMESTAMP}] COMPLETED | agent_id=${AGENT_ID} | type=${AGENT_TYPE}" >> "$LOG_FILE"
+echo "[${TIMESTAMP}] COMPLETED | task_id=${TASK_ID} | subject=${TASK_SUBJECT} | teammate=${TEAMMATE_NAME} | team=${TEAM_NAME}" >> "$LOG_FILE"
 
 # 統計情報計算（今日の完了タスク数）
 TODAY=$(date -u +"%Y-%m-%d")
@@ -35,5 +37,5 @@ COMPLETED_TODAY=$(grep -c "${TODAY}.*COMPLETED" "$LOG_FILE" 2>/dev/null || echo 
 
 # 結果を返す
 jq -n \
-  --arg sm "${ICON_SUCCESS} Task completed: ${AGENT_TYPE} (${AGENT_ID}) | Today: ${COMPLETED_TODAY} tasks done" \
+  --arg sm "${ICON_SUCCESS} Task completed: ${TASK_SUBJECT} (${TASK_ID}) by ${TEAMMATE_NAME} | Today: ${COMPLETED_TODAY} tasks done" \
   '{systemMessage: $sm}'
