@@ -33,15 +33,11 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 ## オプション
 
 ```bash
-# 複雑度指定
---simple        # Simple強制（TaskCreate不使用）
---complex       # TaskDecomposition強制（TaskCreate使用）
---teams         # Agent階層強制（PO→Manager→Developer）
-
 # ステップスキップ
 --skip-prd      # PRDスキップ
 --skip-test     # テストスキップ
 --skip-review   # レビュースキップ
+--no-po         # PO起動をスキップし直接実行（緊急時のみ）
 
 # 実行モード
 --interactive   # 各ステップで確認
@@ -57,30 +53,23 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 - 変更ファイルあり → /prdスキップ、/devから開始を提案
 - 変更なし → 新規タスクとして最初から実行
 
-### Step 2: 複雑度判定
+### Step 2: PO Agent起動（必須）
 
-| 複雑度 | 判定条件 | 実行方法 |
-|--------|----------|----------|
-| **Simple** | 設定ファイル・ドキュメントのみの変更 OR 行数<50 | 直接実行 |
-| **TaskDecomposition** | ファイル数3-5 OR 行数50-300 | TaskCreate/Update で進捗追跡 + 直接実行 |
-| **AgentHierarchy** | ファイル数>5 OR 行数>300 OR 新機能実装 OR リファクタリング | **必ず** Agent階層で実行 |
+**`/flow` は常にPO Agentを起動する。** 複雑度の自己判定は行わない。
 
-**Agent階層の実行手順**（AgentHierarchy判定時、スキップ禁止）:
 ```
-1. Task(po-agent) → 戦略決定・タスク定義
-2. Task(manager-agent) → タスク分割・Developer配分計画
-3. Task(developer-agent) × N → 並列実装（1メッセージで複数Task）
+Task(subagent_type: "po-agent") を起動
+  → POがタスクを分析
+  → POが「Team使用」or「直接実行推奨」を判断（デフォルト: Team）
+  → Team使用の場合: POがManager Agentを起動
+  → 直接実行推奨の場合: POの分析結果を元にStep 3へ
 ```
 
-### Step 3: Plan モード判断
+**例外**: `--no-po` 指定時のみPOをスキップし、従来通り直接実行。
 
-- **Plan必須**: 新機能実装, リファクタリング, 複雑なバグ修正
-  - → `EnterPlanMode()` で自動移行
-- **通常モード**: 単純なバグ修正, ドキュメント, テスト
+### Step 3: ワークフロー実行
 
-### Step 4: ワークフロー実行
-
-タスクタイプ判定表に従い、各コマンドを順次実行。
+PO Agent完了後（またはPOスキップ時）、タスクタイプ判定表に従い後続ステップを実行。
 
 ## バグ修正ワークフロー詳細
 
