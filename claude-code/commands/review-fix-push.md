@@ -15,7 +15,7 @@ Boris流の日常ワークフロー。レビューで見つけた問題を修正
 Skill("comprehensive-review")
 ```
 
-5観点の統合レビューを実行。結果をCritical/Warning別に分類。
+6観点の統合レビューを実行。結果をCritical/Warning別に分類。
 
 ### Step 2: 判断
 

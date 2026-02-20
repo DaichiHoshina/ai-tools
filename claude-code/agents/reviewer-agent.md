@@ -74,6 +74,7 @@ git diff
 - **設計・品質**: `comprehensive-review --focus=quality`（旧 code-quality-review）
 - **セキュリティ**: `comprehensive-review --focus=security`（旧 security-error-review）
 - **ドキュメント・テスト**: `comprehensive-review --focus=docs`（旧 docs-test-review）
+- **恒久対応**: `comprehensive-review --focus=root-cause`（対症療法・パターン再発検出）
 - **UI/UX**: `uiux-review`
 
 ※ 旧スキル名も後方互換性のため使用可能
