@@ -19,10 +19,7 @@ memory: project
 
 1. **プロンプト分析**: タスクタイプ、技術スタック、対象範囲、緊急度を抽出
 2. **Git状態確認**: `git status --short` / `git diff --name-only`
-3. **複雑度判定**:
-   - Simple: ファイル数<5 AND 行数<300 → Tasks不使用
-   - TaskDecomposition: ファイル数>=5 OR 独立機能>=3 → TaskCreate/Update
-   - AgentHierarchy: 複数プロジェクト横断 OR 大規模変更 → PO/Manager/Developer
+3. **PO Agent起動**: `/flow` は常にPO Agentを起動。POがTeam使用/直接実行を判断（デフォルト: Team）
 4. **技術スタック自動検出**:
    - `go.mod` → golang
    - `package.json` + react/next → nextjs-react, それ以外 → typescript
@@ -232,8 +229,8 @@ bugfix_rcaタイプの場合は常にbugfix_with_rcaを使用。bugfixタイプ�
 
 ## Phase 4: ワークフロー実行
 
-- **Simple時**: 進捗表示のみ（`[1/N] ステップ名 実行中...`）
-- **TaskDecomposition時**: TaskCreate/Updateで進捗管理
+- PO Agent完了後、ワークフロー定義に従い各ステップを実行
+- TaskCreate/Updateで進捗管理
 - 各ステップ開始時: `TaskUpdate(status: "in_progress")`
 - 各ステップ完了時: `TaskUpdate(status: "completed")`
 - 失敗時: 2回リトライ、超過で中断
@@ -255,7 +252,7 @@ bugfix_rcaタイプの場合は常にbugfix_with_rcaを使用。bugfixタイプ�
 - `--skip-prd`, `--skip-test`, `--skip-review`: 該当ステップ除外
 - `--interactive`: 各ステップ実行前にユーザー確認
 - `--auto`: 確認なしで全自動実行
-- `--simple`, `--complex`, `--teams`: 複雑度強制指定
+- `--no-po`: PO起動をスキップし直接実行（緊急時のみ）
 
 ## エラーハンドリング
 

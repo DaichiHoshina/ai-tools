@@ -21,8 +21,8 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 | コマンド | 起動されるエージェント | フロー |
 |---------|---------------------|--------|
-| `/flow` | workflow-orchestrator | タスク自動判定 → 複数エージェント起動 |
-| `/dev` | developer-agent | 直接実装（単純） or manager-agent経由（複雑） |
+| `/flow` | po-agent（常時起動） | PO → Manager → Developer（Teamデフォルト） |
+| `/dev` | なし（直接実行） | Agent不使用。Agent Teamが必要なら `/flow` を使用 |
 | `/review` | reviewer-agent | レビュー自動実行 |
 | `/plan` | po-agent + manager-agent | 戦略策定 + タスク分割 |
 | `/explore` | explore-agent（並列） | 複数観点から同時調査 |
@@ -35,40 +35,22 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 ユーザーがコマンドを実行すると、内部で自動的にエージェントが起動されます：
 
-### `/flow` のワークフロー例
+### `/flow` のワークフロー例（2段階起動方式）
 
 ```
-1. workflow-orchestrator 起動
-   ↓ タスクタイプ判定: 「新機能実装」
+1. po-agent 起動（常時・必須）
+   ↓ タスク分析 → Team使用判断（デフォルト: Team）
    ↓
-2. po-agent 起動（PRD作成）
+2. manager-agent 起動（PO→Manager委任）
+   ↓ タスク分割・Developer配分計画
    ↓
-3. manager-agent 起動（タスク分割）
+3. developer-agent × N 並列起動（実装）
    ↓
-4. developer-agent 起動（実装）
+4. code-simplifier 起動（簡素化）
    ↓
-5. code-simplifier 起動（簡素化）
+5. verify-app 起動（ビルド・テスト）
    ↓
-6. verify-app 起動（ビルド・テスト）
-   ↓
-7. reviewer-agent 起動（最終レビュー）
-```
-
-### リファクタリングのワークフロー例
-
-```
-1. workflow-orchestrator 起動
-   ↓ タスクタイプ判定: 「リファクタリング」
-   ↓
-2. manager-agent 起動（タスク分割）
-   ↓
-3. developer-agent 起動（実装）
-   ↓
-4. code-simplifier 起動（必須・複雑度削減）
-   ↓
-5. verify-app 起動（デグレ確認）
-   ↓
-6. reviewer-agent 起動（品質確認）
+6. reviewer-agent 起動（最終レビュー）
 ```
 
 ---
@@ -101,15 +83,15 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 ### 5. manager-agent
 
-- **トリガー**: 複雑度判定で TaskDecomposition 以上
+- **トリガー**: PO Agentからの委任
 - **役割**: タスク分割と配分計画（実装なし）
 - **特徴**: TaskCreate/TaskUpdate で管理
 
 ### 6. po-agent
 
-- **トリガー**: `/plan`, 戦略的判断が必要な場合
-- **役割**: プロダクト戦略・Worktree管理（実装なし）
-- **特徴**: 読み取り専門、意思決定支援
+- **トリガー**: `/flow`（常時起動）, `/plan`
+- **役割**: 実行モード判断・戦略決定・Worktree管理（実装なし）
+- **特徴**: Team使用をデフォルトで判断、Manager Agentを起動
 
 ### 7. code-simplifier
 
