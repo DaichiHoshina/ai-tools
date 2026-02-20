@@ -1,11 +1,11 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Skill, AskUserQuestion, mcp__serena__*
-description: コードレビュー用コマンド（comprehensive-reviewスキルで5観点統合レビュー）
+description: コードレビュー用コマンド（comprehensive-reviewスキルで6観点統合レビュー）
 ---
 
 ## /review - 包括的コードレビュー
 
-> comprehensive-reviewスキルで設計・品質・可読性・セキュリティ・ドキュメント/テストを統合レビュー
+> comprehensive-reviewスキルで設計・品質・可読性・セキュリティ・ドキュメント/テスト・恒久対応を統合レビュー
 
 ## 実行方法
 
@@ -33,15 +33,17 @@ Skill("comprehensive-review")
 
 comprehensive-reviewスキルが内部で以下を実行：
 
-1. 静的解析ツール（lint/tsc/go vet等）
-2. cleanup-enforcement（未使用コード検出）
-3. 5観点の統合レビュー（`--focus`で絞り込み可能）：
+1. ガイドライン読み込み（load-guidelines）
+2. 静的解析ツール（lint/tsc/go vet等）
+3. cleanup-enforcement（未使用コード検出）
+4. 6観点の統合レビュー（`--focus`で絞り込み可能）：
    - `--focus=architecture`（設計 — CA/DDD/依存関係）
    - `--focus=quality`（品質 — 型安全性・パフォーマンス・古いパターン）
    - `--focus=readability`（可読性 — 命名・構造・認知的複雑度）
    - `--focus=security`（セキュリティ — OWASP Top 10・エラーハンドリング）
    - `--focus=docs`（ドキュメント・テスト — 該当時）
-4. uiux-review（UI変更時、別スキル）
+   - `--focus=root-cause`（恒久対応 — 対症療法vs根本治療・パターン再発）
+5. uiux-review（UI変更時、別スキル）
 
 ## レビュー観点
 
@@ -82,6 +84,13 @@ comprehensive-reviewスキルが内部で以下を実行：
 - 過剰なモック
 - カバレッジ不足
 
+### 🔍 恒久対応（--focus=root-cause）
+
+- **対症療法** - null check/try-catch/条件分岐で問題を隠していないか
+- **パターン再発** - 同じ問題が他の箇所にないか（3箇所以上なら共通化）
+- **構造的正しさ** - 修正が既存パターンと矛盾しないか
+- **原因説明** - なぜ直ったか説明できるか
+
 ## 出力形式
 
 ```markdown
@@ -93,6 +102,7 @@ comprehensive-reviewスキルが内部で以下を実行：
 - ✅ readability（可読性）
 - ✅ security（セキュリティ）
 - ✅ docs（ドキュメント・テスト）
+- ✅ root-cause（恒久対応）
 
 ### 🔴 Critical（修正必須）
 - [設計] Domain→Infrastructure参照（src/domain/user.ts:45）

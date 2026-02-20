@@ -12,7 +12,7 @@ requires-guidelines:
 parameters:
   focus:
     type: enum
-    values: [all, architecture, quality, readability, security, docs]
+    values: [all, architecture, quality, readability, security, docs, root-cause]
     default: all
     description: レビュー観点のフォーカス
 ---
@@ -28,6 +28,7 @@ parameters:
 3. **readability（可読性）** - 命名、構造、認知的複雑度、一貫性
 4. **security（セキュリティ）** - OWASP Top 10、エラーハンドリング、ログ管理
 5. **docs（ドキュメント/テスト）** - ドキュメント品質、テスト品質、カバレッジ
+6. **root-cause（恒久対応）** - 対症療法vs根本治療、パターン再発、構造的正しさ
 
 ## パラメータ
 
@@ -64,6 +65,17 @@ git diff --name-only
 - 言語（TypeScript/Go/その他）
 - ファイル種別（テスト/API/UI/ドキュメント）
 - 変更規模
+
+### Step 1.5: ガイドライン読み込み（必須）
+
+`requires-guidelines` に基づき、関連ガイドラインをセッションに読み込む:
+
+```
+Skill("load-guidelines")
+```
+
+Step 1で検出した言語に応じて、common + 言語別 + 設計ガイドラインを読み込む。
+既にセッション内で読み込み済みの場合はスキップされる。
 
 ### Step 2: 静的解析ツール実行（必須）
 
@@ -110,6 +122,7 @@ focus パラメータで指定された観点のみ実行。`all` の場合は�
 - ✅ readability（可読性）
 - ✅ security（セキュリティ）
 - ✅ docs（ドキュメント・テスト）
+- ✅ root-cause（恒久対応）
 
 ### 🔴 Critical（修正必須）
 - [設計] Domain→Infrastructure参照（src/domain/user.ts:45）
@@ -230,10 +243,31 @@ Total: Critical 3件 / Warning 3件
 | カバレッジ不足 | 異常系・境界値テスト欠如 |
 | **冗長なテストコード** | 過剰なセットアップ、意味のない重複テスト、実装の詳細に依存しすぎたテスト |
 
+### 🔍 root-cause（恒久対応）
+
+修正が対症療法ではなく根本対応になっているかを検証する。
+
+#### 🔴 Critical
+
+| チェック項目 | 説明 |
+|-------------|------|
+| 対症療法 | null check/try-catch/条件分岐で問題を隠している（初期化保証・型安全性で解決すべき） |
+| エラー握りつぶし | エラーを無視して処理を続行（空catch、`_ = err`） |
+| 同一パターン再発 | 同じ種類の問題がコードベース内の他の箇所にも存在する |
+
+#### 🟡 Warning
+
+| チェック項目 | 説明 |
+|-------------|------|
+| 局所的修正 | 1箇所だけ修正しているが、同じパターンが3箇所以上ある（共通化すべき） |
+| 構造的不整合 | 修正が既存の設計パターンと矛盾する（例: 他は DI なのにここだけ直接依存） |
+| 原因未特定 | なぜ直ったか説明できない修正（偶然の成功） |
+| ガード追加の妥当性 | 防御的コードの追加が「なぜそのケースが発生するのか」を解決していない |
+
 ---
 
 ## 注意事項
 
 - 大量の差分 → 1ファイルずつ、Critical → Warning の優先度順
 - 問題指摘だけでなく具体的な修正案を提示
-- focus=all の場合は全5観点を並列実行
+- focus=all の場合は全6観点を並列実行
