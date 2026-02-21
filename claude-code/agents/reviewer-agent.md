@@ -24,8 +24,9 @@ memory: project
 1. **変更内容確認** - git diff で変更範囲を特定
 2. **コード品質レビュー** - 型安全性・コード品質・設計原則
 3. **セキュリティレビュー** - OWASP Top 10、エラーハンドリング
-4. **ドキュメント・テストレビュー** - コメント品質、テスト網羅性
-5. **結果報告** - 問題サマリーと改善提案（優先度付き）
+4. **恒久対応レビュー** - 対症療法検出、パターン再発確認
+5. **ドキュメント・テストレビュー** - コメント品質、テスト網羅性
+6. **結果報告** - 問題サマリーと改善提案（優先度付き）
 
 ## レビュー観点
 
@@ -87,6 +88,7 @@ git diff
 Skill("comprehensive-review", "--focus=quality")
 Skill("comprehensive-review", "--focus=security")
 Skill("comprehensive-review", "--focus=docs")
+Skill("comprehensive-review", "--focus=root-cause")
 ```
 
 ### 4. 結果統合とレポート生成

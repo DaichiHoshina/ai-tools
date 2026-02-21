@@ -43,6 +43,7 @@ parameters:
 /skill comprehensive-review --focus=readability   # 可読性のみ
 /skill comprehensive-review --focus=security      # セキュリティのみ
 /skill comprehensive-review --focus=docs          # ドキュメント/テストのみ
+/skill comprehensive-review --focus=root-cause    # 恒久対応のみ
 ```
 
 ## 使用タイミング

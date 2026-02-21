@@ -69,7 +69,7 @@ Task(subagent_type: "po-agent") を起動
 
 ### Step 3: ワークフロー実行
 
-PO Agent完了後（またはPOスキップ時）、タスクタイプ判定表に従い後続ステップを実行。
+PO Agent完了後（またはPOスキップ時）、タスクタイプ判定表に従い後続ステップ（lint-test、review、commit等）を実行する。
 
 ## バグ修正ワークフロー詳細
 
@@ -84,7 +84,7 @@ PO Agentがバグの複雑度を判断し、適切なフローを選択する:
 
 | レベル | 例 | フロー |
 |--------|---|--------|
-| Low | タイポ、インポートミス | /debug → /dev → /lint-test → /commit-push-main |
+| Low | タイポ、インポートミス | /debug → /dev → /lint-test → /commit-push-pr |
 | Medium | ロジックバグ、検証漏れ | /debug → Skill(root-cause) → /dev → /lint-test → /commit-push-pr |
 | High | 競合状態、セキュリティ | /debug → Task(root-cause-analyzer) → /dev → /lint-test → /commit-push-pr |
 

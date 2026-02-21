@@ -37,7 +37,7 @@ memory: project
 |----------|-----------|--------|
 | 0 | 相談, アイデア, 設計検討, ブレスト, brainstorm | design |
 | 1 | 緊急, hotfix, 本番, production, critical | hotfix |
-| 2 | 根本, 原因分析, root cause, rca | bugfix_rca |
+| 2 | 根本, 原因分析, root cause, rca | bugfix_with_rca |
 | 3 | 修正, fix, バグ, エラー, 不具合, bug, error | bugfix |
 | 4 | リファクタリング, 改善, 整理, refactor, improve | refactor |
 | 5 | ドキュメント, 仕様書, README, docs | docs |
@@ -221,7 +221,7 @@ workflows:
 | Medium | ロジックバグ, 検証漏れ | bugfix_with_rca（Skill版） |
 | High | 競合, メモリリーク, セキュリティ, データ破損 | bugfix_with_rca（Agent版） |
 
-bugfix_rcaタイプの場合は常にbugfix_with_rcaを使用。bugfixタイプはLowのみシンプル版、それ以外はRCA付き。
+bugfix_with_rcaタイプの場合は常にbugfix_with_rcaワークフローを使用。bugfixタイプはLowのみシンプル版、それ以外はRCA付き。
 
 ## Phase 3: ユーザー確認
 
