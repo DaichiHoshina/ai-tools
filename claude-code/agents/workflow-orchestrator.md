@@ -148,8 +148,8 @@ workflows:
       - command: /review
         required: false
         activeForm: ドキュメントレビュー中
-      - command: /commit-push-pr
-        activeForm: ドキュメントPR作成中
+      - command: /commit-push-main
+        activeForm: ドキュメントpush中
 
   hotfix:
     steps:
@@ -160,8 +160,8 @@ workflows:
       - agent: verify-app
         args: "テストのみ"
         activeForm: 緊急修正検証中
-      - command: /commit-push-pr
-        activeForm: HotfixPR作成中
+      - command: /commit-push-main
+        activeForm: main直接push中
 
   test:
     steps:

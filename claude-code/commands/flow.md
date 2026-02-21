@@ -20,7 +20,7 @@ description: ワークフロー自動化 - タスクタイプを自動判定し�
 | 0 | 相談, アイデア, 設計検討, ブレスト, brainstorm | **設計相談** | /brainstorm → /prd → /plan |
 | 1 | 緊急, hotfix, 本番, production, critical | **緊急対応** | /debug → /dev → /lint-test → /commit-push-main |
 | 2 | 根本, 原因分析, root cause, rca | **バグ修正（RCA付き）** | /debug → Skill(root-cause) → /dev → /lint-test → /commit-push-pr |
-| 3 | 修正, fix, バグ, エラー, 不具合, bug, error | **バグ修正** | /debug → /dev → /lint-test → /review → /commit-push-main |
+| 3 | 修正, fix, バグ, エラー, 不具合, bug, error | **バグ修正** | /debug → /dev → /lint-test → /commit-push-pr |
 | 4 | リファクタリング, 改善, 整理, refactor, improve | **リファクタリング** | /plan → /refactor → /lint-test → /test → /review → /commit-push-pr |
 | 5 | ドキュメント, 仕様書, README, docs | **ドキュメント** | /docs → /review → /commit-push-main |
 | 6 | テスト, test, spec, testing | **テスト作成** | /test → /review → /lint-test → /commit-push-pr |
@@ -118,7 +118,7 @@ PO Agentがバグの複雑度を判断し、適切なフローを選択する:
 
 ```
 新機能:    /prd → /plan → /dev → /lint-test → /test → /review → /commit-push-pr
-バグ修正:  /debug → /dev → /lint-test → /review → /commit-push-main
+バグ修正:  /debug → /dev → /lint-test → /commit-push-pr
 リファクタ: /plan → /refactor → /lint-test → /test → /review → /commit-push-pr
 テスト:    /test → /review → /lint-test → /commit-push-pr
 ドキュメント: /docs → /review → /commit-push-main

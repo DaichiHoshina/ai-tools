@@ -72,13 +72,11 @@ git diff
 
 変更内容に応じて適切なレビュースキルを自動選択（Phase 2-5統合対応）:
 
-- **設計・品質**: `comprehensive-review --focus=quality`（旧 code-quality-review）
-- **セキュリティ**: `comprehensive-review --focus=security`（旧 security-error-review）
-- **ドキュメント・テスト**: `comprehensive-review --focus=docs`（旧 docs-test-review）
-- **恒久対応**: `comprehensive-review --focus=root-cause`（対症療法・パターン再発検出）
+- **設計・品質**: `comprehensive-review --focus=quality`
+- **セキュリティ**: `comprehensive-review --focus=security`
+- **ドキュメント・テスト**: `comprehensive-review --focus=docs`
+- **恒久対応**: `comprehensive-review --focus=root-cause`
 - **UI/UX**: `uiux-review`
-
-※ 旧スキル名も後方互換性のため使用可能
 
 ### 3. レビュー実行
 
