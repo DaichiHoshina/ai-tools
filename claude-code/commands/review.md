@@ -1,11 +1,11 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Skill, AskUserQuestion, mcp__serena__*
-description: コードレビュー用コマンド（comprehensive-reviewスキルで6観点統合レビュー）
+description: コードレビュー用コマンド（comprehensive-reviewスキルで7観点統合レビュー）
 ---
 
 ## /review - 包括的コードレビュー
 
-> comprehensive-reviewスキルで設計・品質・可読性・セキュリティ・ドキュメント/テスト・恒久対応を統合レビュー
+> comprehensive-reviewスキルで設計・品質・可読性・セキュリティ・ドキュメント/テスト・恒久対応・ログを統合レビュー
 
 ## 実行方法
 
@@ -36,13 +36,14 @@ comprehensive-reviewスキルが内部で以下を実行：
 1. ガイドライン読み込み（load-guidelines）
 2. 静的解析ツール（lint/tsc/go vet等）
 3. cleanup-enforcement（未使用コード検出）
-4. 6観点の統合レビュー（`--focus`で絞り込み可能）：
+4. 7観点の統合レビュー（`--focus`で絞り込み可能）：
    - `--focus=architecture`（設計 — CA/DDD/依存関係）
    - `--focus=quality`（品質 — 型安全性・パフォーマンス・古いパターン）
    - `--focus=readability`（可読性 — 命名・構造・認知的複雑度）
    - `--focus=security`（セキュリティ — OWASP Top 10・エラーハンドリング）
    - `--focus=docs`（ドキュメント・テスト — 該当時）
    - `--focus=root-cause`（恒久対応 — 対症療法vs根本治療・パターン再発）
+   - `--focus=logging`（ログ — レベル適切性・構造化・可観測性・機密保護）
 5. uiux-review（UI変更時、別スキル）
 
 ## レビュー観点
@@ -91,6 +92,14 @@ comprehensive-reviewスキルが内部で以下を実行：
 - **構造的正しさ** - 修正が既存パターンと矛盾しないか
 - **原因説明** - なぜ直ったか説明できるか
 
+### 📋 ログ（--focus=logging）
+
+- **機密情報ログ出力** - password/token/secret/個人情報（Critical）
+- **エラー情報欠落** - error objectなし、メッセージのみ（Critical）
+- **ログレベル不適切** - CLAUDE.mdの「ログレベル基準」参照（Warning）
+- **非構造化ログ** - 文字列結合、JSON構造化未使用（Warning）
+- **コンテキスト不足** - リクエストID/トレースIDなし（Warning）
+
 ## 出力形式
 
 ```markdown
@@ -103,6 +112,7 @@ comprehensive-reviewスキルが内部で以下を実行：
 - ✅ security（セキュリティ）
 - ✅ docs（ドキュメント・テスト）
 - ✅ root-cause（恒久対応）
+- ✅ logging（ログ）
 
 ### 🔴 Critical（修正必須）
 - [設計] Domain→Infrastructure参照（src/domain/user.ts:45）
@@ -134,4 +144,4 @@ Total: Critical 3件 / Warning 2件
 - **大量の差分**: 1ファイルずつレビュー
 - **優先度**: Critical → Warning の順で報告
 - **具体的な修正案**: 問題指摘だけでなく改善方法も提示
-- **並列実行がデフォルト**: 全6観点を並列で実行
+- **並列実行がデフォルト**: 全7観点を並列で実行
