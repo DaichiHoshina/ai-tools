@@ -101,15 +101,15 @@ PO Agentがバグの複雑度を判断し、適切なフローを選択する:
 
 **2回失敗ルール**: 同じアプローチで2回失敗 → `/clear` → 問題再整理 → 新アプローチ
 
-### 完了時のアクション提案
+### 完了時のアクション
 
 ```
 ワークフロー完了
-
-次のアクション:
-1. /commit-push-pr でcommit→push→PR作成
-2. /commit-push-main でmainにpush
-3. 追加の修正・テスト
+  → Serena memoryに作業サマリを自動保存
+  → AskUserQuestion: 「pushしますか？」
+    → main push → /commit-push-main
+    → PR作成 → /commit-push-pr
+    → まだpushしない → 終了
 ```
 
 ## コマンド依存グラフ
