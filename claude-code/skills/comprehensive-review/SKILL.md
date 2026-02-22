@@ -276,7 +276,7 @@ Total: Critical 3件 / Warning 3件
 
 | チェック項目 | 説明 |
 |-------------|------|
-| 機密情報ログ出力 | password/token/secret/api_key/個人情報をログ出力（セキュリティとの重複確認） |
+| 機密情報ログ出力 | password/token/secret/api_key/個人情報をログ出力（security観点で未検出の場合のみ指摘） |
 | 本番環境のdebugログ | 条件分岐なしのdebugログがホットパスに存在 |
 | エラー情報の欠落 | エラーログにerror objectやstacktraceが含まれていない（メッセージのみ） |
 
