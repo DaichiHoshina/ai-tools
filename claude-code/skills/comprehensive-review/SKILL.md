@@ -285,6 +285,7 @@ Total: Critical 3件 / Warning 3件
 | チェック項目 | 説明 |
 |-------------|------|
 | ログレベル不適切 | 正常系にwarn/error、異常系にinfo、debug使用 |
+| フォールバックのInfo降格 | 稀にしか起きない事象をフォールバック付きだからとinfoにしている（warn以上にすべき。infoだと異常に気づけない） |
 | 必須フィールド欠落 | request_id/trace_id、event、duration_ms、result が不足 |
 | msg が日本語/動的 | msg は固定英語文字列にし、動的情報はフィールドに分離すべき |
 | NotFound判断ミス | 一覧0件にwarn、ID指定NotFoundにログなし等（文脈で判断すべき） |
