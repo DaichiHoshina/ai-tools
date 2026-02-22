@@ -279,6 +279,7 @@ Total: Critical 3件 / Warning 3件
 | 機密情報ログ出力 | password/token/Cookie/Authorization/PII生値/request body丸ごと（security観点で未検出の場合のみ指摘） |
 | エラー情報の欠落 | エラーログにerror object/stacktraceなし（メッセージのみ） |
 | 非構造化ログ | 文字列結合でのログ出力（`"user " + id`等）。構造化フィールドを使用すべき |
+| 到達不能パスのレベル不足 | switchのdefault、未対応enum値など本来ありえないパスがwarn/info（errorにすべき） |
 
 #### 🟡 Warning
 
