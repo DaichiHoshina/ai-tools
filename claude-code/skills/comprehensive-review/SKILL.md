@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: 包括的コードレビュー - 設計・品質・可読性・セキュリティ・ドキュメント/テスト・ログを統合評価
+description: 包括的コードレビュー - 設計・品質・可読性・セキュリティ・ドキュメント/テスト・恒久対応・ログを統合評価
 requires-guidelines:
   - common
   - clean-architecture

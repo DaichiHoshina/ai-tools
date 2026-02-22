@@ -96,7 +96,7 @@ comprehensive-reviewスキルが内部で以下を実行：
 
 - **機密情報ログ出力** - password/token/secret/個人情報（Critical）
 - **エラー情報欠落** - error objectなし、メッセージのみ（Critical）
-- **ログレベル不適切** - CLAUDE.mdの「ログレベル基準」参照（Warning）
+- **ログレベル不適切** - CLAUDE.mdの「ログ設計基準」参照（Warning）
 - **非構造化ログ** - 文字列結合、JSON構造化未使用（Warning）
 - **コンテキスト不足** - リクエストID/トレースIDなし（Warning）
 
