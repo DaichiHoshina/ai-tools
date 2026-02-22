@@ -46,59 +46,7 @@ comprehensive-reviewスキルが内部で以下を実行：
    - `--focus=logging`（ログ — レベル適切性・構造化・可観測性・機密保護）
 5. uiux-review（UI変更時、別スキル）
 
-## レビュー観点
-
-### 🏗️ 設計（--focus=architecture）
-
-- レイヤー違反（Domain→Infrastructure参照）
-- 依存方向の逆転不備（DI未使用）
-- 貧血ドメインモデル（getter/setterのみ）
-- 集約境界違反
-
-### 🎯 品質（--focus=quality）
-
-- 型安全性（any使用、無検証as）
-- パフォーマンス（N+1問題、メモリリーク）
-- 古いパターン（言語別ガイドラインの検出テーブル参照）
-- コード臭（長い関数、マジックナンバー）
-
-### 📖 可読性（--focus=readability）
-
-- 誤解を招く命名（名前と振る舞いの不一致）
-- 認知的複雑度（深いネスト、長い条件式）
-- 関数の長さ・引数（50行超、4引数超）
-- 構造の明瞭さ（ガード節未使用、否定条件の連鎖）
-- **過剰な複雑性（YAGNI違反）** - 使われていない抽象化、1回だけ呼ばれるヘルパー
-
-### 🛡️ セキュリティ（--focus=security）
-
-- OWASP Top 10（SQLインジェクション、XSS等）
-- 認証・認可不備
-- エラー握りつぶし（空catch）
-- 機密情報ログ出力
-
-### 📝 ドキュメント・テスト（--focus=docs）
-
-- 公開APIのドキュメント不足
-- **実質的検証がないテスト** - `toBeDefined()` のみ、assertion なし
-- **冗長なテストコード** - 過剰なセットアップ、意味のない重複
-- 過剰なモック
-- カバレッジ不足
-
-### 🔍 恒久対応（--focus=root-cause）
-
-- **対症療法** - null check/try-catch/条件分岐で問題を隠していないか
-- **パターン再発** - 同じ問題が他の箇所にないか（3箇所以上なら共通化）
-- **構造的正しさ** - 修正が既存パターンと矛盾しないか
-- **原因説明** - なぜ直ったか説明できるか
-
-### 📋 ログ（--focus=logging）
-
-- **機密情報ログ出力** - password/token/secret/個人情報（Critical）
-- **エラー情報欠落** - error objectなし、メッセージのみ（Critical）
-- **ログレベル不適切** - CLAUDE.mdの「ログ設計基準」参照（Warning）
-- **非構造化ログ** - 文字列結合、JSON構造化未使用（Warning）
-- **コンテキスト不足** - リクエストID/トレースIDなし（Warning）
+> 各観点の詳細チェック項目は `comprehensive-review` スキル（`skills/comprehensive-review/SKILL.md`）を参照。
 
 ## 出力形式
 
@@ -106,38 +54,22 @@ comprehensive-reviewスキルが内部で以下を実行：
 ## 包括的レビュー結果
 
 ### 実行した観点
-- ✅ architecture（設計）
-- ✅ quality（品質）
-- ✅ readability（可読性）
-- ✅ security（セキュリティ）
-- ✅ docs（ドキュメント・テスト）
-- ✅ root-cause（恒久対応）
-- ✅ logging（ログ）
+✅ architecture / ✅ quality / ✅ readability / ✅ security / ✅ docs / ✅ root-cause / ✅ logging
 
 ### 🔴 Critical（修正必須）
 - [設計] Domain→Infrastructure参照（src/domain/user.ts:45）
 - [セキュリティ] SQLインジェクション脆弱性（src/api/user.ts:120）
-- [可読性] 関数名と振る舞いの不一致（src/services/user.ts:30）
 
 ### 🟡 Warning（要改善）
 - [品質] 古いパターン: sort.Slice → slices.Sort（pkg/sort.go:15）
-- [可読性] ネスト4階層（src/handlers/order.go:80）
 
-Total: Critical 3件 / Warning 2件
+Total: Critical 2件 / Warning 1件
 ```
 
 ## レビュー対象
 
-### 含める
-
-- 変更されたファイル（git diff）
-- 新規追加ファイル
-
-### 除外
-
-- auto-generatedファイル
-- vendor/node_modules
-- lockファイル
+含める: 変更ファイル（git diff）、新規追加ファイル
+除外: auto-generated、vendor/node_modules、lockファイル
 
 ## 注意事項
 
