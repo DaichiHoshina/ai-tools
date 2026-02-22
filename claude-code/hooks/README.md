@@ -307,6 +307,7 @@ echo '{"session_id": "test", "workspace": {"current_dir": "/Users/daichi/ai-tool
 ## 利用可能な Hooks イベント
 
 - **SessionStart**: セッション開始時
+- **SessionEnd**: セッション終了時
 - **PreToolUse**: ツール実行前
 - **PostToolUse**: ツール実行後
 - **Stop**: タスク完了時
@@ -314,6 +315,9 @@ echo '{"session_id": "test", "workspace": {"current_dir": "/Users/daichi/ai-tool
 - **PreCompact**: コンパクション前
 - **UserPromptSubmit**: ユーザープロンプト送信時
 - **PermissionRequest**: 権限リクエスト時
+- **WorktreeCreate**: git worktree作成時（v2.1.47+）
+- **WorktreeRemove**: git worktree削除時（v2.1.47+）
+- **ConfigChange**: 設定変更時（v2.1.47+）
 
 ## カスタマイズ
 
