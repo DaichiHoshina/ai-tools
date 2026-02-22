@@ -42,7 +42,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "*",
+        "matcher": "Edit|Write|MultiEdit|Bash|mcp__serena__create_text_file|mcp__serena__replace_content|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|mcp__serena__write_memory|mcp__serena__delete_memory|mcp__serena__edit_memory|mcp__serena__execute_shell_command|mcp__serena__rename_symbol|mcp__jira__jira_post|mcp__jira__jira_put|mcp__jira__jira_patch|mcp__jira__jira_delete|mcp__confluence__conf_post|mcp__confluence__conf_put|mcp__confluence__conf_patch|mcp__confluence__conf_delete",
         "hooks": [
           {
             "type": "command",
@@ -81,6 +81,64 @@
           {
             "type": "command",
             "command": "afplay ~/notification.mp3",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-tool-use.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/subagent-start.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/subagent-stop.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/teammate-idle.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/task-completed.sh",
             "async": true
           }
         ]
