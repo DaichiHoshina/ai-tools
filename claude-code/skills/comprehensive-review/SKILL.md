@@ -270,24 +270,25 @@ Total: Critical 3件 / Warning 3件
 
 ### 📋 logging（ログ）
 
-ログの適切性・可観測性・安全性をレビュー。ログレベル基準はCLAUDE.mdの「ログレベル基準」参照。
+ログの適切性・可観測性・安全性をレビュー。詳細基準はCLAUDE.mdの「ログ設計基準」参照。
 
 #### 🔴 Critical
 
 | チェック項目 | 説明 |
 |-------------|------|
-| 機密情報ログ出力 | password/token/secret/api_key/個人情報をログ出力（security観点で未検出の場合のみ指摘） |
-| エラー情報の欠落 | エラーログにerror objectやstacktraceが含まれていない（メッセージのみ） |
+| 機密情報ログ出力 | password/token/Cookie/Authorization/PII生値/request body丸ごと（security観点で未検出の場合のみ指摘） |
+| エラー情報の欠落 | エラーログにerror object/stacktraceなし（メッセージのみ） |
+| 非構造化ログ | 文字列結合でのログ出力（`"user " + id`等）。構造化フィールドを使用すべき |
 
 #### 🟡 Warning
 
 | チェック項目 | 説明 |
 |-------------|------|
-| ログレベル不適切 | 正常系にwarn/error、異常系にinfo、debug使用（CLAUDE.mdの基準参照） |
-| 非構造化ログ | 文字列結合でのログ出力（`log.info("user " + id)` 等）、JSON構造化未使用 |
-| コンテキスト不足 | リクエストID/トレースIDなし（マイクロサービスでのトレーサビリティ欠如） |
+| ログレベル不適切 | 正常系にwarn/error、異常系にinfo、debug使用 |
+| 必須フィールド欠落 | request_id/trace_id、event、duration_ms、result が不足 |
+| msg が日本語/動的 | msg は固定英語文字列にし、動的情報はフィールドに分離すべき |
+| NotFound判断ミス | 一覧0件にwarn、ID指定NotFoundにログなし等（文脈で判断すべき） |
 | 過剰ログ | ループ内やN+1になるログ出力 |
-| 検索性低下 | ログメッセージに識別子（ID等）が含まれず検索困難 |
 
 ---
 
