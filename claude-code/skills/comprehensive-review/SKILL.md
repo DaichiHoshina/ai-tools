@@ -277,14 +277,13 @@ Total: Critical 3件 / Warning 3件
 | チェック項目 | 説明 |
 |-------------|------|
 | 機密情報ログ出力 | password/token/secret/api_key/個人情報をログ出力（security観点で未検出の場合のみ指摘） |
-| 本番環境のdebugログ | 条件分岐なしのdebugログがホットパスに存在 |
 | エラー情報の欠落 | エラーログにerror objectやstacktraceが含まれていない（メッセージのみ） |
 
 #### 🟡 Warning
 
 | チェック項目 | 説明 |
 |-------------|------|
-| ログレベル不適切 | 正常系にwarn/error、異常系にinfo（CLAUDE.mdの基準参照） |
+| ログレベル不適切 | 正常系にwarn/error、異常系にinfo、debug使用（CLAUDE.mdの基準参照） |
 | 非構造化ログ | 文字列結合でのログ出力（`log.info("user " + id)` 等）、JSON構造化未使用 |
 | コンテキスト不足 | リクエストID/トレースIDなし（マイクロサービスでのトレーサビリティ欠如） |
 | 過剰ログ | ループ内やN+1になるログ出力 |
