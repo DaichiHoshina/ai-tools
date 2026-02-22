@@ -105,11 +105,12 @@ PO Agentがバグの複雑度を判断し、適切なフローを選択する:
 
 ```
 ワークフロー完了
-  → Serena memoryに作業サマリを自動保存
-  → AskUserQuestion: 「pushしますか？」
-    → main push → /commit-push-main
-    → PR作成 → /commit-push-pr
-    → まだpushしない → 終了
+  → Serena memory保存（名前: work-context-YYYYMMDD-{topic}）
+  → pushが未実行の場合のみ:
+    → AskUserQuestion: 「pushしますか？」
+      → main push → /commit-push-main
+      → PR作成 → /commit-push-pr
+      → まだpushしない → 終了
 ```
 
 ## コマンド依存グラフ
