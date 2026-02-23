@@ -67,7 +67,7 @@ jobs:
 
       - name: Run BATS integration tests
         run: |
-          bats claude-code/tests/integration/**/*.bats
+          find claude-code/tests/integration -name "*.bats" -print0 | xargs -0 bats
 
   bats-test:
     name: BATS Unit Tests
@@ -89,7 +89,7 @@ jobs:
 
       - name: Run BATS tests
         run: |
-          bats claude-code/tests/unit/**/*.bats
+          find claude-code/tests/unit -name "*.bats" -print0 | xargs -0 bats
 
   install-test:
     name: Install Script Test

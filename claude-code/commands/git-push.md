@@ -92,6 +92,7 @@ Conventional Commits形式で自動生成:
 |--------|------|
 | 変更なし & pushなし | 「Already up to date」で終了 |
 | reject（競合） | `git pull --rebase` を提案 |
+| stash popコンフリクト | コンフリクト箇所を表示し手動解消を案内 |
 | 認証エラー | SSH鍵/トークン確認を提案 |
 | PR/MR作成失敗 | push済みのブランチURLを表示 |
 

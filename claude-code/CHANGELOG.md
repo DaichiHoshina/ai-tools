@@ -6,10 +6,13 @@
 
 ### Fixed
 
-- CI: shellcheckのmacOSインストール分岐を追加
+- CI: shellcheckのmacOSインストール分岐を追加、bats globパターンをfind方式に修正
+- CI: integrationテスト用ジョブ追加
 - README/SKILLS-MAP: 数値を実態に合わせて更新
 - stop.sh: macOS専用→クロスプラットフォーム対応
 - sync.sh: `sync_from_local()` のDRY化、`.env` sourceのセキュリティ修正
+- pre-compact.sh: `\n`リテラル→実改行に修正、保存内容を4項目に具体化
+- CLAUDE.md: 旧コマンド名残存を修正
 
 ### Changed
 
@@ -17,13 +20,15 @@
 - Git pushコマンド3つ（commit-push-main/pr, branch-push-mr）を `/git-push` に統合
 - po-agent: model を opus → sonnet に変更（コスト最適化）
 - spec-agent: 未使用のためアーカイブに移動
+- reload.md: compact-restore復元の優先順位と蓄積防止を明確化
 
 ### Added
 
 - `guidelines/common/logging-standards.md` - ログ設計ガイドライン
-- `commands/git-push.md` - 統合Gitコマンド
+- `commands/git-push.md` - 統合Gitコマンド（auto-sync、stash popエラーハンドリング含む）
 - `CHANGELOG.md` - 変更履歴
-- hooks連携の統合テスト追加
+- hooks連携の統合テスト9件追加
+- CLAUDE.md: 自然言語トリガー追加（sync push、ブランチ切って修正等）
 
 ## [2.1.38] - 2026-02-18
 

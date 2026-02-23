@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash, Read, Grep, Glob, mcp__serena__*
-description: Git統合ヘルパー - commit → push → PR作成を1コマンドで実行（Boris流）
+description: 統合済み - /git-push --pr を使用してください
 ---
 
 > **統合済み**: このコマンドは `/git-push --pr` に統合されました。

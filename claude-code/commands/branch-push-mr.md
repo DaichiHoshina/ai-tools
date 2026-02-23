@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash, Read, Grep, Glob
-description: mainからブランチ切り → commit → push → MR/PR作成を1コマンドで実行
+description: 統合済み - /git-push --branch を使用してください
 ---
 
 > **統合済み**: このコマンドは `/git-push --branch` に統合されました。
