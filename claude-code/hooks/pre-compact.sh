@@ -23,8 +23,12 @@ fi
 if [ "$SERENA_AVAILABLE" = true ]; then
   SYSTEM_MESSAGE="${ICON_CRITICAL} COMPACT検出 - Serena memoryに保存してください"
   ADDITIONAL_CONTEXT="**必須**: \`mcp__serena__write_memory\` で \`compact-restore-${TIMESTAMP}\` に保存\n"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}保存内容: 現在のタスク、進捗、次のアクション\n\n"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}**復元**: compact後に \`/reload\` または \`mcp__serena__list_memories\` → \`compact-restore-*\` 読み込み"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}保存内容（以下を全て含めること）:\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}1. 現在のタスク（何を依頼されたか）\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. 完了済みステップと残ステップ\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. 編集中のファイルパスと変更内容の要約\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}4. 次に実行すべきアクション\n\n"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}**復元**: compact後に \`/reload\` で自動復元"
 else
   SYSTEM_MESSAGE="${ICON_WARNING} COMPACT検出 - Serena無効"
   ADDITIONAL_CONTEXT="Serena MCPを有効にしてください"

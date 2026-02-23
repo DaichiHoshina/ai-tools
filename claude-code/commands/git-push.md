@@ -45,7 +45,8 @@ commit → push → PR/MR作成を1コマンドで実行。旧 `/commit-push-mai
 ### mainモード
 
 3. `git push origin main`
-4. 結果表示
+4. **ai-toolsリポジトリの場合のみ**: `./claude-code/sync.sh to-local` を自動実行（`echo y |`で確認スキップ）
+5. 結果表示
 
 ### prモード
 
