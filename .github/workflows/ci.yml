@@ -71,8 +71,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-npm-bats-${{ hashFiles('.github/workflows/ci.yml') }}
-          restore-keys: ${{ runner.os }}-npm-bats-
+          key: ${{ runner.os }}-npm-bats-integration-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: ${{ runner.os }}-npm-bats-integration-
 
       - name: Install bats-core and jq
         run: |
@@ -102,8 +102,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-npm-bats-${{ hashFiles('.github/workflows/ci.yml') }}
-          restore-keys: ${{ runner.os }}-npm-bats-
+          key: ${{ runner.os }}-npm-bats-unit-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: ${{ runner.os }}-npm-bats-unit-
 
       - name: Install bats-core
         run: npm install -g bats
