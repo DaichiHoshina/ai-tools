@@ -19,9 +19,11 @@ teardown() {
 # =============================================================================
 
 # フックを実行してJSON出力を取得
+_DEFAULT_INPUT="{}"
+
 run_hook() {
   local tool_name="$1"
-  local tool_input="${2:-{}}"
+  local tool_input="${2:-$_DEFAULT_INPUT}"
   local input
   input=$(jq -n --arg name "$tool_name" --argjson inp "$tool_input" \
     '{tool_name: $name, tool_input: $inp}')

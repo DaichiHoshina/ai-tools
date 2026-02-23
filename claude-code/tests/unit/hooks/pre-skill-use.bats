@@ -398,11 +398,8 @@ description: ガイドラインセクションなし
   # common は再読み込みされないが typescript は読み込まれる
   [[ "${msg}" =~ "Auto-loading" ]]
   [[ "${msg}" =~ "typescript" ]]
-  # common は含まれないはず
-  if [[ "${msg}" =~ "common" ]]; then
-    false  # common が再度読み込まれているのは誤り
-  fi
-  true
+  # common は含まれないはず（再読み込みされていない）
+  [[ ! "${msg}" =~ "common" ]]
 }
 
 @test "pre-skill-use: セッション状態ファイルに session_id が記録される" {

@@ -1,6 +1,6 @@
 ---
 name: workflow-orchestrator
-description: "/flowコマンドの実行エンジン。タスクタイプ自動判定・ワークフロー選択・ステップ実行を担当。manager-agentにタスク分割を委任する上位オーケストレーター（manager=計画、orchestrator=実行）"
+description: "/flowコマンドの実行エンジン。タスク分類→ワークフロー選択→ステップ実行を担当"
 model: sonnet
 color: purple
 permissionMode: normal
