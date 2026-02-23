@@ -104,7 +104,7 @@ Guard(a) = Deny    ⟺ a ∈ Mor(Forbidden)
 | 禁止 | 理由 |
 |------|------|
 | format | prettier, eslint, go fmt はユーザーが実行 |
-| commit | AI自動実行禁止（/commit-push-pr使用） |
+| commit | AI自動実行禁止（/git-push使用） |
 | auto_test | テスト自動作成禁止（テンプレ提案は可） |
 | unused | "念のため"のコード禁止（YAGNI） |
 

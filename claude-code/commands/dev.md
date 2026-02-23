@@ -114,7 +114,7 @@ ruff check . && mypy .
   → /lint-test（品質チェック）
   → /test（テスト作成・実行）
   → /review（コードレビュー）
-  → /commit-push-pr or /commit-push-main（Git操作）
+  → /git-push（Git操作）
   → エラー時: /debug
 ```
 

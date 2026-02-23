@@ -81,7 +81,7 @@ requires-guidelines:
   → /lint-test（品質チェック・必須）
   → /test（テスト実行・必須。動作不変の保証）
   → /review（コードレビュー）
-  → /commit-push-pr or /commit-push-main（Git操作）
+  → /git-push（Git操作）
   → テスト失敗時: /debug
 ```
 

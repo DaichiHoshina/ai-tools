@@ -11,7 +11,7 @@ description: コマンドエイリアス定義
 
 | エイリアス | フルコマンド | 用途 |
 |-----------|-------------|------|
-| `/cpr` | `/commit-push-pr` | コミット→プッシュ→PR作成を一括 |
+| `/gp` | `/git-push` | Git統合（commit→push→PR/MR） |
 | `/br` | `/brainstorm` | 設計相談・ブレインストーミング |
 | `/dbg` | `/debug` | デバッグ支援 |
 | `/ref` | `/refactor` | リファクタリング |
@@ -20,7 +20,7 @@ description: コマンドエイリアス定義
 | `/ts` | `/test` | テスト作成 |
 | `/cm` | `/commit` | コミットのみ |
 | `/pl` | `/plan` | 設計・計画 |
-| `/mp` | `/commit-push-main` | mainにコミット&プッシュ |
+| `/mp` | `/git-push --main` | mainにコミット&プッシュ |
 
 ## 使用例
 
@@ -28,7 +28,7 @@ description: コマンドエイリアス定義
 
 ```bash
 # 1. 一括コミット・PR作成
-/cpr
+/gp --pr
 
 # 2. ブレインストーミング
 /br UI設計について相談したい
@@ -53,7 +53,7 @@ description: コマンドエイリアス定義
 /ref LoginButton を関数コンポーネント化
 
 # PR作成
-/cpr
+/gp --pr
 ```
 
 ### デバッグフロー
@@ -76,7 +76,7 @@ Claude Code設定に追加（`~/.claude/settings.json`）:
 ```json
 {
   "aliases": {
-    "cpr": "commit-push-pr",
+    "gp": "git-push",
     "br": "brainstorm",
     "dbg": "debug",
     "ref": "refactor",

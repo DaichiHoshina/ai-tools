@@ -1,7 +1,7 @@
 ---
 name: po-agent
 description: Product Owner agent - 戦略決定とWorktree管理を担当。実装は一切行わない。
-model: opus
+model: sonnet
 color: purple
 permissionMode: normal
 memory: project

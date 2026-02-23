@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Skill, AskUserQuestion, mcp__serena__*, mcp__context7__*
-description: レビュー→修正→プッシュを1コマンドで実行。/review + /dev 全修正 + /commit-push-main の統合。
+description: レビュー→修正→プッシュを1コマンドで実行。/review + /dev 全修正 + /git-push --main の統合。
 ---
 
 ## /review-fix-push - レビュー・修正・プッシュ一括実行
@@ -33,7 +33,7 @@ Skill("comprehensive-review")
 ### Step 4: プッシュ
 
 ```
-/commit-push-main
+/git-push --main
 ```
 
 修正をコミットしてmainにpush。

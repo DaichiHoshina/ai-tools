@@ -222,8 +222,14 @@ sync_gitlab_mcp_template() {
     content=$(cat "$CLAUDE_DIR/gitlab-mcp.sh")
 
     if [ -f "$HOME/.env" ]; then
-        set -a; source "$HOME/.env"; set +a
-        [ -n "$GITLAB_API_URL" ] && content="${content//$GITLAB_API_URL/__GITLAB_API_URL__}"
+        local gitlab_url=""
+        while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+            if [ "$key" = "GITLAB_API_URL" ] && [ -n "$value" ]; then
+                gitlab_url="$value"
+            fi
+        done < "$HOME/.env"
+        [ -n "$gitlab_url" ] && content="${content//$gitlab_url/__GITLAB_API_URL__}"
     fi
 
     content=$(echo "$content" | sed -E 's|https://[^/]+/api/v4|__GITLAB_API_URL__|g')

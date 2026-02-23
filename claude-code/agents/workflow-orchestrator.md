@@ -83,7 +83,7 @@ workflows:
         activeForm: コードレビュー中
       - agent: verify-app
         activeForm: アプリケーション検証中
-      - command: /commit-push-pr
+      - command: /git-push --pr
         activeForm: PR作成中
 
   bugfix:
@@ -95,7 +95,7 @@ workflows:
       - agent: verify-app
         args: "テストのみ"
         activeForm: テスト検証中
-      - command: /commit-push-pr
+      - command: /git-push --pr
         activeForm: 修正PR作成中
 
   bugfix_with_rca:
@@ -113,7 +113,7 @@ workflows:
         activeForm: 修正実装中
       - agent: verify-app
         activeForm: 検証中
-      - command: /commit-push-pr
+      - command: /git-push --pr
         activeForm: PR作成中
 
   refactor:
@@ -132,7 +132,7 @@ workflows:
         activeForm: リファクタリングレビュー中
       - agent: verify-app
         activeForm: リファクタリング検証中
-      - command: /commit-push-pr
+      - command: /git-push --pr
         args: "--draft"
         activeForm: ドラフトPR作成中
 
@@ -146,7 +146,7 @@ workflows:
       - command: /review
         required: false
         activeForm: ドキュメントレビュー中
-      - command: /commit-push-main
+      - command: /git-push --main
         activeForm: ドキュメントpush中
 
   hotfix:
@@ -158,7 +158,7 @@ workflows:
       - agent: verify-app
         args: "テストのみ"
         activeForm: 緊急修正検証中
-      - command: /commit-push-main
+      - command: /git-push --main
         activeForm: main直接push中
 
   test:
@@ -171,7 +171,7 @@ workflows:
       - agent: verify-app
         args: "テストのみ"
         activeForm: テスト検証中
-      - command: /commit-push-pr
+      - command: /git-push --pr
         activeForm: テストPR作成中
 
   data-analysis:
@@ -181,7 +181,7 @@ workflows:
       - command: /docs
         required: false
         activeForm: 分析結果ドキュメント化中
-      - command: /commit-push-pr
+      - command: /git-push --pr
         activeForm: 分析PR作成中
 
   infrastructure:
@@ -195,7 +195,7 @@ workflows:
       - agent: verify-app
         args: "terraform plan / kubectl dry-run"
         activeForm: インフラ検証中
-      - command: /commit-push-pr
+      - command: /git-push --pr
         args: "--draft"
         activeForm: インフラPR作成中
 

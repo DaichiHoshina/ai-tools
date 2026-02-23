@@ -320,7 +320,7 @@ feat: ユーザー認証機能を追加
 
 - **コマンド**: 27個（/dev, /review, /plan, /prd, /test, /commit, /flow 等）
 - **スキル**: 20個（レビュー系3個、開発系5個、インフラ系4個、ユーティリティ8個）
-- **エージェント**: 10個（PO, Manager, Developer, Explore 等）
+- **エージェント**: 9個（PO, Manager, Developer, Explore 等）
 - **ガイドライン**: 35ファイル + サマリー8ファイル（言語別、設計、インフラ、共通）
 - **MCP統合**: Serena, Context7, Playwright, O3
 
@@ -355,7 +355,7 @@ ai-tools/
 │   │
 │   ├── commands/                       # 27個のコマンド
 │   ├── skills/                         # 20個のスキル
-│   ├── agents/                         # 10個のエージェント
+│   ├── agents/                         # 9個のエージェント
 │   ├── guidelines/                     # 35個のガイドライン
 │   ├── scripts/                        # ユーティリティ
 │   └── templates/                      # テンプレート
