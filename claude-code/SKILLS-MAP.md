@@ -1,6 +1,6 @@
 # スキル依存関係マップ（統合後）
 
-全19スキルの依存関係と推奨組み合わせ（Phase2-5スキル統合完了）
+全20スキルの依存関係と推奨組み合わせ
 
 > **関連ドキュメント**: [commands/](commands/) | [QUICKSTART.md](QUICKSTART.md) | [GLOSSARY.md](GLOSSARY.md)
 
@@ -71,11 +71,6 @@
 ### container-ops
 （上記参照）
 
-### dockerfile-best-practices
-- **requires-guidelines**: なし
-- **often-used-with**: container-ops
-- **用途**: マルチステージビルド、キャッシュ最適化、セキュリティ強化、イメージサイズ最小化の指針
-
 ### terraform
 - **requires-guidelines**: terraform, common
 - **often-used-with**: container-ops
@@ -132,15 +127,15 @@
 
 ## 統合サマリー
 
-| カテゴリ | 統合前 | 統合後 | 削減数 |
-|---------|-------|--------|-------|
-| レビュー系 | 5 | 3 | -2 |
-| 開発系 | 6 | 5 | -1 |
-| インフラ系 | 5 | 4 | -1 |
-| ユーティリティ | 8 | 8 | 0 |
-| **合計** | **24** | **20** | **-4** |
+| カテゴリ | スキル数 |
+|---------|---------|
+| レビュー系 | 3 |
+| 開発系 | 5 |
+| インフラ系 | 3 |
+| ユーティリティ | 9 |
+| **合計** | **20** |
 
-**実質的な機能数**: パラメータ化により14独立機能（comprehensive-review=3観点、backend-dev=4言語、container-ops=3プラットフォーム×3モード）
+**実質的な機能数**: パラメータ化により多数の独立機能（comprehensive-review=7観点、backend-dev=4言語、container-ops=3プラットフォーム×3モード）
 
 ---
 
@@ -195,7 +190,7 @@
 
 #### インフラ・Kubernetes
 ```bash
-/skill container-ops --platform=kubernetes + dockerfile-best-practices
+/skill container-ops --platform=kubernetes
 /skill container-ops + terraform  # IaC統合
 ```
 
@@ -217,7 +212,7 @@
   ├ コンテナ運用 → container-ops（プラットフォーム自動検出）
   ├ API開発 → api-design
   ├ UI/UX → uiux-review or ui-skills
-  ├ インフラ → container-ops, dockerfile-best-practices, terraform
+  ├ インフラ → container-ops, terraform
   └ エラー・障害 → container-ops --mode=troubleshoot, comprehensive-review --focus=security
 ```
 

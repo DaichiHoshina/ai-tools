@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stop Hook - タスク完了時の通知音再生
-# 8原則: 完了通知 - afplay ~/notification.mp3 実行
+# 8原則: 完了通知 - プラットフォーム別に再生コマンドを選択
 
 set -euo pipefail
 
@@ -11,19 +11,24 @@ INPUT=$(cat)
 NOTIFICATION_FILE="$HOME/notification.mp3"
 
 if [ -f "$NOTIFICATION_FILE" ]; then
-  # 通知音を再生（バックグラウンドで実行）
-  afplay "$NOTIFICATION_FILE" &
+  # プラットフォーム別に再生（バックグラウンドで実行）
+  PLAYED=false
+  if [[ "${OSTYPE}" == "darwin"* ]]; then
+    afplay "$NOTIFICATION_FILE" &
+    PLAYED=true
+  elif command -v paplay &>/dev/null; then
+    paplay "$NOTIFICATION_FILE" &
+    PLAYED=true
+  elif command -v aplay &>/dev/null; then
+    aplay "$NOTIFICATION_FILE" &
+    PLAYED=true
+  fi
 
-  cat <<EOF
-{
-  "systemMessage": "🔔 Task completed. Notification sound played."
-}
-EOF
+  if [ "$PLAYED" = true ]; then
+    echo '{"systemMessage":"Task completed. Notification sound played."}'
+  else
+    echo '{"systemMessage":"Task completed. No audio player found."}'
+  fi
 else
-  # 通知音ファイルが存在しない場合
-  cat <<EOF
-{
-  "systemMessage": "  Notification file not found at ~/notification.mp3"
-}
-EOF
+  echo '{"systemMessage":"Notification file not found at ~/notification.mp3"}'
 fi

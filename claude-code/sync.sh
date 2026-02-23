@@ -117,41 +117,17 @@ sync_to_local() {
 sync_from_local() {
     print_header "ローカル → リポジトリ 同期"
 
-    # VERSION
-    if [ -f "$CLAUDE_DIR/VERSION" ]; then
-        if ! cp "$CLAUDE_DIR/VERSION" "$SCRIPT_DIR/VERSION"; then
-            print_error "コピー失敗: VERSION"
-            return 1
+    # 単体ファイル同期
+    local files=("VERSION" "CLAUDE.md" "CANONICAL.md" "AGENTS.md")
+    for file in "${files[@]}"; do
+        if [ -f "$CLAUDE_DIR/$file" ]; then
+            if ! cp "$CLAUDE_DIR/$file" "$SCRIPT_DIR/$file"; then
+                print_error "コピー失敗: $file"
+                return 1
+            fi
+            print_success "$file"
         fi
-        print_success "VERSION"
-    fi
-
-    # CLAUDE.md
-    if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
-        if ! cp "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/CLAUDE.md"; then
-            print_error "コピー失敗: CLAUDE.md"
-            return 1
-        fi
-        print_success "CLAUDE.md"
-    fi
-
-    # CANONICAL.md
-    if [ -f "$CLAUDE_DIR/CANONICAL.md" ]; then
-        if ! cp "$CLAUDE_DIR/CANONICAL.md" "$SCRIPT_DIR/CANONICAL.md"; then
-            print_error "コピー失敗: CANONICAL.md"
-            return 1
-        fi
-        print_success "CANONICAL.md"
-    fi
-
-    # AGENTS.md
-    if [ -f "$CLAUDE_DIR/AGENTS.md" ]; then
-        if ! cp "$CLAUDE_DIR/AGENTS.md" "$SCRIPT_DIR/AGENTS.md"; then
-            print_error "コピー失敗: AGENTS.md"
-            return 1
-        fi
-        print_success "AGENTS.md"
-    fi
+    done
 
     # Directories
     local dirs=("commands" "guidelines" "skills" "agents" "scripts" "lib" "output-styles" "hooks" "rules")
