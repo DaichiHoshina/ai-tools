@@ -400,7 +400,8 @@ get_additional_context() {
 }
 
 @test "pre-tool-use: Bashコマンドにセミコロンがある場合はBoundary" {
-  result=$(run_hook "Bash" '{"command": "ls ; rm -rf /tmp/test"}')
+  # セミコロン付きはSafe判定から除外される（Forbiddenパターンを含まない例）
+  result=$(run_hook "Bash" '{"command": "ls ; echo done"}')
   msg=$(get_system_message "$result")
   [[ "$msg" =~ "要確認" ]]
 }
