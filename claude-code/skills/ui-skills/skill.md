@@ -155,7 +155,10 @@ UI実装リクエスト検出時:
    b. tailwind.config.{js,ts,mjs} あり → ui-themes/tailwind/ から適用
    c. いずれにも該当しない → ui-themes/tokens/ のJSONを参照
 3. AskUserQuestion でプリセット選択（または自動判定）
-4. テーマファイルの適用
+4. テーマファイルの適用:
+   - shadcn → app/globals.css に上書き
+   - tailwind → src/styles/theme.css として作成し globals.css で @import
+   - tokens → JSONを参照してプロジェクトのCSS変数に手動変換
 ```
 
 ### テーマ自動判定ロジック

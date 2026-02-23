@@ -94,9 +94,9 @@ fi
 required=$(awk '
     /^---$/ { if (++count == 2) exit }
     count == 1 && /^requires-guidelines:/ { in_section = 1; next }
-    in_section && /^  - / { gsub(/^  - /, ""); print; next }
+    in_section && /^  - / { gsub(/^  - /, ""); gsub(/#.*$/, ""); gsub(/[[:space:]]+$/, ""); print; next }
     in_section && /^[^ ]/ { in_section = 0 }
-' "$SKILL_FILE" | tr '\n' ' ')
+' "$SKILL_FILE" | { grep -v '^$' || true; } | tr '\n' ' ')
 
 if [ -z "$required" ]; then
     echo '{}'
@@ -136,7 +136,7 @@ for guideline in $unloaded; do
         nextjs-react)
             summary_paths="$summary_paths ~/.claude/guidelines/summaries/nextjs-react-summary.md"
             ;;
-        design|clean-architecture|ddd)
+        design|clean-architecture|ddd|domain-driven-design)
             summary_paths="$summary_paths ~/.claude/guidelines/summaries/design-summary.md"
             ;;
         infrastructure|terraform|kubernetes|aws-*)

@@ -5,10 +5,6 @@ requires-guidelines:
   - common
   - clean-architecture
   - domain-driven-design
-  - typescript  # lang=typescript の場合
-  - golang  # lang=go の場合
-  - python  # lang=python の場合
-  - rust  # lang=rust の場合
 parameters:
   focus:
     type: enum
