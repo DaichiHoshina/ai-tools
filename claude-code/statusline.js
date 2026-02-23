@@ -1,40 +1,46 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: dir:branch | #turn | tokens | context%
+// 表示: ◈ dir:branch │ model │ tokens │ [████░░░░] 34%
 
-const fs = require("fs");
 const path = require("path");
 
-/** @type {Record<string, {color: string, icon: string, threshold: number}>} */
-const STATES = {
-  normal: { color: "\x1b[32m", icon: "\u25CB", threshold: 0 },
-  warning: { color: "\x1b[33m", icon: "\u25B2", threshold: 70 },
-  critical: { color: "\x1b[31m", icon: "\u2715", threshold: 90 },
+// ANSI 256color
+const C = {
+  R: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+  cyan: "\x1b[36m",
+  magenta: "\x1b[35m",
+  white: "\x1b[97m",
+  green: "\x1b[38;5;114m",
+  yellow: "\x1b[38;5;221m",
+  red: "\x1b[38;5;203m",
+  gray: "\x1b[38;5;243m",
+  darkGray: "\x1b[38;5;238m",
+  branchColor: "\x1b[38;5;75m",
+  modelColor: "\x1b[38;5;177m",
+  tokenColor: "\x1b[38;5;252m",
 };
 
 /**
- * transcriptファイルからユーザーメッセージ数をカウント
- * @param {string} transcriptPath
- * @returns {number}
+ * プログレスバーを生成
+ * @param {number} pct - 0-100
+ * @param {number} width - バー幅
+ * @returns {string}
  */
-function countUserMessages(transcriptPath) {
-  try {
-    if (!fs.existsSync(transcriptPath)) return 0;
-    const content = fs.readFileSync(transcriptPath, "utf8");
-    const lines = content.trim().split("\n");
-    let count = 0;
-    for (const line of lines) {
-      try {
-        if (JSON.parse(line).type === "user") count++;
-      } catch {
-        // skip invalid lines
-      }
-    }
-    return count;
-  } catch {
-    return 0;
-  }
+function progressBar(pct, width) {
+  const filled = Math.round((pct / 100) * width);
+  const empty = width - filled;
+  const filledChar = "\u2588"; // █
+  const emptyChar = "\u2591"; // ░
+
+  let barColor;
+  if (pct >= 90) barColor = C.red;
+  else if (pct >= 70) barColor = C.yellow;
+  else barColor = C.green;
+
+  return `${barColor}${filledChar.repeat(filled)}${C.darkGray}${emptyChar.repeat(empty)}${C.R}`;
 }
 
 /**
@@ -62,41 +68,46 @@ function getGitBranch(cwd) {
  */
 function displayStatusLine(data) {
   const ctx = data.context_window || {};
-  const percentage = Math.round(ctx.used_percentage || 0);
-  const tokens = (
-    (ctx.total_input_tokens || 0) + (ctx.total_output_tokens || 0)
-  ).toLocaleString();
-
-  const state =
-    percentage >= STATES.critical.threshold
-      ? STATES.critical
-      : percentage >= STATES.warning.threshold
-        ? STATES.warning
-        : STATES.normal;
-
-  const warning =
-    state === STATES.critical
-      ? ` ${state.icon} /reload`
-      : state === STATES.warning
-        ? ` ${state.icon} Warning`
-        : "";
+  const pct = Math.round(ctx.used_percentage || 0);
+  const totalTokens =
+    (ctx.total_input_tokens || 0) + (ctx.total_output_tokens || 0);
+  const tokens =
+    totalTokens >= 1000
+      ? (totalTokens / 1000).toFixed(1).replace(/\.0$/, "") + "k"
+      : String(totalTokens);
 
   const cwd = data.cwd || process.cwd();
   const dirName = path.basename(cwd);
   const branch = getGitBranch(cwd);
-  const turn = data.transcript_path
-    ? countUserMessages(data.transcript_path)
-    : 0;
+  const model = (data.model && data.model.display_name) || "?";
 
-  const R = "\x1b[0m";
-  const D = "\x1b[90m";
+  const sep = `${C.darkGray}\u2502${C.R}`;
   const termWidth = process.stdout.columns || 80;
+
+  let pctColor;
+  let suffix = "";
+  if (pct >= 90) {
+    pctColor = C.red;
+    suffix = ` ${C.bold}${C.red}\u2715 /reload${C.R}`;
+  } else if (pct >= 70) {
+    pctColor = C.yellow;
+    suffix = ` ${C.yellow}\u25B2${C.R}`;
+  } else {
+    pctColor = C.green;
+  }
 
   let text;
   if (termWidth < 60) {
-    text = `${state.color}${percentage}%${R}${warning ? " " + state.icon : ""}`;
+    text = `${pctColor}${pct}%${C.R}${suffix}`;
   } else {
-    text = `${D}${dirName}:${branch}${R} ${D}|${R} #${turn} ${D}|${R} ${tokens} ${D}|${R} ${state.color}${percentage}%${R}${warning}`;
+    const barWidth = termWidth >= 120 ? 12 : 8;
+    const bar = progressBar(pct, barWidth);
+    text = [
+      `${C.cyan}\u25C8 ${dirName}${C.gray}:${C.branchColor}${branch}${C.R}`,
+      `${C.modelColor}${model}${C.R}`,
+      `${C.tokenColor}${tokens}${C.R}`,
+      `${bar} ${pctColor}${C.bold}${pct}%${C.R}${suffix}`,
+    ].join(` ${sep} `);
   }
 
   const visibleLen = text.replace(/\x1b\[[0-9;]*m/g, "").length;
@@ -117,10 +128,5 @@ if (require.main === module) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    displayStatusLine,
-    countUserMessages,
-    getGitBranch,
-    STATES,
-  };
+  module.exports = { displayStatusLine, getGitBranch, progressBar };
 }
