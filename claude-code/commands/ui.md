@@ -78,19 +78,7 @@ options:
 
 カスタムテーマが既にある場合はAskUserQuestionで上書き確認。
 
-適用後:
-
-```yaml
-question: "テーマを適用しました。次は？"
-header: "次のステップ"
-options:
-  - label: "UI実装に進む"
-    description: "テーマを使ってコンポーネントを構築"
-  - label: "ビジュアル検証"
-    description: "Playwrightでスクショ確認"
-  - label: "完了"
-    description: "ここで終了"
-```
+適用後、AskUserQuestionで次ステップ（UI実装/ビジュアル検証/完了）を確認。
 
 ### 2. UI実装
 
@@ -100,44 +88,17 @@ options:
 
 ### 3. UI/UXレビュー
 
-`uiux-review` スキルに委譲。
-
-対象ファイル/ディレクトリが不明な場合はAskUserQuestionで確認。
-
-レビュー観点:
-- Material Design 3（コンポーネント実装）
-- WCAG 2.2 AA（アクセシビリティ）
-- Nielsen 10原則（ユーザビリティ）
+`uiux-review` スキルに委譲。対象不明時はAskUserQuestionで確認。
+観点: MD3 / WCAG 2.2 AA / Nielsen 10原則
 
 ### 4. パフォーマンスレビュー
 
-`react-best-practices` スキルに委譲。
-
-**前提**: React/Next.jsプロジェクトであること。非Reactの場合はその旨を伝えてスキップ。
-
-レビュー観点:
-- ウォーターフォール排除
-- バンドルサイズ最適化
-- Server/Client分離
-- 再レンダリング最適化
+`react-best-practices` スキルに委譲。非Reactの場合はスキップ。
+観点: ウォーターフォール排除 / バンドル最適化 / Server-Client分離 / 再レンダリング最適化
 
 ### 5. ビジュアル検証
 
-`ui-skills` スキルの「Playwrightビジュアル検証」セクションに従う。
-
-異なるポートの場合はAskUserQuestionで確認:
-
-```bash
-# デフォルト
-npx tsx ~/.claude/templates/ui-themes/playwright-visual-check.ts
-
-# カスタムポート
-BASE_URL=http://localhost:5173 npx tsx ~/.claude/templates/ui-themes/playwright-visual-check.ts
-```
-
-前提条件:
-- dev server起動中であること
-- `npx playwright install chromium`（初回のみ）
+`ui-skills` スキルの「Playwrightビジュアル検証」に従う。前提: dev server起動中、`npx playwright install chromium`済み。カスタムポートは `BASE_URL=http://localhost:5173` で指定。
 
 ### 6. フルUI監査
 
@@ -152,27 +113,6 @@ Step 5: AskUserQuestion → 修正するか確認
 Step 6: ui-skills で修正実行（ユーザー承認後）
 ```
 
-統合レポートの形式:
-
-```markdown
-## UI監査結果
-
-### UI/UXレビュー
-- [Critical] ...
-- [Warning] ...
-
-### パフォーマンス（React）
-- [Critical] ...
-- [Warning] ...
-
-### ビジュアル検証
-- スクリーンショット: ...
-
-### 推奨修正（優先度順）
-1. ...
-2. ...
-```
-
 ## 依存スキル
 
 | スキル | 用途 |
@@ -182,13 +122,8 @@ Step 6: ui-skills で修正実行（ユーザー承認後）
 | `react-best-practices` | Reactパフォーマンスレビュー |
 | `load-guidelines` | tailwind, shadcn ガイドライン自動読み込み |
 
-## 他コマンドとの関係
-
-- `/review` は独立して `uiux-review` を呼び出す（そのまま）
-- `/flow` は独立して `ui-skills` を呼び出す（そのまま）
-- `/ui` は追加の統合入口であり、既存の動線を置き換えない
-
 ## 注意事項
 
 - 3回修正しても改善しない場合はユーザーに相談
 - フルUI監査は各ステップの結果を確認してから次に進む
+- `/review`や`/flow`の既存UI動線はそのまま維持（`/ui`は追加の統合入口）
