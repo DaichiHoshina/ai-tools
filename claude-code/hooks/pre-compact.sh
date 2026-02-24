@@ -29,7 +29,7 @@ if [ "$SERENA_AVAILABLE" = true ]; then
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. 完了済みステップと残ステップ${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. 編集中のファイルパスと変更内容の要約${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}4. 次に実行すべきアクション${NL}${NL}"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}**復元**: compact後に \`/reload\` で自動復元"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}**復元**: compact後に自動復元されます（SessionStart compact hook）"
 else
   SYSTEM_MESSAGE="${ICON_WARNING} COMPACT検出 - Serena無効"
   ADDITIONAL_CONTEXT="Serena MCPを有効にしてください"
