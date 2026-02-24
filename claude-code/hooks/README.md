@@ -173,18 +173,35 @@ $1### 4. post-tool-use.sh
 ```
 
 ### 5. pre-compact.sh
-**トリガー**: コンテキスト圧縮前
+**トリガー**: コンテキスト圧縮前（`PreCompact` イベント）
 
 **機能**:
-- セッション情報の自動バックアップ
-- Serena memoryへの保存推奨
-- 圧縮後のリカバリー手順表示
+- Serena memoryへの保存を指示（`compact-restore-YYYYMMDD_HHMMSS` 形式）
+- 保存内容（タスク・進捗・ファイル・次アクション）を指定
+- compact後は `post-compact-reload.sh` が自動復元することを通知
 
 **出力例**:
 ```json
 {
-  "systemMessage": "📦 Pre-compact backup saved: ~/.claude/pre-compact-backups/...",
-  "additionalContext": "## 🧠 Serena Memory Recommendation\n\n**Action Required**: Save important information..."
+  "systemMessage": "◉ COMPACT検出 - Serena memoryに保存してください",
+  "additionalContext": "**必須**: `mcp__serena__write_memory` で `compact-restore-...` に保存\n..."
+}
+```
+
+### 5a. post-compact-reload.sh
+**トリガー**: compact後のセッション再開時（`SessionStart` の `"compact"` matcher）
+
+> **注意**: Claude CodeにはPostCompact hookが未実装のため、SessionStart compact matcherで代替。
+
+**機能**:
+- compact後に自動で `/reload` 相当の復元処理を実行するよう指示
+- `compact-restore-*` メモリを読み込み → 削除 → サマリー報告
+
+**出力例**:
+```json
+{
+  "systemMessage": "✓ COMPACT完了 - コンテキスト自動復元を開始",
+  "additionalContext": "**自動実行（必須）**: compact後の復元手順\n1. `mcp__serena__list_memories` で..."
 }
 ```
 
@@ -227,27 +244,34 @@ $1### 4. post-tool-use.sh
 ```json
 {
   "hooks": {
-    "SessionStart": {
-      "command": "~/.claude/hooks/session-start.sh"
-    },
-    "UserPromptSubmit": {
-      "command": "~/.claude/hooks/user-prompt-submit.sh"
-    },
-    "PreToolUse": {
-      "command": "~/.claude/hooks/pre-tool-use.sh"
-    },
-    "PostToolUse": {
-      "command": "~/.claude/hooks/post-tool-use.sh"
-    },
-    "PreCompact": {
-      "command": "~/.claude/hooks/pre-compact.sh"
-    },
-    "Stop": {
-      "command": "~/.claude/hooks/stop.sh"
-    },
-    "SessionEnd": {
-      "command": "~/.claude/hooks/session-end.sh"
-    }
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [{"type": "command", "command": "~/.claude/hooks/session-start.sh"}]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [{"type": "command", "command": "~/.claude/hooks/post-compact-reload.sh"}]
+      }
+    ],
+    "UserPromptSubmit": [
+      {"matcher": "*", "hooks": [{"type": "command", "command": "~/.claude/hooks/user-prompt-submit.sh"}]}
+    ],
+    "PreToolUse": [
+      {"matcher": "Edit|Write|Bash|...", "hooks": [{"type": "command", "command": "~/.claude/hooks/pre-tool-use.sh"}]}
+    ],
+    "PostToolUse": [
+      {"matcher": "Edit|Write", "hooks": [{"type": "command", "command": "~/.claude/hooks/post-tool-use.sh", "async": true}]}
+    ],
+    "PreCompact": [
+      {"matcher": "*", "hooks": [{"type": "command", "command": "~/.claude/hooks/pre-compact.sh"}]}
+    ],
+    "Stop": [
+      {"matcher": "*", "hooks": [{"type": "command", "command": "afplay ~/notification.mp3", "async": true}]}
+    ],
+    "SessionEnd": [
+      {"matcher": "*", "hooks": [{"type": "command", "command": "~/.claude/hooks/session-end.sh", "async": true}]}
+    ]
   }
 }
 ```
