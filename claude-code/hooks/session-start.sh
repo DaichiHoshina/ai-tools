@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # SessionStart Hook - protection-mode + guidelines 自動読み込み
 # セッション開始時にSerena memoryリストを確認 + compact-restore読み込み
+# NOTE: Serena有無はチェックしない（compact直後はMCP未初期化の可能性あり）
 
 set -euo pipefail
 
@@ -15,18 +16,10 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# JSON入力を読み込む
-INPUT=$(cat)
+# JSON入力を消費（未使用だが読み捨て必要）
+cat > /dev/null
 
-# Serena MCPが有効かチェック
-if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
-  jq -n \
-    --arg sm "${ICON_SUCCESS} Session初期化完了" \
-    --arg ac "**自動**: protection-mode, Serena自動初期化（onboarding確認, memory読み込み）\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否" \
-    '{systemMessage: $sm, additionalContext: $ac}'
-else
-  jq -n \
-    --arg sm "${ICON_WARNING} Serena未設定 - 基本モード" \
-    --arg ac "**自動**: protection-mode\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否" \
-    '{systemMessage: $sm, additionalContext: $ac}'
-fi
+jq -n \
+  --arg sm "${ICON_SUCCESS} Session初期化完了" \
+  --arg ac "**自動**: protection-mode, Serena自動初期化（onboarding確認, memory読み込み）\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否" \
+  '{systemMessage: $sm, additionalContext: $ac}'
