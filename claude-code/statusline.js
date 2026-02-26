@@ -88,10 +88,13 @@ function displayStatusLine(data) {
   let suffix = "";
   if (pct >= 90) {
     pctColor = C.red;
-    suffix = ` ${C.bold}${C.red}\u2715 /reload${C.R}`;
+    suffix = ` ${C.bold}${C.red}\u26D4 /reload${C.R}`;
   } else if (pct >= 70) {
     pctColor = C.yellow;
-    suffix = ` ${C.yellow}\u25B2${C.R}`;
+    suffix = ` ${C.bold}${C.yellow}\u26A0 /compact${C.R}`;
+  } else if (pct >= 50) {
+    pctColor = C.yellow;
+    suffix = ` ${C.dim}${C.yellow}\u25B2${C.R}`;
   } else {
     pctColor = C.green;
   }
