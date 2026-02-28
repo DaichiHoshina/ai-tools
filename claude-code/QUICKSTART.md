@@ -128,6 +128,13 @@ PRD作成 → 設計 → 実装 → テスト → レビュー → PR作成
 /serena         # Serena MCP操作
 ```
 
+**CLIコマンド（シェルから実行）:**
+
+```bash
+claude agents   # 設定済みエージェントの一覧表示（v2.1.47+）
+claude auth     # 認証管理（login / status / logout）（v2.1.50+）
+```
+
 **用語がわからない:** → [GLOSSARY.md](./GLOSSARY.md) を参照
 
 ---
