@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  /* ---------------------------------------------------------- */
+  /* Reset & Base                                                */
+  /* ---------------------------------------------------------- */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:          #0d1117;
+    --card:        #161b22;
+    --border:      #30363d;
+    --text:        #c9d1d9;
+    --text-muted:  #8b949e;
+    --blue:        #58a6ff;
+    --green:       #3fb950;
+    --orange:      #d29922;
+    --red:         #f85149;
+    --purple:      #bc8cff;
+    --font-mono:   'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-sans:   'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius:      8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ---------------------------------------------------------- */
+  /* Layout                                                      */
+  /* ---------------------------------------------------------- */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .header h1 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--blue);
+    font-family: var(--font-mono);
+    letter-spacing: -0.3px;
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .header h1 span { color: var(--text-muted); font-weight: 400; }
+
+  .filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .filter-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .btn-group {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .btn-group button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border-right: 1px solid var(--border);
+  }
+
+  .btn-group button:last-child { border-right: none; }
+
+  .btn-group button:hover { background: var(--border); color: var(--text); }
+
+  .btn-group button.active {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px;
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  select:hover { border-color: var(--blue); }
+
+  .main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* ---------------------------------------------------------- */
+  /* Summary Cards                                               */
+  /* ---------------------------------------------------------- */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .card.accent-blue::before  { background: var(--blue); }
+  .card.accent-green::before { background: var(--green); }
+  .card.accent-orange::before { background: var(--orange); }
+  .card.accent-red::before   { background: var(--red); }
+
+  .card-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-bottom: 10px;
+  }
+
+  .card-value {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .card.accent-blue  .card-value { color: var(--blue); }
+  .card.accent-green .card-value { color: var(--green); }
+  .card.accent-orange .card-value { color: var(--orange); }
+  .card.accent-red   .card-value { color: var(--red); }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  /* ---------------------------------------------------------- */
+  /* Chart Grid                                                  */
+  /* ---------------------------------------------------------- */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .chart-card h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+  }
+
+  .chart-wrapper {
+    position: relative;
+    height: 220px;
+  }
+
+  /* ---------------------------------------------------------- */
+  /* Tables                                                      */
+  /* ---------------------------------------------------------- */
+  .table-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 900px) { .table-grid { grid-template-columns: 1fr; } }
+
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .table-card h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .data-table th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    padding: 0 10px 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 9px 10px 9px 0;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+
+  .data-table tr:hover td { background: rgba(88, 166, 255, 0.04); }
+
+  .bar-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bar-bg {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    min-width: 60px;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .bar-pct {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 34px;
+    text-align: right;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .badge-builtin { background: rgba(88,166,255,0.15); color: var(--blue); }
+  .badge-mcp     { background: rgba(63,185,80,0.15);  color: var(--green); }
+  .badge-skill   { background: rgba(210,153,34,0.15); color: var(--orange); }
+  .badge-agent   { background: rgba(188,140,255,0.15); color: var(--purple); }
+  .badge-other   { background: rgba(139,148,158,0.15); color: var(--text-muted); }
+
+  /* ---------------------------------------------------------- */
+  /* Status / Error                                              */
+  /* ---------------------------------------------------------- */
+  .status-bar {
+    text-align: center;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+
+  .error-box {
+    background: rgba(248, 81, 73, 0.1);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+    border-radius: var(--radius);
+    padding: 16px;
+    color: var(--red);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- Header                                                        -->
+<!-- ============================================================ -->
+<header class="header">
+  <h1>Claude Code <span>Analytics</span></h1>
+  <div class="filters">
+    <span class="filter-label">Period:</span>
+    <div class="btn-group" id="daysGroup">
+      <button data-days="7">7d</button>
+      <button data-days="30" class="active">30d</button>
+      <button data-days="90">90d</button>
+      <button data-days="all">All</button>
+    </div>
+    <span class="filter-label">Project:</span>
+    <select id="projectSelect">
+      <option value="all">All Projects</option>
+    </select>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- Main                                                          -->
+<!-- ============================================================ -->
+<main class="main">
+
+  <div id="errorBox" class="error-box" style="display:none;"></div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="card accent-blue">
+      <div class="card-label">Total Sessions</div>
+      <div class="card-value" id="statSessions">—</div>
+      <div class="card-sub" id="statActiveDays">— active days</div>
+    </div>
+    <div class="card accent-green">
+      <div class="card-label">Tool Uses</div>
+      <div class="card-value" id="statTools">—</div>
+      <div class="card-sub" id="statAgents">— agent runs</div>
+    </div>
+    <div class="card accent-orange">
+      <div class="card-label">Total Tokens</div>
+      <div class="card-value" id="statTokens">—</div>
+      <div class="card-sub" id="statTokensSub">input + output</div>
+    </div>
+    <div class="card accent-red">
+      <div class="card-label">Estimated Cost</div>
+      <div class="card-value" id="statCost">—</div>
+      <div class="card-sub" id="statCostSub">USD</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h2>Tool Usage Trend</h2>
+      <div class="chart-wrapper"><canvas id="chartToolTrend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h2>Tool Category Distribution</h2>
+      <div class="chart-wrapper"><canvas id="chartCategory"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h2>Token Usage Over Time</h2>
+      <div class="chart-wrapper"><canvas id="chartTokens"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h2>Daily Sessions</h2>
+      <div class="chart-wrapper"><canvas id="chartSessions"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Tables -->
+  <div class="table-grid">
+    <div class="table-card">
+      <h2>Tool Ranking</h2>
+      <div id="tableTools"><div class="empty-state">Loading...</div></div>
+    </div>
+    <div class="table-card">
+      <h2>Recent Sessions</h2>
+      <div id="tableSessions"><div class="empty-state">Loading...</div></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="status-bar" id="statusBar">Initializing...</div>
+
+<script>
+// ============================================================
+// Utilities
+// ============================================================
+const fmt = {
+  num(n) {
+    if (n == null) return '0';
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
+    return String(n);
+  },
+  dur(sec) {
+    if (!sec) return '0s';
+    if (sec < 60)   return sec + 's';
+    if (sec < 3600) return Math.floor(sec / 60) + 'm ' + (sec % 60) + 's';
+    return Math.floor(sec / 3600) + 'h ' + Math.floor((sec % 3600) / 60) + 'm';
+  },
+  date(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' })
+      + ' ' + d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  },
+  cost(usd) {
+    if (usd == null) return '$0.00';
+    return '$' + usd.toFixed(2);
+  }
+};
+
+const COLORS = {
+  blue:   '#58a6ff',
+  green:  '#3fb950',
+  orange: '#d29922',
+  red:    '#f85149',
+  purple: '#bc8cff',
+  muted:  '#8b949e',
+};
+
+const CAT_COLORS = {
+  builtin: COLORS.blue,
+  mcp:     COLORS.green,
+  skill:   COLORS.orange,
+  agent:   COLORS.purple,
+};
+
+function catColor(cat) {
+  return CAT_COLORS[cat] || COLORS.muted;
+}
+
+const CHART_DEFAULTS = {
+  color: '#c9d1d9',
+  grid:  'rgba(48,54,61,0.6)',
+};
+
+Chart.defaults.color = CHART_DEFAULTS.color;
+
+function baseScales(opts) {
+  opts = opts || {};
+  return {
+    x: {
+      grid: { color: CHART_DEFAULTS.grid },
+      ticks: { maxRotation: 0, font: { family: "'SF Mono','Fira Code',monospace", size: 10 } },
+    },
+    y: {
+      grid: { color: CHART_DEFAULTS.grid },
+      ticks: Object.assign(
+        { font: { family: "'SF Mono','Fira Code',monospace", size: 10 } },
+        opts.yTicks || {}
+      ),
+    },
+  };
+}
+
+function basePlugins(opts) {
+  opts = opts || {};
+  return {
+    legend: { display: !!opts.legend, labels: { boxWidth: 12, font: { size: 11 } } },
+    tooltip: {},
+  };
+}
+
+// ============================================================
+// State
+// ============================================================
+const state = {
+  days: '30',
+  project: 'all',
+};
+
+const charts = {};
+
+// ============================================================
+// API
+// ============================================================
+async function fetchApi(path) {
+  const params = new URLSearchParams({ days: state.days, project: state.project });
+  const res = await fetch(path + '?' + params.toString());
+  if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + path);
+  return res.json();
+}
+
+// ============================================================
+// Chart helpers
+// ============================================================
+function destroyChart(key) {
+  if (charts[key]) {
+    charts[key].destroy();
+    charts[key] = null;
+  }
+}
+
+function createChart(key, canvasId, config) {
+  destroyChart(key);
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  charts[key] = new Chart(ctx, config);
+}
+
+// ============================================================
+// DOM Helpers (XSS-safe)
+// ============================================================
+function el(tag, props) {
+  const e = document.createElement(tag);
+  if (props) {
+    Object.keys(props).forEach(function(k) {
+      if (k === 'cls') {
+        e.className = props[k];
+      } else if (k === 'text') {
+        e.textContent = props[k];
+      } else if (k === 'style') {
+        e.setAttribute('style', props[k]);
+      } else {
+        e[k] = props[k];
+      }
+    });
+  }
+  return e;
+}
+
+function clearAndAppend(containerId, node) {
+  const container = document.getElementById(containerId);
+  while (container.firstChild) container.removeChild(container.firstChild);
+  container.appendChild(node);
+}
+
+function makeEmptyState(msg) {
+  return el('div', { cls: 'empty-state', text: msg });
+}
+
+// ============================================================
+// Render: Overview (summary cards)
+// ============================================================
+function renderOverview(data) {
+  document.getElementById('statSessions').textContent  = fmt.num(data.total_sessions);
+  document.getElementById('statActiveDays').textContent = data.active_days + ' active days';
+  document.getElementById('statTools').textContent     = fmt.num(data.total_tool_uses);
+  document.getElementById('statAgents').textContent    = fmt.num(data.total_agent_runs) + ' agent runs';
+
+  const total = (data.total_tokens.input || 0) + (data.total_tokens.output || 0)
+    + (data.total_tokens.cache_read || 0) + (data.total_tokens.cache_write || 0);
+  document.getElementById('statTokens').textContent    = fmt.num(total);
+  document.getElementById('statTokensSub').textContent =
+    fmt.num(data.total_tokens.input) + ' in / ' + fmt.num(data.total_tokens.output) + ' out';
+}
+
+// ============================================================
+// Render: Tool Trend Chart
+// ============================================================
+function renderToolTrend(data) {
+  const labels = data.daily_trend.map(function(d) { return d.date; });
+  const values = data.daily_trend.map(function(d) { return d.count; });
+
+  createChart('toolTrend', 'chartToolTrend', {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Tool Uses',
+        data: values,
+        borderColor: COLORS.blue,
+        backgroundColor: 'rgba(88,166,255,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: labels.length > 60 ? 0 : 3,
+        pointHoverRadius: 5,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: basePlugins(),
+      scales: baseScales(),
+    },
+  });
+}
+
+// ============================================================
+// Render: Category Donut Chart
+// ============================================================
+function renderCategory(data) {
+  const labels = data.by_category.map(function(d) { return d.category; });
+  const values = data.by_category.map(function(d) { return d.count; });
+  const colors = labels.map(catColor);
+
+  createChart('category', 'chartCategory', {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderColor: '#161b22',
+        borderWidth: 2,
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      cutout: '60%',
+      plugins: {
+        legend: {
+          display: true,
+          position: 'right',
+          labels: {
+            boxWidth: 12,
+            font: { family: "'SF Mono','Fira Code',monospace", size: 11 },
+          },
+        },
+      },
+    },
+  });
+}
+
+// ============================================================
+// Render: Token Chart (stacked area)
+// ============================================================
+function renderTokens(data) {
+  const labels = data.daily.map(function(d) { return d.date; });
+
+  createChart('tokens', 'chartTokens', {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Input',
+          data: data.daily.map(function(d) { return d.input; }),
+          borderColor: COLORS.blue,
+          backgroundColor: 'rgba(88,166,255,0.2)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+        },
+        {
+          label: 'Output',
+          data: data.daily.map(function(d) { return d.output; }),
+          borderColor: COLORS.green,
+          backgroundColor: 'rgba(63,185,80,0.2)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+        },
+        {
+          label: 'Cache Read',
+          data: data.daily.map(function(d) { return d.cache_read; }),
+          borderColor: COLORS.orange,
+          backgroundColor: 'rgba(210,153,34,0.15)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+        },
+        {
+          label: 'Cache Write',
+          data: data.daily.map(function(d) { return d.cache_write; }),
+          borderColor: COLORS.purple,
+          backgroundColor: 'rgba(188,140,255,0.15)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: basePlugins({ legend: true }),
+      scales: baseScales({ yTicks: { callback: function(v) { return fmt.num(v); } } }),
+    },
+  });
+}
+
+// ============================================================
+// Render: Session Bar Chart
+// ============================================================
+function renderSessionChart(data) {
+  const labels = data.daily_trend.map(function(d) { return d.date; });
+  const counts = data.daily_trend.map(function(d) { return d.count; });
+
+  createChart('sessions', 'chartSessions', {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Sessions',
+        data: counts,
+        backgroundColor: 'rgba(63,185,80,0.5)',
+        borderColor: COLORS.green,
+        borderWidth: 1,
+        borderRadius: 3,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: basePlugins(),
+      scales: baseScales({ yTicks: { precision: 0 } }),
+    },
+  });
+}
+
+// ============================================================
+// Render: Tool Ranking Table (DOM-safe)
+// ============================================================
+function renderToolTable(data) {
+  const containerId = 'tableTools';
+  if (!data.by_name || data.by_name.length === 0) {
+    clearAndAppend(containerId, makeEmptyState('No data available'));
+    return;
+  }
+
+  const total = data.by_name.reduce(function(s, d) { return s + d.count; }, 0);
+  const top = data.by_name.slice(0, 20);
+
+  const table = document.createElement('table');
+  table.className = 'data-table';
+
+  // thead
+  const thead = document.createElement('thead');
+  const hRow = document.createElement('tr');
+  ['Tool', 'Category', 'Uses', 'Share'].forEach(function(label, i) {
+    const th = document.createElement('th');
+    th.textContent = label;
+    if (i === 2) th.setAttribute('style', 'text-align:right');
+    hRow.appendChild(th);
+  });
+  thead.appendChild(hRow);
+  table.appendChild(thead);
+
+  // tbody
+  const tbody = document.createElement('tbody');
+  top.forEach(function(d) {
+    const pct = total ? (d.count / total * 100) : 0;
+    const cat = d.category || 'other';
+    const validCats = ['builtin', 'mcp', 'skill', 'agent'];
+    const badgeClass = 'badge badge-' + (validCats.indexOf(cat) >= 0 ? cat : 'other');
+
+    const tr = document.createElement('tr');
+
+    // Tool name
+    const tdName = el('td', {
+      style: 'font-family:var(--font-mono);color:var(--text)',
+      text: d.name,
+    });
+
+    // Category badge
+    const tdCat = document.createElement('td');
+    const badge = el('span', { cls: badgeClass, text: cat });
+    tdCat.appendChild(badge);
+
+    // Count
+    const tdCount = el('td', {
+      style: 'font-family:var(--font-mono);text-align:right',
+      text: d.count.toLocaleString(),
+    });
+
+    // Bar
+    const tdBar = el('td', { style: 'min-width:130px' });
+    const barContainer = el('div', { cls: 'bar-container' });
+    const barBg = el('div', { cls: 'bar-bg' });
+    const barFill = el('div', { cls: 'bar-fill' });
+    barFill.style.width = pct.toFixed(1) + '%';
+    barBg.appendChild(barFill);
+    const barPct = el('span', { cls: 'bar-pct', text: pct.toFixed(1) + '%' });
+    barContainer.appendChild(barBg);
+    barContainer.appendChild(barPct);
+    tdBar.appendChild(barContainer);
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdCat);
+    tr.appendChild(tdCount);
+    tr.appendChild(tdBar);
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  clearAndAppend(containerId, table);
+}
+
+// ============================================================
+// Render: Recent Sessions Table (DOM-safe)
+// ============================================================
+function renderSessionTable(data) {
+  const containerId = 'tableSessions';
+  if (!data.sessions || data.sessions.length === 0) {
+    clearAndAppend(containerId, makeEmptyState('No data available'));
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'data-table';
+
+  // thead
+  const thead = document.createElement('thead');
+  const hRow = document.createElement('tr');
+  const headers = [
+    { label: 'Project', style: '' },
+    { label: 'Model',   style: '' },
+    { label: 'Time',    style: '' },
+    { label: 'Duration', style: 'text-align:right' },
+    { label: 'Msgs',    style: 'text-align:right' },
+    { label: 'Tokens',  style: 'text-align:right' },
+  ];
+  headers.forEach(function(h) {
+    const th = document.createElement('th');
+    th.textContent = h.label;
+    if (h.style) th.setAttribute('style', h.style);
+    hRow.appendChild(th);
+  });
+  thead.appendChild(hRow);
+  table.appendChild(thead);
+
+  // tbody
+  const tbody = document.createElement('tbody');
+  data.sessions.slice(0, 20).forEach(function(s) {
+    const model = (s.model || 'unknown')
+      .replace('claude-', '')
+      .replace('-4-6', '-4.6')
+      .replace('-4-5', '-4.5');
+
+    const tr = document.createElement('tr');
+
+    const tdProj = el('td', {
+      style: 'font-family:var(--font-mono);color:var(--blue);max-width:120px;overflow:hidden;text-overflow:ellipsis',
+      text: s.project,
+    });
+    const tdModel = el('td', {
+      style: 'font-family:var(--font-mono);font-size:11px;color:var(--text-muted)',
+      text: model,
+    });
+    const tdTime = el('td', {
+      style: 'font-family:var(--font-mono);font-size:11px;white-space:nowrap',
+      text: fmt.date(s.start_time),
+    });
+    const tdDur = el('td', {
+      style: 'font-family:var(--font-mono);text-align:right',
+      text: fmt.dur(s.duration_sec),
+    });
+    const tdMsgs = el('td', {
+      style: 'font-family:var(--font-mono);text-align:right;color:var(--text-muted)',
+      text: String(s.total_messages),
+    });
+    const tdTok = el('td', {
+      style: 'font-family:var(--font-mono);text-align:right;font-size:11px',
+      text: fmt.num((s.input_tokens || 0) + (s.output_tokens || 0)),
+    });
+
+    [tdProj, tdModel, tdTime, tdDur, tdMsgs, tdTok].forEach(function(td) {
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  clearAndAppend(containerId, table);
+}
+
+// ============================================================
+// Render: Cost (stat card)
+// ============================================================
+function renderCost(data) {
+  const cost = data.estimated_cost || { total_usd: 0, by_model: [] };
+  document.getElementById('statCost').textContent = fmt.cost(cost.total_usd);
+  const byModel = (cost.by_model || [])
+    .map(function(m) { return m.model.replace('claude-', '') + ':' + fmt.cost(m.cost_usd); })
+    .join(' · ');
+  document.getElementById('statCostSub').textContent = byModel || 'USD (estimated)';
+}
+
+// ============================================================
+// Project Select
+// ============================================================
+function updateProjectSelect(projects) {
+  const sel = document.getElementById('projectSelect');
+  const current = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  (projects || []).forEach(function(p) {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = p;
+    if (p === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+// ============================================================
+// Error display
+// ============================================================
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.style.display = 'block';
+  box.textContent = msg;
+}
+
+function hideError() {
+  document.getElementById('errorBox').style.display = 'none';
+}
+
+// ============================================================
+// Main Load
+// ============================================================
+async function loadAll() {
+  document.getElementById('statusBar').textContent = 'Loading...';
+  hideError();
+
+  try {
+    const [overview, tools, sessions, tokens] = await Promise.all([
+      fetchApi('/api/overview'),
+      fetchApi('/api/tools'),
+      fetchApi('/api/sessions'),
+      fetchApi('/api/tokens'),
+    ]);
+
+    renderOverview(overview);
+    updateProjectSelect(overview.projects);
+    renderToolTrend(tools);
+    renderCategory(tools);
+    renderToolTable(tools);
+    renderTokens(tokens);
+    renderCost(tokens);
+    renderSessionChart(sessions);
+    renderSessionTable(sessions);
+
+    const now = new Date().toLocaleTimeString('ja-JP');
+    document.getElementById('statusBar').textContent =
+      'Last updated: ' + now + '  |  DB: ~/.claude/analytics/analytics.db';
+
+  } catch (err) {
+    let msg = 'Error: ' + err.message;
+    if (err.message.indexOf('Failed to fetch') >= 0 || err.message.indexOf('NetworkError') >= 0) {
+      msg = 'Could not connect to the API server. Please start server.py first.';
+    } else if (err.message.indexOf('404') >= 0 || err.message.indexOf('500') >= 0) {
+      msg = 'API error: ' + err.message + '. The database may not be initialized yet.';
+    }
+    showError(msg);
+    document.getElementById('statusBar').textContent = 'Error — check console for details.';
+    console.error('[dashboard]', err);
+  }
+}
+
+// ============================================================
+// Event Listeners
+// ============================================================
+document.getElementById('daysGroup').addEventListener('click', function(e) {
+  if (!e.target.dataset.days) return;
+  document.querySelectorAll('#daysGroup button').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  e.target.classList.add('active');
+  state.days = e.target.dataset.days;
+  loadAll();
+});
+
+document.getElementById('projectSelect').addEventListener('change', function(e) {
+  state.project = e.target.value;
+  loadAll();
+});
+
+window.addEventListener('resize', function() {
+  Object.keys(charts).forEach(function(k) {
+    if (charts[k]) charts[k].resize();
+  });
+});
+
+// ============================================================
+// Boot
+// ============================================================
+loadAll();
+</script>
+</body>
+</html>
