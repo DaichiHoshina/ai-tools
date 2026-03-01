@@ -1,0 +1,177 @@
+#!/usr/bin/env bash
+# =============================================================================
+# analytics-writer.sh - Claude Code利用状況分析用SQLite書き込みライブラリ
+# フック等から呼び出し、セッション・ツール・エージェント情報をSQLiteに記録
+# =============================================================================
+#
+# 使用方法:
+#   source /path/to/lib/analytics-writer.sh
+#   analytics_init          # DB初期化（初回自動実行）
+#   analytics_insert_tool_event "$session_id" "$project" "$tool_name" "$tool_category"
+#   analytics_insert_session "$session_id" "$project" ...
+#   analytics_insert_agent_start "$agent_id" "$agent_type" "$project"
+#   analytics_update_agent_stop "$agent_id"
+#
+# 設計方針:
+#   - 書き込み失敗は stderr に warn 出力して続行（本処理を止めない）
+#   - DB未存在時は自動作成（マイグレーション込み）
+# =============================================================================
+
+# --- 定数 ---
+ANALYTICS_DB_DIR="${HOME}/.claude/analytics"
+ANALYTICS_DB="${ANALYTICS_DB_DIR}/analytics.db"
+
+# --- 重複読み込み防止 ---
+if [[ "${_ANALYTICS_WRITER_LOADED:-}" = "true" ]]; then
+    return 0 2>/dev/null || true
+fi
+_ANALYTICS_WRITER_LOADED=true
+
+# --- 前提条件チェック ---
+_analytics_check_deps() {
+    if ! command -v sqlite3 &>/dev/null; then
+        echo "WARNING: sqlite3 not found, analytics disabled" >&2
+        return 1
+    fi
+    return 0
+}
+
+# --- DB初期化 ---
+analytics_init() {
+    _analytics_check_deps || return 1
+
+    mkdir -p "$ANALYTICS_DB_DIR"
+
+    sqlite3 "$ANALYTICS_DB" <<'SQL'
+CREATE TABLE IF NOT EXISTS tool_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    session_id TEXT NOT NULL,
+    project TEXT NOT NULL,
+    tool_name TEXT NOT NULL,
+    tool_category TEXT NOT NULL DEFAULT 'builtin',
+    tool_input_summary TEXT,
+    duration_ms INTEGER,
+    exit_code INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    session_id TEXT PRIMARY KEY,
+    start_time TEXT NOT NULL,
+    end_time TEXT,
+    project TEXT NOT NULL,
+    model TEXT,
+    git_branch TEXT,
+    input_tokens INTEGER DEFAULT 0,
+    cache_read_tokens INTEGER DEFAULT 0,
+    cache_write_tokens INTEGER DEFAULT 0,
+    output_tokens INTEGER DEFAULT 0,
+    total_messages INTEGER DEFAULT 0,
+    duration_sec INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS agent_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent_id TEXT NOT NULL,
+    agent_type TEXT NOT NULL,
+    project TEXT NOT NULL,
+    start_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    end_time TEXT,
+    duration_sec INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_tool_events_session ON tool_events(session_id);
+CREATE INDEX IF NOT EXISTS idx_tool_events_timestamp ON tool_events(timestamp);
+CREATE INDEX IF NOT EXISTS idx_tool_events_tool_name ON tool_events(tool_name);
+CREATE INDEX IF NOT EXISTS idx_sessions_start_time ON sessions(start_time);
+CREATE INDEX IF NOT EXISTS idx_agent_events_agent_id ON agent_events(agent_id);
+SQL
+    return $?
+}
+
+# --- 安全なSQLite実行ラッパー ---
+_analytics_exec() {
+    local sql="$1"
+    if ! sqlite3 "$ANALYTICS_DB" "$sql" 2>/dev/null; then
+        echo "WARNING: analytics write failed" >&2
+        return 1
+    fi
+    return 0
+}
+
+# --- ツールカテゴリ判定 ---
+_analytics_tool_category() {
+    local tool_name="$1"
+    case "$tool_name" in
+        Skill)           echo "skill" ;;
+        Agent|Task*)     echo "agent" ;;
+        mcp__*)          echo "mcp" ;;
+        Read|Write|Edit|Glob|Grep|Bash|WebFetch|WebSearch) echo "builtin" ;;
+        *)               echo "builtin" ;;
+    esac
+}
+
+# --- ツールイベント記録 ---
+# Usage: analytics_insert_tool_event "$session_id" "$project" "$tool_name" ["$input_summary"]
+analytics_insert_tool_event() {
+    local session_id="${1:-unknown}"
+    local project="${2:-unknown}"
+    local tool_name="${3:-unknown}"
+    local input_summary="${4:-}"
+    local category
+    category=$(_analytics_tool_category "$tool_name")
+
+    # DB未初期化なら初期化
+    [[ -f "$ANALYTICS_DB" ]] || analytics_init || return 1
+
+    # シングルクォートのエスケープ
+    input_summary="${input_summary//\'/\'\'}"
+
+    _analytics_exec "INSERT INTO tool_events (session_id, project, tool_name, tool_category, tool_input_summary) VALUES ('${session_id}', '${project}', '${tool_name}', '${category}', '${input_summary}');"
+}
+
+# --- セッション記録 ---
+# Usage: analytics_insert_session "$session_id" "$project" "$model" "$git_branch" \
+#          "$input_tokens" "$cache_read" "$cache_write" "$output_tokens" "$total_messages" "$duration"
+analytics_insert_session() {
+    local session_id="${1:-unknown}"
+    local project="${2:-unknown}"
+    local model="${3:-unknown}"
+    local git_branch="${4:-}"
+    local input_tokens="${5:-0}"
+    local cache_read="${6:-0}"
+    local cache_write="${7:-0}"
+    local output_tokens="${8:-0}"
+    local total_messages="${9:-0}"
+    local duration="${10:-0}"
+    local now
+    now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    [[ -f "$ANALYTICS_DB" ]] || analytics_init || return 1
+
+    _analytics_exec "INSERT OR REPLACE INTO sessions (session_id, start_time, end_time, project, model, git_branch, input_tokens, cache_read_tokens, cache_write_tokens, output_tokens, total_messages, duration_sec) VALUES ('${session_id}', '${now}', '${now}', '${project}', '${model}', '${git_branch}', ${input_tokens}, ${cache_read}, ${cache_write}, ${output_tokens}, ${total_messages}, ${duration});"
+}
+
+# --- エージェント開始記録 ---
+# Usage: analytics_insert_agent_start "$agent_id" "$agent_type" "$project"
+analytics_insert_agent_start() {
+    local agent_id="${1:-unknown}"
+    local agent_type="${2:-unknown}"
+    local project="${3:-unknown}"
+
+    [[ -f "$ANALYTICS_DB" ]] || analytics_init || return 1
+
+    _analytics_exec "INSERT INTO agent_events (agent_id, agent_type, project) VALUES ('${agent_id}', '${agent_type}', '${project}');"
+}
+
+# --- エージェント終了記録 ---
+# Usage: analytics_update_agent_stop "$agent_id"
+analytics_update_agent_stop() {
+    local agent_id="${1:-unknown}"
+    local now
+    now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    [[ -f "$ANALYTICS_DB" ]] || analytics_init || return 1
+
+    _analytics_exec "UPDATE agent_events SET end_time='${now}', duration_sec=CAST((julianday('${now}') - julianday(start_time)) * 86400 AS INTEGER) WHERE agent_id='${agent_id}' AND end_time IS NULL;"
+}

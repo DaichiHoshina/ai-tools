@@ -59,6 +59,21 @@ case "$TOOL_NAME" in
     ;;
 esac
 
+# --- Analytics記録 ---
+_HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_LIB_DIR="${_HOOK_DIR}/../lib"
+if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
+    source "${_LIB_DIR}/analytics-writer.sh"
+    _SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"')
+    _PROJECT=$(basename "$(echo "$INPUT" | jq -r '.cwd // "."')")
+    _INPUT_SUMMARY=""
+    case "$TOOL_NAME" in
+        "Skill") _INPUT_SUMMARY=$(echo "$INPUT" | jq -r '.tool_input.skill // ""') ;;
+        "Agent") _INPUT_SUMMARY=$(echo "$INPUT" | jq -r '.tool_input.subagent_type // ""') ;;
+    esac
+    analytics_insert_tool_event "$_SESSION_ID" "$_PROJECT" "$TOOL_NAME" "$_INPUT_SUMMARY" 2>/dev/null || true
+fi
+
 # JSON出力
 if [ -n "$MESSAGE" ]; then
   cat <<EOF

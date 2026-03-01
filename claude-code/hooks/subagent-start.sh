@@ -27,6 +27,15 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="${LOG_DIR}/subagent-events.log"
 echo "[${TIMESTAMP}] START | agent_id=${AGENT_ID} | type=${AGENT_TYPE} | cwd=${CWD}" >> "$LOG_FILE"
 
+# --- Analytics記録 ---
+_HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_LIB_DIR="${_HOOK_DIR}/../lib"
+if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
+    source "${_LIB_DIR}/analytics-writer.sh"
+    _PROJECT=$(basename "$CWD")
+    analytics_insert_agent_start "$AGENT_ID" "$AGENT_TYPE" "$_PROJECT" 2>/dev/null || true
+fi
+
 # 統計情報計算（過去24時間のサブエージェント起動数）
 if [ -f "$LOG_FILE" ]; then
   CUTOFF=$(date -u -v-24H +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d '24 hours ago' +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "")

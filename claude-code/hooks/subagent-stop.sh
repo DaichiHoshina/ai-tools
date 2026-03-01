@@ -27,6 +27,14 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="${LOG_DIR}/subagent-events.log"
 echo "[${TIMESTAMP}] STOP  | agent_id=${AGENT_ID} | type=${AGENT_TYPE} | cwd=${CWD}" >> "$LOG_FILE"
 
+# --- Analytics記録 ---
+_HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_LIB_DIR="${_HOOK_DIR}/../lib"
+if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
+    source "${_LIB_DIR}/analytics-writer.sh"
+    analytics_update_agent_stop "$AGENT_ID" 2>/dev/null || true
+fi
+
 # 実行時間計算（同じagent_idのSTARTとSTOPの差分）
 DURATION="N/A"
 if [ -f "$LOG_FILE" ] && [ "$AGENT_ID" != "unknown" ]; then
