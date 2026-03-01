@@ -28,7 +28,7 @@
 
 | ファイル | サイズ | 用途 | 関連スキル |
 |---------|--------|------|-----------|
-| `ecommerce-platforms.md` | 7.0KB | EC系プロジェクト専用 | ecommerce (skills-archive) |
+| `ecommerce-platforms.md` | 7.0KB | EC系プロジェクト専用 | ecommerce |
 | `ui-ux-guidelines.md` | 6.6KB | UI/UXレビュー専用 | uiux-review |
 | `microservices-kubernetes.md` | 4.8KB | インフラ設計専用 | microservices-monorepo, kubernetes |
 | `requirements-engineering.md` | 4.2KB | PRD作成時のみ | prd |

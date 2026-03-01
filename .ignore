@@ -9,7 +9,6 @@
 
 # Exclude examples and archives
 claude-code/templates/
-claude-code/skills-archive/
 claude-code/scripts/
 
 # Exclude docs that aren't guidelines
