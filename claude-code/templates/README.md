@@ -33,7 +33,7 @@ cp ~/.claude/templates/keybindings.json.template ~/.claude/keybindings.json
 
 **定義済みショートカット**:
 - `Ctrl+Shift+F`: `/flow`
-- `Ctrl+Shift+C`: `/commit-push-pr`
+- `Ctrl+Shift+C`: `/git-push --pr`
 - `Ctrl+Shift+R`: `/review`
 - `Ctrl+Shift+T`: `/test`
 

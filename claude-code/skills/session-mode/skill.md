@@ -91,6 +91,9 @@ SafeBoundary = {
 - `/dev` 実行時: Plan確認をスキップ、即実装開始
 - Agent Teams: サブエージェント起動の確認をスキップ
 - AskUserQuestion: 選択肢が1つの場合は自動選択
+- 中間確認: 「〜でよろしいですか？」「進めてよいですか？」等の確認は全てスキップ（ただし/prdのPhase 1は除外）
+- エラー修正: 自明なエラー（lint, type, test）は確認なしで即修正
+- レビュー後修正: `/review-fix-push`内の修正は確認なしで全適用
 
 **Boris流との相性**: fastモードはBoris流（短い指示で即実行）に最適化。
 「fix」「push」「review」等の短い指示で確認なしに即座実行。

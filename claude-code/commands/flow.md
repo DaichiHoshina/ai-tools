@@ -161,11 +161,21 @@ PO Agentがバグの複雑度を判断し、適切なフローを選択する:
 各コマンドの推奨実行順序。`/flow` は自動でこの順序を適用する。
 
 ```
-新機能:    /prd → /plan → /dev → /lint-test → /test → /review → /git-push --pr
-バグ修正:  /debug → /dev → /lint-test → /review → /git-push --pr
-リファクタ: /plan → /refactor → /lint-test → /test → /review → /git-push --pr
+新機能:    /prd → /plan → /dev → /simplify → /test → /review → /git-push --pr
+バグ修正:  /debug → /dev → /simplify → /review → /git-push --pr
+リファクタ: /plan → /refactor → /simplify → /review → /git-push --pr
 テスト:    /test → /review → /lint-test → /git-push --pr
 ドキュメント: /docs → /review → /git-push --main
 ```
+
+## 自動適用機能（v2.1.50+）
+
+`/flow`はワークフロー実行時に以下を自動適用する:
+
+| 機能 | 条件 | 動作 |
+|------|------|------|
+| worktree分離 | コード変更ワークフロー（直接実行時） | 自動作成・クリーンアップ |
+| `/simplify` | 実装/修正ステップ後 | バンドルコマンドで高速実行 |
+| background agents | `--auto`時のverify-app | 非同期検証 |
 
 ARGUMENTS: $ARGUMENTS

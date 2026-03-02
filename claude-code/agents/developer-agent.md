@@ -143,6 +143,15 @@ PO→Manager→Developer間のデータ引き継ぎはJSON形式で行う。
 
 `worktree` が未指定の場合、現在のディレクトリで作業する。
 
+### isolation: worktree（v2.1.50+）
+
+Agent tool呼び出し時に`isolation: "worktree"`を指定すると、Claude Codeが自動的に独立worktreeを作成・クリーンアップする。
+
+| 使用シーン | worktree管理 |
+|-----------|-------------|
+| Teamフロー（PO→Manager→Dev） | POが共有worktree作成。`isolation`不使用 |
+| スタンドアロン（`/dev`等） | `isolation: "worktree"`で自動管理可 |
+
 ---
 
 ## 完了報告フォーマット

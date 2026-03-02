@@ -7,7 +7,7 @@
     },
     {
       "key": "ctrl+shift+c",
-      "command": "/commit-push-pr"
+      "command": "/git-push --pr"
     },
     {
       "key": "ctrl+shift+r",
