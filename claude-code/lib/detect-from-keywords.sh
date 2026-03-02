@@ -153,6 +153,11 @@ detect_from_keywords() {
   local -n _skills=$3
   local -n _context=$4
 
+  # スラッシュコマンドはスキル側でルーティングするため検出スキップ
+  if [[ "$prompt_lower" =~ ^/ ]]; then
+    return 0
+  fi
+
   # キャッシュチェック
   local prompt_hash=$(_hash_prompt "$prompt_lower")
   if _get_cached_result "$prompt_hash" _langs _skills; then
