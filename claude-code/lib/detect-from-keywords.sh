@@ -5,6 +5,8 @@
 # Performance optimization: キャッシング機構追加
 # =============================================================================
 
+set -euo pipefail
+
 # キャッシュディレクトリ
 CACHE_DIR="${HOME}/.claude/cache"
 CACHE_FILE="${CACHE_DIR}/keyword-patterns.json"

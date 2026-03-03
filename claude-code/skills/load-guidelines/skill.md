@@ -100,8 +100,8 @@ Skillのフロントマターに`requires-guidelines`が定義されている場
 
 ```yaml
 ---
-name: typescript-backend
-description: TypeScriptバックエンド開発
+name: backend-dev
+description: バックエンド開発（Go/TypeScript/Python/Rust対応）
 requires-guidelines:
   - typescript
   - common

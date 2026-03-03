@@ -4,11 +4,11 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+
 # jq前提条件チェック
-if ! command -v jq &> /dev/null; then
-    echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
-    exit 1
-fi
+require_jq
 
 # JSON入力を読み込む
 INPUT=$(cat)

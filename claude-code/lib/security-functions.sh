@@ -189,6 +189,47 @@ validate_file_path() {
 }
 
 # ========================================
+# 秘匿情報マスキング関数
+# ========================================
+#
+# 用途: settings.json等のコンテンツから秘匿情報をマスク
+# sync.sh等から呼び出し
+#
+# 引数:
+#   $1: マスク対象のコンテンツ文字列
+# 出力: マスク済みコンテンツ（stdout）
+#
+mask_secrets() {
+    local content="$1"
+    local env_file="${ENV_FILE:-$HOME/.env}"
+
+    # HOMEパスをマスク
+    content="${content//$HOME/__HOME__}"
+
+    # Node.jsパスをマスク
+    local node_path
+    node_path="$(dirname "$(which node)" 2>/dev/null || echo "/usr/local/bin")"
+    content="${content//$node_path/__NODE_PATH__}"
+
+    # .envからキー名ベースで検出（*_KEY, *_TOKEN, *_SECRET, *_PASSWORD）
+    if [ -f "$env_file" ]; then
+        while IFS='=' read -r key value; do
+            [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+            if [[ "$key" =~ _(KEY|TOKEN|SECRET|PASSWORD|URL|EMAIL)$ ]] && [ -n "$value" ]; then
+                content="${content//$value/__${key}__}"
+            fi
+        done < "$env_file"
+    fi
+
+    # 既知のトークンパターンをフォールバックマスク
+    content=$(echo "$content" | sed -E 's/ATATT3x[A-Za-z0-9_=-]+/__CONFLUENCE_API_TOKEN__/g')
+    content=$(echo "$content" | sed -E 's/sk-proj-[A-Za-z0-9_-]+/__OPENAI_API_KEY__/g')
+    content=$(echo "$content" | sed -E 's/BSA[A-Za-z0-9_-]+/__BRAVE_API_KEY__/g')
+
+    echo "$content"
+}
+
+# ========================================
 # 使用例（実行時のテスト）
 # ========================================
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then

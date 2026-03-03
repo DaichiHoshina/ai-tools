@@ -1,7 +1,11 @@
-# backend-dev スキル（プロトタイプ）
+# backend-dev スキル（プロトタイプ - 統合完了済み）
+
+> **注記**: このファイルは設計経緯を残す歴史的ドキュメント。
+> go-backend と typescript-backend の backend-dev への統合は完了済み。
+> 現在の実装は `claude-code/skills/backend-dev/skill.md` を参照。
 
 ## 概要
-go-backend と typescript-backend を統合し、言語パラメータで切り替え可能にする。
+go-backend と typescript-backend を統合し、言語パラメータで切り替え可能にする（統合済み）。
 
 ---
 
@@ -30,7 +34,7 @@ git diff --name-only | grep -q '\.(ts|tsx)$' && LANG=typescript
 
 ---
 
-## SKILL.md 構造案
+## skill.md 構造案
 
 ```yaml
 ---
@@ -216,7 +220,7 @@ export BACKEND_LANG=go
 ## 実装優先度
 
 1. ✅ パラメータ設計
-2. ⏳ SKILL.md 作成
+2. ⏳ skill.md 作成
 3. ⏳ 自動検出ロジック実装
 4. ⏳ detect-from-*.sh 更新
 5. ⏳ 後方互換性テスト
@@ -226,8 +230,9 @@ export BACKEND_LANG=go
 
 ## 関連ファイル
 
-- `claude-code/skills/go-backend/SKILL.md` - 統合元
-- `claude-code/skills/typescript-backend/SKILL.md` - 統合元
+- `claude-code/skills/backend-dev/skill.md` - 統合後スキル（現行）
 - `claude-code/lib/detect-from-*.sh` - 検出ロジック
 - `claude-code/guidelines/golang.md` - Go固有ガイドライン
 - `claude-code/guidelines/typescript.md` - TypeScript固有ガイドライン
+
+> **統合元ファイル（削除済み）**: `skills/go-backend/skill.md`, `skills/typescript-backend/skill.md`

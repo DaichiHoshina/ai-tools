@@ -1,5 +1,5 @@
 {
-  "_comment": "See README.md and claude-code/QUICKSTART.md for setup instructions. Note: context7 and playwright should be configured globally in ~/.claude/settings.json for use across all projects",
+  "_comment": "手動設定用サンプル。自動生成は install.sh を使用（templates/.mcp.json.template から envsubst で生成）",
   "mcpServers": {
     "serena": {
       "type": "stdio",

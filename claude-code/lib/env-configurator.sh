@@ -10,6 +10,7 @@
 #   - common.sh が読み込まれていること（print_*, sed_inplace 関数を使用）
 #
 # =============================================================================
+set -euo pipefail
 
 # 重複読み込み防止
 if [[ "${_ENV_CONFIGURATOR_LOADED:-}" = "true" ]]; then

@@ -3,6 +3,7 @@
 # Print Functions Library
 # 共通の出力関数（DRY化）
 # =============================================================================
+set -euo pipefail
 
 # カラーコードを読み込み
 _PRINT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

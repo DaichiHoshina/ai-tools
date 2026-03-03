@@ -17,6 +17,8 @@
 #   - DB未存在時は自動作成（マイグレーション込み）
 # =============================================================================
 
+set -euo pipefail
+
 # --- 定数 ---
 ANALYTICS_DB_DIR="${HOME}/.claude/analytics"
 ANALYTICS_DB="${ANALYTICS_DB_DIR}/analytics.db"

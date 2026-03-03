@@ -117,9 +117,9 @@ claude --version
 
 ```
 はい。ファイル拡張子から自動検出：
-*.go → go-backend
-*.ts → typescript-backend
-*.py → python-backend
+*.go → backend-dev --lang=go
+*.ts → backend-dev --lang=typescript
+*.py → backend-dev --lang=python
 ```
 
 ### Q: エラーが出たら？

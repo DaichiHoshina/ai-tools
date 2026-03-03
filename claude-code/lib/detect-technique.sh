@@ -3,6 +3,7 @@
 # Detect Recommended Techniques from Prompt Analysis
 # technique-selection.md のロジックをシェルスクリプトで実装
 # =============================================================================
+set -euo pipefail
 
 # タスク目的を検出
 # Args: $1 = prompt_lower

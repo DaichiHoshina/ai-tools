@@ -23,10 +23,7 @@ load_lib "detect-from-git.sh" || exit 1
 load_lib "detect-technique.sh" || exit 1
 
 # === 前提条件チェック ===
-if ! command -v jq &>/dev/null; then
-  echo '{"error":"jq not installed. Please run: brew install jq"}' >&2
-  exit 1
-fi
+require_jq
 
 # === 入力処理 ===
 input=$(cat)

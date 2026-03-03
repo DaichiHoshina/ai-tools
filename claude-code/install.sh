@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # Claude Code Configuration Installer
 # 初回セットアップ専用 - ~/.claude/ディレクトリ作成とシンボリックリンク設定
@@ -112,12 +112,6 @@ copy_directory_contents() {
     if [ -f "$SCRIPT_DIR/CANONICAL.md" ]; then
         cp "$SCRIPT_DIR/CANONICAL.md" "$CLAUDE_DIR/CANONICAL.md"
         print_success "CANONICAL.md をコピーしました"
-    fi
-
-    # AGENTS.md（常に上書き）
-    if [ -f "$SCRIPT_DIR/AGENTS.md" ]; then
-        cp "$SCRIPT_DIR/AGENTS.md" "$CLAUDE_DIR/AGENTS.md"
-        print_success "AGENTS.md をコピーしました"
     fi
 
     # Guidelines（各カテゴリ）

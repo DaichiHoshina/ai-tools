@@ -3,6 +3,7 @@
 # Detect Technology Stack from Git State
 # user-prompt-submit.sh から分離（保守性向上）
 # =============================================================================
+set -euo pipefail
 
 # Git状態（ブランチ名）から技術スタックを検出
 # Args:

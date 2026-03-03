@@ -2,6 +2,16 @@
 # =============================================================================
 # Hook共通ユーティリティ
 # =============================================================================
+set -euo pipefail
+
+# jqの存在チェック。なければエラー出力してexit 1
+# Usage: require_jq
+require_jq() {
+  if ! command -v jq &>/dev/null; then
+    echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+    exit 1
+  fi
+}
 
 # 標準入力からJSON読み取り
 read_hook_input() {

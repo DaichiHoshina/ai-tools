@@ -1,6 +1,6 @@
 # Commands Guide - コマンド使い分けガイド
 
-Claude Codeの17コマンドの使い分けとベストプラクティス。
+Claude Codeの29コマンドの使い分けとベストプラクティス。
 
 ## 📌 推奨: Core 3コマンド
 
@@ -53,15 +53,20 @@ Claude Codeの17コマンドの使い分けとベストプラクティス。
 | コマンド | 用途 | 使用例 |
 |---------|------|--------|
 | `/test` | テストコード作成 | 既存コードにテスト追加 |
-| `/refactor` | リファクタリング | コード整理・改善 |
-| `/quick-fix` | 1-2ファイルの軽微な修正 | タイポ修正、簡単なバグ修正 |
 | `/tdd` | TDD開発モード | RED-GREEN-REFACTOR サイクル |
+| `/refactor` | リファクタリング | コード整理・改善 |
+| `/lint-test` | ローカルCI相当チェック一括実行 | build/lint/test/typecheck まとめて確認 |
+| `/ui` | UI実装・レビュー・監査統合 | テーマから実装・パフォーマンス検証まで |
+| `/review-fix-push` | レビュー→修正→プッシュ一括実行 | `/review` + 全修正 + `/git-push` の統合 |
+| `/mr-review` | MR/PRレビュー | GitLab MR / GitHub PR のURLを貼るだけ |
 
 ### 調査・分析系
 
 | コマンド | 用途 | 使用例 |
 |---------|------|--------|
 | `/explore` | 並列探索（複数観点） | 認証フローを4観点から調査 |
+| `/analytics` | Claude Code利用状況分析 | 利用パターンの分析・改善提案 |
+| `/dashboard` | 利用状況ダッシュボード起動 | 統計・可視化の確認 |
 | `/retrospective` | セッション振り返り | 過去の作業を分析して改善 |
 
 ### ドキュメント系
@@ -77,7 +82,11 @@ Claude Codeの17コマンドの使い分けとベストプラクティス。
 | コマンド | 用途 | 使用例 |
 |---------|------|--------|
 | `/reload` | 設定再読み込み | compaction後のコンテキスト復元 |
-| `/rename` | セッション名変更 | 引数なし→自動生成（v2.1.41+） |
+| `/aliases` | コマンドエイリアス定義 | ショートカット設定の管理 |
+| `/memory-save` | Serena memoryへ即時保存 | 作業状態・知見のメモリー記録 |
+| `/protection-mode` | 操作保護モード適用 | 安全性チェック・操作ガードの有効化 |
+| `/takt` | TAKTワークフローエンジン実行 | YAML宣言的タスク実行 |
+| `/claude-update-fix` | バージョン差分検出・衝突分析 | Claude Code更新後の設定修正 |
 | `/serena` | Serena MCP操作 | メモリー管理・プロジェクト知識操作 |
 | `/serena-refresh` | Serenaデータ最新化 | データ・メモリーの整理 |
 
@@ -152,9 +161,9 @@ Claude Codeの17コマンドの使い分けとベストプラクティス。
 
 `/dev`は実装専用。設計・要件整理が必要なら `/flow` を使う。
 
-### ❌ 毎回 `/quick-fix` を使う
+### ❌ 専門コマンドの個別チェーン
 
-`/quick-fix`は本当に軽微な修正のみ。判断に迷ったら `/dev` または `/flow`。
+`/lint-test`、`/review`、`/git-push`を個別に実行する前に `/review-fix-push` で一括できないか検討する。
 
 ---
 
@@ -165,9 +174,9 @@ Claude Codeの17コマンドの使い分けとベストプラクティス。
 | 頻度 | コマンド |
 |------|---------|
 | 毎日 | `/flow`, `/dev`, `/review`, `/commit` |
-| 週1-2回 | `/git-push`, `/debug`, `/test` |
-| 月1-2回 | `/plan`, `/docs`, `/refactor`, `/explore` |
-| 稀 | その他の専門コマンド |
+| 週1-2回 | `/git-push`, `/debug`, `/test`, `/lint-test`, `/review-fix-push` |
+| 月1-2回 | `/plan`, `/docs`, `/refactor`, `/explore`, `/tdd`, `/ui`, `/mr-review` |
+| 稀 | `/prd`, `/brainstorm`, `/analytics`, `/dashboard`, `/retrospective`, `/takt`, その他 |
 
 ---
 

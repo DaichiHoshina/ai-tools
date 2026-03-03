@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # =============================================================================
 # Claude Code Configuration Sync Script
@@ -62,7 +62,6 @@ sync_to_local() {
         "VERSION"
         "CLAUDE.md"
         "CANONICAL.md"
-        "AGENTS.md"
         "commands"
         "guidelines"
         "skills"
@@ -118,7 +117,7 @@ sync_from_local() {
     print_header "ローカル → リポジトリ 同期"
 
     # 単体ファイル同期
-    local files=("VERSION" "CLAUDE.md" "CANONICAL.md" "AGENTS.md")
+    local files=("VERSION" "CLAUDE.md" "CANONICAL.md")
     for file in "${files[@]}"; do
         if [ -f "$CLAUDE_DIR/$file" ]; then
             if ! cp "$CLAUDE_DIR/$file" "$SCRIPT_DIR/$file"; then
@@ -171,42 +170,9 @@ sync_settings_template() {
 
     local content
     content=$(cat "$CLAUDE_DIR/settings.json")
-    content="${content//$HOME/__HOME__}"
 
-    local node_path
-    node_path="$(dirname "$(which node)" 2>/dev/null || echo "/usr/local/bin")"
-    content="${content//$node_path/__NODE_PATH__}"
-
-    # 環境変数をホワイトリスト方式で読み込み（セキュリティ対策）
-    if [ -f "$HOME/.env" ]; then
-        local allowed_keys="GITLAB_API_URL CONFLUENCE_URL CONFLUENCE_EMAIL CONFLUENCE_API_TOKEN JIRA_URL JIRA_EMAIL JIRA_API_TOKEN OPENAI_API_KEY"
-        while IFS='=' read -r key value; do
-            [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
-            # ホワイトリストにあるキーのみexport
-            if [[ " $allowed_keys " =~ " ${key} " ]] && [ -n "$value" ]; then
-                # bash置換では特殊文字エスケープ不要
-                content="${content//$value/__${key}__}"
-            fi
-        done < "$HOME/.env"
-    fi
-
-    content=$(echo "$content" | sed -E 's/ATATT3x[A-Za-z0-9_=-]+/__CONFLUENCE_API_TOKEN__/g')
-    content=$(echo "$content" | sed -E 's/sk-proj-[A-Za-z0-9_-]+/__OPENAI_API_KEY__/g')
-    content=$(echo "$content" | sed -E 's/BSA[A-Za-z0-9_-]+/__BRAVE_API_KEY__/g')
-
-    # 秘密情報マスク強化: .envからキー名ベースで検出（*_KEY, *_TOKEN, *_SECRET, *_PASSWORD）
-    if [ -f "$HOME/.env" ]; then
-        while IFS='=' read -r key value; do
-            # コメント行と空行をスキップ
-            [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
-            # 機密キー名パターンをチェック
-            if [[ "$key" =~ _(KEY|TOKEN|SECRET|PASSWORD)$ ]] && [ -n "$value" ]; then
-                # bash置換では特殊文字エスケープ不要
-                local placeholder="__${key}__"
-                content="${content//$value/$placeholder}"
-            fi
-        done < "$HOME/.env"
-    fi
+    # 共通マスキング関数を使用（security-functions.sh）
+    content=$(mask_secrets "$content")
 
     mkdir -p "$SCRIPT_DIR/templates"
     echo "$content" > "$SCRIPT_DIR/templates/settings.json.template"
@@ -246,7 +212,7 @@ sync_gitlab_mcp_template() {
 show_diff() {
     print_header "差分確認"
 
-    local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "AGENTS.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules")
+    local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules")
     local has_diff=false
 
     for item in "${items[@]}"; do

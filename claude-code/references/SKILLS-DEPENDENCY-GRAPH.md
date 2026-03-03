@@ -14,7 +14,7 @@ flowchart TB
 
     subgraph "言語スキル"
         GO[go-backend]
-        TS[typescript-backend]
+        TS[backend-dev]
         React[react-best-practices]
         Python[python-backend]
         Rust[rust-backend]
@@ -98,7 +98,7 @@ flowchart LR
 flowchart LR
     subgraph "TypeScript"
         TS_LG[load-guidelines]
-        TS_BE[typescript-backend]
+        TS_BE[backend-dev --lang=typescript]
         TS_CA[clean-architecture-ddd]
     end
 
@@ -163,7 +163,7 @@ flowchart LR
 | 用途 | スキル組み合わせ |
 |------|-----------------|
 | **Go + gRPC** | `go-backend` → `clean-architecture-ddd` → `grpc-protobuf` |
-| **TypeScript** | `typescript-backend` → `clean-architecture-ddd` → `api-design` |
+| **TypeScript** | `backend-dev --lang=typescript` → `clean-architecture-ddd` → `api-design` |
 | **React/Next.js** | `react-best-practices` → `ui-skills` → `uiux-review` |
 | **Python FastAPI** | `python-backend` → `clean-architecture-ddd` → `api-design` |
 | **Rust CLI** | `rust-backend` → `clean-architecture-ddd` |
@@ -199,7 +199,7 @@ flowchart TD
     Input --> GitCheck{Git状態検出}
 
     FileCheck -->|"*.go"| GO[go-backend]
-    FileCheck -->|"*.ts/tsx"| TS[typescript-backend]
+    FileCheck -->|"*.ts/tsx"| TS[backend-dev --lang=typescript]
     FileCheck -->|"*.py"| Python[python-backend]
     FileCheck -->|"*.rs"| Rust[rust-backend]
     FileCheck -->|"*.java"| Java[java-backend]
@@ -211,7 +211,7 @@ flowchart TD
     KeywordCheck -->|"テスト"| DT[comprehensive-review --focus=docs]
 
     ErrorCheck -->|"Docker接続"| DT2[docker-troubleshoot]
-    ErrorCheck -->|"型エラー"| TS2[typescript-backend]
+    ErrorCheck -->|"型エラー"| TS2[backend-dev --lang=typescript]
     ErrorCheck -->|"ModuleNotFoundError"| Python2[python-backend]
 
     GitCheck -->|"feature/api"| API[api-design]
@@ -232,7 +232,7 @@ flowchart TD
 | スキル | 必要ガイドライン |
 |--------|-----------------|
 | `go-backend` | `languages/go-backend.md` |
-| `typescript-backend` | `languages/typescript-backend.md` |
+| `backend-dev` | `languages/typescript.md`（typescript検出時）、`languages/golang.md`（go検出時）|
 | `react-best-practices` | `languages/react-best-practices.md` |
 | `python-backend` | `languages/python-backend.md` |
 | `rust-backend` | `languages/rust-backend.md` |

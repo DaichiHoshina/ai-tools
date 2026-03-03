@@ -3,6 +3,7 @@
 # Detect Technology Stack from Changed Files
 # user-prompt-submit.sh から分離（保守性向上）
 # =============================================================================
+set -euo pipefail
 
 # ファイルパターンから技術スタックを検出
 # Args:
