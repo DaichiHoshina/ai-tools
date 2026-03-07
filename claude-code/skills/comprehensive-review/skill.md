@@ -1,6 +1,8 @@
 ---
 name: comprehensive-review
 description: 包括的コードレビュー - 設計・品質・可読性・セキュリティ・ドキュメント/テスト・恒久対応・ログを統合評価
+context: fork
+agent: reviewer-agent
 requires-guidelines:
   - common
   - clean-architecture

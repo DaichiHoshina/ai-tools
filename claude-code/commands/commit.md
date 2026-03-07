@@ -5,9 +5,15 @@ description: Git コミットヘルパー - 差分を分析して適切なコミ
 
 ## /commit - Git コミットヘルパー
 
+## 現在のGit状態
+
+!`git status --short`
+!`git diff --stat`
+!`git log --oneline -5`
+
 ## フロー
 
-1. **状態確認** - `git status`, `git diff --cached` or `git diff`, `git log -5 --oneline`
+1. **状態確認** - 上記の自動取得結果を確認。必要に応じて `git diff` で詳細確認
 2. **変更分析** - Serena MCP でシンボルレベルの変更を確認
 3. **メッセージ生成** - Conventional Commits 形式
 4. **ユーザー確認**（必須）
