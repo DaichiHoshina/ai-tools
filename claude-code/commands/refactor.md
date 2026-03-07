@@ -82,7 +82,7 @@ requires-guidelines:
   → /test（テスト実行・必須。動作不変の保証）
   → /review（コードレビュー）
   → /git-push（Git操作）
-  → テスト失敗時: /debug
+  → テスト失敗時: /diagnose
 ```
 
 ## 関連コマンド

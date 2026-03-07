@@ -115,7 +115,7 @@ ruff check . && mypy .
   → /test（テスト作成・実行）
   → /review（コードレビュー）
   → /git-push（Git操作）
-  → エラー時: /debug
+  → エラー時: /diagnose
 ```
 
 ## 関連コマンド

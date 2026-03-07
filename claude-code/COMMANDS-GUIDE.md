@@ -40,7 +40,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 | **`/commit`** | コミットメッセージ自動生成 | 実装完了後 |
 | **`/git-push`** | commit→push→PR/MR一括 | 完成してPR作成まで一気に |
 | **`/plan`** | 設計・計画のみ | 大規模実装前の設計検討 |
-| **`/debug`** | エラー解析・修正提案 | バグ発生時 |
+| **`/diagnose`** | エラー解析・修正提案 | バグ発生時 |
 
 ---
 
@@ -174,7 +174,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 | 頻度 | コマンド |
 |------|---------|
 | 毎日 | `/flow`, `/dev`, `/review`, `/commit` |
-| 週1-2回 | `/git-push`, `/debug`, `/test`, `/lint-test`, `/review-fix-push` |
+| 週1-2回 | `/git-push`, `/diagnose`, `/test`, `/lint-test`, `/review-fix-push` |
 | 月1-2回 | `/plan`, `/docs`, `/refactor`, `/explore`, `/tdd`, `/ui`, `/mr-review` |
 | 稀 | `/prd`, `/brainstorm`, `/analytics`, `/dashboard`, `/retrospective`, `/takt`, その他 |
 
@@ -191,7 +191,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 - `/commit` でコミットメッセージ作成
 
 ### レベル3: 上級者（1ヶ月）
-- Tier 2コマンド（`/plan`, `/debug`）を活用
+- Tier 2コマンド（`/plan`, `/diagnose`）を活用
 - 状況に応じた最適なコマンド選択
 
 ### レベル4: エキスパート（3ヶ月）

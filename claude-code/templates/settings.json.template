@@ -143,6 +143,18 @@
           }
         ]
       }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/instructions-loaded.sh",
+            "async": true
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -164,6 +176,7 @@
       "熟考中"
     ]
   },
+  "includeGitInstructions": false,
   "skipDangerousModePermissionPrompt": true,
   "1feedbackSurveyState": {
     "lastShownTime": 1753938733414

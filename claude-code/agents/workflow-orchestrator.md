@@ -97,7 +97,7 @@ workflows:
   bugfix:
     worktree: auto
     steps:
-      - command: /debug
+      - command: /diagnose
         activeForm: バグ調査中
       - command: /dev
         activeForm: 修正実装中
@@ -113,7 +113,7 @@ workflows:
   bugfix_with_rca:
     worktree: auto
     steps:
-      - command: /debug
+      - command: /diagnose
         activeForm: バグ調査中
       - decision: complexity_check
       - command: /root-cause
@@ -168,7 +168,7 @@ workflows:
 
   hotfix:
     steps:
-      - command: /debug
+      - command: /diagnose
         activeForm: 緊急バグ調査中
       - command: /dev
         activeForm: 緊急修正実装中

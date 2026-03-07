@@ -99,7 +99,7 @@ allowed-tools: Bash, Read, Edit  # オプション
 | /test | テスト作成専用 |
 | /refactor | リファクタリング |
 | /lint-test | CI相当のローカルチェック |
-| /debug | デバッグ支援 |
+| /diagnose | デバッグ支援 |
 | /protection-mode | 操作保護モード読み込み |
 
 ## エージェント一覧

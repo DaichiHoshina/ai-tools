@@ -82,7 +82,7 @@ flowchart LR
         Plan[/plan]
         Dev[/dev]
         Review[/review]
-        Debug[/debug]
+        Debug[/diagnose]
         Test[/test]
     end
 

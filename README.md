@@ -92,7 +92,7 @@ claude
 
 **このリポジトリ使用時**:
 ```
-/debug この認証エラーを修正
+/diagnose この認証エラーを修正
 ```
 ↓ **自動で実行される処理**:
 1. UserPromptSubmit Hookが技術スタック検出

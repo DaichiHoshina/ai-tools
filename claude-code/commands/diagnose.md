@@ -3,7 +3,7 @@ allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TaskCreate, TaskUpdate, Task
 description: デバッグ支援 - エラーログ解析から原因特定・修正提案まで
 ---
 
-## /debug - デバッグ支援
+## /diagnose - デバッグ支援
 
 ## フロー
 

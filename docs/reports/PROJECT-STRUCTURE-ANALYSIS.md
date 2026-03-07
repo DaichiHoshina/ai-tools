@@ -61,7 +61,7 @@ po-agent (戦略決定)
 - `/review`: 包括的コードレビュー
 
 **Tier 2 (よく使う)**:
-- `/commit`, `/commit-push-pr`, `/plan`, `/debug`
+- `/commit`, `/commit-push-pr`, `/plan`, `/diagnose`
 
 **Tier 3 (専門)**:
 - `/test`, `/refactor`, `/quick-fix`, `/tdd`, `/explore`, `/retrospective`, etc.

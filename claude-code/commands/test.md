@@ -74,7 +74,7 @@ test('should do something', () => {
 /test 完了
   → /review（コードレビュー）
   → /git-push（Git操作）
-  → テスト失敗時: /debug
+  → テスト失敗時: /diagnose
   → カバレッジ不足: 追加テスト作成
 ```
 

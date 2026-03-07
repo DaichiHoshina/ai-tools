@@ -13,7 +13,7 @@ description: コマンドエイリアス定義
 |-----------|-------------|------|
 | `/gp` | `/git-push` | Git統合（commit→push→PR/MR） |
 | `/br` | `/brainstorm` | 設計相談・ブレインストーミング |
-| `/dbg` | `/debug` | デバッグ支援 |
+| `/dbg` | `/diagnose` | デバッグ支援 |
 | `/ref` | `/refactor` | リファクタリング |
 | `/doc` | `/docs` | ドキュメント作成 |
 | `/rv` | `/review` | コードレビュー |
@@ -78,7 +78,7 @@ Claude Code設定に追加（`~/.claude/settings.json`）:
   "aliases": {
     "gp": "git-push",
     "br": "brainstorm",
-    "dbg": "debug",
+    "dbg": "diagnose",
     "ref": "refactor",
     "doc": "docs",
     "rv": "review",
