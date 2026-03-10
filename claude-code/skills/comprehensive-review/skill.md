@@ -129,6 +129,7 @@ Total: Critical N件 / Warning N件
 | 過剰な抽象化 | 不要なインターフェース・レイヤー |
 | Fat Service | 1つのServiceに複数責務が集中 |
 | ユビキタス言語不一致 | コード上の命名がドメイン用語と乖離 |
+| OCP違反の分岐 | switch/ifで種別・キャリア等を分岐 → Strategy/Specificationパターンでの置き換えを提案 |
 
 ### quality（品質）
 
