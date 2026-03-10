@@ -139,6 +139,7 @@ Total: Critical N件 / Warning N件
 | 型安全性 | `any`使用、無検証`as`、`interface{}` |
 | パフォーマンス | N+1問題、メモリリーク |
 | 古いパターン | 言語別ガイドラインの「古いパターン検出」参照 |
+| DB機能未活用 | アプリ側フィルタ/変換をDB固有機能（MySQL 8 JSON_TABLE等）でSQL完結できないか検討。auto-memoryのDB情報を参照 |
 
 #### Warning
 
