@@ -81,8 +81,8 @@ npm install -g @openai/codex
 ls ~/.claude/commands/
 ls ~/.claude/skills/
 ls ~/.claude/guidelines/
-ls ~/.claude/hooks/          # 🆕 Hooks確認
-ls ~/.claude/output-styles/  # 🆕 Output Styles確認
+ls ~/.claude/hooks/
+ls ~/.claude/output-styles/  # スタイル切り替えは /config で
 
 # MCP確認
 cat ~/.claude.json | grep -A 5 "mcpServers"
@@ -263,6 +263,6 @@ cd ~/ai-tools/claude-code
 - [ ] Serena MCP インストール
 - [ ] Codex インストール
 - [ ] 🆕 Hooks 動作確認（6つ全て）
-- [ ] 🆕 Output Styles 確認
+- [ ] Output Styles 確認（`/config` でスタイル切替）
 - [ ] 🆕 通知音設定（オプション）
 - [ ] `/serena オンボーディング` 成功
