@@ -1,0 +1,11 @@
+{
+  "_comment": "ディレクトリパターンと色のマッピング。パターンは部分一致（上から順に最初にマッチしたものを使用）",
+  "_colors": ["red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan", "default"],
+  "mappings": [
+    { "pattern": "/ai-tools",   "color": "green"  },
+    { "pattern": "/work",       "color": "blue"   },
+    { "pattern": "/personal",   "color": "purple" },
+    { "pattern": "/sandbox",    "color": "orange" }
+  ],
+  "default": "default"
+}

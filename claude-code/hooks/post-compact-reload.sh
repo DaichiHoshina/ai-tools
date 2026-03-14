@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PostCompact Reload Hook - compact後の自動コンテキスト復元
-# SessionStart の "compact" matcher で発火
+# PostCompact hook event で発火（v2.1.76+）
 # compact後に /reload 相当の処理を自動実行するよう指示
 # NOTE: Serena有無はチェックしない（compact直後はMCP未初期化の可能性あり）
 

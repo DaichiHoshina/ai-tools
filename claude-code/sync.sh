@@ -72,6 +72,7 @@ sync_to_local() {
         "output-styles"
         "hooks"
         "rules"
+        "config"
     )
 
     for item in "${items[@]}"; do
@@ -129,7 +130,7 @@ sync_from_local() {
     done
 
     # Directories
-    local dirs=("commands" "guidelines" "skills" "agents" "scripts" "lib" "output-styles" "hooks" "rules")
+    local dirs=("commands" "guidelines" "skills" "agents" "scripts" "lib" "output-styles" "hooks" "rules" "config")
     for dir in "${dirs[@]}"; do
         if [ -d "$CLAUDE_DIR/$dir" ]; then
             # 例外伝播の明示化（Critical #7対策）
@@ -212,7 +213,7 @@ sync_gitlab_mcp_template() {
 show_diff() {
     print_header "差分確認"
 
-    local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules")
+    local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules" "config")
     local has_diff=false
 
     for item in "${items[@]}"; do
