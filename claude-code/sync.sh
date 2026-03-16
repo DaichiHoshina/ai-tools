@@ -52,6 +52,33 @@ if ! command -v escape_for_sed &> /dev/null; then
 fi
 
 # =============================================================================
+# Settings Hooks Diff Check
+# =============================================================================
+
+check_settings_hooks_diff() {
+    if ! check_jq; then
+        return
+    fi
+
+    local template="$SCRIPT_DIR/templates/settings.json.template"
+    local live="$CLAUDE_DIR/settings.json"
+
+    if [ ! -f "$template" ] || [ ! -f "$live" ]; then
+        return
+    fi
+
+    local template_hooks live_hooks
+    template_hooks=$(jq -S '.hooks // {}' "$template" 2>/dev/null)
+    live_hooks=$(jq -S '.hooks // {}' "$live" 2>/dev/null)
+
+    if [ "$template_hooks" != "$live_hooks" ]; then
+        print_warning "settings.json hooks がテンプレートと異なります:"
+        diff <(echo "$template_hooks") <(echo "$live_hooks") | head -20 || true
+        print_info "手動で追加した設定がある場合は無視してOKです"
+    fi
+}
+
+# =============================================================================
 # Sync: to-local (リポジトリ → ローカル)
 # =============================================================================
 
@@ -106,6 +133,9 @@ sync_to_local() {
             print_warning "$item が見つかりません"
         fi
     done
+
+    # settings.json hooks差分チェック
+    check_settings_hooks_diff
 
     print_success "ローカルへの同期が完了しました"
 }
