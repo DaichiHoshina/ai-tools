@@ -11,6 +11,9 @@ codex/hooks/*.sh
 !codex/*.example
 !codex/COMMANDS.md
 
+# Codex system skills（Codexプラグインが自動管理）
+claude-code/skills/.system/
+
 # 環境変数ファイル
 .env
 .env.local
