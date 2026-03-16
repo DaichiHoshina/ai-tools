@@ -62,6 +62,17 @@
         ]
       }
     ],
+    "PostCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-compact-reload.sh"
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "matcher": "*",
