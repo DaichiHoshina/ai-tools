@@ -8,7 +8,7 @@ INPUT=$(cat)
 
 # macOS通知バナー
 if command -v terminal-notifier &>/dev/null; then
-  terminal-notifier -title "Claude Code" -message "作業が完了しました" -sound Glass &
+  terminal-notifier -title "Claude Code" -message "作業が完了しました" -contentImage "$HOME/.claude/claude-icon.png" -sound Glass &
 fi
 
 # 通知音ファイル（任意）
