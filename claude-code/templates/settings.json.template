@@ -91,7 +91,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "afplay ~/notification.mp3",
+            "command": "~/.claude/hooks/stop.sh",
             "async": true
           }
         ]
