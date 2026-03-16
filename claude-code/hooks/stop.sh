@@ -29,7 +29,7 @@ if command -v terminal-notifier &>/dev/null; then
     -message "${NOTIFY_MSG}" \
     -contentImage "$HOME/.claude/claude-icon.png" \
     -sound Glass \
-    -execute "open -a Terminal.app && claude --resume '${SESSION_ID}'" &
+    -execute "osascript -e 'tell application \"iTerm\" to activate'" &
 fi
 
 # ntfy.sh（CLAUDE_NTFY_TOPIC が設定されている場合のみ）
