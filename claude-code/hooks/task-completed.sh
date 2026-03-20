@@ -31,6 +31,10 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="${LOG_DIR}/agent-team-events.log"
 echo "[${TIMESTAMP}] COMPLETED | task_id=${TASK_ID} | subject=${TASK_SUBJECT} | teammate=${TEAMMATE_NAME} | team=${TEAM_NAME}" >> "$LOG_FILE"
 
+# Task Diary記録（セッション間知識蓄積用）
+DIARY_FILE="${LOG_DIR}/task-diary.log"
+echo "[${TIMESTAMP}] ${TASK_SUBJECT} | by=${TEAMMATE_NAME} team=${TEAM_NAME}" >> "$DIARY_FILE"
+
 # 統計情報計算（今日の完了タスク数）
 TODAY=$(date -u +"%Y-%m-%d")
 COMPLETED_TODAY=$(grep -c "${TODAY}.*COMPLETED" "$LOG_FILE" 2>/dev/null || echo "0")
@@ -38,4 +42,5 @@ COMPLETED_TODAY=$(grep -c "${TODAY}.*COMPLETED" "$LOG_FILE" 2>/dev/null || echo 
 # 結果を返す
 jq -n \
   --arg sm "${ICON_SUCCESS} Task completed: ${TASK_SUBJECT} (${TASK_ID}) by ${TEAMMATE_NAME} | Today: ${COMPLETED_TODAY} tasks done" \
-  '{systemMessage: $sm}'
+  --arg ctx "タスク完了をtask-diary.logに記録済み。重要な学びがあれば /memory-save でSerena memoryにも保存を検討。" \
+  '{systemMessage: $sm, additionalContext: $ctx}'
