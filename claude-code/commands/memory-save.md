@@ -1,6 +1,7 @@
 ---
 allowed-tools: mcp__serena__*
 description: Serena memoryへの簡易保存 - 現在の作業状態を即座にメモリに記録
+effort: low
 ---
 
 # /memory-save - Serena Memory 簡易保存

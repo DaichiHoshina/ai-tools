@@ -1,6 +1,7 @@
 ---
 name: aliases
 description: コマンドエイリアス定義
+effort: low
 ---
 
 # コマンドエイリアス

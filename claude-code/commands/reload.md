@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, mcp__serena__*
 description: CLAUDE.mdを再読み込みしてcompaction後のコンテキストを復元
+effort: low
 ---
 
 # /reload - コンテキスト復元
