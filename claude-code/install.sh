@@ -150,6 +150,15 @@ copy_directory_contents() {
         chmod +x "$CLAUDE_DIR/lib/"*.sh 2>/dev/null || true
     fi
 
+    # Hooks（ディレクトリ構造ごとコピー）
+    if [ -d "$SCRIPT_DIR/hooks" ]; then
+        rm -rf "$CLAUDE_DIR/hooks"
+        cp -r "$SCRIPT_DIR/hooks" "$CLAUDE_DIR/hooks"
+        rm -f "$CLAUDE_DIR/hooks"/test-*.sh 2>/dev/null || true
+        chmod +x "$CLAUDE_DIR/hooks/"*.sh 2>/dev/null || true
+        print_success "hooks をコピーしました"
+    fi
+
     # statusline.js
     cp "$SCRIPT_DIR/statusline.js" "$CLAUDE_DIR/statusline.js"
     chmod +x "$CLAUDE_DIR/statusline.js"

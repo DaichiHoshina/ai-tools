@@ -179,8 +179,10 @@ generate_settings_json() {
         return 1
     fi
 
-    # Phase 2でMCP設定は.mcp.jsonに分離済みのため、単純コピーで十分
+    # テンプレートをコピーし、プレースホルダーを実際のパスに置換
     if cp "$script_dir/templates/settings.json.template" "$claude_dir/settings.json"; then
+        sed_inplace "s|__HOME__|${HOME}|g" "$claude_dir/settings.json"
+        sed_inplace "s|__NODE_PATH__|$(dirname "$(which node)" 2>/dev/null || echo "/usr/local/bin")|g" "$claude_dir/settings.json"
         print_success "settings.json を生成しました"
     else
         print_error "settings.json の生成に失敗しました"
