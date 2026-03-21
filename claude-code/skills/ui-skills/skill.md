@@ -57,6 +57,10 @@ requires-guidelines:
 | NEVER | 大規模`blur()`/`backdrop-filter`の動画化 |
 | NEVER | レンダーロジックで可能な処理に`useEffect` |
 | NEVER | 明示要求なしのグラデーション、紫色/マルチカラーグラデーション |
+| SHOULD | ローディングは構造的スケルトン表示 |
+| SHOULD | `prefers-reduced-motion`尊重 |
+| SHOULD | 正方形要素は`size-*`（`w-* h-*`より優先） |
+| SHOULD | 既存テーマ/Tailwind標準色を優先 |
 
 ## 初回実装品質ガード
 

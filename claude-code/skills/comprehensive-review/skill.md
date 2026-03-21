@@ -29,6 +29,21 @@ parameters:
 
 各観点の詳細チェック項目: [references/review-criteria.md](references/review-criteria.md)
 
+## パラメータ
+
+`--focus`で観点を絞る（デフォルト: all）:
+
+| 値 | レビュー範囲 |
+|----|-------------|
+| all | 全7観点（デフォルト） |
+| architecture | 設計のみ |
+| quality | 品質のみ |
+| readability | 可読性のみ |
+| security | セキュリティのみ |
+| docs | ドキュメント/テストのみ |
+| root-cause | 恒久対応のみ |
+| logging | ログのみ |
+
 ## 実行フロー
 
 ### Step 1: 変更ファイル分析
