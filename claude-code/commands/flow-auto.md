@@ -1,6 +1,5 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*
-model: sonnet
 description: 完全自律ワークフロー - /flow --auto のショートカット。質問なし・承認スキップ・自動push。
 ---
 

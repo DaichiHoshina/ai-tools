@@ -1,6 +1,5 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Task, AskUserQuestion, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*
-model: sonnet
 description: ワークフロー自動化 - タスクタイプを自動判定して最適なワークフローを実行
 ---
 
