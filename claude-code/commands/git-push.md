@@ -87,6 +87,12 @@ Conventional Commits形式で自動生成:
 <type>(<scope>): <subject>
 ```
 
+## Jiraチケットリンク
+
+push/MR作成完了後、コミットメッセージやブランチ名にJiraチケットIDが含まれる場合:
+- 該当チケットにMR/PR URLをコメントとして自動追加（`mcp__jira__jira_post`）
+- チケットIDが見つからない場合は警告を表示: 「関連Jiraチケットが未リンクです。チケットIDを指定しますか？」
+
 ## 注意
 
 - force pushは**絶対禁止**
