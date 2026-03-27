@@ -16,8 +16,17 @@ ICON_FORBIDDEN=$'\u2297'  # ban
 # jq前提条件チェック
 require_jq
 
-# JSON入力を消費（未使用だが読み捨て必要）
-cat > /dev/null
+# JSON入力を読み込む
+_SS_INPUT=$(cat)
+
+# --- Analytics: セッション開始記録 ---
+_SS_LIB_DIR="${SCRIPT_DIR}/../lib"
+if [[ -f "${_SS_LIB_DIR}/analytics-writer.sh" ]]; then
+    source "${_SS_LIB_DIR}/analytics-writer.sh"
+    _SS_SESSION_ID=$(echo "${_SS_INPUT}" | jq -r '.session_id // "unknown"')
+    _SS_PROJECT=$(basename "$(echo "${_SS_INPUT}" | jq -r '.cwd // "."')")
+    analytics_start_session "${_SS_SESSION_ID}" "${_SS_PROJECT}" 2>/dev/null || true
+fi
 
 # --- Directory Color ---
 _COLOR_CONFIG="${HOME}/.claude/config/dir-colors.json"

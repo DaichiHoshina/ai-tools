@@ -345,13 +345,14 @@ def run_full(conn: sqlite3.Connection) -> str:
     sess = fetch_session_stats(conn, start_iso, end_iso)
     prev_sess = fetch_session_stats(conn, prev_start_iso, prev_end_iso)
     tools = fetch_tool_stats(conn, start_iso, end_iso)
+    prev_tools = fetch_tool_stats(conn, prev_start_iso, prev_end_iso)
     trends = fetch_tool_trend(conn, start_iso, end_iso, prev_start_iso, prev_end_iso)
 
     tool_total = tools["total"]
 
     # 前期比
     sess_pct = fmt_pct(calc_pct_change(sess["session_count"], prev_sess["session_count"]))
-    tool_pct = fmt_pct(calc_pct_change(tool_total, prev_sess["session_count"]))
+    tool_pct = fmt_pct(calc_pct_change(tool_total, prev_tools["total"]))
     cost_pct = fmt_pct(calc_pct_change(sess["total_cost"], prev_sess["total_cost"]))
     avg_dur = sess["avg_duration_sec"]
     prev_avg_dur = prev_sess["avg_duration_sec"]

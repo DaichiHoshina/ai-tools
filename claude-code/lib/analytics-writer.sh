@@ -105,11 +105,11 @@ _analytics_exec() {
 _analytics_tool_category() {
     local tool_name="$1"
     case "$tool_name" in
-        Skill)           echo "skill" ;;
-        Agent|Task*)     echo "agent" ;;
-        mcp__*)          echo "mcp" ;;
+        Skill|SlashCommand) echo "skill" ;;
+        Agent|Task*)        echo "agent" ;;
+        mcp__*)             echo "mcp" ;;
         Read|Write|Edit|Glob|Grep|Bash|WebFetch|WebSearch) echo "builtin" ;;
-        *)               echo "builtin" ;;
+        *)                  echo "builtin" ;;
     esac
 }
 
@@ -132,9 +132,23 @@ analytics_insert_tool_event() {
     _analytics_exec "INSERT INTO tool_events (session_id, project, tool_name, tool_category, tool_input_summary) VALUES ('${session_id}', '${project}', '${tool_name}', '${category}', '${input_summary}');"
 }
 
-# --- セッション記録 ---
+# --- セッション開始記録 ---
+# Usage: analytics_start_session "$session_id" "$project"
+analytics_start_session() {
+    local session_id="${1:-unknown}"
+    local project="${2:-unknown}"
+    local now
+    now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    [[ -f "$ANALYTICS_DB" ]] || analytics_init || return 1
+
+    _analytics_exec "INSERT OR IGNORE INTO sessions (session_id, start_time, project) VALUES ('${session_id}', '${now}', '${project}');"
+}
+
+# --- セッション終了記録 ---
 # Usage: analytics_insert_session "$session_id" "$project" "$model" "$git_branch" \
 #          "$input_tokens" "$cache_read" "$cache_write" "$output_tokens" "$total_messages" "$duration"
+# start_timeが既に記録されていればそれを使い、なければ現在時刻をフォールバック
 analytics_insert_session() {
     local session_id="${1:-unknown}"
     local project="${2:-unknown}"
@@ -151,7 +165,10 @@ analytics_insert_session() {
 
     [[ -f "$ANALYTICS_DB" ]] || analytics_init || return 1
 
-    _analytics_exec "INSERT OR REPLACE INTO sessions (session_id, start_time, end_time, project, model, git_branch, input_tokens, cache_read_tokens, cache_write_tokens, output_tokens, total_messages, duration_sec) VALUES ('${session_id}', '${now}', '${now}', '${project}', '${model}', '${git_branch}', ${input_tokens}, ${cache_read}, ${cache_write}, ${output_tokens}, ${total_messages}, ${duration});"
+    sqlite3 "$ANALYTICS_DB" "INSERT OR REPLACE INTO sessions (session_id, start_time, end_time, project, model, git_branch, input_tokens, cache_read_tokens, cache_write_tokens, output_tokens, total_messages, duration_sec) VALUES ('${session_id}', COALESCE((SELECT start_time FROM sessions WHERE session_id = '${session_id}'), '${now}'), '${now}', '${project}', '${model}', '${git_branch}', ${input_tokens}, ${cache_read}, ${cache_write}, ${output_tokens}, ${total_messages}, CAST((julianday('${now}') - julianday(COALESCE((SELECT start_time FROM sessions WHERE session_id = '${session_id}'), '${now}'))) * 86400 AS INTEGER));" 2>/dev/null || {
+        echo "WARNING: analytics session write failed" >&2
+        return 1
+    }
 }
 
 # --- エージェント開始記録 ---

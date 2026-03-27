@@ -50,6 +50,19 @@ fi
 
 prompt_lower=$(echo "$prompt" | tr '[:upper:]' '[:lower:]')
 
+# === Analytics: スラッシュコマンド追跡 ===
+if [[ "$prompt" == /* ]]; then
+    _CMD_NAME=$(echo "$prompt" | sed 's|^/\([a-zA-Z_-]*\).*|\1|')
+    if [[ -n "${_CMD_NAME}" ]]; then
+        if [[ -f "${LIB_DIR}/analytics-writer.sh" ]]; then
+            source "${LIB_DIR}/analytics-writer.sh"
+            _CMD_SESSION_ID=$(echo "$input" | jq -r '.session_id // "unknown"')
+            _CMD_PROJECT=$(basename "$(echo "$input" | jq -r '.cwd // "."')")
+            analytics_insert_tool_event "${_CMD_SESSION_ID}" "${_CMD_PROJECT}" "SlashCommand" "${_CMD_NAME}" 2>/dev/null || true
+        fi
+    fi
+fi
+
 # === 検出結果格納 ===
 declare -A detected_langs
 declare -A detected_skills
