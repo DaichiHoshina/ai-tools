@@ -1,6 +1,6 @@
 ---
 name: context7
-description: Retrieve up-to-date documentation for software libraries, frameworks, and components via the Context7 API. This skill should be used when looking up documentation for any programming library or framework, finding code examples for specific APIs or features, verifying correct usage of library functions, or obtaining current information about library APIs that may have changed since training.
+description: ライブラリ・フレームワークの最新ドキュメントをContext7 API経由で取得。ドキュメント検索、APIの正しい使い方の確認、トレーニングデータ以降の変更確認時に使用。
 ---
 
 # context7 - ライブラリドキュメント検索
