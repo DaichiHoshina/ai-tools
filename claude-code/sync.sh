@@ -134,6 +134,25 @@ sync_to_local() {
         fi
     done
 
+    # groove同期（リポジトリ groove/ → ~/.groove/）
+    local groove_src="${SCRIPT_DIR}/../groove"
+    local groove_dst="$HOME/.groove"
+    if [ -d "$groove_src" ]; then
+        for subdir in workflows agents; do
+            if [ -d "$groove_src/$subdir" ]; then
+                mkdir -p "$groove_dst/$subdir"
+                if ! cp -r "$groove_src/$subdir/"* "$groove_dst/$subdir/" 2>/dev/null; then
+                    print_warning "groove/$subdir コピー失敗（空ディレクトリの可能性）"
+                fi
+            fi
+        done
+        if [ -f "$groove_src/config.yaml" ]; then
+            cp "$groove_src/config.yaml" "$groove_dst/"
+        fi
+        mkdir -p "$groove_dst/runs"
+        print_success "groove → ~/.groove/"
+    fi
+
     # settings.json hooks差分チェック
     check_settings_hooks_diff
 
@@ -185,6 +204,23 @@ sync_from_local() {
     if [ -f "$CLAUDE_DIR/statusline.js" ]; then
         cp "$CLAUDE_DIR/statusline.js" "$SCRIPT_DIR/statusline.js"
         print_success "statusline.js"
+    fi
+
+    # groove逆同期（~/.groove/ → リポジトリ groove/）
+    local groove_src="$HOME/.groove"
+    local groove_dst="${SCRIPT_DIR}/../groove"
+    if [ -d "$groove_src" ]; then
+        for subdir in workflows agents; do
+            if [ -d "$groove_src/$subdir" ]; then
+                mkdir -p "$groove_dst/$subdir"
+                rm -f "$groove_dst/$subdir/"* 2>/dev/null || true
+                cp "$groove_src/$subdir/"* "$groove_dst/$subdir/" 2>/dev/null || true
+            fi
+        done
+        if [ -f "$groove_src/config.yaml" ]; then
+            cp "$groove_src/config.yaml" "$groove_dst/"
+        fi
+        print_success "~/.groove/ → groove/"
     fi
 
     # Templates (センシティブ情報をマスク)

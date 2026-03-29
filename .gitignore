@@ -46,9 +46,8 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
-# groove実行結果（ランタイム生成）
-.groove/runs/*
-!.groove/runs/.gitkeep
+# groove（定義は~/.groove/に配置、プロジェクト側はオーバーライド用）
+.groove/
 
 # 一時ファイル
 tmp/

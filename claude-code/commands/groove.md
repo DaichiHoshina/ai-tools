@@ -20,15 +20,28 @@ description: 軽量マルチエージェントオーケストレーター。YAML
 | `/groove spec-driven タスク` | 指定ワークフローで実行 |
 | `/groove タスク` | デフォルト`spec-driven`で実行 |
 
+## パス解決
+
+ファイルは以下の優先順位で検索する。プロジェクト固有の定義がホームを上書きする。
+
+| 種類 | 1st（プロジェクト） | 2nd（ホーム） |
+|------|-------------------|--------------|
+| ワークフロー | `.groove/workflows/` | `~/.groove/workflows/` |
+| Agent定義 | `.groove/agents/` | `~/.groove/agents/` |
+| 設定 | `.groove/config.yaml` | `~/.groove/config.yaml` |
+| 実行結果 | `.groove/runs/`（プロジェクトのみ） | `~/.groove/runs/`（フォールバック） |
+
+`list`コマンドは両方のディレクトリからワークフローを列挙する（重複はプロジェクト側優先）。
+
 ## オーケストレーション実行手順
 
 **このコマンドを受けたら、以下のループを自分自身（メインAgent）が直接実行する。外部CLIやカスタムAgent typeは使わない。**
 
 ### 1. 初期化
 
-1. `.groove/workflows/{name}.yaml`をReadで読み込む
+1. 上記パス解決ルールに従い`{name}.yaml`をReadで読み込む
 2. 実行IDを生成: `date +%Y%m%d-%H%M%S`
-3. `.groove/runs/{id}/`を作成、`state.json`を書き込む:
+3. `.groove/runs/{id}/`（プロジェクト内、なければ`~/.groove/runs/{id}/`）を作成、`state.json`を書き込む:
    ```json
    {"workflow":"名前","task":"タスク","run_id":"ID","current_step":"最初のstep","step_count":0,"loop_count":{},"status":"running","history":[]}
    ```
@@ -54,7 +67,7 @@ WHILE current_step != COMPLETE && current_step != ABORT:
 
 #### 通常ステップ
 
-`.groove/agents/{agent名}.md`をReadで読み込み、その内容をpromptに含める:
+パス解決ルールに従いAgent定義を読み込み（プロジェクト`.groove/agents/` → `~/.groove/agents/`）、その内容をpromptに含める:
 
 ```
 Agent(
