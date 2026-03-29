@@ -8,131 +8,76 @@ description: 軽量マルチエージェントオーケストレーター。YAML
 ## 使用方法
 
 ```text
-/groove <workflow> <task>
-/groove list
+/groove <task>                    # ワークフロー自動選択
+/groove <workflow> <task>         # ワークフロー指定
+/groove --auto <task>             # 自動モード（COMPLETE後にcommit+push）
+/groove list                      # ワークフロー一覧
 ```
 
-## 引数解析
+## ワークフロー自動選択
 
-| パターン | 動作 |
-|---------|------|
-| `/groove list` | `.groove/workflows/`のワークフロー一覧表示 |
-| `/groove spec-driven タスク` | 指定ワークフローで実行 |
-| `/groove タスク` | デフォルト`spec-driven`で実行 |
+| キーワード | ワークフロー |
+|-----------|------------|
+| テスト, TDD, test | `tdd` |
+| それ以外 | `spec-driven` |
 
-## パス解決
+## パス解決（プロジェクト優先→ホームフォールバック）
 
-ファイルは以下の優先順位で検索する。プロジェクト固有の定義がホームを上書きする。
-
-| 種類 | 1st（プロジェクト） | 2nd（ホーム） |
-|------|-------------------|--------------|
+| 種類 | 1st | 2nd |
+|------|-----|-----|
 | ワークフロー | `.groove/workflows/` | `~/.groove/workflows/` |
 | Agent定義 | `.groove/agents/` | `~/.groove/agents/` |
-| 設定 | `.groove/config.yaml` | `~/.groove/config.yaml` |
-| 実行結果 | `.groove/runs/`（プロジェクトのみ） | `~/.groove/runs/`（フォールバック） |
 
-`list`コマンドは両方のディレクトリからワークフローを列挙する（重複はプロジェクト側優先）。
+## 実行手順
 
-## オーケストレーション実行手順
-
-**このコマンドを受けたら、以下のループを自分自身（メインAgent）が直接実行する。外部CLIやカスタムAgent typeは使わない。**
+メインAgentが直接ループを回す。外部CLIは使わない。
 
 ### 1. 初期化
 
-1. 上記パス解決ルールに従い`{name}.yaml`をReadで読み込む
-2. 実行IDを生成: `date +%Y%m%d-%H%M%S`
-3. `.groove/runs/{id}/`（プロジェクト内、なければ`~/.groove/runs/{id}/`）を作成、`state.json`を書き込む:
-   ```json
-   {"workflow":"名前","task":"タスク","run_id":"ID","current_step":"最初のstep","step_count":0,"loop_count":{},"status":"running","history":[]}
-   ```
+YAMLをReadで読み込み、最初のstepから開始。内部変数で状態管理（step_count, loop_count）。
 
 ### 2. ステップ実行ループ
 
-`current_step`がCOMPLETE/ABORTになるまで繰り返す:
-
 ```
 WHILE current_step != COMPLETE && current_step != ABORT:
-  1. state.json読み込み
-  2. step_count >= max_steps → ABORT
-  3. loop_count[current_step] >= loop_limit → ABORT
-  4. YAMLからステップ定義取得
-  5. Agent起動（下記ルール）
-  6. Agent出力から GROOVE_RESULT: を抽出
-  7. rulesマッチングで次ステップ決定
-  8. レポート保存: .groove/runs/{id}/{step}-{n}.md
-  9. state.json更新
+  1. step_count >= max_steps → ABORT
+  2. loop_count[step] >= loop_limit → ABORT
+  3. Agent定義をReadで読み込み
+  4. Agent起動（下記ルール）
+  5. 出力からGROOVE_RESULT:を抽出
+  6. rulesマッチングで次step決定
+  7. step_count++, loop_count[step]++
 ```
 
 ### 3. Agent起動ルール
 
-#### 通常ステップ
-
-パス解決ルールに従いAgent定義を読み込み（プロジェクト`.groove/agents/` → `~/.groove/agents/`）、その内容をpromptに含める:
-
+**通常:**
 ```
 Agent(
   subagent_type: "general-purpose",
   mode: edit→"bypassPermissions" / readonly→"default",
-  prompt: "{Agent定義の内容}\n\n## タスク\n{タスク内容}\n\n## 前ステップのレポート\n{直前レポート}"
+  prompt: "{Agent定義}\n\n## タスク\n{task}\n\n## 前ステップ結果\n{prev_result}"
 )
 ```
 
-#### parallelステップ
+**parallel:** 単一メッセージで複数Agent並列起動。集約: spec_issue > any_fail > all_pass
 
-**単一メッセージ内で複数のAgent tool callを並列発行する。**
+**provider: codex:** Bash toolで`codex`コマンドを実行。未インストール時はpassでスキップ。
 
-結果集約（優先順位順）:
-1. いずれかがspec_issue → `spec_issue`
-2. いずれかがfail → `any_fail`
-3. 全てpass → `all_pass`
-
-#### ask_user: true
-
-needs_inputの場合、GROOVE_QUESTIONの内容でAskUserQuestionを呼び、回答を追加して再実行。
+**ask_user: true:** needs_input時にAskUserQuestionで質問し、回答を追加して再実行。
 
 ### 4. 結果解析
 
-Agent出力から`GROOVE_RESULT: {値}`を検索。見つからない場合:
-- edit mode → `done`
-- readonly mode → `pass`
+`GROOVE_RESULT: {値}`を検索。見つからない場合: edit→`done` / readonly→`pass`
 
-### 5. 完了処理
+### 5. 完了
 
-結果レポートを`.groove/runs/{id}/result.md`に保存し、実行履歴を表示。
-
-## YAML構造
-
-```yaml
-name: ワークフロー名
-description: 説明
-max_steps: 25
-loop_limit: 3
-
-steps:
-  - name: ステップ名
-    agent: Agent定義名     # .groove/agents/{name}.md
-    mode: readonly|edit
-    rules:
-      - on: イベント名
-        next: ステップ名|COMPLETE|ABORT
-        ask_user: true     # オプション
-
-  - name: 並列ステップ名   # parallel版
-    parallel:
-      - agent: Agent1
-        mode: readonly
-      - agent: Agent2
-        mode: readonly
-    rules:
-      - on: all_pass
-        next: 次ステップ
-      - on: any_fail
-        next: 修正ステップ
-```
+- COMPLETE → 実行履歴を表示。`--auto`なら`/git-push --main`を実行
+- ABORT → 失敗理由を表示
 
 ## 利用可能ワークフロー
 
 | ワークフロー | 説明 |
 |-------------|------|
 | `spec-driven` | 仕様レビュー→Codexレビュー→実装→受入検査→修正→簡素化 |
-| `tdd` | テスト作成→実装→レビュー→修正（TDD） |
+| `tdd` | テスト作成→実装→レビュー→修正 |
