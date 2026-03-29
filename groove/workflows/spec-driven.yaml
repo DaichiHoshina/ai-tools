@@ -7,6 +7,8 @@ steps:
   - name: spec_review
     agent: spec-reviewer
     mode: readonly
+    retry: 1
+    timeout: 120
     rules:
       - on: pass
         next: codex_review
@@ -17,6 +19,8 @@ steps:
     agent: codex-reviewer
     mode: readonly
     provider: codex
+    retry: 1
+    timeout: 180
     rules:
       - on: pass
         next: implement
@@ -26,6 +30,8 @@ steps:
   - name: implement
     agent: developer
     mode: edit
+    retry: 2
+    timeout: 300
     rules:
       - on: done
         next: acceptance_review
@@ -41,6 +47,7 @@ steps:
         mode: readonly
       - agent: ai-reviewer
         mode: readonly
+    timeout: 180
     rules:
       - on: all_pass
         next: simplify
@@ -52,6 +59,10 @@ steps:
   - name: fix
     agent: fixer
     mode: edit
+    retry: 2
+    timeout: 300
+    fallback:
+      next: implement
     rules:
       - on: done
         next: acceptance_review
@@ -61,6 +72,10 @@ steps:
   - name: simplify
     agent: simplifier
     mode: edit
+    retry: 1
+    timeout: 180
+    fallback:
+      next: COMPLETE
     rules:
       - on: done
         next: COMPLETE

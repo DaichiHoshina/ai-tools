@@ -44,10 +44,31 @@ WHILE current_step != COMPLETE && current_step != ABORT:
   2. loop_count[step] >= loop_limit → ABORT
   3. Agent定義をReadで読み込み
   4. Agent起動（下記ルール）
+     - timeout定義あり → Agent起動時にtimeout(秒×1000)を設定
   5. 出力からGROOVE_RESULT:を抽出
+     - Agent失敗/タイムアウト時 → retry処理へ
   6. rulesマッチングで次step決定
   7. step_count++, loop_count[step]++
 ```
+
+### 2a. retry/timeout/fallback処理
+
+```
+ON agent_error OR timeout:
+  IF retry_count[step] < step.retry (default: 0):
+    retry_count[step]++
+    → 同じステップを再実行（step_countは増加）
+  ELSE IF step.fallback defined:
+    → fallback.next で指定されたステップへ遷移
+  ELSE:
+    → rulesの on: blocked にマッチ、なければ ABORT
+```
+
+| フィールド | 型 | デフォルト | 説明 |
+|-----------|-----|----------|------|
+| `retry` | int | 0 | 失敗時の最大リトライ回数 |
+| `timeout` | int | なし | ステップのタイムアウト（秒） |
+| `fallback.next` | string | なし | 全リトライ失敗時の遷移先ステップ |
 
 ### 3. Agent起動ルール
 
