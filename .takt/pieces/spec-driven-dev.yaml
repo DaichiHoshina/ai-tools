@@ -1,0 +1,233 @@
+name: spec-driven-dev
+description: 仕様駆動マルチエージェント開発（仕様レビュー→実装→受入検査→修正→簡素化）
+piece_config:
+  provider_options:
+    codex:
+      network_access: true
+    opencode:
+      network_access: true
+max_movements: 25
+initial_movement: spec_review
+movements:
+  # ========================================
+  # Movement 1: 仕様レビュー
+  # 仕様の品質を検証。実装可能かを判定。
+  # ========================================
+  - name: spec_review
+    edit: false
+    persona: spec-reviewer
+    knowledge:
+      - architecture
+      - ai-tools-architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Bash
+      - WebSearch
+      - WebFetch
+      - mcp__serena__find_symbol
+      - mcp__serena__get_symbols_overview
+      - mcp__serena__search_for_pattern
+      - mcp__serena__find_referencing_symbols
+      - mcp__serena__read_file
+      - mcp__serena__list_dir
+    instruction: spec-review
+    rules:
+      - condition: >-
+          仕様が明確で実装可能（指摘なし、または軽微な改善提案のみ）。
+          軽微な改善提案はAPPROVEとして指摘事項に記載する。
+          実装者が判断できるレベルの曖昧さはREJECTにしない。
+        next: implement
+      - condition: 仕様に致命的な矛盾・変更対象の重大な漏れがあり実装不可能
+        next: ABORT
+    output_contracts:
+      report:
+        - name: spec-review.md
+          format: spec-review
+
+  # ========================================
+  # Movement 2: 実装
+  # ========================================
+  - name: implement
+    edit: true
+    persona: ai-tools-coder
+    policy:
+      - coding
+    knowledge:
+      - architecture
+      - ai-tools-architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Edit
+      - Write
+      - Bash
+      - WebSearch
+      - WebFetch
+      - mcp__serena__find_symbol
+      - mcp__serena__get_symbols_overview
+      - mcp__serena__search_for_pattern
+      - mcp__serena__find_referencing_symbols
+      - mcp__serena__read_file
+      - mcp__serena__replace_symbol_body
+      - mcp__serena__insert_after_symbol
+      - mcp__serena__insert_before_symbol
+      - mcp__serena__replace_content
+      - mcp__serena__rename_symbol
+      - mcp__serena__list_dir
+      - mcp__serena__execute_shell_command
+      - mcp__serena__create_text_file
+    required_permission_mode: edit
+    instruction: implement
+    rules:
+      - condition: 実装が完了した
+        next: acceptance_reviewers
+      - condition: 実装を進行できない
+        next: ABORT
+      - condition: ユーザーへの確認事項があるためユーザー入力が必要
+        next: implement
+        requires_user_input: true
+        interactive_only: true
+    output_contracts:
+      report:
+        - name: coder-scope.md
+          format: coder-scope
+        - name: coder-decisions.md
+          format: coder-decisions
+
+  # ========================================
+  # Movement 3: 受入検査（並列）
+  # 完了条件ベースの検査 + AIアンチパターンレビュー
+  # ========================================
+  - name: acceptance_reviewers
+    parallel:
+      - name: acceptance
+        edit: false
+        persona: acceptor
+        policy: review
+        knowledge:
+          - architecture
+          - ai-tools-architecture
+        allowed_tools:
+          - Read
+          - Glob
+          - Grep
+          - Bash
+          - mcp__serena__find_symbol
+          - mcp__serena__get_symbols_overview
+          - mcp__serena__search_for_pattern
+          - mcp__serena__read_file
+          - mcp__serena__list_dir
+        instruction: acceptance-test
+        rules:
+          - condition: >-
+              全完了条件を充足（指摘なし、または軽微な改善提案のみ）。
+              軽微な改善提案はAPPROVEとして指摘事項に記載する。
+          - condition: 完了条件未達成または具体的問題あり
+          - condition: 仕様自体の問題が発覚（実装差し戻しが必要）
+        output_contracts:
+          report:
+            - name: acceptance-validation.md
+              format: supervisor-validation
+            - name: summary.md
+              format: summary
+              use_judge: false
+      - name: ai_review
+        edit: false
+        persona: ai-antipattern-reviewer
+        policy:
+          - review
+          - ai-antipattern
+        allowed_tools:
+          - Read
+          - Glob
+          - Grep
+        instruction: review-ai
+        rules:
+          - condition: AI特有の問題なし
+          - condition: AI特有の問題あり
+        output_contracts:
+          report:
+            - name: ai-review.md
+              format: ai-review
+    rules:
+      - condition: >-
+          all("全完了条件を充足（指摘なし、または軽微な改善提案のみ）。軽微な改善提案はAPPROVEとして指摘事項に記載する。",
+              "AI特有の問題なし")
+        next: simplify
+      - condition: >-
+          any("仕様自体の問題が発覚（実装差し戻しが必要）")
+        next: implement
+      - condition: >-
+          any("完了条件未達成または具体的問題あり", "AI特有の問題あり")
+        next: fix
+
+  # ========================================
+  # Movement 4: 修正
+  # ========================================
+  - name: fix
+    edit: true
+    persona: ai-tools-coder
+    policy:
+      - coding
+    knowledge:
+      - architecture
+      - ai-tools-architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Edit
+      - Write
+      - Bash
+      - mcp__serena__find_symbol
+      - mcp__serena__get_symbols_overview
+      - mcp__serena__search_for_pattern
+      - mcp__serena__read_file
+      - mcp__serena__replace_symbol_body
+      - mcp__serena__replace_content
+      - mcp__serena__insert_after_symbol
+      - mcp__serena__insert_before_symbol
+      - mcp__serena__list_dir
+      - mcp__serena__execute_shell_command
+    required_permission_mode: edit
+    pass_previous_response: false
+    instruction: fix-supervisor
+    rules:
+      - condition: 修正が完了した
+        next: acceptance_reviewers
+      - condition: 修正を進行できない
+        next: implement
+
+  # ========================================
+  # Movement 5: コード簡素化
+  # ========================================
+  - name: simplify
+    edit: true
+    persona: simplifier
+    policy:
+      - coding
+    knowledge:
+      - architecture
+      - ai-tools-architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Edit
+      - Write
+      - Bash
+      - mcp__serena__find_symbol
+      - mcp__serena__get_symbols_overview
+      - mcp__serena__search_for_pattern
+      - mcp__serena__read_file
+      - mcp__serena__replace_symbol_body
+      - mcp__serena__replace_content
+      - mcp__serena__list_dir
+    required_permission_mode: edit
+    instruction: simplify
+    rules:
+      - condition: 簡素化完了（改善を適用した、または改善不要と判断した）
+        next: COMPLETE
