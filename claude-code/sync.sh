@@ -282,6 +282,23 @@ show_diff() {
     local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules" "config")
     local has_diff=false
 
+    # groove差分チェック
+    local groove_src="${SCRIPT_DIR}/../groove"
+    local groove_dst="$HOME/.groove"
+    if [ -d "$groove_src" ] && [ -d "$groove_dst" ]; then
+        for subdir in workflows agents; do
+            if [ -d "$groove_src/$subdir" ] && [ -d "$groove_dst/$subdir" ]; then
+                local diff_output
+                diff_output=$(diff -rq "$groove_src/$subdir" "$groove_dst/$subdir" 2>/dev/null || true)
+                if [ -n "$diff_output" ]; then
+                    echo -e "${YELLOW}groove/$subdir/:${NC}"
+                    echo "$diff_output" | head -10
+                    has_diff=true
+                fi
+            fi
+        done
+    fi
+
     for item in "${items[@]}"; do
         local src="$SCRIPT_DIR/$item"
         local dst="$CLAUDE_DIR/$item"

@@ -85,7 +85,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 | `/aliases` | コマンドエイリアス定義 | ショートカット設定の管理 |
 | `/memory-save` | Serena memoryへ即時保存 | 作業状態・知見のメモリー記録 |
 | `/protection-mode` | 操作保護モード適用 | 安全性チェック・操作ガードの有効化 |
-| `/takt` | TAKTワークフローエンジン実行 | YAML宣言的タスク実行 |
+| `/groove` | マルチエージェントオーケストレーター | YAMLワークフロー定義で複数Agent協調実行 |
 | `/claude-update-fix` | バージョン差分検出・衝突分析 | Claude Code更新後の設定修正 |
 | `/serena` | Serena MCP操作 | メモリー管理・プロジェクト知識操作 |
 | `/serena-refresh` | Serenaデータ最新化 | データ・メモリーの整理 |
@@ -176,7 +176,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 | 毎日 | `/flow`, `/dev`, `/review`, `/commit` |
 | 週1-2回 | `/git-push`, `/diagnose`, `/test`, `/lint-test`, `/review-fix-push` |
 | 月1-2回 | `/plan`, `/docs`, `/refactor`, `/explore`, `/tdd`, `/ui`, `/mr-review` |
-| 稀 | `/prd`, `/brainstorm`, `/analytics`, `/dashboard`, `/retrospective`, `/takt`, その他 |
+| 稀 | `/prd`, `/brainstorm`, `/analytics`, `/dashboard`, `/retrospective`, `/groove`, その他 |
 
 ---
 
