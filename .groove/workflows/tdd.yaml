@@ -1,0 +1,47 @@
+name: tdd
+description: TDD開発（テスト作成→実装→レビュー→修正）
+max_steps: 20
+loop_limit: 3
+
+steps:
+  - name: test_write
+    agent: test-writer
+    mode: edit
+    rules:
+      - on: done
+        next: implement
+      - on: blocked
+        next: ABORT
+      - on: needs_input
+        next: test_write
+        ask_user: true
+
+  - name: implement
+    agent: developer
+    mode: edit
+    rules:
+      - on: done
+        next: review
+      - on: blocked
+        next: ABORT
+      - on: needs_input
+        next: implement
+        ask_user: true
+
+  - name: review
+    agent: ai-reviewer
+    mode: readonly
+    rules:
+      - on: pass
+        next: COMPLETE
+      - on: fail
+        next: fix
+
+  - name: fix
+    agent: fixer
+    mode: edit
+    rules:
+      - on: done
+        next: review
+      - on: blocked
+        next: ABORT
