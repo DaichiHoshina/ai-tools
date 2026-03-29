@@ -64,8 +64,10 @@ Agent定義は`.groove/agents/{agent名}.md`から読み込む。
 複数のAgentを**同一メッセージ内で並列起動**する。全Agent完了後に結果を集約:
 
 - 全てpass → `all_pass`
-- いずれかがspec_issue → `spec_issue`
+- いずれかがspec_issue → `spec_issue`（仕様問題は最優先で判定）
 - いずれかがfail → `any_fail`
+
+判定優先順位: `spec_issue` > `any_fail` > `all_pass`
 
 #### ask_user: trueの場合
 
