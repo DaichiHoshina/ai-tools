@@ -1,0 +1,56 @@
+name: spec-driven
+description: 仕様駆動マルチエージェント開発（仕様レビュー→実装→受入検査→修正→簡素化）
+max_steps: 25
+loop_limit: 3
+
+steps:
+  - name: spec_review
+    agent: spec-reviewer
+    mode: readonly
+    rules:
+      - on: pass
+        next: implement
+      - on: fail
+        next: ABORT
+
+  - name: implement
+    agent: developer
+    mode: edit
+    rules:
+      - on: done
+        next: acceptance_review
+      - on: blocked
+        next: ABORT
+      - on: needs_input
+        next: implement
+        ask_user: true
+
+  - name: acceptance_review
+    parallel:
+      - agent: acceptor
+        mode: readonly
+      - agent: ai-reviewer
+        mode: readonly
+    rules:
+      - on: all_pass
+        next: simplify
+      - on: any_fail
+        next: fix
+      - on: spec_issue
+        next: implement
+
+  - name: fix
+    agent: fixer
+    mode: edit
+    rules:
+      - on: done
+        next: acceptance_review
+      - on: blocked
+        next: implement
+
+  - name: simplify
+    agent: simplifier
+    mode: edit
+    rules:
+      - on: done
+        next: COMPLETE

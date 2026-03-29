@@ -46,6 +46,10 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
+# groove実行結果（ランタイム生成）
+.groove/runs/*
+!.groove/runs/.gitkeep
+
 # 一時ファイル
 tmp/
 temp/

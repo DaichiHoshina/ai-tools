@@ -1,0 +1,8 @@
+default_provider: claude
+
+# プロバイダー設定（オプション）
+# 特定ステップを別プロバイダーで実行する場合に設定
+# providers:
+#   codex:
+#     steps:
+#       - spec_review
