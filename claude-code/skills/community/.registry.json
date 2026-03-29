@@ -1,0 +1,22 @@
+{
+  "gemini-api-dev": {
+    "repo": "google-gemini/gemini-skills",
+    "installed": "2026-03-29T05:13:07Z",
+    "updated": "2026-03-29T05:13:07Z"
+  },
+  "gemini-interactions-api": {
+    "repo": "google-gemini/gemini-skills",
+    "installed": "2026-03-29T05:13:07Z",
+    "updated": "2026-03-29T05:13:07Z"
+  },
+  "gemini-live-api-dev": {
+    "repo": "google-gemini/gemini-skills",
+    "installed": "2026-03-29T05:13:08Z",
+    "updated": "2026-03-29T05:13:08Z"
+  },
+  "vertex-ai-api-dev": {
+    "repo": "google-gemini/gemini-skills",
+    "installed": "2026-03-29T05:13:08Z",
+    "updated": "2026-03-29T05:13:08Z"
+  }
+}
