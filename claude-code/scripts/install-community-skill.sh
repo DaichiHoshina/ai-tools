@@ -14,6 +14,12 @@ SKILLS_DIR="${SCRIPT_DIR}/../skills/community"
 REGISTRY="${SKILLS_DIR}/.registry.json"
 TMP_DIR=""
 
+# jq依存チェック
+if ! command -v jq &>/dev/null; then
+  echo "ERROR: jq is required but not installed" >&2
+  exit 1
+fi
+
 cleanup() {
   if [[ -n "$TMP_DIR" && -d "$TMP_DIR" ]]; then
     rm -rf "$TMP_DIR"
@@ -47,7 +53,10 @@ cmd_install() {
   TMP_DIR="$(mktemp -d)"
 
   echo "Cloning $repo..."
-  git clone --depth 1 "https://github.com/${repo}.git" "$TMP_DIR/repo" 2>/dev/null
+  if ! git clone --depth 1 --quiet "https://github.com/${repo}.git" "$TMP_DIR/repo"; then
+    echo "ERROR: Failed to clone $repo" >&2
+    return 1
+  fi
 
   # スキルディレクトリを自動検出
   local skills_root=""
@@ -73,7 +82,7 @@ cmd_install() {
     # 単一スキルリポジトリの場合（リポジトリ名をスキル名に使用）
     if [[ ${#skills[@]} -eq 0 && -f "$skills_root/SKILL.md" ]]; then
       local name
-      name="$(echo "$repo" | sed 's|.*/||')"
+      name="${repo##*/}"
       skills+=("$name")
     fi
   fi
@@ -108,7 +117,7 @@ cmd_install() {
       cp -r "${subdir%/}" "$dest_dir/"
     done
 
-    # レジストリ更新
+    # レジストリ更新（installed日付は初回のみ記録、以降はupdatedのみ更新）
     local now
     now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     local tmp_reg
@@ -116,7 +125,8 @@ cmd_install() {
     jq --arg name "$skill_name" \
        --arg repo "$repo" \
        --arg date "$now" \
-       '.[$name] = {"repo": $repo, "installed": $date, "updated": $date}' \
+       'if .[$name] then .[$name].repo = $repo | .[$name].updated = $date
+        else .[$name] = {"repo": $repo, "installed": $date, "updated": $date} end' \
        "$REGISTRY" > "$tmp_reg"
     mv "$tmp_reg" "$REGISTRY"
 
