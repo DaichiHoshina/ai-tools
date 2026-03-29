@@ -1,22 +1,17 @@
 {
-  "gemini-api-dev": {
-    "repo": "google-gemini/gemini-skills",
-    "installed": "2026-03-29T05:13:07Z",
-    "updated": "2026-03-29T05:13:07Z"
+  "react-best-practices": {
+    "repo": "vercel-labs/agent-skills",
+    "installed": "2026-03-29T05:22:03Z",
+    "updated": "2026-03-29T05:22:03Z"
   },
-  "gemini-interactions-api": {
-    "repo": "google-gemini/gemini-skills",
-    "installed": "2026-03-29T05:13:07Z",
-    "updated": "2026-03-29T05:13:07Z"
+  "composition-patterns": {
+    "repo": "vercel-labs/agent-skills",
+    "installed": "2026-03-29T05:22:03Z",
+    "updated": "2026-03-29T05:22:03Z"
   },
-  "gemini-live-api-dev": {
-    "repo": "google-gemini/gemini-skills",
-    "installed": "2026-03-29T05:13:08Z",
-    "updated": "2026-03-29T05:13:08Z"
-  },
-  "vertex-ai-api-dev": {
-    "repo": "google-gemini/gemini-skills",
-    "installed": "2026-03-29T05:13:08Z",
-    "updated": "2026-03-29T05:13:08Z"
+  "terraform-skill": {
+    "repo": "antonbabenko/terraform-skill",
+    "installed": "2026-03-29T05:22:02Z",
+    "updated": "2026-03-29T05:22:02Z"
   }
 }

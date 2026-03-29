@@ -70,10 +70,10 @@ cmd_install() {
       echo "  - $name"
       skills+=("$name")
     done
-    # 単一スキルリポジトリの場合
+    # 単一スキルリポジトリの場合（リポジトリ名をスキル名に使用）
     if [[ ${#skills[@]} -eq 0 && -f "$skills_root/SKILL.md" ]]; then
       local name
-      name="$(basename "$TMP_DIR/repo")"
+      name="$(echo "$repo" | sed 's|.*/||')"
       skills+=("$name")
     fi
   fi
@@ -95,15 +95,18 @@ cmd_install() {
     mkdir -p "$dest_dir"
     convert_skill_md "$src_dir" "$dest_dir" || continue
 
-    # references/ ディレクトリがあればコピー
-    if [[ -d "$src_dir/references" ]]; then
-      cp -r "$src_dir/references" "$dest_dir/"
-    fi
-
-    # scripts/ ディレクトリがあればコピー
-    if [[ -d "$src_dir/scripts" ]]; then
-      cp -r "$src_dir/scripts" "$dest_dir/"
-    fi
+    # サブディレクトリをコピー（references, rules, scripts, assets等）
+    for subdir in "$src_dir"/*/; do
+      [[ -d "$subdir" ]] || continue
+      local dirname
+      dirname="$(basename "$subdir")"
+      # 不要なディレクトリをスキップ
+      case "$dirname" in
+        .git|.github|.claude-plugin|tests|node_modules|__pycache__) continue ;;
+      esac
+      # 末尾スラッシュを除去（macOSではcp -r dir/ がcontentsのみコピーになるため）
+      cp -r "${subdir%/}" "$dest_dir/"
+    done
 
     # レジストリ更新
     local now
