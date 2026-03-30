@@ -1,0 +1,83 @@
+name: vsdd
+description: VSDD仕様駆動開発（仕様レビュー→テスト→実装→敵対的レビュー→修正→簡素化）
+max_steps: 30
+loop_limit: 3
+
+steps:
+  - name: spec_review
+    agent: spec-reviewer
+    mode: readonly
+    retry: 1
+    timeout: 120
+    rules:
+      - on: pass
+        next: test_write
+      - on: fail
+        next: ABORT
+
+  - name: test_write
+    agent: test-writer
+    mode: edit
+    retry: 2
+    timeout: 240
+    rules:
+      - on: done
+        next: implement
+      - on: blocked
+        next: ABORT
+      - on: needs_input
+        next: test_write
+        ask_user: true
+
+  - name: implement
+    agent: developer
+    mode: edit
+    retry: 2
+    timeout: 300
+    rules:
+      - on: done
+        next: adversary_review
+      - on: blocked
+        next: ABORT
+      - on: needs_input
+        next: implement
+        ask_user: true
+
+  - name: adversary_review
+    parallel:
+      - agent: adversary
+        mode: readonly
+      - agent: ai-reviewer
+        mode: readonly
+    timeout: 180
+    rules:
+      - on: all_pass
+        next: simplify
+      - on: any_fail
+        next: fix
+      - on: spec_issue
+        next: test_write
+
+  - name: fix
+    agent: fixer
+    mode: edit
+    retry: 2
+    timeout: 300
+    fallback:
+      next: implement
+    rules:
+      - on: done
+        next: adversary_review
+      - on: blocked
+        next: implement
+
+  - name: simplify
+    agent: simplifier
+    mode: edit
+    retry: 1
+    timeout: 180
+    fallback:
+      next: COMPLETE
+    rules:
+      - on: done
+        next: COMPLETE
