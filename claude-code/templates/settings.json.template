@@ -9,6 +9,7 @@
     "DISABLE_TELEMETRY": "true",
     "DISABLE_AUTOUPDATER": "true",
     "DISABLE_MICROCOMPACT": "false",
+    "CLAUDE_CODE_NO_FLICKER": "1",
     "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1",
     "MAX_THINKING_TOKENS": "24000",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "24000"
@@ -175,6 +176,18 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/instructions-loaded.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/permission-denied.sh",
             "async": true
           }
         ]

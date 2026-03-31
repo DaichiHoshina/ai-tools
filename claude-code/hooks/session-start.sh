@@ -28,6 +28,7 @@ _HARNESS_WARNINGS=()
 _REQUIRED_HOOKS=(
   "pre-tool-use.sh"
   "post-tool-use.sh"
+  "permission-denied.sh"
   "session-start.sh"
   "stop.sh"
   "stop-failure.sh"
