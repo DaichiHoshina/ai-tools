@@ -88,7 +88,7 @@ fi
 # --- ヘルパー関数 ---
 
 # lib ファイルを安全に読み込み
-# Usage: load_lib "detect-from-files.sh"
+# Usage: load_lib "detect-from-keywords.sh"
 load_lib() {
     local lib_name="$1"
     local lib_path="${_COMMON_LIB_DIR}/${lib_name}"

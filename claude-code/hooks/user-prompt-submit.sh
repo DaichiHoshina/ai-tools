@@ -16,10 +16,7 @@ source "${LIB_DIR}/common.sh" || {
 }
 
 # detect ライブラリを読み込み
-load_lib "detect-from-files.sh" || exit 1
 load_lib "detect-from-keywords.sh" || exit 1
-load_lib "detect-from-errors.sh" || exit 1
-load_lib "detect-from-git.sh" || exit 1
 load_lib "detect-technique.sh" || exit 1
 
 # === 前提条件チェック ===
@@ -68,20 +65,10 @@ declare -A detected_langs
 declare -A detected_skills
 additional_context=""
 
-# === 階層的検出実行 (lib関数呼び出し) ===
-# 優先度順: ファイルパス > キーワード > エラーログ > Git状態
+# === 検出実行 (lib関数呼び出し) ===
 
-# 1. ファイルパス検出（最優先）
-detect_from_files detected_langs detected_skills
-
-# 2. プロンプトキーワード検出
+# キーワード検出
 detect_from_keywords "$prompt_lower" detected_langs detected_skills additional_context
-
-# 3. エラーログ検出
-detect_from_errors "$prompt" detected_skills additional_context
-
-# 4. Git状態検出
-detect_from_git_state detected_skills
 
 # === テクニック自動選択 ===
 technique_recommendation=""
