@@ -10,16 +10,38 @@
     "DISABLE_AUTOUPDATER": "true",
     "DISABLE_MICROCOMPACT": "false",
     "CLAUDE_CODE_NO_FLICKER": "1",
-    "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1",
-    "MAX_THINKING_TOKENS": "24000",
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "24000"
+    "MAX_THINKING_TOKENS": "20000",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "32000"
   },
   "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(go *)",
+      "Bash(make *)",
+      "Bash(gh *)",
+      "Bash(cargo *)",
+      "Bash(docker *)",
+      "Bash(*--help*)",
+      "Bash(*--version*)"
+    ],
     "deny": [
       "NotebookEdit"
     ]
   },
   "hooks": {
+    "Setup": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/setup.sh"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "*",
@@ -44,11 +66,23 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit|Bash|mcp__serena__create_text_file|mcp__serena__replace_content|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|mcp__serena__write_memory|mcp__serena__delete_memory|mcp__serena__edit_memory|mcp__serena__execute_shell_command|mcp__serena__rename_symbol|mcp__jira__jira_post|mcp__jira__jira_put|mcp__jira__jira_patch|mcp__jira__jira_delete|mcp__confluence__conf_post|mcp__confluence__conf_put|mcp__confluence__conf_patch|mcp__confluence__conf_delete",
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
             "command": "~/.claude/hooks/pre-tool-use.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-tool-use.sh",
+            "async": true
           }
         ]
       }
@@ -64,13 +98,24 @@
         ]
       }
     ],
-    "PostCompact": [
+    "SubagentStart": [
       {
         "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/post-compact-reload.sh"
+            "command": "~/.claude/hooks/subagent-start.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/subagent-stop.sh"
           }
         ]
       }
@@ -83,6 +128,41 @@
             "type": "command",
             "command": "~/.claude/hooks/session-end.sh",
             "async": true
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/teammate-idle.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/task-completed.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-compact-reload.sh"
           }
         ]
       }
@@ -110,88 +190,6 @@
           }
         ]
       }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/post-tool-use.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/subagent-start.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/subagent-stop.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "TeammateIdle": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/teammate-idle.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/task-completed.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "InstructionsLoaded": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/instructions-loaded.sh",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "PermissionDenied": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/permission-denied.sh",
-            "async": true
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
@@ -200,9 +198,19 @@
   },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true,
+    "python-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true
   },
-  "outputStyle": "normal",
+  "outputStyle": "ai-tools-format",
   "language": "japanese",
   "spinnerVerbs": {
     "mode": "append",
@@ -213,42 +221,19 @@
       "熟考中"
     ]
   },
-  "includeGitInstructions": false,
-  "skipDangerousModePermissionPrompt": true,
+  "effortLevel": "high",
+  "autoUpdatesChannel": "latest",
+  "instructions": [
+    "日本語で回答すること",
+    "Guard関手: Safe射(読み取り)→即実行、Boundary射(編集)→確認必要、Forbidden射(破壊)→拒否",
+    "any型禁止、as控える",
+    "実装完了後は必ずverify-app実行",
+    "2回同じアプローチで失敗したら/clearして再整理"
+  ],
+  "showTurnDuration": true,
+  "autocompact": true,
   "1feedbackSurveyState": {
     "lastShownTime": 1753938733414
   },
-  "mcpServers": {
-    "serena": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena",
-        "start-mcp-server",
-        "--context",
-        "claude-code"
-      ],
-      "env": {
-        "REQUESTS_CA_BUNDLE": "/opt/homebrew/lib/python3.14/site-packages/certifi/cacert.pem",
-        "SSL_CERT_FILE": "/opt/homebrew/lib/python3.14/site-packages/certifi/cacert.pem"
-      }
-    },
-    "context7": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ],
-      "env": {}
-    },
-    "confluence": {
-      "command": "__HOME__/.claude/mcp-wrappers/confluence-wrapper.sh",
-      "args": []
-    },
-    "jira": {
-      "command": "__HOME__/.claude/mcp-wrappers/jira-wrapper.sh",
-      "args": []
-    }
-  }
+  "skipDangerousModePermissionPrompt": true
 }
