@@ -19,7 +19,7 @@ Claude Code フック・スクリプト間で共有される関数群。
 source "${SCRIPT_DIR}/../lib/common.sh"
 
 # detect ライブラリ（個別）
-load_lib "detect-from-files.sh"
+load_lib "detect-from-keywords.sh"
 
 # i18n（オプション）
 export COMMON_LOAD_I18N=true
@@ -52,10 +52,8 @@ source "${LIB_DIR}/common.sh"
 
 | ファイル | 提供内容 |
 |--------|---------|
-| `detect-from-files.sh` | ファイルパターンから技術スタック検出、git に依存 |
 | `detect-from-keywords.sh` | プロンプトキーワードから検出、LRUキャッシュ内蔵（100エントリ） |
-| `detect-from-errors.sh` | エラーログパターンから関連スキル検出 |
-| `detect-from-git.sh` | Gitブランチ名から関連スキル検出 |
+| `detect-technique.sh` | テクニック自動推奨（TDD、リファクタリング等） |
 
 ### Level 4: 自律実行ライブラリ（`/flow --autonomous` で使用）
 
@@ -65,7 +63,6 @@ source "${LIB_DIR}/common.sh"
 | `error-codes.sh` | 構造化エラーコード管理（E1xxx=タイムアウト、E2xxx=ロック、E3xxx=進捗、E4xxx=入力、E5xxx=サンプリング） |
 | `sampling.sh` | 決定的サンプリング（`sample_items`, `sample_files`、Fisher-Yates shuffle） |
 | `progress.sh` | セッション別進捗追跡（`update_session_progress`, `aggregate_progress`） |
-| `task-lock.sh` | TTL付きタスクロック（`acquire_lock`, `release_lock`, `check_lock`）、timeout.sh に依存 |
 
 ## 読み込み順序
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # UserPromptSubmit Hook - スキル推奨（オーケストレーター版）
-# 検出ロジックは lib/detect-from-*.sh に委譲
+# 検出ロジックは lib/detect-from-keywords.sh, detect-technique.sh に委譲
 # =============================================================================
 
 set -euo pipefail
