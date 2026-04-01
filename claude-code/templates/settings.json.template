@@ -190,6 +190,29 @@
           }
         ]
       }
+    ],
+    "PermissionDenied": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/permission-denied.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/instructions-loaded.sh"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -230,6 +253,7 @@
     "実装完了後は必ずverify-app実行",
     "2回同じアプローチで失敗したら/clearして再整理"
   ],
+  "showThinkingSummaries": true,
   "showTurnDuration": true,
   "autocompact": true,
   "1feedbackSurveyState": {
