@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: ◈ dir:branch │ Opus 4.6 │ [████░░] 34%
+// 表示: ◈ dir:branch │ Opus 4.6 │ 34%
 
 const path = require("path");
 
@@ -97,12 +97,10 @@ function displayStatusLine(data) {
   if (termWidth < 60) {
     text = `${pctColor}${pct}%${C.R}${suffix}`;
   } else {
-    const barWidth = termWidth >= 120 ? 10 : 6;
-    const bar = progressBar(pct, barWidth);
     text = [
       `${C.cyan}\u25C8 ${dirName}${C.gray}:${C.branchColor}${branch}${C.R}`,
       `${C.modelColor}${model}${C.R}`,
-      `${bar} ${pctColor}${C.bold}${pct}%${C.R}${suffix}`,
+      `${pctColor}${C.bold}${pct}%${C.R}${suffix}`,
     ].join(` ${sep} `);
   }
 
