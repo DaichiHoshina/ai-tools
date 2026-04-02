@@ -58,7 +58,6 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 | `/lint-test` | ローカルCI相当チェック一括実行 | build/lint/test/typecheck まとめて確認 |
 | `/ui` | UI実装・レビュー・監査統合 | テーマから実装・パフォーマンス検証まで |
 | `/review-fix-push` | レビュー→修正→プッシュ一括実行 | `/review` + 全修正 + `/git-push` の統合 |
-| `/mr-review` | MR/PRレビュー | GitLab MR / GitHub PR のURLを貼るだけ |
 
 ### 調査・分析系
 
@@ -175,7 +174,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 |------|---------|
 | 毎日 | `/flow`, `/dev`, `/review`, `/commit` |
 | 週1-2回 | `/git-push`, `/diagnose`, `/test`, `/lint-test`, `/review-fix-push` |
-| 月1-2回 | `/plan`, `/docs`, `/refactor`, `/explore`, `/tdd`, `/ui`, `/mr-review` |
+| 月1-2回 | `/plan`, `/docs`, `/refactor`, `/explore`, `/tdd`, `/ui` |
 | 稀 | `/prd`, `/brainstorm`, `/analytics`, `/dashboard`, `/retrospective`, `/groove`, その他 |
 
 ---

@@ -55,15 +55,6 @@ source "${LIB_DIR}/common.sh"
 | `detect-from-keywords.sh` | プロンプトキーワードから検出、LRUキャッシュ内蔵（100エントリ） |
 | `detect-technique.sh` | テクニック自動推奨（TDD、リファクタリング等） |
 
-### Level 4: 自律実行ライブラリ（`/flow --autonomous` で使用）
-
-| ファイル | 提供内容 |
-|--------|---------|
-| `timeout.sh` | セッション/タスク/ループのタイムアウト制御（`check_session_timeout`, `check_task_timeout`, `enforce_loop_interval`） |
-| `error-codes.sh` | 構造化エラーコード管理（E1xxx=タイムアウト、E2xxx=ロック、E3xxx=進捗、E4xxx=入力、E5xxx=サンプリング） |
-| `sampling.sh` | 決定的サンプリング（`sample_items`, `sample_files`、Fisher-Yates shuffle） |
-| `progress.sh` | セッション別進捗追跡（`update_session_progress`, `aggregate_progress`） |
-
 ## 読み込み順序
 
 common.sh は以下を自動読み込み（重複防止あり）：
