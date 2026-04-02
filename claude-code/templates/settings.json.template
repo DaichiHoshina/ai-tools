@@ -202,17 +202,6 @@
           }
         ]
       }
-    ],
-    "InstructionsLoaded": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/instructions-loaded.sh"
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
