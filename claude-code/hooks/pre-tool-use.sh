@@ -137,3 +137,8 @@ else
   # 安全操作はメッセージなし（トークン節約）
   echo "{}"
 fi
+
+# Forbiddenの場合はexit 2でツール実行をブロック（v2.1.90で正常動作）
+if [ "$GUARD_CLASS" = "Forbidden" ]; then
+  exit 2
+fi
