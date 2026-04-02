@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: ◈ dir:branch │ model │ tokens │ [████░░░░] 34%
+// 表示: ◈ dir:branch │ Opus 4.6 │ [████░░] 34%
 
 const path = require("path");
 
@@ -69,17 +69,11 @@ function getGitBranch(cwd) {
 function displayStatusLine(data) {
   const ctx = data.context_window || {};
   const pct = Math.round(ctx.used_percentage || 0);
-  const totalTokens =
-    (ctx.total_input_tokens || 0) + (ctx.total_output_tokens || 0);
-  const tokens =
-    totalTokens >= 1000
-      ? (totalTokens / 1000).toFixed(1).replace(/\.0$/, "") + "k"
-      : String(totalTokens);
-
   const cwd = data.cwd || process.cwd();
   const dirName = path.basename(cwd);
   const branch = getGitBranch(cwd);
-  const model = (data.model && data.model.display_name) || "?";
+  const rawModel = (data.model && data.model.display_name) || "?";
+  const model = rawModel.replace(/^Claude\s+/i, "");
 
   const sep = `${C.darkGray}\u2502${C.R}`;
   const termWidth = process.stdout.columns || 80;
@@ -103,12 +97,11 @@ function displayStatusLine(data) {
   if (termWidth < 60) {
     text = `${pctColor}${pct}%${C.R}${suffix}`;
   } else {
-    const barWidth = termWidth >= 120 ? 12 : 8;
+    const barWidth = termWidth >= 120 ? 10 : 6;
     const bar = progressBar(pct, barWidth);
     text = [
       `${C.cyan}\u25C8 ${dirName}${C.gray}:${C.branchColor}${branch}${C.R}`,
       `${C.modelColor}${model}${C.R}`,
-      `${C.tokenColor}${tokens}${C.R}`,
       `${bar} ${pctColor}${C.bold}${pct}%${C.R}${suffix}`,
     ].join(` ${sep} `);
   }
