@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>groove - Lightweight Multi-Agent Orchestrator</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #fff;
+      --border: #e0e0e0;
+      --text: #1a1a1a;
+      --text-secondary: #555;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --green: #16a34a;
+      --green-light: #f0fdf4;
+      --orange: #ea580c;
+      --orange-light: #fff7ed;
+      --purple: #9333ea;
+      --purple-light: #faf5ff;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --mono: "SF Mono", "Fira Code", "Cascadia Code", Menlo, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* Header */
+    .header {
+      background: var(--text);
+      color: #fff;
+      padding: 3rem 2rem 2.5rem;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      font-family: var(--mono);
+      letter-spacing: -0.02em;
+    }
+    .header p {
+      margin-top: 0.75rem;
+      font-size: 1.1rem;
+      color: #aaa;
+    }
+    .badge-row {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.1);
+      color: #ccc;
+    }
+
+    /* Layout */
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+    section { margin-bottom: 3rem; }
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+    h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .card-title {
+      font-weight: 700;
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Workflow Diagram */
+    .workflow-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    .workflow-tab {
+      padding: 0.6rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+    }
+    .workflow-tab:hover { color: var(--text); }
+    .workflow-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .workflow-panel { display: none; }
+    .workflow-panel.active { display: block; }
+
+    /* Flow Diagram */
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 0;
+    }
+    .flow-step {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: var(--mono);
+      white-space: nowrap;
+    }
+    .flow-step.readonly { background: var(--accent-light); color: var(--accent); border: 1px solid #bfdbfe; }
+    .flow-step.edit { background: var(--green-light); color: var(--green); border: 1px solid #bbf7d0; }
+    .flow-step.parallel { background: var(--purple-light); color: var(--purple); border: 1px solid #e9d5ff; }
+    .flow-step.terminal { background: var(--text); color: #fff; }
+    .flow-arrow { color: var(--text-secondary); font-size: 1.2rem; flex-shrink: 0; }
+    .flow-branch {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: block;
+      width: 100%;
+      padding-left: 1rem;
+      margin: -0.25rem 0 0.25rem;
+    }
+
+    /* Agent Grid */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.75rem;
+    }
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+    }
+    .agent-name {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+    .agent-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .agent-tag {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+    .agent-tag.readonly { background: var(--accent-light); color: var(--accent); }
+    .agent-tag.edit { background: var(--green-light); color: var(--green); }
+
+    /* Code Block */
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f0f0f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+    pre code { background: none; padding: 0; }
+
+    /* Sync Diagram */
+    .sync-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 2rem 1rem;
+      flex-wrap: wrap;
+    }
+    .sync-box {
+      text-align: center;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      min-width: 200px;
+    }
+    .sync-box.repo {
+      background: var(--accent-light);
+      border: 2px solid #bfdbfe;
+    }
+    .sync-box.home {
+      background: var(--green-light);
+      border: 2px solid #bbf7d0;
+    }
+    .sync-box .label {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .sync-box .sublabel {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+    .sync-arrows {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-family: var(--mono);
+    }
+    .sync-arrows .arrow { font-size: 1.5rem; color: var(--text); }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      font-weight: 600;
+      background: var(--bg);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    /* Loop Diagram */
+    .loop-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .loop-step {
+      padding: 0.5rem 0 0.5rem 1.5rem;
+      border-left: 3px solid var(--accent);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .loop-step:last-child { margin-bottom: 0; }
+    .loop-step strong { font-family: var(--mono); font-size: 0.85rem; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      font-size: 0.8rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    .legend-dot.readonly { background: var(--accent-light); border: 1px solid #bfdbfe; }
+    .legend-dot.edit { background: var(--green-light); border: 1px solid #bbf7d0; }
+    .legend-dot.parallel { background: var(--purple-light); border: 1px solid #e9d5ff; }
+
+    @media (max-width: 640px) {
+      .header h1 { font-size: 1.75rem; }
+      .container { padding: 1.5rem 1rem; }
+      .agent-grid { grid-template-columns: 1fr; }
+      .sync-diagram { flex-direction: column; }
+      .sync-arrows .arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>/groove</h1>
+  <p>YAML駆動の軽量マルチエージェントオーケストレーター</p>
+  <div class="badge-row">
+    <span class="badge">Claude Code内で完結</span>
+    <span class="badge">外部依存なし</span>
+    <span class="badge">YAML定義</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Overview -->
+  <section>
+    <h2>概要</h2>
+    <p>
+      grooveは、YAMLでワークフローを定義し、複数のAI Agentを協調実行する仕組みです。
+      各ステップでAgentを起動し、その出力結果に基づいて次のステップへ自動遷移します。
+      リトライ、タイムアウト、並列実行、フォールバックに対応。
+    </p>
+  </section>
+
+  <!-- Usage -->
+  <section>
+    <h2>使い方</h2>
+    <pre><code>/groove &lt;task&gt;                # ワークフロー自動選択
+/groove &lt;workflow&gt; &lt;task&gt;     # ワークフロー指定
+/groove --auto &lt;task&gt;         # 自動モード（完了後にcommit+push）
+/groove list                  # ワークフロー一覧</code></pre>
+    <p style="margin-top:0.75rem; font-size:0.9rem; color:var(--text-secondary)">
+      タスクの内容からワークフローを自動選択します。「テスト」「TDD」を含む場合はtdd、「VSDD」「品質重視」はvsdd、それ以外はspec-drivenが選ばれます。
+    </p>
+  </section>
+
+  <!-- Workflows -->
+  <section>
+    <h2>ワークフロー</h2>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot readonly"></div> readonly（読み取り専用）</div>
+      <div class="legend-item"><div class="legend-dot edit"></div> edit（編集可能）</div>
+      <div class="legend-item"><div class="legend-dot parallel"></div> parallel（並列実行）</div>
+    </div>
+
+    <div class="workflow-tabs">
+      <button class="workflow-tab active" onclick="showWorkflow('spec-driven')">spec-driven</button>
+      <button class="workflow-tab" onclick="showWorkflow('tdd')">tdd</button>
+      <button class="workflow-tab" onclick="showWorkflow('vsdd')">vsdd</button>
+    </div>
+
+    <!-- spec-driven -->
+    <div id="wf-spec-driven" class="workflow-panel active">
+      <div class="card">
+        <div class="card-title">spec-driven: 仕様駆動マルチエージェント開発</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem">仕様の品質を検証してから実装に入り、受入検査で品質担保。デフォルトワークフロー。</p>
+        <div class="flow">
+          <span class="flow-step readonly">spec_review</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step readonly">codex_review</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step edit">implement</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step parallel">acceptance_review</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step edit">simplify</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step terminal">COMPLETE</span>
+        </div>
+        <span class="flow-branch">acceptance_review FAIL &rarr; <strong>fix</strong> &rarr; acceptance_review（ループ）</span>
+      </div>
+      <table>
+        <thead><tr><th>ステップ</th><th>Agent</th><th>モード</th><th>役割</th></tr></thead>
+        <tbody>
+          <tr><td><code>spec_review</code></td><td>spec-reviewer</td><td>readonly</td><td>タスク指示書の明確性を検証</td></tr>
+          <tr><td><code>codex_review</code></td><td>codex-reviewer</td><td>readonly</td><td>Codex CLIで仕様の穴・矛盾を検出</td></tr>
+          <tr><td><code>implement</code></td><td>developer</td><td>edit</td><td>仕様に基づいて実装</td></tr>
+          <tr><td><code>acceptance_review</code></td><td>acceptor + ai-reviewer</td><td>parallel</td><td>5次元評価 + AIスロップ検出</td></tr>
+          <tr><td><code>fix</code></td><td>fixer</td><td>edit</td><td>レビュー指摘の修正</td></tr>
+          <tr><td><code>simplify</code></td><td>simplifier</td><td>edit</td><td>コード簡素化・整理</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- tdd -->
+    <div id="wf-tdd" class="workflow-panel">
+      <div class="card">
+        <div class="card-title">tdd: テスト駆動開発</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem">先にテストを書き、実装し、レビューで検証するTDDサイクル。</p>
+        <div class="flow">
+          <span class="flow-step edit">test_write</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step edit">implement</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step readonly">review</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step terminal">COMPLETE</span>
+        </div>
+        <span class="flow-branch">review FAIL &rarr; <strong>fix</strong> &rarr; review（ループ）</span>
+      </div>
+      <table>
+        <thead><tr><th>ステップ</th><th>Agent</th><th>モード</th><th>役割</th></tr></thead>
+        <tbody>
+          <tr><td><code>test_write</code></td><td>test-writer</td><td>edit</td><td>失敗するテストを先に書く（RED）</td></tr>
+          <tr><td><code>implement</code></td><td>developer</td><td>edit</td><td>テストを通す実装（GREEN）</td></tr>
+          <tr><td><code>review</code></td><td>ai-reviewer</td><td>readonly</td><td>AIスロップ・品質チェック</td></tr>
+          <tr><td><code>fix</code></td><td>fixer</td><td>edit</td><td>レビュー指摘の修正（REFACTOR）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- vsdd -->
+    <div id="wf-vsdd" class="workflow-panel">
+      <div class="card">
+        <div class="card-title">vsdd: 仕様駆動 + 敵対的レビュー</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem">最も厳格なワークフロー。敵対的レビュアーが「欠陥がある」前提でコードを検証。</p>
+        <div class="flow">
+          <span class="flow-step readonly">spec_review</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step edit">test_write</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step edit">implement</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step parallel">adversary_review</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step edit">simplify</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-step terminal">COMPLETE</span>
+        </div>
+        <span class="flow-branch">adversary_review FAIL &rarr; <strong>fix</strong> &rarr; adversary_review（ループ）</span>
+      </div>
+      <table>
+        <thead><tr><th>ステップ</th><th>Agent</th><th>モード</th><th>役割</th></tr></thead>
+        <tbody>
+          <tr><td><code>spec_review</code></td><td>spec-reviewer</td><td>readonly</td><td>仕様の品質検証</td></tr>
+          <tr><td><code>test_write</code></td><td>test-writer</td><td>edit</td><td>先にテストを作成</td></tr>
+          <tr><td><code>implement</code></td><td>developer</td><td>edit</td><td>実装</td></tr>
+          <tr><td><code>adversary_review</code></td><td>adversary + ai-reviewer</td><td>parallel</td><td>敵対的5次元評価 + AIスロップ検出</td></tr>
+          <tr><td><code>fix</code></td><td>fixer</td><td>edit</td><td>指摘修正</td></tr>
+          <tr><td><code>simplify</code></td><td>simplifier</td><td>edit</td><td>コード簡素化</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Agents -->
+  <section>
+    <h2>Agent一覧</h2>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="agent-name">spec-reviewer</div>
+        <div class="agent-desc">タスク指示書の品質を検証。要件の明確性、変更対象の特定可能性を判定。</div>
+        <span class="agent-tag readonly">readonly</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-name">codex-reviewer</div>
+        <div class="agent-desc">OpenAI Codex CLIで仕様の穴や矛盾を検出。外部プロバイダー連携。</div>
+        <span class="agent-tag readonly">readonly</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-name">developer</div>
+        <div class="agent-desc">仕様レビュー通過後のタスクを実装。テスト・ビルド実行まで担当。</div>
+        <span class="agent-tag edit">edit</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-name">test-writer</div>
+        <div class="agent-desc">TDDのREDフェーズ担当。実装より先に失敗するテストを作成。</div>
+        <span class="agent-tag edit">edit</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-name">acceptor</div>
+        <div class="agent-desc">受入検査。5次元バイナリ評価（1つでもFAILなら全体FAIL）。</div>
+        <span class="agent-tag readonly">readonly</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-name">adversary</div>
+        <div class="agent-desc">敵対的レビュアー。「欠陥がある」前提で5次元検証。</div>
+        <span class="agent-tag readonly">readonly</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-name">ai-reviewer</div>
+        <div class="agent-desc">AIスロップ検出。過度な抽象化・不要パターン・冗長コードを3カテゴリで検出。</div>
+        <span class="agent-tag readonly">readonly</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-name">fixer</div>
+        <div class="agent-desc">レビュー指摘事項を修正。テスト・ビルド実行で確認。</div>
+        <span class="agent-tag edit">edit</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-name">simplifier</div>
+        <div class="agent-desc">実装完了後のコード簡素化・整理。変更ファイルのみ対象。</div>
+        <span class="agent-tag edit">edit</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Execution Engine -->
+  <section>
+    <h2>実行エンジン</h2>
+
+    <h3>ステップ実行ループ</h3>
+    <div class="loop-diagram">
+      <div class="loop-step"><strong>1.</strong> max_steps超過チェック &rarr; 超過ならABORT</div>
+      <div class="loop-step"><strong>2.</strong> loop_limit超過チェック &rarr; 超過ならABORT</div>
+      <div class="loop-step"><strong>3.</strong> Agent定義ファイルを読み込み</div>
+      <div class="loop-step"><strong>4.</strong> Agent起動（edit: bypassPermissions / readonly: default）</div>
+      <div class="loop-step"><strong>5.</strong> 出力から <code>GROOVE_RESULT: {値}</code> を抽出</div>
+      <div class="loop-step"><strong>6.</strong> rulesマッチングで次ステップを決定</div>
+      <div class="loop-step"><strong>7.</strong> step_count++, loop_count++ &rarr; 次ループへ</div>
+    </div>
+
+    <h3>エラーハンドリング</h3>
+    <table>
+      <thead><tr><th>設定</th><th>型</th><th>デフォルト</th><th>説明</th></tr></thead>
+      <tbody>
+        <tr><td><code>retry</code></td><td>int</td><td>0</td><td>失敗時の最大リトライ回数</td></tr>
+        <tr><td><code>timeout</code></td><td>int</td><td>なし</td><td>ステップのタイムアウト（秒）</td></tr>
+        <tr><td><code>fallback.next</code></td><td>string</td><td>なし</td><td>全リトライ失敗時の遷移先</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--text-secondary)">
+      Agent失敗/タイムアウト時: retry上限まで再実行 &rarr; fallback定義があれば遷移 &rarr; なければABORT
+    </p>
+
+    <h3>並列実行</h3>
+    <p style="font-size:0.9rem;">
+      <code>parallel</code>指定されたステップは、複数Agentを同時起動します。結果の集約ルール:
+    </p>
+    <table>
+      <thead><tr><th>結果</th><th>条件</th></tr></thead>
+      <tbody>
+        <tr><td><code>spec_issue</code></td><td>いずれかがspec_issueを返した場合（最優先）</td></tr>
+        <tr><td><code>any_fail</code></td><td>いずれかがfailを返した場合</td></tr>
+        <tr><td><code>all_pass</code></td><td>全Agentがpassを返した場合</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Sync -->
+  <section>
+    <h2>配置と同期</h2>
+    <p style="margin-bottom:1rem">
+      <code>groove/</code> はGit管理用のソースディレクトリ。実行時は <code>~/.groove/</code> が参照されます。
+    </p>
+
+    <div class="sync-diagram">
+      <div class="sync-box repo">
+        <div class="label">ai-tools/groove/</div>
+        <div class="sublabel">Git管理（ソース）</div>
+      </div>
+      <div class="sync-arrows">
+        <span>sync.sh to-local</span>
+        <span class="arrow">&harr;</span>
+        <span>sync.sh from-local</span>
+      </div>
+      <div class="sync-box home">
+        <div class="label">~/.groove/</div>
+        <div class="sublabel">実行時に参照</div>
+      </div>
+    </div>
+
+    <pre><code>./claude-code/sync.sh to-local    # リポジトリ → ~/.groove/
+./claude-code/sync.sh from-local  # ~/.groove/ → リポジトリ
+./claude-code/sync.sh diff        # 差分確認</code></pre>
+
+    <h3>パス解決の優先順位</h3>
+    <table>
+      <thead><tr><th>優先度</th><th>パス</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td>1st</td><td><code>.groove/</code></td><td>プロジェクト固有のワークフロー</td></tr>
+        <tr><td>2nd</td><td><code>~/.groove/</code></td><td>グローバル（ホーム）</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--text-secondary)">
+      プロジェクト直下に <code>.groove/</code> を置けば、そのプロジェクト専用のワークフロー・Agentを定義できます。
+    </p>
+  </section>
+
+  <!-- YAML Reference -->
+  <section>
+    <h2>ワークフローYAML構文</h2>
+    <pre><code>name: my-workflow
+description: ワークフローの説明
+max_steps: 25          # 全体の最大ステップ数
+loop_limit: 3          # 同一ステップの最大ループ回数
+
+steps:
+  - name: review
+    agent: spec-reviewer     # agents/内のファイル名（.md除く）
+    mode: readonly           # readonly | edit
+    retry: 1                 # 失敗時リトライ回数
+    timeout: 120             # タイムアウト（秒）
+    rules:
+      - on: pass             # GROOVE_RESULTの値
+        next: implement      # 次のステップ名
+      - on: fail
+        next: ABORT          # 特殊値: ABORT, COMPLETE
+
+  - name: implement
+    agent: developer
+    mode: edit
+    rules:
+      - on: done
+        next: review_parallel
+      - on: needs_input
+        next: implement
+        ask_user: true       # ユーザーに質問してから再実行
+
+  - name: review_parallel
+    parallel:                # 並列実行
+      - agent: acceptor
+        mode: readonly
+      - agent: ai-reviewer
+        mode: readonly
+    rules:
+      - on: all_pass
+        next: COMPLETE
+      - on: any_fail
+        next: fix
+
+  - name: fix
+    agent: fixer
+    mode: edit
+    fallback:
+      next: implement        # 全リトライ失敗時の遷移先
+    rules:
+      - on: done
+        next: review_parallel</code></pre>
+  </section>
+
+</div>
+
+<div class="footer">
+  groove - part of <a href="https://github.com/DaichiHoshina/ai-tools" style="color:var(--accent);text-decoration:none">ai-tools</a>
+</div>
+
+<script>
+function showWorkflow(name) {
+  document.querySelectorAll('.workflow-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.workflow-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[onclick="showWorkflow('${name}')"]`).classList.add('active');
+  document.getElementById('wf-' + name).classList.add('active');
+}
+</script>
+</body>
+</html>
