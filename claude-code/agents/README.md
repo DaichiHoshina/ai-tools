@@ -6,16 +6,17 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 ## エージェント一覧
 
-| エージェント | 役割 | 主な用途 |
-|------------|------|---------|
-| **workflow-orchestrator** | ワークフロー自動化 | タスクタイプ判定→最適ワークフロー実行 |
-| **developer-agent** | 実装担当 | コード実装・修正・追加 |
-| **reviewer-agent** | レビュー担当 | コード品質・セキュリティ・テストレビュー |
-| **explore-agent** | 探索・分析担当 | コードベース調査・並列探索 |
-| **manager-agent** | タスク分割・配分 | 大規模タスクのサブタスク管理 |
-| **po-agent** | 戦略決定担当 | プロダクト戦略・Worktree管理 |
-| **code-simplifier** | 簡素化担当 | 実装後の複雑度削減・重複統合 |
-| **verify-app** | 検証担当 | ビルド・テスト・lintの統合検証 |
+| エージェント | model | 役割 | 主な用途 |
+|------------|-------|------|---------|
+| **workflow-orchestrator** | sonnet | ワークフロー自動化 | タスクタイプ判定→最適ワークフロー実行 |
+| **developer-agent** | sonnet | 実装担当 | コード実装・修正・追加 |
+| **reviewer-agent** | sonnet | レビュー担当 | コード品質・セキュリティ・テストレビュー |
+| **root-cause-analyzer** | sonnet | 根本原因分析 | バグの5Whys分析・構造的修正提案 |
+| **po-agent** | sonnet | 戦略決定担当 | プロダクト戦略・Worktree管理 |
+| **manager-agent** | sonnet | タスク分割・配分 | 大規模タスクのサブタスク管理 |
+| **explore-agent** | haiku | 探索・分析担当 | コードベース調査・並列探索 |
+| **code-simplifier** | haiku | 簡素化担当 | 実装後の複雑度削減・重複統合 |
+| **verify-app** | haiku | 検証担当 | ビルド・テスト・lintの統合検証 |
 
 ---
 
@@ -133,6 +134,7 @@ po-agent (戦略)
 - [workflow-orchestrator.md](./workflow-orchestrator.md)
 - [developer-agent.md](./developer-agent.md)
 - [reviewer-agent.md](./reviewer-agent.md)
+- [root-cause-analyzer.md](./root-cause-analyzer.md)
 - [explore-agent.md](./explore-agent.md)
 - [manager-agent.md](./manager-agent.md)
 - [po-agent.md](./po-agent.md)
