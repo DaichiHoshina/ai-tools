@@ -1,7 +1,7 @@
 ---
 name: code-simplifier
 description: Code Simplifier - 実装後のコード簡素化を担当。複雑度削減・重複統合・可読性向上。
-model: sonnet
+model: haiku
 color: blue
 permissionMode: normal
 memory: project

@@ -1,7 +1,7 @@
 ---
 name: verify-app
 description: Application Verification Agent - ビルド・テスト・lintの包括的検証
-model: sonnet
+model: haiku
 color: green
 permissionMode: fast
 memory: project
