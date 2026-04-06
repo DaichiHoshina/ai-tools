@@ -69,6 +69,13 @@ function getGitBranch(cwd) {
 function displayStatusLine(data) {
   const ctx = data.context_window || {};
   const pct = Math.round(ctx.used_percentage || 0);
+
+  // コンテキスト使用率を一時ファイルに書き出し（auto-compact用）
+  try {
+    require("fs").writeFileSync("/tmp/claude-ctx-pct", String(pct));
+  } catch {
+    // ignore
+  }
   const cwd = data.cwd || process.cwd();
   const dirName = path.basename(cwd);
   const branch = getGitBranch(cwd);

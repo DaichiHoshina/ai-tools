@@ -37,11 +37,25 @@ if ! validate_json "$input"; then
   exit 1
 fi
 
+# === Auto-compact: コンテキスト50%超で自動コンパクト指示 ===
+_CTX_FILE="/tmp/claude-ctx-pct"
+_AUTO_COMPACT_MSG=""
+if [[ -f "${_CTX_FILE}" ]]; then
+  _CTX_PCT=$(cat "${_CTX_FILE}" 2>/dev/null || echo "0")
+  if [[ "${_CTX_PCT}" =~ ^[0-9]+$ ]] && [[ "${_CTX_PCT}" -ge 50 ]]; then
+    _AUTO_COMPACT_MSG="⚡ AUTO-COMPACT: コンテキスト使用率${_CTX_PCT}%。ユーザーメッセージ処理前に/compactを実行せよ。"
+  fi
+fi
+
 # promptフィールド取得
 prompt=$(echo "$input" | jq -r '.prompt // empty')
 if [ -z "$prompt" ]; then
-  # promptが空の場合は何もしない
-  echo '{}'
+  # promptが空の場合でもauto-compactメッセージがあれば返す
+  if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
+    jq -n --arg msg "${_AUTO_COMPACT_MSG}" '{"systemMessage": $msg}'
+  else
+    echo '{}'
+  fi
   exit 0
 fi
 
@@ -83,9 +97,13 @@ lang_count=${#detected_langs[@]}
 skill_count=${#detected_skills[@]}
 set -u
 
-# 検出されたスキル・言語・テクニックがない場合は空オブジェクトを返す
+# 検出されたスキル・言語・テクニックがない場合
 if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ] && [ -z "$technique_recommendation" ]; then
-  echo '{}'
+  if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
+    jq -n --arg msg "${_AUTO_COMPACT_MSG}" '{"systemMessage": $msg}'
+  else
+    echo '{}'
+  fi
   exit 0
 fi
 
@@ -139,8 +157,18 @@ if [ -n "$system_message" ]; then
 fi
 
 if [ -n "$additional_context" ]; then
-  # エスケープして追加
   output_json=$(echo "$output_json" | jq --arg ctx "$additional_context" '.additionalContext = $ctx')
+fi
+
+# auto-compactメッセージを先頭に追加
+if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
+  _existing_msg=$(echo "$output_json" | jq -r '.systemMessage // ""')
+  if [[ -n "${_existing_msg}" ]]; then
+    output_json=$(echo "$output_json" | jq --arg msg "${_AUTO_COMPACT_MSG}
+${_existing_msg}" '.systemMessage = $msg')
+  else
+    output_json=$(echo "$output_json" | jq --arg msg "${_AUTO_COMPACT_MSG}" '.systemMessage = $msg')
+  fi
 fi
 
 echo "$output_json"
