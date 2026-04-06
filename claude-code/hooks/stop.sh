@@ -8,6 +8,6 @@ source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 require_jq
 
 INPUT=$(cat)
-send_stop_notification "$INPUT" "" "Glass" "robot" "default"
+send_stop_notification "$INPUT" "" "Glass" "robot" "default" 2>>"$HOME/.claude/logs/stop-hook.log"
 
 echo '{"systemMessage":"Task completed."}'

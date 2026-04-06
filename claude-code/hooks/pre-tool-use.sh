@@ -28,7 +28,12 @@ classify_bash_command() {
 
   # 禁止操作チェック（危険なコマンド）
   # スペースの揺れ（\s+）とエスケープ（\\rm等）を考慮
-  if echo "$cmd" | grep -qE '(rm\s+-rf\s+/|rm\s+-rf\s+\*|>\s*/dev/|:\(\)\{|sudo\s+rm|git\s+push\s+--force|git\s+push\s+-f)'; then
+  # /dev/null へのリダイレクトは安全（cat > /dev/null等）、それ以外の /dev/ は禁止
+  local _dev_forbidden=0
+  if echo "$cmd" | grep -qE '>\s*/dev/' && ! echo "$cmd" | grep -qE '>\s*/dev/null'; then
+    _dev_forbidden=1
+  fi
+  if [[ "$_dev_forbidden" -eq 1 ]] || echo "$cmd" | grep -qE '(rm\s+-rf\s+/|rm\s+-rf\s+\*|:\(\)\{|sudo\s+rm|git\s+push\s+--force|git\s+push\s+-f)'; then
     GUARD_CLASS="Forbidden"
     MESSAGE="${ICON_CRITICAL} 禁止: 危険なコマンド検出"
     ADDITIONAL_CONTEXT="破壊的コマンド検出。実行を中止し安全な代替手段を提案"

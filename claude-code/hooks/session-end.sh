@@ -3,6 +3,8 @@
 
 set -euo pipefail
 
+exec 2>>"$HOME/.claude/logs/hook-errors.log"
+
 # JSON入力を読み込む
 INPUT=$(cat)
 
