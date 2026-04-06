@@ -1,7 +1,7 @@
 ---
 name: root-cause-analyzer
 description: Root Cause Analysis専門エージェント - 深い分析と構造的修正提案
-model: sonnet
+model: opus
 color: red
 permissionMode: readonly  # コードベースは読み取り専用。Serena Memory書き込みは許可。
 memory: project

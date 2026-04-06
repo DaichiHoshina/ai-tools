@@ -75,10 +75,12 @@ ON agent_error OR timeout:
 
 **通常:**
 ```
+Agent定義のfrontmatter（---で囲まれた部分）からmodelフィールドを抽出。
 Agent(
   subagent_type: "general-purpose",
+  model: frontmatterのmodel値（haiku/sonnet/opus）、なければ省略,
   mode: edit→"bypassPermissions" / readonly→"default",
-  prompt: "{Agent定義}\n\n## タスク\n{task}\n\n## 前ステップ結果\n{prev_result}"
+  prompt: "{Agent定義本文（frontmatter除く）}\n\n## タスク\n{task}\n\n## 前ステップ結果\n{prev_result}"
 )
 ```
 

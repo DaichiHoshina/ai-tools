@@ -1,7 +1,7 @@
 ---
 name: workflow-orchestrator
 description: "/flowコマンドの実行エンジン。タスク分類→ワークフロー選択→ステップ実行を担当"
-model: sonnet
+model: haiku
 color: purple
 permissionMode: normal
 memory: project

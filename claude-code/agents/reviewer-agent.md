@@ -1,7 +1,7 @@
 ---
 name: reviewer-agent
 description: Reviewer Agent - Writer/Reviewer並列パターンのレビュー担当
-model: sonnet
+model: opus
 color: blue
 permissionMode: fast
 memory: user

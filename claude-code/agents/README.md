@@ -8,13 +8,13 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 | エージェント | model | 役割 | 主な用途 |
 |------------|-------|------|---------|
-| **workflow-orchestrator** | sonnet | ワークフロー自動化 | タスクタイプ判定→最適ワークフロー実行 |
+| **reviewer-agent** | opus | レビュー担当 | コード品質・セキュリティ・テストレビュー |
+| **root-cause-analyzer** | opus | 根本原因分析 | バグの5Whys分析・構造的修正提案 |
 | **developer-agent** | sonnet | 実装担当 | コード実装・修正・追加 |
-| **reviewer-agent** | sonnet | レビュー担当 | コード品質・セキュリティ・テストレビュー |
-| **root-cause-analyzer** | sonnet | 根本原因分析 | バグの5Whys分析・構造的修正提案 |
 | **po-agent** | sonnet | 戦略決定担当 | プロダクト戦略・Worktree管理 |
-| **manager-agent** | sonnet | タスク分割・配分 | 大規模タスクのサブタスク管理 |
-| **explore-agent** | haiku | 探索・分析担当 | コードベース調査・並列探索 |
+| **explore-agent** | sonnet | 探索・分析担当 | コードベース調査・並列探索 |
+| **workflow-orchestrator** | haiku | ワークフロー自動化 | タスクタイプ判定→最適ワークフロー実行 |
+| **manager-agent** | haiku | タスク分割・配分 | 大規模タスクのサブタスク管理 |
 | **code-simplifier** | haiku | 簡素化担当 | 実装後の複雑度削減・重複統合 |
 | **verify-app** | haiku | 検証担当 | ビルド・テスト・lintの統合検証 |
 

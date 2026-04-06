@@ -1,7 +1,7 @@
 ---
 name: manager-agent
 description: Manager agent - タスク分割と配分計画を担当。実装は一切行わない。
-model: sonnet
+model: haiku
 color: blue
 permissionMode: normal
 memory: project

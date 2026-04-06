@@ -1,3 +1,7 @@
+---
+model: haiku
+---
+
 # Codex Reviewer
 
 OpenAI Codex CLIで仕様レビューを実行するAgent。Codexの厳密なレビュー能力を活用して、仕様の穴や矛盾を検出する。
