@@ -160,14 +160,14 @@ if [ -n "$additional_context" ]; then
   output_json=$(echo "$output_json" | jq --arg ctx "$additional_context" '.additionalContext = $ctx')
 fi
 
-# auto-compactメッセージを先頭に追加
+# auto-compactをadditionalContextに追加（Claudeに届けるため）
 if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
-  _existing_msg=$(echo "$output_json" | jq -r '.systemMessage // ""')
-  if [[ -n "${_existing_msg}" ]]; then
-    output_json=$(echo "$output_json" | jq --arg msg "${_AUTO_COMPACT_MSG}
-${_existing_msg}" '.systemMessage = $msg')
+  _existing_ctx=$(echo "$output_json" | jq -r '.additionalContext // ""')
+  if [[ -n "${_existing_ctx}" ]]; then
+    output_json=$(echo "$output_json" | jq --arg ctx "${_AUTO_COMPACT_MSG}
+${_existing_ctx}" '.additionalContext = $ctx')
   else
-    output_json=$(echo "$output_json" | jq --arg msg "${_AUTO_COMPACT_MSG}" '.systemMessage = $msg')
+    output_json=$(echo "$output_json" | jq --arg ctx "${_AUTO_COMPACT_MSG}" '.additionalContext = $ctx')
   fi
 fi
 
