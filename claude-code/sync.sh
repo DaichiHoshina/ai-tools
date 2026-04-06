@@ -72,10 +72,15 @@ sync_settings_hooks() {
     template_hooks=$(jq '.hooks // {}' "$template" 2>/dev/null)
 
     # テンプレートのhooksをマージ（テンプレート優先、ユーザー追加分は保持）
-    local merged
-    merged=$(jq --argjson th "$template_hooks" '.hooks = ((.hooks // {}) + $th)' "$live")
-    echo "${merged}" > "$live"
-    print_success "settings.json hooks を同期しました"
+    local tmpfile
+    tmpfile=$(mktemp)
+    if jq --argjson th "$template_hooks" '.hooks = ((.hooks // {}) + $th)' "$live" > "$tmpfile"; then
+        mv "$tmpfile" "$live"
+        print_success "settings.json hooks を同期しました"
+    else
+        rm -f "$tmpfile"
+        print_error "settings.json hooks のマージに失敗しました"
+    fi
 }
 
 check_settings_hooks_diff() {

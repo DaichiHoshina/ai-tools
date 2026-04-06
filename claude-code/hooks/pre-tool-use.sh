@@ -28,9 +28,10 @@ classify_bash_command() {
 
   # 禁止操作チェック（危険なコマンド）
   # スペースの揺れ（\s+）とエスケープ（\\rm等）を考慮
-  # /dev/null へのリダイレクトは安全（cat > /dev/null等）、それ以外の /dev/ は禁止
+  # /dev/null へのリダイレクトは安全（cat > /dev/null, 2>/dev/null等）、それ以外の /dev/ は禁止
+  # fd番号付きリダイレクト（2>/dev/sda等）も対象
   local _dev_forbidden=0
-  if echo "$cmd" | grep -qE '>\s*/dev/' && ! echo "$cmd" | grep -qE '>\s*/dev/null'; then
+  if echo "$cmd" | grep -qE '[0-9]*>\s*/dev/' && ! echo "$cmd" | grep -qE '[0-9]*>\s*/dev/null'; then
     _dev_forbidden=1
   fi
   if [[ "$_dev_forbidden" -eq 1 ]] || echo "$cmd" | grep -qE '(rm\s+-rf\s+/|rm\s+-rf\s+\*|:\(\)\{|sudo\s+rm|git\s+push\s+--force|git\s+push\s+-f)'; then

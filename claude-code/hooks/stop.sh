@@ -3,11 +3,13 @@
 
 set -euo pipefail
 
+exec 2>>"$HOME/.claude/logs/hook-errors.log"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 require_jq
 
 INPUT=$(cat)
-send_stop_notification "$INPUT" "" "Glass" "robot" "default" 2>>"$HOME/.claude/logs/stop-hook.log"
+send_stop_notification "$INPUT" "" "Glass" "robot" "default"
 
 echo '{"systemMessage":"Task completed."}'
