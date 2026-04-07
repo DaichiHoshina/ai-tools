@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash /Users/daichi.hoshina/.claude/hooks/user-prompt-submit.sh)",
+      "Read(//Users/daichi.hoshina/ghq/**)",
+      "Read(//Users/daichi.hoshina/ghq/github.com/**)"
+    ]
+  }
+}

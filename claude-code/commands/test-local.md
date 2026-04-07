@@ -3,7 +3,7 @@ allowed-tools: Bash, Read, Glob, Grep, AskUserQuestion
 description: ローカル動作確認→スクショ撮影→PRコメント投稿
 ---
 
-# /local-test - ローカル動作確認 & PR添付
+# /test-local - ローカル動作確認 & PR添付
 
 変更をローカルで確認し、テスト結果とスクショをPRに添付する。
 
