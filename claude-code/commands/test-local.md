@@ -19,23 +19,30 @@ PRがなければ作成を提案してから続行。
 
 引数に `--with-test` がある場合のみ `/lint-test` を実行し結果を記録。省略時はスキップ。
 
-## Step 3: スクショ撮影
+## Step 3: スクショ撮影（Playwright）
 
-AskUserQuestionで確認（省略可）:
-- 「スクショを撮りますか？（画面全体 / 選択範囲 / スキップ）」
+AskUserQuestionで確認:
+- 「スクショを撮るURLを教えてください（例: http://localhost:3000/items）」
 
 ```bash
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-SCREENSHOT=/tmp/local-test-${TIMESTAMP}.png
+SCREENSHOT=/tmp/test-local-${TIMESTAMP}.png
+URL="<入力されたURL>"
 
-# 選択範囲（デフォルト）
-screencapture -i "${SCREENSHOT}"
-# 全画面の場合
-# screencapture "${SCREENSHOT}"
+# Playwright CLIでスクショ撮影
+npx playwright screenshot "${URL}" "${SCREENSHOT}" --full-page
 
-# クリップボードにもコピー
+# クリップボードにコピー（macOS）
 osascript -e "set the clipboard to (read (POSIX file \"${SCREENSHOT}\") as JPEG picture)"
 ```
+
+Playwrightが未インストールの場合:
+```bash
+npm install -D @playwright/test && npx playwright install chromium
+```
+
+`--fullscreen` 指定時は `--full-page` を付与（デフォルト）。
+`--viewport WxH` でビューポート指定（例: `--viewport 375x812` でモバイル）。
 
 ## Step 4: PRコメント投稿
 
@@ -76,10 +83,10 @@ gh pr view --web
 
 | 引数 | 動作 |
 |------|------|
-| (なし) | 選択スクショ → PRコメント |
+| (なし) | URL指定→Playwrightスクショ→PRコメント |
 | `--with-test` | lint-test も実行してから添付 |
-| `--no-screenshot` | スクショスキップ、テキスト結果のみ |
-| `--fullscreen` | 全画面スクショ |
+| `--no-screenshot` | スクショスキップ |
+| `--viewport 375x812` | モバイルサイズでスクショ |
 
 ## 注意
 
