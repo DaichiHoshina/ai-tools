@@ -15,9 +15,9 @@ gh pr view --json number,title,url
 
 PRがなければ作成を提案してから続行。
 
-## Step 2: lint-test実行
+## Step 2: lint-test実行（`--with-test` 指定時のみ）
 
-`/lint-test` を実行し、結果を変数に保持。
+引数に `--with-test` がある場合のみ `/lint-test` を実行し結果を記録。省略時はスキップ。
 
 ## Step 3: スクショ撮影
 
@@ -76,10 +76,10 @@ gh pr view --web
 
 | 引数 | 動作 |
 |------|------|
-| (なし) | lint-test → 選択スクショ → PRコメント |
+| (なし) | 選択スクショ → PRコメント |
+| `--with-test` | lint-test も実行してから添付 |
 | `--no-screenshot` | スクショスキップ、テキスト結果のみ |
 | `--fullscreen` | 全画面スクショ |
-| `--skip-test` | テストスキップ、スクショのみ |
 
 ## 注意
 
