@@ -19,6 +19,23 @@ PRがなければ作成を提案してから続行。
 
 引数に `--with-test` がある場合のみ `/lint-test` を実行し結果を記録。省略時はスキップ。
 
+## Step 2.5: テストデータ確認・作成
+
+スクショ前にページが意味ある状態か確認。AskUserQuestionで:
+- 「テストデータは必要ですか？（自動作成 / 手動で用意済み / スキップ）」
+
+自動作成を選んだ場合、プロジェクトのseed/fixture方法を検出して実行:
+
+| 検出条件 | 実行コマンド |
+|---------|-------------|
+| `db/seeds.rb` or `seeds/` | `rails db:seed` or `bundle exec rails db:seed` |
+| `prisma/seed.ts` | `npx prisma db seed` |
+| `scripts/seed.*` | そのスクリプトを実行 |
+| `Makefile` に `seed` target | `make seed` |
+| 上記なし | AskUserQuestion「seedコマンドを教えてください」 |
+
+seed実行後、指定URLにアクセスしてデータが表示されているか確認してからスクショへ進む。
+
 ## Step 3: スクショ撮影（Playwright）
 
 AskUserQuestionで確認:
