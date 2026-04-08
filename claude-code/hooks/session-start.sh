@@ -118,7 +118,8 @@ if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
-_AC_BASE="**自動**: protection-mode, Serena自動初期化（onboarding確認, memory読み込み）\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否"
+_CWD=$(echo "${_SS_INPUT}" | jq -r '.cwd // ""')
+_AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__activate_project\` を path=\"${_CWD}\" で呼び出す\n2. \`mcp__serena__list_memories\` でメモリ一覧を確認する\n3. 関連メモリがあれば読み込む\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否"
 if [[ -n "${_DIAG_MSG}" ]]; then
     _AC_FULL="${_DIAG_MSG}\n${_AC_BASE}"
 else
