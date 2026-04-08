@@ -70,7 +70,7 @@ Go 1.26対応（2026年2月リリース）。共通ガイドラインは `~/.cla
 | パターン | コード | 用途 |
 |---------|--------|------|
 | 基本 | `func TestXxx(t *testing.T)` | ユニットテスト |
-| テーブル駆動 | `tests := []struct{name string; ...}` | 複数ケース |
+| テーブル駆動 | `tests := map[string]struct{...}` | 複数ケース（mapでサブテスト名を強制） |
 | ベンチマーク | `for b.Loop() { ... }` | 性能測定 (1.24+) |
 | 並行テスト | `testing/synctest` | 並行コード (1.25+) |
 
@@ -129,3 +129,96 @@ Go 1.26対応（2026年2月リリース）。共通ガイドラインは `~/.cla
 - **早期リターン** でネスト回避
 - **`any`** より具体的な型 or ジェネリクス
 - **nil チェック** 徹底
+
+---
+
+## テスト詳細
+
+### ビルドタグ
+
+| タグ | `t.Parallel()` | DB/Fixtures | 用途 |
+|-----|--------------|------------|------|
+| `parallel` | 必須 | 禁止（mock使用） | ユニットテスト |
+| `serial` | 禁止 | 可 | Repository実装テスト |
+| `integration` | 禁止 | 可 | フルスタックテスト |
+
+### テーブル駆動テスト
+
+- **sliceでなくmapを使用**（サブテスト名を強制、順序ランダム化でテスト分離）
+- アサーション: `cmp.Diff(expected, actual)` で差分表示
+- テスト名: アンダースコア区切り（`TestXxx_returns_error`）
+
+### フレーキーテスト防止
+
+- 自動生成IDを期待値に入れない（存在確認のみ）
+- parallel テストで共有データを変更しない（deep copyしてから操作）
+- parallel タグは `t.Parallel()` 必須（トップレベル＆サブテスト両方）
+
+---
+
+## データベース
+
+### 命名規則
+
+| 要素 | パターン | 例 |
+|------|---------|-----|
+| テーブル/カラム | snake_case | `user_orders`, `created_at` |
+| Index | `idx_table_column` | `idx_users_email` |
+| Foreign key | `fkey_table_column` | `fkey_orders_user_id` |
+| Unique key | `ukey_table_column` | `ukey_users_email` |
+
+### クエリルール
+
+- プレースホルダ: 名前付き（`:var_name`）のみ、`?` 禁止
+- 必ず `WithContext(ctx)` を使用
+- BETWEEN は datetime に使わない（`>=` と `<` を使用）
+- INSERT/UPDATE は ORM の Insert/Update（生SQL禁止）
+- テーブルエイリアスの `AS` 禁止（自己結合除く）
+
+---
+
+## エンティティ・Nullable
+
+| 層 | 推奨型 | 禁止 |
+|----|--------|------|
+| Entity（DB mapping）| `sql.Null[T]`（Go 1.22+） | `sql.NullInt64` 等の型固有版、`*T` |
+| Domain/Service | カスタム `Nullable[T]` 型 | `*T`（意味的な区別のため） |
+| Handler/Adapter | `*T` | `Nullable[T]`（Swagger等との互換性） |
+
+値アクセス: `.V` フィールド（`sql.Null[T]`）、または `.Valid` チェック後に使用。
+
+---
+
+## API 設計
+
+- URL: スラッシュで終わらない（`/users/123` ○、`/users/123/` ✕）
+- JSON キー: lowerCamelCase、ハイフン禁止
+- 空配列: `[]` を返す（`null` 禁止）
+- `omitempty` タグ禁止（クライアントのパース問題を回避）
+- タイムゾーン: DB/API は UTC、表示時にローカルタイムに変換
+
+---
+
+## マイグレーション
+
+- **既存ファイルを編集禁止**（適用済み環境に影響なし → 不整合の原因）
+- テーブル変更は常に新規ファイルで（`ALTER TABLE`）
+- up/down 両ファイル必須
+
+---
+
+## セキュリティ
+
+- 乱数生成: `crypto/rand`（`math/rand` 禁止）
+- シークレット比較: `subtle.ConstantTimeCompare`（`==` 禁止 → タイミング攻撃対策）
+- 最低32バイト以上生成
+- 認証確認: セッション/トークンの有効性を先にチェック、ユーザーIDはセッション/トークンから取得（リクエストパラメータ禁止）
+
+---
+
+## CQRS パターン
+
+- Command（書き込み）と Query（読み取り）でレイヤーを分離
+- Command: Work Unit パターンでトランザクション管理
+- Command usecase シグネチャ: `Do(ctx, in *Input) (*Output, *Result)`
+- Mock 生成: `go generate` を使用（手動作成禁止）
