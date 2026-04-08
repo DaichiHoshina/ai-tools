@@ -70,7 +70,7 @@ Go 1.26対応（2026年2月リリース）。共通ガイドラインは `~/.cla
 | パターン | コード | 用途 |
 |---------|--------|------|
 | 基本 | `func TestXxx(t *testing.T)` | ユニットテスト |
-| テーブル駆動 | `tests := map[string]struct{...}` | 複数ケース（mapでサブテスト名を強制） |
+| テーブル駆動 | `tests := map[string]struct{...}` | 複数ケース（詳細は「テスト詳細」参照） |
 | ベンチマーク | `for b.Loop() { ... }` | 性能測定 (1.24+) |
 | 並行テスト | `testing/synctest` | 並行コード (1.25+) |
 
@@ -185,7 +185,7 @@ Go 1.26対応（2026年2月リリース）。共通ガイドラインは `~/.cla
 | Domain/Service | カスタム `Nullable[T]` 型 | `*T`（意味的な区別のため） |
 | Handler/Adapter | `*T` | `Nullable[T]`（Swagger等との互換性） |
 
-値アクセス: `.V` フィールド（`sql.Null[T]`）、または `.Valid` チェック後に使用。
+値アクセス: `.V` フィールド（`sql.Null[T]` の Go 1.22+ 標準フィールド）、または `.Valid` チェック後に使用。
 
 ---
 
@@ -220,5 +220,5 @@ Go 1.26対応（2026年2月リリース）。共通ガイドラインは `~/.cla
 
 - Command（書き込み）と Query（読み取り）でレイヤーを分離
 - Command: Work Unit パターンでトランザクション管理
-- Command usecase シグネチャ: `Do(ctx, in *Input) (*Output, *Result)`
+- Command usecase シグネチャ: `Do(ctx, in *Input) (*Output, *Result)`（`*Result`: 操作の成否を示す型、`error` の代替として使用）
 - Mock 生成: `go generate` を使用（手動作成禁止）

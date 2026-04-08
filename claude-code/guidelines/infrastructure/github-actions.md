@@ -14,7 +14,7 @@
 - uses: actions/checkout@v4
 
 # Bad - AIが直接書いたハッシュ（古い可能性あり）
-- uses: actions/checkout@a81bbbf8298c0fa03ea29cdc473d45769f953675
+- uses: actions/checkout@a81bbbf8298c0fa03ea29cdc473d45769f953675 # (架空のハッシュ例)
 ```
 
 ## 手順
