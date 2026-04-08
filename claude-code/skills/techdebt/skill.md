@@ -154,23 +154,4 @@ requires-guidelines:
 /techdebt --verbose     # 除外ファイル・類似度詳細を出力
 ```
 
----
-
-## 技術的詳細
-
-**使用ツール**:
-- `mcp__serena__list_dir` - ファイル収集
-- `mcp__serena__search_for_pattern` - パターン検索
-- `mcp__serena__read_file` - コード内容取得（必要時）
-
-**アルゴリズム**: ハッシュベース重複検出（O(n)）/ Levenshtein距離（類似度）/ 正規表現（DRY違反）
-
----
-
-## 参考
-
-- `comprehensive-review --focus=quality`（アーキテクチャ・型安全性レビュー）
-- `cleanup-enforcement`（未使用コード削除）
-- 詳細は [SKILL-MIGRATION.md](../../SKILL-MIGRATION.md) 参照
-
 **鉄則**: 技術的負債は「見える化」が第一歩。定期実行で負債増加を防ぐ。
