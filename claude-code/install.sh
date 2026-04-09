@@ -74,7 +74,6 @@ setup_directories() {
     mkdir -p "$CLAUDE_DIR/guidelines/design"
     mkdir -p "$CLAUDE_DIR/guidelines/infrastructure"
     mkdir -p "$CLAUDE_DIR/guidelines/summaries"
-    mkdir -p "$CLAUDE_DIR/guidelines-archive/design"
     mkdir -p "$CLAUDE_DIR/scripts"
     mkdir -p "$CLAUDE_DIR/commands"
     mkdir -p "$CLAUDE_DIR/agents"
@@ -120,7 +119,6 @@ copy_directory_contents() {
     copy_files "$SCRIPT_DIR/guidelines/design" "$CLAUDE_DIR/guidelines/design" "guidelines/design"
     copy_files "$SCRIPT_DIR/guidelines/infrastructure" "$CLAUDE_DIR/guidelines/infrastructure" "guidelines/infrastructure"
     copy_files "$SCRIPT_DIR/guidelines/summaries" "$CLAUDE_DIR/guidelines/summaries" "guidelines/summaries"
-    copy_files "$SCRIPT_DIR/guidelines-archive/design" "$CLAUDE_DIR/guidelines-archive/design" "guidelines-archive/design"
 
     # Commands
     copy_files "$SCRIPT_DIR/commands" "$CLAUDE_DIR/commands" "commands"

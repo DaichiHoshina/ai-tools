@@ -19,7 +19,6 @@ requires-guidelines:
 **読み込み:**
 - `~/.claude/guidelines/design/clean-architecture.md` - クリーンアーキテクチャ原則
 - `~/.claude/guidelines/design/domain-driven-design.md` - DDD戦術・戦略パターン
-- `~/.claude/guidelines-archive/design/requirements-engineering.md` - 要件定義手法（必要時のみ）
 
 ### B. 言語ガイドライン
 `load-guidelines` スキルで自動検出:
@@ -29,15 +28,9 @@ requires-guidelines:
 
 ### C. プロジェクト種別別ガイドライン
 
-**マイクロサービス:**
-- `guidelines-archive/design/microservices-kubernetes.md` - サービス分割、通信パターン（必要時のみ）
-
 **インフラ計画:**
 - `infrastructure/terraform.md` - IaC設計
 - `infrastructure/aws-eks.md` - Kubernetes運用
-
-**UI/UX設計:**
-- `guidelines-archive/design/ui-ux-guidelines.md` - ユーザビリティ、アクセシビリティ（必要時のみ）
 
 ### D. Skill連携
 以下のSkillが自動的にガイドラインを読み込み:

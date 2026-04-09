@@ -127,8 +127,6 @@ requires-guidelines:
 
 **設計**: `clean-architecture`, `ddd` → `design/`
 
-**アーカイブ**: `microservices-kubernetes`, `ui-ux`, `requirements-engineering` → `guidelines-archive/`
-
 ### 自動読み込みフロー
 
 1. Skill呼び出し時、フロントマターの`requires-guidelines`を確認
