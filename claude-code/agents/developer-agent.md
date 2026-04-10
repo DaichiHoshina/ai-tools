@@ -1,7 +1,7 @@
 ---
 name: developer-agent
 description: Developer agent (dev1-4) - 実装を担当。Serena MCP必須使用。
-model: sonnet
+model: haiku
 color: orange
 permissionMode: normal
 memory: project
