@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: 包括的コードレビュー - 設計・品質・可読性・セキュリティ・ドキュメント/テスト・恒久対応・ログを統合評価。/reviewコマンドで自動選択。--focusで観点を絞れる。
+description: 包括的コードレビュー - 設計・品質・可読性・セキュリティ・ドキュメント・テスト充足度・恒久対応・ログを統合評価。/reviewコマンドで自動選択。--focusで観点を絞れる。
 context: fork
 agent: reviewer-agent
 requires-guidelines:
@@ -10,22 +10,23 @@ requires-guidelines:
 parameters:
   focus:
     type: enum
-    values: [all, architecture, quality, readability, security, docs, root-cause, logging]
+    values: [all, architecture, quality, readability, security, docs, test-coverage, root-cause, logging]
     default: all
     description: レビュー観点のフォーカス
 ---
 
 # comprehensive-review - 包括的コードレビュー
 
-## 7つの観点
+## 8つの観点
 
 1. **architecture** - クリーンアーキテクチャ、DDD、レイヤー違反
 2. **quality** - コード臭、パフォーマンス、型安全性
 3. **readability** - 命名、認知的複雑度、一貫性
 4. **security** - OWASP Top 10、機密情報漏洩
-5. **docs** - ドキュメント品質、テスト品質
-6. **root-cause** - 対症療法vs根本治療
-7. **logging** - ログレベル適切性、構造化ログ
+5. **docs** - ドキュメント品質
+6. **test-coverage** - テストケースの充足度
+7. **root-cause** - 対症療法vs根本治療
+8. **logging** - ログレベル適切性、構造化ログ
 
 各観点の詳細チェック項目: [references/review-criteria.md](references/review-criteria.md)
 
@@ -35,12 +36,13 @@ parameters:
 
 | 値 | レビュー範囲 |
 |----|-------------|
-| all | 全7観点（デフォルト） |
+| all | 全8観点（デフォルト） |
 | architecture | 設計のみ |
 | quality | 品質のみ |
 | readability | 可読性のみ |
 | security | セキュリティのみ |
-| docs | ドキュメント/テストのみ |
+| docs | ドキュメントのみ |
+| test-coverage | テスト充足度のみ |
 | root-cause | 恒久対応のみ |
 | logging | ログのみ |
 
@@ -68,7 +70,17 @@ go vet ./... 2>&1 | head -50
 
 ### Step 4: レビュー観点の選択と実行
 
-focusパラメータで指定された観点のみ実行。`all`の場合は全7観点を並列実行。
+focusパラメータで指定された観点のみ実行。`all`の場合は全8観点を並列実行。
+
+**test-coverage観点のチェック項目**:
+
+| チェック | 内容 |
+|---------|------|
+| **テスト有無** | 変更したロジックに対応するテストファイルが存在するか |
+| **新規コードのテスト** | 新しい関数・メソッド・エンドポイントにテストがあるか |
+| **バグ修正の回帰テスト** | 修正したバグの再発を防ぐテストケースがあるか |
+| **境界値・異常系** | 正常系だけでなくエラーケース・境界値がカバーされているか |
+| **テストの質** | テストが実装の詳細でなく振る舞いを検証しているか |
 
 **ファイル種別による自動追加**:
 
@@ -76,6 +88,7 @@ focusパラメータで指定された観点のみ実行。`all`の場合は全7
 |------|---------|
 | テストファイル（`*_test.*`, `*.spec.*`） | `docs` |
 | UIファイル（`components/*`, `*.tsx`） | `uiux-review`（別スキル） |
+| ロジック変更（テストファイル以外の`.go`, `.ts`, `.py`） | `test-coverage` |
 
 ### Step 5: 結果集約
 
@@ -85,7 +98,7 @@ focusパラメータで指定された観点のみ実行。`all`の場合は全7
 ## 包括的レビュー結果
 
 ### 実行した観点
-- architecture / quality / readability / security / docs / root-cause / logging
+- architecture / quality / readability / security / docs / test-coverage / root-cause / logging
 
 ### Critical（修正必須）
 - [設計] Domain→Infrastructure参照（src/domain/user.ts:45）
@@ -101,4 +114,4 @@ Total: Critical N件 / Warning N件
 
 - 大量の差分 → 1ファイルずつ、Critical → Warningの優先度順
 - 問題指摘だけでなく具体的な修正案を提示
-- focus=allの場合は全7観点を並列実行
+- focus=allの場合は全8観点を並列実行

@@ -12,4 +12,4 @@ require_jq
 INPUT=$(cat)
 send_stop_notification "$INPUT" "" "Glass" "robot" "default"
 
-echo '{"systemMessage":"Task completed. 💡 コンテキストが溜まっていたら /compact を実行してください。"}'
+echo '{}'
