@@ -80,6 +80,11 @@ setup_directories() {
     mkdir -p "$CLAUDE_DIR/skills"
     mkdir -p "$CLAUDE_DIR/lib"
 
+    # Groove
+    mkdir -p "$HOME/.groove/workflows"
+    mkdir -p "$HOME/.groove/agents"
+    mkdir -p "$HOME/.groove/runs"
+
     print_success "ディレクトリ構造を作成しました"
 }
 
@@ -155,6 +160,20 @@ copy_directory_contents() {
         rm -f "$CLAUDE_DIR/hooks"/test-*.sh 2>/dev/null || true
         chmod +x "$CLAUDE_DIR/hooks/"*.sh 2>/dev/null || true
         print_success "hooks をコピーしました"
+    fi
+
+    # Groove（リポジトリ groove/ → ~/.groove/）
+    local groove_src="${SCRIPT_DIR}/../groove"
+    if [ -d "$groove_src" ]; then
+        for subdir in workflows agents; do
+            if [ -d "$groove_src/$subdir" ]; then
+                cp -r "$groove_src/$subdir/"* "$HOME/.groove/$subdir/" 2>/dev/null || true
+            fi
+        done
+        if [ -f "$groove_src/config.yaml" ]; then
+            cp "$groove_src/config.yaml" "$HOME/.groove/"
+        fi
+        print_success "groove をコピーしました"
     fi
 
     # statusline.js
