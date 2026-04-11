@@ -1,11 +1,11 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Skill, AskUserQuestion, mcp__serena__*, mcp__context7__*
-description: レビュー→修正→プッシュを1コマンドで実行。/review + /dev 全修正 + /git-push --main の統合。
+description: レビュー→修正→プッシュを1コマンドで実行。/review + /dev 全修正 + /git-push --pr の統合。
 ---
 
 ## /review-fix-push - レビュー・修正・プッシュ一括実行
 
-Boris流の日常ワークフロー。レビューで見つけた問題を修正し、mainにpushするまでを一気に実行。
+Boris流の日常ワークフロー。レビューで見つけた問題を修正し、ブランチにpush→PR作成まで一気に実行。
 
 ## フロー
 
@@ -33,10 +33,10 @@ Skill("comprehensive-review")
 ### Step 4: プッシュ
 
 ```
-/git-push --main
+/git-push --pr
 ```
 
-修正をコミットしてmainにpush。
+修正をコミットしてブランチにpush、PR作成。
 
 ## オプション
 

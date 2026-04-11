@@ -96,7 +96,7 @@ Agent(
 
 ### 5. 完了
 
-- COMPLETE → 実行履歴を表示。`--auto`なら`/git-push --main`を実行
+- COMPLETE → 実行履歴を表示。`--auto`なら`/git-push --pr`を実行
 - ABORT → 失敗理由を表示
 
 ## 利用可能ワークフロー
