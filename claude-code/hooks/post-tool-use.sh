@@ -54,8 +54,23 @@ case "$TOOL_NAME" in
     fi
     ;;
   
+  "Bash")
+    # cdでgitリポジトリに移動した場合、作業ディレクトリをマーカーに記録
+    COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+    SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
+    if [ -n "$COMMAND" ] && [ -n "$SESSION_ID" ]; then
+      CD_TARGET=$(echo "$COMMAND" | grep -oE 'cd [^ &|;]+' | head -1 | sed 's/^cd //' || true)
+      if [ -n "$CD_TARGET" ] && [ -d "$CD_TARGET" ]; then
+        if git -C "$CD_TARGET" rev-parse --git-dir >/dev/null 2>&1; then
+          ABS_PATH=$(cd "$CD_TARGET" && pwd)
+          echo "$ABS_PATH" > "/tmp/claude-wt-${SESSION_ID}"
+        fi
+      fi
+    fi
+    ;;
+
   *)
-    # Edit/Write以外のツールは何もしない
+    # その他のツールは何もしない
     ;;
 esac
 

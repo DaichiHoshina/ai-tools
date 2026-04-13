@@ -97,7 +97,20 @@ function displayStatusLine(data) {
   } catch {
     // ignore
   }
-  const cwd = data.cwd || process.cwd();
+  const fs = require("fs");
+  const launchCwd = data.cwd || process.cwd();
+  // マーカーファイルから実作業ディレクトリを取得
+  let cwd = launchCwd;
+  if (data.session_id) {
+    try {
+      const wtPath = fs
+        .readFileSync(`/tmp/claude-wt-${data.session_id}`, "utf8")
+        .trim();
+      if (wtPath && fs.existsSync(wtPath)) cwd = wtPath;
+    } catch {
+      // no marker
+    }
+  }
   const dirName = path.basename(cwd);
   const branch = getGitBranch(cwd);
   const rawModel = (data.model && data.model.display_name) || "?";
