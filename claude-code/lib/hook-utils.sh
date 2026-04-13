@@ -82,3 +82,54 @@ send_stop_notification() {
       "https://ntfy.sh/${ntfy_topic}" &>/dev/null &
   fi
 }
+
+# git worktreeのmemoryディレクトリをメインリポジトリにシンボリックリンク
+# Usage: ensure_worktree_memory_link "/path/to/worktree"
+ensure_worktree_memory_link() {
+  local target_dir="$1"
+  [[ -z "${target_dir}" ]] && return 0
+
+  local git_dir common_dir
+  git_dir=$(git -C "${target_dir}" rev-parse --git-dir 2>/dev/null) || return 0
+  common_dir=$(git -C "${target_dir}" rev-parse --git-common-dir 2>/dev/null) || return 0
+
+  # 相対パスなら絶対パスに変換
+  [[ "${git_dir}" != /* ]] && git_dir="${target_dir}/${git_dir}"
+  [[ "${common_dir}" != /* ]] && common_dir="${target_dir}/${common_dir}"
+
+  # python3でパス正規化（cd+pwdはchpwdフック等で余計な出力が混入する）
+  local abs_git abs_common
+  abs_git=$(python3 -c "import os; print(os.path.realpath('${git_dir}'))")
+  abs_common=$(python3 -c "import os; print(os.path.realpath('${common_dir}'))")
+
+  # worktreeでなければ何もしない
+  [[ "${abs_git}" == "${abs_common}" ]] && return 0
+
+  # メインリポジトリのパス = git-common-dirの親
+  local main_repo
+  main_repo=$(dirname "${abs_common}")
+
+  # パスをプロジェクトIDに変換（/ → -）
+  local wt_id main_id
+  wt_id=$(echo "${target_dir}" | sed 's|/|-|g')
+  main_id=$(echo "${main_repo}" | sed 's|/|-|g')
+
+  local projects_dir="${HOME}/.claude/projects"
+  local wt_mem="${projects_dir}/${wt_id}/memory"
+  local main_mem="${projects_dir}/${main_id}/memory"
+
+  # 既にシンボリックリンクなら何もしない
+  [[ -L "${wt_mem}" ]] && return 0
+
+  # メインのmemoryディレクトリを確保
+  mkdir -p "${main_mem}"
+  mkdir -p "${projects_dir}/${wt_id}"
+
+  # 既存memoryがあればメインに移動
+  if [[ -d "${wt_mem}" ]]; then
+    cp -rn "${wt_mem}/"* "${main_mem}/" 2>/dev/null || true
+    rm -rf "${wt_mem}"
+  fi
+
+  ln -s "${main_mem}" "${wt_mem}"
+}

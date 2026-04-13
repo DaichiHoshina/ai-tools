@@ -79,6 +79,10 @@ if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]]; then
   done
 fi
 
+# --- Worktree Memory Symlink ---
+_CWD=$(echo "${_SS_INPUT}" | jq -r '.cwd // ""')
+ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true
+
 # --- Analytics: セッション開始記録 ---
 _SS_LIB_DIR="${SCRIPT_DIR}/../lib"
 if [[ -f "${_SS_LIB_DIR}/analytics-writer.sh" ]]; then

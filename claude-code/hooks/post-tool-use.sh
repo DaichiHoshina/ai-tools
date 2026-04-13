@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+
 # JSON入力を読み込む
 INPUT=$(cat)
 
@@ -64,6 +67,8 @@ case "$TOOL_NAME" in
         if git -C "$CD_TARGET" rev-parse --git-dir >/dev/null 2>&1; then
           ABS_PATH=$(cd "$CD_TARGET" && pwd)
           echo "$ABS_PATH" > "/tmp/claude-wt-${SESSION_ID}"
+          # worktreeならmemoryシンボリックリンク作成
+          ensure_worktree_memory_link "$ABS_PATH" 2>/dev/null || true
         fi
       fi
     fi
