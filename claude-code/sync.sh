@@ -387,31 +387,57 @@ check_version() {
 # =============================================================================
 
 usage() {
-    echo "Usage: $0 [to-local|from-local|diff]"
+    echo "Usage: $0 [to-local|from-local|diff] [--yes|-y]"
     echo ""
     echo "  to-local    リポジトリ → ~/.claude/ に反映"
     echo "  from-local  ~/.claude/ → リポジトリ に反映"
     echo "  diff        差分を表示"
+    echo ""
+    echo "Options:"
+    echo "  --yes, -y   確認プロンプトをスキップ"
 }
 
 main() {
+    local mode=""
+    local skip_confirm=false
+
+    # 引数パース
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --yes|-y)
+                skip_confirm=true
+                ;;
+            to-local|from-local|diff)
+                mode="$1"
+                ;;
+            "")
+                ;;
+            *)
+                print_error "不明なコマンド: $1"
+                usage
+                exit 1
+                ;;
+        esac
+        shift
+    done
+
     # バージョンチェック（diff以外）
-    if [ "${1:-}" != "diff" ] && [ -n "${1:-}" ]; then
+    if [ "$mode" != "diff" ] && [ -n "$mode" ]; then
         check_version
     fi
 
-    case "${1:-}" in
+    case "$mode" in
         to-local)
             show_diff
             echo ""
-            if confirm "ローカルに反映しますか？"; then
+            if [ "$skip_confirm" = true ] || confirm "ローカルに反映しますか？"; then
                 sync_to_local
             fi
             ;;
         from-local)
             show_diff
             echo ""
-            if confirm "リポジトリに反映しますか？"; then
+            if [ "$skip_confirm" = true ] || confirm "リポジトリに反映しますか？"; then
                 sync_from_local
             fi
             ;;
@@ -420,11 +446,6 @@ main() {
             ;;
         "")
             usage
-            ;;
-        *)
-            print_error "不明なコマンド: $1"
-            usage
-            exit 1
             ;;
     esac
 }
