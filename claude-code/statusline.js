@@ -121,28 +121,42 @@ function displayStatusLine(data) {
     pctColor = C.green;
   }
 
-  const wtTag = isWorktree(cwd) ? ` ${C.yellow}[wt]` : "";
-  const locPart = `${C.cyan}\u25C8 ${dirName}${C.gray}:${C.branchColor}${branch}${wtTag}${C.R}`;
+  const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
+  const wt = isWorktree(cwd);
+  const wtTag = wt ? ` ${C.yellow}[wt]` : "";
   const modelPart = `${C.modelColor}${model}${C.R}`;
   const pctPart = `${pctColor}${C.bold}${pct}%${C.R}${suffix}`;
-  const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
 
   if (termWidth < 60) {
     const pad = Math.max(0, termWidth - stripAnsi(pctPart).length);
     console.log(" ".repeat(pad) + pctPart);
   } else {
-    const fullText = [locPart, modelPart, pctPart].join(` ${sep} `);
-    const fullLen = stripAnsi(fullText).length;
-    if (fullLen <= termWidth) {
-      const pad = Math.max(0, termWidth - fullLen);
-      console.log(" ".repeat(pad) + fullText);
-    } else {
-      // 2行分割: 1行目=location │ model, 2行目=pct% (単一console.logで\n結合)
-      const line1 = [locPart, modelPart].join(` ${sep} `);
-      const pad1 = Math.max(0, termWidth - stripAnsi(line1).length);
-      const pad2 = Math.max(0, termWidth - stripAnsi(pctPart).length);
-      console.log(" ".repeat(pad1) + line1 + "\n" + " ".repeat(pad2) + pctPart);
+    // 固定部分の長さを計算（"◈ " + ":" + wtTag + " │ model │ pct suffix"）
+    const fixedLen =
+      2 +
+      1 +
+      (wt ? 5 : 0) +
+      3 +
+      stripAnsi(modelPart).length +
+      3 +
+      stripAnsi(pctPart).length;
+    const maxLocLen = termWidth - fixedLen;
+
+    let d = dirName;
+    let b = branch;
+    if (d.length + b.length > maxLocLen && maxLocLen > 0) {
+      // branchを優先的に残し、dirNameを切り詰め
+      const minDir = 3; // "xx…" 最小
+      const bMax = Math.min(b.length, maxLocLen - minDir);
+      const dMax = maxLocLen - bMax;
+      if (dMax < d.length) d = d.slice(0, Math.max(dMax - 1, 1)) + "\u2026";
+      if (bMax < b.length) b = b.slice(0, Math.max(bMax - 1, 1)) + "\u2026";
     }
+
+    const locPart = `${C.cyan}\u25C8 ${d}${C.gray}:${C.branchColor}${b}${wtTag}${C.R}`;
+    const text = [locPart, modelPart, pctPart].join(` ${sep} `);
+    const pad = Math.max(0, termWidth - stripAnsi(text).length);
+    console.log(" ".repeat(pad) + text);
   }
 }
 
