@@ -73,7 +73,7 @@ ON agent_error OR timeout:
 
 ### 3. Agent起動ルール
 
-**通常:**
+**通常（逐次ステップ）:**
 ```
 Agent定義のfrontmatter（---で囲まれた部分）からmodelフィールドを抽出。
 Agent(
@@ -83,8 +83,9 @@ Agent(
   prompt: "{Agent定義本文（frontmatter除く）}\n\n## タスク\n{task}\n\n## 前ステップ結果\n{prev_result}"
 )
 ```
+※逐次ステップではisolation不使用（前ステップの変更を参照する必要があるため）
 
-**parallel:** 単一メッセージで複数Agent並列起動。集約: spec_issue > any_fail > all_pass
+**parallel:** 単一メッセージで複数Agent並列起動。edit modeのAgentには `isolation: "worktree"` を付与し、独立環境で作業させる。集約: spec_issue > any_fail > all_pass。worktreeに変更がある場合、結果のブランチをマージまたはチェリーピックで統合する。
 
 **provider: codex:** Bash toolで`codex`コマンドを実行。未インストール時はpassでスキップ。
 
