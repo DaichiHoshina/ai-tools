@@ -18,6 +18,7 @@ Claude Codeの動作モードをセッション単位で切り替える。
 | git commit/push | 必ず確認 |
 | 設定変更 | 必ず確認 |
 | npm install | 必ず確認 |
+| disableSkillShellExecution | `true`（スキル内シェル実行を無効化） |
 | ユースケース | 本番環境作業、重要なリファクタリング |
 
 ### normal モード（デフォルト）

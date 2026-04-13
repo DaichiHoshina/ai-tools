@@ -281,7 +281,8 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline.js"
+    "command": "~/.claude/statusline.js",
+    "refreshInterval": 10
   },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
