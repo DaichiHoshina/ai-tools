@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: ◈ dir:branch │ Opus 4.6 │ 34%
+// 表示: ◈ dir:branch [wt] │ Opus 4.6 │ 34%  (幅超過時は2行分割)
 
 const path = require("path");
 
@@ -64,6 +64,27 @@ function getGitBranch(cwd) {
 }
 
 /**
+ * ワークツリー内かどうか判定
+ * @param {string} cwd
+ * @returns {boolean}
+ */
+function isWorktree(cwd) {
+  try {
+    const { execSync } = require("child_process");
+    const opts = { cwd, encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] };
+    // 1回のシェル呼び出しで両方取得
+    const out = execSync(
+      'echo "$(git rev-parse --git-dir)\n$(git rev-parse --git-common-dir)"',
+      opts,
+    ).trim();
+    const [gitDir, commonDir] = out.split("\n");
+    return path.resolve(cwd, gitDir) !== path.resolve(cwd, commonDir);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * @param {any} data - Claude Codeから渡されるJSON
  */
 function displayStatusLine(data) {
@@ -100,20 +121,29 @@ function displayStatusLine(data) {
     pctColor = C.green;
   }
 
-  let text;
-  if (termWidth < 60) {
-    text = `${pctColor}${pct}%${C.R}${suffix}`;
-  } else {
-    text = [
-      `${C.cyan}\u25C8 ${dirName}${C.gray}:${C.branchColor}${branch}${C.R}`,
-      `${C.modelColor}${model}${C.R}`,
-      `${pctColor}${C.bold}${pct}%${C.R}${suffix}`,
-    ].join(` ${sep} `);
-  }
+  const wtTag = isWorktree(cwd) ? ` ${C.yellow}[wt]` : "";
+  const locPart = `${C.cyan}\u25C8 ${dirName}${C.gray}:${C.branchColor}${branch}${wtTag}${C.R}`;
+  const modelPart = `${C.modelColor}${model}${C.R}`;
+  const pctPart = `${pctColor}${C.bold}${pct}%${C.R}${suffix}`;
+  const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
 
-  const visibleLen = text.replace(/\x1b\[[0-9;]*m/g, "").length;
-  const pad = Math.max(0, termWidth - visibleLen);
-  console.log(" ".repeat(pad) + text);
+  if (termWidth < 60) {
+    const pad = Math.max(0, termWidth - stripAnsi(pctPart).length);
+    console.log(" ".repeat(pad) + pctPart);
+  } else {
+    const fullText = [locPart, modelPart, pctPart].join(` ${sep} `);
+    const fullLen = stripAnsi(fullText).length;
+    if (fullLen <= termWidth) {
+      const pad = Math.max(0, termWidth - fullLen);
+      console.log(" ".repeat(pad) + fullText);
+    } else {
+      // 2行分割: 1行目=location │ model, 2行目=pct% (単一console.logで\n結合)
+      const line1 = [locPart, modelPart].join(` ${sep} `);
+      const pad1 = Math.max(0, termWidth - stripAnsi(line1).length);
+      const pad2 = Math.max(0, termWidth - stripAnsi(pctPart).length);
+      console.log(" ".repeat(pad1) + line1 + "\n" + " ".repeat(pad2) + pctPart);
+    }
+  }
 }
 
 if (require.main === module) {
@@ -129,5 +159,5 @@ if (require.main === module) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { displayStatusLine, getGitBranch, progressBar };
+  module.exports = { displayStatusLine, getGitBranch, isWorktree, progressBar };
 }
