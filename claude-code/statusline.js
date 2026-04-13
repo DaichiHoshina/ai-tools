@@ -101,7 +101,7 @@ function displayStatusLine(data) {
   const dirName = path.basename(cwd);
   const branch = getGitBranch(cwd);
   const rawModel = (data.model && data.model.display_name) || "?";
-  const model = rawModel.replace(/^Claude\s+/i, "");
+  const model = rawModel.replace(/^Claude\s+/i, "").replace(/\s*\(.*?\)$/, "");
 
   const sep = `${C.darkGray}\u2502${C.R}`;
   const termWidth = process.stdout.columns || 80;
