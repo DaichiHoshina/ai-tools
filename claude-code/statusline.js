@@ -137,12 +137,11 @@ function displayStatusLine(data) {
       const pad = Math.max(0, termWidth - fullLen);
       console.log(" ".repeat(pad) + fullText);
     } else {
-      // 2行分割: 1行目=location │ model, 2行目=pct%
+      // 2行分割: 1行目=location │ model, 2行目=pct% (単一console.logで\n結合)
       const line1 = [locPart, modelPart].join(` ${sep} `);
       const pad1 = Math.max(0, termWidth - stripAnsi(line1).length);
       const pad2 = Math.max(0, termWidth - stripAnsi(pctPart).length);
-      console.log(" ".repeat(pad1) + line1);
-      console.log(" ".repeat(pad2) + pctPart);
+      console.log(" ".repeat(pad1) + line1 + "\n" + " ".repeat(pad2) + pctPart);
     }
   }
 }
