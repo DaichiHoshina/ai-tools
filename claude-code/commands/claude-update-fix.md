@@ -1,97 +1,128 @@
 ---
-allowed-tools: Read, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestion, mcp__serena__*
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestion, mcp__serena__*
 description: Claude Codeアップデート対応 - バージョン差分検出・衝突分析・修正提案
 ---
 
 # /claude-update-fix - Claude Codeアップデート対応
 
-## 実行フロー
+## Phase 1: バージョン差分検出
 
-### Phase 1: バージョン差分検出
+並列実行:
 
 ```bash
-# CLIバージョン（インストール済み）
-claude --version
-
-# 実行中バージョン（現セッション）
-claude doctor 2>&1 | grep "Currently running"
-
-# 確認済みバージョン
-cat claude-code/VERSION
+claude --version                # CLIバージョン
+cat claude-code/VERSION         # 確認済みバージョン
 ```
 
-**重要**: CLIバージョンと実行中バージョンが異なる場合がある（セッション起動後にバイナリ更新された場合）。
-実行中バージョンが古い場合、新機能（Hook等）は次セッションまで使えない旨を警告する。
+差分なし → 「最新確認済み」で終了。差分あり → Phase 2へ。
 
-差分なし → 「最新確認済みです」で終了。
-差分あり → Phase 2へ。
+## Phase 2: CHANGELOG取得・解析
 
-### Phase 2: CHANGELOG取得・解析
-
-CHANGELOGを取得（優先順位順）:
-
+取得（優先順）:
 1. `WebFetch`: https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md
-2. 取得失敗時 → `WebSearch`: "claude code changelog {現在バージョン}"
-3. それも失敗 → `npm view @anthropic-ai/claude-code` で公開情報を確認
+2. `WebSearch`: "claude code changelog {バージョン}"
+3. `npm view @anthropic-ai/claude-code`
 
-確認済みバージョン〜現在バージョン間の変更を抽出し、カテゴリ分類:
+確認済み〜現在バージョン間の変更を抽出。以下のカテゴリに分類:
 
-| カテゴリ | 検索キーワード |
-|---------|--------------|
+| カテゴリ | キーワード |
+|---------|-----------|
 | 新コマンド | command, slash command |
-| 新Hook | hook, event |
+| 新/変更Hook | hook, event, PreCompact, PostCompact |
 | 新設定 | setting, config, option |
 | 破壊的変更 | breaking, removed, deprecated |
 | モデル変更 | model, claude-sonnet, claude-opus |
+| ツール変更 | tool, parameter, EnterWorktree |
+| スキル仕様変更 | skill, description, frontmatter |
 
-### Phase 3: 影響分析
+## Phase 3: アクティブ適応分析
 
-ai-toolsリポジトリとの衝突・影響をチェック:
+各カテゴリについて**具体的な検出→修正案生成**を実行:
 
-| チェック | 方法 | 判定 |
-|---------|------|------|
-| コマンド名衝突 | 新コマンド vs `commands/*.md` | Critical |
-| スキル名衝突 | 新コマンド vs `skills/*/` | Critical |
-| 非推奨Hook | deprecated/removed vs `hooks/*.sh` | Warning |
-| 新Hookイベント | 新hook vs 現在のhooks/ | Info |
-| 新設定項目 | 新setting vs 現在の設定 | Info |
-| モデル変更 | モデル名変更 vs `agents/*.md` | Warning |
+### 3-1. コマンド名衝突チェック
 
-### Phase 4: 修正実行
-
-```
-AskUserQuestion: 修正対象を選択（複数選択可）
-→ 選択された修正を実行
-→ VERSION更新
-→ sync to-local（ai-toolsリポジトリ時）
+```bash
+# 現在のbuilt-inコマンド一覧を取得
+claude --help 2>&1
 ```
 
-## 出力フォーマット
+- `commands/*.md` の各ファイル名と照合
+- 衝突あり → **Critical**: リネーム案を生成（例: `review.md` → `custom-review.md`）
 
-```markdown
-# Claude Code Update Report
+### 3-2. Hook互換性チェック
 
-## バージョン
-確認済み: vX.X.X → 現在: vY.Y.Y（Nバージョン差分）
+CHANGELOGから抽出したHook変更について:
 
-## 影響分析
+| 変更種別 | 検出 | アクション |
+|---------|------|-----------|
+| 新Hookイベント追加 | `hooks/` に対応スクリプトがない | 有用なら新hookスクリプト作成案を生成 |
+| Hook入出力変更 | 既存hookの入出力と不一致 | 既存hookスクリプトの修正案を生成 |
+| Hook新機能（decision blocking等） | 既存hookで活用可能か判定 | 活用案を生成（Info扱い） |
+| Hook非推奨/削除 | `hooks/*.sh` + `templates/settings.json.template` でgrep | **Warning**: 該当hookの修正/削除案 |
 
-### Critical（対応必須）
-- [衝突] /xxx がバンドルコマンドとして追加。カスタム定義の削除/改名が必要
+### 3-3. 設定・テンプレート更新チェック
 
-### Warning（推奨対応）
-- [非推奨] xxx.md がトークン浪費の可能性
-
-### Info（参考情報）
-- [新機能] xxx が利用可能に
-
-## 推奨アクション
-1. [ ] xxx を修正
-2. [ ] VERSION を vY.Y.Y に更新
+```bash
+# 現在のsettingsテンプレートを確認
+cat claude-code/templates/settings.json.template
 ```
+
+- 新設定項目 → テンプレートへの追加案を生成
+- 非推奨設定 → テンプレートからの削除案を生成
+
+### 3-4. モデル名変更チェック
+
+CHANGELOGにモデル変更がある場合:
+
+```bash
+# 旧モデル名の使用箇所を検索
+grep -r "旧モデル名" claude-code/agents/ claude-code/CLAUDE.md claude-code/skills/
+```
+
+- 該当あり → 置換案を生成
+
+### 3-5. 非推奨・削除機能チェック
+
+```bash
+# 非推奨/削除された機能名でリポジトリ全体をgrep
+grep -r "非推奨機能名" claude-code/
+```
+
+- 該当あり → 削除/代替案を生成
+
+### 3-6. スキル仕様変更チェック
+
+- frontmatter制約変更（description文字数上限等）→ `skills/*/skill.md` の更新案
+- 新パラメータ追加 → 活用案（Info扱い）
+
+## Phase 4: 修正実行
+
+### Step 1: 修正案一覧を重要度順に出力
+
+重要度: **Critical**（衝突・破壊） > **Warning**（非推奨） > **Opportunity**（活用可能） > **Info**（参考のみ）
+
+各項目に番号を振り、ファイルパス・変更内容・Before/Afterを明記。
+
+### Step 2: ユーザー確認
+
+AskUserQuestion: 全適用 / Critical+Warningのみ / 個別選択（番号） / VERSION更新のみ
+
+### Step 3: 修正適用 → VERSION更新 → sync
+
+Edit/Writeで修正適用後、`claude-code/VERSION` 更新 + `./claude-code/sync.sh to-local` 実行。
+
+## Phase 5: 変更記録
+
+Serena memoryに更新サマリを保存（`claude-update-YYYYMMDD`）:
+
+保存内容:
+- 旧→新バージョン
+- 適用した修正の一覧
+- 未対応のOpportunity項目（後日検討用）
 
 ## 注意事項
 
+- `claude doctor` は対話的で使えない場合あり。`claude --version` を主に使用
 - 修正実行は必ずユーザー確認後
-- VERSION更新は全修正完了後に実行
-- CHANGELOGが取得できない場合でも、`claude --help`等のローカル情報で分析可能
+- VERSION更新は全修正完了後
+- CHANGELOGが取得できない場合、`claude --help` + ローカル情報で分析可能
