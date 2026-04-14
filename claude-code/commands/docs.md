@@ -7,16 +7,17 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 コードベースから知識を抽出し、Notionに蓄積する。プロジェクト非依存。
 
-## ドキュメントタイプ
+## ドキュメントタイプと連携リソース
 
-| タイプ | キーワード | 内容 |
-|--------|-----------|------|
-| 設計判断 | adr, 設計, why | なぜこの設計にしたか、トレードオフ、代替案 |
-| API仕様 | api, endpoint | エンドポイント、リクエスト/レスポンス、エラー |
-| アーキテクチャ | arch, 構成 | システム構成、データフロー、依存関係 |
-| 障害対応 | incident, 障害 | 根本原因、影響範囲、対応手順、再発防止 |
-| 手順書 | runbook, 手順 | 操作手順、チェックリスト |
-| 変更履歴 | changelog, 変更 | 直近の変更内容、影響範囲、注意点 |
+| タイプ | キーワード | 連携ガイドライン/スキル |
+|--------|-----------|----------------------|
+| 設計判断 | adr, 設計, why | `guidelines/design/clean-architecture.md`, `guidelines/design/domain-driven-design.md` |
+| API仕様 | api, endpoint | Skill(`api-design`) |
+| アーキテクチャ | arch, 構成 | Skill(`clean-architecture-ddd`), `guidelines/common/code-quality-design.md` |
+| 障害対応 | incident, 障害 | Skill(`incident-response`), Skill(`root-cause`) |
+| レシピ | recipe, パターン, tips | `guidelines/common/document-management.md`（❌/✅形式必須） |
+| 手順書 | runbook, 手順 | `guidelines/common/development-process.md` |
+| 変更履歴 | changelog, 変更 | git log/diffから自動抽出 |
 | 自由記述 | （上記以外） | ユーザー指示に従う |
 
 ## フロー
@@ -26,7 +27,16 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 - 引数あり → そのトピックで分析
 - 引数なし → `git log --oneline -10` と `git diff --stat` から直近の変更を提示、ユーザーに選択させる
 
-### Step 2: コード分析
+### Step 2: ガイドライン読み込み
+
+タイプに応じた連携ガイドライン/スキルを読み込む。
+
+- **設計判断**: clean-architecture.md, domain-driven-design.md を読み、設計原則に照らして判断理由を記述
+- **障害対応**: incident-responseスキルのフォーマット（分類→影響範囲→原因→再発防止）に準拠
+- **レシピ**: document-management.md の❌/✅形式を**必ず**使用。コード例5行以内、テーブル優先
+- **API仕様**: api-designスキルのエンドポイント記述規約に準拠
+
+### Step 3: コード分析
 
 ```
 git log / git diff → 変更内容把握
@@ -40,42 +50,56 @@ Grep / Read → 関連コード読解
 - **Impact**: 影響範囲（依存先、利用箇所）
 - **Caveat**: 注意点・既知の制約
 
-### Step 3: Notion検索
+### Step 4: Notion検索
 
 `notion-search` で既存の関連ページを検索。
 
 - 関連ページあり → 更新するか新規作成か確認
 - なし → 新規作成
 
-### Step 4: Notionページ作成/更新
+### Step 5: Notionページ作成/更新
 
 `notion-create-pages` または `notion-update-page` で投稿。
 
-ページ構造:
-```markdown
-# {タイトル}
+タイプ別テンプレート:
 
-## 概要
-1-3行のサマリー
-
-## 背景・経緯
-なぜこの変更/設計が必要だったか
-
-## 詳細
-技術的な内容（コードブロック、図表含む）
-
-## 影響範囲
-関連するシステム・モジュール
-
-## 注意点・制約
-運用上の注意、既知の制限
-
-## 参考
-- コミット: {hash}
-- PR: {url}（あれば）
+**設計判断（ADR）**:
+```
+## ステータス: 承認済み
+## コンテキスト: 何が問題だったか
+## 決定: 何を選んだか
+## 代替案: 他に何を検討したか
+## 結果: この決定による影響
 ```
 
-### Step 5: URL出力
+**障害対応**:
+```
+## 概要: 1行サマリー
+## タイムライン: 発生→検知→対応→復旧
+## 根本原因: 5 Whys分析
+## 影響範囲: ユーザー/システムへの影響
+## 再発防止: 具体的アクション
+```
+
+**レシピ**:
+```
+## パターン名
+| ❌ 避ける | ✅ 使う | 理由 |
+|----------|---------|------|
+| 悪い例 | 良い例 | 1行 |
+**Why**: 背景説明（1行）
+```
+
+**共通フッター**（全タイプ）:
+```
+## 参考
+- リポジトリ: {repo}
+- コミット: {hash}
+- PR: {url}（あれば）
+- 作成日: {date}
+```
+
+### Step 6: URL出力
 
 作成/更新したNotionページのURLを表示。
 
@@ -87,10 +111,11 @@ Grep / Read → 関連コード読解
 | `--update <url>` | 既存ページを更新 |
 | `--dry` | Notion投稿せずプレビューのみ |
 
-## 注意
+## 品質ガード
 
-- Notion投稿前にユーザーにプレビューを見せて確認を取る
-- コード内の秘匿情報（トークン、パスワード）はNotionに含めない
-- Mermaid図はNotionのコードブロック（mermaid指定）で記述
+- **秘匿情報禁止**: APIキー、パスワード、実URLはプレースホルダーに置換（`guidelines/common/document-management.md` セキュリティ節準拠）
+- **コード例**: 5行以内（document-management.md ルール）
+- **投稿前確認**: ユーザーにプレビューを見せて承認を得る
+- **Mermaid図**: Notionのコードブロック（mermaid指定）で記述
 
 ARGUMENTS: $ARGUMENTS
