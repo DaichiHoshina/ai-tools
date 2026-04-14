@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 
 # codexをiTerm2の新タブで起動する
 # Claude Code内から ! codex-open "レビューして" で使用
@@ -8,13 +8,19 @@ set -uo pipefail
 PROMPT="${*:-直近の変更をレビューして}"
 CWD="$(pwd)"
 
-osascript <<APPLESCRIPT
-tell application "iTerm2"
+# AppleScript内で安全に展開するためエスケープ
+ESCAPED_CWD="${CWD//\\/\\\\}"
+ESCAPED_CWD="${ESCAPED_CWD//\"/\\\"}"
+ESCAPED_PROMPT="${PROMPT//\\/\\\\}"
+ESCAPED_PROMPT="${ESCAPED_PROMPT//\"/\\\"}"
+
+osascript -e "
+tell application \"iTerm2\"
     tell current window
         create tab with default profile
         tell current session
-            write text "cd ${CWD} && codex \"${PROMPT}\""
+            write text \"cd \\\"${ESCAPED_CWD}\\\" && codex \\\"${ESCAPED_PROMPT}\\\"\"
         end tell
     end tell
 end tell
-APPLESCRIPT
+"
