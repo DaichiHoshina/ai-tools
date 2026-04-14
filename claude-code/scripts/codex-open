@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# codexをiTerm2の新タブで起動する
+# Claude Code内から ! codex-open "レビューして" で使用
+# TTYが必要なcodex対話モードをClaude Codeから起動するためのラッパー
+
+PROMPT="${*:-直近の変更をレビューして}"
+CWD="$(pwd)"
+
+osascript <<APPLESCRIPT
+tell application "iTerm2"
+    tell current window
+        create tab with default profile
+        tell current session
+            write text "cd ${CWD} && codex \"${PROMPT}\""
+        end tell
+    end tell
+end tell
+APPLESCRIPT

@@ -199,7 +199,7 @@ finalize_installation() {
 
     # ~/bin にCLIツールのシンボリックリンクを作成
     mkdir -p "$HOME/bin"
-    for cmd in "$CLAUDE_DIR/scripts/codex-review"; do
+    for cmd in "$CLAUDE_DIR/scripts/codex-review" "$CLAUDE_DIR/scripts/codex-open"; do
         if [ -f "$cmd" ]; then
             local cmd_name
             cmd_name=$(basename "$cmd")
