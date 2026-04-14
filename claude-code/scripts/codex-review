@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# codex review ラッパー: レビュー結果のみ抽出して出力
+# 使い方:
+#   codex-review                    # --uncommitted or --commit HEAD 自動判定
+#   codex-review --base main        # mainとの差分
+#   codex-review --commit HEAD~3    # 特定コミット
+#   codex-review "セキュリティ重視で" # カスタム指示
+
+TMPFILE=$(mktemp)
+trap 'rm -f "$TMPFILE"' EXIT
+
+# 引数なし → 未コミット変更の有無で自動判定
+if [[ $# -eq 0 ]]; then
+  if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+    ARGS=("--uncommitted")
+  else
+    ARGS=("--commit" "HEAD")
+  fi
+else
+  ARGS=("$@")
+fi
+
+echo "codex review ${ARGS[*]} ..." >&2
+
+# codex review実行、stdout+stderrを両方キャプチャ
+codex review "${ARGS[@]}" > "$TMPFILE" 2>&1 || true
+
+# レビュー結果を抽出
+# codex reviewの出力: ツール実行ログ(exec/succeeded/ERROR) → レビュー本文
+# 最後のツールログ行以降がレビュー結果
+LAST_LOG_LINE=$(grep -n -E "^\s*(succeeded in |exec$|ERROR |^ succeeded)" "$TMPFILE" | tail -1 | cut -d: -f1 || echo "")
+
+if [[ -n "$LAST_LOG_LINE" && "$LAST_LOG_LINE" -gt 0 ]] 2>/dev/null; then
+  RESULT=$(tail -n +"$((LAST_LOG_LINE + 1))" "$TMPFILE" | sed '/^[[:space:]]*$/d')
+  if [[ -n "$RESULT" ]]; then
+    echo "$RESULT"
+  else
+    # ログ行以降が空 = レビュー結果がログ行の直前にある可能性
+    # "Review comment:" を探す
+    grep -A 1000 "Review comment\|review comment\|LGTM\|No issues\|no issues" "$TMPFILE" || cat "$TMPFILE"
+  fi
+else
+  # ツールログが見つからない → 全体がレビュー結果
+  cat "$TMPFILE"
+fi

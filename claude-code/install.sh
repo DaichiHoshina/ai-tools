@@ -197,6 +197,17 @@ finalize_installation() {
         generate_mcp_json "$SCRIPT_DIR"
     fi
 
+    # ~/bin にCLIツールのシンボリックリンクを作成
+    mkdir -p "$HOME/bin"
+    for cmd in "$CLAUDE_DIR/scripts/codex-review"; do
+        if [ -f "$cmd" ]; then
+            local cmd_name
+            cmd_name=$(basename "$cmd")
+            ln -sf "$cmd" "$HOME/bin/$cmd_name"
+            print_success "~/bin/$cmd_name をリンクしました"
+        fi
+    done
+
     print_success "最終処理が完了しました"
 }
 
