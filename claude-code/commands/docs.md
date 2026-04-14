@@ -1,81 +1,96 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
-description: ドキュメント作成 - README、API ドキュメント、アーキテクチャ図などを作成
+allowed-tools: Read, Glob, Grep, Bash, mcp__serena__*, mcp__claude_ai_Notion__*
+description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 ---
 
-## /docs - ドキュメント作成モード
+## /docs - ナレッジ蓄積コマンド
 
-**目的**: プロジェクトのドキュメントを作成・更新する
+コードベースから知識を抽出し、Notionに蓄積する。プロジェクト非依存。
 
-## Auto Language Detection
+## ドキュメントタイプ
 
-プロジェクトの言語を自動検出し、対応するガイドラインを読み込む:
+| タイプ | キーワード | 内容 |
+|--------|-----------|------|
+| 設計判断 | adr, 設計, why | なぜこの設計にしたか、トレードオフ、代替案 |
+| API仕様 | api, endpoint | エンドポイント、リクエスト/レスポンス、エラー |
+| アーキテクチャ | arch, 構成 | システム構成、データフロー、依存関係 |
+| 障害対応 | incident, 障害 | 根本原因、影響範囲、対応手順、再発防止 |
+| 手順書 | runbook, 手順 | 操作手順、チェックリスト |
+| 変更履歴 | changelog, 変更 | 直近の変更内容、影響範囲、注意点 |
+| 自由記述 | （上記以外） | ユーザー指示に従う |
 
-| 検出ファイル | 言語 | ガイドライン |
-|-------------|------|-------------|
-| `go.mod` | Go | `~/.claude/guidelines/languages/golang.md` |
-| `package.json` + `tsconfig.json` | TypeScript | `~/.claude/guidelines/languages/typescript.md` |
-| `next.config.*` | Next.js/React | `~/.claude/guidelines/languages/nextjs-react.md` |
+## フロー
 
-**検出順序**: next.config → tsconfig → go.mod
+### Step 1: 対象特定
 
-## Document Types
+- 引数あり → そのトピックで分析
+- 引数なし → `git log --oneline -10` と `git diff --stat` から直近の変更を提示、ユーザーに選択させる
 
-### 1. README.md
-- プロジェクト概要
-- セットアップ手順
-- 使い方
-- ライセンス
+### Step 2: コード分析
 
-### 2. API Documentation
-- エンドポイント一覧
-- リクエスト・レスポンス例
-- エラーコード
-- 認証方法
+```
+git log / git diff → 変更内容把握
+Grep / Read → 関連コード読解
+```
 
-### 3. Architecture Documentation
-- システムアーキテクチャ図 (Mermaid)
-- データフロー図
-- ER図（データベース設計）
-- コンポーネント構成
+抽出する情報:
+- **What**: 何が変わったか（差分サマリー）
+- **Why**: なぜ変えたか（コミットメッセージ、PR説明）
+- **How**: どう実装したか（主要ロジック）
+- **Impact**: 影響範囲（依存先、利用箇所）
+- **Caveat**: 注意点・既知の制約
 
-### 4. Developer Guide
-- 開発環境セットアップ
-- コーディング規約
-- テスト方法
-- デプロイ手順
+### Step 3: Notion検索
 
-## Execution
+`notion-search` で既存の関連ページを検索。
 
-1. **Detect** project language and read guideline
-2. **Analyze** codebase with Serena MCP
-   - プロジェクト構造を把握
-   - 主要なシンボル・モジュールを特定
-   - 依存関係を分析
-3. **Determine** document type
-   - ユーザーに何のドキュメントを作成するか確認
-4. **Create** document
-   - 既存コードから情報を抽出
-   - 適切なフォーマットで記述
-   - コードブロック・図表を活用
-5. **Review** with user
-   - ドキュメント案を提示
-   - フィードバックを反映
+- 関連ページあり → 更新するか新規作成か確認
+- なし → 新規作成
 
-## Writing Standards
+### Step 4: Notionページ作成/更新
 
-- **明確**: 技術的に正確で分かりやすい
-- **簡潔**: 冗長な説明を避ける
-- **具体的**: 実例・コード例を含める
-- **一貫性**: 用語・フォーマットを統一
-- **完全性**: 必要な情報を網羅
+`notion-create-pages` または `notion-update-page` で投稿。
 
-**Mermaid 図の活用**:
-- システム構成図
-- シーケンス図
-- クラス図
-- フローチャート
+ページ構造:
+```markdown
+# {タイトル}
 
-**注意**: ドキュメント作成前に必ずユーザーに確認を取る
+## 概要
+1-3行のサマリー
 
-Use Serena MCP for code analysis and information extraction.
+## 背景・経緯
+なぜこの変更/設計が必要だったか
+
+## 詳細
+技術的な内容（コードブロック、図表含む）
+
+## 影響範囲
+関連するシステム・モジュール
+
+## 注意点・制約
+運用上の注意、既知の制限
+
+## 参考
+- コミット: {hash}
+- PR: {url}（あれば）
+```
+
+### Step 5: URL出力
+
+作成/更新したNotionページのURLを表示。
+
+## オプション
+
+| オプション | 説明 |
+|-----------|------|
+| `--parent <url>` | Notionの親ページURL指定 |
+| `--update <url>` | 既存ページを更新 |
+| `--dry` | Notion投稿せずプレビューのみ |
+
+## 注意
+
+- Notion投稿前にユーザーにプレビューを見せて確認を取る
+- コード内の秘匿情報（トークン、パスワード）はNotionに含めない
+- Mermaid図はNotionのコードブロック（mermaid指定）で記述
+
+ARGUMENTS: $ARGUMENTS
