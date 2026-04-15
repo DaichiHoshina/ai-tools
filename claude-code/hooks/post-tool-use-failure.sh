@@ -19,7 +19,7 @@ ERROR=$(echo "${INPUT}" | jq -r '.error // .tool_input // "no details"' 2>/dev/n
 echo "[${TIMESTAMP}] FAIL: ${TOOL_NAME} | ${ERROR}" >> "${LOG_FILE}"
 
 # ログファイルが1000行超えたら古い行を削除
-if [ "$(wc -l < "${LOG_FILE}")" -gt 1000 ]; then
+if [ "$(wc -l < "${LOG_FILE}" | tr -d ' ')" -gt 1000 ]; then
   tail -500 "${LOG_FILE}" > "${LOG_FILE}.tmp"
   mv "${LOG_FILE}.tmp" "${LOG_FILE}"
 fi
