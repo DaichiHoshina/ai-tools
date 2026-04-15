@@ -7,7 +7,11 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 コードベースから知識を抽出し、Notionに蓄積する。プロジェクト非依存。
 
-**必読**: Notion投稿時は `guidelines/common/notion-writing.md` に従うこと（構成・見出し・文体・表記ルール）。
+**必読**: Notion投稿時は以下のガイドラインに従うこと:
+- `guidelines/common/notion-writing.md` — 構成・見出し・文体・表記ルール（コア）
+- `guidelines/common/notion-design.md` — デザインパターン
+- `guidelines/common/notion-database.md` — DB設計・テンプレート
+- `guidelines/common/notion-operations.md` — AI活用・権限・外部連携
 
 ## ドキュメントタイプと連携リソース
 
