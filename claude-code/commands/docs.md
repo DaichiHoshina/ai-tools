@@ -21,7 +21,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 | API仕様 | api, endpoint | Skill(`api-design`) |
 | アーキテクチャ | arch, 構成 | Skill(`clean-architecture-ddd`), `guidelines/common/code-quality-design.md` |
 | 障害対応 | incident, 障害 | Skill(`incident-response`), Skill(`root-cause`) |
-| レシピ | recipe, パターン, tips | `guidelines/common/document-management.md`（❌/✅形式必須） |
+| レシピ | recipe, パターン, tips | `guidelines/common/documentation-strategy.md`（❌/✅形式必須） |
 | 手順書 | runbook, 手順 | `guidelines/common/development-process.md` |
 | 変更履歴 | changelog, 変更 | git log/diffから自動抽出 |
 | 自由記述 | （上記以外） | ユーザー指示に従う |
@@ -39,7 +39,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 - **設計判断**: clean-architecture.md, domain-driven-design.md を読み、設計原則に照らして判断理由を記述
 - **障害対応**: incident-responseスキルのフォーマット（分類→影響範囲→原因→再発防止）に準拠
-- **レシピ**: document-management.md の❌/✅形式を**必ず**使用。コード例5行以内、テーブル優先
+- **レシピ**: documentation-strategy.md の❌/✅形式を**必ず**使用。コード例5行以内、テーブル優先
 - **API仕様**: api-designスキルのエンドポイント記述規約に準拠
 
 ### Step 3: コード分析
@@ -119,8 +119,8 @@ Grep / Read → 関連コード読解
 
 ## 品質ガード
 
-- **秘匿情報禁止**: APIキー、パスワード、実URLはプレースホルダーに置換（`guidelines/common/document-management.md` セキュリティ節準拠）
-- **コード例**: 5行以内（document-management.md ルール）
+- **秘匿情報禁止**: APIキー、パスワード、実URLはプレースホルダーに置換（`guidelines/common/documentation-strategy.md` セキュリティ節準拠）
+- **コード例**: 5行以内（documentation-strategy.md ルール）
 - **投稿前確認**: ユーザーにプレビューを見せて承認を得る
 - **Mermaid図**: Notionのコードブロック（mermaid指定）で記述
 
