@@ -237,3 +237,56 @@ run_detect_from_keywords() {
   [ "$langs_count" -eq 0 ]
   [ "$skills_count" -eq 0 ]
 }
+
+# =============================================================================
+# 正常系テスト: 監視・インシデント系検出
+# =============================================================================
+
+@test "detect-from-keywords: detects incident-response from 'monitoring' keyword" {
+  run run_detect_from_keywords 'monitoring設定を確認して'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_incident=$(echo "$output" | jq '.skills | map(select(. == "incident-response")) | length > 0')
+  [ "$has_incident" = "true" ]
+}
+
+@test "detect-from-keywords: detects incident-response from 'slo' keyword" {
+  run run_detect_from_keywords 'slo burn rateアラート対応'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_incident=$(echo "$output" | jq '.skills | map(select(. == "incident-response")) | length > 0')
+  [ "$has_incident" = "true" ]
+}
+
+@test "detect-from-keywords: detects incident-response from 'アラート' keyword" {
+  run run_detect_from_keywords 'アラート対応のrunbook確認'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_incident=$(echo "$output" | jq '.skills | map(select(. == "incident-response")) | length > 0')
+  [ "$has_incident" = "true" ]
+}
+
+# =============================================================================
+# 正常系テスト: 非同期ジョブ系検出
+# =============================================================================
+
+@test "detect-from-keywords: detects backend-dev from 'worker' keyword" {
+  run run_detect_from_keywords 'workerのジョブを追加'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
+  [ "$has_backend" = "true" ]
+}
+
+@test "detect-from-keywords: detects backend-dev from 'キュー' keyword" {
+  run run_detect_from_keywords 'キューの設計パターン確認'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
+  [ "$has_backend" = "true" ]
+}
