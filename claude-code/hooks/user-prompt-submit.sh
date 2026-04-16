@@ -61,17 +61,22 @@ fi
 
 prompt_lower=$(echo "$prompt" | tr '[:upper:]' '[:lower:]')
 
-# === Analytics: スラッシュコマンド追跡 ===
+# === スラッシュコマンドは検出スキップ（analytics追跡のみ） ===
 if [[ "$prompt" == /* ]]; then
     _CMD_NAME=$(echo "$prompt" | sed 's|^/\([a-zA-Z_-]*\).*|\1|')
-    if [[ -n "${_CMD_NAME}" ]]; then
-        if [[ -f "${LIB_DIR}/analytics-writer.sh" ]]; then
-            source "${LIB_DIR}/analytics-writer.sh"
-            _CMD_SESSION_ID=$(echo "$input" | jq -r '.session_id // "unknown"')
-            _CMD_PROJECT=$(basename "$(echo "$input" | jq -r '.cwd // "."')")
-            analytics_insert_tool_event "${_CMD_SESSION_ID}" "${_CMD_PROJECT}" "SlashCommand" "${_CMD_NAME}" 2>/dev/null || true
-        fi
+    if [[ -n "${_CMD_NAME}" && -f "${LIB_DIR}/analytics-writer.sh" ]]; then
+        source "${LIB_DIR}/analytics-writer.sh"
+        _CMD_SESSION_ID=$(echo "$input" | jq -r '.session_id // "unknown"')
+        _CMD_PROJECT=$(basename "$(echo "$input" | jq -r '.cwd // "."')")
+        analytics_insert_tool_event "${_CMD_SESSION_ID}" "${_CMD_PROJECT}" "SlashCommand" "${_CMD_NAME}" 2>/dev/null || true
     fi
+    # スラッシュコマンドはスキル/言語検出不要 → 早期リターン
+    if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
+        jq -n --arg msg "${_AUTO_COMPACT_MSG}" '{"systemMessage": $msg}'
+    else
+        echo '{}'
+    fi
+    exit 0
 fi
 
 # === 検出結果格納 ===

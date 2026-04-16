@@ -29,8 +29,11 @@ TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 LOG_DIR="${HOME}/.claude/logs"
 mkdir -p "$LOG_DIR"
 
-# イベントログに記録
+# イベントログに記録（1000行超でローテーション）
 LOG_FILE="${LOG_DIR}/agent-team-events.log"
+if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE" | tr -d ' ') -gt 1000 ]]; then
+  tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
+fi
 echo "[${TIMESTAMP}] IDLE | teammate=${TEAMMATE_NAME} | team=${TEAM_NAME}" >> "$LOG_FILE"
 
 # idle回数カウント（同一teammate_nameの直近のIDLEイベント数）

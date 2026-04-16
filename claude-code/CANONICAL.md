@@ -149,16 +149,6 @@ AI-THINKING-ESSENTIALS（拡張子なし）
 
 **関連ドキュメント**:
 - `claude-code/commands/flow.md` - 実装例
-- `claude-code/agents/workflow-orchestrator.md` - 自動判定ロジック
-
----
-
-## 🚫 廃止・統合予定
-
-| ドキュメント | 理由 | 統合先 |
-|-------------|------|--------|
-| `claude-code/common/guardrails-theory.md` | 内容重複（統合済み） | `guidelines/common/guardrails.md` |
-| `category-theory/GUARDRAILS.md` | 存在しない | （削除済み） |
 
 ---
 

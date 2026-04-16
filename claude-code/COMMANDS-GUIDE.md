@@ -1,6 +1,6 @@
 # Commands Guide - コマンド使い分けガイド
 
-Claude Codeの29コマンドの使い分けとベストプラクティス。
+Claude Codeの27コマンドの使い分けとベストプラクティス。
 
 ## 📌 推奨: Core 3コマンド
 
@@ -37,7 +37,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 
 | コマンド | 用途 | タイミング |
 |---------|------|-----------|
-| **`/commit`** | コミットメッセージ自動生成 | 実装完了後 |
+| **`/git-push`** | コミット→push→PR作成 | 実装完了後 |
 | **`/git-push`** | commit→push→PR/MR一括 | 完成してPR作成まで一気に |
 | **`/plan`** | 設計・計画のみ | 大規模実装前の設計検討 |
 | **`/diagnose`** | エラー解析・修正提案 | バグ発生時 |
@@ -53,7 +53,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 | コマンド | 用途 | 使用例 |
 |---------|------|--------|
 | `/test` | テストコード作成 | 既存コードにテスト追加 |
-| `/tdd` | TDD開発モード | RED-GREEN-REFACTOR サイクル |
+| `/test --tdd` | TDD開発モード | RED-GREEN-REFACTOR サイクル |
 | `/refactor` | リファクタリング | コード整理・改善 |
 | `/lint-test` | ローカルCI相当チェック一括実行 | build/lint/test/typecheck まとめて確認 |
 | `/ui` | UI実装・レビュー・監査統合 | テーマから実装・パフォーマンス検証まで |
@@ -147,7 +147,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 ↓
 /review でレビュー
 ↓
-/commit でコミット
+/git-push でコミット+push
 ```
 
 **良い例**:
@@ -172,9 +172,9 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 
 | 頻度 | コマンド |
 |------|---------|
-| 毎日 | `/flow`, `/dev`, `/review`, `/commit` |
+| 毎日 | `/flow`, `/dev`, `/review`, `/git-push` |
 | 週1-2回 | `/git-push`, `/diagnose`, `/test`, `/lint-test`, `/review-fix-push` |
-| 月1-2回 | `/plan`, `/docs`, `/refactor`, `/explore`, `/tdd`, `/ui` |
+| 月1-2回 | `/plan`, `/docs`, `/refactor`, `/explore`, `/test --tdd`, `/ui` |
 | 稀 | `/prd`, `/brainstorm`, `/analytics`, `/dashboard`, `/retrospective`, `/groove`, その他 |
 
 ---
@@ -187,7 +187,7 @@ Claude Codeの29コマンドの使い分けとベストプラクティス。
 
 ### レベル2: 中級者（1週間）
 - `/dev` と `/flow` の使い分けを理解
-- `/commit` でコミットメッセージ作成
+- `/git-push` でコミット+push+PR作成
 
 ### レベル3: 上級者（1ヶ月）
 - Tier 2コマンド（`/plan`, `/diagnose`）を活用

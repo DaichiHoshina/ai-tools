@@ -22,61 +22,63 @@ require_jq
 _SS_INPUT=$(cat)
 
 # ====================================
-# ハーネス自己診断（非ブロッキング）
+# ハーネス自己診断（24時間キャッシュ）
 # ====================================
 _HARNESS_WARNINGS=()
-
-# 1. 必須hookファイルの存在・実行権限チェック
-_REQUIRED_HOOKS=(
-  "pre-tool-use.sh"
-  "post-tool-use.sh"
-  "permission-denied.sh"
-  "session-start.sh"
-  "stop.sh"
-  "stop-failure.sh"
-)
-for _hook in "${_REQUIRED_HOOKS[@]}"; do
-  _hook_path="${SCRIPT_DIR}/${_hook}"
-  if [[ ! -f "${_hook_path}" ]]; then
-    _HARNESS_WARNINGS+=("hook missing: ${_hook}")
-  elif [[ ! -x "${_hook_path}" ]]; then
-    _HARNESS_WARNINGS+=("hook not executable: ${_hook}")
-  fi
-done
-
-# 2. 必須libファイルの存在チェック
-_REQUIRED_LIBS=(
-  "hook-utils.sh"
-  "analytics-writer.sh"
-)
-_LIB_BASE="${SCRIPT_DIR}/../lib"
-for _lib in "${_REQUIRED_LIBS[@]}"; do
-  if [[ ! -f "${_LIB_BASE}/${_lib}" ]]; then
-    _HARNESS_WARNINGS+=("lib missing: ${_lib}")
-  fi
-done
-
-# 3. settings.json のhook参照先が実在するかチェック
+_DIAG_MSG=""
+_DIAG_CACHE="${HOME}/.claude/cache/harness-diag.cache"
 _SETTINGS_FILE="${HOME}/.claude/settings.json"
-if [[ -f "${_SETTINGS_FILE}" ]]; then
-  while IFS= read -r _hook_cmd; do
-    # ~/ をホームディレクトリに展開
-    _expanded="${_hook_cmd/#\~\//${HOME}/}"
-    if [[ ! -f "${_expanded}" ]]; then
-      _HARNESS_WARNINGS+=("settings.json hook not found: ${_hook_cmd}")
-    elif [[ ! -x "${_expanded}" ]]; then
-      _HARNESS_WARNINGS+=("settings.json hook not executable: ${_hook_cmd}")
-    fi
-  done < <(jq -r '.. | objects | select(.type == "command") | .command // empty' "${_SETTINGS_FILE}" 2>/dev/null)
+
+# キャッシュが24時間以内なら再利用
+_NEED_DIAG=true
+if [[ -f "${_DIAG_CACHE}" ]]; then
+  _CACHE_AGE=$(( $(date +%s) - $(stat -f%m "${_DIAG_CACHE}" 2>/dev/null || echo 0) ))
+  if [[ ${_CACHE_AGE} -lt 86400 ]]; then
+    _DIAG_MSG=$(cat "${_DIAG_CACHE}")
+    _NEED_DIAG=false
+  fi
 fi
 
-# 診断結果を文字列化
-_DIAG_MSG=""
-if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]]; then
-  _DIAG_MSG="${ICON_WARNING} **Harness診断**: ${#_HARNESS_WARNINGS[@]}件の問題検出\n"
-  for _w in "${_HARNESS_WARNINGS[@]}"; do
-    _DIAG_MSG+="  - ${_w}\n"
+if [[ "${_NEED_DIAG}" == "true" ]]; then
+  # 1. 必須hookファイルの存在・実行権限チェック
+  for _hook in pre-tool-use.sh post-tool-use.sh permission-denied.sh session-start.sh stop.sh stop-failure.sh; do
+    _hook_path="${SCRIPT_DIR}/${_hook}"
+    if [[ ! -f "${_hook_path}" ]]; then
+      _HARNESS_WARNINGS+=("hook missing: ${_hook}")
+    elif [[ ! -x "${_hook_path}" ]]; then
+      _HARNESS_WARNINGS+=("hook not executable: ${_hook}")
+    fi
   done
+
+  # 2. 必須libファイルの存在チェック
+  _LIB_BASE="${SCRIPT_DIR}/../lib"
+  for _lib in hook-utils.sh analytics-writer.sh; do
+    if [[ ! -f "${_LIB_BASE}/${_lib}" ]]; then
+      _HARNESS_WARNINGS+=("lib missing: ${_lib}")
+    fi
+  done
+
+  # 3. settings.json のhook参照先チェック
+  if [[ -f "${_SETTINGS_FILE}" ]]; then
+    while IFS= read -r _hook_cmd; do
+      _expanded="${_hook_cmd/#\~\//${HOME}/}"
+      if [[ ! -f "${_expanded}" ]]; then
+        _HARNESS_WARNINGS+=("settings.json hook not found: ${_hook_cmd}")
+      elif [[ ! -x "${_expanded}" ]]; then
+        _HARNESS_WARNINGS+=("settings.json hook not executable: ${_hook_cmd}")
+      fi
+    done < <(jq -r '.. | objects | select(.type == "command") | .command // empty' "${_SETTINGS_FILE}" 2>/dev/null)
+  fi
+
+  # 診断結果を文字列化 & キャッシュ
+  if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]]; then
+    _DIAG_MSG="${ICON_WARNING} **Harness診断**: ${#_HARNESS_WARNINGS[@]}件の問題検出\n"
+    for _w in "${_HARNESS_WARNINGS[@]}"; do
+      _DIAG_MSG+="  - ${_w}\n"
+    done
+  fi
+  mkdir -p "$(dirname "${_DIAG_CACHE}")"
+  printf '%s' "${_DIAG_MSG}" > "${_DIAG_CACHE}"
 fi
 
 # --- Worktree Memory Symlink ---
@@ -108,14 +110,6 @@ if [[ -f "${_COLOR_CONFIG}" ]]; then
     done < <(jq -c '.mappings[]' "${_COLOR_CONFIG}" 2>/dev/null || true)
 fi
 
-# --- Analytics Brief ---
-_HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_REPORT_SCRIPT="${_HOOK_DIR}/../scripts/analytics-report.py"
-_ANALYTICS_BRIEF=""
-if [[ -f "${_REPORT_SCRIPT}" ]]; then
-    _ANALYTICS_BRIEF=$(python3 "${_REPORT_SCRIPT}" --mode brief 2>/dev/null || true)
-fi
-
 # --- 出力組み立て ---
 _SM_PREFIX="${ICON_SUCCESS}"
 if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]]; then
@@ -129,10 +123,6 @@ if [[ -n "${_DIAG_MSG}" ]]; then
 else
     _AC_FULL="${_AC_BASE}"
 fi
-if [[ -n "${_ANALYTICS_BRIEF}" ]]; then
-    _AC_FULL="${_AC_FULL}\n\n${_ANALYTICS_BRIEF}"
-fi
-
 jq -n \
   --arg sm "${_SM_PREFIX} Session初期化完了 [color:${_SESSION_COLOR}]" \
   --arg ac "${_AC_FULL}" \
