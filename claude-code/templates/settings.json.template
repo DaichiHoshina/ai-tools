@@ -125,9 +125,11 @@
       "Read(~/.azure/**)",
       "Read(~/.git-credentials)",
       "Read(~/.docker/config.json)",
-      "Read(**/*token*)",
-      "Edit(**/*token*)",
-      "Write(**/*token*)"
+      "Read(**/*.token)",
+      "Read(**/*_token.json)",
+      "Read(**/*_token.yaml)",
+      "Edit(**/*.token)",
+      "Write(**/*.token)"
     ]
   },
   "hooks": {
