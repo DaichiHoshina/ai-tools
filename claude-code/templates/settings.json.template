@@ -24,6 +24,7 @@
       "Bash(make *)",
       "Bash(gh *)",
       "Bash(cargo *)",
+      "Bash(uv *)",
       "Bash(docker *)",
       "Bash(*--help*)",
       "Bash(*--version*)"
