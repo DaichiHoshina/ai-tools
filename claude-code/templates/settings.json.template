@@ -76,6 +76,20 @@
       "Bash(history -c)",
       "Bash(shred *)",
 
+      "Bash(env)",
+      "Bash(printenv)",
+      "Bash(printenv *)",
+      "Bash(set)",
+      "Bash(export -p)",
+      "Bash(cat /proc/*/environ)",
+      "Bash(*cat*/proc/*)",
+      "Bash(git config --list*)",
+      "Bash(git config -l*)",
+      "Bash(npm config list*)",
+      "Bash(curl*169.254*)",
+      "Bash(wget*169.254*)",
+      "Bash(curl*metadata.google*)",
+
       "Read(.env)",
       "Read(.env.*)",
       "Read(**/.env)",
@@ -105,7 +119,15 @@
       "Read(~/.config/gh/**)",
       "Read(~/.gnupg/**)",
       "Read(~/.netrc)",
-      "Read(~/.npmrc)"
+      "Read(~/.npmrc)",
+      "Read(~/.kube/**)",
+      "Read(~/.gcloud/**)",
+      "Read(~/.azure/**)",
+      "Read(~/.git-credentials)",
+      "Read(~/.docker/config.json)",
+      "Read(**/*token*)",
+      "Edit(**/*token*)",
+      "Write(**/*token*)"
     ]
   },
   "hooks": {
