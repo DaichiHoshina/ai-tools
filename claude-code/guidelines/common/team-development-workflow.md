@@ -80,7 +80,7 @@
 1. 指摘事項を修正
 2. Re-request reviewを押す
 3. Approve後、PR作成者がマージ
-4. main追従が必要な場合は `git merge --no-ff origin/main`（rebase禁止）
+4. main追従ルールは `release-management.md` 参照
 
 ### レビュワーの心得
 
