@@ -75,7 +75,10 @@ Hooksがプロンプトやツール呼び出しに応じて、適切な設定を
 プロンプト: "Go APIのバグを修正してください"
 ↓ UserPromptSubmit Hook
 🔍 Tech stack detected: go | Skills: go-backend
-💡 Recommendation: Run `/load-guidelines` to apply language-specific guidelines
+
+プロンプト: "SLOのburn rateアラート対応"
+↓ UserPromptSubmit Hook
+🔍 Skills: incident-response
 ```
 
 ### スキルとガイドライン
@@ -83,8 +86,10 @@ Hooksがプロンプトやツール呼び出しに応じて、適切な設定を
 技術スタックに応じたガイドラインが自動で適用されます。
 
 - **言語**: Go / TypeScript / Python / Rust / React
-- **設計**: クリーンアーキテクチャ、DDD、マイクロサービス
+- **設計**: クリーンアーキテクチャ、DDD、マイクロサービス、非同期ジョブ設計
 - **インフラ**: Docker / Kubernetes / Terraform / AWS
+- **運用**: 監視・SLO/Burn Rate対応、リリース管理、Runbookテンプレート
+- **品質**: Flakyテスト防止、ドキュメント分類・AI対応ライティング
 
 ---
 
@@ -122,6 +127,14 @@ Hooksがプロンプトやツール呼び出しに応じて、適切な設定を
 ```
 
 Terraform・ECS・Dockerfileのガイドラインが自動適用され、一式を生成。
+
+### 障害対応
+
+```bash
+/diagnose SLOのburn rateアラートが発火した
+```
+
+監視Runbook・インシデント対応ガイドラインが自動適用。アラート種別→原因切り分け→対処→エスカレーション判断まで一貫対応。
 
 ---
 
