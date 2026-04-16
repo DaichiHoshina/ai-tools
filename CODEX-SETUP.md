@@ -32,10 +32,10 @@ ls -la ~/.codex/
 # lib@ -> ~/ai-tools/claude-code/lib/
 
 # 利用可能なリソース
-echo "Agents: 8種類"
-echo "Skills: 24種類"
-echo "Guidelines: 29種類"
-echo "Commands: 19種類"
+echo "Agents: 7種類"
+echo "Skills: 22種類"
+echo "Guidelines: 48種類"
+echo "Commands: 29種類"
 ```
 
 ## 手動セットアップ（Level 3）

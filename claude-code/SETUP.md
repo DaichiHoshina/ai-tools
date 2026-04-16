@@ -137,6 +137,6 @@ Bash タイムアウト延長（`~/.claude/settings.json`）:
 - [ ] install.sh 実行完了
 - [ ] Serena MCP インストール
 - [ ] Codex インストール
-- [ ] Hooks 動作確認（6つ全て）
+- [ ] Hooks 動作確認（主要Hook）
 - [ ] 通知音設定（オプション）
 - [ ] `/serena オンボーディング` 成功
