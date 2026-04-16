@@ -97,8 +97,8 @@ Agent(
 
 ### 5. 完了
 
-- COMPLETE → 実行履歴を表示。`--auto`なら`/git-push --pr`を実行
-- ABORT → 失敗理由を表示
+- COMPLETE → 実行履歴を表示。`--auto`なら`/git-push --pr`を実行 → PushNotification（`"[groove] {workflow}: {task} 完了"`）
+- ABORT → 失敗理由を表示 → PushNotification（`"[groove] {workflow} ABORT: {理由}"`）
 
 ## 利用可能ワークフロー
 
