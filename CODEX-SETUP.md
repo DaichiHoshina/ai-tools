@@ -35,7 +35,7 @@ ls -la ~/.codex/
 echo "Agents: 7種類"
 echo "Skills: 22種類"
 echo "Guidelines: 48種類"
-echo "Commands: 29種類"
+echo "Commands: 30種類"
 ```
 
 ## 手動セットアップ（Level 3）
