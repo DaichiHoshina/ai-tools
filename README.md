@@ -18,7 +18,7 @@
 /commit                             → diff分析、コミットメッセージ生成
 ```
 
-他にも `/test`, `/refactor`, `/explore`, `/docs`, `/flow` など27コマンドを収録。
+他にも `/test`, `/refactor`, `/explore`, `/docs`, `/flow` など29コマンドを収録。
 
 ---
 
@@ -44,11 +44,11 @@ cp .mcp.json.example .mcp.json
 ```
 ai-tools/
 ├── claude-code/
-│   ├── commands/        # 27コマンド（/dev, /review, /plan, /prd ...）
-│   ├── skills/          # 20スキル（レビュー、開発、インフラ、ユーティリティ）
-│   ├── agents/          # 9エージェント（PO, Manager, Developer ...）
-│   ├── guidelines/      # 35ガイドライン + 8サマリー
-│   ├── hooks/           # 12イベントHook
+│   ├── commands/        # 29コマンド（/dev, /review, /plan, /prd ...）
+│   ├── skills/          # 22スキル（レビュー、開発、インフラ、ユーティリティ）
+│   ├── agents/          # 7エージェント（PO, Manager, Developer ...）
+│   ├── guidelines/      # 47ガイドライン（言語・設計・インフラ・運用）
+│   ├── hooks/           # 16イベントHook
 │   ├── output-styles/   # 返信フォーマット定義
 │   ├── scripts/         # ユーティリティスクリプト
 │   ├── templates/       # テンプレート

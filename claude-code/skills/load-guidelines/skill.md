@@ -127,6 +127,8 @@ requires-guidelines:
 
 **設計**: `clean-architecture`, `ddd` → `design/`
 
+**運用**: `operations` → `operations/monitoring-runbook.md`
+
 ### 自動読み込みフロー
 
 1. Skill呼び出し時、フロントマターの`requires-guidelines`を確認

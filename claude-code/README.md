@@ -1,34 +1,27 @@
 # Claude Code Hooks
 
-**バージョン**: v2.1.71 | **最終更新**: 2026-03-07
-
-Claude Code 1.0.82+ の Hooks 機能を活用した自動化スクリプト群。CLAUDE.md の 8原則を自動適用します。
+Claude Code の Hooks 機能を活用した自動化スクリプト群（16スクリプト）。
 
 ## 実装済みフック
 
 | フック | トリガー | 主な機能 |
 |--------|---------|---------|
-| `session-start.sh` | セッション開始時 | Serena MCP 確認、8原則リマインダー |
-| `user-prompt-submit.sh` ★ | プロンプト送信時 | 技術スタック自動検出（Go/TS/React等）、スキル推奨 |
+| `session-start.sh` | セッション開始時 | Serena MCP確認、リマインダー |
+| `user-prompt-submit.sh` ★ | プロンプト送信時 | 技術スタック自動検出、スキル推奨 |
 | `pre-tool-use.sh` | ツール実行前 | 危険コマンド検出、型安全リマインダー |
+| `post-tool-use.sh` | ツール実行後 | 自動フォーマット |
+| `post-tool-use-failure.sh` | ツール失敗後 | エラー対応 |
 | `pre-compact.sh` | コンテキスト圧縮前 | Serena memory保存指示 |
+| `post-compact-reload.sh` | compact後 | メモリ自動復元 |
 | `stop.sh` | タスク完了時 | 完了通知音再生 |
+| `stop-failure.sh` | タスク失敗時 | 失敗通知 |
 | `session-end.sh` | セッション終了時 | セッション統計ログ、通知音再生 |
-
-## セットアップ
-
-```json
-{
-  "hooks": {
-    "SessionStart": {"command": "~/.claude/hooks/session-start.sh"},
-    "UserPromptSubmit": {"command": "~/.claude/hooks/user-prompt-submit.sh"},
-    "PreToolUse": {"command": "~/.claude/hooks/pre-tool-use.sh"},
-    "PreCompact": {"command": "~/.claude/hooks/pre-compact.sh"},
-    "Stop": {"command": "~/.claude/hooks/stop.sh"},
-    "SessionEnd": {"command": "~/.claude/hooks/session-end.sh"}
-  }
-}
-```
+| `setup.sh` | 初期設定 | 環境セットアップ |
+| `permission-denied.sh` | 権限拒否時 | 権限エラー対応 |
+| `subagent-start.sh` | サブエージェント開始 | サブエージェント管理 |
+| `subagent-stop.sh` | サブエージェント終了 | サブエージェント管理 |
+| `task-completed.sh` | タスク完了 | タスク完了処理 |
+| `teammate-idle.sh` | チームメイトアイドル | アイドル検知 |
 
 ## 動作確認
 
@@ -39,22 +32,9 @@ echo '{"tool_name": "Bash", "tool_input": {"command": "npm run lint"}}' | ~/.cla
 echo '{}' | ~/.claude/hooks/stop.sh
 ```
 
-## 8原則との対応
-
-| 原則 | 担当フック |
-|------|----------|
-| 1. mem | UserPromptSubmit |
-| 2. serena | SessionStart, UserPromptSubmit |
-| 3. guidelines | UserPromptSubmit |
-| 4. 自動処理禁止 | PreToolUse |
-| 5. 完了通知 | Stop, SessionEnd |
-| 6. 型安全 | PreToolUse, UserPromptSubmit |
-| 7. コマンド提案 | UserPromptSubmit |
-| 8. 確認済 | PreToolUse, UserPromptSubmit |
-
 ## 利用可能なイベント
 
-`SessionStart`, `PreToolUse`, `PostToolUse`, `Stop`, `SubagentStop`, `PreCompact`, `UserPromptSubmit`, `PermissionRequest`
+`SessionStart`, `SessionEnd`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `SubagentStart`, `SubagentStop`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, `PermissionRequest`, `TaskCompleted`, `TeammateIdle`
 
 ## カスタマイズ
 

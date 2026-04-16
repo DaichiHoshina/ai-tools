@@ -190,6 +190,8 @@ detect_from_keywords() {
     ['brainstorm|ブレスト|設計相談|アイデア出し']=":superpowers:brainstorm"
     ['tdd|test.*driven|red.*green.*refactor|テスト駆動']=":superpowers:test-driven-development"
     ['systematic.*debug|根本原因|デバッグ.*体系']=":superpowers:systematic-debugging"
+    ['monitoring|alert|slo|burn.*rate|runbook|障害対応|アラート']=":incident-response"
+    ['async.*job|queue|worker|job.*pattern|非同期|キュー|ワーカー|dlq|dead.*letter']=":backend-dev"
   )
 
   # set -u対応
