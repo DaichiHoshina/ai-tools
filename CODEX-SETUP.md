@@ -34,7 +34,7 @@ ls -la ~/.codex/
 # 利用可能なリソース
 echo "Agents: 7種類"
 echo "Skills: 22種類"
-echo "Guidelines: 47種類"
+echo "Guidelines: 48種類"
 echo "Commands: 29種類"
 ```
 

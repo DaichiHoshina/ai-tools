@@ -47,7 +47,7 @@ ai-tools/
 │   ├── commands/        # 29コマンド（/dev, /review, /plan, /prd ...）
 │   ├── skills/          # 22スキル（レビュー、開発、インフラ、ユーティリティ）
 │   ├── agents/          # 7エージェント（PO, Manager, Developer ...）
-│   ├── guidelines/      # 47ガイドライン（言語・設計・インフラ・運用）
+│   ├── guidelines/      # 48ガイドライン（言語・設計・インフラ・運用）
 │   ├── hooks/           # 16イベントHook
 │   ├── output-styles/   # 返信フォーマット定義
 │   ├── scripts/         # ユーティリティスクリプト
