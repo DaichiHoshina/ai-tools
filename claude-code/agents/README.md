@@ -10,9 +10,9 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 |------------|-------|------|---------|
 | **reviewer-agent** | opus | レビュー担当 | コード品質・セキュリティ・テストレビュー |
 | **root-cause-analyzer** | opus | 根本原因分析 | バグの5Whys分析・構造的修正提案 |
-| **developer-agent** | sonnet | 実装担当 | コード実装・修正・追加 |
 | **po-agent** | sonnet | 戦略決定担当 | プロダクト戦略・Worktree管理 |
-| **explore-agent** | sonnet | 探索・分析担当 | コードベース調査・並列探索 |
+| **developer-agent** | haiku | 実装担当 | コード実装・修正・追加 |
+| **explore-agent** | haiku | 探索・分析担当 | コードベース調査・並列探索 |
 | **manager-agent** | haiku | タスク分割・配分 | 大規模タスクのサブタスク管理 |
 | **verify-app** | haiku | 検証担当 | ビルド・テスト・lintの統合検証 |
 
