@@ -52,6 +52,44 @@ if ! command -v escape_for_sed &> /dev/null; then
 fi
 
 # =============================================================================
+# gh skill Protection Functions
+# gh skill（GitHub公式 Agent Skills マネージャ）経由でインストールされたスキルを
+# sync.sh の削除から保護する。frontmatter の metadata ブロックに github-repo:
+# が注入されるため、これを検知して退避→復元する。
+# =============================================================================
+
+has_gh_skill_metadata() {
+    local skill_file="$1"
+    [ -f "$skill_file" ] || return 1
+    grep -qE "^[[:space:]]+github-repo:[[:space:]]+https://github\.com/" "$skill_file" 2>/dev/null
+}
+
+preserve_gh_skills() {
+    local dst="$1" bak_dir="$2"
+    [ -d "$dst" ] || return 0
+    local d skill_file
+    for d in "${dst}"/*/; do
+        [ -d "$d" ] || continue
+        skill_file=""
+        [ -f "${d}SKILL.md" ] && skill_file="${d}SKILL.md"
+        [ -z "$skill_file" ] && [ -f "${d}skill.md" ] && skill_file="${d}skill.md"
+        if [ -n "$skill_file" ] && has_gh_skill_metadata "$skill_file"; then
+            mv "$d" "${bak_dir}/"
+        fi
+    done
+}
+
+restore_gh_skills() {
+    local dst="$1" bak_dir="$2"
+    [ -d "$bak_dir" ] || return 0
+    local d
+    for d in "${bak_dir}"/*/; do
+        [ -d "$d" ] || continue
+        mv "$d" "${dst}/"
+    done
+}
+
+# =============================================================================
 # Settings Hooks Diff Check
 # =============================================================================
 
@@ -135,19 +173,33 @@ sync_to_local() {
 
         if [ -e "$src" ]; then
             if [ -d "$src" ]; then
+                # skills のみ gh skill 管理のディレクトリを退避してから削除
+                local gh_bak=""
+                if [ "$item" = "skills" ] && [ -d "$dst" ]; then
+                    gh_bak=$(mktemp -d)
+                    preserve_gh_skills "$dst" "$gh_bak"
+                fi
                 # 例外伝播の明示化（Critical #7対策）
                 if ! rm -rf "${dst:?}"; then
                     print_error "削除失敗: $dst"
+                    [ -n "$gh_bak" ] && rm -rf "$gh_bak"
                     return 1
                 fi
                 if ! cp -r "$src" "$dst"; then
                     print_error "コピー失敗: $src -> $dst"
+                    [ -n "$gh_bak" ] && rm -rf "$gh_bak"
                     return 1
                 fi
                 # hooksディレクトリの場合、テストファイルを除外
                 if [ "$item" = "hooks" ]; then
                     rm -f "$dst"/test-*.sh 2>/dev/null || true
                     print_info "  → テストファイル(test-*.sh)を除外"
+                fi
+                # 退避していた gh skill 管理スキルを復元
+                if [ -n "$gh_bak" ]; then
+                    restore_gh_skills "$dst" "$gh_bak"
+                    rmdir "$gh_bak" 2>/dev/null || true
+                    print_info "  → gh skill 管理スキルを保護"
                 fi
             else
                 if ! cp "$src" "$dst"; then

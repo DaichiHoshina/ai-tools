@@ -93,6 +93,12 @@ SKILL="<skill-name>"; [ -n "$SKILL" ] && rm -rf "$HOME/.claude/skills/$SKILL"
 
 ai-toolsリポジトリのgit管理には載らないため、各マシンで `gh skill install` 再実行する。
 
+## sync.sh 連携
+
+`./claude-code/sync.sh to-local` は `~/.claude/skills/` を削除→ai-tools 側から再配置するが、`gh skill` でインストールしたスキルは frontmatter の `metadata.github-repo` を sync.sh が自動検知して退避→復元する。sync によって消失しない。
+
+検知条件: SKILL.md（または skill.md）の frontmatter に `github-repo: https://github.com/...` が含まれること。手動でインストールしたスキルを保護対象にしたい場合は同じメタデータを付与する。
+
 ## 旧方式（フォールバック）
 
 `gh` v2.90.0未満、または `gh skill` 未対応リポジトリのみ:
