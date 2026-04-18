@@ -124,23 +124,7 @@ needs_input 時に AskUserQuestion で質問、回答を追記して再実行。
 - COMPLETE → 実行履歴表示。`--auto` なら `/git-push --pr` 実行 → PushNotification
 - ABORT → 失敗理由表示 → PushNotification
 
-## スキーマフィールド早見表
+## 参考
 
-| フィールド | 場所 | 説明 |
-|-----------|------|------|
-| `version` | top | スキーマバージョン（現在 `1`） |
-| `defaults.retry` | top | ステップ既定のリトライ回数 |
-| `defaults.timeout` | top | ステップ既定のタイムアウト秒 |
-| `defaults.mode` | top | ステップ既定のモード |
-| `aggregate.priority` | parallel step | 集約優先順位 |
-| `rules[].on: error` | rule | エラー/タイムアウト時遷移先（fallback の後継） |
-
-詳細は `~/.groove/schema.md` を参照。
-
-## 利用可能ワークフロー
-
-| ワークフロー | 説明 |
-|-------------|------|
-| `spec-driven` | 仕様レビュー→Codexレビュー→実装→受入検査→修正→簡素化→検証 |
-| `tdd` | テスト作成→実装→レビュー→修正→簡素化→検証 |
-| `vsdd` | 仕様レビュー→テスト→実装→敵対的レビュー→修正→簡素化→検証 |
+- スキーマ仕様・フィールド定義: `~/.groove/schema.md`
+- 利用可能ワークフロー一覧: `~/.groove/README.md`（または `/groove list`）
