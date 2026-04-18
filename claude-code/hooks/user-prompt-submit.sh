@@ -37,13 +37,13 @@ if ! validate_json "$input"; then
   exit 1
 fi
 
-# === Auto-compact: コンテキスト50%超で自動コンパクト指示 ===
+# === Context usage notice: コンテキスト50%超で /compact 提案を通知 ===
 _CTX_FILE="/tmp/claude-ctx-pct"
 _AUTO_COMPACT_MSG=""
 if [[ -f "${_CTX_FILE}" ]]; then
   _CTX_PCT=$(cat "${_CTX_FILE}" 2>/dev/null || echo "0")
   if [[ "${_CTX_PCT}" =~ ^[0-9]+$ ]] && [[ "${_CTX_PCT}" -ge 50 ]]; then
-    _AUTO_COMPACT_MSG="⚡ AUTO-COMPACT: コンテキスト使用率${_CTX_PCT}%。ユーザーメッセージ処理前に/compactを実行せよ。"
+    _AUTO_COMPACT_MSG="⚠️ コンテキスト使用率${_CTX_PCT}%。次レスポンス冒頭で /compact 実行をユーザーに提案すること（自動実行禁止、承認後に実行）。"
   fi
 fi
 
