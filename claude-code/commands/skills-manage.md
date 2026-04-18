@@ -1,32 +1,36 @@
 ---
 name: skills-manage
-description: コミュニティスキル管理（gh skillベース）。GitHub公式Agent Skillsマネージャ経由で検索・インストール・更新。供給チェーン保護（tree SHA、--pin、provenance）付き。
+description: gh skill ベースのコミュニティスキル管理。検索・インストール・更新（tree SHA/pin/source tracking 付き）。
 ---
 
 # /skills-manage - コミュニティスキル管理
 
-GitHub公式 `gh skill` コマンド（v2.90.0+、preview）で管理。供給チェーン保護（tree SHA検証、バージョンpin、provenanceメタデータ）付き。
+GitHub公式 `gh skill` コマンド（v2.90.0+、preview）で管理。供給チェーン保護（tree SHA検証、バージョンpin、source tracking metadata）付き。
 
 **前提**: `gh` v2.90.0以上（未満なら `brew upgrade gh`）。
 
 ## 使用方法
 
 ```text
-/skills-manage search <query>
+/skills-manage search <query> [--owner <org>]
 /skills-manage preview <owner/repo> <skill>
-/skills-manage install <owner/repo> <skill> [--pin <tag>]
+/skills-manage install <owner/repo> <skill> [--pin <tag>] [--force]
 /skills-manage update [--all | <skill-name>] [--dry-run]
 /skills-manage list
 /skills-manage remove <skill-name>
 ```
+
+`list` / `remove` は `gh skill` に未実装のためローカルで実行する。
 
 ## 実行フロー
 
 ### search
 
 ```bash
-gh skill search "<query>"
+gh skill search "<query>" [--owner <org>]
 ```
+
+`--owner` で信頼済み org に絞り込むと供給チェーン保護に有効。
 
 ### preview
 
@@ -39,13 +43,14 @@ gh skill preview <owner/repo> <skill>
 ### install
 
 ```bash
-gh skill install <owner/repo> <skill> --agent claude-code --scope user [--pin <tag>]
+gh skill install <owner/repo> <skill> --agent claude-code --scope user [--pin <tag>] [--force]
 ```
 
-- インストール先: `~/.claude/skills/<skill-name>/SKILL.md`
-- `--pin <tag>` でバージョン固定（供給チェーン保護）
-- SKILL.md frontmatter に source tracking メタデータ自動注入 → 後から `update` 可能
-- `@version` 記法も可（例: `skill-name@v1.2.0`）
+- `--scope user`（推奨）: `~/.claude/skills/` に配置、全プロジェクト共通
+- `--scope project`（デフォルト）: `<cwd>/.claude/skills/` にリポジトリローカル配置
+- `--pin <tag>` でバージョン固定 or `skill@v1.2.0` 記法
+- `--force` で既存スキル強制上書き
+- SKILL.md frontmatter に source tracking metadata（source repo / git ref / tree SHA）が自動注入される → `update` で差分検知可能
 
 ### update
 
@@ -54,13 +59,11 @@ gh skill update [--all | <skill-name>] [--dry-run]
 ```
 
 - tree SHA比較で差分検知
-- pinされたスキルはスキップ（`--unpin`で解除）
+- pinされたスキルはスキップ（`--unpin` で解除）
 - `--dry-run` で変更プレビュー
 - `--force` でローカル編集を上書き再取得
 
 ### list
-
-gh skill未実装のためローカル列挙:
 
 ```bash
 ls -1 ~/.claude/skills/
@@ -68,10 +71,10 @@ ls -1 ~/.claude/skills/
 
 ### remove
 
-gh skill未実装のためディレクトリ削除（**削除前にユーザー確認必須**）:
+**削除前にユーザー確認必須**。スキル名空文字による事故防止のガード付きで実行:
 
 ```bash
-rm -rf ~/.claude/skills/<skill-name>
+SKILL="<skill-name>"; [ -n "$SKILL" ] && rm -rf "$HOME/.claude/skills/$SKILL"
 ```
 
 ## 対応スキルリポジトリ
@@ -85,18 +88,20 @@ rm -rf ~/.claude/skills/<skill-name>
 
 ## インストール先
 
-`~/.claude/skills/<skill-name>/SKILL.md`
+- `--scope user`（推奨）: `~/.claude/skills/<skill-name>/SKILL.md`
+- `--scope project`: `<cwd>/.claude/skills/<skill-name>/SKILL.md`
 
-- ai-toolsリポジトリのgit管理外。各マシンで再インストール要
-- 既存の `claude-code/skills/community/` 配下は旧方式で管理継続
+ai-toolsリポジトリのgit管理には載らないため、各マシンで `gh skill install` 再実行する。
 
-## 旧方式（deprecated）
+## 旧方式（フォールバック）
 
-gh v2.90.0未満、またはgh skill未対応リポジトリの場合のみ:
+`gh` v2.90.0未満、または `gh skill` 未対応リポジトリのみ:
 
 ```bash
 ./claude-code/scripts/install-community-skill.sh <install|update|list|remove> ...
 ```
+
+gh 普及後は削除予定。
 
 ## 参考
 
