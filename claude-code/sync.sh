@@ -225,9 +225,11 @@ sync_to_local() {
                 fi
             fi
         done
-        if [ -f "$groove_src/config.yaml" ]; then
-            cp "$groove_src/config.yaml" "$groove_dst/"
-        fi
+        for f in config.yaml schema.md README.md; do
+            if [ -f "${groove_src}/${f}" ]; then
+                cp "${groove_src}/${f}" "${groove_dst}/"
+            fi
+        done
         mkdir -p "$groove_dst/runs"
         print_success "groove → ~/.groove/"
     fi
@@ -296,9 +298,11 @@ sync_from_local() {
                 cp "$groove_src/$subdir/"* "$groove_dst/$subdir/" 2>/dev/null || true
             fi
         done
-        if [ -f "$groove_src/config.yaml" ]; then
-            cp "$groove_src/config.yaml" "$groove_dst/"
-        fi
+        for f in config.yaml schema.md README.md; do
+            if [ -f "${groove_src}/${f}" ]; then
+                cp "${groove_src}/${f}" "${groove_dst}/"
+            fi
+        done
         print_success "~/.groove/ → groove/"
     fi
 

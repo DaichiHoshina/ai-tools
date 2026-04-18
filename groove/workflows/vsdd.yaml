@@ -1,18 +1,24 @@
+version: 1
 name: vsdd
-description: VSDD仕様駆動開発（仕様レビュー→テスト→実装→敵対的レビュー→修正→簡素化）
+description: VSDD仕様駆動開発（仕様レビュー→テスト→実装→敵対的レビュー→修正→簡素化→検証）
 max_steps: 30
 loop_limit: 3
+
+defaults:
+  retry: 1
+  timeout: 180
+  mode: readonly  # mode 未指定ステップは readonly として起動
 
 steps:
   - name: spec_review
     agent: spec-reviewer
-    mode: readonly
-    retry: 1
     timeout: 120
     rules:
       - on: pass
         next: test_write
       - on: fail
+        next: ABORT
+      - on: error
         next: ABORT
 
   - name: test_write
@@ -28,6 +34,8 @@ steps:
       - on: needs_input
         next: test_write
         ask_user: true
+      - on: error
+        next: ABORT
 
   - name: implement
     agent: developer
@@ -42,6 +50,8 @@ steps:
       - on: needs_input
         next: implement
         ask_user: true
+      - on: error
+        next: ABORT
 
   - name: adversary_review
     parallel:
@@ -49,7 +59,8 @@ steps:
         mode: readonly
       - agent: ai-reviewer
         mode: readonly
-    timeout: 180
+    aggregate:
+      priority: [spec_issue, any_fail, all_pass]
     rules:
       - on: all_pass
         next: simplify
@@ -57,27 +68,40 @@ steps:
         next: fix
       - on: spec_issue
         next: test_write
+      - on: error
+        next: fix
 
   - name: fix
     agent: fixer
     mode: edit
     retry: 2
     timeout: 300
-    fallback:
-      next: implement
     rules:
       - on: done
         next: adversary_review
       - on: blocked
         next: implement
+      - on: error
+        next: implement
 
   - name: simplify
     agent: simplifier
     mode: edit
-    retry: 1
-    timeout: 180
-    fallback:
-      next: COMPLETE
     rules:
       - on: done
+        next: verify
+      - on: blocked
+        next: verify
+      - on: error
+        next: fix
+
+  - name: verify
+    agent: verifier
+    timeout: 300
+    rules:
+      - on: pass
+        next: COMPLETE
+      - on: fail
+        next: fix
+      - on: error
         next: COMPLETE

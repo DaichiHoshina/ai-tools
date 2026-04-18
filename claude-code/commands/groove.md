@@ -31,79 +31,116 @@ description: 軽量マルチエージェントオーケストレーター。YAML
 
 ## 実行手順
 
-メインAgentが直接ループを回す。外部CLIは使わない。
+メインAgentが直接ループを回す。外部CLIは使わない。スキーマ仕様は `~/.groove/schema.md` 参照。
 
 ### 1. 初期化
 
-YAMLをReadで読み込み、最初のstepから開始。内部変数で状態管理（step_count, loop_count）。
+YAMLをReadで読み込み、最初のstepから開始。
+
+- `version` フィールドを確認（未指定は v0 として警告のみ）
+- `defaults` を抽出。各ステップの未指定フィールドに適用（ステップ値が優先）
+- 内部変数で状態管理（step_count, loop_count, retry_count）
 
 ### 2. ステップ実行ループ
 
-```
+```text
 WHILE current_step != COMPLETE && current_step != ABORT:
   1. step_count >= max_steps → ABORT
   2. loop_count[step] >= loop_limit → ABORT
   3. Agent定義をReadで読み込み
-  4. Agent起動（下記ルール）
-     - timeout定義あり → Agent起動時にtimeout(秒×1000)を設定
-  5. 出力からGROOVE_RESULT:を抽出
+  4. Agent起動（下記ルール、defaults適用済みの値で）
+  5. 出力から GROOVE_RESULT を抽出
      - Agent失敗/タイムアウト時 → retry処理へ
   6. rulesマッチングで次step決定
   7. step_count++, loop_count[step]++
 ```
 
-### 2a. retry/timeout/fallback処理
+### 2a. retry / error処理
 
-```
+```text
 ON agent_error OR timeout:
-  IF retry_count[step] < step.retry (default: 0):
+  IF retry_count[step] < step.retry:
     retry_count[step]++
-    → 同じステップを再実行（step_countは増加）
-  ELSE IF step.fallback defined:
-    → fallback.next で指定されたステップへ遷移
+    → 同じステップを再実行
   ELSE:
-    → rulesの on: blocked にマッチ、なければ ABORT
+    GROOVE_RESULT = error として rules評価
+    → rules の on: error にマッチするnextへ遷移
+    → 該当ルール未定義なら ABORT
 ```
 
-| フィールド | 型 | デフォルト | 説明 |
-|-----------|-----|----------|------|
-| `retry` | int | 0 | 失敗時の最大リトライ回数 |
-| `timeout` | int | なし | ステップのタイムアウト（秒） |
-| `fallback.next` | string | なし | 全リトライ失敗時の遷移先ステップ |
+v0 互換挙動の詳細は `~/.groove/schema.md#移行ルールv0--v1` を参照。
 
 ### 3. Agent起動ルール
 
 **通常（逐次ステップ）:**
-```
-Agent定義のfrontmatter（---で囲まれた部分）からmodelフィールドを抽出。
+
+```text
+Agent定義のfrontmatter から model を抽出。
 Agent(
   subagent_type: "general-purpose",
-  model: frontmatterのmodel値（haiku/sonnet/opus）、なければ省略,
+  model: frontmatter.model（haiku/sonnet/opus）、なければ省略,
   mode: edit→"bypassPermissions" / readonly→"default",
   prompt: "{Agent定義本文（frontmatter除く）}\n\n## タスク\n{task}\n\n## 前ステップ結果\n{prev_result}"
 )
 ```
-※逐次ステップではisolation不使用（前ステップの変更を参照する必要があるため）
 
-**parallel:** 単一メッセージで複数Agent並列起動。edit modeのAgentには `isolation: "worktree"` を付与し、独立環境で作業させる。集約: spec_issue > any_fail > all_pass。worktreeに変更がある場合、結果のブランチをマージまたはチェリーピックで統合する。
+逐次ステップでは isolation 不使用（前ステップの変更参照が必要なため）。
 
-**provider: codex:** Bash toolで`codex`コマンドを実行。未インストール時はpassでスキップ。
+**parallel:**
 
-**ask_user: true:** needs_input時にAskUserQuestionで質問し、回答を追加して再実行。
+単一メッセージで複数Agent並列起動。edit mode のサブステップには `isolation: "worktree"` を自動付与。集約は `aggregate.priority` の先頭にマッチした結果を採用:
+
+```yaml
+aggregate:
+  priority: [spec_issue, any_fail, all_pass]
+```
+
+- `spec_issue`: いずれかの出力が spec_issue
+- `any_fail`: いずれかが fail
+- `all_pass`: 全員 pass
+
+`aggregate` 未定義時のデフォルト priority: `[spec_issue, any_fail, all_pass]`。
+
+worktree に変更が残る場合は親へマージ/チェリーピック統合。変更なしは自動クリーンアップ。
+
+**provider: codex:**
+
+Bash toolで `codex` コマンド実行。未インストール時は error（rules.on:error に従う）。
+
+**ask_user: true:**
+
+needs_input 時に AskUserQuestion で質問、回答を追記して再実行。
 
 ### 4. 結果解析
 
-`GROOVE_RESULT: {値}`を検索。見つからない場合: edit→`done` / readonly→`pass`
+`GROOVE_RESULT: {値}` を検索。見つからない場合:
+
+- edit → `done`
+- readonly → `pass`
+- agent エラー/timeout → `error`
 
 ### 5. 完了
 
-- COMPLETE → 実行履歴を表示。`--auto`なら`/git-push --pr`を実行 → PushNotification（`"[groove] {workflow}: {task} 完了"`）
-- ABORT → 失敗理由を表示 → PushNotification（`"[groove] {workflow} ABORT: {理由}"`）
+- COMPLETE → 実行履歴表示。`--auto` なら `/git-push --pr` 実行 → PushNotification
+- ABORT → 失敗理由表示 → PushNotification
+
+## スキーマフィールド早見表
+
+| フィールド | 場所 | 説明 |
+|-----------|------|------|
+| `version` | top | スキーマバージョン（現在 `1`） |
+| `defaults.retry` | top | ステップ既定のリトライ回数 |
+| `defaults.timeout` | top | ステップ既定のタイムアウト秒 |
+| `defaults.mode` | top | ステップ既定のモード |
+| `aggregate.priority` | parallel step | 集約優先順位 |
+| `rules[].on: error` | rule | エラー/タイムアウト時遷移先（fallback の後継） |
+
+詳細は `~/.groove/schema.md` を参照。
 
 ## 利用可能ワークフロー
 
 | ワークフロー | 説明 |
 |-------------|------|
-| `spec-driven` | 仕様レビュー→Codexレビュー→実装→受入検査→修正→簡素化 |
-| `tdd` | テスト作成→実装→レビュー→修正 |
-| `vsdd` | 仕様レビュー→テスト→実装→敵対的レビュー（5次元評価）→修正→簡素化 |
+| `spec-driven` | 仕様レビュー→Codexレビュー→実装→受入検査→修正→簡素化→検証 |
+| `tdd` | テスト作成→実装→レビュー→修正→簡素化→検証 |
+| `vsdd` | 仕様レビュー→テスト→実装→敵対的レビュー→修正→簡素化→検証 |

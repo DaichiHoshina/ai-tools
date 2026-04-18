@@ -170,9 +170,11 @@ copy_directory_contents() {
                 cp -r "$groove_src/$subdir/"* "$HOME/.groove/$subdir/" 2>/dev/null || true
             fi
         done
-        if [ -f "$groove_src/config.yaml" ]; then
-            cp "$groove_src/config.yaml" "$HOME/.groove/"
-        fi
+        for f in config.yaml schema.md README.md; do
+            if [ -f "${groove_src}/${f}" ]; then
+                cp "${groove_src}/${f}" "$HOME/.groove/"
+            fi
+        done
         print_success "groove をコピーしました"
     fi
 

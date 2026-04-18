@@ -6,7 +6,9 @@
       "Read(//Users/daichi.hoshina/ghq/github.com/**)",
       "Bash(rm -f ~/.claude/commands/commit.md ~/.claude/commands/tdd.md)",
       "Bash(rm -rf ~/.claude/guidelines/summaries/)",
-      "Bash(rm -f ~/.claude/hooks/.icon-mapping.sh ~/.claude/hooks/pre-skill-use.sh)"
+      "Bash(rm -f ~/.claude/hooks/.icon-mapping.sh ~/.claude/hooks/pre-skill-use.sh)",
+      "Bash(rm -rf ~/.claude/skills/git-commit)",
+      "Read(//Users/daichi/.claude/skills/**)"
     ]
   }
 }

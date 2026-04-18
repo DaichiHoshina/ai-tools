@@ -1,7 +1,13 @@
+version: 1
 name: tdd
-description: TDD開発（テスト作成→実装→レビュー→修正）
-max_steps: 20
+description: TDD開発（テスト作成→実装→レビュー→修正→簡素化→検証）
+max_steps: 22
 loop_limit: 3
+
+defaults:
+  retry: 1
+  timeout: 180
+  mode: readonly  # mode 未指定ステップは readonly として起動
 
 steps:
   - name: test_write
@@ -17,6 +23,8 @@ steps:
       - on: needs_input
         next: test_write
         ask_user: true
+      - on: error
+        next: ABORT
 
   - name: implement
     agent: developer
@@ -31,16 +39,18 @@ steps:
       - on: needs_input
         next: implement
         ask_user: true
+      - on: error
+        next: ABORT
 
   - name: review
     agent: ai-reviewer
-    mode: readonly
-    retry: 1
     timeout: 120
     rules:
       - on: pass
-        next: COMPLETE
+        next: simplify
       - on: fail
+        next: fix
+      - on: error
         next: fix
 
   - name: fix
@@ -48,10 +58,32 @@ steps:
     mode: edit
     retry: 2
     timeout: 300
-    fallback:
-      next: implement
     rules:
       - on: done
         next: review
       - on: blocked
-        next: ABORT
+        next: implement
+      - on: error
+        next: implement
+
+  - name: simplify
+    agent: simplifier
+    mode: edit
+    rules:
+      - on: done
+        next: verify
+      - on: blocked
+        next: verify
+      - on: error
+        next: fix
+
+  - name: verify
+    agent: verifier
+    timeout: 300
+    rules:
+      - on: pass
+        next: COMPLETE
+      - on: fail
+        next: fix
+      - on: error
+        next: COMPLETE

@@ -1,31 +1,36 @@
+version: 1
 name: spec-driven
-description: 仕様駆動マルチエージェント開発（仕様レビュー→Codexレビュー→実装→受入検査→修正→簡素化）
+description: 仕様駆動マルチエージェント開発（仕様レビュー→Codexレビュー→実装→受入検査→修正→簡素化→検証）
 max_steps: 25
 loop_limit: 3
+
+defaults:
+  retry: 1
+  timeout: 180
+  mode: readonly  # mode 未指定ステップは readonly として起動
 
 steps:
   - name: spec_review
     agent: spec-reviewer
-    mode: readonly
-    retry: 1
     timeout: 120
     rules:
       - on: pass
         next: codex_review
       - on: fail
         next: ABORT
+      - on: error
+        next: ABORT
 
   - name: codex_review
     agent: codex-reviewer
-    mode: readonly
     provider: codex
-    retry: 1
-    timeout: 180
     rules:
       - on: pass
         next: implement
       - on: fail
         next: ABORT
+      - on: error
+        next: implement
 
   - name: implement
     agent: developer
@@ -40,6 +45,8 @@ steps:
       - on: needs_input
         next: implement
         ask_user: true
+      - on: error
+        next: ABORT
 
   - name: acceptance_review
     parallel:
@@ -47,7 +54,8 @@ steps:
         mode: readonly
       - agent: ai-reviewer
         mode: readonly
-    timeout: 180
+    aggregate:
+      priority: [spec_issue, any_fail, all_pass]
     rules:
       - on: all_pass
         next: simplify
@@ -55,27 +63,40 @@ steps:
         next: fix
       - on: spec_issue
         next: implement
+      - on: error
+        next: fix
 
   - name: fix
     agent: fixer
     mode: edit
     retry: 2
     timeout: 300
-    fallback:
-      next: implement
     rules:
       - on: done
         next: acceptance_review
       - on: blocked
         next: implement
+      - on: error
+        next: implement
 
   - name: simplify
     agent: simplifier
     mode: edit
-    retry: 1
-    timeout: 180
-    fallback:
-      next: COMPLETE
     rules:
       - on: done
+        next: verify
+      - on: blocked
+        next: verify
+      - on: error
+        next: fix
+
+  - name: verify
+    agent: verifier
+    timeout: 300
+    rules:
+      - on: pass
+        next: COMPLETE
+      - on: fail
+        next: fix
+      - on: error
         next: COMPLETE
