@@ -39,20 +39,20 @@ fi
 
 # === Context usage notice: コンテキスト50%超で /compact 提案を通知 ===
 _CTX_FILE="/tmp/claude-ctx-pct"
-_AUTO_COMPACT_MSG=""
+_COMPACT_NOTICE_MSG=""
 if [[ -f "${_CTX_FILE}" ]]; then
   _CTX_PCT=$(cat "${_CTX_FILE}" 2>/dev/null || echo "0")
   if [[ "${_CTX_PCT}" =~ ^[0-9]+$ ]] && [[ "${_CTX_PCT}" -ge 50 ]]; then
-    _AUTO_COMPACT_MSG="⚠️ コンテキスト使用率${_CTX_PCT}%。次レスポンス冒頭で /compact 実行をユーザーに提案すること（自動実行禁止、承認後に実行）。"
+    _COMPACT_NOTICE_MSG="⚠️ コンテキスト使用率${_CTX_PCT}%。次レスポンス冒頭で /compact 実行をユーザーに提案すること（自動実行禁止、承認後に実行）。"
   fi
 fi
 
 # promptフィールド取得
 prompt=$(echo "$input" | jq -r '.prompt // empty')
 if [ -z "$prompt" ]; then
-  # promptが空の場合でもauto-compactメッセージがあれば返す
-  if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
-    jq -n --arg msg "${_AUTO_COMPACT_MSG}" '{"systemMessage": $msg}'
+  # promptが空の場合でも compact 提案メッセージがあれば返す
+  if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
+    jq -n --arg msg "${_COMPACT_NOTICE_MSG}" '{"systemMessage": $msg}'
   else
     echo '{}'
   fi
@@ -71,8 +71,8 @@ if [[ "$prompt" == /* ]]; then
         analytics_insert_tool_event "${_CMD_SESSION_ID}" "${_CMD_PROJECT}" "SlashCommand" "${_CMD_NAME}" 2>/dev/null || true
     fi
     # スラッシュコマンドはスキル/言語検出不要 → 早期リターン
-    if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
-        jq -n --arg msg "${_AUTO_COMPACT_MSG}" '{"systemMessage": $msg}'
+    if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
+        jq -n --arg msg "${_COMPACT_NOTICE_MSG}" '{"systemMessage": $msg}'
     else
         echo '{}'
     fi
@@ -104,8 +104,8 @@ set -u
 
 # 検出されたスキル・言語・テクニックがない場合
 if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ] && [ -z "$technique_recommendation" ]; then
-  if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
-    jq -n --arg msg "${_AUTO_COMPACT_MSG}" '{"systemMessage": $msg}'
+  if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
+    jq -n --arg msg "${_COMPACT_NOTICE_MSG}" '{"systemMessage": $msg}'
   else
     echo '{}'
   fi
@@ -165,14 +165,14 @@ if [ -n "$additional_context" ]; then
   output_json=$(echo "$output_json" | jq --arg ctx "$additional_context" '.additionalContext = $ctx')
 fi
 
-# auto-compactをadditionalContextに追加（Claudeに届けるため）
-if [[ -n "${_AUTO_COMPACT_MSG}" ]]; then
+# compact 提案を additionalContext に追加（Claudeに届けるため）
+if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
   _existing_ctx=$(echo "$output_json" | jq -r '.additionalContext // ""')
   if [[ -n "${_existing_ctx}" ]]; then
-    output_json=$(echo "$output_json" | jq --arg ctx "${_AUTO_COMPACT_MSG}
+    output_json=$(echo "$output_json" | jq --arg ctx "${_COMPACT_NOTICE_MSG}
 ${_existing_ctx}" '.additionalContext = $ctx')
   else
-    output_json=$(echo "$output_json" | jq --arg ctx "${_AUTO_COMPACT_MSG}" '.additionalContext = $ctx')
+    output_json=$(echo "$output_json" | jq --arg ctx "${_COMPACT_NOTICE_MSG}" '.additionalContext = $ctx')
   fi
 fi
 
