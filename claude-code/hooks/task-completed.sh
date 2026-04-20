@@ -21,7 +21,24 @@ TASK_ID=$(echo "$INPUT" | jq -r '.task_id // "unknown"')
 TASK_SUBJECT=$(echo "$INPUT" | jq -r '.task_subject // "unknown"')
 TEAMMATE_NAME=$(echo "$INPUT" | jq -r '.teammate_name // "unknown"')
 TEAM_NAME=$(echo "$INPUT" | jq -r '.team_name // "unknown"')
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# cwd フォールバック（JSONになければ環境から取得）
+if [ -z "${CWD}" ]; then
+  CWD="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+fi
+PROJECT_NAME=$(basename "${CWD}")
+
+# Agent Teams 経由でない場合のフォールバック
+# - teammate=unknown → "user"（ユーザー直接実行）
+# - team=unknown → プロジェクト名（cwdのbasename）
+if [ "${TEAMMATE_NAME}" = "unknown" ]; then
+  TEAMMATE_NAME="user"
+fi
+if [ "${TEAM_NAME}" = "unknown" ]; then
+  TEAM_NAME="${PROJECT_NAME}"
+fi
 
 # ログディレクトリ作成
 LOG_DIR="${HOME}/.claude/logs"
@@ -29,11 +46,11 @@ mkdir -p "$LOG_DIR"
 
 # ログファイルに記録
 LOG_FILE="${LOG_DIR}/agent-team-events.log"
-echo "[${TIMESTAMP}] COMPLETED | task_id=${TASK_ID} | subject=${TASK_SUBJECT} | teammate=${TEAMMATE_NAME} | team=${TEAM_NAME}" >> "$LOG_FILE"
+echo "[${TIMESTAMP}] COMPLETED | task_id=${TASK_ID} | subject=${TASK_SUBJECT} | teammate=${TEAMMATE_NAME} | team=${TEAM_NAME} | cwd=${CWD}" >> "$LOG_FILE"
 
 # Task Diary記録（セッション間知識蓄積用）
 DIARY_FILE="${LOG_DIR}/task-diary.log"
-echo "[${TIMESTAMP}] ${TASK_SUBJECT} | by=${TEAMMATE_NAME} team=${TEAM_NAME}" >> "$DIARY_FILE"
+echo "[${TIMESTAMP}] ${TASK_SUBJECT} | by=${TEAMMATE_NAME} team=${TEAM_NAME} cwd=${PROJECT_NAME}" >> "$DIARY_FILE"
 
 # 統計情報計算（今日の完了タスク数）
 TODAY=$(date -u +"%Y-%m-%d")

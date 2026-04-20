@@ -468,8 +468,21 @@ main() {
                 ;;
             "")
                 ;;
+            --force|-f|--dry-run|--check)
+                print_error "未対応フラグ: $1"
+                echo "  → このスクリプトは --yes/-y のみ対応" >&2
+                echo "  → 強制実行は不要（show_diff で差分確認後に確認プロンプト）" >&2
+                usage
+                exit 1
+                ;;
             *)
                 print_error "不明なコマンド: $1"
+                # よくある typo / 類似コマンドへのヒント
+                case "$1" in
+                    tolocal|to_local|local) echo "  → もしかして: to-local" >&2 ;;
+                    fromlocal|from_local) echo "  → もしかして: from-local" >&2 ;;
+                    diffs|differ) echo "  → もしかして: diff" >&2 ;;
+                esac
                 usage
                 exit 1
                 ;;

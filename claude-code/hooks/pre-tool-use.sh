@@ -72,7 +72,18 @@ classify_bash_command() {
 
 case "$TOOL_NAME" in
   # === 安全操作（即実行可能） ===
-  "Read"|"Glob"|"Grep"|"WebFetch"|"WebSearch"|"ListMcpResourcesTool"|"ReadMcpResourceTool")
+  "Read")
+    GUARD_CLASS="Safe"
+    # ディレクトリ判定: EISDIR を事前ブロックして Glob/ls へ誘導
+    READ_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
+    if [ -n "$READ_PATH" ] && [ -d "$READ_PATH" ]; then
+      echo "Read対象がディレクトリ: ${READ_PATH}" >&2
+      echo "→ Glob (pattern=\"${READ_PATH}/**/*\") または Bash (ls -la \"${READ_PATH}\") を使うこと" >&2
+      exit 2
+    fi
+    ;;
+
+  "Glob"|"Grep"|"WebFetch"|"WebSearch"|"ListMcpResourcesTool"|"ReadMcpResourceTool")
     GUARD_CLASS="Safe"
     # 安全操作はメッセージなし（トークン節約）
     ;;
