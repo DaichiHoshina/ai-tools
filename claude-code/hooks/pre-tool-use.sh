@@ -77,9 +77,10 @@ case "$TOOL_NAME" in
     # ディレクトリ判定: EISDIR を事前ブロックして Glob/ls へ誘導
     READ_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
     if [ -n "$READ_PATH" ] && [ -d "$READ_PATH" ]; then
-      echo "Read対象がディレクトリ: ${READ_PATH}" >&2
-      echo "→ Glob (pattern=\"${READ_PATH}/**/*\") または Bash (ls -la \"${READ_PATH}\") を使うこと" >&2
-      exit 2
+      _DENY_REASON="Read対象がディレクトリ: ${READ_PATH} → Glob (pattern=\"${READ_PATH}/**/*\") または Bash (ls -la \"${READ_PATH}\") を使うこと"
+      jq -n --arg reason "$_DENY_REASON" \
+        '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
+      exit 0
     fi
     ;;
 

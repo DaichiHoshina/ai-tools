@@ -23,7 +23,7 @@ description: Git pull --rebase の安全実行。未コミット変更を自動s
 ## フロー
 
 1. **状態確認**: `git status --porcelain` で未コミット変更検知
-2. **stash**: 変更あり → `git stash push -m "auto-stash before /git-pull $(date +%s)"`
+2. **stash**: 変更あり → `git stash push -u -m "auto-stash before /git-pull $(date +%s)"`
 3. **pull**: `git pull --rebase`（`--no-rebase` 時は `git pull`）
 4. **pop**: stash した場合 → `git stash pop`
 5. **コンフリクト処理**: pop失敗 → stashは残したまま、ユーザーに通知
@@ -32,30 +32,11 @@ description: Git pull --rebase の安全実行。未コミット変更を自動s
 
 | 失敗 | 対処 |
 |------|------|
-| `pull --rebase` 失敗 | stash残したままユーザー報告。`git rebase --abort` を提案 |
+| `pull --rebase` 失敗 | stash残したままユーザー報告、`git rebase --abort` を提案 |
 | `stash pop` でコンフリクト | stash残したまま（`git stash list` で確認可）、解消方法を提示 |
 | 未tracked branch | `git branch --set-upstream-to` を提案 |
 
-## 実装サンプル
-
-```bash
-HAS_CHANGES=$(git status --porcelain)
-STASHED=false
-
-if [ -n "$HAS_CHANGES" ] && [ "$NO_STASH" != "true" ]; then
-  git stash push -m "auto-stash before /git-pull $(date +%s)" && STASHED=true
-fi
-
-if [ "$NO_REBASE" = "true" ]; then
-  git pull
-else
-  git pull --rebase
-fi || { echo "pull failed. stash kept."; exit 1; }
-
-if [ "$STASHED" = "true" ]; then
-  git stash pop || echo "stash pop conflict. resolve manually: git stash list"
-fi
-```
+注: `--no-rebase` 時は `git pull --no-rebase --ff` を明示（git 2.27+ の `pull.rebase` 警告回避）。
 
 ## 関連コマンド
 

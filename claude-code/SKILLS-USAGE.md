@@ -1,6 +1,6 @@
 # Skills Usage Guide - スキル使い分けガイド
 
-Claude Codeの20スキル（Phase2-5統合後）の使用ガイド。
+Claude Codeの19スキル（Phase2-5統合後）の使用ガイド。
 
 > **スキル一覧・依存関係の詳細**: [SKILLS-MAP.md](./SKILLS-MAP.md) を参照
 

@@ -200,28 +200,6 @@ teardown() {
 }
 
 # =============================================================================
-# Pre-Skill-Use Hook Tests
-# =============================================================================
-
-@test "hooks: pre-skill-use accepts valid JSON input" {
-  local input='{"skill": "test-skill"}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-skill-use.sh"
-  [ "$status" -eq 0 ]
-}
-
-@test "hooks: pre-skill-use handles empty skill name" {
-  local input='{"skill": ""}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-skill-use.sh"
-  [ "$status" -eq 0 ]
-}
-
-@test "hooks: pre-skill-use handles missing skill field" {
-  local input='{}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-skill-use.sh"
-  [ "$status" -eq 0 ]
-}
-
-# =============================================================================
 # Post-Tool-Use Hook Tests
 # =============================================================================
 

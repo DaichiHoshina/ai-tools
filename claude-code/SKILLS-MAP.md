@@ -1,6 +1,6 @@
 # スキル依存関係マップ（統合後）
 
-全20スキルの依存関係と推奨組み合わせ
+全19スキルの依存関係と推奨組み合わせ
 
 > **関連ドキュメント**: [commands/](commands/) | [QUICKSTART.md](QUICKSTART.md) | [GLOSSARY.md](GLOSSARY.md)
 
@@ -81,7 +81,7 @@
 - **often-used-with**: container-ops, clean-architecture-ddd, grpc-protobuf
 - **用途**: サービス分割、通信パターン、モノレポ構成
 
-## ユーティリティ（8スキル）
+## ユーティリティ（7スキル）
 
 ### load-guidelines
 - **requires-guidelines**: なし

@@ -37,7 +37,7 @@ if [ "${TEAMMATE_NAME}" = "unknown" ]; then
   TEAMMATE_NAME="user"
 fi
 if [ "${TEAM_NAME}" = "unknown" ]; then
-  TEAM_NAME="${PROJECT_NAME}"
+  TEAM_NAME="local:${PROJECT_NAME}"
 fi
 
 # ログディレクトリ作成
