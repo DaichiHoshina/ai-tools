@@ -33,8 +33,9 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
 DEFAULT_PRICING = {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_write": 3.75}
 
 KNOWN_SKILLS = [
-    "dev", "flow", "review", "test", "refactor", "commit",
-    "git-push", "debug", "plan", "docs",
+    "dev", "flow", "review", "test", "refactor",
+    "git-push", "git-pull", "diagnose", "plan", "docs",
+    "lint-test", "memory-save", "retrospective",
 ]
 
 MAX_REPORT_WEEKS = 4
@@ -220,6 +221,16 @@ def fetch_tool_stats(conn: sqlite3.Connection, start_iso: str, end_iso: str) -> 
         (start_iso, end_iso),
     ).fetchall()
 
+    # SlashCommand 実行数（builtin 扱いだが Skill 同等の操作）
+    slash_row = conn.execute(
+        """
+        SELECT COUNT(*) AS cnt FROM tool_events
+        WHERE timestamp >= ? AND timestamp < ?
+          AND tool_name = 'SlashCommand'
+        """,
+        (start_iso, end_iso),
+    ).fetchone()
+
     return {
         "total": total,
         "top_tools": [dict(r) for r in top_tools],
@@ -227,6 +238,7 @@ def fetch_tool_stats(conn: sqlite3.Connection, start_iso: str, end_iso: str) -> 
         "skill_breakdown": [dict(r) for r in skill_rows],
         "agent_breakdown": [dict(r) for r in agent_rows],
         "mcp_breakdown": [dict(r) for r in mcp_rows],
+        "slashcommand_count": slash_row["cnt"] or 0,
     }
 
 
@@ -489,11 +501,12 @@ def _build_suggestions(
 ) -> list[str]:
     suggestions: list[str] = []
 
-    skill_count = tools["category_breakdown"].get("skill", 0)
+    # Skill ツール + SlashCommand を「Skill 利用」として合算
+    skill_count = tools["category_breakdown"].get("skill", 0) + tools.get("slashcommand_count", 0)
     skill_rate = (skill_count / tool_total * 100) if tool_total > 0 else 0.0
-    if skill_rate < 10:
+    if skill_rate < 5:
         suggestions.append(
-            f"**Skill活用**: Skill利用率 {skill_rate:.0f}%。/dev, /flow を活用すると効率UP"
+            f"**Skill活用**: Skill+SlashCommand利用率 {skill_rate:.0f}%。/dev, /flow を活用すると効率UP"
         )
 
     agent_count = tools["category_breakdown"].get("agent", 0)
