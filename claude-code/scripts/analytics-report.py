@@ -33,7 +33,7 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
 DEFAULT_PRICING = {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_write": 3.75}
 
 KNOWN_SKILLS = [
-    "dev", "flow", "review", "test", "refactor",
+    "dev", "flow", "review", "test",
     "git-push", "git-pull", "diagnose", "plan", "docs",
     "lint-test", "memory-save", "retrospective",
 ]

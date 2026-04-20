@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Notion__notion-fetch",
+      "mcp__claude_ai_Notion__notion-search",
+      "mcp__claude_ai_Slack__slack_search_public_and_private",
+      "mcp__datadog__search_datadog_monitors",
+      "mcp__datadog__analyze_datadog_logs",
+      "mcp__datadog__search_datadog_logs",
+      "mcp__datadog__search_datadog_metrics",
+      "mcp__datadog__get_datadog_metric",
+      "mcp__datadog__monitor_groups_search",
+      "mcp__serena__read_memory",
+      "mcp__serena__list_memories",
+      "mcp__plugin_serena_serena__activate_project",
+      "mcp__plugin_serena_serena__list_memories",
+      "mcp__plugin_serena_serena__read_memory",
+      "Bash(make lint-md)",
+      "Bash(go vet *)"
+    ]
+  }
+}
