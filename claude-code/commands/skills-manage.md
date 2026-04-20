@@ -99,16 +99,6 @@ ai-toolsリポジトリのgit管理には載らないため、各マシンで `g
 
 検知条件: SKILL.md（または skill.md）の frontmatter に `github-repo: https://github.com/...` が含まれること。手動でインストールしたスキルを保護対象にしたい場合は同じメタデータを付与する。
 
-## 旧方式（フォールバック）
-
-`gh` v2.90.0未満、または `gh skill` 未対応リポジトリのみ:
-
-```bash
-./claude-code/scripts/install-community-skill.sh <install|update|list|remove> ...
-```
-
-gh 普及後は削除予定。
-
 ## 参考
 
 - 記事: <https://zenn.dev/ubie_dev/articles/gh-skill-install-agent-skills>
