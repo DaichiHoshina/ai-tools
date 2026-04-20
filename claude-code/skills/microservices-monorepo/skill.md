@@ -60,29 +60,13 @@ monorepo/
 
 ---
 
-## 主要パターン
+## アンチパターン（禁止事項）
 
-```typescript
-// ✅ イベント駆動通信
-class OrderService {
-  async placeOrder(order: Order): Promise<void> {
-    await this.orderRepository.save(order);
-    await this.eventBus.publish({ type: 'OrderPlaced', orderId: order.id });
-  }
-}
+- **他サービスのDB直接参照**: サービス境界違反。スキーマ変更で破綻 → 必ず API 経由
+- **同期呼び出しチェーン**: A→B→C→D の連鎖。障害連鎖の原因 → 非同期イベント駆動を検討
+- **共有DB**: Database per Service 違反。独自DBを持たせる
 
-// ✅ API経由でアクセス（DB直接参照禁止）
-const user = await this.userClient.GetUser(ctx, order.UserID);
-```
-
-```typescript
-// ❌ 他サービスのDB直接参照（禁止）
-// 理由: サービス境界違反。UserServiceのDBスキーマ変更時に破綻する
-const userDB = new Pool({ connectionString: 'user-service-db-url' });
-
-// ✅ API経由（サービス境界を尊重）
-const user = await this.userClient.getUser(userId);
-```
+> 実装例は `guidelines/design/microservices-kubernetes.md` を参照。
 
 ---
 
@@ -124,19 +108,7 @@ const user = await this.userClient.getUser(userId);
 
 ---
 
-## 関連ガイドライン
+## 関連ガイドライン / Context7
 
-- `design/microservices-kubernetes.md`
-- `design/clean-architecture.md`
-
-## 外部知識ベース（Context7）
-
-- Kubernetes公式ドキュメント
-- Service Mesh（Istio, Linkerd）
-- Turborepo, Nx
-
-> **Context7検索キーワード**:
-> - `/vercel/turborepo` で "workspace dependencies"
-> - `/nrwl/nx` で "affected commands"
-> - "event driven architecture saga pattern"
-> - "circuit breaker fallback"
+- `guidelines/design/microservices-kubernetes.md`, `design/clean-architecture.md`
+- Context7: `/vercel/turborepo`, `/nrwl/nx`, "saga pattern", "circuit breaker"

@@ -46,54 +46,13 @@ requires-guidelines:
 
 ---
 
-## 主要パターン
+## アンチパターン（禁止事項）
 
-```go
-// ✅ Domain層: ビジネスロジック + IF定義
-type User struct { ID UserID; Status UserStatus }
+- **Domain → Infrastructure 依存**（例: `gorm.Model` を Domain に埋め込む）: DB技術への依存。ID/CreatedAt等は自前で定義
+- **貧血ドメインモデル**: getter/setterのみの Entity。ビジネスロジックを Entity/UseCase に置く
+- **Repository IF を Infra に配置**: IF は必ず Domain 層に定義
 
-func (u *User) Activate() error {
-    if u.Status == StatusActive { return ErrAlreadyActive }
-    u.Status = StatusActive
-    return nil
-}
-
-type UserRepository interface {
-    Save(user *User) error
-    FindByID(id UserID) (*User, error)
-}
-
-// ✅ Application層: UseCase
-func (uc *ActivateUserUseCase) Execute(userID UserID) error {
-    user, _ := uc.repo.FindByID(userID)
-    if err := user.Activate(); err != nil { return err }
-    return uc.repo.Save(user)
-}
-```
-
-```typescript
-// ✅ Value Object（不変）
-class Email {
-  private constructor(private readonly value: string) {}
-  static create(value: string): Email { /* バリデーション */ }
-  equals(other: Email): boolean { return this.value === other.value; }
-}
-
-// ✅ リッチドメインモデル
-class User {
-  activate(): void {
-    if (this.status === UserStatus.Active) throw new Error('Already active');
-    this.status = UserStatus.Active;
-  }
-}
-```
-
-```go
-// ❌ Domain が Infrastructure に依存（禁止）
-// 理由: gorm.ModelはDB固有の型。Domain層はDB技術に依存してはならない
-import "gorm.io/gorm"
-type User struct { gorm.Model }  // → ID, CreatedAt等を自前で定義すべき
-```
+> 実装例は `guidelines/design/clean-architecture.md` を参照。
 
 ---
 
@@ -131,18 +90,7 @@ type User struct { gorm.Model }  // → ID, CreatedAt等を自前で定義すべ
 
 ---
 
-## 関連ガイドライン
+## 関連ガイドライン / Context7
 
-- `design/clean-architecture.md`
-- `design/domain-driven-design.md`
-
-## 外部知識ベース（Context7）
-
-- クリーンアーキテクチャ（Robert C. Martin）
-- DDD（エリック・エヴァンス）
-- SOLID原則
-
-> **Context7検索キーワード**:
-> - Go: `/golang/go` で "interface repository pattern"
-> - TypeScript: `/microsoft/typescript` で "dependency injection"
-> - DDD: "aggregate root", "value object immutable"
+- `guidelines/design/clean-architecture.md`, `design/domain-driven-design.md`
+- Context7: "repository pattern", "dependency injection", "aggregate root", "value object immutable"

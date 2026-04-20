@@ -86,29 +86,11 @@ requires-guidelines:
 
 ### Step 4: チケット作成
 
-Jira MCP（`mcp__jira__jira_post`）でチケット作成:
-
-```yaml
-必須項目:
-  summary: "[影響レベル] エラー概要"
-  description: |
-    ## 現象
-    - エラー内容（ログ引用）
-    - 発生日時・環境
-    ## 影響範囲
-    - 影響を受けるユーザー/機能
-    ## 原因
-    - 特定した根本原因
-    ## 対応方針
-    - 修正方針・見積もり
-  priority: 影響レベルに応じて設定
-  labels: ["incident"]
-```
+Jira MCP（`mcp__jira__jira_post`）で作成。必須項目: summary（`[影響レベル] 概要`）、description（現象/影響範囲/原因/対応方針）、priority（影響レベル準拠）、labels（`["incident"]`）。
 
 ### Step 5: 記録
 
-- Confluence MCP（`mcp__confluence__conf_post`）でインシデント記録を作成
-- 必要に応じてSlackで関係者に通知
+Confluence MCP（`mcp__confluence__conf_post`）でインシデント記録作成、必要ならSlack通知。
 
 ## 出力フォーマット
 
