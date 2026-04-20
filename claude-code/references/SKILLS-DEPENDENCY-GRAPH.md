@@ -51,7 +51,6 @@ flowchart TB
         GM[guideline-maintenance]
         CE[cleanup-enforcement]
         MCP[mcp-setup-guide]
-        AIS[ai-tools-sync]
     end
 
     %% ガイドライン依存

@@ -33,7 +33,7 @@ Claude Codeの20スキル（Phase2-5統合後）の使用ガイド。
 |--------|--------|
 | 自動検出されない専門領域 | data-analysis, context7 |
 | 特定のレビュー観点のみ | uiux-review |
-| 設定・運用タスク | mcp-setup-guide, ai-tools-sync |
+| 設定・運用タスク | mcp-setup-guide（同期は `sync.sh` または `/git-push --main` 自動sync） |
 | セッション設定 | session-mode, protection-mode |
 
 ---

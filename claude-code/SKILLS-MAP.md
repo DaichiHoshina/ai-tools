@@ -88,11 +88,6 @@
 - **often-used-with**: すべてのスキル（前提として機能）
 - **用途**: プロジェクトの技術スタックを検出し、必要なガイドラインのみをセッションに適用。トークン節約。
 
-### ai-tools-sync
-- **requires-guidelines**: なし
-- **often-used-with**: なし
-- **用途**: リポジトリと~/.claude/間の設定ファイル同期。to-local/from-local/diffモード。
-
 ### cleanup-enforcement
 - **requires-guidelines**: common
 - **often-used-with**: comprehensive-review, すべての開発系スキル
