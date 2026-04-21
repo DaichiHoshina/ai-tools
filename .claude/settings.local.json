@@ -11,7 +11,12 @@
       "Read(//Users/daichi/.claude/skills/**)",
       "Bash(git show *)",
       "Bash(chmod +x /Users/daichi.hoshina/.claude/hooks/_old_*.sh)",
-      "Read(//Users/daichi.hoshina/.claude/hooks/**)"
+      "Read(//Users/daichi.hoshina/.claude/hooks/**)",
+      "Bash(echo '{\"mcpServers\":{}}')",
+      "Read(//Users/daichi.hoshina/.claude/**)",
+      "Bash(jq 'if has\\(\"claudeAiMcpEverConnected\"\\) then .claudeAiMcpEverConnected |= map\\(select\\(. != \"claude.ai Figma\"\\)\\) else . end' ~/.claude.json)",
+      "Bash(mv /tmp/claude.json.new ~/.claude.json)",
+      "Read(//Users/daichi.hoshina/**)"
     ]
   }
 }
