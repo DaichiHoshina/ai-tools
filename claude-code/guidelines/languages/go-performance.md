@@ -38,7 +38,7 @@ go build -gcflags='-m=2' ./... 2>&1 | grep "escapes"
 
 **heap escape（遅い、GC圧）**:
 - interface への代入（型情報を runtime で持つ）
-- ポインタを関数外（戻り値、grobal、closure）に渡す
+- ポインタを関数外（戻り値、global、closure）に渡す
 - 動的サイズの slice/map 生成
 - `fmt.Println(x)` 等の `interface{}` 引数
 
@@ -58,8 +58,8 @@ var buf [64]byte; _ = string(buf[:])             // stack（fixed size）
 |---------|------|
 | **map preallocation** | `make(map[K]V, size)` で rehash回避 |
 | **slice preallocation** | `make([]T, 0, capHint)` で grow 回避 |
-| **string concat** | `+=` 連発 → `strings.Builder`、`fmt.Sprintf` 高頻度 → `strconv` |
-| **[]byte ↔ string ゼロコピー** | `unsafe.String`/`unsafe.SliceData`（Go 1.20+）で copy回避（不変保証要） |
+| **string concat** | `+=` 連発 → `strings.Builder`、`fmt.Sprintf("%d",n)` → `strconv.Itoa(n)` / `FormatInt` |
+| **[]byte ↔ string ゼロコピー** | `unsafe.String`/`unsafe.SliceData`（Go 1.20+）。**安全代替**を優先（`strings.Builder`, `[]byte(s)`）、`unsafe` は局所化＋元 slice 不変が関数内で保証できる時のみ |
 | **sync.Pool** | 短命大object 再利用、GC圧削減 |
 | **interface 化避ける** | `any` 引数は escape、ジェネリクス検討 |
 
@@ -83,7 +83,7 @@ Go コンパイラは関数を **コスト 80以下** で自動 inline。inline 
 |------|---------|
 | inline 判定 | `go build -gcflags='-m=2' ./...` で `can inline` / `cannot inline (cost X)` |
 | inline 強制不可 | `//go:noinline` で明示的に inline 抑制（profiling用） |
-| budget 増加 | `-gcflags='-l=4'` で aggressive inline（実験用、本番非推奨） |
+| inline 制御 | `-gcflags='-l'` は inlining **無効化**（debug用）。aggressive inline の正式手段は **PGO（後述）**、内部 `-l=4` 等は非公開デバッグ水準で本番非推奨 |
 
 **ホット関数を inline させるコツ**: 短く保つ（loop / 大 switch なし）、interface 引数避ける。
 

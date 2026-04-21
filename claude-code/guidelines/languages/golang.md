@@ -2,7 +2,8 @@
 
 Go 1.26.2対応（2026年4月時点）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
-**深堀り**:
+## 関連ガイドライン
+
 - パフォーマンス最適化（escape/GC/pprof/PGO）→ `languages/go-performance.md`
 - 並行処理深堀り（scheduler/channel sizing/leak検出）→ `languages/go-concurrency.md`
 

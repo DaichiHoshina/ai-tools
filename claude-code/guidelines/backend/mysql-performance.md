@@ -83,12 +83,15 @@ InnoDB は **PRIMARY KEY = データの物理配置順**（clustered index）。
 |--------|-----------|-----------|------|
 | **READ UNCOMMITTED** | - | （何も） | dirty read許容、稀 |
 | **READ COMMITTED** | - | dirty read | 一般 OLTP（PG既定と同じ） |
-| **REPEATABLE READ** | ✅ 既定 | + non-repeatable read、**phantom もMVCCで防ぐ** | InnoDB既定 |
+| **REPEATABLE READ** | ✅ 既定 | + non-repeatable read, phantom（InnoDB特有のロック挙動） | InnoDB既定 |
 | **SERIALIZABLE** | - | 全て | 強整合、競合激しいと性能低下 |
 
 **PG との重要差**:
-- InnoDB の REPEATABLE READ は MVCC + Next-Key Lock で **phantom もほぼ防ぐ**（PGのRR は phantom 許す）
-- SERIALIZABLE は SSI ではなく純粋 lock ベース（PG とは仕組み別）
+- 両者とも RR で phantom を実質的に防ぐが**仕組みが異なる**:
+  - InnoDB RR: MVCC + **Next-Key Lock**（gap lock で範囲ロック）
+  - PG RR: pure MVCC スナップショット（lockなし、SI = Snapshot Isolation）
+- 結果、**書込競合時の挙動差**: InnoDB は lock 待ち、PG は serialization failure（retry必要）
+- **SERIALIZABLE**: PG は SSI（Serializable Snapshot Isolation、競合検出時 abort）、InnoDB は純粋 lock ベース（impl別物）
 
 ---
 
@@ -113,10 +116,10 @@ InnoDB は **PRIMARY KEY = データの物理配置順**（clustered index）。
 | パラメータ | 推奨 | 説明 |
 |-----------|------|------|
 | `innodb_buffer_pool_size` | 物理RAM 70-80% | 最重要、データ+index キャッシュ |
-| `innodb_log_file_size` | 1-4GB | 大きいほど crash recovery 長い、書込性能向上 |
+| `innodb_redo_log_capacity`（8.0.30+ 推奨） | 1-8GB | redo log 総容量。旧 `innodb_log_file_size` は 8.4 で deprecated |
 | `innodb_flush_log_at_trx_commit` | 1（既定）or 2 | 1=ACID完全、2=1秒内データロス可で性能↑ |
 | `sync_binlog` | 1（既定） | 0は性能↑だがクラッシュでbinlogロス |
-| `max_connections` | 200-500 | 多すぎは memory 食う、PgBouncer類はProxySQL |
+| `max_connections` | 200-500 | 多すぎは memory 食う、外部 pooling は ProxySQL（MySQL 版 PgBouncer 相当） |
 | `tmp_table_size` / `max_heap_table_size` | 64-256MB | 小さいと filesort/temp が disk へ |
 
 ---
@@ -144,9 +147,12 @@ ALTER TABLE orders ADD COLUMN note TEXT, ALGORITHM=INSTANT, LOCK=NONE;
 | **RANGE** | 時系列、古いデータDROP | `created_at` 月単位 |
 | **LIST** | カテゴリ分離 | `region` |
 | **HASH** | 均等分散 | `user_id` |
-| **KEY** | MySQL内部hash（FK使える） | `user_id` |
+| **KEY** | MySQL内部hash（任意の型に対応） | `user_id` |
 
-**注意**: パーティション pruning は WHERE が partition key を含む時のみ効く。FK は partitioned table で制限あり。
+**注意**:
+- パーティション pruning は WHERE が partition key を含む時のみ効く
+- **InnoDB partitioned table は FOREIGN KEY 非対応**（MySQL 8.4 時点）→ FK 必要なら partition せず別解（archive table 等）
+- partition key は PK/UNIQUE constraint に含まれる必要あり
 
 ---
 

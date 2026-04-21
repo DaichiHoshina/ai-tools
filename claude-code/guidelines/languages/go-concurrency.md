@@ -24,10 +24,10 @@ scheduler動作・channel sizing・leak検出・mutex contention 対処が必要
 
 | パラメータ | 既定 | 推奨 |
 |-----------|------|------|
-| `GOMAXPROCS` | 論理CPU数 | container では `automaxprocs` lib で CPU limit 反映 |
+| `GOMAXPROCS` | Go 1.25+: Linux cgroup CPU limit を考慮 / 1.24以前: 論理CPU数 | Go 1.24以前は `go.uber.org/automaxprocs` で cgroup 反映 |
 | 初期 goroutine stack | 2KB | growable、deep recursion で問題なし |
 
-**注意**: container で CPU limit 4 cores 設定でもホストが32coreなら GOMAXPROCS=32 になる → 過剰並列 → CPU throttle で遅延。`go.uber.org/automaxprocs` import 推奨。
+**注意（Go 1.24以前）**: container で CPU limit 4 cores でもホスト32coreなら GOMAXPROCS=32 になる → 過剰並列 → CPU throttle で遅延。Go 1.24 以前の本番運用では `automaxprocs` 必須。**Go 1.25+** は標準で cgroup CPU quota 反映、`automaxprocs` 不要。
 
 ---
 
@@ -107,7 +107,7 @@ default: // ch 空、即進む
 | 状況 | 選択 |
 |------|------|
 | 値の更新 + 読込 | `sync.Mutex`（書込多）/ `sync.RWMutex`（読多書少） |
-| 単一値の読書（int/pointer） | `atomic.Int64` / `atomic.Pointer[T]`（lock-free） |
+| 単一値の読み書き（int/pointer） | `atomic.Int64` / `atomic.Pointer[T]`（lock-free） |
 | 1回限りの初期化 | `sync.Once` |
 | event 通知（broadcast） | `chan struct{}` close + `<-ch` |
 | handoff / pipeline | channel |
@@ -183,7 +183,7 @@ runtime.SetMutexProfileFraction(5)  // 5回に1回sample
 ## 11. go tool trace（scheduler可視化）
 
 ```bash
-go test -trace=trace.out -run=BenchmarkX
+go test -trace=trace.out -bench=BenchmarkX -run=^$
 go tool trace trace.out  # ブラウザで可視化
 ```
 
