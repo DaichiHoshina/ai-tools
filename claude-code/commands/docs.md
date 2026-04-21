@@ -5,9 +5,9 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 ## /docs - ナレッジ蓄積コマンド
 
-コードベースから知識を抽出し、Notionに蓄積する。プロジェクト非依存。
+完了した作業の知識を Notion に蓄積する。プロジェクト非依存。
 
-> チーム共有用の設計資料（Design Doc）を md で書く場合は `/design-dog` を使う。`/docs` は Notion への完了後ナレッジ蓄積用。
+> **責務分離**: 設計段階の Design Doc は `/design-dog`（md、チーム共有用）。`/docs` は完了後の Notion ナレッジ蓄積。ADR / アーキテクチャ判断の設計フェーズ文書も `/design-dog` を使う。
 
 **必読**: Notion投稿時は以下のガイドラインに従うこと:
 - `guidelines/common/notion-writing.md` — 構成・見出し・文体・表記ルール（コア）
@@ -20,14 +20,14 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 | タイプ | キーワード | 連携ガイドライン/スキル |
 |--------|-----------|----------------------|
-| 設計判断 | adr, 設計, why | `guidelines/design/clean-architecture.md`, `guidelines/design/domain-driven-design.md` |
 | API仕様 | api, endpoint | Skill(`api-design`) |
-| アーキテクチャ | arch, 構成 | Skill(`clean-architecture-ddd`), `guidelines/common/code-quality-design.md` |
 | 障害対応 | incident, 障害 | Skill(`incident-response`), Skill(`root-cause`) |
 | レシピ | recipe, パターン, tips | `guidelines/common/documentation-strategy.md`（❌/✅形式必須） |
 | 手順書 | runbook, 手順 | `guidelines/common/development-process.md` |
 | 変更履歴 | changelog, 変更 | git log/diffから自動抽出 |
 | 自由記述 | （上記以外） | ユーザー指示に従う |
+
+> 設計判断（ADR）・アーキテクチャ設計は `/design-dog` で md 作成後、完了時にこのコマンドで Notion へ取り込む。
 
 ## フロー
 
@@ -35,12 +35,12 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 - 引数あり → そのトピックで分析
 - 引数なし → `git log --oneline -10` と `git diff --stat` から直近の変更を提示、ユーザーに選択させる
+- `--from <md-path>` → 既存 md（`/design-dog` 出力等）を入力としてNotion化
 
 ### Step 2: ガイドライン読み込み
 
 タイプに応じた連携ガイドライン/スキルを読み込む。
 
-- **設計判断**: clean-architecture.md, domain-driven-design.md を読み、設計原則に照らして判断理由を記述
 - **障害対応**: incident-responseスキルのフォーマット（分類→影響範囲→原因→再発防止）に準拠
 - **レシピ**: documentation-strategy.md の❌/✅形式を**必ず**使用。コード例5行以内、テーブル優先
 - **API仕様**: api-designスキルのエンドポイント記述規約に準拠
@@ -71,15 +71,6 @@ Grep / Read → 関連コード読解
 `notion-create-pages` または `notion-update-page` で投稿。
 
 タイプ別テンプレート:
-
-**設計判断（ADR）**:
-```
-## ステータス: 承認済み
-## コンテキスト: 何が問題だったか
-## 決定: 何を選んだか
-## 代替案: 他に何を検討したか
-## 結果: この決定による影響
-```
 
 **障害対応**:
 ```
@@ -126,7 +117,8 @@ Grep / Read → 関連コード読解
 | オプション | 説明 |
 |-----------|------|
 | `--parent <url>` | Notionの親ページURL指定 |
-| `--update <url>` | 既存ページを更新 |
+| `--update <url>` | 既存 Notion ページを更新（URL指定） |
+| `--from <md-path>` | ローカル md（`/design-dog` 出力等）を入力としてNotion化 |
 | `--dry` | Notion投稿せずプレビューのみ |
 
 ## 品質ガード
