@@ -21,6 +21,7 @@ claude-code/
 - `install.sh`/`sync.sh` を更新したら `~/.claude/` に同期必要
 - 🔒 PROTECTED SECTION（CLAUDE.md内）は変更禁止
 - frontmatter（---で囲まれた部分）は正確なYAML形式を維持
+- **`claude-code/VERSION` は Claude Code CLI本体のバージョン追従用**。コマンド・スキル・設定の変更ごとに bump しない。CLI リリース取り込み時のみ更新（`/claude-update-fix` 担当）。sync.sh の "Version mismatch" 警告は本体バージョンとローカル配置の差を示すだけで bump 指示ではない
 
 ## 定義ファイルのトークン節約原則
 
