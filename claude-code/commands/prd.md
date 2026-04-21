@@ -47,7 +47,7 @@ Critical（必須対応）/ Warning（推奨対応）/ Info（検討推奨）
 
 ### Phase 5: 修正・承認
 
-AskUserQuestion → 修正 or 承認 → `/design-dog`（チーム共有用設計資料） or `/plan` or `/dev`
+AskUserQuestion → 修正 or 承認 → `/design-doc`（チーム共有用設計資料） or `/plan` or `/dev`
 
 ## 出力テンプレート
 

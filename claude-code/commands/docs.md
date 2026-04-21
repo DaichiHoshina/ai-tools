@@ -7,7 +7,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 完了した作業の知識を Notion に蓄積する。プロジェクト非依存。
 
-> **責務分離**: 設計段階の Design Doc は `/design-dog`（md、チーム共有用）。`/docs` は完了後の Notion ナレッジ蓄積。ADR / アーキテクチャ判断の設計フェーズ文書も `/design-dog` を使う。
+> **責務分離**: 設計段階の Design Doc は `/design-doc`（md、チーム共有用）。`/docs` は完了後の Notion ナレッジ蓄積。ADR / アーキテクチャ判断の設計フェーズ文書も `/design-doc` を使う。
 
 **必読**: Notion投稿時は以下のガイドラインに従うこと:
 - `guidelines/common/notion-writing.md` — 構成・見出し・文体・表記ルール（コア）
@@ -27,7 +27,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 | 変更履歴 | changelog, 変更 | git log/diffから自動抽出 |
 | 自由記述 | （上記以外） | ユーザー指示に従う |
 
-> 設計判断（ADR）・アーキテクチャ設計は `/design-dog` で md 作成後、完了時にこのコマンドで Notion へ取り込む。
+> 設計判断（ADR）・アーキテクチャ設計は `/design-doc` で md 作成後、完了時にこのコマンドで Notion へ取り込む。
 
 ## フロー
 
@@ -35,7 +35,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 - 引数あり → そのトピックで分析
 - 引数なし → `git log --oneline -10` と `git diff --stat` から直近の変更を提示、ユーザーに選択させる
-- `--from <md-path>` → 既存 md（`/design-dog` 出力等）を入力としてNotion化
+- `--from <md-path>` → 既存 md（`/design-doc` 出力等）を入力としてNotion化
 
 ### Step 2: ガイドライン読み込み
 
@@ -118,7 +118,7 @@ Grep / Read → 関連コード読解
 |-----------|------|
 | `--parent <url>` | Notionの親ページURL指定 |
 | `--update <url>` | 既存 Notion ページを更新（URL指定） |
-| `--from <md-path>` | ローカル md（`/design-dog` 出力等）を入力としてNotion化 |
+| `--from <md-path>` | ローカル md（`/design-doc` 出力等）を入力としてNotion化 |
 | `--dry` | Notion投稿せずプレビューのみ |
 
 ## 品質ガード

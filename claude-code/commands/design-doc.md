@@ -3,11 +3,11 @@ allowed-tools: Read, Glob, Grep, Bash, Write, Edit, AskUserQuestion, mcp__serena
 description: チーム共有用の設計資料作成 - PRD→設計に落とす、md形式でローカル保存
 ---
 
-# /design-dog - チーム共有用の設計資料作成
+# /design-doc - チーム共有用の設計資料作成
 
 `/prd` で整理した要件を、実装者・レビュワー・PMに読ませるチーム共有用の技術設計書（md）に落とし込む。
 
-**位置付け**: `/prd`=要件定義 → `/design-dog`=設計 → `/dev`=実装 → `/docs`=Notion蓄積（完了後）
+**位置付け**: `/prd`=要件定義 → `/design-doc`=設計 → `/dev`=実装 → `/docs`=Notion蓄積（完了後）
 
 ## 設計思想
 
