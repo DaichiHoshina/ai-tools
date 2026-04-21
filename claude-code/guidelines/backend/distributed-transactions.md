@@ -169,4 +169,4 @@ Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
 - Saga: ByteByteGo
 - Outbox: AWS Prescriptive Guidance
 - Idempotency Key RFC: IETF draft
-- 関連: `design/async-job-patterns.md`（DLQ）, `backend/observability-design.md`（trace相関）
+- 関連: `design/async-job-patterns.md`（DLQ）, `backend/observability-design.md`（trace相関）, `backend/event-driven-architecture.md`（Outbox/Kafka 実装）

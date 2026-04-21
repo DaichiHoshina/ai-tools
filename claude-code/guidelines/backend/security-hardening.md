@@ -173,4 +173,4 @@ X-RateLimit-Reset: 1700000000
 ## 12. 参考
 
 - OWASP Top 10: 2021版（2026更新予定）
-- 関連: `rules/enterprise-security.md`（基礎）, `backend/observability-design.md`（監査ログ統合）
+- 関連: `rules/enterprise-security.md`（基礎）, `backend/observability-design.md`（監査ログ統合）, `backend/multi-tenancy.md`（tenant 分離・RLS）

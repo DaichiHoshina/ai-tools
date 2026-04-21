@@ -183,4 +183,4 @@ producer が consumer の処理速度を超える時の対処:
 
 - AWS Prescriptive Guidance（patterns）
 - Designing Data-Intensive Applications（書籍）
-- 関連: `backend/distributed-transactions.md`（Saga）, `backend/caching-strategies.md`（read最適化）
+- 関連: `backend/distributed-transactions.md`（Saga）, `backend/caching-strategies.md`（read最適化）, `backend/multi-tenancy.md`（tenant_id shard key）

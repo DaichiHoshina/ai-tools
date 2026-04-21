@@ -71,3 +71,7 @@ bounded_context/
 | 一意キーによる重複排除 | メッセージIDやリクエストIDでDB制約 |
 | 状態チェック | 処理前に現在の状態を確認し、処理済みならスキップ |
 | トランザクション | DB操作とキュー操作の整合性を保つ |
+
+---
+
+- 関連: `backend/event-driven-architecture.md`（Kafka/streaming/exactly-once）, `backend/distributed-transactions.md`（Outbox/Saga）
