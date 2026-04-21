@@ -27,7 +27,7 @@
 
 ## 2. Read Replica + Eventual Consistency
 
-```
+```text
 Write → Primary
 Read → Replica (lag 100ms程度)
 ```
@@ -95,7 +95,7 @@ Read → Replica (lag 100ms程度)
 
 ## 6. Circuit Breaker
 
-```
+```text
 Closed（正常） → 失敗閾値超 → Open（即fail返却）
                     ↓ timeout
                 Half-Open（試行）→ 成功 → Closed
@@ -116,7 +116,7 @@ Closed（正常） → 失敗閾値超 → Open（即fail返却）
 
 リソース（thread pool, connection pool）を**機能別に分離**し、1機能の障害が全体に波及しないように。
 
-```
+```text
 [Order Service]
   - 通常 API: pool A (size=20)
   - レポート: pool B (size=5)  // 重い処理を隔離
@@ -154,7 +154,7 @@ producer が consumer の処理速度を超える時の対処:
 ## 10. キャパシティプランニング
 
 **基本式**:
-```
+```text
 必要 instance 数 = (peak QPS × 平均 latency) / instance当たり並列数
 ```
 
@@ -168,7 +168,7 @@ producer が consumer の処理速度を超える時の対処:
 
 ## 11. 判定フロー
 
-```
+```text
 スループット不足？
 ├─ DB読み多 → Read Replica + caching
 ├─ DB書き多 → sharding 検討（key設計慎重）

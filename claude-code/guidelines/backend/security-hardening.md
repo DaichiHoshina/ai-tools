@@ -87,7 +87,7 @@
 - endpoint 単位（重い API の制限）
 
 **429 応答**:
-```
+```text
 HTTP/1.1 429 Too Many Requests
 Retry-After: 30
 X-RateLimit-Limit: 100

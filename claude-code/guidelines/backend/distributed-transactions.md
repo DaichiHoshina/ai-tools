@@ -80,7 +80,7 @@ for i := 0; i < 3; i++ {
 - 補償も冪等であること
 
 **例（注文）**:
-```
+```text
 予約座席 → 決済 → 配送手配
 失敗時補償: 配送キャンセル → 返金 → 座席解放
 ```
@@ -91,7 +91,7 @@ for i := 0; i < 3; i++ {
 
 DB tx と message publish の atomicity 保証。
 
-```
+```text
 TX 内:
   INSERT INTO orders ...
   INSERT INTO outbox (event, payload) ...
@@ -152,7 +152,7 @@ Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
 
 ## 9. 判定フロー
 
-```
+```text
 分散整合性必要？
 ├─ いいえ → 単一 DB tx + 適切な分離レベル
 └─ はい

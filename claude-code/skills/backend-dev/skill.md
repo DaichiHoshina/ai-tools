@@ -5,16 +5,13 @@ requires-guidelines:
   - common
   - clean-architecture
   - ddd
-  - database-performance
-  - caching-strategies
-  - distributed-transactions
-  - observability-design
-  - security-hardening
-  - scalability-patterns
   - golang  # lang=go の場合
   - typescript  # lang=typescript の場合
   - python  # lang=python の場合
   - rust  # lang=rust の場合
+# backend/ 配下（database-performance, caching-strategies, distributed-transactions,
+# observability-design, security-hardening, scalability-patterns）は自動読込しない。
+# タスクのサブトピック検出時に load-guidelines が個別読込する方針（トークン節約）。
 parameters:
   lang:
     type: enum

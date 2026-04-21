@@ -81,7 +81,7 @@ cache.Del(key)  // invalidate（次回 read で reload）
 | **stale-while-revalidate** | TTL切れ後も短時間 stale 返却、裏で更新 | UX影響最小化 |
 
 **PER 数式**:
-```
+```text
 expires_at - now() < beta * delta * log(rand())
 ```
 （delta = 計算時間、beta ≈ 1.0）
@@ -90,7 +90,7 @@ expires_at - now() < beta * delta * log(rand())
 
 ## 6. 2層キャッシュ（local + distributed）
 
-```
+```text
 [App memory (LRU 100ms TTL)] → [Redis (5min TTL)] → [DB]
 ```
 
