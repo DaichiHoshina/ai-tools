@@ -113,14 +113,18 @@ ALTER TABLE users FORCE ROW LEVEL SECURITY;  -- table owner にも適用
 CREATE POLICY tenant_isolation ON users
   USING (tenant_id = current_setting('app.current_tenant', true)::uuid);
 
--- connection 毎に session variable 設定
-SET app.current_tenant = '550e8400-e29b-41d4-a716-446655440000';
+-- request 毎に BEGIN 直後で SET LOCAL（tx 終了で自動解除）
+BEGIN;
+SET LOCAL app.current_tenant = '550e8400-e29b-41d4-a716-446655440000';
+-- 業務 query
+COMMIT;
 ```
 
 **注意**:
-- `SET LOCAL app.current_tenant` は tx 内限定（connection pool 使用時は必須）
+- **`SET LOCAL` 必須**（connection pool/PgBouncer transaction pooling 下で session-scoped `SET` は次 request に tenant context が漏洩 → isolation 崩壊）。必ず `BEGIN` 後に `SET LOCAL` で tx scope に限定
 - `BYPASSRLS` 権限を持つ role で admin/migration 操作（業務 role は持たせない）
-- pg_dump / logical replication の挙動確認（RLS 適用される）
+- **`pg_dump` は RLS を bypass するのが既定**（table owner / superuser は `row_security=off` デフォルト）。backup/export を tenant-safe にするには (a) 非 owner role + `row_security=on` で実行、または (b) app 経由の export を使う。pg_dump に tenant 隔離を任せない
+- logical replication も owner 実行なら RLS 無視、専用 role 必須
 
 **MySQL は RLS 非対応**。定義者権限付き VIEW + session variable で擬似実装可能だが、基本 app 層強制が本命。
 
