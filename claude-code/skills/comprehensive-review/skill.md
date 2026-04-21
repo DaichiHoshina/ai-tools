@@ -10,23 +10,24 @@ requires-guidelines:
 parameters:
   focus:
     type: enum
-    values: [all, architecture, quality, readability, security, docs, test-coverage, root-cause, logging]
+    values: [all, architecture, quality, readability, security, docs, test-coverage, root-cause, logging, writing]
     default: all
     description: レビュー観点のフォーカス
 ---
 
 # comprehensive-review - 包括的コードレビュー
 
-## 8つの観点
+## 9つの観点
 
 1. **architecture** - クリーンアーキテクチャ、DDD、レイヤー違反
 2. **quality** - コード臭、パフォーマンス、型安全性
 3. **readability** - 命名、認知的複雑度、一貫性
 4. **security** - OWASP Top 10、機密情報漏洩
-5. **docs** - ドキュメント品質
+5. **docs** - ドキュメント品質（テストファイル等の補助ドキュメント）
 6. **test-coverage** - テストケースの充足度
 7. **root-cause** - 対症療法vs根本治療
 8. **logging** - ログレベル適切性、構造化ログ
+9. **writing** - ヒト向けドキュメント（md / Notion / PR description / PRD / Design Doc）の文章品質
 
 ## パラメータ
 
@@ -43,6 +44,7 @@ parameters:
 | test-coverage | テスト充足度のみ |
 | root-cause | 恒久対応のみ |
 | logging | ログのみ |
+| writing | ヒト向けドキュメントの文章品質のみ |
 
 ## 実行フロー
 
@@ -79,6 +81,32 @@ focusパラメータで指定された観点のみ実行。`all`の場合は全8
 | **バグ修正の回帰テスト** | 修正したバグの再発を防ぐテストケースがあるか |
 | **境界値・異常系** | 正常系だけでなくエラーケース・境界値がカバーされているか |
 | **テストの質** | テストが実装の詳細でなく振る舞いを検証しているか |
+
+**writing観点のチェック項目**（`guidelines/common/user-voice.md` 準拠）:
+
+対象ファイル: md（Design Doc、README、ADR、調査レポート）、Notion 投稿下書き、PR description、PRD。コード・コードコメントは対象外（コードは `readability` focus で扱う）。
+
+| チェック | NG 例 | Critical / Warning |
+|---------|-------|-------------------|
+| **結論先行** | 「本稿では〜について説明します」導入、数段落後に結論 | Warning |
+| **根拠なき評価語** | 「適切な」「最適な」「重要」「必須」「推奨」を根拠1文なしで使用 | Critical（1箇所でもあれば） |
+| **抽象語の放置** | 「改善」「最適化」「効率化」「強化」に数字 or 事例が隣接していない | Critical |
+| **難語の未定義** | 初出の idempotency / Saga / RLS / CQRS 等を定義併記なしで使用 | Warning |
+| **主語の省略** | 誰が・何がが不明な文（「対応しました」「実施する」） | Warning |
+| **5W1H 欠落** | When / Where / Who が不明な決定記述 | Warning |
+| **箇条書き金太郎飴** | 3項目以上の bullet の前後に地の文が1文もない | Warning |
+| **AI 定型語** | 「効果的に」「シームレスに」「〜を実現します」等、user-voice.md NG辞書ヒット | Warning |
+| **読後アクション未明示** | 末尾に「レビュワーは X を確認」「次は Y を実行」が無い | Warning |
+
+**Critical / Warning の扱い**:
+- Critical: 1箇所でもあれば書き直し必須
+- Warning: 3箇所以下なら修正推奨、4箇所以上で書き直し必須
+
+**出力例**:
+```
+🔴 Critical: [writing] 根拠なき「必須」使用（docs/design/oripa.md:45）
+修正案: 「SET LOCAL 必須」→ 「SET LOCAL 必須。session-scoped の SET は connection pool で次 request に tenant が漏洩するため」
+```
 
 **ファイル種別による自動追加**:
 
