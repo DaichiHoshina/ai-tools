@@ -1,6 +1,6 @@
 # Golang ガイドライン
 
-Go 1.26対応（2026年2月リリース）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+Go 1.26対応（2026年4月時点、安定版1.26.2）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 

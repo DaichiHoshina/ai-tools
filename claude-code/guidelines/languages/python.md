@@ -1,6 +1,6 @@
 # Python ガイドライン
 
-Python 3.13対応（2024年10月リリース）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+Python 3.14対応（2026年4月時点、安定版3.14.4）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 
