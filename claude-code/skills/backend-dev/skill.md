@@ -5,6 +5,12 @@ requires-guidelines:
   - common
   - clean-architecture
   - ddd
+  - database-performance
+  - caching-strategies
+  - distributed-transactions
+  - observability-design
+  - security-hardening
+  - scalability-patterns
   - golang  # lang=go の場合
   - typescript  # lang=typescript の場合
   - python  # lang=python の場合
