@@ -1,6 +1,6 @@
 # DBパフォーマンス ガイドライン
 
-クエリが遅い・スループット頭打ち・本番DB調査時に参照。**PostgreSQL 16-18 専用**（pg_stat_statements、EXPLAIN BUFFERS等PG固有）。MySQL/Oracle/SQLite は本書適用外、別途要調査。
+クエリが遅い・スループット頭打ち・本番DB調査時に参照。**PostgreSQL 16-18 専用**（pg_stat_statements、EXPLAIN BUFFERS等PG固有）。MySQL/InnoDB は `backend/mysql-performance.md` 参照。Oracle/SQLite は本書適用外。
 
 ## Tier 区分
 
