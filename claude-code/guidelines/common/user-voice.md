@@ -39,9 +39,17 @@
 
 抽象語（「エンジニア」「ユーザー」「改善」）で埋めても意味がない。具体的な人物像・数字・問題を書く。書いた内容を本文各所に織り込むのが目的。
 
-### 品質検証は review で
+### 品質検証の仕組み
 
-生成時は上記の4問・原則5点を参照して書き、書き終えた後は `/review --focus=writing` で機械的に違反を検出する。検出基準は `skills/comprehensive-review/SKILL.md` の writing 観点に定義済み。`/design-doc`、`/prd`、`/docs` は生成フロー末尾で自動実行する構成になっている。
+生成時は上記の4問・原則5点を参照して書く。書き終えた後は `skills/comprehensive-review/SKILL.md` の writing 観点 NG 表で違反を数え、閾値超なら書き直す。
+
+検査タイミングはコマンドごとに異なる（`/review` は git diff ベースなので、生成直後 or 投稿前の draft には直接使えない）:
+
+- `/design-doc`: Step 8 でファイル書き出し → Step 8.5 で `Read` + NG 判定 + `Edit` で書き直し loop
+- `/prd`: chat 出力のため、出力直前に AI が self-review（Phase 4.5）。`--out <path>` 指定時はファイル経由で同じ流れ
+- `/docs`: Notion 投稿前（Step 4.8）に draft 本文を self-review。投稿後の書き換えコストが高いので投稿前必須
+
+合格ライン: Critical 1件以上 または Warning 4件以上で書き直し（最大2 loop）。3 loop 到達しても残る場合は残件をユーザーに報告して続行判断。
 
 ## chat と document の文体を分ける
 

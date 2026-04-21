@@ -66,6 +66,17 @@ Grep / Read → 関連コード読解
 - 関連ページあり → 更新するか新規作成か確認
 - なし → 新規作成
 
+### Step 4.8: writing 検査（Notion 投稿前・必須）
+
+`notion-create-pages` 実行前に、draft 本文（Step 5 で投稿する text）を AI 自身が検査する。対象は md 化された draft で、まだ Notion に送られていない段階。
+
+検査項目は `skills/comprehensive-review/SKILL.md` の writing 観点 NG 表と `guidelines/common/user-voice.md` の NG 辞書。
+
+- Critical 1件以上、または Warning 4件以上ヒット → draft を書き直してから再検査（最大2 loop）
+- 合格後に Step 5 へ進む
+
+投稿後は編集コストが高いので、**必ず投稿前**に検査する。
+
 ### Step 5: Notionページ作成/更新
 
 `notion-create-pages` または `notion-update-page` で投稿。
@@ -107,10 +118,6 @@ Grep / Read → 関連コード読解
 - 3層（Intent / Understanding / Expression）を順に実行、合計9件以内
 - Layer 2 のユーザー回答文は draft にそのまま織り込む（AI で言い換え禁止）
 - 回答は `user_vocabulary.md` に追記
-
-### Step 5.7: writing レビュー自動実行
-
-`/review --focus=writing` で文章品質を検査する。Critical 1件以上 or Warning 4件以上で書き直し必須（最大2 loop）。検出基準は `skills/comprehensive-review/SKILL.md` の writing 観点に定義済み。
 
 ### Step 6: URL出力
 
