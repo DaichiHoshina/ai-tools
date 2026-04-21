@@ -34,7 +34,7 @@ TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コ
 - `type` - ユニオン・交差型
 - **Branded Type** - ID型安全性
 - **const assertion** - `as const`
-- **Utility Types** - 詳細は下記「型定義（厳格）」節の表参照
+- **Utility Types** - `Partial<T>`, `Pick<T,K>`, `Omit<T,K>`, `Record<K,V>` 等（詳細は下記「クイックリファレンス > Utility Types」節の表）
 
 ---
 
@@ -81,9 +81,14 @@ TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コ
 |----|------|
 | `Partial<T>` | 全プロパティをオプション化 |
 | `Required<T>` | 全プロパティを必須化 |
+| `Readonly<T>` | 全プロパティを読み取り専用化 |
 | `Pick<T, K>` | 特定プロパティ抽出 |
 | `Omit<T, K>` | 特定プロパティ除外 |
 | `Record<K, V>` | キー・値のマップ |
+| `NonNullable<T>` | null/undefined 除外 |
+| `ReturnType<F>` | 関数の戻り型抽出 |
+| `Parameters<F>` | 関数の引数型抽出（tuple） |
+| `Awaited<T>` | Promise 解決型抽出 |
 
 ### エラー処理
 

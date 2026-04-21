@@ -16,13 +16,16 @@ description: ガイドライン陳腐化チェック&自動修正 - バージョ
 ## 使用方法
 
 ```
-/update-guidelines              # 全guideline 3軸検査→自動修正
-/update-guidelines <path>       # 特定ファイルのみ
-/update-guidelines --dry        # 検出のみ、修正なし
-/update-guidelines --only=stale # 陳腐化のみ（他の軸スキップ）
-/update-guidelines --only=verbose  # 冗長性のみ
-/update-guidelines --only=ai    # AI可読性のみ
+/update-guidelines                      # 全guideline 3軸検査→自動修正
+/update-guidelines <path>               # 特定ファイルのみ
+/update-guidelines --dry                # 検出のみ、修正なし
+/update-guidelines --check-only         # --dry エイリアス（後方互換）
+/update-guidelines --only=staleness     # 陳腐化のみ
+/update-guidelines --only=redundancy    # 冗長性のみ
+/update-guidelines --only=readability   # AI可読性のみ
 ```
+
+`--only` 値（1文字略記も可）: `staleness|s` / `redundancy|r` / `readability|a`
 
 ## フロー
 
@@ -67,7 +70,7 @@ description: ガイドライン陳腐化チェック&自動修正 - バージョ
 | 冗長な接続詞 | 「〜なので」「〜ですから」等敬語連発 | 🟢 Info | ✅ 体言止めに変換 |
 | コード例過剰 | 同一原則に5行超の例 | 🟢 Info | 5行以内に短縮提案（要レビュー） |
 | 絵文字過剰 | 1ファイルに絵文字10個超 | 🟢 Info | 必須マーカー（✅❌⚠️）以外を削減提案 |
-| 英数字周りスペース | 日本語中の半角英数字前後に全角スペース | 🟢 Info | ✅ rules/markdown.md 準拠で削除 |
+| 英数字周りスペース | 日本語中の半角英数字前後の全/半スペース混入（例: 「Go 1.26 対応」の半角スペース、まれに全角も） | 🟢 Info | ✅ rules/markdown.md 準拠で削除（全/半両対応） |
 
 ## 修正の安全策
 
