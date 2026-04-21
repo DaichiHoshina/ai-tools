@@ -28,3 +28,8 @@ paths:
 ## テスト
 - table-driven tests推奨
 - テストヘルパーは t.Helper() 呼び出し
+- Flaky対策詳細: `guidelines/languages/go-test-stability.md`
+
+## 詳細ガイドライン
+
+設計パターン・ジェネリクス・アーキテクチャ構成等の詳細は `guidelines/languages/golang.md` 参照（`/load-guidelines full` で自動読込）。
