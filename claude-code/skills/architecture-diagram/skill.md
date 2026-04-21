@@ -9,9 +9,7 @@ Create professional technical architecture diagrams as self-contained HTML files
 
 ## Design System
 
-**詳細**: `references/design-system.md` 参照
-
-**要約**: ダークテーマ（slate-950背景）、JetBrains Mono、セマンティックカラー（cyan=Frontend, emerald=Backend, violet=DB, amber=Cloud, rose=Security）。SVGコンポーネント間は40px以上の間隔。Legend は全boundary外側に配置。
+ダークテーマ（slate-950背景）、JetBrains Mono、セマンティックカラー（cyan=Frontend, emerald=Backend, violet=DB, amber=Cloud, rose=Security）。SVGコンポーネント間は40px以上の間隔。Legend は全boundary外側に配置。
 
 ## Template
 

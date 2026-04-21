@@ -28,8 +28,6 @@ parameters:
 7. **root-cause** - 対症療法vs根本治療
 8. **logging** - ログレベル適切性、構造化ログ
 
-各観点の詳細チェック項目: [references/review-criteria.md](references/review-criteria.md)
-
 ## パラメータ
 
 `--focus`で観点を絞る（デフォルト: all）:

@@ -82,14 +82,6 @@ requires-guidelines:
 | 4 | API所要時間の事前確認 | 重い処理をUI内で同期実行 |
 | 5 | レスポンシブ確認 | サイズが画面に対して不適切 |
 
-## Reference Map
-
-必要な時だけ読み込む:
-
-- [references/themes.md](references/themes.md) → テーマプリセット選択、フレームワーク自動検出、デザインブリーフ
-- [references/dashboard-patterns.md](references/dashboard-patterns.md) → ダッシュボード設計、視覚的階層、レイアウト原則
-- [references/playwright-check.md](references/playwright-check.md) → Playwrightビジュアル検証フロー
-
 ## 出力形式
 
 ```text
