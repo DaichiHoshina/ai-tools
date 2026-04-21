@@ -20,6 +20,8 @@
 | SLO, SLI, tracing, OpenTelemetry, observability | `~/.claude/guidelines/backend/observability-design.md` |
 | OWASP, rate limit, secret, mTLS, authn, authz | `~/.claude/guidelines/backend/security-hardening.md` |
 | scale, sharding, read replica, circuit breaker, bulkhead | `~/.claude/guidelines/backend/scalability-patterns.md` |
+| Kafka, Redpanda, RabbitMQ, SQS, SNS, Pub/Sub, event-driven, partition, consumer group, DLQ, exactly-once, schema registry, Debezium, CDC | `~/.claude/guidelines/backend/event-driven-architecture.md` |
+| multi-tenant, tenancy, tenant_id, RLS, row-level security, SaaS分離, schema-per-tenant, database-per-tenant | `~/.claude/guidelines/backend/multi-tenancy.md` |
 
 ## 言語深堀りサブトピック
 

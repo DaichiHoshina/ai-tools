@@ -99,4 +99,4 @@ Skill frontmatter の `requires-guidelines` 識別子を skill実行時に自動
 - `typescript|golang|nextjs-react|tailwind|shadcn|python|rust|eslint|go-test-stability|go-performance|go-concurrency` → `languages/`
 - `terraform` → `infrastructure/terraform.md`、`kubernetes` → `infrastructure/aws-eks.md`
 - `clean-architecture|ddd|async-job-patterns` → `design/`
-- `database-performance|mysql-performance|caching-strategies|distributed-transactions|observability-design|security-hardening|scalability-patterns` → `backend/`
+- `database-performance|mysql-performance|caching-strategies|distributed-transactions|observability-design|security-hardening|scalability-patterns|event-driven-architecture|multi-tenancy` → `backend/`
