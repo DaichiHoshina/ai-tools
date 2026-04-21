@@ -8,7 +8,10 @@
       "Bash(rm -rf ~/.claude/guidelines/summaries/)",
       "Bash(rm -f ~/.claude/hooks/.icon-mapping.sh ~/.claude/hooks/pre-skill-use.sh)",
       "Bash(rm -rf ~/.claude/skills/git-commit)",
-      "Read(//Users/daichi/.claude/skills/**)"
+      "Read(//Users/daichi/.claude/skills/**)",
+      "Bash(git show *)",
+      "Bash(chmod +x /Users/daichi.hoshina/.claude/hooks/_old_*.sh)",
+      "Read(//Users/daichi.hoshina/.claude/hooks/**)"
     ]
   }
 }

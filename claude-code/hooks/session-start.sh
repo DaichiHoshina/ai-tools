@@ -21,6 +21,10 @@ require_jq
 # JSON入力を読み込む
 _SS_INPUT=$(cat)
 
+# jq 1回で全フィールド取得（v2.2.1 fork削減）
+eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "unknown") _CWD=\(.cwd // "")"' <<< "${_SS_INPUT}")"
+_SS_PROJECT=$(basename "${_CWD:-.}")
+
 # ====================================
 # ハーネス自己診断（24時間キャッシュ）
 # ====================================
@@ -82,32 +86,34 @@ if [[ "${_NEED_DIAG}" == "true" ]]; then
 fi
 
 # --- Worktree Memory Symlink ---
-_CWD=$(echo "${_SS_INPUT}" | jq -r '.cwd // ""')
 ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true
 
 # --- Analytics: セッション開始記録 ---
 _SS_LIB_DIR="${SCRIPT_DIR}/../lib"
 if [[ -f "${_SS_LIB_DIR}/analytics-writer.sh" ]]; then
     source "${_SS_LIB_DIR}/analytics-writer.sh"
-    _SS_SESSION_ID=$(echo "${_SS_INPUT}" | jq -r '.session_id // "unknown"')
-    _SS_PROJECT=$(basename "$(echo "${_SS_INPUT}" | jq -r '.cwd // "."')")
     analytics_start_session "${_SS_SESSION_ID}" "${_SS_PROJECT}" 2>/dev/null || true
 fi
 
 # --- Directory Color ---
+# jq 1回で default + mappings を取得して bash側でマッチング（fork大幅削減）
 _COLOR_CONFIG="${HOME}/.claude/config/dir-colors.json"
 _SESSION_COLOR="default"
 if [[ -f "${_COLOR_CONFIG}" ]]; then
-    _DEFAULT_COLOR=$(jq -r '.default // "default"' "${_COLOR_CONFIG}")
-    _SESSION_COLOR="${_DEFAULT_COLOR}"
-    while IFS= read -r _MAPPING; do
-        _PATTERN=$(echo "${_MAPPING}" | jq -r '.pattern')
-        _COLOR=$(echo "${_MAPPING}" | jq -r '.color')
-        if [[ "${PWD}" == *"${_PATTERN}"* ]]; then
+    # 1行目=default、2行目以降="pattern\tcolor"
+    _COLOR_DATA=$(jq -r '.default // "default", (.mappings[]? | "\(.pattern)\t\(.color)")' "${_COLOR_CONFIG}" 2>/dev/null || echo "default")
+    _FIRST=true
+    while IFS=$'\t' read -r _PATTERN _COLOR; do
+        if $_FIRST; then
+            _SESSION_COLOR="${_PATTERN}"  # 1行目は default 値
+            _FIRST=false
+            continue
+        fi
+        if [[ -n "${_PATTERN}" ]] && [[ "${PWD}" == *"${_PATTERN}"* ]]; then
             _SESSION_COLOR="${_COLOR}"
             break
         fi
-    done < <(jq -c '.mappings[]' "${_COLOR_CONFIG}" 2>/dev/null || true)
+    done <<< "${_COLOR_DATA}"
 fi
 
 # --- 出力組み立て ---
@@ -116,7 +122,6 @@ if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
-_CWD=$(echo "${_SS_INPUT}" | jq -r '.cwd // ""')
 _AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__activate_project\` を path=\"${_CWD}\" で呼び出す\n2. \`mcp__serena__list_memories\` でメモリ一覧を確認する\n3. 関連メモリがあれば読み込む\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否"
 if [[ -n "${_DIAG_MSG}" ]]; then
     _AC_FULL="${_DIAG_MSG}\n${_AC_BASE}"

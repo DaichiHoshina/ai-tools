@@ -47,8 +47,8 @@ if [[ -f "${_CTX_FILE}" ]]; then
   fi
 fi
 
-# promptフィールド取得
-prompt=$(echo "$input" | jq -r '.prompt // empty')
+# promptフィールド取得（<<< で fork 削減）
+prompt=$(jq -r '.prompt // empty' <<< "$input")
 if [ -z "$prompt" ]; then
   # promptが空の場合でも compact 提案メッセージがあれば返す
   if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
@@ -59,15 +59,19 @@ if [ -z "$prompt" ]; then
   exit 0
 fi
 
-prompt_lower=$(echo "$prompt" | tr '[:upper:]' '[:lower:]')
+prompt_lower="${prompt,,}"  # bash組み込みで小文字化（tr fork削減）
 
 # === スラッシュコマンドは検出スキップ（analytics追跡のみ） ===
 if [[ "$prompt" == /* ]]; then
-    _CMD_NAME=$(echo "$prompt" | sed 's|^/\([a-zA-Z_-]*\).*|\1|')
+    # bash parameter expansion で /コマンド名 を抽出（sed fork削減）
+    _CMD_NAME="${prompt#/}"
+    _CMD_NAME="${_CMD_NAME%% *}"
+    _CMD_NAME="${_CMD_NAME%%[^a-zA-Z_-]*}"
     if [[ -n "${_CMD_NAME}" && -f "${LIB_DIR}/analytics-writer.sh" ]]; then
         source "${LIB_DIR}/analytics-writer.sh"
-        _CMD_SESSION_ID=$(echo "$input" | jq -r '.session_id // "unknown"')
-        _CMD_PROJECT=$(basename "$(echo "$input" | jq -r '.cwd // "."')")
+        # jq 1回で session_id と cwd を取得
+        eval "$(jq -r '@sh "_CMD_SESSION_ID=\(.session_id // "unknown") _CMD_CWD=\(.cwd // ".")"' <<< "$input")"
+        _CMD_PROJECT=$(basename "$_CMD_CWD")
         analytics_insert_tool_event "${_CMD_SESSION_ID}" "${_CMD_PROJECT}" "SlashCommand" "${_CMD_NAME}" 2>/dev/null || true
     fi
     # スラッシュコマンドはスキル/言語検出不要 → 早期リターン
@@ -155,25 +159,23 @@ if [ -n "$technique_recommendation" ]; then
   fi
 fi
 
-# JSON出力
-output_json="{}"
-if [ -n "$system_message" ]; then
-  output_json=$(echo "$output_json" | jq --arg msg "$system_message" '.systemMessage = $msg')
-fi
-
-if [ -n "$additional_context" ]; then
-  output_json=$(echo "$output_json" | jq --arg ctx "$additional_context" '.additionalContext = $ctx')
-fi
-
-# compact 提案を additionalContext に追加（Claudeに届けるため）
+# JSON出力: compact通知と既存additional_contextを結合してjq 1回にまとめる
+final_ctx="$additional_context"
 if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
-  _existing_ctx=$(echo "$output_json" | jq -r '.additionalContext // ""')
-  if [[ -n "${_existing_ctx}" ]]; then
-    output_json=$(echo "$output_json" | jq --arg ctx "${_COMPACT_NOTICE_MSG}
-${_existing_ctx}" '.additionalContext = $ctx')
+  if [[ -n "$final_ctx" ]]; then
+    final_ctx="${_COMPACT_NOTICE_MSG}
+${final_ctx}"
   else
-    output_json=$(echo "$output_json" | jq --arg ctx "${_COMPACT_NOTICE_MSG}" '.additionalContext = $ctx')
+    final_ctx="${_COMPACT_NOTICE_MSG}"
   fi
 fi
 
-echo "$output_json"
+if [ -n "$system_message" ] && [ -n "$final_ctx" ]; then
+  jq -n --arg msg "$system_message" --arg ctx "$final_ctx" '{systemMessage: $msg, additionalContext: $ctx}'
+elif [ -n "$system_message" ]; then
+  jq -n --arg msg "$system_message" '{systemMessage: $msg}'
+elif [ -n "$final_ctx" ]; then
+  jq -n --arg ctx "$final_ctx" '{additionalContext: $ctx}'
+else
+  echo "{}"
+fi
