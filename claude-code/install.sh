@@ -79,6 +79,7 @@ setup_directories() {
     mkdir -p "$CLAUDE_DIR/agents"
     mkdir -p "$CLAUDE_DIR/skills"
     mkdir -p "$CLAUDE_DIR/lib"
+    mkdir -p "$CLAUDE_DIR/references"
 
     # Groove
     mkdir -p "$HOME/.groove/workflows"
@@ -160,6 +161,11 @@ copy_directory_contents() {
         rm -f "$CLAUDE_DIR/hooks"/test-*.sh 2>/dev/null || true
         chmod +x "$CLAUDE_DIR/hooks/"*.sh 2>/dev/null || true
         print_success "hooks をコピーしました"
+    fi
+
+    # References（ガイドラインから参照される詳細資料）
+    if [ -d "$SCRIPT_DIR/references" ]; then
+        copy_files "$SCRIPT_DIR/references" "$CLAUDE_DIR/references" "references"
     fi
 
     # Groove（リポジトリ groove/ → ~/.groove/）
