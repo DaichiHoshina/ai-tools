@@ -182,10 +182,4 @@ mcp__serena__write_memory("rca-{YYYYMMDD}-{要約}", レポート内容)
 
 ## Serena MCP必須使用
 
-すべてのコード操作でSerena MCPツールを使用:
-- `mcp__serena__find_symbol` - シンボル検索
-- `mcp__serena__find_referencing_symbols` - 使用箇所追跡
-- `mcp__serena__search_for_pattern` - パターン検出
-- `mcp__serena__read_file` - ファイル読み取り
-- `mcp__serena__get_symbols_overview` - ファイル構造把握
-- `mcp__serena__write_memory` - レポート保存
+すべてのコード操作で Serena MCP ツール（`find_symbol` / `find_referencing_symbols` / `search_for_pattern` / `read_file` / `get_symbols_overview` / `write_memory`）を使用。詳細は各 Step の用例参照。

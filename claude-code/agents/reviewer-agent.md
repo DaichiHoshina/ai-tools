@@ -137,16 +137,6 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 - ❌ 自動修正の実行
 - ❌ 主観的な好みによる指摘（客観的な問題のみ指摘）
 
-## 実行例
-
-```bash
-# 呼び出し例
-Task(
-  subagent_type: "reviewer-agent",
-  prompt: "PR #123 の変更内容をレビュー。認証機能の追加が含まれるため、セキュリティ重点的に確認"
-)
-```
-
 ## 10原則遵守
 
 1. **protection-mode**: 読み取り操作のみ（安全操作）
