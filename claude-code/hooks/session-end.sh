@@ -41,5 +41,5 @@ if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
         "$_INPUT_TOKENS" "$_CACHE_READ" "$_CACHE_WRITE" "$_OUTPUT_TOKENS" "$TOTAL_MESSAGES" "$DURATION" 2>/dev/null || true
 fi
 
-# JSON出力
-echo '{"systemMessage":"Session logged"}'
+# JSON出力（stdout閉鎖時のbroken pipeを無視）
+echo '{"systemMessage":"Session logged"}' 2>/dev/null || true

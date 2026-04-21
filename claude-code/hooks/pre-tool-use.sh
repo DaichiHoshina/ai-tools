@@ -27,14 +27,13 @@ classify_bash_command() {
   local cmd="$1"
 
   # 禁止操作チェック（危険なコマンド）
-  # スペースの揺れ（\s+）とエスケープ（\\rm等）を考慮
-  # /dev/null へのリダイレクトは安全（cat > /dev/null, 2>/dev/null等）、それ以外の /dev/ は禁止
-  # fd番号付きリダイレクト（2>/dev/sda等）も対象
+  # grep外部プロセスを bash [[ =~ ]] に置換して高速化（v2.2.1）
+  # /dev/null へのリダイレクトは安全、それ以外の /dev/ は禁止
   local _dev_forbidden=0
-  if echo "$cmd" | grep -qE '[0-9]*>\s*/dev/' && ! echo "$cmd" | grep -qE '[0-9]*>\s*/dev/null'; then
+  if [[ "$cmd" =~ [0-9]*\>[[:space:]]*/dev/ ]] && ! [[ "$cmd" =~ [0-9]*\>[[:space:]]*/dev/null ]]; then
     _dev_forbidden=1
   fi
-  if [[ "$_dev_forbidden" -eq 1 ]] || echo "$cmd" | grep -qE '(rm\s+-rf\s+/|rm\s+-rf\s+\*|:\(\)\{|sudo\s+rm|git\s+push\s+--force|git\s+push\s+-f)'; then
+  if [[ "$_dev_forbidden" -eq 1 ]] || [[ "$cmd" =~ (rm[[:space:]]+-rf[[:space:]]+/|rm[[:space:]]+-rf[[:space:]]+\*|:\(\)\{|sudo[[:space:]]+rm|git[[:space:]]+push[[:space:]]+--force|git[[:space:]]+push[[:space:]]+-f) ]]; then
     GUARD_CLASS="Forbidden"
     MESSAGE="${ICON_CRITICAL} 禁止: 危険なコマンド検出"
     ADDITIONAL_CONTEXT="破壊的コマンド検出。実行を中止し安全な代替手段を提案"
@@ -42,21 +41,21 @@ classify_bash_command() {
   fi
 
   # 自動処理禁止チェック
-  if echo "$cmd" | grep -qE '(npm run lint|prettier|eslint --fix|go fmt|autopep8|black )'; then
+  if [[ "$cmd" =~ (npm[[:space:]]run[[:space:]]lint|prettier|eslint[[:space:]]--fix|go[[:space:]]fmt|autopep8|black[[:space:]]) ]]; then
     GUARD_CLASS="Boundary"
     MESSAGE="${ICON_WARNING} 要確認: 自動整形"
     return
   fi
 
   # 変更系コマンド
-  if echo "$cmd" | grep -qE '(git commit|git push|git merge|git rebase|npm install|pip install|go mod|docker build|docker push)'; then
+  if [[ "$cmd" =~ (git[[:space:]]commit|git[[:space:]]push|git[[:space:]]merge|git[[:space:]]rebase|npm[[:space:]]install|pip[[:space:]]install|go[[:space:]]mod|docker[[:space:]]build|docker[[:space:]]push) ]]; then
     GUARD_CLASS="Boundary"
     MESSAGE="🔶 要確認: 変更系コマンド"
     return
   fi
 
   # 読み取り系コマンド（チェーン・パイプを含まない単純コマンドのみ）
-  if echo "$cmd" | grep -qE '^(git (status|log|diff|branch)|ls |pwd$|echo |cat |which |type )' && ! echo "$cmd" | grep -qE '[;&|]'; then
+  if [[ "$cmd" =~ ^(git[[:space:]](status|log|diff|branch)|ls[[:space:]]|pwd$|echo[[:space:]]|cat[[:space:]]|which[[:space:]]|type[[:space:]]) ]] && ! [[ "$cmd" =~ [\;\&\|] ]]; then
     GUARD_CLASS="Safe"
     return
   fi
