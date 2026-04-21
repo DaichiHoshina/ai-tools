@@ -87,6 +87,27 @@ Conventional Commits形式で自動生成:
 <type>(<scope>): <subject>
 ```
 
+## PR description テンプレート（pr/branch モード）
+
+PR 作成時は `guidelines/common/user-voice.md` の4問に対応した4セクションで description を書く。レビュワーが次アクションを取りやすい形式。
+
+```markdown
+## Why
+<なぜこの変更が必要か。根拠となるインシデント・数字・要件を1-2文で>
+
+## What changed
+<何を変えたか。抽象語でなく具体名で（「Redis cache 追加」「handler に `context.WithTimeout(5s)` 挿入」）>
+
+## Testing
+<どう検証したか。ローカル・staging・本番 like 環境での確認結果、テストコマンド>
+
+## Review focus
+<レビュワーに特に見てほしい箇所 or 意思決定を求める選択肢>
+```
+
+**避ける**: 「本PRでは〜を実装しました」「改善しました」「最適化しました」（根拠・数字なし）。
+**推奨**: 「p99 1.2s → 320ms、実装は Redis cache + N+1 削除」のような測れる記述。
+
 ## Jiraチケットリンク
 
 push/MR作成完了後、コミットメッセージやブランチ名にJiraチケットIDが含まれる場合:
