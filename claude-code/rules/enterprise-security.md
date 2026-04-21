@@ -34,6 +34,8 @@ paths:
 - `metadata.google.internal` (GCP metadata)
 - `100.100.100.200` (Alibaba metadata)
 
+**Sandbox 設定**: `settings.json` の `sandbox.network.deniedDomains` に上記を登録済み。ただし**sandbox 有効化時のみ効果**（`claude --sandbox` 起動、worktree isolation、または `EnterWorktree` 経由時）。通常起動では `permissions.deny` の `Bash(curl*169.254*)` 等が第一防御線。
+
 ## 4. MCP/外部API データ分類
 
 | 分類 | 例 | 取り扱い |

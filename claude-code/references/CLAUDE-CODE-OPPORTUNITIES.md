@@ -18,4 +18,10 @@
 ## 2.1.116 (2026-04-21 検出)
 
 - [ ] **Agent frontmatter `hooks:` (main-thread 経由)**: `--agent` で main-thread 実行時にも agent 側 hooks が発火可能に — 検討箇所: `claude-code/agents/*.md`
-- [ ] **Bash tool の gh rate-limit ヒント**: `gh` コマンドで GitHub API rate limit に達した際に backoff ヒントを surface — 検討箇所: リトライロジックを持つ hooks/scripts
+- ~~**Bash tool の gh rate-limit ヒント**~~ (obsolete 2026-04-21): リポジトリ内に gh リトライロジックを持つ hooks/scripts が存在せず恩恵不要
+
+## 2.1.108〜2.1.113 (2026-04-21 遡及検出)
+
+- [x] **`xhigh` effort level (Opus 4.7)**: `high` と `max` の中間。深いタスクで速度と精度をバランス — 採用: `claude-code/CLAUDE.md` effort 表に追加 (2026-04-21)
+- [x] **`sandbox.network.deniedDomains`**: 広い `allowedDomains` 下で特定ドメインをブロック可能。SSRF防止補強 — 採用: `templates/settings.json.template` にクラウドメタデータIP 3件追加 (2026-04-21)
+- [x] **`/ultrareview` (built-in)**: クラウドで並列マルチエージェントレビュー。PR番号指定も可 — 採用: `commands/review.md` に `--ultra` オプション追加 (2026-04-21)
