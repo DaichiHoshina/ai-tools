@@ -9,6 +9,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 **必読**: Notion投稿時は以下のガイドラインに従うこと:
 - `guidelines/common/notion-writing.md` — 構成・見出し・文体・表記ルール（コア）
+- `guidelines/common/user-voice.md` — ユーザー文体ガイド + 対話型チェック辞書
 - `guidelines/common/notion-design.md` — デザインパターン
 - `guidelines/common/notion-database.md` — DB設計・テンプレート
 - `guidelines/common/notion-operations.md` — AI活用・権限・外部連携
@@ -104,6 +105,15 @@ Grep / Read → 関連コード読解
 - PR: {url}（あれば）
 - 作成日: {date}
 ```
+
+### Step 5.5: 対話型リライト（必須）
+
+詳細・辞書・テンプレは `guidelines/common/user-voice.md` 参照。
+
+- 事前読込: `~/.claude/projects/{project}/memory/user_vocabulary.md`（既知語スキップ）
+- 3層（Intent / Understanding / Expression）を順に実行、合計9件以内
+- Layer 2 のユーザー回答文は draft にそのまま織り込む（AI で言い換え禁止）
+- 回答は `user_vocabulary.md` に追記
 
 ### Step 6: URL出力
 
