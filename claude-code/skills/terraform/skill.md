@@ -34,9 +34,6 @@ requires-guidelines:
 | 2 | タグ付け | 共通タグをlocalsで定義、全リソースに適用 |
 | 3 | 公式モジュール | terraform-aws-modules活用 |
 
-コード例が必要な場合: [references/design-patterns.md](references/design-patterns.md)
-モジュール設計詳細: [references/module-design.md](references/module-design.md)
-
 ## チェックリスト
 
 | カテゴリ | 項目 |

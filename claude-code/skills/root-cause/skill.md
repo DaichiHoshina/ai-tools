@@ -31,8 +31,6 @@ parameters:
 
 各レベルで「なぜ?」を問い、証拠を収集する。
 
-詳細テンプレート: [references/analysis-framework.md](references/analysis-framework.md)
-
 ### Step 3: 根本原因の分類
 
 | カテゴリ | 説明 | 典型的な複雑度 |
@@ -51,8 +49,6 @@ parameters:
 | L1: 対症療法 | 高 | 緊急時のみ |
 | L2: 部分的治療 | 中 | 時間制約時 |
 | L3: 根本治療 | 低 | 推奨 |
-
-詳細: [references/analysis-framework.md](references/analysis-framework.md)
 
 ### Step 5: 類似問題の検出
 

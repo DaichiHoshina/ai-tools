@@ -19,7 +19,6 @@ effort: low
 | `/doc` | `/docs` | ドキュメント作成 |
 | `/rv` | `/review` | コードレビュー |
 | `/ts` | `/test` | テスト作成 |
-| `/cm` | `/commit` | コミットのみ |
 | `/pl` | `/plan` | 設計・計画 |
 | `/dd` | `/design-doc` | チーム共有用Design Doc作成 |
 | `/mp` | `/git-push --main` | mainにコミット&プッシュ |
