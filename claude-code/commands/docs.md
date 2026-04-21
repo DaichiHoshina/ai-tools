@@ -7,6 +7,8 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 コードベースから知識を抽出し、Notionに蓄積する。プロジェクト非依存。
 
+> チーム共有用の設計資料（Design Doc）を md で書く場合は `/design-dog` を使う。`/docs` は Notion への完了後ナレッジ蓄積用。
+
 **必読**: Notion投稿時は以下のガイドラインに従うこと:
 - `guidelines/common/notion-writing.md` — 構成・見出し・文体・表記ルール（コア）
 - `guidelines/common/user-voice.md` — ユーザー文体ガイド + 対話型チェック辞書
