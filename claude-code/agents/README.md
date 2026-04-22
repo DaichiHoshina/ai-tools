@@ -10,8 +10,8 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 |------------|-------|------|---------|
 | **reviewer-agent** | opus | レビュー担当 | コード品質・セキュリティ・テストレビュー |
 | **root-cause-analyzer** | opus | 根本原因分析 | バグの5Whys分析・構造的修正提案 |
-| **po-agent** | sonnet | 戦略決定担当 | プロダクト戦略・Worktree管理・Manager 起動 |
-| **manager-agent** | sonnet | タスク分割・配分・Developer 並列起動 | 大規模タスクのサブタスク管理・統合 |
+| **po-agent** | sonnet | 戦略決定担当 | プロダクト戦略・Worktree管理・判断結果返却 |
+| **manager-agent** | sonnet | タスク分割・配分計画作成 | 大規模タスクの配分計画・完了時の統合検証 |
 | **developer-agent** | haiku | 実装担当 | コード実装・修正・追加 |
 | **explore-agent** | haiku | 探索・分析担当 | コードベース調査・並列探索 |
 | **verify-app** | haiku | 検証担当 | ビルド・テスト・lintの統合検証 |
@@ -22,7 +22,7 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 | コマンド | 起動されるエージェント | フロー |
 |---------|---------------------|--------|
-| `/flow` | po-agent（常時起動） | PO → Manager → Developer（Teamデフォルト） |
+| `/flow` | po-agent（常時起動） | 親が PO → Manager → Developer × N を順次起動（Teamデフォルト） |
 | `/dev` | なし（直接実行） | Agent不使用。Agent Teamが必要なら `/flow` を使用 |
 | `/review` | reviewer-agent | レビュー自動実行 |
 | `/plan` | po-agent + manager-agent | 戦略策定 + タスク分割 |
@@ -34,28 +34,27 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 ユーザーがコマンドを実行すると、内部で自動的にエージェントが起動されます：
 
-### `/flow` のワークフロー（自走型階層起動）
+### `/flow` のワークフロー（親ハンドリング型）
 
-各層が **自分で次の層を起動** する。親（Claude Code）は PO を呼ぶだけで以下が連鎖する。
+Claude Code の sub-agent 仕様上、sub-agent は他の sub-agent を spawn できない。**親（Claude Code）が各層を順次起動**する。
 
 ```
 1. 親 → Task(po-agent) 起動
-   ↓ タスク分析 → Team使用判断（デフォルト: Team）
+   ↓ PO: 実行モード判断 → 判断結果を親に返却
    ↓
-2. PO → Task(manager-agent) 自走起動（Team使用時のみ）
-   ↓ タスク分割・配分計画
+2. 親 → Task(manager-agent) 起動（Team使用時）
+   ↓ Manager: 配分計画を親に返却
    ↓
-3. Manager → Task(developer-agent) × N を 1メッセージで並列起動
-   ↓ 実装 → 全Developer完了を統合
+3. 親 → Task(developer-agent) × N を 1メッセージで並列起動
+   ↓ 全 Developer 完了
    ↓
-4. Manager → 統合結果を PO に返却
+4. 親 → Task(manager-agent) 再起動（統合検証）
+   ↓ Manager: 統合結果を返却
    ↓
-5. PO → 結果を親に返却（ここで PO 完了）
-   ↓
-6. 親 → /lint-test → /review(reviewer-agent) → /git-push --pr
+5. 親 → /lint-test → /review(reviewer-agent) → /git-push --pr
 ```
 
-**直接実行推奨時**: PO が判断結果を親に返し、親が `/dev` を起動（Step 2-5 スキップ）。
+**直接実行推奨時**: PO が判断結果を親に返し、親が `/dev` を起動（Step 2-4 スキップ）。
 
 ---
 
@@ -81,15 +80,15 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 ### 4. manager-agent
 
-- **トリガー**: PO Agent が Team使用判断時に自走起動
-- **役割**: タスク分割・配分計画・Developer 並列起動・完了統合（実装なし）
-- **特徴**: `Task(developer-agent)` を 1メッセージで並列呼び出し、全完了まで管理
+- **トリガー**: PO が Team使用判断時、親が起動
+- **役割**: タスク分割・配分計画作成・完了時の統合検証（実装なし、Developer 起動は親が担当）
+- **特徴**: 配分計画フォーマットを親に返し、親が `Task(developer-agent)` を並列起動
 
 ### 5. po-agent
 
 - **トリガー**: `/flow`（常時起動）, `/plan`
-- **役割**: 実行モード判断・戦略決定・Worktree管理・Manager 起動（実装なし）
-- **特徴**: Team使用判断時は **自ら `Task(manager-agent)` を起動** し完了まで待機
+- **役割**: 実行モード判断・戦略決定・Worktree管理・Manager への指示フォーマット作成（実装なし）
+- **特徴**: 判断結果（モード・worktree・Manager 指示）を親に返却。親が次層を起動
 
 ### 6. verify-app
 
@@ -101,20 +100,24 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 ## エージェント階層（Agent Hierarchy）
 
-大規模タスクでは階層構造で実行。各層が **自分で次の層を起動** する自走型。
+大規模タスクでは階層構造で実行。**親（Claude Code）が各層を順次起動**する親ハンドリング型（sub-agent 仕様準拠）。
 
 ```
 親（Claude Code）
-  └─ Task(po-agent)              # 戦略・Team判断
-       └─ Task(manager-agent)    # PO が自走起動
-            ├─ Task(developer-agent) dev1  # Manager が並列起動
-            ├─ Task(developer-agent) dev2
-            └─ Task(developer-agent) dev3
-  └─ verify-app                  # 実装完了後、親が起動
+  ├─ Task(po-agent)              # 戦略・Team判断 → 返却
+  ├─ Task(manager-agent)         # 配分計画 → 返却
+  ├─ Task(developer-agent) dev1  ┐ 1メッセージで
+  ├─ Task(developer-agent) dev2  │ 並列起動
+  ├─ Task(developer-agent) dev3  ┘
+  ├─ Task(manager-agent)         # 統合検証（再起動）
+  ├─ verify-app                  # 実装完了後
   └─ Task(reviewer-agent)        # 最終レビュー
 ```
 
-**設計原則**: 各 Agent の `tools` に次層の `Task(...)` を持たせ、親のハンドリング漏れを防ぐ。
+**設計原則**:
+- sub-agent は他 sub-agent を spawn できない（Claude Code 仕様）
+- PO/Manager/Explore には `disallowedTools: Write, Edit, MultiEdit` を明示し、実装違反を物理防止
+- 並列起動は親が 1メッセージで複数 `Task` を同時呼び出しする
 
 ---
 

@@ -14,6 +14,10 @@ tools:
   - TaskUpdate
   - TaskList
   - mcp__serena__*
+disallowedTools:
+  - Write
+  - Edit
+  - MultiEdit
 ---
 
 # Explore（探索エージェント）Agent
