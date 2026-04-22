@@ -59,10 +59,15 @@ if [ -z "$prompt" ]; then
   exit 0
 fi
 
-# 長いプロンプトは検出処理を先頭2000字に制限（線形スキャンのコスト削減）
-# キーワード・テクニック検出は先頭部分で十分。後続処理には影響しない。
+# 長いプロンプトは検出処理を先頭2000文字に制限（線形スキャンのコスト削減）
+# bash 5.0+ の ${var:0:N} は LC_CTYPE が UTF-8 ならマルチバイト文字数基準で切り出す。
+# C/POSIX ロケール時はバイト基準になるため、iconv で不正バイト列を除去して下流に渡す。
 if (( ${#prompt} > 2000 )); then
   prompt_lower="${prompt:0:2000}"
+  # UTF-8 境界で不完全なバイト列が混入した場合に備えてサニタイズ（iconv 不在時はスキップ）
+  if command -v iconv &>/dev/null; then
+    prompt_lower=$(printf '%s' "$prompt_lower" | iconv -f utf-8 -t utf-8 -c 2>/dev/null || printf '%s' "$prompt_lower")
+  fi
   prompt_lower="${prompt_lower,,}"
 else
   prompt_lower="${prompt,,}"  # bash組み込みで小文字化（tr fork削減）

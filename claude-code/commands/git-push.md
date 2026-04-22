@@ -94,6 +94,10 @@ Conventional Commits 形式: `<type>(<scope>): <subject>`
 
 避ける: 「〜を実装しました」「改善しました」（数字なし）、未実行テストの虚偽記載。
 
+## Jiraチケットリンク
+
+push/MR 作成後、コミットメッセージやブランチ名に Jira チケット ID が含まれる場合、該当チケットに MR/PR URL を `mcp__jira__jira_post` で自動コメント追加。ID 未検出時は警告。
+
 ## 注意
 
 - force push 禁止

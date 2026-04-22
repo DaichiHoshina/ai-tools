@@ -44,7 +44,10 @@ analytics_init() {
 
     mkdir -p "$ANALYTICS_DB_DIR"
 
+    # 並列セッション対応: WAL mode + busy_timeout で同時書き込み競合を回避
     sqlite3 "$ANALYTICS_DB" <<'SQL'
+PRAGMA journal_mode=WAL;
+PRAGMA busy_timeout=3000;
 CREATE TABLE IF NOT EXISTS tool_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
@@ -92,9 +95,10 @@ SQL
 }
 
 # --- 安全なSQLite実行ラッパー ---
+# busy_timeout 3秒を全呼び出しに適用（並列セッション時のロック衝突を再試行で吸収）
 _analytics_exec() {
     local sql="$1"
-    if ! sqlite3 "$ANALYTICS_DB" "$sql" 2>/dev/null; then
+    if ! sqlite3 -cmd "PRAGMA busy_timeout=3000;" "$ANALYTICS_DB" "$sql" 2>/dev/null; then
         echo "WARNING: analytics write failed" >&2
         return 1
     fi
@@ -186,24 +190,62 @@ analytics_insert_agent_start() {
 # --- 古いレコードのクリーンアップ ---
 # Usage: analytics_cleanup_old_records [days]
 # デフォルト 90日超のレコードを削除。DB肥大化防止のため session-end から日次で呼ばれる。
+# 設計:
+#   - WAL + busy_timeout で並列セッションの INSERT と共存
+#   - VACUUM は削除行数が閾値を超えたときのみ実行（排他ロック時間を最小化）
+#   - end_time IS NULL の孤児 sessions も start_time 基準で削除（整合性維持）
+#   - 失敗時もフラグを立てて翌日まで再試行抑制（ログ汚染防止）
+#   - 失敗時の stderr は analytics-errors.log に追記（監視可能化）
 analytics_cleanup_old_records() {
     local days="${1:-90}"
+    local vacuum_threshold="${2:-1000}"  # 削除行数がこれを超えたら VACUUM
     [[ -f "$ANALYTICS_DB" ]] || return 0
 
-    # 日次実行フラグ（同日複数回実行を抑制）
+    # 日次実行フラグ（同日複数回実行を抑制、成功/失敗問わず当日は再試行しない）
     local flag_file="${ANALYTICS_DB_DIR}/.cleanup-$(date -u +%Y%m%d)"
     [[ -f "$flag_file" ]] && return 0
 
     _analytics_check_deps || return 1
 
-    if ! sqlite3 "$ANALYTICS_DB" "
+    local log_dir="${HOME}/.claude/logs"
+    local err_log="${log_dir}/analytics-errors.log"
+    mkdir -p "$log_dir" 2>/dev/null || true
+
+    # 既存 DB への WAL 冪等適用（init 未経由でも WAL 化保証）。出力は捨てる
+    sqlite3 -cmd "PRAGMA busy_timeout=3000;" "$ANALYTICS_DB" "PRAGMA journal_mode=WAL;" >/dev/null 2>>"$err_log" || true
+
+    # 削除実行（busy_timeout は SQL 内で設定）
+    local sqlite_out sqlite_status
+    sqlite_out=$(sqlite3 "$ANALYTICS_DB" <<SQL 2>>"$err_log"
+PRAGMA busy_timeout=5000;
 DELETE FROM tool_events WHERE timestamp < datetime('now', '-${days} days');
 DELETE FROM agent_events WHERE start_time < datetime('now', '-${days} days');
-DELETE FROM sessions WHERE end_time IS NOT NULL AND end_time < datetime('now', '-${days} days');
-VACUUM;
-" 2>/dev/null; then
-        echo "WARNING: analytics cleanup failed" >&2
+DELETE FROM sessions WHERE start_time < datetime('now', '-${days} days')
+  AND (end_time IS NULL OR end_time < datetime('now', '-${days} days'));
+SELECT total_changes();
+SQL
+    )
+    sqlite_status=$?
+
+    if [[ $sqlite_status -ne 0 ]]; then
+        echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] analytics cleanup DELETE failed (exit=${sqlite_status})" >>"$err_log"
+        # 失敗時もフラグ立てて翌日まで抑制（無限リトライ防止）
+        touch "$flag_file" 2>/dev/null || true
         return 1
+    fi
+
+    # sqlite3 バージョンによっては PRAGMA 設定時も値を stdout に出すため、
+    # tail -n 1 で SELECT total_changes() の結果のみ抽出する
+    local deleted
+    deleted=$(printf '%s\n' "$sqlite_out" | tail -n 1)
+    [[ "$deleted" =~ ^[0-9]+$ ]] || deleted=0
+
+    # VACUUM は削除行数が閾値超のときのみ（排他ロック時間短縮）
+    if (( deleted > vacuum_threshold )); then
+        if ! sqlite3 -cmd "PRAGMA busy_timeout=10000;" "$ANALYTICS_DB" "VACUUM;" 2>>"$err_log"; then
+            echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] analytics VACUUM failed (deleted=${deleted})" >>"$err_log"
+            # VACUUM 失敗は致命的ではない（次回再試行される）
+        fi
     fi
 
     # 古いフラグファイル掃除（7日超）+ 今回フラグ作成

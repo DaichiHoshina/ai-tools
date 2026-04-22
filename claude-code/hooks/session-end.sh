@@ -39,7 +39,8 @@ if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
     _OUTPUT_TOKENS=$(jq -r '.output_tokens // 0' <<< "$INPUT")
     analytics_insert_session "$SESSION_ID" "$PROJECT_NAME" "$_MODEL" "$_GIT_BRANCH" \
         "$_INPUT_TOKENS" "$_CACHE_READ" "$_CACHE_WRITE" "$_OUTPUT_TOKENS" "$TOTAL_MESSAGES" "$DURATION" 2>/dev/null || true
-    analytics_cleanup_old_records 90 2>/dev/null || true
+    # stderr は exec 2>> で hook-errors.log に既にリダイレクト済（6行目）。明示捨てない
+    analytics_cleanup_old_records 90 || true
 fi
 
 # JSON出力（stdout閉鎖時のbroken pipeを無視）
