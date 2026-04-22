@@ -164,6 +164,13 @@ OpenAI Codexにも対応しています。詳細は [CODEX-SETUP.md](./CODEX-SET
 | [claude-code/SETUP.md](./claude-code/SETUP.md) | セットアップ手順 |
 | [claude-code/hooks/README.md](./claude-code/hooks/README.md) | Hooks詳細 |
 | [claude-code/output-styles/README.md](./claude-code/output-styles/README.md) | Output Styles詳細 |
+| [docs/commands-quickref.md](./docs/commands-quickref.md) | コマンドクイックリファレンス |
+
+### 継続課題
+
+既知のバグ・未対応改善・検証待ち事項をまとめています。
+
+[docs/pending-improvements.md](./docs/pending-improvements.md)
 
 ---
 
