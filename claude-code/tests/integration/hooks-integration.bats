@@ -105,9 +105,10 @@ teardown() {
 @test "hooks: pre-tool-use detects dangerous commands" {
   local input='{"tool_name": "Bash", "tool_input": {"command": "rm -rf /"}}'
   run bash -c "echo '$input' | ${HOOKS_DIR}/pre-tool-use.sh"
-  [ "$status" -eq 0 ]
-  # 警告メッセージが出力されることを確認
-  [[ "$output" =~ "⚠" ]] || [[ "$output" =~ "warning" ]]
+  # Forbiddenは exit 2 でtoolブロック（Claude Code hook契約）
+  [ "$status" -eq 2 ]
+  # 禁止メッセージが出力されることを確認
+  [[ "$output" =~ "禁止" ]] || [[ "$output" =~ "危険" ]]
 }
 
 @test "hooks: user-prompt-submit handles code injection attempts" {
@@ -139,21 +140,21 @@ teardown() {
 
 @test "integration: hooks can load lib/security-functions.sh" {
   # security-functions.sh が正しくロードできることを確認
-  run bash -c "source ${PROJECT_ROOT}/claude-code/lib/security-functions.sh && declare -F validate_json"
+  run bash -c "source ${PROJECT_ROOT}/lib/security-functions.sh && declare -F validate_json"
   [ "$status" -eq 0 ]
   [[ "$output" =~ "validate_json" ]]
 }
 
 @test "integration: hooks can load lib/hook-utils.sh" {
   # hook-utils.sh が正しくロードできることを確認
-  run bash -c "source ${PROJECT_ROOT}/claude-code/lib/hook-utils.sh && declare -F get_field"
+  run bash -c "source ${PROJECT_ROOT}/lib/hook-utils.sh && declare -F get_field"
   [ "$status" -eq 0 ]
   [[ "$output" =~ "get_field" ]]
 }
 
 @test "integration: hooks can load lib/print-functions.sh" {
   # print-functions.sh が正しくロードできることを確認
-  run bash -c "source ${PROJECT_ROOT}/claude-code/lib/print-functions.sh && declare -F print_success"
+  run bash -c "source ${PROJECT_ROOT}/lib/print-functions.sh && declare -F print_success"
   [ "$status" -eq 0 ]
   [[ "$output" =~ "print_success" ]]
 }
@@ -318,7 +319,9 @@ teardown() {
 @test "integration: pre-tool-use classifies Forbidden bash commands" {
   local input='{"tool_name": "Bash", "tool_input": {"command": "rm -rf /"}}'
   run bash -c "echo '$input' | ${HOOKS_DIR}/pre-tool-use.sh"
-  [ "$status" -eq 0 ]
+  # Forbiddenは exit 2 でtoolブロック
+  [ "$status" -eq 2 ]
+  # additionalContext が出力される
   echo "$output" | jq -e '.additionalContext' >/dev/null
 }
 
