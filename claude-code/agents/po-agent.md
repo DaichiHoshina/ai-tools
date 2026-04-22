@@ -31,8 +31,12 @@ tools:
 2. **実行モード判断** - Team使用 or 直接実行推奨を決定（下記参照）
 3. **Worktree判断** - Team使用時、新規作業ならユーザーに確認（AskUserQuestion使用）
 4. **戦略決定** - 技術選定、品質基準の設定
-5. **Managerへ指示** - Team使用時、明確な指示とworktree情報を伝達
-6. **進捗監督と承認** - 最終成果物を確認
+5. **Manager 起動（Team使用時のみ）** - `Task(manager-agent)` を **PO が自ら呼び出す**。指示フォーマット（下記）と worktree 情報を prompt に含め、Manager の完了まで待機
+6. **進捗監督と承認** - Manager から返却された統合結果を確認し、最終成果物を親（Claude Code）に返却
+
+### 直接実行推奨時の動作
+
+Manager を起動せず、親（Claude Code）に「直接実行推奨」と判断結果を返すのみ。後続は `/dev` が担当。
 
 ## 実行モード判断（/flow からの起動時）
 
@@ -84,6 +88,7 @@ tools:
 - ❌ ファイル編集（Write/Edit）
 - ❌ ユーザー確認なしのWorktree作成
 - ❌ Git書き込み操作（add/commit/push）
+- ❌ Team使用判断時に Manager を起動せず親に戻すこと（親がハンドリング漏れする）
 
 ## Manager への指示フォーマット
 
