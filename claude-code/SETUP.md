@@ -132,6 +132,14 @@ Bash タイムアウト延長（`~/.claude/settings.json`）:
 
 デフォルト2分 → 5分（最大10分: 600000）
 
+### デバッグ専用環境変数（通常運用では設定しない）
+
+| 変数 | 用途 | リスク |
+|------|------|--------|
+| `OTEL_LOG_RAW_API_BODIES` | OpenTelemetry ログに API request/response body 全文を出力 | token・credential・PII 漏洩。本番環境禁止 |
+
+API 呼び出しの詳細デバッグが必要な時のみ一時的に `"1"` を設定。作業後必ず削除。
+
 ## チェックリスト
 
 - [ ] install.sh 実行完了
