@@ -49,6 +49,8 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 - 単純修正（1-2ファイル）→ `/dev --quick` または直接実行
 - 複雑実装（3ファイル以上）→ `/flow` でAgent階層使用
 - 大量ファイル処理（20+）→ `claude -p` fan-out（`references/fanout-recipes.md`）
+- **実装前の設計判断**: 軽量は `Shift+Tab` でネイティブ Plan Mode（read-only、`Ctrl+G` で plan 編集）。大規模戦略判断は `/plan`（PO agent）
+- **長期タスク**: `/rename {type}-{scope}` で識別、`claude --resume` で再開（`references/session-management.md`）
 - **軽い調査は agent 起動しない**: 1-2クエリなら直接 grep/find/serena（起動コスト 30秒〜数分）
 - **成功基準原則**: 手順指示より「何が達成されれば成功か」を与える
 - **検証ファースト**: 実装後は必ずテスト/lint/型チェック実行。検証できない変更は出荷しない
@@ -112,5 +114,6 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 | UIデフォルト設定 | `references/ui-defaults.md` |
 | インシデント対応フロー | `references/incident-flow.md` |
 | Checkpoint / Rewind 活用 | `references/checkpoint-rewind.md` |
+| セッション管理（rename/resume/命名規約） | `references/session-management.md` |
 | claude -p Fan-out レシピ | `references/fanout-recipes.md` |
 | Agent コスト実測 | `references/performance-insights.md` |
