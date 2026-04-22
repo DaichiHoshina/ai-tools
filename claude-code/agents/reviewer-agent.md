@@ -131,6 +131,55 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 - **問題指摘と提案のみ**: 修正はDeveloper Agentに委託
 - **verify-appと併用**: レビュー後に必ず自動検証を実行
 
+## /flow Team チェーンでの動作
+
+`/flow` Team経路から親経由で起動される場合の入出力規約:
+
+### レビュー方式: --codex モード固定
+
+`/flow` Team経路では **comprehensive-review + codex review を並列実行**（`/review --codex` と同等）。
+
+```bash
+# 並列実行
+Skill("comprehensive-review")          # 7観点レビュー
+codex review --uncommitted             # セカンドオピニオン
+```
+
+**結果統合ルール**:
+- **両者が指摘** → **P0**（確度高、再修正対象）
+- **片方のみ指摘**（観点=security/type-safety/data-integrity）→ **P0**（厳しめ）
+- **片方のみ指摘**（その他）→ **P1**（ユーザー報告のみ）
+- codex 未インストール（`which codex` 失敗）→ comprehensive-review 単独、警告をログに残す
+
+### 入力（親からのprompt）
+
+- Manager 統合結果（変更ファイル一覧、残課題）
+- PO 品質基準（P0 閾値・対象観点）
+- 再検証モードか初回レビューか
+
+### 出力フォーマット（親が Manager 再起動判断に使う）
+
+```markdown
+## Team レビュー結果
+
+### P0 (N件) — 再修正対象
+- [観点] 内容（ファイル:行）
+  - 修正案: 具体案
+
+### P1 (N件) — ユーザー報告のみ（再修正対象外）
+- [観点] 内容（ファイル:行）
+
+## 判定
+- [ ] P0: 0件 → 合格、/git-push へ
+- [ ] P0: 1件以上 → Manager 再配分（1ループのみ）
+```
+
+### Team チェーン内の制約
+
+- **再修正ループは最大1回**（無限ループ防止）
+- 再検証で P0 残存 → ユーザー報告、`--auto` 時は停止
+- P1 以下は `/flow` 完了後の報告に回す（ループ対象外）
+
 ## 禁止事項
 
 - ❌ コードの直接編集（Edit/Write/Bash編集コマンド使用禁止）

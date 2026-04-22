@@ -51,6 +51,11 @@ disallowedTools:
 - パス: [worktreeパス or "mainブランチで作業"]
 - ブランチ: [ブランチ名]
 
+## Reviewer 品質基準（Team使用時のみ）
+- P0（再修正対象）: [例] type-safety / security / data-integrity
+- P1（報告のみ）: [例] performance / test-coverage
+- 再修正ループ上限: 1回
+
 ## Manager への指示（Team使用時のみ）
 [下記フォーマット参照]
 ```

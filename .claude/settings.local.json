@@ -16,7 +16,9 @@
       "Read(//Users/daichi.hoshina/.claude/**)",
       "Bash(jq 'if has\\(\"claudeAiMcpEverConnected\"\\) then .claudeAiMcpEverConnected |= map\\(select\\(. != \"claude.ai Figma\"\\)\\) else . end' ~/.claude.json)",
       "Bash(mv /tmp/claude.json.new ~/.claude.json)",
-      "Read(//Users/daichi.hoshina/**)"
+      "Read(//Users/daichi.hoshina/**)",
+      "Bash(rm -f ~/.claude/analytics/.cleanup-20260422)",
+      "Bash(bash -c 'source claude-code/lib/analytics-writer.sh && analytics_cleanup_old_records 90 && echo OK')"
     ]
   }
 }
