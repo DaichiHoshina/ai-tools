@@ -13,7 +13,7 @@ claude-code/
 ├── hooks/         イベントフック（session-start等）
 ├── guidelines/    言語・設計ガイドライン
 ├── agents/        エージェント定義
-└── references/    参考資料
+└── references/    参考資料（必要時参照）
 ```
 
 ## 編集時の注意
@@ -21,198 +21,96 @@ claude-code/
 - `install.sh`/`sync.sh` を更新したら `~/.claude/` に同期必要
 - 🔒 PROTECTED SECTION（CLAUDE.md内）は変更禁止
 - frontmatter（---で囲まれた部分）は正確なYAML形式を維持
-- **`claude-code/VERSION` は Claude Code CLI本体のバージョン追従用**。コマンド・スキル・設定の変更ごとに bump しない。CLI リリース取り込み時のみ更新（`/claude-update-fix` 担当）。sync.sh の "Version mismatch" 警告は本体バージョンとローカル配置の差を示すだけで bump 指示ではない
+- **`claude-code/VERSION` は Claude Code CLI本体のバージョン追従用**。設定変更ごとに bump しない。CLI リリース取り込み時のみ更新（`/claude-update-fix` 担当）
 
 ## 定義ファイルのトークン節約原則
 
-commands/, skills/, agents/ の.mdファイルはセッション中にトークンとして消費される。冗長な定義はコスト増・性能低下に直結するため、以下を徹底する。
+commands/, skills/, agents/ の.mdファイルはセッション中にトークンとして消費される。
 
-**残すもの（核心）**:
-- 判定表・分岐ロジック（表形式推奨）
-- ワークフロー定義（YAML等の宣言的記法）
-- 操作ガード・禁止事項
-- 入出力フォーマット（1例のみ）
-
-**削除するもの（冗長）**:
-- TypeScript/Python等のサンプル実装コード（エージェントは参考にするだけで実行しない）
-- 同じ情報の複数フォーマットでの繰り返し
-- 詳細な使用例（1例あれば十分）
-- 他ファイルと重複する説明（参照で済ませる）
-
-**目安**: エージェント定義は300行以内、コマンド定義は150行以内
-
-## 同期コマンド
-
-```bash
-./claude-code/install.sh   # 初回インストール
-./claude-code/sync.sh      # 更新時の同期
-```
-
-## モデル選択指針
-
-デフォルトモデル: **Sonnet 4.6**（`claude-sonnet-4-6`）
-
-| タスク | 推奨モデル | モデルID | 切替 |
-|--------|-----------|---------|------|
-| バッチ処理、型変換、フォーマット整形、大量ファイル処理 | Haiku 4.5 | `claude-haiku-4-5-20251001` | `/model` → haiku |
-| 単純修正、調査、コード読解、通常開発 | **Sonnet 4.6**（デフォルト） | `claude-sonnet-4-6` | そのまま |
-| 根本原因分析、設計判断、複雑バグ解析、セキュリティ監査 | Opus 4.7 | `claude-opus-4-7` | `/model` → opus |
-| タスク難易度が不明、動的な使い分け | Auto（Max subscribers限定） | - | `/model` → auto |
-
-**モデル切替は明示 `/model` を推奨**（自然語トリガーは誤判定リスクのため削除）。
-
-**Auto Mode**（v2.1.111〜）: Max subscribers は Opus 4.7 ベースで利用可能。`--enable-auto-mode` フラグ不要化。タスク難易度に応じて Claude が自動でモデル切替。
-
-**エージェント別自動割り当て**（各 agent の frontmatter で指定）:
-- **Opus 4.7**: reviewer-agent, root-cause-analyzer（深い分析）
-- **Sonnet 4.6**: po-agent（戦略判断）, manager-agent（タスク分割・Developer並列配分判断）
-- **Haiku 4.5**: developer-agent, explore-agent, verify-app（低コスト処理、実時間はタスク範囲依存）
+**残す**: 判定表・ワークフロー定義・操作ガード・禁止事項・入出力フォーマット（1例のみ）
+**削除**: サンプル実装コード・重複説明・詳細使用例・他ファイルと重複する内容
+**目安**: agent 定義は300行以内、コマンド定義は150行以内
 
 ## 探索・調査の使い分け（濫用防止）
 
-agent 起動コスト（実時間の中央値は数十秒〜数分）が最大コスト源。実測データは `claude-code/agents/README.md` 参照。以下ルールを遵守。
+agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 
-| 調査規模 | 使用するツール |
+| 調査規模 | ツール |
 |---------|--------------|
 | 1-2ファイル・特定シンボル | Bash grep/find または `mcp__serena__find_symbol` |
 | 3-4クエリの広域探索 | `/explore`（explore-agent×4 並列） |
 | Claude Code CLI/SDK/API の仕様質問 | claude-code-guide agent |
 | それ以外で本当に広域分析が必要 | Explore（built-in、最終手段） |
 
-**`general-purpose` agent は原則使わない**（実測で最大コスト源）。代替で十分なケースが大半。
-
-計測方法・コスト構造の詳細は [`references/performance-insights.md`](references/performance-insights.md) 参照。
-
-## effortレベル
-
-`--effort`フラグまたは`/effort`でセッション単位の思考深度を制御。
-
-| レベル | 用途 | 例 |
-|--------|------|-----|
-| `low` | 単純な質問、フォーマット修正 | `claude --effort low -p "fix typo"` |
-| `medium` | 軽めの開発・調査（コスト抑えめ） | `claude --effort medium` |
-| `high` | 通常開発（デフォルト） | そのまま |
-| `xhigh` | 高難度タスク（`high`と`max`の中間） | `claude --effort xhigh` |
-| `max` | 根本原因分析、大規模リファクタ、最難デバッグ | `claude --effort max` |
-
-> `xhigh` は Opus 4.7 限定（v2.1.111〜）。他モデルでは `high` にフォールバック。
-
-スクリプトで`--print`使用時は`--fallback-model sonnet`で過負荷時の自動フォールバックも指定可能。
+**`general-purpose` agent は原則使わない**（実測で最大コスト源）。計測データ: `references/performance-insights.md`
 
 ## セッション効率化
 
-- 単純な修正（1-2ファイル）→ `/dev --quick` または直接実行
-- 複雑な実装（3ファイル以上）→ `/flow` でAgent階層使用
-- **軽い調査は agent を起動しない**: 1-2クエリで済むなら直接 Bash grep/find/mcp__serena__find_symbol を使う（agent 起動コスト 30秒〜数分）
-- Boris流: 「fix」だけで修正、細かく指示しない
-- **成功基準原則**: 手順指示より「何が達成されれば成功か」を与える。Claudeは手順を自分で組み立てられる
-- **検証ファースト**: 実装後は必ず検証を実行（テスト、lint、型チェック）。検証できない変更は出荷しない
-- **Task Diary**: 以下のいずれかに該当する完了時のみ `/memory-save` を提案:
-  - 3ファイル以上の変更
-  - 非自明な設計判断を伴うリファクタ
-  - インシデント対応
-  - 上記以外は `~/.claude/logs/task-diary.log` への自動蓄積で十分
-- **確認質問最小化**: 安全な操作（読み取り・検索・分析）は承認を求めずに即実行。「〜してもいいですか？」「〜を実行しますか？」型の質問は禁止。判断が必要なのはファイル削除・デプロイ・外部送信のみ。
-- **選択肢提示は最小限**: 軽微な選択（実装詳細、変数名、スタイル選択等）は推奨案を直接実行（理由明記）。重要判断（アーキテクチャ選定、破壊的操作、費用発生、外部送信、不可逆変更）は2-3案を提示してユーザーに委ねる。判断に迷う時は選択肢提示ではなく **調査で解消** してから実行。
-- **パス決め打ち禁止**: Read/Bash でパスを指定する前に、未確認なパスは `ls` / `find` / `Glob` で存在確認する。記憶や類推で叩いて `No such file or directory` を出さない。tool-failures.log の最頻エラー源
+- 単純修正（1-2ファイル）→ `/dev --quick` または直接実行
+- 複雑実装（3ファイル以上）→ `/flow` でAgent階層使用
+- 大量ファイル処理（20+）→ `claude -p` fan-out（`references/fanout-recipes.md`）
+- **軽い調査は agent 起動しない**: 1-2クエリなら直接 grep/find/serena（起動コスト 30秒〜数分）
+- **成功基準原則**: 手順指示より「何が達成されれば成功か」を与える
+- **検証ファースト**: 実装後は必ずテスト/lint/型チェック実行。検証できない変更は出荷しない
+- **確認質問最小化**: 安全な操作（読み取り・検索・分析）は承認を求めず即実行。「〜してもいいですか？」型の質問禁止。判断必要なのはファイル削除・デプロイ・外部送信のみ
+- **選択肢提示は最小限**: 軽微な選択は推奨案を直接実行（理由明記）。重要判断（アーキテクチャ、破壊的操作、費用発生、外部送信、不可逆変更）のみ2-3案提示
+- **パス決め打ち禁止**: Read/Bash でパス指定前に `ls`/`find`/`Glob` で存在確認。tool-failures.log の最頻エラー源
+- **Task Diary**: `/memory-save` 提案は3ファイル以上変更・非自明リファクタ・インシデント対応時のみ（詳細: `references/memory-usage.md`）
 
-## レビューコマンド使い分け
+## Rewind / Checkpoint
 
-| コマンド | 用途 | 特徴 |
-|---------|------|------|
-| `/review` | ローカル包括レビュー | comprehensive-review skill、7観点統合（設計・品質・可読性・セキュリティ・ドキュメント・テスト・ログ） |
-| `/review --codex` | セカンドオピニオン | comprehensive-review + Codex CLI 並列、両者共通指摘を優先 |
-| `/ultrareview` | クラウド並列マルチエージェントレビュー | 大規模変更や複数観点深掘り。**ユーザー明示発動のみ**（別課金、Claudeからは起動不可） |
+- **Esc**: Claude を途中停止（コンテキスト保持）
+- **Esc + Esc** or `/rewind`: 会話・コード・両方を過去checkpointに復元
+- 「試してダメならrewind」前提で risky 変更を走らせる方が計画より早い場合あり
+- 詳細: `references/checkpoint-rewind.md`
 
-判断基準:
-- 小〜中規模（1-3ファイル）→ `/review`
-- 確度上げたい or 設計レビュー → `/review --codex`
-- 大規模ブランチ / PR全体の深掘り → `/ultrareview`（ユーザー指示で起動）
+## コンテキスト管理
 
-## メモリ使い分け
+- **コンテキスト使用率50%超えたら、次レスポンス冒頭で `/compact` 提案**
+- 自動実行はしない（情報欠落リスク）。ユーザー承認後に実行
+- compact時必須保持: 変更済みファイル一覧、現在のタスク状態、テストコマンド、アーキテクチャ決定事項
+- 無関係タスク間は `/clear` でコンテキストリセット
+- 汚染せず質問だけしたい時は `/btw`（オーバーレイ表示、履歴非保存）
 
-| メモリ | 用途 | 自動読み込み |
-|--------|------|-------------|
-| auto-memory (`~/.claude/projects/{project}/memory/`) | 安定したパターン・規約・ユーザー好み | 毎セッション自動（200行上限） |
-| Serena memory | 作業コンテキスト・振り返り・一時的な調査結果 | 手動read_memory |
+## 自然言語トリガー（主要のみ）
 
-- 両方に同じ情報を書かない
-- auto-memoryはトークン消費するため簡潔に保つ
-
-## コンテキスト管理（/compact 運用）
-
-- **コンテキスト使用率が50%を超えたら、次レスポンス冒頭で `/compact` 実行を提案する**
-- 作業中断・情報欠落リスクがあるため自動実行はしない。ユーザー承認後に実行
-- compacting時は以下を必ず保持: 変更済みファイル一覧、現在のタスク状態、テストコマンド、アーキテクチャ決定事項
-
-## 自然言語トリガー
-
-頻用パターンのみ自然語解釈する。その他は明示コマンド（`/commandname`）を使用。
-
-| ユーザー入力 | 実行コマンド |
-|-------------|-------------|
-| "pushして", "push" | `/git-push --pr`（ブランチ作成→PR） |
-| "main push", "mainにpush" | `/git-push --main`（mainブランチ直接push） |
-| "sync push", "push sync" | `/git-push` → `sync.sh to-local`（ai-toolsリポジトリ時のみ） |
+| 入力 | 実行 |
+|------|------|
+| "push", "pushして" | `/git-push --pr` |
+| "main push" | `/git-push --main` |
 | "全自動で", "autoで", "おまかせ" | `/flow-auto` |
-| "横並びで", "同じ修正を" | 複数リポジトリ横並び作業（下記参照） |
-| "codexでレビュー", "セカンドオピニオン" | `/review --codex` |
-| "ブレスト", "設計検討", "アイデア出し" | `/brainstorm`（対話的設計精緻化） |
-| "strict mode", "厳格モード" | `/session-mode strict`（本番作業向け） |
-| "fast mode", "高速モード", "プロトタイプモード" | `/session-mode fast` |
-| "normal mode", "通常モード" | `/session-mode normal` |
+| "横並びで", "同じ修正を" | 複数リポジトリ作業（`references/multi-repo-workflow.md`） |
+| "codexでレビュー" | `/review --codex` |
+| "ブレスト", "設計検討" | `/brainstorm` |
+| "{strict\|fast\|normal} mode" | `/session-mode {強度}` |
 
-上記以外（`修正してpush`、`grooveで`、`元に戻して`、`codexで{タスク}` 等）は自然語解釈しない。明示コマンド（例: `/groove`, `/undo`）を使う。誤判定・トークン消費を避けるため。
-
-## エラー調査・インシデント対応
-
-エラーログを貼られた時の対応フロー:
-
-1. **分類**: 既知エラー（設定ミス・想定内）か未知エラーか判定
-2. **影響範囲**: ユーザー影響あり → 即対応、なし → チケット化
-3. **原因特定**: ログから根本原因を特定（対症療法禁止）
-4. **対応判断**: 修正 or 設定変更 or 監視継続をユーザーに提案
-
-重い外部API呼び出し（Argo diff等）をUI内で実行する場合は、事前に所要時間を確認し、10秒超なら非同期+ローディング表示を提案すること。
-
-## 横並び作業（複数リポジトリ）
-
-「横並びで」「同じ修正を」と指示された場合:
-
-1. 対象リポジトリを確認（ユーザーに列挙を依頼）
-2. 1つ目のリポジトリで修正を実施
-3. 修正内容を確認後、残りのリポジトリに同様の修正を適用
-4. 各リポジトリで/git-push --prを実行
+上記以外は自然語解釈しない。明示コマンドを使う（誤判定・トークン消費回避）。全リスト: `references/natural-language-triggers.md`
 
 ## Git マージ禁止ルール
 
-| 操作 | ルール | 備考 |
-|------|--------|------|
-| PRブランチのマージ（`gh pr merge`等） | **絶対禁止** | ユーザーが頼んでも実行しない。PR URLを出力してブラウザでのマージを案内 |
-| git merge（ローカル） | 禁止 | 必ずユーザー確認 |
-| MR/PRマージ（リモート） | 禁止 | 必ずユーザー確認 |
-| リベース | 禁止 | 必ずユーザー確認 |
-| ブランチ削除 | 禁止 | 必ずユーザー確認 |
+| 操作 | ルール |
+|------|--------|
+| PRブランチのマージ（`gh pr merge`等） | **絶対禁止**。PR URL出力してブラウザ案内 |
+| git merge（ローカル） | ユーザー確認必須 |
+| MR/PRマージ（リモート） | ユーザー確認必須 |
+| リベース | ユーザー確認必須 |
+| ブランチ削除 | ユーザー確認必須 |
 
-## PR分割戦略
+## 根本原因分析
 
-差分が大きくなる場合は複数PRに分割:
-- **各PRが単独でmainにマージしても壊れない**ように作る
-- 分割例: migration → model/repository → usecase → handler → frontend
-- 未使用コードの先行投入はOK（次PRで使う前提）
-- migrationは単独PRでリリース（他変更と混ぜない）
+対症療法（エラーを隠す）ではなく根本治療（原因を取り除く）。**再現→原因特定→設計判断→検証** の4ステップ必須。詳細: `/root-cause` skill, `/protection-mode` 品質ガード。
 
-## UIデフォルト設定
+## 詳細リファレンス
 
-新規UI作成時のデフォルト方針:
-
-- **ダークモード不要**（ライトモードのみ）
-- **ミニマルデザイン優先**（装飾は最小限）
-- **日本語対応**（日付はJST、通貨は円）
-- **配色**: 同一プロジェクト配下の既存UIがあれば合わせる
-
-## 根本原因分析（Root Cause Analysis）原則
-
-→ 詳細: `/root-cause` スキル、`/protection-mode` の品質ガードを参照
-
-**要点**: 対症療法（エラーを隠す）ではなく根本治療（原因を取り除く）。再現→原因特定→設計判断→検証の4ステップ必須。
+| トピック | ファイル |
+|---------|---------|
+| モデル選択・effortレベル | `references/model-selection.md` |
+| 自然言語トリガー全リスト | `references/natural-language-triggers.md` |
+| レビューコマンド使い分け | `references/review-commands.md` |
+| メモリ使い分け（auto-memory/Serena） | `references/memory-usage.md` |
+| 複数リポジトリ横並び・PR分割 | `references/multi-repo-workflow.md` |
+| UIデフォルト設定 | `references/ui-defaults.md` |
+| インシデント対応フロー | `references/incident-flow.md` |
+| Checkpoint / Rewind 活用 | `references/checkpoint-rewind.md` |
+| claude -p Fan-out レシピ | `references/fanout-recipes.md` |
+| Agent コスト実測 | `references/performance-insights.md` |
