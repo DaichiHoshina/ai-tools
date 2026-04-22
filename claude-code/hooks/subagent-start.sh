@@ -28,6 +28,22 @@ LOG_FILE="${LOG_DIR}/subagent-events.log"
 if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE" | tr -d ' ') -gt 1000 ]]; then
   tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
 fi
+# 重複起動検知: 直近60秒以内に同一 agent_type が起動済みなら警告
+_DUP_WARN=""
+if [[ -f "$LOG_FILE" ]]; then
+  _LAST_SAME=$(grep "type=${AGENT_TYPE} " "$LOG_FILE" | tail -1 | awk -F'[][]' '{print $2}' || true)
+  if [[ -n "$_LAST_SAME" ]]; then
+    _NOW_EPOCH=$(date +%s)
+    _LAST_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$_LAST_SAME" +%s 2>/dev/null || echo 0)
+    if [[ "$_LAST_EPOCH" -gt 0 ]]; then
+      _DIFF=$((_NOW_EPOCH - _LAST_EPOCH))
+      if [[ "$_DIFF" -lt 60 ]]; then
+        _DUP_WARN="⚠️ ${AGENT_TYPE} を${_DIFF}秒前に起動済み。重複起動の可能性あり（同一作業を二重実行していないか確認）。"
+      fi
+    fi
+  fi
+fi
+
 echo "[${TIMESTAMP}] START | agent_id=${AGENT_ID} | type=${AGENT_TYPE} | cwd=${CWD}" >> "$LOG_FILE"
 
 # --- Analytics記録 ---
@@ -55,11 +71,22 @@ fi
 AC_MSG="**Agent ID**: ${AGENT_ID}
 **Type**: ${AGENT_TYPE}
 **Working Directory**: ${CWD}
-**Recent Activity**: ${RECENT_COUNT} subagents started in last 24h
+**Recent Activity**: ${RECENT_COUNT} subagents started in last 24h"
+if [[ -n "$_DUP_WARN" ]]; then
+  AC_MSG="${AC_MSG}
+
+${_DUP_WARN}"
+fi
+AC_MSG="${AC_MSG}
 
 Subagent logs: ~/.claude/logs/subagent-events.log"
 
+_SM="🚀 Subagent started: ${AGENT_TYPE}"
+if [[ -n "$_DUP_WARN" ]]; then
+  _SM="⚠️ Subagent重複疑い: ${AGENT_TYPE}"
+fi
+
 jq -n \
-  --arg sm "🚀 Subagent started: ${AGENT_TYPE}" \
+  --arg sm "$_SM" \
   --arg ac "$AC_MSG" \
   '{systemMessage: $sm, additionalContext: $ac}'

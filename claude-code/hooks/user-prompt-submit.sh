@@ -47,6 +47,29 @@ if [[ -f "${_CTX_FILE}" ]]; then
   fi
 fi
 
+# === Serena MCP health notice: 失敗が累積したら /serena-refresh 提案 ===
+_SERENA_COUNTER="/tmp/claude-serena-fail-count"
+_SERENA_NOTICE_MSG=""
+if [[ -f "${_SERENA_COUNTER}" ]]; then
+  _SERENA_FAILS=$(cat "${_SERENA_COUNTER}" 2>/dev/null || echo "0")
+  if [[ "${_SERENA_FAILS}" =~ ^[0-9]+$ ]] && [[ "${_SERENA_FAILS}" -ge 2 ]]; then
+    _SERENA_NOTICE_MSG="⚠️ Serena MCP が${_SERENA_FAILS}回失敗。ユーザーに \`/serena-refresh\` 実行を提案してください（再接続で復旧）。"
+    rm -f "${_SERENA_COUNTER}"  # 1度通知したらクリア
+  fi
+fi
+
+# 通知を合成
+_COMBINED_NOTICE=""
+if [[ -n "${_COMPACT_NOTICE_MSG}" && -n "${_SERENA_NOTICE_MSG}" ]]; then
+  _COMBINED_NOTICE="${_COMPACT_NOTICE_MSG}
+${_SERENA_NOTICE_MSG}"
+elif [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
+  _COMBINED_NOTICE="${_COMPACT_NOTICE_MSG}"
+elif [[ -n "${_SERENA_NOTICE_MSG}" ]]; then
+  _COMBINED_NOTICE="${_SERENA_NOTICE_MSG}"
+fi
+_COMPACT_NOTICE_MSG="${_COMBINED_NOTICE}"
+
 # promptフィールド取得（<<< で fork 削減）
 prompt=$(jq -r '.prompt // empty' <<< "$input")
 if [ -z "$prompt" ]; then

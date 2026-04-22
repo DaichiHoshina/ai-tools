@@ -59,6 +59,15 @@ case "$TOOL_NAME" in
             # prettier未インストールならmessage無し（警告抑制）
           fi
           ;;
+
+        "sh"|"bash")
+          # bash -n で syntax error 検出（実行はしない）
+          if command -v bash &> /dev/null; then
+            _SYNTAX_ERR=$(bash -n "$FILE_PATH" 2>&1) || {
+              MESSAGE="⚠ Shell syntax error: ${FILE_PATH}\n${_SYNTAX_ERR}"
+            }
+          fi
+          ;;
       esac
     fi
     ;;
