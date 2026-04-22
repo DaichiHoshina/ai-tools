@@ -1,5 +1,7 @@
 # ドキュメント分類・保存先ガイドライン
 
+> 体系設計（種別の役割分担・関係性・Bounded Context 分割・命名規則・レビュープロセス）は [`doc-organization-principles.md`](./doc-organization-principles.md) を参照。本ファイルは「どこに保存するか」「どう書くか」に特化。
+
 ## ドキュメント種別と保存先
 
 | 種別 | 内容 | 保存先 |
