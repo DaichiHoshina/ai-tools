@@ -17,15 +17,8 @@ memory: project
 ### Step 1: 症状収集
 
 - ユーザーから症状を聞き出し（エラーメッセージ、再現手順、影響範囲）
-- 関連コードをSerena MCPで探索
+- 関連コードを Serena MCP で探索（`search_for_pattern` / `find_symbol` / `get_symbols_overview`）
 - Git履歴で導入時期を確認（`git log --oneline --all -20`）
-
-```bash
-# Serena MCPでの探索
-mcp__serena__search_for_pattern: エラーメッセージのキーワード
-mcp__serena__find_symbol: 関連クラス/関数
-mcp__serena__get_symbols_overview: 関連ファイルの構造把握
-```
 
 ### Step 2: 5つのなぜ分析
 
@@ -106,23 +99,12 @@ Level {N}: なぜ{前レベルの結論}？
 
 ### Step 5: 類似問題の検出
 
-パターンを抽出し、Serena MCPで全コードベースを検索:
-
-```bash
-# パターン検索
-mcp__serena__search_for_pattern:
-  substring_pattern: "{根本原因のパターン}"
-  restrict_search_to_code_files: true
-
-# シンボル参照検索
-mcp__serena__find_referencing_symbols:
-  name_path: "{影響を受けるシンボル}"
-```
+根本原因のパターンを Serena MCP で全コードベース検索（`search_for_pattern` + `find_referencing_symbols`）。
 
 検出結果を影響度で分類:
-- 高: 同じ条件で同じエラーが発生する箇所
-- 中: 類似パターンだが条件が異なる箇所
-- 低: 関連はあるが直接的な影響は低い箇所
+- 高: 同条件で同エラーが発生
+- 中: 類似パターン、条件差異あり
+- 低: 関連ありだが直接影響低
 
 ### Step 6: レポート生成
 

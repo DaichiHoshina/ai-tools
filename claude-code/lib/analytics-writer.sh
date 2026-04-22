@@ -183,6 +183,35 @@ analytics_insert_agent_start() {
     _analytics_exec "INSERT INTO agent_events (agent_id, agent_type, project) VALUES ('${agent_id}', '${agent_type}', '${project}');"
 }
 
+# --- 古いレコードのクリーンアップ ---
+# Usage: analytics_cleanup_old_records [days]
+# デフォルト 90日超のレコードを削除。DB肥大化防止のため session-end から日次で呼ばれる。
+analytics_cleanup_old_records() {
+    local days="${1:-90}"
+    [[ -f "$ANALYTICS_DB" ]] || return 0
+
+    # 日次実行フラグ（同日複数回実行を抑制）
+    local flag_file="${ANALYTICS_DB_DIR}/.cleanup-$(date -u +%Y%m%d)"
+    [[ -f "$flag_file" ]] && return 0
+
+    _analytics_check_deps || return 1
+
+    if ! sqlite3 "$ANALYTICS_DB" "
+DELETE FROM tool_events WHERE timestamp < datetime('now', '-${days} days');
+DELETE FROM agent_events WHERE start_time < datetime('now', '-${days} days');
+DELETE FROM sessions WHERE end_time IS NOT NULL AND end_time < datetime('now', '-${days} days');
+VACUUM;
+" 2>/dev/null; then
+        echo "WARNING: analytics cleanup failed" >&2
+        return 1
+    fi
+
+    # 古いフラグファイル掃除（7日超）+ 今回フラグ作成
+    find "$ANALYTICS_DB_DIR" -maxdepth 1 -name ".cleanup-*" -type f -mtime +7 -delete 2>/dev/null || true
+    touch "$flag_file" 2>/dev/null || true
+    return 0
+}
+
 # --- エージェント終了記録 ---
 # Usage: analytics_update_agent_stop "$agent_id"
 analytics_update_agent_stop() {

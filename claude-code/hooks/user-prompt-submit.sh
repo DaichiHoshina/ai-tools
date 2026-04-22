@@ -59,7 +59,14 @@ if [ -z "$prompt" ]; then
   exit 0
 fi
 
-prompt_lower="${prompt,,}"  # bash組み込みで小文字化（tr fork削減）
+# 長いプロンプトは検出処理を先頭2000字に制限（線形スキャンのコスト削減）
+# キーワード・テクニック検出は先頭部分で十分。後続処理には影響しない。
+if (( ${#prompt} > 2000 )); then
+  prompt_lower="${prompt:0:2000}"
+  prompt_lower="${prompt_lower,,}"
+else
+  prompt_lower="${prompt,,}"  # bash組み込みで小文字化（tr fork削減）
+fi
 
 # === スラッシュコマンドは検出スキップ（analytics追跡のみ） ===
 if [[ "$prompt" == /* ]]; then
