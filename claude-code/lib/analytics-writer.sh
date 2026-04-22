@@ -86,6 +86,11 @@ CREATE TABLE IF NOT EXISTS agent_events (
     duration_sec INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS cleanup_runs (
+    run_date TEXT PRIMARY KEY,
+    run_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_tool_events_session ON tool_events(session_id);
 CREATE INDEX IF NOT EXISTS idx_tool_events_timestamp ON tool_events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_tool_events_tool_name ON tool_events(tool_name);
@@ -190,22 +195,20 @@ analytics_insert_agent_start() {
 }
 
 # --- 古いレコードのクリーンアップ ---
-# Usage: analytics_cleanup_old_records [days]
+# Usage: analytics_cleanup_old_records [days] [vacuum_threshold]
 # デフォルト 90日超のレコードを削除。DB肥大化防止のため session-end から日次で呼ばれる。
 # 設計:
 #   - WAL + busy_timeout で並列セッションの INSERT と共存
+#   - 1日1回保証と並列実行排他を DB の INSERT OR IGNORE で原子化（filesystem flag 廃止）
 #   - VACUUM は削除行数が閾値を超えたときのみ実行（排他ロック時間を最小化）
 #   - end_time IS NULL の孤児 sessions も start_time 基準で削除（整合性維持）
-#   - 失敗時もフラグを立てて翌日まで再試行抑制（ログ汚染防止）
+#   - sqlite3 は -batch -bail でインタラクティブ禁止・エラー即中断
+#   - stdout の予期せぬ出力は analytics-errors.log に記録（silent degradation 回避）
 #   - 失敗時の stderr は analytics-errors.log に追記（監視可能化）
 analytics_cleanup_old_records() {
     local days="${1:-90}"
     local vacuum_threshold="${2:-1000}"  # 削除行数がこれを超えたら VACUUM
     [[ -f "$ANALYTICS_DB" ]] || return 0
-
-    # 日次実行フラグ（同日複数回実行を抑制、成功/失敗問わず当日は再試行しない）
-    local flag_file="${ANALYTICS_DB_DIR}/.cleanup-$(date -u +%Y%m%d)"
-    [[ -f "$flag_file" ]] && return 0
 
     _analytics_check_deps || return 1
 
@@ -214,16 +217,43 @@ analytics_cleanup_old_records() {
     mkdir -p "$log_dir" 2>/dev/null || true
 
     # 既存 DB への WAL 冪等適用（init 未経由でも WAL 化保証）。出力は捨てる
-    sqlite3 -cmd "PRAGMA busy_timeout=3000;" "$ANALYTICS_DB" "PRAGMA journal_mode=WAL;" >/dev/null 2>>"$err_log" || true
+    sqlite3 -batch -bail "$ANALYTICS_DB" "PRAGMA busy_timeout=3000; PRAGMA journal_mode=WAL;" >/dev/null 2>>"$err_log" || true
 
-    # 削除実行（busy_timeout は SQL 内で設定）
+    # 今日分の実行権取得（並列セッション時も INSERT OR IGNORE の原子性で 1 プロセスのみが "1" を受け取る）
+    # cleanup_runs テーブルが未作成の旧 DB に対しても失敗しないよう CREATE TABLE も同時実行
+    local acquired
+    acquired=$(sqlite3 -batch -bail "$ANALYTICS_DB" "
+PRAGMA busy_timeout=5000;
+CREATE TABLE IF NOT EXISTS cleanup_runs (run_date TEXT PRIMARY KEY, run_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')));
+INSERT OR IGNORE INTO cleanup_runs (run_date) VALUES (date('now', 'utc'));
+SELECT changes();
+" 2>>"$err_log")
+    local acq_status=$?
+
+    if [[ $acq_status -ne 0 ]]; then
+        echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] analytics cleanup lock acquire failed (exit=${acq_status})" >>"$err_log"
+        return 1
+    fi
+
+    # 期待値は "1"（取得成功）または "0"（既に今日実行済 or 別プロセスが取得中）
+    acquired=$(printf '%s' "$acquired" | tail -n 1)
+    if [[ "$acquired" != "1" ]]; then
+        # 他プロセスが取得済、または予期せぬ出力
+        if [[ "$acquired" != "0" ]]; then
+            echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] analytics cleanup unexpected lock output: [${acquired}]" >>"$err_log"
+        fi
+        return 0
+    fi
+
+    # 削除実行（-batch -bail でエラー即中断）
     local sqlite_out sqlite_status
-    sqlite_out=$(sqlite3 "$ANALYTICS_DB" <<SQL 2>>"$err_log"
+    sqlite_out=$(sqlite3 -batch -bail "$ANALYTICS_DB" <<SQL 2>>"$err_log"
 PRAGMA busy_timeout=5000;
 DELETE FROM tool_events WHERE timestamp < datetime('now', '-${days} days');
 DELETE FROM agent_events WHERE start_time < datetime('now', '-${days} days');
 DELETE FROM sessions WHERE start_time < datetime('now', '-${days} days')
   AND (end_time IS NULL OR end_time < datetime('now', '-${days} days'));
+DELETE FROM cleanup_runs WHERE run_date < date('now', 'utc', '-7 days');
 SELECT total_changes();
 SQL
     )
@@ -231,29 +261,27 @@ SQL
 
     if [[ $sqlite_status -ne 0 ]]; then
         echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] analytics cleanup DELETE failed (exit=${sqlite_status})" >>"$err_log"
-        # 失敗時もフラグ立てて翌日まで抑制（無限リトライ防止）
-        touch "$flag_file" 2>/dev/null || true
         return 1
     fi
 
-    # sqlite3 バージョンによっては PRAGMA 設定時も値を stdout に出すため、
-    # tail -n 1 で SELECT total_changes() の結果のみ抽出する
-    local deleted
-    deleted=$(printf '%s\n' "$sqlite_out" | tail -n 1)
-    [[ "$deleted" =~ ^[0-9]+$ ]] || deleted=0
+    # SELECT total_changes() の結果のみ抽出。予期せぬ出力は err_log に記録
+    local deleted last_line
+    last_line=$(printf '%s\n' "$sqlite_out" | tail -n 1)
+    if [[ "$last_line" =~ ^[0-9]+$ ]]; then
+        deleted=$last_line
+    else
+        echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] analytics cleanup unexpected output: [${sqlite_out}]" >>"$err_log"
+        deleted=0
+    fi
 
     # VACUUM は削除行数が閾値超のときのみ（排他ロック時間短縮）
-    # stdout 破棄（PRAGMA 出力が session-end hook の JSON レスポンスに混入するのを防ぐ）
     if (( deleted > vacuum_threshold )); then
-        if ! sqlite3 "$ANALYTICS_DB" "PRAGMA busy_timeout=10000; VACUUM;" >/dev/null 2>>"$err_log"; then
+        if ! sqlite3 -batch -bail "$ANALYTICS_DB" "PRAGMA busy_timeout=10000; VACUUM;" >/dev/null 2>>"$err_log"; then
             echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] analytics VACUUM failed (deleted=${deleted})" >>"$err_log"
-            # VACUUM 失敗は致命的ではない（次回再試行される）
+            # VACUUM 失敗は致命的ではない（次回 cleanup_runs が期限切れすれば再試行される）
         fi
     fi
 
-    # 古いフラグファイル掃除（7日超）+ 今回フラグ作成
-    find "$ANALYTICS_DB_DIR" -maxdepth 1 -name ".cleanup-*" -type f -mtime +7 -delete 2>/dev/null || true
-    touch "$flag_file" 2>/dev/null || true
     return 0
 }
 

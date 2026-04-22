@@ -92,8 +92,8 @@ teardown() {
   [ "$remaining" = "recent" ]
 }
 
-@test "cleanup: 同日2回目の実行はフラグでスキップ" {
-  # 1回目実行でフラグ作成
+@test "cleanup: 同日2回目の実行は cleanup_runs テーブルでスキップ" {
+  # 1回目実行で cleanup_runs に今日のレコードが INSERT される
   analytics_cleanup_old_records 90
 
   # 古いレコード追加
@@ -102,13 +102,48 @@ teardown() {
     VALUES (datetime('now', '-100 days'), 's1', 'p', 'Read', 'builtin');
   "
 
-  # 2回目実行 → フラグがあるのでスキップ（削除されない）
+  # 2回目実行 → INSERT OR IGNORE が 0 件で取得失敗、削除されない
   run analytics_cleanup_old_records 90
   [ "$status" -eq 0 ]
 
   local count
   count=$(sqlite3 "$ANALYTICS_DB" "SELECT COUNT(*) FROM tool_events;")
   [ "$count" = "1" ]
+
+  # cleanup_runs に今日のレコードが1件だけ存在することも確認
+  local run_count
+  run_count=$(sqlite3 "$ANALYTICS_DB" "SELECT COUNT(*) FROM cleanup_runs WHERE run_date = date('now', 'utc');")
+  [ "$run_count" = "1" ]
+}
+
+@test "cleanup: 並列実行でも DELETE は1回だけ、cleanup_runs の一意性が保証される" {
+  # Warning 1/2 回帰テスト: 並列 session-end 同時発火しても INSERT OR IGNORE の
+  # 原子性により 1 プロセスのみが実行権を取得する（ファイルフラグ race 回避）
+
+  # 古いレコード追加
+  sqlite3 "$ANALYTICS_DB" "
+    INSERT INTO tool_events (timestamp, session_id, project, tool_name, tool_category)
+    VALUES (datetime('now', '-100 days'), 's1', 'p', 'Read', 'builtin');
+    INSERT INTO tool_events (timestamp, session_id, project, tool_name, tool_category)
+    VALUES (datetime('now', '-100 days'), 's2', 'p', 'Read', 'builtin');
+  "
+
+  # 4プロセス並列起動
+  (analytics_cleanup_old_records 90 &)
+  (analytics_cleanup_old_records 90 &)
+  (analytics_cleanup_old_records 90 &)
+  analytics_cleanup_old_records 90
+  wait
+
+  # cleanup_runs に今日のレコードは必ず 1 件のみ
+  local run_count
+  run_count=$(sqlite3 "$ANALYTICS_DB" "SELECT COUNT(*) FROM cleanup_runs WHERE run_date = date('now', 'utc');")
+  [ "$run_count" = "1" ]
+
+  # 削除結果も正しい（古い 2 件が消えて 0 件）
+  local count
+  count=$(sqlite3 "$ANALYTICS_DB" "SELECT COUNT(*) FROM tool_events;")
+  [ "$count" = "0" ]
 }
 
 @test "cleanup: DB 不在時は no-op で return 0" {
@@ -129,6 +164,41 @@ teardown() {
   [ "$status" -eq 0 ]
 
   # ここでは VACUUM 実行有無の直接検出は難しいため、少なくとも削除成功を確認
+  local count
+  count=$(sqlite3 "$ANALYTICS_DB" "SELECT COUNT(*) FROM tool_events;")
+  [ "$count" = "0" ]
+}
+
+@test "cleanup: VACUUM 発火で DB サイズが縮小する" {
+  # Warning 4 回帰テスト: 大量 INSERT で DB を膨張させ、cleanup + VACUUM 発火で
+  # サイズが縮小することを直接 assert する
+
+  # 200 行の古いレコードを INSERT（十分な膨張を得るため input_summary に長い文字列を入れる）
+  local i padding
+  padding=$(printf '%0.sx' {1..200})  # 200文字の pad
+  sqlite3 "$ANALYTICS_DB" "BEGIN;"
+  for i in $(seq 1 200); do
+    sqlite3 "$ANALYTICS_DB" "INSERT INTO tool_events (timestamp, session_id, project, tool_name, tool_category, tool_input_summary)
+      VALUES (datetime('now', '-100 days'), 's${i}', 'p', 'Read', 'builtin', '${padding}');"
+  done
+
+  # WAL チェックポイントでメインファイルに反映させてサイズ測定
+  sqlite3 "$ANALYTICS_DB" "PRAGMA wal_checkpoint(TRUNCATE);" >/dev/null
+  local size_before
+  size_before=$(wc -c < "$ANALYTICS_DB")
+
+  # 閾値 1 で VACUUM を確実に発火（削除 200 行 > 1）
+  run analytics_cleanup_old_records 90 1
+  [ "$status" -eq 0 ]
+
+  sqlite3 "$ANALYTICS_DB" "PRAGMA wal_checkpoint(TRUNCATE);" >/dev/null
+  local size_after
+  size_after=$(wc -c < "$ANALYTICS_DB")
+
+  # VACUUM 後のサイズが膨張前より小さいことを確認
+  [ "$size_after" -lt "$size_before" ]
+
+  # 削除結果も正しい
   local count
   count=$(sqlite3 "$ANALYTICS_DB" "SELECT COUNT(*) FROM tool_events;")
   [ "$count" = "0" ]
