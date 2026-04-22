@@ -32,11 +32,32 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
 }
 DEFAULT_PRICING = {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_write": 3.75}
 
-KNOWN_SKILLS = [
+_KNOWN_SKILLS_FALLBACK = [
     "dev", "flow", "review", "test",
     "git-push", "git-pull", "diagnose", "plan", "docs",
     "lint-test", "memory-save", "retrospective",
 ]
+
+
+def get_known_skills() -> list[str]:
+    """~/.claude/commands/ と ~/.claude/skills/ から slash command 名を動的取得。
+
+    ディレクトリが存在しない場合や空の場合は fallback のハードコード値を返す。
+    """
+    home = Path.home() / ".claude"
+    names: set[str] = set()
+
+    commands_dir = home / "commands"
+    if commands_dir.is_dir():
+        names.update(p.stem for p in commands_dir.glob("*.md"))
+
+    skills_dir = home / "skills"
+    if skills_dir.is_dir():
+        for p in skills_dir.iterdir():
+            if p.is_dir() and (p / "skill.md").exists():
+                names.add(p.name)
+
+    return sorted(names) if names else list(_KNOWN_SKILLS_FALLBACK)
 
 MAX_REPORT_WEEKS = 4
 
@@ -516,7 +537,7 @@ def _build_suggestions(
     # （実際の検出は full query が必要なため suggestion は tool_total に応じて出す）
 
     used_skills = {s["skill"] for s in tools["skill_breakdown"]}
-    unused = [sk for sk in KNOWN_SKILLS if sk not in used_skills]
+    unused = [sk for sk in get_known_skills() if sk not in used_skills]
     if unused:
         unused_str = ", ".join(f"/{s}" for s in unused[:3])
         suggestions.append(
