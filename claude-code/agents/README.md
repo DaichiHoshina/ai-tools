@@ -18,20 +18,19 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 ## エージェント起動コスト（subagent-events.log 実測）
 
-| agent | 平均実時間 | 最大 | 備考 |
-|-------|-----------|------|------|
-| developer-agent | 17s | 23s | 最速、タスク明確時 |
-| manager-agent | 42s | 68s | 計画のみで軽量 |
-| reviewer-agent | 82s | 161s | Opus + comprehensive-review |
-| po-agent | 96s | 365s | 戦略判断で膨らむ |
-| Explore (built-in) | 99s | 310s | 使用頻度最多（79件） |
-| general-purpose | **115s** | **501s** | **使用を避ける**（明確理由時のみ） |
-| explore-agent | 123s | 289s | Haikuだがタスク重い |
+| agent | N | 平均実時間 | 最大 | 備考 |
+|-------|---|-----------|------|------|
+| developer-agent | 2* | 17s | 23s | 最速、タスク明確時 |
+| manager-agent | 2* | 42s | 68s | 計画のみで軽量 |
+| reviewer-agent | 27 | 82s | 161s | Opus + comprehensive-review |
+| po-agent | 9* | 96s | 365s | 戦略判断で膨らむ |
+| Explore (built-in) | 79 | 99s | 310s | 使用頻度最多 |
+| general-purpose | 21 | **115s** | **501s** | **使用を避ける** |
+| explore-agent | 7* | 123s | 289s | Haikuだがタスク範囲広く実時間長い |
 
-**濫用防止の原則**:
-- 1-2クエリで済む調査は **agent を起動せず直接 Bash grep/find/mcp__serena__find_symbol**
-- 3クエリ以上の広域探索のみ `/explore`（explore-agent×4 並列）
-- `general-purpose` は原則非推奨。代替で十分なケースが大半
+`*` は N<10 の参考値（サンプル少、母数拡大で値ブレうる）。運用判断は使用頻度の多い agent（N≥20）の傾向を優先。
+
+運用ルール（判定表）は `claude-code/CLAUDE.md` の「探索・調査の使い分け」参照。
 
 ---
 
