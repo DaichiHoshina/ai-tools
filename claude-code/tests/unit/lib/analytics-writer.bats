@@ -143,3 +143,48 @@ teardown() {
   mode=$(sqlite3 "$ANALYTICS_DB" "PRAGMA journal_mode;")
   [ "$mode" = "wal" ]
 }
+
+# =============================================================================
+# stdout 汚染防止（codex レビュー指摘の回帰テスト）
+# hook は JSON レスポンス返すため、sqlite3 の PRAGMA 値が stdout に漏れると壊れる
+# =============================================================================
+
+@test "stdout: analytics_init は何も stdout に出力しない" {
+  rm -f "$ANALYTICS_DB"
+  unset _ANALYTICS_WRITER_LOADED 2>/dev/null || true
+  local out
+  out=$(analytics_init)
+  [ -z "$out" ]
+}
+
+@test "stdout: analytics_insert_tool_event は何も stdout に出力しない" {
+  local out
+  out=$(analytics_insert_tool_event "s1" "p" "Read" "summary")
+  [ -z "$out" ]
+}
+
+@test "stdout: analytics_start_session は何も stdout に出力しない" {
+  local out
+  out=$(analytics_start_session "s2" "p")
+  [ -z "$out" ]
+}
+
+@test "stdout: analytics_insert_agent_start は何も stdout に出力しない" {
+  local out
+  out=$(analytics_insert_agent_start "a1" "dev" "p")
+  [ -z "$out" ]
+}
+
+@test "stdout: cleanup 実行時にも何も stdout に出力しない（VACUUM 閾値超でも）" {
+  # 大量の古いレコードを追加して VACUUM を発火させる
+  local i
+  for i in $(seq 1 5); do
+    sqlite3 "$ANALYTICS_DB" "INSERT INTO tool_events (timestamp, session_id, project, tool_name, tool_category)
+      VALUES (datetime('now', '-100 days'), 's${i}', 'p', 'Read', 'builtin');"
+  done
+
+  local out
+  # 閾値 1 にして VACUUM を確実に発火
+  out=$(analytics_cleanup_old_records 90 1)
+  [ -z "$out" ]
+}

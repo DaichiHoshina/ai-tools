@@ -45,7 +45,8 @@ analytics_init() {
     mkdir -p "$ANALYTICS_DB_DIR"
 
     # 並列セッション対応: WAL mode + busy_timeout で同時書き込み競合を回避
-    sqlite3 "$ANALYTICS_DB" <<'SQL'
+    # stdout は全て破棄（PRAGMA 出力が hook の JSON レスポンスに混入するのを防ぐ）
+    sqlite3 "$ANALYTICS_DB" >/dev/null <<'SQL'
 PRAGMA journal_mode=WAL;
 PRAGMA busy_timeout=3000;
 CREATE TABLE IF NOT EXISTS tool_events (
@@ -95,10 +96,11 @@ SQL
 }
 
 # --- 安全なSQLite実行ラッパー ---
-# busy_timeout 3秒を全呼び出しに適用（並列セッション時のロック衝突を再試行で吸収）
+# busy_timeout 3秒を SQL 内で設定（-cmd 指定は PRAGMA 値を stdout に出力するため使わない）
+# stdout は全て破棄（hook の JSON レスポンス汚染防止）。INSERT/UPDATE しか呼ばれない設計
 _analytics_exec() {
     local sql="$1"
-    if ! sqlite3 -cmd "PRAGMA busy_timeout=3000;" "$ANALYTICS_DB" "$sql" 2>/dev/null; then
+    if ! sqlite3 "$ANALYTICS_DB" "PRAGMA busy_timeout=3000; ${sql}" >/dev/null 2>/dev/null; then
         echo "WARNING: analytics write failed" >&2
         return 1
     fi
@@ -241,8 +243,9 @@ SQL
     [[ "$deleted" =~ ^[0-9]+$ ]] || deleted=0
 
     # VACUUM は削除行数が閾値超のときのみ（排他ロック時間短縮）
+    # stdout 破棄（PRAGMA 出力が session-end hook の JSON レスポンスに混入するのを防ぐ）
     if (( deleted > vacuum_threshold )); then
-        if ! sqlite3 -cmd "PRAGMA busy_timeout=10000;" "$ANALYTICS_DB" "VACUUM;" 2>>"$err_log"; then
+        if ! sqlite3 "$ANALYTICS_DB" "PRAGMA busy_timeout=10000; VACUUM;" >/dev/null 2>>"$err_log"; then
             echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] analytics VACUUM failed (deleted=${deleted})" >>"$err_log"
             # VACUUM 失敗は致命的ではない（次回再試行される）
         fi
