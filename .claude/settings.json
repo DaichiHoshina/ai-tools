@@ -1,5 +1,6 @@
 {
   "permissions": {
+    "defaultMode": "auto",
     "allow": [
       "mcp__claude_ai_Notion__notion-fetch",
       "mcp__claude_ai_Notion__notion-search",
@@ -18,5 +19,10 @@
       "Bash(make lint-md)",
       "Bash(go vet ./...)"
     ]
+  },
+  "autoMode": {
+    "allow": ["$defaults"],
+    "soft_deny": ["$defaults"],
+    "environment": ["$defaults"]
   }
 }
