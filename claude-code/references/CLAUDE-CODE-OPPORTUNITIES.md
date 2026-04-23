@@ -15,6 +15,14 @@
 
 ---
 
+## 2.1.118 (2026-04-23 検出)
+
+- [ ] **Hooks から MCP tool 直接呼出 (`type: "mcp_tool"`)**: shellスクリプト経由でなくhook定義から MCP tool を直接起動可能 — 検討箇所: `claude-code/hooks/*.sh`（session-end/task-completed 等で Notion/Slack を直接叩く余地）、`templates/settings.json.template` の `hooks` セクション
+- [ ] **`DISABLE_UPDATES` env var**: `claude update` 手動実行も含めて完全ブロック（`DISABLE_AUTOUPDATER` より厳格）— 検討箇所: `templates/settings.json.template` / `templates/settings-ghq.json.template`。現状 `DISABLE_AUTOUPDATER` のみ。Enterprise Policy で更新完全固定したい場合のみ切替
+- [ ] **autoMode `"$defaults"` 指定**: `autoMode.allow`/`soft_deny`/`environment` に `"$defaults"` 追加で組込ルール維持したまま独自ルール追加可能（従来は置換） — 検討箇所: `.claude/settings.json` の autoMode 設定（採用時のみ）
+- [ ] **`/usage` コマンド統合**: `/cost` と `/stats` が `/usage` にマージ（旧名もshortcutとして残存）— 検討箇所: `claude-code/commands/dashboard.md`, `commands/analytics.md` 等で `/cost`/`/stats` 参照していないか再確認（現状検出なし、参照形式のみ監視）
+- [ ] **名前付きカスタムテーマ (`/theme` + `~/.claude/themes/`)**: JSON直接編集 or plugins `themes/` ディレクトリ配布可能 — 検討箇所: `claude-code/templates/` 配下にテーマ追加可否（現 `ui-themes/` は Tailwind トークン用で別物）
+
 ## 2.1.117 (2026-04-22 検出)
 
 - [ ] **Agent frontmatter `mcpServers:` (main-thread 経由)**: `--agent` で main-thread 実行時にも agent 側 mcpServers が読み込まれる。2.1.116 の `hooks:` と同系統 — 検討箇所: `claude-code/agents/*.md`
