@@ -18,7 +18,11 @@
       "Bash(mv /tmp/claude.json.new ~/.claude.json)",
       "Read(//Users/daichi.hoshina/**)",
       "Bash(rm -f ~/.claude/analytics/.cleanup-20260422)",
-      "Bash(bash -c 'source claude-code/lib/analytics-writer.sh && analytics_cleanup_old_records 90 && echo OK')"
+      "Bash(bash -c 'source claude-code/lib/analytics-writer.sh && analytics_cleanup_old_records 90 && echo OK')",
+      "Bash(/Users/daichi.hoshina/ai-tools/claude-code/sync.sh to-local *)",
+      "Bash(~/.claude/hooks/session-start.sh)",
+      "Bash(CLAUDE_SKIP_COMPACT_SERENA_CHECK=1 ~/.claude/hooks/pre-compact.sh)",
+      "Bash(~/.claude/hooks/task-completed.sh)"
     ]
   }
 }
