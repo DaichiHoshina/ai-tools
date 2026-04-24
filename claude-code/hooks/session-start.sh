@@ -90,7 +90,7 @@ fi
 # git/rg/Glob が全体を舐めに行き体感が極端に遅くなる。個別リポ cd を促す警告。
 # キャッシュとは独立して毎回評価する（cwd はセッション毎に変わるため）。
 _CWD_GUARD_MSG=""
-if [[ -n "${_CWD}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
+if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
   _NESTED_REPOS=$(find "${_CWD}" -maxdepth 3 -type d -name ".git" 2>/dev/null | head -2 | wc -l | tr -d ' ')
   if [[ "${_NESTED_REPOS}" -ge 2 ]]; then
     _CWD_GUARD_MSG="${ICON_WARNING} **cwd警告**: 複数リポジトリの親ディレクトリで起動中（${_CWD}）。git/rg/Glob が全体を舐めて重くなる。個別リポに cd してから起動推奨\n"
