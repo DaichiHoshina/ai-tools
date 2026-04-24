@@ -49,8 +49,9 @@ teardown() {
 }
 
 @test "hooks: pre-compact accepts valid JSON input" {
+  # Serena 接続判定が環境依存なので skip flag で迂回（スモークテスト目的）
   local input='{"session_id": "test", "workspace": {"current_dir": "/test"}, "current_tokens": 150000}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
+  run bash -c "echo '$input' | CLAUDE_SKIP_COMPACT_SERENA_CHECK=1 ${HOOKS_DIR}/pre-compact.sh"
   [ "$status" -eq 0 ]
 }
 
@@ -350,23 +351,73 @@ teardown() {
 # Integration: Pre-Compact Memory Save Flow
 # =============================================================================
 
-@test "integration: pre-compact with serena produces memory save instruction" {
-  local input='{"mcp_servers": {"serena": {}}}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
-  [ "$status" -eq 0 ]
-  echo "$output" | jq -e '.systemMessage' >/dev/null
-  echo "$output" | jq -e '.additionalContext' >/dev/null
-  # Serena memory保存指示を含む
-  [[ "$output" == *"write_memory"* ]]
+# pre-compact.sh は `claude mcp list` で Serena 接続判定を行うため、
+# テスト用に PATH を差し替えて Connected/Disconnected をシミュレートする。
+_stub_claude_dir() {
+  local status_line="$1"
+  local dir
+  dir="$(mktemp -d)"
+  cat > "${dir}/claude" <<EOF
+#!/bin/bash
+echo "${status_line}"
+EOF
+  chmod +x "${dir}/claude"
+  echo "${dir}"
 }
 
-@test "integration: pre-compact without serena produces warning" {
-  local input='{"mcp_servers": {}}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
+@test "integration: pre-compact blocks when serena disconnected" {
+  local stub
+  stub="$(_stub_claude_dir 'serena: /path - ! Needs authentication')"
+  local input='{"session_id": "test"}'
+  run bash -c "echo '$input' | PATH='${stub}:$PATH' ${HOOKS_DIR}/pre-compact.sh"
+  rm -rf "${stub}"
+  [ "$status" -eq 2 ]
+  echo "$output" | jq -e '.decision == "block"' >/dev/null
+  [[ "$output" == *"Serena MCP 未接続"* ]]
+}
+
+@test "integration: pre-compact saves state when serena connected" {
+  local stub
+  stub="$(_stub_claude_dir 'serena: /path - ✓ Connected')"
+  local input='{"session_id": "test"}'
+  run bash -c "echo '$input' | PATH='${stub}:$PATH' ${HOOKS_DIR}/pre-compact.sh"
+  rm -rf "${stub}"
   [ "$status" -eq 0 ]
   echo "$output" | jq -e '.systemMessage' >/dev/null
-  # Serena無効メッセージを含む
-  [[ "$output" == *"Serena"* ]]
+  [[ "$output" == *"write_memory"* ]]
+  # 状態ファイルが connected で書き込まれていること
+  [ "$(cat "${HOME}/.claude/.compact-serena-state")" = "connected" ]
+}
+
+@test "integration: pre-compact bypass flag skips check even if disconnected" {
+  local stub
+  stub="$(_stub_claude_dir 'serena: /path - ! Needs authentication')"
+  local input='{"session_id": "test"}'
+  run bash -c "echo '$input' | CLAUDE_SKIP_COMPACT_SERENA_CHECK=1 PATH='${stub}:$PATH' ${HOOKS_DIR}/pre-compact.sh"
+  rm -rf "${stub}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"強行モード"* ]]
+  [ "$(cat "${HOME}/.claude/.compact-serena-state")" = "skipped" ]
+}
+
+@test "integration: post-compact-reload uses state from pre-compact" {
+  # pre-compact が残した状態ファイルをシミュレート
+  echo "connected" > "${HOME}/.claude/.compact-serena-state"
+  local input='{"session_id": "test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/post-compact-reload.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"list_memories"* ]]
+  # 状態ファイルは使用後に削除される契約
+  [ ! -f "${HOME}/.claude/.compact-serena-state" ]
+}
+
+@test "integration: post-compact-reload handles missing state gracefully" {
+  # 状態ファイル無し = pre-compact が走らなかった状態
+  rm -f "${HOME}/.claude/.compact-serena-state"
+  local input='{"session_id": "test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/post-compact-reload.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"状態不明"* ]]
 }
 
 # =============================================================================
