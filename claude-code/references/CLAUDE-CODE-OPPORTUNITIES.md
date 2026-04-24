@@ -15,11 +15,18 @@
 
 ---
 
+## 2.1.119 (2026-04-24 検出)
+
+- [ ] **`PostToolUse` / `PostToolUseFailure` hook に `duration_ms`**: hook 入力 JSON に実行時間が入る。`lib/analytics-writer.sh` の `tool_events.duration_ms` カラム（既存・未充填）を埋められる — 検討箇所: `claude-code/hooks/post-tool-use.sh` / `post-tool-use-failure.sh` で `jq` 抽出、`analytics_insert_tool_event` のシグネチャ拡張
+- [ ] **Statusline stdin に `effort.level` / `thinking.enabled`**: 現在 Opus/Sonnet 名のみ表示。高 effort や thinking ON を視覚化できる — 検討箇所: `claude-code/statusline.js` の `displayStatusLine`
+- [ ] **`prUrlTemplate` 設定**: `owner/repo#N` 等の展開先を github.com 以外（GHE/GitLab self-hosted）へ差し替え可能 — 検討箇所: `templates/settings.json.template`（社内 GitLab 環境利用時のみ有効）
+- [ ] **`CLAUDE_CODE_HIDE_CWD` env var**: startup logo で cwd を隠す。機密ディレクトリや録画時に有用 — 検討箇所: `templates/settings.json.template` の `env` セクション（常時ONはtoo much、opt-in）
+- [ ] **`--from-pr` GitLab/Bitbucket/GHE 対応**: `/review --from-pr <gitlab-mr-url>` 等が動くようになった — 検討箇所: `claude-code/commands/review.md`（現状 GitHub PR 前提の記述があれば汎化）
+
 ## 2.1.118 (2026-04-23 検出)
 
 - [ ] **Hooks から MCP tool 直接呼出 (`type: "mcp_tool"`)**: shellスクリプト経由でなくhook定義から MCP tool を直接起動可能 — 検討箇所: `claude-code/hooks/*.sh`（session-end/task-completed 等で Notion/Slack を直接叩く余地）、`templates/settings.json.template` の `hooks` セクション
 - [ ] **`DISABLE_UPDATES` env var**: `claude update` 手動実行も含めて完全ブロック（`DISABLE_AUTOUPDATER` より厳格）— 検討箇所: `templates/settings.json.template` / `templates/settings-ghq.json.template`。現状 `DISABLE_AUTOUPDATER` のみ。Enterprise Policy で更新完全固定したい場合のみ切替
-- [x] **autoMode `"$defaults"` 指定**: `autoMode.allow`/`soft_deny`/`environment` に `"$defaults"` 追加で組込ルール維持したまま独自ルール追加可能（従来は置換） — 採用済（2026-04-23、`.claude/settings.json` に `permissions.defaultMode: auto` + `autoMode.{allow,soft_deny,environment}: ["$defaults"]`）
 - [ ] **`/usage` コマンド統合**: `/cost` と `/stats` が `/usage` にマージ（旧名もshortcutとして残存）— 検討箇所: `claude-code/commands/dashboard.md`, `commands/analytics.md` 等で `/cost`/`/stats` 参照していないか再確認（現状検出なし、参照形式のみ監視）
 - [ ] **名前付きカスタムテーマ (`/theme` + `~/.claude/themes/`)**: JSON直接編集 or plugins `themes/` ディレクトリ配布可能 — 検討箇所: `claude-code/templates/` 配下にテーマ追加可否（現 `ui-themes/` は Tailwind トークン用で別物）
 
@@ -31,4 +38,3 @@
 ## 2.1.116 (2026-04-21 検出)
 
 - [ ] **Agent frontmatter `hooks:` (main-thread 経由)**: `--agent` で main-thread 実行時にも agent 側 hooks が発火可能に — 検討箇所: `claude-code/agents/*.md`
-- ~~**Bash tool の gh rate-limit ヒント**~~ (obsolete 2026-04-21): リポジトリ内に gh リトライロジックを持つ hooks/scripts が存在せず恩恵不要
