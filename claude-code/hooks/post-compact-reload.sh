@@ -14,9 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/hook-utils.sh
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 
-# Nerd Fonts icons
-ICON_SUCCESS=$'✓'
-ICON_WARN=$'⚠'
+# ICON_* は hook-utils.sh で定義済み（source 経由で参照）
 
 require_jq
 

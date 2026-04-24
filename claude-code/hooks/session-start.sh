@@ -11,9 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 
 # Nerd Fonts icons
-ICON_SUCCESS=$'\u2713'    # check-circle
-ICON_WARNING=$'\u25b2'    # exclamation-triangle
-ICON_FORBIDDEN=$'\u2297'  # ban
+# ICON_* \u306f hook-utils.sh \u3067\u5b9a\u7fa9\u6e08\u307f
 
 # jq前提条件チェック
 require_jq

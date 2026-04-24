@@ -4,6 +4,20 @@
 # =============================================================================
 set -euo pipefail
 
+# -----------------------------------------------------------------------------
+# 共通アイコン (Nerd Fonts / Unicode)
+# 各hookでの重複定義と表記ブレ（ICON_WARN vs ICON_WARNING、✓ vs ✓）を解消。
+# hook-utils.sh を source した hook はこの変数をそのまま参照できる。
+# -----------------------------------------------------------------------------
+: "${ICON_SUCCESS:=$'✓'}"    # check-circle
+: "${ICON_WARNING:=$'▲'}"    # exclamation-triangle
+: "${ICON_ERROR:=$'✗'}"      # x-mark
+: "${ICON_FORBIDDEN:=$'⊗'}"  # ban
+: "${ICON_CRITICAL:=$'◉'}"   # filled circle (critical event)
+: "${ICON_IDLE:=$'☾'}"       # moon (idle/sleep)
+# 後方互換: ICON_WARN は ICON_WARNING のエイリアス
+: "${ICON_WARN:=${ICON_WARNING}}"
+
 # jqの存在チェック。なければエラー出力してexit 1
 # Usage: require_jq
 require_jq() {
