@@ -129,6 +129,10 @@ cleanup_target "shell-snapshots" "${BASE_DIR}/shell-snapshots"  "${DAYS_SHELL_SN
 cleanup_target "paste-cache"     "${BASE_DIR}/paste-cache"      "${DAYS_PASTE_CACHE}"     -type f
 cleanup_target "backups"         "${BASE_DIR}/backups"          "${DAYS_BACKUPS}"         -type f
 
+# session-env 配下は過去セッション毎の空ディレクトリが蓄積するため、
+# サブディレクトリ単位で保持日数超を削除（mindepth 1 で親を残す）。
+cleanup_target "session-env"     "${BASE_DIR}/session-env"      "${DAYS_LOGS}"            -mindepth 1 -type d -empty
+
 echo
 printf "合計: %d 件 / %s\n" "${total_count}" "$(human_size "${total_freed_kb}")"
 

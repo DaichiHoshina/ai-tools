@@ -3,6 +3,10 @@
 
 set -euo pipefail
 
+# Claude Code 本体が stdout を閉じた状態で発火するため、echo の broken pipe が
+# hook-errors.log を汚染する。SIGPIPE を無視して書き込み失敗を静かに扱う。
+trap '' PIPE
+
 exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
 # JSON入力を読み込む
