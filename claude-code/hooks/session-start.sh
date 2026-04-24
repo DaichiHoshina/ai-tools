@@ -85,6 +85,18 @@ if [[ "${_NEED_DIAG}" == "true" ]]; then
   printf '%s' "${_DIAG_MSG}" > "${_DIAG_CACHE}"
 fi
 
+# --- 多リポ配下起動ガード ---
+# cwd がリポジトリルートでない（.git 無し）かつ子孫に複数の git リポがある場合、
+# git/rg/Glob が全体を舐めに行き体感が極端に遅くなる。個別リポ cd を促す警告。
+# キャッシュとは独立して毎回評価する（cwd はセッション毎に変わるため）。
+_CWD_GUARD_MSG=""
+if [[ -n "${_CWD}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
+  _NESTED_REPOS=$(find "${_CWD}" -maxdepth 3 -type d -name ".git" 2>/dev/null | head -2 | wc -l | tr -d ' ')
+  if [[ "${_NESTED_REPOS}" -ge 2 ]]; then
+    _CWD_GUARD_MSG="${ICON_WARNING} **cwd警告**: 複数リポジトリの親ディレクトリで起動中（${_CWD}）。git/rg/Glob が全体を舐めて重くなる。個別リポに cd してから起動推奨\n"
+  fi
+fi
+
 # --- Worktree Memory Symlink ---
 ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true
 
@@ -118,13 +130,20 @@ fi
 
 # --- 出力組み立て ---
 _SM_PREFIX="${ICON_SUCCESS}"
-if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]]; then
+if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
 _AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__activate_project\` を path=\"${_CWD}\" で呼び出す\n2. \`mcp__serena__list_memories\` でメモリ一覧を確認する\n3. 関連メモリがあれば読み込む\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否"
+_AC_PREFIX=""
+if [[ -n "${_CWD_GUARD_MSG}" ]]; then
+    _AC_PREFIX+="${_CWD_GUARD_MSG}"
+fi
 if [[ -n "${_DIAG_MSG}" ]]; then
-    _AC_FULL="${_DIAG_MSG}\n${_AC_BASE}"
+    _AC_PREFIX+="${_DIAG_MSG}"
+fi
+if [[ -n "${_AC_PREFIX}" ]]; then
+    _AC_FULL="${_AC_PREFIX}\n${_AC_BASE}"
 else
     _AC_FULL="${_AC_BASE}"
 fi
