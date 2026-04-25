@@ -80,6 +80,31 @@ comprehensive-review --focus=quality と --focus=security でレビューして
 
 ---
 
+## スキル品質の検証（skill-lint）
+
+`scripts/skill-lint.sh` で `skills/*/SKILL.md` の frontmatter を検証。
+
+```bash
+# 全スキル検証
+./claude-code/scripts/skill-lint.sh
+
+# 単一スキル
+./claude-code/scripts/skill-lint.sh --skill backend-dev
+
+# warning も exit 1 扱い（CI 用）
+./claude-code/scripts/skill-lint.sh --strict
+```
+
+**検査項目**:
+- `name` 必須 + ディレクトリ名と一致
+- `description` 必須、長さ 30〜200 字
+- `description` にトリガー語（`〜時`、`使用`、`対応`、`Use this`、`When` 等）
+- `requires-guidelines` が配列形式
+
+トリガー語不足は warning。description 改善時の指針として活用。
+
+---
+
 ## 関連ドキュメント
 
 - [SKILLS-MAP.md](./SKILLS-MAP.md): スキル一覧と依存関係（詳細）
