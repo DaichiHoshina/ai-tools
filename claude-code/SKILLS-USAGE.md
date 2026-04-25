@@ -82,7 +82,7 @@ comprehensive-review --focus=quality と --focus=security でレビューして
 
 ## スキル品質の検証（skill-lint）
 
-`scripts/skill-lint.sh` で `skills/*/SKILL.md` の frontmatter を検証。
+`scripts/skill-lint.sh` で `skills/*/skill.md` の frontmatter を検証（大文字 `SKILL.md` も fallback で許容、真実源は小文字）。
 
 ```bash
 # 全スキル検証
@@ -91,7 +91,7 @@ comprehensive-review --focus=quality と --focus=security でレビューして
 # 単一スキル
 ./claude-code/scripts/skill-lint.sh --skill backend-dev
 
-# warning も exit 1 扱い（CI 用）
+# warning も exit 1 扱い（push 前の最終確認や pre-commit から呼ぶ用途）
 ./claude-code/scripts/skill-lint.sh --strict
 ```
 
