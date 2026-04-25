@@ -12,7 +12,7 @@ source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 INPUT=$(cat)
 
 # 全フィールドを1回のjqで取得（fork削減）
-eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "")"' <<< "$INPUT")"
+eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "")"' <<< "$INPUT")"
 
 # デフォルトメッセージ
 MESSAGE=""
@@ -101,7 +101,7 @@ if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
         "Skill") _INPUT_SUMMARY="$SKILL_NAME" ;;
         "Agent") _INPUT_SUMMARY="$AGENT_TYPE" ;;
     esac
-    analytics_insert_tool_event "${SESSION_ID:-unknown}" "$_PROJECT" "$TOOL_NAME" "$_INPUT_SUMMARY" 2>/dev/null || true
+    analytics_insert_tool_event "${SESSION_ID:-unknown}" "$_PROJECT" "$TOOL_NAME" "$_INPUT_SUMMARY" "${DURATION_MS:-}" "0" 2>/dev/null || true
 fi
 
 # JSON出力

@@ -4,6 +4,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 LOG_DIR="${HOME}/.claude/logs"
 LOG_FILE="${LOG_DIR}/tool-failures.log"
 mkdir -p "${LOG_DIR}"
@@ -14,6 +16,9 @@ INPUT=$(cat)
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 TOOL_NAME=$(echo "${INPUT}" | jq -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
 ERROR=$(echo "${INPUT}" | jq -r '.error // .tool_input // "no details"' 2>/dev/null | head -c 500)
+SESSION_ID=$(echo "${INPUT}" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
+CWD=$(echo "${INPUT}" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
+DURATION_MS=$(echo "${INPUT}" | jq -r '.duration_ms // .tool_response.duration_ms // ""' 2>/dev/null || echo "")
 
 # ログ記録（500文字で切り詰め）
 echo "[${TIMESTAMP}] FAIL: ${TOOL_NAME} | ${ERROR}" >> "${LOG_FILE}"
@@ -31,4 +36,13 @@ if [[ "${TOOL_NAME}" == mcp__serena__* ]]; then
   _CURRENT=0
   [[ -f "${_SERENA_COUNTER}" ]] && _CURRENT=$(cat "${_SERENA_COUNTER}" 2>/dev/null || echo 0)
   echo $((_CURRENT + 1)) > "${_SERENA_COUNTER}"
+fi
+
+# --- Analytics失敗イベント記録（exit_code=1） ---
+_LIB_DIR="${SCRIPT_DIR}/../lib"
+if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "${_LIB_DIR}/analytics-writer.sh"
+  _PROJECT=$(basename "${CWD}")
+  analytics_insert_tool_event "${SESSION_ID}" "${_PROJECT}" "${TOOL_NAME}" "" "${DURATION_MS}" "1" 2>/dev/null || true
 fi

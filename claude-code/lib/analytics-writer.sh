@@ -125,12 +125,16 @@ _analytics_tool_category() {
 }
 
 # --- ツールイベント記録 ---
-# Usage: analytics_insert_tool_event "$session_id" "$project" "$tool_name" ["$input_summary"]
+# Usage: analytics_insert_tool_event "$session_id" "$project" "$tool_name" \
+#          ["$input_summary"] ["$duration_ms"] ["$exit_code"]
+# duration_ms / exit_code は省略時 NULL。非数値も NULL に正規化（SQL injection 防止）
 analytics_insert_tool_event() {
     local session_id="${1:-unknown}"
     local project="${2:-unknown}"
     local tool_name="${3:-unknown}"
     local input_summary="${4:-}"
+    local duration_ms="${5:-}"
+    local exit_code="${6:-}"
     local category
     category=$(_analytics_tool_category "$tool_name")
 
@@ -140,7 +144,13 @@ analytics_insert_tool_event() {
     # シングルクォートのエスケープ
     input_summary="${input_summary//\'/\'\'}"
 
-    _analytics_exec "INSERT INTO tool_events (session_id, project, tool_name, tool_category, tool_input_summary) VALUES ('${session_id}', '${project}', '${tool_name}', '${category}', '${input_summary}');"
+    # 数値以外は NULL に（SQL に直接埋め込むため厳格チェック）
+    local duration_sql="NULL"
+    [[ "${duration_ms}" =~ ^[0-9]+$ ]] && duration_sql="${duration_ms}"
+    local exit_sql="NULL"
+    [[ "${exit_code}" =~ ^-?[0-9]+$ ]] && exit_sql="${exit_code}"
+
+    _analytics_exec "INSERT INTO tool_events (session_id, project, tool_name, tool_category, tool_input_summary, duration_ms, exit_code) VALUES ('${session_id}', '${project}', '${tool_name}', '${category}', '${input_summary}', ${duration_sql}, ${exit_sql});"
 }
 
 # --- セッション開始記録 ---
