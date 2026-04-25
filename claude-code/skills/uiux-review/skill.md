@@ -1,6 +1,6 @@
 ---
 name: uiux-review
-description: UI/UXレビュー - Material Design 3 + WCAG 2.2 AA + Nielsen 10原則で実装に直結するレビュー
+description: UI/UXレビュー - Material Design 3 + WCAG 2.2 AA + Nielsen 10原則で実装に直結するレビュー。画面実装時に使用
 requires-guidelines:
   - common
   - nextjs-react

@@ -80,6 +80,57 @@ comprehensive-review --focus=quality と --focus=security でレビューして
 
 ---
 
+## スキル品質の検証（skill-lint）
+
+`scripts/skill-lint.sh` で `skills/*/skill.md` の frontmatter を検証（大文字 `SKILL.md` も fallback で許容、真実源は小文字）。
+
+使い分け: 日常開発では引数なし、push 前 hook では `--strict`、新規追加時は `--skill <name>` で対象を絞る。
+
+```bash
+# 全スキル検証
+./claude-code/scripts/skill-lint.sh
+
+# 単一スキル
+./claude-code/scripts/skill-lint.sh --skill backend-dev
+
+# warning も exit 1 扱い（push 前の最終確認や pre-commit から呼ぶ用途）
+./claude-code/scripts/skill-lint.sh --strict
+```
+
+**検査項目**:
+- `name` 必須 + ディレクトリ名と一致
+- `description` 必須、長さ 30〜200 字
+- `description` にトリガー語（`〜時`、`使用`、`対応`、`Use this`、`When` 等）
+- `requires-guidelines` が配列形式
+
+トリガー語不足は warning。description 改善時の指針として活用。
+
+## スキル発火率の計測（skill-eval）
+
+`scripts/skill-eval.sh` で `~/.claude/projects/*/*.jsonl` から Skill ツールの発火回数を集計し、死蔵スキルを可視化。
+
+```bash
+# 直近 30 日（デフォルト）
+./claude-code/scripts/skill-eval.sh
+
+# 全期間
+./claude-code/scripts/skill-eval.sh --all
+
+# 死蔵スキルのみ
+./claude-code/scripts/skill-eval.sh --unused
+
+# 特定スキルの発火数
+./claude-code/scripts/skill-eval.sh --skill backend-dev --days 7
+```
+
+**注意**: Skill ツール経由の明示呼び出しのみカウント。コマンド経由（例: `/dev` から自動選択）の暗黙呼び出しは別計測。
+
+## 新規スキル追加（/skill-add）
+
+`/skill-add <name>` で skill-creator → skill-lint → 同期を一括実行。詳細は `commands/skill-add.md`。
+
+---
+
 ## 関連ドキュメント
 
 - [SKILLS-MAP.md](./SKILLS-MAP.md): スキル一覧と依存関係（詳細）

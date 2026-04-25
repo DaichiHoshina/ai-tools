@@ -1,6 +1,6 @@
 ---
 name: clean-architecture-ddd
-description: クリーンアーキテクチャ・DDD設計 - レイヤー設計、ドメインモデリング、依存関係管理
+description: クリーンアーキテクチャ・DDD設計 - レイヤー設計、ドメインモデリング、依存関係管理。設計判断時に使用
 requires-guidelines:
   - common
   - clean-architecture

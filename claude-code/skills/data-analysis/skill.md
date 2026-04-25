@@ -1,6 +1,6 @@
 ---
 name: data-analysis
-description: データ分析 - SQL不要でBigQuery/PostgreSQL/MySQL/SQLite/CSV分析
+description: データ分析 - SQL不要でBigQuery/PostgreSQL/MySQL/SQLite/CSV分析時に使用
 requires-guidelines:
   - common
 hooks:
