@@ -31,10 +31,11 @@
 |--------|------|-----|
 | `low` | 単純な質問、フォーマット修正 | `claude --effort low -p "fix typo"` |
 | `medium` | 軽めの開発・調査（コスト抑えめ） | `claude --effort medium` |
-| `high` | 通常開発（デフォルト） | そのまま |
-| `xhigh` | 高難度タスク（`high`と`max`の中間） | `claude --effort xhigh` |
-| `max` | 根本原因分析、大規模リファクタ、最難デバッグ | `claude --effort max` |
+| `high` | 通常開発 | `claude --effort high` |
+| `xhigh` | **Opus 4.7 推奨デフォルト**（高難度・設計判断・深い分析） | `claude --effort xhigh` |
+| `max` | 最難デバッグ・大規模RCA。常用非推奨（overthinking で精度低下リスク） | `claude --effort max` |
 
+> Opus 4.7 公式ガイダンス（2026-04-16）: 推奨デフォルトは `max` ではなく `xhigh`。`max` は overthinking 傾向で逆効果になる場合あり、最難タスクのみに限定。
 > `xhigh` は Opus 4.7 限定（v2.1.111〜）。他モデルでは `high` にフォールバック。
 
 スクリプトで`--print`使用時は`--fallback-model sonnet`で過負荷時の自動フォールバックも指定可能。

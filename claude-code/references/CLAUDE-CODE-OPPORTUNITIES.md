@@ -21,7 +21,7 @@
 - [ ] **Statusline stdin に `effort.level` / `thinking.enabled`**: 現在 Opus/Sonnet 名のみ表示。高 effort や thinking ON を視覚化できる — 検討箇所: `claude-code/statusline.js` の `displayStatusLine`
 - [ ] **`prUrlTemplate` 設定**: `owner/repo#N` 等の展開先を github.com 以外（GHE/GitLab self-hosted）へ差し替え可能 — 検討箇所: `templates/settings.json.template`（社内 GitLab 環境利用時のみ有効）
 - [ ] **`CLAUDE_CODE_HIDE_CWD` env var**: startup logo で cwd を隠す。機密ディレクトリや録画時に有用 — 検討箇所: `templates/settings.json.template` の `env` セクション（常時ONはtoo much、opt-in）
-- [ ] **`--from-pr` GitLab/Bitbucket/GHE 対応**: `/review --from-pr <gitlab-mr-url>` 等が動くようになった — 検討箇所: `claude-code/commands/review.md`（現状 GitHub PR 前提の記述があれば汎化）
+- ~~**`--from-pr` GitLab/Bitbucket/GHE 対応**~~ (obsolete 2026-04-25): review.md に GitHub 固定記述なし、汎化作業不要
 
 ## 2.1.118 (2026-04-23 検出)
 
