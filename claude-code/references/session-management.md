@@ -11,18 +11,18 @@
 | `/rename <name>` | 現在のセッションに名前付与 |
 | `Esc + Esc` / `/rewind` | checkpoint復元（セッション終了後も永続） |
 | `/clear` | コンテキスト完全リセット（別タスク切替時） |
-| `/focus` | 途中プロセス非表示・結果のみ表示。長時間セッションを横で見守らない運用に |
-| Recaps | 復帰時のサマリー自動表示（Opus 4.7 公式推奨）。離席→復帰前提の長時間タスクで活用 |
 
-## 権限モード（Opus 4.7 以降の方針）
+## 権限モード方針
 
 | モード | 用途 |
 |------|------|
 | 通常モード | デフォルト。重要操作は都度承認 |
-| **Auto Mode**（Max/Team/Enterprise 限定） | `/fewer-permission-prompts` で許可リスト整備済み環境向け公式代替 |
-| `--dangerously-skip-permissions` | **常用非推奨**（Opus 4.7 公式ガイダンス）。Auto Mode が使えない場合の最終手段のみ |
+| Auto Mode（Max/Team/Enterprise 限定） | `claude --help` の `auto-mode` subcommand 参照。許可リスト整備済み環境で都度承認を抑制 |
+| `--dangerously-skip-permissions` | 常用非推奨。sandbox 等の隔離環境専用 |
 
-`--dangerously-skip-permissions` を毎回付ける運用は廃止。許可リスト不足が原因なら `/fewer-permission-prompts` で半自動整備する。
+> 出典: Opus 4.7 リリース後の運用ガイド（[Qiita @ot12 2026-04-16](https://qiita.com/ot12/items/06420caf41a34a910c53)、二次情報）。Anthropic 公式 docs での明文化は未確認のため、運用判断材料として扱う。
+
+`--dangerously-skip-permissions` を毎回付ける運用は廃止する。許可リスト不足が原因なら `/fewer-permission-prompts` で半自動整備し、実行後 `~/.claude/settings.json` の `permissions.allow` を確認、不足分は手動追記する。
 
 ## 命名規約
 

@@ -32,10 +32,10 @@
 | `low` | 単純な質問、フォーマット修正 | `claude --effort low -p "fix typo"` |
 | `medium` | 軽めの開発・調査（コスト抑えめ） | `claude --effort medium` |
 | `high` | 通常開発 | `claude --effort high` |
-| `xhigh` | **Opus 4.7 推奨デフォルト**（高難度・設計判断・深い分析） | `claude --effort xhigh` |
-| `max` | 最難デバッグ・大規模RCA。常用非推奨（overthinking で精度低下リスク） | `claude --effort max` |
+| `xhigh` | 高難度タスク・設計判断・深い分析（Opus 4.7 で利用可能） | `claude --effort xhigh` |
+| `max` | 最難デバッグ・大規模RCA。常用非推奨（overthinking で逆効果になる報告あり） | `claude --effort max` |
 
-> Opus 4.7 公式ガイダンス（2026-04-16）: 推奨デフォルトは `max` ではなく `xhigh`。`max` は overthinking 傾向で逆効果になる場合あり、最難タスクのみに限定。
-> `xhigh` は Opus 4.7 限定（v2.1.111〜）。他モデルでは `high` にフォールバック。
+> `xhigh` は Opus 4.7 限定（v2.1.111〜、`claude --help` の `--effort` choices で確認可）。他モデルでは `high` にフォールバック。
+> 運用方針の出典: Opus 4.7 リリース後の運用ガイド（[Qiita @ot12 2026-04-16](https://qiita.com/ot12/items/06420caf41a34a910c53)、二次情報）。Anthropic 公式 docs での明文化は未確認、コミュニティ知見として参照する。
 
 スクリプトで`--print`使用時は`--fallback-model sonnet`で過負荷時の自動フォールバックも指定可能。
