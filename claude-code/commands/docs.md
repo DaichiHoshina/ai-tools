@@ -8,6 +8,8 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 完了した作業の知識を Notion に蓄積する。プロジェクト非依存。
 
 > **責務分離**: 設計段階の Design Doc は `/design-doc`（md、チーム共有用）。`/docs` は完了後の Notion ナレッジ蓄積。ADR / アーキテクチャ判断の設計フェーズ文書も `/design-doc` を使う。
+>
+> 全体フロー: `references/design-phase-flow.md`
 
 **必読**: Notion投稿時は以下のガイドラインに従うこと:
 - `guidelines/common/notion-writing.md` — 構成・見出し・文体・表記ルール（コア）

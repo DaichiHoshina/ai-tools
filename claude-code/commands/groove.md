@@ -5,6 +5,8 @@ description: 軽量マルチエージェントオーケストレーター。YAML
 
 # /groove - マルチエージェントオーケストレーター
 
+> `/flow`（命令的判定型）との使い分け: `references/flow-vs-groove.md`
+
 ## 使用方法
 
 ```text

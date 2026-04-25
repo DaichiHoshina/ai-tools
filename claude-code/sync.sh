@@ -90,6 +90,43 @@ restore_gh_skills() {
 }
 
 # =============================================================================
+# Repo Freshness Check
+# sync_to_local 実行前に origin/main の未取り込みコミットを警告。
+# race condition（push 直後の sync が古い workspace を反映する事故）を防ぐ。
+# =============================================================================
+
+check_repo_freshness() {
+    local repo_root="${SCRIPT_DIR}/.."
+
+    if ! command -v git &>/dev/null; then
+        return 0
+    fi
+    if ! git -C "${repo_root}" rev-parse --git-dir &>/dev/null; then
+        return 0
+    fi
+
+    # fetch 失敗（オフライン等）は無視
+    git -C "${repo_root}" fetch --quiet 2>/dev/null || return 0
+
+    # upstream 未設定なら skip
+    local upstream
+    upstream=$(git -C "${repo_root}" rev-parse --abbrev-ref '@{u}' 2>/dev/null) || return 0
+
+    local behind
+    behind=$(git -C "${repo_root}" rev-list --count "HEAD..@{u}" 2>/dev/null || echo "0")
+
+    if [ "${behind}" -gt 0 ]; then
+        print_warning "リモート ${upstream} に ${behind} 件の未取り込みコミットあり"
+        echo "  → 'git pull --rebase' を推奨（--skip-git-check で抑制可）" >&2
+        echo "  未取り込みコミット:" >&2
+        git -C "${repo_root}" log --oneline "HEAD..@{u}" 2>/dev/null | head -5 | sed 's/^/    /' >&2
+        echo "" >&2
+        return 1
+    fi
+    return 0
+}
+
+# =============================================================================
 # Settings Hooks Diff Check
 # =============================================================================
 
@@ -149,6 +186,12 @@ check_settings_hooks_diff() {
 
 sync_to_local() {
     print_header "リポジトリ → ローカル 同期"
+
+    # race condition 対策: push 直後の origin/main 未取り込み状態で
+    # workspace が古いまま反映されると、追加されたファイルが取りこぼされる。
+    if [ "${SKIP_GIT_CHECK:-false}" != "true" ]; then
+        check_repo_freshness || true
+    fi
 
     local items=(
         "VERSION"
@@ -444,14 +487,15 @@ check_version() {
 # =============================================================================
 
 usage() {
-    echo "Usage: $0 [to-local|from-local|diff] [--yes|-y]"
+    echo "Usage: $0 [to-local|from-local|diff] [--yes|-y] [--skip-git-check]"
     echo ""
     echo "  to-local    リポジトリ → ~/.claude/ に反映"
     echo "  from-local  ~/.claude/ → リポジトリ に反映"
     echo "  diff        差分を表示"
     echo ""
     echo "Options:"
-    echo "  --yes, -y   確認プロンプトをスキップ"
+    echo "  --yes, -y         確認プロンプトをスキップ"
+    echo "  --skip-git-check  to-local 時の origin/main 未取り込みチェックを抑制"
 }
 
 main() {
@@ -463,6 +507,9 @@ main() {
         case "$1" in
             --yes|-y)
                 skip_confirm=true
+                ;;
+            --skip-git-check)
+                export SKIP_GIT_CHECK=true
                 ;;
             to-local|from-local|diff)
                 mode="$1"

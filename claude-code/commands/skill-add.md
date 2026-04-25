@@ -9,6 +9,8 @@ description: 新規スキル追加 - skill-creator 起動 → skill-lint 検証 
 
 **前提**: 真実源は小文字 `skill.md`（`commands/claude-update-fix.md` 規約準拠）。
 
+> **skill-creator について**: `skill-creator` は外部 plugin（Anthropic 公式 Superpowers 等）を想定。本リポジトリには同梱しないため、未インストール環境では自動的に最小テンプレートにフォールバックする。skill-creator を使いたい場合は対応 plugin を別途インストールする。常にテンプレートでよいなら `--skip-creator` を付与。
+
 ## 引数
 
 ```

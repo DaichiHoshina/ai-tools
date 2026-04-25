@@ -24,6 +24,8 @@ description: 対話的設計精緻化（Superpowers統合）
 | `/plan` | 設計が決まっており、実装計画を作成する場合 |
 | `/dev` | 設計・計画が決まっており、即実装する場合 |
 
+> 全体フロー（brainstorm → prd → design-doc → plan → dev → docs）: `references/design-phase-flow.md`
+
 ## フロー
 
 1. `/brainstorm` 実行 → Superpowersのbrainstormスキル起動
