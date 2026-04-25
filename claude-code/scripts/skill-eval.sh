@@ -22,20 +22,22 @@ ALL_TIME=0
 ONLY_UNUSED=0
 TOP_N=20
 TARGET_SKILL=""
+MAX_FILES=2000
 
 print_usage() {
     cat <<'EOF'
-Usage: skill-eval.sh [--days N] [--all] [--skill NAME] [--unused] [--top N] [--help]
+Usage: skill-eval.sh [--days N] [--all] [--skill NAME] [--unused] [--top N] [--max-files N] [--help]
 
 Aggregates Skill tool invocations from ~/.claude/projects/*/*.jsonl.
 
 Options:
-  --days N      直近 N 日のみ集計（デフォルト: 30）
-  --all         全期間集計（--days を無視）
-  --skill NAME  特定スキルの発火回数のみ表示
-  --unused      この期間で発火 0 のスキルだけ表示
-  --top N       上位 N 件のみ表示（デフォルト: 20）
-  --help, -h    このヘルプを表示
+  --days N        直近 N 日のみ集計（デフォルト: 30）
+  --all           全期間集計（--days を無視）
+  --skill NAME    特定スキルの発火回数のみ表示
+  --unused        この期間で発火 0 のスキルだけ表示
+  --top N         上位 N 件のみ表示（デフォルト: 20）
+  --max-files N   走査ファイル数の上限（デフォルト: 2000、超過時は警告し --days 推奨）
+  --help, -h      このヘルプを表示
 
 Sources:
   CLAUDE_PROJECTS_DIR (env, default: ~/.claude/projects)
@@ -52,6 +54,9 @@ while [[ $# -gt 0 ]]; do
         --top)
             [[ $# -ge 2 ]] || { print_error "--top requires an argument"; exit 2; }
             TOP_N="$2"; shift 2 ;;
+        --max-files)
+            [[ $# -ge 2 ]] || { print_error "--max-files requires an argument"; exit 2; }
+            MAX_FILES="$2"; shift 2 ;;
         --skill)
             [[ $# -ge 2 ]] || { print_error "--skill requires an argument"; exit 2; }
             TARGET_SKILL="$2"; shift 2 ;;
@@ -94,6 +99,7 @@ ONLY_UNUSED="$ONLY_UNUSED" \
 TOP_N="$TOP_N" \
 DAYS="$DAYS" \
 ALL_TIME="$ALL_TIME" \
+MAX_FILES="$MAX_FILES" \
 LOCAL_SKILLS="$LOCAL_SKILLS_CSV" \
 TRANSCRIPTS_DIR="$TRANSCRIPTS_DIR" \
 python3 - <<'PY'
@@ -113,11 +119,14 @@ cutoff = None
 if not all_time:
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
+max_files = int(os.environ.get("MAX_FILES", "2000"))
+
 counter = Counter()
 nonlocal_counter = Counter()
 files_scanned = 0
 lines_scanned = 0
 hits = 0
+truncated = False
 
 # プロジェクト跨いで全 jsonl を見る
 patterns = [
@@ -127,6 +136,10 @@ patterns = [
 files = []
 for p in patterns:
     files.extend(glob.glob(p))
+
+if len(files) > max_files:
+    truncated = True
+    files = sorted(files, key=os.path.getmtime, reverse=True)[:max_files]
 
 for path in files:
     if cutoff is not None:
@@ -171,6 +184,8 @@ for path in files:
 
 # 出力
 print()
+if truncated:
+    print(f"WARN: scan truncated to {max_files} files (use --days N or --max-files M to widen)")
 print(f"Scanned: {files_scanned} files / {lines_scanned} lines / {hits} Skill invocations")
 print()
 

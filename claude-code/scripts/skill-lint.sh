@@ -77,23 +77,18 @@ lint_skill() {
     fi
 
     if [[ -z "$skill_md" ]]; then
-        print_error "[$skill_name] skill.md not found"
+        printf 'error\t[%s] skill.md not found\n' "$skill_name"
         return 2
     fi
 
-    SKILL_FILE="$skill_md" \
-    SKILL_NAME="$skill_name" \
-    DESC_MIN="$DESC_MIN" \
-    DESC_MAX="$DESC_MAX" \
-    TRIGGER_PATTERN="$TRIGGER_PATTERN" \
-    python3 - <<'PY'
-import os, sys, re
+    python3 - "$skill_md" "$skill_name" "$DESC_MIN" "$DESC_MAX" "$TRIGGER_PATTERN" <<'PY'
+import sys, re
 
-skill_file = os.environ["SKILL_FILE"]
-skill_name = os.environ["SKILL_NAME"]
-desc_min = int(os.environ["DESC_MIN"])
-desc_max = int(os.environ["DESC_MAX"])
-trigger_pattern = os.environ["TRIGGER_PATTERN"]
+skill_file = sys.argv[1]
+skill_name = sys.argv[2]
+desc_min = int(sys.argv[3])
+desc_max = int(sys.argv[4])
+trigger_pattern = sys.argv[5]
 
 with open(skill_file, encoding="utf-8") as f:
     content = f.read()

@@ -58,9 +58,19 @@ steps:
       最終ステータス（pass / warn / fail）と発火率計測の参考コマンドを表示
 ```
 
+## 失敗時のロールバック
+
+`lint` ステップが 3 回連続で失敗した場合は、対話で原因を確定したうえで以下のいずれかを実行する:
+
+- **修正再開**: `skills/<name>/skill.md` を手動編集して `skill-lint --skill <name>` で確認
+- **やり直し**: `rm -rf claude-code/skills/<name>` で初期化してから `/skill-add <name>` を再実行
+- **保留**: WIP 旨のコメントを `skill.md` 冒頭に書いて push し、別 PR で完成させる
+
+`create-dir` 後に skill-creator がエラーで中断した場合も同じく `rm -rf claude-code/skills/<name>` で空ディレクトリを掃除する。
+
 ## 最小テンプレート
 
-新規 `claude-code/skills/<name>/skill.md`:
+下記は skill-lint をパスする最低限の構造。`description` のトリガー語を抜くと warning が出るため、必ず含める。新規 `claude-code/skills/<name>/skill.md`:
 
 ```markdown
 ---

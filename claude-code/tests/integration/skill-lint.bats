@@ -191,6 +191,15 @@ setup_fake_root() {
   [[ "$output" == *"requires-guidelines must be a list"* ]]
 }
 
+@test "skill-lint.sh: accepts requires-guidelines as a YAML list" {
+  local body=$'---\nname: rg-list\ndescription: list 形式の requires-guidelines は正常、検証時に使用\nrequires-guidelines:\n  - common\n  - golang\n---\n# body'
+  local linter
+  linter="$(setup_fake_root rg-list skill.md "$body")"
+  run "$linter"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"[rg-list] ok"* ]]
+}
+
 @test "skill-lint.sh: detects missing leading frontmatter delimiter" {
   local body=$'name: nofm\ndescription: leading --- なし、検出時に使用\n# body'
   local linter

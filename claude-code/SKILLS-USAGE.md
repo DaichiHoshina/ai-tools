@@ -84,6 +84,8 @@ comprehensive-review --focus=quality と --focus=security でレビューして
 
 `scripts/skill-lint.sh` で `skills/*/skill.md` の frontmatter を検証（大文字 `SKILL.md` も fallback で許容、真実源は小文字）。
 
+使い分け: 日常開発では引数なし、push 前 hook では `--strict`、新規追加時は `--skill <name>` で対象を絞る。
+
 ```bash
 # 全スキル検証
 ./claude-code/scripts/skill-lint.sh
