@@ -1,54 +1,26 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
-description: Token-efficient Serena MCP command for structured app development and problem-solving
+allowed-tools: Read, Glob, Grep, mcp__serena__*
+description: 旧コマンド。/dev または /diagnose を使用（Serena MCP は両者で利用可能）
 ---
 
-## Options
+# /serena（deprecated）
 
-| Option | Description | Usage |
-|--------|-------------|-------|
-| `-q` | Quick mode | `/serena "fix button" -q` |
-| `-d` | Deep analysis | `/serena "architecture design" -d` |
-| `-c` | Code-focused | `/serena "optimize" -c` |
-| `-s` | Step-by-step + todos | `/serena "build feature" -s` |
-| `-r` | Research with Context7 | `/serena "choose lib" -r` |
-| `--lang` | Load language guidelines | `/serena "fix api" --lang=go` |
+このコマンドは廃止予定。後続コマンドへの最小リダイレクト。
 
-## Language Guidelines
+## 移行先
 
-When `--lang` specified, read the file first:
+| 旧オプション | 新コマンド |
+|------------|---------|
+| `/serena "..." -q` | `/dev --quick "..."` |
+| `/serena "..." -d` | `/diagnose "..."` または `/refactor "..."`（深い分析） |
+| `/serena "..." -c` | `/dev "..."`（コード操作はデフォルトで Serena MCP 経由） |
+| `/serena "..." -s` | `/plan "..."` → `/dev "..."`（Phase 分割） |
+| `/serena "..." -r` | `/dev "..." --research`（Context7 連携） |
+| `/serena "..." --lang=go` | `/dev "..." --lang=go`（言語ガイドライン自動読込） |
+| `/serena オンボーディング` | `Skill(load-guidelines)` + `mcp__serena__list_memories` |
 
-| Option | File |
-|--------|------|
-| `--lang=go` | `~/.claude/guidelines/languages/golang.md` |
-| `--lang=ts` | `~/.claude/guidelines/languages/typescript.md` |
-| `--lang=react` | `~/.claude/guidelines/languages/nextjs-react.md` |
+## なぜ廃止か
 
-Multiple: `--lang=go,ts`
+Serena MCP は `/dev` `/diagnose` `/refactor` `/plan` `/explore` の **全実装系コマンドで既定利用**。`/serena` 独自の付加価値はオンボーディング memory 連携のみだったが、これは `Skill(load-guidelines)` で代替可能。
 
-## Onboarding Optimization
-
-When `オンボーディング` is requested:
-
-1. **Check memory first**: `list_memories` → look for `onboarding-{project-name}*`
-2. **If exists**: Read memory and report "前回のオンボーディング情報を使用"
-3. **If not exists**: Perform full analysis → Save to `onboarding-{project-name}-YYYY-MM`
-
-## Execution
-
-Use Serena MCP for all tasks:
-
-1. **Detect** problem type (debug/design/implement/optimize/onboarding)
-2. **Read** language guidelines if `--lang` specified
-3. **Check memory** for onboarding (skip if exists)
-4. **Analyze** with Serena's semantic code tools
-5. **Research** with Context7 if `-r` specified
-6. **Execute** with specific, actionable steps
-7. **Save memory** if onboarding (for future reuse)
-8. **Create todos** if `-s` specified
-
-**Guidelines:**
-- Use Serena MCP tools for all code operations
-- If `--lang` specified, strictly follow language guidelines
-- `-q`: minimal analysis, `-d`: thorough analysis
-- End with concrete actions
+ARGUMENTS: $ARGUMENTS

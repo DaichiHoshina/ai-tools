@@ -1,14 +1,10 @@
 ---
-description: Claude Code利用状況ダッシュボードを起動
+description: /analytics --ui への最小リダイレクト
 ---
 
-Claude Code Analytics ダッシュボードを起動します。
+# /dashboard（リダイレクト）
 
-## 手順
-
-1. `~/.claude/analytics/analytics.db` が存在しない場合、バックフィルスクリプトを実行
-2. `http://localhost:8765` でダッシュボードを起動
-3. ブラウザを自動オープン
+`/analytics --ui` の別名。Claude Code Analytics ダッシュボードをブラウザで起動する。
 
 ## 実行
 
@@ -16,4 +12,4 @@ Claude Code Analytics ダッシュボードを起動します。
 bash claude-code/scripts/dashboard.sh
 ```
 
-上記コマンドをBashツールで実行してください。ユーザーに起動完了を伝えてください。
+> 機能本体は `/analytics`。CLI 出力（インサイト・改善提案）が必要なら `/analytics`、Web UI が必要なら `/analytics --ui`（または本コマンド）。
