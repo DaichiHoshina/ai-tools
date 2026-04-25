@@ -15,7 +15,7 @@ INPUT=$(cat)
 
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 TOOL_NAME=$(echo "${INPUT}" | jq -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
-ERROR=$(echo "${INPUT}" | jq -r '.error // .tool_input // "no details"' 2>/dev/null | head -c 500)
+ERROR=$(echo "${INPUT}" | jq -r '.error // (.tool_input | tojson) // "no details"' 2>/dev/null | tr '\n' ' ' | head -c 500)
 SESSION_ID=$(echo "${INPUT}" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
 CWD=$(echo "${INPUT}" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
 DURATION_MS=$(echo "${INPUT}" | jq -r '.duration_ms // .tool_response.duration_ms // ""' 2>/dev/null || echo "")
