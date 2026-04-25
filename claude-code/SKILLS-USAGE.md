@@ -103,6 +103,30 @@ comprehensive-review --focus=quality と --focus=security でレビューして
 
 トリガー語不足は warning。description 改善時の指針として活用。
 
+## スキル発火率の計測（skill-eval）
+
+`scripts/skill-eval.sh` で `~/.claude/projects/*/*.jsonl` から Skill ツールの発火回数を集計し、死蔵スキルを可視化。
+
+```bash
+# 直近 30 日（デフォルト）
+./claude-code/scripts/skill-eval.sh
+
+# 全期間
+./claude-code/scripts/skill-eval.sh --all
+
+# 死蔵スキルのみ
+./claude-code/scripts/skill-eval.sh --unused
+
+# 特定スキルの発火数
+./claude-code/scripts/skill-eval.sh --skill backend-dev --days 7
+```
+
+**注意**: Skill ツール経由の明示呼び出しのみカウント。コマンド経由（例: `/dev` から自動選択）の暗黙呼び出しは別計測。
+
+## 新規スキル追加（/skill-add）
+
+`/skill-add <name>` で skill-creator → skill-lint → 同期を一括実行。詳細は `commands/skill-add.md`。
+
 ---
 
 ## 関連ドキュメント
