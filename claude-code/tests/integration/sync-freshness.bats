@@ -9,6 +9,10 @@ setup() {
   export TEST_TMPDIR="${BATS_TMPDIR}/sync-freshness-${RANDOM}-$$"
   mkdir -p "${TEST_TMPDIR}"
 
+  # NOTE: 関数本体は `^}$`（行頭の `}` 単独行）で終端判定している。
+  # sync.sh 側で check_repo_freshness の中に `}` を独立行で書く構造（here-doc EOF
+  # としての `}`、ネスト関数の `}` 等）を入れると抽出が途中切断される。
+  # 将来 sync.sh を改修する際は lib/ に切り出して双方 source する形に移行する。
   CHECK_FUNC=$(sed -n '/^check_repo_freshness()/,/^}$/p' "${PROJECT_ROOT}/claude-code/sync.sh")
   export CHECK_FUNC
 }
@@ -77,6 +81,12 @@ setup_repo_with_upstream() {
 }
 
 @test "check_repo_freshness: returns 0 when fetch fails (offline simulated)" {
+  # 到達不能な upstream を設定 → fetch は失敗するが、後続の rev-list が
+  # 捏造 ref と HEAD が一致するため 0 を返す。
+  # 「fetch 失敗 → 早期 return 0」と「behind が 0 → return 0」の両分岐が
+  # 結果的に 0 を返すケース。前者の経路を独立検証するには sync.sh を
+  # lib/ 切り出ししてモックする必要があるため、ここでは「ネットワーク
+  # 不到達でも abort しない」契約を確認する観点に絞る。
   local repo="${TEST_TMPDIR}/bad-upstream"
   git init --initial-branch=main "${repo}" >/dev/null 2>&1
   pushd "${repo}" >/dev/null
@@ -85,7 +95,6 @@ setup_repo_with_upstream() {
   echo "x" > a.txt
   git add a.txt
   git commit -m "init" >/dev/null
-  # 到達不能な upstream
   git remote add origin "${TEST_TMPDIR}/nonexistent.git"
   git update-ref refs/remotes/origin/main HEAD
   git branch --set-upstream-to=origin/main >/dev/null 2>&1
@@ -140,4 +149,14 @@ setup_repo_with_upstream() {
   run bash "${PROJECT_ROOT}/claude-code/sync.sh" invalid-mode
   [ "${status}" -eq 1 ]
   [[ "${output}" =~ "--skip-git-check" ]]
+}
+
+@test "sync.sh: sync_to_local invokes check_repo_freshness without --skip-git-check" {
+  # sync.sh のソースから「SKIP_GIT_CHECK ガード + check_repo_freshness 呼び出し」
+  # の構造が壊れていないことを確認する静的検査。実 sync 実行は HOME 全置換が
+  # 必要で重いため、構造の回帰を最小コストで検出する。
+  run grep -E 'SKIP_GIT_CHECK:-false.*!=.*"true"' "${PROJECT_ROOT}/claude-code/sync.sh"
+  [ "${status}" -eq 0 ]
+  run grep -E 'check_repo_freshness \|\| true' "${PROJECT_ROOT}/claude-code/sync.sh"
+  [ "${status}" -eq 0 ]
 }

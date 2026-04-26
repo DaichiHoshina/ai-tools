@@ -79,7 +79,9 @@ afplay ~/notification.mp3  # テスト
 
 ## 6. Serena オンボーディング
 
-Claude Code 起動時に `mcp__serena__check_onboarding_performed` が自動実行される。未実施なら `mcp__serena__onboarding` を呼べばよい（旧 `/serena オンボーディング` は廃止、`/dev` 等で Serena MCP を既定利用）。
+- 起動時に `mcp__serena__check_onboarding_performed` が自動実行
+- 未実施なら `mcp__serena__onboarding` を呼ぶ
+- 旧 `/serena オンボーディング` は廃止（`/dev` 等で Serena MCP を既定利用）
 
 ## 7. 定期更新
 
