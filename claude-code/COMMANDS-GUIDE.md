@@ -86,7 +86,7 @@ Claude Codeの27コマンドの使い分けとベストプラクティス。
 | `/protection-mode` | 操作保護モード適用 | 安全性チェック・操作ガードの有効化 |
 | `/groove` | マルチエージェントオーケストレーター | YAMLワークフロー定義で複数Agent協調実行 |
 | `/claude-update-fix` | バージョン差分検出・衝突分析 | Claude Code更新後の設定修正 |
-| `/serena` | Serena MCP操作 | メモリー管理・プロジェクト知識操作 |
+| `/serena` | 廃止（後方互換）| `/dev` `/diagnose` `/refactor` へリダイレクト |
 | `/serena-refresh` | Serenaデータ最新化 | データ・メモリーの整理 |
 
 ---

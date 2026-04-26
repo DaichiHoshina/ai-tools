@@ -31,7 +31,7 @@ Claude Code で使用できる全スラッシュコマンドの一覧。
 | /review-fix-push | レビュー→修正→プッシュを1コマンドで実行。/review + /dev 全修正 + /git-push --pr の統合。 | レビュー・自動化 |
 | /review | コードレビュー用コマンド（comprehensive-reviewスキルで7観点統合レビュー） | レビュー |
 | /serena-refresh | Serenaデータとメモリーを最新化・整理 | メモリ・整理 |
-| /serena | Token-efficient Serena MCP command for structured app development and problem-solving | 開発支援 |
+| /serena | 廃止（後方互換）。`/dev` `/diagnose` `/refactor` `/plan` へリダイレクト | 開発支援 |
 | /skills-manage | gh skill ベースのコミュニティスキル管理。検索・インストール・更新（tree SHA/pin/source tracking 付き）。 | スキル管理 |
 | /test-local | ローカル動作確認→スクショ撮影→PRコメント投稿 | テスト・検証 |
 | /test | テスト作成専用モード - 既存コードに対するテストを作成 | テスト |

@@ -85,8 +85,8 @@ cp ~/.claude/templates/serena-memories/*.template.md ~/.serena/memories/
 ```
 
 **メモリー管理**:
-- `/serena` コマンドでメモリー操作
-- `mcp__serena__write_memory` でプログラム的に更新
+- `/memory-save` で現在の作業状態をメモリに記録
+- `mcp__serena__write_memory` / `mcp__serena__read_memory` で直接操作
 
 ---
 

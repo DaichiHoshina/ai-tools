@@ -107,7 +107,7 @@ PRD作成 → 設計 → 実装 → テスト → レビュー → PR作成
 ```
 /help           # ヘルプ表示
 /reload         # 設定再読み込み
-/serena         # Serena MCP操作
+/dev "..."      # 実装（Serena MCP は既定で利用）
 ```
 
 **CLIコマンド（シェルから実行）:**
