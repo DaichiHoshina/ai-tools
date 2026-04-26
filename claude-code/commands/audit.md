@@ -48,6 +48,7 @@ description: 依存パッケージのセキュリティ監査 - BE/FE 横断で 
 | `--report md\|json` | ファイル出力形式 | コンソールのみ |
 | `--include-container` | trivy/docker scout も実行（重い） | false |
 | `--offline` | キャッシュ参照のみ（対応ツールに限る） | false |
+| `--no-temp-lock` | lockfile 不在エコシステムを一時生成せずスキップ | false |
 
 ## フロー
 
@@ -59,6 +60,9 @@ description: 依存パッケージのセキュリティ監査 - BE/FE 横断で 
 4. 各エコシステムの audit ツール存在確認（`command -v`）
 5. 不在ツールはインストール手順を表示してスキップ（処理続行、例: `pip install pip-audit` / `cargo install cargo-audit` / `go install golang.org/x/vuln/cmd/govulncheck@latest`）
 6. `--offline` 時、ネット必須ツール（govulncheck 等）はスキップ
+7. **lockfile 必須ツール**（npm/pnpm/yarn/composer/bundler/cargo）で lockfile 不在時:
+   - デフォルト: `npm i --package-lock-only` 等で一時生成 → audit → **一時 lockfile を削除**（リポジトリ汚染防止）
+   - `--no-temp-lock` 指定時: 該当エコシステムをスキップ
 
 ### Phase 2: 並列実行
 
