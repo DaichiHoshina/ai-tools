@@ -83,6 +83,7 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 | "全自動で", "autoで", "おまかせ" | `/flow-auto` |
 | "横並びで", "同じ修正を" | 複数リポジトリ作業（`references/multi-repo-workflow.md`） |
 | "codexでレビュー" | `/review --codex` |
+| "設計レビュー", "敵対レビュー" | `/review --adversarial` |
 | "深掘りレビュー", "厳しめレビュー" | `/review --deep` |
 | "リリース前レビュー" | `/review --multi <PR>` |
 | "ブレスト", "設計検討" | `/brainstorm` |
