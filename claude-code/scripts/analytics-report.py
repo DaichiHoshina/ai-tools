@@ -10,9 +10,12 @@ Claude Code 利用状況分析スクリプト
 
 import argparse
 import csv
+import json
 import os
 import sqlite3
+import subprocess
 import sys
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
@@ -90,6 +93,133 @@ def iso_range(days_ago: int, base: Optional[datetime] = None) -> tuple[str, str]
     end = base or now_utc()
     start = end - timedelta(days=days_ago)
     return start.isoformat(), end.isoformat()
+
+
+# =====================================================================
+# レビュー履歴解析
+# =====================================================================
+
+def find_repo_root() -> Optional[Path]:
+    """現在のCWDから git リポジトリルートを取得。"""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=True, timeout=5,
+        )
+        return Path(result.stdout.strip())
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+
+
+def load_review_history(repo_root: Path) -> list[dict]:
+    """`<repo>/.claude/review-history.jsonl` を読み込む。不在時は空。"""
+    history_file = repo_root / ".claude" / "review-history.jsonl"
+    if not history_file.exists():
+        return []
+    entries: list[dict] = []
+    try:
+        with history_file.open() as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entries.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+    except OSError:
+        return []
+    return entries
+
+
+def analyze_review_history(entries: list[dict]) -> dict:
+    """履歴から統計を生成。観点別件数・信頼度分布・繰り返し top・時系列。"""
+    if not entries:
+        return {}
+
+    focus_counts = Counter(e.get("focus") for e in entries if e.get("focus"))
+    severity_counts = Counter(e.get("severity") for e in entries if e.get("severity"))
+
+    confidence_buckets = {"25-49": 0, "50-79": 0, "80-100": 0}
+    for e in entries:
+        c = e.get("confidence")
+        if not isinstance(c, (int, float)):
+            continue
+        if 25 <= c < 50:
+            confidence_buckets["25-49"] += 1
+        elif 50 <= c < 80:
+            confidence_buckets["50-79"] += 1
+        elif c >= 80:
+            confidence_buckets["80-100"] += 1
+
+    location_counter: Counter = Counter()
+    for e in entries:
+        file = e.get("file")
+        line = e.get("line", 0) or 0
+        focus = e.get("focus")
+        if file and focus:
+            bucket = (file, focus, line // 4)
+            location_counter[bucket] += 1
+    repeated = [(loc, cnt) for loc, cnt in location_counter.most_common(10) if cnt >= 3]
+
+    now = now_utc()
+    last_30_cutoff = (now - timedelta(days=30)).strftime("%Y-%m-%d")
+    prev_60_cutoff = (now - timedelta(days=60)).strftime("%Y-%m-%d")
+    last_count = sum(1 for e in entries if (d := e.get("date")) and d >= last_30_cutoff)
+    prev_count = sum(
+        1 for e in entries
+        if (d := e.get("date")) and prev_60_cutoff <= d < last_30_cutoff
+    )
+
+    return {
+        "total": len(entries),
+        "focus_counts": dict(focus_counts.most_common()),
+        "severity_counts": dict(severity_counts),
+        "confidence_buckets": confidence_buckets,
+        "repeated": repeated,
+        "last_30d": last_count,
+        "prev_30d": prev_count,
+    }
+
+
+def format_review_history(stats: dict) -> str:
+    """統計を Markdown セクションに整形。履歴なしなら空文字。"""
+    if not stats or stats.get("total", 0) == 0:
+        return ""
+
+    crit = stats["severity_counts"].get("Critical", 0)
+    warn = stats["severity_counts"].get("Warning", 0)
+    cb = stats["confidence_buckets"]
+
+    last = stats["last_30d"]
+    prev = stats["prev_30d"]
+    if prev > 0:
+        pct = (last - prev) / prev * 100
+        trend = f"📈 {pct:+.0f}%" if pct > 0 else f"📉 {pct:+.0f}%"
+    else:
+        trend = "—"
+
+    focus_str = ", ".join(
+        f"{focus}({cnt})" for focus, cnt in list(stats["focus_counts"].items())[:5]
+    ) or "（データなし）"
+
+    lines = [
+        "",
+        "### レビュー履歴（このリポジトリ）",
+        f"- 累計指摘数: {stats['total']}件（Critical {crit} / Warning {warn}）",
+        f"- 観点TOP5: {focus_str}",
+        f"- 信頼度分布: 80-100={cb['80-100']} / 50-79={cb['50-79']} / 25-49={cb['25-49']}",
+        f"- 直近30日: {last}件（前期 {prev}件 {trend}）",
+    ]
+
+    if stats["repeated"]:
+        lines.append("")
+        lines.append("**🔁 繰り返し指摘 TOP5**（同一箇所で3回以上）:")
+        for (file, focus, line_bucket), cnt in stats["repeated"][:5]:
+            line_approx = line_bucket * 4
+            lines.append(f"- {focus} @ `{file}:~{line_approx}` ({cnt}回)")
+
+    return "\n".join(lines)
 
 
 # =====================================================================
@@ -441,6 +571,14 @@ def run_full(conn: sqlite3.Connection) -> str:
         "### 提案",
         suggestion_lines,
     ]
+
+    repo_root = find_repo_root()
+    if repo_root:
+        review_section = format_review_history(
+            analyze_review_history(load_review_history(repo_root))
+        )
+        if review_section:
+            lines.append(review_section)
 
     return "\n".join(lines)
 
