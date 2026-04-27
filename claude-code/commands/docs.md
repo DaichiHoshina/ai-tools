@@ -72,7 +72,7 @@ Grep / Read → 関連コード読解
 
 `notion-create-pages` 実行前に、draft 本文（Step 5 で投稿する text）を AI 自身が検査する。対象は md 化された draft で、まだ Notion に送られていない段階。
 
-検査項目は `skills/comprehensive-review/SKILL.md` の writing 観点 NG 表と `guidelines/common/user-voice.md` の NG 辞書。
+検査項目は `skills/comprehensive-review/skill.md` の writing 観点 NG 表と `guidelines/common/user-voice.md` の NG 辞書。
 
 - Critical 1件以上、または Warning 4件以上ヒット → draft を書き直してから再検査（最大2 loop）
 - 合格後に Step 5 へ進む

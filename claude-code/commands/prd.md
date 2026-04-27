@@ -94,7 +94,7 @@ Critical（必須対応）/ Warning（推奨対応）/ Info（検討推奨）
 
 `/prd` は chat 出力で、ファイル化していないため `/review` の git diff 対象にならない。AI が出力直前に、生成済み draft 本文に対して以下を自己検査する:
 
-- `skills/comprehensive-review/SKILL.md` の writing 観点 NG 表（結論先行・根拠なき評価語・抽象語放置・難語未定義・主語省略・5W1H 欠落・箇条書き金太郎飴・AI 定型語・読後アクション未明示）
+- `skills/comprehensive-review/skill.md` の writing 観点 NG 表（結論先行・根拠なき評価語・抽象語放置・難語未定義・主語省略・5W1H 欠落・箇条書き金太郎飴・AI 定型語・読後アクション未明示）
 - `guidelines/common/user-voice.md` の NG 辞書
 
 Critical 1件以上、または Warning 4件以上ヒット → 該当箇所を修正してから Phase 5 に渡す（最大2 loop）。修正は推測せず、4問（読み手・読後アクション・数字・なぜ）の答えを本文に織り込む方向で行う。

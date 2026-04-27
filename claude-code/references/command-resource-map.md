@@ -7,7 +7,7 @@
 | リソース種別 | 自動発火 | 備考 |
 |-----------|---------|------|
 | **rule** | 起動時自動適用 | `~/.claude/CLAUDE.md`、`~/.claude/rules/*.md`、`claude-code/CLAUDE.md`、`.claude/rules/*.md` から起動時に自動読み込み。改めて invoke 不要 |
-| **hook** | settings.json 自動発火 | PreToolUse、PostToolUse、SessionStart、UserPromptSubmit、Stop、Notification イベント時に自動発火。改めて invoke 不要 |
+| **hook** | settings.json 自動発火 | PreToolUse、PostToolUse、SessionStart、UserPromptSubmit、Stop、Notification イベント時に自動発火。改めて invoke 不要。**全コマンドで同一発火（コマンド間で差分なし）** |
 | **agent** | Task ツール経由 | 親コマンドが `Task(subagent_type)` で起動。po-agent、manager-agent、developer-agent、reviewer-agent など |
 | **skill** | 遅延読込 | Step 0 では skill 推奨リスト表示（テキストのみ、本体 read なし）。必要時に `Skill()` ツール呼び出し or 手動 Read |
 | **guideline** | 技術スタック検出ベース | `load-guidelines` skill が自動検出実装。コマンド起動時に Step 0 で参照 |
@@ -79,13 +79,21 @@
 **リンク有効性確認（command-resource-map.md からの全参照先が存在するか）**:
 
 ```bash
-# インラインコード形式 `path.md` を抽出して存在確認（claude-code/ 起点）
+# インラインコード形式のファイルパスを抽出して存在確認（claude-code/ 起点）
+# 対象: ディレクトリを含む相対パスのみ（単独ファイル名・glob/brace/regex リテラルは除外）
 grep -oE '`[^`]+\.md`' claude-code/references/command-resource-map.md | \
   sed 's/`//g' | sort -u | while read p; do
-    [[ "$p" =~ ^(~|/) ]] && continue  # 絶対パス・home はスキップ
-    base="claude-code"
-    [[ "$p" =~ ^(common|design|languages|infrastructure|backend|operations)/ ]] && base="claude-code/guidelines"
-    test -e "$base/$p" || echo "BROKEN: $p (resolved: $base/$p)"
+    [[ "$p" != */* ]] && continue          # ディレクトリ無し（説明用語句）はスキップ
+    [[ "$p" =~ []*{}+[] ]] && continue     # glob/brace/regex リテラルはスキップ
+    [[ "$p" =~ ^(~|/) ]] && continue       # 絶対パス・home はスキップ
+    if [[ "$p" =~ ^claude-code/ ]]; then
+      target="$p"
+    elif [[ "$p" =~ ^(common|design|languages|infrastructure|backend|operations)/ ]]; then
+      target="claude-code/guidelines/$p"
+    else
+      target="claude-code/$p"
+    fi
+    test -e "$target" || echo "BROKEN: $p (resolved: $target)"
   done
 ```
 
