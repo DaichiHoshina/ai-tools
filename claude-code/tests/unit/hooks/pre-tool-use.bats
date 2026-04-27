@@ -40,6 +40,15 @@ get_additional_context() {
   echo "$1" | jq -r '.additionalContext // empty'
 }
 
+# Forbidden 系（exit 2 で hook がブロックする）の Bash コマンド実行
+# bats `run` を使って exit code をキャプチャ。$status と $output が利用可能
+_run_bash_forbidden() {
+  local cmd="$1"
+  local input
+  input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+}
+
 # =============================================================================
 # Safe操作テスト
 # =============================================================================
@@ -314,44 +323,51 @@ get_additional_context() {
 # =============================================================================
 
 @test "pre-tool-use: Bash rm -rf / はForbidden" {
-  result=$(run_hook "Bash" '{"command": "rm -rf /"}')
-  msg=$(get_system_message "$result")
+  _run_bash_forbidden "rm -rf /"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
   [[ "$msg" =~ "禁止" ]]
 }
 
 @test "pre-tool-use: Bash rm -rf * はForbidden" {
-  result=$(run_hook "Bash" '{"command": "rm -rf *"}')
-  msg=$(get_system_message "$result")
+  _run_bash_forbidden "rm -rf *"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
   [[ "$msg" =~ "禁止" ]]
 }
 
 @test "pre-tool-use: Bash git push --force はForbidden" {
-  result=$(run_hook "Bash" '{"command": "git push --force origin main"}')
-  msg=$(get_system_message "$result")
+  _run_bash_forbidden "git push --force origin main"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
   [[ "$msg" =~ "禁止" ]]
 }
 
 @test "pre-tool-use: Bash git push -f はForbidden" {
-  result=$(run_hook "Bash" '{"command": "git push -f origin main"}')
-  msg=$(get_system_message "$result")
+  _run_bash_forbidden "git push -f origin main"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
   [[ "$msg" =~ "禁止" ]]
 }
 
 @test "pre-tool-use: Bash sudo rm はForbidden" {
-  result=$(run_hook "Bash" '{"command": "sudo rm -rf /var/log"}')
-  msg=$(get_system_message "$result")
+  _run_bash_forbidden "sudo rm -rf /var/log"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
   [[ "$msg" =~ "禁止" ]]
 }
 
 @test "pre-tool-use: Bash fork bomb はForbidden" {
-  result=$(run_hook "Bash" '{"command": ":(){ :|:& };:"}')
-  msg=$(get_system_message "$result")
+  _run_bash_forbidden ":(){ :|:& };:"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
   [[ "$msg" =~ "禁止" ]]
 }
 
 @test "pre-tool-use: Bash > /dev/null リダイレクト はForbidden" {
-  result=$(run_hook "Bash" '{"command": "> /dev/sda"}')
-  msg=$(get_system_message "$result")
+  _run_bash_forbidden "> /dev/sda"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
   [[ "$msg" =~ "禁止" ]]
 }
 
@@ -360,8 +376,9 @@ get_additional_context() {
 # =============================================================================
 
 @test "pre-tool-use: Forbidden時にadditionalContextが設定される" {
-  result=$(run_hook "Bash" '{"command": "rm -rf /"}')
-  ctx=$(get_additional_context "$result")
+  _run_bash_forbidden "rm -rf /"
+  [ "$status" -eq 2 ]
+  ctx=$(get_additional_context "$output")
   [ -n "$ctx" ]
   [[ "$ctx" =~ "破壊的" ]]
 }
