@@ -45,7 +45,9 @@ fi
 DURATION="N/A"
 if [ -f "$LOG_FILE" ] && [ "$AGENT_ID" != "unknown" ]; then
   # awk 1 fork で「START 行で agent_id 一致の最終行のタイムスタンプ」抽出
-  START_TIME=$(awk -F'[][]' -v aid="agent_id=${AGENT_ID}" '/START/ && $0 ~ aid {ts=$2} END{print ts}' "$LOG_FILE" || echo "")
+  # /START/ で START 行に絞り、index() で固定文字列マッチ（AGENT_ID にメタ文字含むケースで誤マッチ防止）
+  # Field 2: -F'[][]' で各角括弧を区切りとし、`[2026-... ]` の中身を取得
+  START_TIME=$(awk -F'[][]' -v aid="agent_id=${AGENT_ID}" '/START/ && index($0, aid) {ts=$2} END{print ts}' "$LOG_FILE" || echo "")
   if [ -n "$START_TIME" ]; then
     # 簡易的な秒数計算（dateコマンドで変換）
     START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$START_TIME" +"%s" 2>/dev/null || echo "0")

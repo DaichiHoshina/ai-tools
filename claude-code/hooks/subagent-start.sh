@@ -35,7 +35,9 @@ fi
 _DUP_WARN=""
 if [[ -f "$LOG_FILE" ]]; then
   # awk 1 fork で「最終マッチ行のタイムスタンプ」抽出（grep|tail|awk の3 fork → 1 fork）
-  _LAST_SAME=$(awk -F'[][]' -v t="type=${AGENT_TYPE} " '$0 ~ t {ts=$2} END{print ts}' "$LOG_FILE" || true)
+  # index() は固定文字列検索（AGENT_TYPE に正規表現メタ文字が含まれても誤マッチしない）
+  # Field 2: -F'[][]' で各角括弧を区切りとし、`[2026-... ]` の中身を取得
+  _LAST_SAME=$(awk -F'[][]' -v t="type=${AGENT_TYPE} " 'index($0, t) {ts=$2} END{print ts}' "$LOG_FILE" || true)
   if [[ -n "$_LAST_SAME" ]]; then
     _NOW_EPOCH=$(date +%s)
     _LAST_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$_LAST_SAME" +%s 2>/dev/null || echo 0)

@@ -38,9 +38,10 @@ echo "[${TIMESTAMP}] IDLE | teammate=${TEAMMATE_NAME} | team=${TEAM_NAME}" >> "$
 
 # idle回数カウント（最後の START 以降の IDLE 数）
 # awk 1 fork で「最終 START 行番号」と「以降の IDLE 数」を同時に取得（grep|tail|cut + tail|grep -c の5 fork → 1 fork）
+# index() は固定文字列検索: TEAMMATE_NAME に正規表現メタ文字（. * [ など）が含まれても誤マッチしない
 IDLE_COUNT=$(awk -v t="teammate=${TEAMMATE_NAME}" '
-  /START/ && $0 ~ t { last_start=NR; idle=0; next }
-  /IDLE/  && $0 ~ t && NR > last_start { idle++ }
+  /START/ && index($0, t) { last_start=NR; idle=0; next }
+  /IDLE/  && index($0, t) && NR > last_start { idle++ }
   END { print idle+0 }
 ' "$LOG_FILE" 2>/dev/null || echo "0")
 
