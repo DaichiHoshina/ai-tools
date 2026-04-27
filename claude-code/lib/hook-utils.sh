@@ -41,13 +41,24 @@ get_field() {
   echo "$input" | jq -r ".${field} // \"${default}\""
 }
 
-# ネストしたフィールド取得
-# Usage: get_nested_field "$INPUT" "workspace.current_dir" "."
-get_nested_field() {
-  local input="$1"
-  local path="$2"
-  local default="${3:-}"
-  echo "$input" | jq -r ".${path} // \"${default}\""
+# 複数JSONフィールドを1回のjq呼び出しでTSV取得（fork削減）
+# Usage:
+#   read -r VAR1 VAR2 ... < <(extract_json_fields "$INPUT" '.f1 // "x"' '.f2 // 0' ...)
+# 各引数は jq 式（デフォルト値含む）。タブ区切りで返すため、値にタブを含む場合は不可。
+extract_json_fields() {
+  local input="$1"; shift
+  local jq_expr="["
+  local first=1
+  for f in "$@"; do
+    if (( first )); then
+      jq_expr+="$f"
+      first=0
+    else
+      jq_expr+=", $f"
+    fi
+  done
+  jq_expr+="] | @tsv"
+  jq -r "$jq_expr" <<< "$input"
 }
 
 # Stop/StopFailure共通の通知送信
