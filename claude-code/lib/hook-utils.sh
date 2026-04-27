@@ -43,8 +43,16 @@ get_field() {
 
 # 複数JSONフィールドを1回のjq呼び出しでTSV取得（fork削減）
 # Usage:
-#   read -r VAR1 VAR2 ... < <(extract_json_fields "$INPUT" '.f1 // "x"' '.f2 // 0' ...)
-# 各引数は jq 式（デフォルト値含む）。タブ区切りで返すため、値にタブを含む場合は不可。
+#   IFS=$'\t' read -r VAR1 VAR2 ... < <(extract_json_fields "$INPUT" '.f1 // "x"' '.f2 // 0' ...)
+#
+# 各引数は jq 式リテラル（デフォルト値含む）。タブ区切りで返すため値にタブを含む場合は不可。
+#
+# Notes:
+# - **Security**: 引数 $@ はそのまま jq 式に連結される。呼び出し元責任で**静的リテラルのみ**
+#   渡すこと。$INPUT 値由来の文字列を渡すと jq 式 injection の可能性あり。
+# - **Failure mode**: jq が異常終了（不正 JSON 入力等）すると stdout 空 → 呼び出し側 `read`
+#   が EOF を返し、`set -e` 下では hook 早期終了する（旧 `VAR=$(jq ...)` と同挙動）。
+#   信頼できない入力には `validate_json` で事前検証推奨。
 extract_json_fields() {
   local input="$1"; shift
   local jq_expr="["
