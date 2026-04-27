@@ -67,7 +67,9 @@ claude plugin install coderabbit@claude-plugins-official
 ```bash
 # 利用可能 skill 一覧から確認
 ls ~/.claude/plugins/cache/claude-plugins-official/ | grep -E "code-review|security-guidance|pr-review-toolkit|coderabbit"
-# /review --multi <PR番号> または /code-review:code-review <PR番号> でテスト実行
+# 動作確認は単体プラグイン呼び出しで（コスト最小）
+# /code-review:code-review <PR番号>
+# 本番運用時のみ /review --multi <PR番号>（4手段並列、コスト最大）
 ```
 
 ### JIRA/Confluence（オプション）
