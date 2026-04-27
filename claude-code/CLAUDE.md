@@ -119,3 +119,4 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 | Agent コスト実測 | `references/performance-insights.md` |
 | 設計フェーズ遷移（brainstorm→prd→design-doc→plan→dev→docs） | `references/design-phase-flow.md` |
 | /flow vs /groove 使い分け | `references/flow-vs-groove.md` |
+| 主要コマンド × リソース対応表 | `references/command-resource-map.md` |

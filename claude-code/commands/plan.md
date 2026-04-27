@@ -51,6 +51,8 @@ requires-guidelines:
 - `api-design` - API設計原則
 - `microservices-monorepo` - マイクロサービス・モノレポ設計（検出時）
 
+詳細な Skill / Agent マッピングは `references/command-resource-map.md` を参照。
+
 ## Agent 使用判断
 
 ### PO Agent を使用（複雑な計画）

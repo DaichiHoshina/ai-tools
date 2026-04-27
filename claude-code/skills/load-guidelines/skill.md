@@ -100,3 +100,45 @@ Skill frontmatter の `requires-guidelines` 識別子を skill実行時に自動
 - `terraform` → `infrastructure/terraform.md`、`kubernetes` → `infrastructure/aws-eks.md`
 - `clean-architecture|ddd|async-job-patterns` → `design/`
 - `database-performance|mysql-performance|caching-strategies|distributed-transactions|observability-design|security-hardening|scalability-patterns|event-driven-architecture|multi-tenancy` → `backend/`
+
+---
+
+## モード3: コマンド別 skill / agent 推奨
+
+主要4コマンド（`/dev` `/plan` `/review` `/flow`）を活用する際、推奨される skill リストを以下に示す。
+
+### `/dev` コマンド推奨
+
+実装フェーズの skill:
+- **UI開発時**: `ui-skills` - UI コンポーネント設計・Tailwind/shadcn 活用
+- **Backend開発時**: `backend-dev` - API・ビジネスロジック実装
+- **共通**: `simplify` - コード簡潔化、`cleanup-enforcement` - 品質・lint 違反検出
+
+### `/plan` コマンド推奨
+
+設計・計画フェーズの skill:
+- `clean-architecture-ddd` - アーキテクチャ設計サポート
+- `api-design` - API 仕様設計
+- `microservices-monorepo` - マイクロサービス・モノレポ設計（該当時）
+- `terraform` - IaC 計画・実装（インフラ計画時）
+- `load-guidelines` - プロジェクト技術スタック検出
+
+### `/review` コマンド推奨
+
+コードレビューの skill:
+- `comprehensive-review` - 総合レビュー（デフォルト）
+- `uiux-review` - UI/UX 観点レビュー（UI 変更時）
+- `cleanup-enforcement` - コード品質・スタイル違反チェック
+
+### `/flow` コマンド推奨
+
+タスクタイプ判定後の自動選択。主なパターン:
+- **設計相談**: `clean-architecture-ddd`
+- **インシデント/緊急対応**: `incident-response`
+- **根本原因分析（RCA）**: `root-cause`
+- **データ分析**: `data-analysis`
+- **IaC 計画**: `terraform`
+
+詳細なマッピングは `references/command-resource-map.md` を参照。
+
+**読込方法**: 上記 skill が必要な場合は、個別に Skill ツール呼び出し、または Read で SKILL.md を参照。遅延読込パターン（トークン節約）を採用。
