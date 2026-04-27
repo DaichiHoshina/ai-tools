@@ -33,6 +33,7 @@ commit → push → PR/MR作成を1コマンドで実行。
 | `--branch <name>` | ブランチ作成→push→MR/PR |
 | `--draft` | ドラフトPR/MR |
 | `-m "msg"` | コミットメッセージ指定 |
+| `--auto-review` | PR作成後に `/code-review:code-review` + `coderabbit:code-review` を並列自動起動（**opt-in、prモード時のみ**）。CodeRabbit は外部API呼び出し・課金影響あり |
 
 ## フロー
 
@@ -52,6 +53,13 @@ commit → push → PR/MR作成を1コマンドで実行。
 3. `git push -u origin <branch>`
 4. `gh pr create` / `glab mr create`（リモート自動判定）
 5. PR/MR URL表示
+6. **自動レビュー**（`--auto-review` 指定時のみ。デフォルト OFF、PR成功時、`gh` 利用可、GitHub限定）:
+   - `/code-review:code-review <PR番号>` を `Bash run_in_background:true` で起動 → bash_id_A 取得
+   - `coderabbit:code-review` を `Bash run_in_background:true` で起動 → bash_id_B 取得
+   - 完了監視: `BashOutput` で bash_id_A / bash_id_B を順次取得
+   - 成功時: PR にコメント投稿された旨をユーザーに表示
+   - 失敗時: ツール名・exit code・stderr 末尾10行 を表示（PR作成自体は成功扱い）
+   - GitLab/`glab` 環境では `--auto-review` 指定があっても skip（plugin 未対応、warn 表示）
 
 ### branchモード
 
@@ -113,5 +121,6 @@ push/MR 作成後、コミットメッセージやブランチ名に Jira チケ
 | stash pop 失敗 | コンフリクト表示、手動解消案内 |
 | 認証エラー | SSH鍵/トークン確認案内 |
 | PR/MR作成失敗 | push済みブランチURL表示 |
+| 自動レビュー失敗 | PR作成は成功扱い。レビューエラーのみ警告表示（PR URL は出力済） |
 
 ARGUMENTS: $ARGUMENTS
