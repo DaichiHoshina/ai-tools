@@ -106,12 +106,12 @@ mdl claude-code/references/command-resource-map.md
 
 ### リソース網羅確認
 
-対象ファイル: `commands/{dev,flow,plan,review}.md`、`skills/load-guidelines/SKILL.md`
+対象ファイル: `commands/{dev,flow,plan,review}.md`、`skills/load-guidelines/skill.md`
 
 ```bash
 # 行数確認（トークン節約原則準拠: コマンド150行以内、skill 300行以内）
 wc -l claude-code/commands/{dev,flow,plan,review}.md
-wc -l claude-code/skills/load-guidelines/SKILL.md
+wc -l claude-code/skills/load-guidelines/skill.md
 ```
 
 ---

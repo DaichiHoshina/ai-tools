@@ -141,4 +141,4 @@ Skill frontmatter の `requires-guidelines` 識別子を skill実行時に自動
 
 詳細なマッピングは `references/command-resource-map.md` を参照。
 
-**読込方法**: 上記 skill が必要な場合は、個別に Skill ツール呼び出し、または Read で SKILL.md を参照。遅延読込パターン（トークン節約）を採用。
+**読込方法**: 上記 skill が必要な場合は、個別に Skill ツール呼び出し、または Read で `skill.md` を参照。遅延読込パターン（トークン節約）を採用。
