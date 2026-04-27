@@ -13,10 +13,13 @@ require_jq
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# エージェント情報を抽出
-AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // "unknown"')
-AGENT_TYPE=$(echo "$INPUT" | jq -r '.agent_type // "unknown"')
-CWD=$(echo "$INPUT" | jq -r '.cwd // "."')
+# エージェント情報を抽出（jq 1回で複数フィールド取得）
+IFS=$'\t' read -r AGENT_ID AGENT_TYPE CWD < <(
+  extract_json_fields "$INPUT" \
+    '.agent_id // "unknown"' \
+    '.agent_type // "unknown"' \
+    '.cwd // "."'
+)
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # ログディレクトリ作成
@@ -41,7 +44,8 @@ fi
 # 実行時間計算（同じagent_idのSTARTとSTOPの差分）
 DURATION="N/A"
 if [ -f "$LOG_FILE" ] && [ "$AGENT_ID" != "unknown" ]; then
-  START_TIME=$(grep "START.*agent_id=${AGENT_ID}" "$LOG_FILE" | tail -1 | awk -F'[][]' '{print $2}' || echo "")
+  # awk 1 fork で「START 行で agent_id 一致の最終行のタイムスタンプ」抽出
+  START_TIME=$(awk -F'[][]' -v aid="agent_id=${AGENT_ID}" '/START/ && $0 ~ aid {ts=$2} END{print ts}' "$LOG_FILE" || echo "")
   if [ -n "$START_TIME" ]; then
     # 簡易的な秒数計算（dateコマンドで変換）
     START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$START_TIME" +"%s" 2>/dev/null || echo "0")

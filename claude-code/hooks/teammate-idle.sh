@@ -17,9 +17,12 @@ require_jq
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# チームメイト情報を抽出
-TEAMMATE_NAME=$(echo "$INPUT" | jq -r '.teammate_name // "unknown"')
-TEAM_NAME=$(echo "$INPUT" | jq -r '.team_name // "unknown"')
+# チームメイト情報を抽出（jq 1回で複数フィールド取得）
+IFS=$'\t' read -r TEAMMATE_NAME TEAM_NAME < <(
+  extract_json_fields "$INPUT" \
+    '.teammate_name // "unknown"' \
+    '.team_name // "unknown"'
+)
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # ログディレクトリ
@@ -33,14 +36,13 @@ if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE" | tr -d ' ') -gt 1000 ]]; th
 fi
 echo "[${TIMESTAMP}] IDLE | teammate=${TEAMMATE_NAME} | team=${TEAM_NAME}" >> "$LOG_FILE"
 
-# idle回数カウント（同一teammate_nameの直近のIDLEイベント数）
-# STARTイベント以降のIDLE回数をカウント（最後の起動からの連続idle）
-LAST_START_LINE=$(grep -n "START.*teammate=${TEAMMATE_NAME}" "$LOG_FILE" 2>/dev/null | tail -1 | cut -d: -f1 || true)
-if [[ -n "${LAST_START_LINE}" ]]; then
-  IDLE_COUNT=$(tail -n +"${LAST_START_LINE}" "$LOG_FILE" | grep -c "IDLE.*teammate=${TEAMMATE_NAME}" 2>/dev/null || echo "0")
-else
-  IDLE_COUNT=$(grep -c "IDLE.*teammate=${TEAMMATE_NAME}" "$LOG_FILE" 2>/dev/null || echo "0")
-fi
+# idle回数カウント（最後の START 以降の IDLE 数）
+# awk 1 fork で「最終 START 行番号」と「以降の IDLE 数」を同時に取得（grep|tail|cut + tail|grep -c の5 fork → 1 fork）
+IDLE_COUNT=$(awk -v t="teammate=${TEAMMATE_NAME}" '
+  /START/ && $0 ~ t { last_start=NR; idle=0; next }
+  /IDLE/  && $0 ~ t && NR > last_start { idle++ }
+  END { print idle+0 }
+' "$LOG_FILE" 2>/dev/null || echo "0")
 
 # エスカレーションレベル判定
 if [[ "${IDLE_COUNT}" -ge 3 ]]; then

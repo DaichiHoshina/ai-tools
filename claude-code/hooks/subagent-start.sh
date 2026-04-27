@@ -13,10 +13,13 @@ require_jq
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# エージェント情報を抽出
-AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // "unknown"')
-AGENT_TYPE=$(echo "$INPUT" | jq -r '.agent_type // "unknown"')
-CWD=$(echo "$INPUT" | jq -r '.cwd // "."')
+# エージェント情報を抽出（jq 1回で複数フィールド取得）
+IFS=$'\t' read -r AGENT_ID AGENT_TYPE CWD < <(
+  extract_json_fields "$INPUT" \
+    '.agent_id // "unknown"' \
+    '.agent_type // "unknown"' \
+    '.cwd // "."'
+)
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # ログディレクトリ作成
@@ -31,7 +34,8 @@ fi
 # 重複起動検知: 直近60秒以内に同一 agent_type が起動済みなら警告
 _DUP_WARN=""
 if [[ -f "$LOG_FILE" ]]; then
-  _LAST_SAME=$(grep "type=${AGENT_TYPE} " "$LOG_FILE" | tail -1 | awk -F'[][]' '{print $2}' || true)
+  # awk 1 fork で「最終マッチ行のタイムスタンプ」抽出（grep|tail|awk の3 fork → 1 fork）
+  _LAST_SAME=$(awk -F'[][]' -v t="type=${AGENT_TYPE} " '$0 ~ t {ts=$2} END{print ts}' "$LOG_FILE" || true)
   if [[ -n "$_LAST_SAME" ]]; then
     _NOW_EPOCH=$(date +%s)
     _LAST_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$_LAST_SAME" +%s 2>/dev/null || echo 0)

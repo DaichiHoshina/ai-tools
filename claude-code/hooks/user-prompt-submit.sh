@@ -41,7 +41,8 @@ fi
 _CTX_FILE="${CLAUDE_CTX_FILE:-/tmp/claude-ctx-pct}"
 _COMPACT_NOTICE_MSG=""
 if [[ -f "${_CTX_FILE}" ]]; then
-  _CTX_PCT=$(cat "${_CTX_FILE}" 2>/dev/null || echo "0")
+  # bash builtin read で fork 不要にする（毎プロンプトで cat fork していた箇所）
+  read -r _CTX_PCT < "${_CTX_FILE}" 2>/dev/null || _CTX_PCT="0"
   if [[ "${_CTX_PCT}" =~ ^[0-9]+$ ]] && [[ "${_CTX_PCT}" -ge 50 ]]; then
     _COMPACT_NOTICE_MSG="⚠️ コンテキスト使用率${_CTX_PCT}%。次レスポンス冒頭で /compact 実行をユーザーに提案すること（自動実行禁止、承認後に実行）。"
   fi
@@ -51,7 +52,7 @@ fi
 _SERENA_COUNTER="${CLAUDE_SERENA_FAIL_COUNT:-/tmp/claude-serena-fail-count}"
 _SERENA_NOTICE_MSG=""
 if [[ -f "${_SERENA_COUNTER}" ]]; then
-  _SERENA_FAILS=$(cat "${_SERENA_COUNTER}" 2>/dev/null || echo "0")
+  read -r _SERENA_FAILS < "${_SERENA_COUNTER}" 2>/dev/null || _SERENA_FAILS="0"
   if [[ "${_SERENA_FAILS}" =~ ^[0-9]+$ ]] && [[ "${_SERENA_FAILS}" -ge 2 ]]; then
     _SERENA_NOTICE_MSG="⚠️ Serena MCP が${_SERENA_FAILS}回失敗。ユーザーに \`/serena-refresh\` 実行を提案してください（再接続で復旧）。"
     rm -f "${_SERENA_COUNTER}"  # 1度通知したらクリア
