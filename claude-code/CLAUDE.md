@@ -82,10 +82,13 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 | "main push" | `/git-push --main` |
 | "全自動で", "autoで", "おまかせ" | `/flow-auto` |
 | "横並びで", "同じ修正を" | 複数リポジトリ作業（`references/multi-repo-workflow.md`） |
+| "レビュー", "レビューして" | `/review`（モード自動推定） |
+| "PR<番号>レビュー" | `/review <PR>` |
 | "codexでレビュー" | `/review --codex` |
-| "設計レビュー", "敵対レビュー" | `/review --adversarial` |
-| "深掘りレビュー", "厳しめレビュー" | `/review --deep` |
-| "リリース前レビュー" | `/review --multi <PR>` |
+| "設計レビュー", "敵対レビュー", "アーキテクチャレビュー" | `/review --adversarial` |
+| "深掘りレビュー", "厳しめレビュー", "徹底レビュー" | `/review --deep` |
+| "リリース前レビュー", "全部入りレビュー" | `/review --multi <PR>` |
+| "クラウドでレビュー" | `/ultrareview` |
 | "ブレスト", "設計検討" | `/brainstorm` |
 | "{strict\|fast\|normal} mode" | `/session-mode {強度}` |
 

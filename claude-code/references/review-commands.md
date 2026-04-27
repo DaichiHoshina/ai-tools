@@ -12,6 +12,10 @@
 
 詳細仕様: [`commands/review.md`](../commands/review.md)
 
+## 自然言語起動
+
+「レビュー」「設計レビュー」「深掘りレビュー」等の自然言語からも起動可能（`natural-language-triggers.md` 参照）。`/review` 単体起動時は内部で**モード自動推定**（diff規模・PR有無・変更タイプから）→ 重いモードはユーザー確認後実行。詳細: [`commands/review.md`](../commands/review.md) Step 0。
+
 ## 判断基準
 
 | 状況 | 推奨 |

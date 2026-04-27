@@ -11,10 +11,13 @@
 | "sync push", "push sync" | `/git-push` → `sync.sh to-local`（ai-toolsリポジトリ時のみ） |
 | "全自動で", "autoで", "おまかせ" | `/flow-auto` |
 | "横並びで", "同じ修正を" | 複数リポジトリ横並び作業（multi-repo-workflow.md参照） |
+| "レビュー", "レビューして", "コードレビュー" | `/review`（デフォルト、内部でモード自動推定） |
+| "PR<番号>レビュー", "<PR-URL>レビュー" | `/review <PR>` |
 | "codexでレビュー", "セカンドオピニオン" | `/review --codex` |
-| "設計レビュー", "敵対レビュー", "設計問い詰め" | `/review --adversarial`（codex adversarial-review 委譲） |
-| "深掘りレビュー", "厳しめレビュー" | `/review --deep`（pr-review-toolkit 6 agent並列） |
-| "リリース前レビュー", "PR最終レビュー" | `/review --multi <PR>`（4手段並列、最大コスト） |
+| "設計レビュー", "敵対レビュー", "設計問い詰め", "アーキテクチャレビュー" | `/review --adversarial`（codex adversarial-review 委譲） |
+| "深掘りレビュー", "厳しめレビュー", "徹底レビュー", "詳細レビュー" | `/review --deep`（pr-review-toolkit 6 agent並列） |
+| "リリース前レビュー", "PR最終レビュー", "全部入りレビュー", "全力レビュー" | `/review --multi <PR>`（4手段並列、最大コスト） |
+| "クラウドでレビュー", "ultrareview" | `/ultrareview`（cloud並列、別課金） |
 | "ブレスト", "設計検討", "アイデア出し" | `/brainstorm`（対話的設計精緻化） |
 | "strict mode", "厳格モード" | `/session-mode strict`（本番作業向け） |
 | "fast mode", "高速モード", "プロトタイプモード" | `/session-mode fast` |
