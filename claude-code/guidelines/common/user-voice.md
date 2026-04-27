@@ -41,7 +41,7 @@
 
 ### 品質検証の仕組み
 
-生成時は上記の4問・原則5点を参照して書く。書き終えた後は `skills/comprehensive-review/SKILL.md` の writing 観点 NG 表で違反を数え、閾値超なら書き直す。
+生成時は上記の4問・原則5点を参照して書く。書き終えた後は `skills/comprehensive-review/skill.md` の writing 観点 NG 表で違反を数え、閾値超なら書き直す。
 
 検査タイミングはコマンドごとに異なる（`/review` は git diff ベースなので、生成直後 or 投稿前の draft には直接使えない）:
 

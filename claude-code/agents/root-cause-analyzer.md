@@ -82,7 +82,7 @@ Level {N}: なぜ{前レベルの結論}？
 - 再発リスク: 中
 - 適用条件: 時間制約がある場合
 
-> 修正戦略の詳細定義は `/root-cause` スキル（`skills/root-cause/SKILL.md`）を参照
+> 修正戦略の詳細定義は `/root-cause` スキル（`skills/root-cause/skill.md`）を参照
 
 #### L3: 根本治療（推奨）
 

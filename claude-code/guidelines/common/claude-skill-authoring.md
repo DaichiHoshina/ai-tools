@@ -1,6 +1,6 @@
 # Claude Skill Authoring
 
-`.claude/skills/*/SKILL.md` ファイルの作成規約。
+`.claude/skills/*/skill.md` ファイルの作成規約。
 
 ## Frontmatter
 
