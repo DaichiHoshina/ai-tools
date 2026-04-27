@@ -12,6 +12,8 @@
 | "全自動で", "autoで", "おまかせ" | `/flow-auto` |
 | "横並びで", "同じ修正を" | 複数リポジトリ横並び作業（multi-repo-workflow.md参照） |
 | "codexでレビュー", "セカンドオピニオン" | `/review --codex` |
+| "深掘りレビュー", "厳しめレビュー" | `/review --deep`（pr-review-toolkit 6 agent並列） |
+| "リリース前レビュー", "PR最終レビュー" | `/review --multi <PR>`（4手段並列、最大コスト） |
 | "ブレスト", "設計検討", "アイデア出し" | `/brainstorm`（対話的設計精緻化） |
 | "strict mode", "厳格モード" | `/session-mode strict`（本番作業向け） |
 | "fast mode", "高速モード", "プロトタイプモード" | `/session-mode fast` |
