@@ -66,6 +66,73 @@ classify_bash_command() {
 }
 
 # ====================================
+# Edit/Write 内容の危険パターン検出
+# security-guidance plugin（eval/exec 系）と相補的：
+# クラウドメタデータSSRF・SQL文字列連結・機密情報リテラルを検出
+# 機密リテラル系は Forbidden に昇格してブロック
+# ====================================
+detect_dangerous_patterns() {
+  local content="$1"
+  local detected=()
+  local has_secret=0
+
+  # 機密情報リテラル（Forbidden 昇格対象）
+  if printf '%s' "$content" | grep -qE 'AKIA[A-Z0-9]{16}'; then
+    detected+=("AWS Access Key literal")
+    has_secret=1
+  fi
+  if printf '%s' "$content" | grep -qE 'ghp_[A-Za-z0-9]{36}'; then
+    detected+=("GitHub PAT literal")
+    has_secret=1
+  fi
+  if printf '%s' "$content" | grep -qE 'sk-[A-Za-z0-9]{40,}'; then
+    detected+=("API key literal (sk-...)")
+    has_secret=1
+  fi
+  if printf '%s' "$content" | grep -qE 'xox[bp]-[A-Za-z0-9-]{20,}'; then
+    detected+=("Slack token literal")
+    has_secret=1
+  fi
+  if printf '%s' "$content" | grep -qE -- '-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'; then
+    detected+=("Private key literal")
+    has_secret=1
+  fi
+
+  # SSRF クラウドメタデータ（Boundary 警告）
+  if printf '%s' "$content" | grep -qE '(169\.254\.169\.254|metadata\.google\.internal|100\.100\.100\.200)'; then
+    detected+=("SSRF cloud metadata access")
+  fi
+
+  # SQL 文字列連結（Boundary 警告）
+  if printf '%s' "$content" | grep -qE '(f"|f'\''|`)(SELECT|INSERT|UPDATE|DELETE)[[:space:]].*\{[^}]+\}'; then
+    detected+=("SQL string interpolation (f-string/template)")
+  elif printf '%s' "$content" | grep -qE '(SELECT|INSERT|UPDATE|DELETE)[[:space:]].*\$\{[^}]+\}'; then
+    detected+=("SQL template literal injection")
+  fi
+
+  # 一般的な password ハードコード
+  if printf '%s' "$content" | grep -qE '(api_key|password|secret|access_token|auth_token)[[:space:]]*[=:][[:space:]]*['\''"][a-zA-Z0-9_/+=-]{20,}'; then
+    detected+=("Hardcoded credential assignment")
+  fi
+
+  if [ ${#detected[@]} -eq 0 ]; then
+    return
+  fi
+
+  local joined
+  joined=$(IFS='; '; echo "${detected[*]}")
+
+  if [ "$has_secret" -eq 1 ]; then
+    GUARD_CLASS="Forbidden"
+    MESSAGE="${ICON_CRITICAL} 機密情報リテラル検出: ${joined}"
+    ADDITIONAL_CONTEXT="ハードコードされた認証情報を検出。環境変数 or secret manager を使用すること。コミット前に履歴からも除去要"
+  else
+    MESSAGE="${ICON_WARNING} 危険パターン: ${joined}"
+    ADDITIONAL_CONTEXT="security-guidance plugin と相補検出。SSRFはホワイトリスト・SQLはプレースホルダで防ぐ"
+  fi
+}
+
+# ====================================
 # protection-mode 3層分類判定
 # ====================================
 
@@ -100,7 +167,16 @@ case "$TOOL_NAME" in
   "Edit"|"Write"|"MultiEdit")
     GUARD_CLASS="Boundary"
     MESSAGE="🔶 要確認: ファイル編集"
-    # additionalContext省略（トークン節約）
+    # 危険パターン検出（機密リテラル/SSRF/SQL injection）
+    EDIT_CONTENT=$(jq -r '
+      if .tool_input.content then .tool_input.content
+      elif .tool_input.new_string then .tool_input.new_string
+      elif .tool_input.edits then [.tool_input.edits[].new_string] | join("\n")
+      else "" end
+    ' <<< "$INPUT")
+    if [ -n "$EDIT_CONTENT" ]; then
+      detect_dangerous_patterns "$EDIT_CONTENT"
+    fi
     ;;
 
   "Bash")
