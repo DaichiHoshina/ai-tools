@@ -38,7 +38,7 @@ if ! validate_json "$input"; then
 fi
 
 # === Context usage notice: コンテキスト50%超で /compact 提案を通知 ===
-_CTX_FILE="/tmp/claude-ctx-pct"
+_CTX_FILE="${CLAUDE_CTX_FILE:-/tmp/claude-ctx-pct}"
 _COMPACT_NOTICE_MSG=""
 if [[ -f "${_CTX_FILE}" ]]; then
   _CTX_PCT=$(cat "${_CTX_FILE}" 2>/dev/null || echo "0")
@@ -48,7 +48,7 @@ if [[ -f "${_CTX_FILE}" ]]; then
 fi
 
 # === Serena MCP health notice: 失敗が累積したら /serena-refresh 提案 ===
-_SERENA_COUNTER="/tmp/claude-serena-fail-count"
+_SERENA_COUNTER="${CLAUDE_SERENA_FAIL_COUNT:-/tmp/claude-serena-fail-count}"
 _SERENA_NOTICE_MSG=""
 if [[ -f "${_SERENA_COUNTER}" ]]; then
   _SERENA_FAILS=$(cat "${_SERENA_COUNTER}" 2>/dev/null || echo "0")

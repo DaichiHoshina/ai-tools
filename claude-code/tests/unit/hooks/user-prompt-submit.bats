@@ -9,6 +9,10 @@ setup() {
   export HOOK_FILE="${PROJECT_ROOT}/hooks/user-prompt-submit.sh"
   export TEST_TMPDIR="$(mktemp -d)"
 
+  # テスト隔離: 実環境の /tmp/claude-ctx-pct, /tmp/claude-serena-fail-count を参照しない
+  export CLAUDE_CTX_FILE="${TEST_TMPDIR}/_ctx_pct_unset"
+  export CLAUDE_SERENA_FAIL_COUNT="${TEST_TMPDIR}/_serena_unset"
+
   # テスト用gitリポジトリ作成
   cd "$TEST_TMPDIR"
   git init
@@ -44,15 +48,15 @@ get_additional_context() {
 }
 
 # =============================================================================
-# 正常系テスト: ファイルパス検出
+# 正常系テスト: プロンプト内ファイルパス言及検出
+# 注: phase2 refactor (3c136bb) で git staged file 検出は廃止。
+#     プロンプト本文の拡張子言及（.go, .ts, dockerfile）のみ検出。
 # =============================================================================
 
-@test "user-prompt-submit: Goファイル変更でgolang+backend-dev検出" {
+@test "user-prompt-submit: .go言及でgolang+backend-dev検出" {
   cd "$TEST_TMPDIR"
-  touch main.go
-  git add main.go
 
-  local input='{"prompt":"何か修正"}'
+  local input='{"prompt":"main.goを修正"}'
   local output=$(run_hook "$input")
 
   # JSON形式であることを確認
@@ -63,24 +67,20 @@ get_additional_context() {
   [[ "$system_msg" =~ "golang" ]] || [[ "$system_msg" =~ "backend-dev" ]]
 }
 
-@test "user-prompt-submit: TypeScriptファイル変更でtypescript検出" {
+@test "user-prompt-submit: .ts言及でtypescript検出" {
   cd "$TEST_TMPDIR"
-  touch index.ts
-  git add index.ts
 
-  local input='{"prompt":"何か修正"}'
+  local input='{"prompt":"index.tsを修正"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
   [[ "$system_msg" =~ "typescript" ]] || [[ "$system_msg" =~ "backend-dev" ]]
 }
 
-@test "user-prompt-submit: Dockerfileでcontainer-ops検出" {
+@test "user-prompt-submit: dockerfile言及でcontainer-ops検出" {
   cd "$TEST_TMPDIR"
-  touch Dockerfile
-  git add Dockerfile
 
-  local input='{"prompt":"何か修正"}'
+  local input='{"prompt":"Dockerfileを修正"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
@@ -138,7 +138,7 @@ get_additional_context() {
 @test "user-prompt-submit: TypeScript型エラーでbackend-dev検出" {
   cd "$TEST_TMPDIR"
 
-  local input='{"prompt":"Type error TS2304: Cannot find name"}'
+  local input='{"prompt":"TypeScript Type error TS2304: Cannot find name"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
@@ -147,30 +147,29 @@ get_additional_context() {
 }
 
 # =============================================================================
-# 正常系テスト: Gitブランチ検出
+# 正常系テスト: プロンプトキーワード検出
+# 注: phase2 refactor (3c136bb) で git branch 検出は廃止。
+#     プロンプト本文のキーワード（API, security 等）のみ検出。
 # =============================================================================
 
-@test "user-prompt-submit: feature/api-ブランチでapi-design検出" {
+@test "user-prompt-submit: REST APIキーワードでapi-design検出" {
   cd "$TEST_TMPDIR"
-  git checkout -b feature/api-users
 
-  local input='{"prompt":"何か修正"}'
+  local input='{"prompt":"REST APIを修正"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
   [[ "$system_msg" =~ "api" ]]
 }
 
-@test "user-prompt-submit: fix/ブランチでcomprehensive-review検出" {
+@test "user-prompt-submit: securityキーワードでcomprehensive-review検出" {
   cd "$TEST_TMPDIR"
-  git checkout -b fix/security-issue
 
-  local input='{"prompt":"何か修正"}'
+  local input='{"prompt":"security issue を修正"}'
   local output=$(run_hook "$input")
 
   local system_msg=$(get_system_message "$output")
-  # スキル統合後: comprehensive-review (REVIEW_FOCUS=security)
-  [[ "$system_msg" =~ "comprehensive-review" ]] || [[ "$system_msg" =~ "security" ]] || [[ "$output" == "{}" ]]
+  [[ "$system_msg" =~ "comprehensive-review" ]] || [[ "$system_msg" =~ "security" ]]
 }
 
 # =============================================================================

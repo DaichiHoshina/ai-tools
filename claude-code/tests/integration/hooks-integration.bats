@@ -12,6 +12,9 @@ setup() {
   export HOME="$(mktemp -d)"
   mkdir -p "$HOME/.claude/logs"
   mkdir -p "$HOME/.claude/session-logs"
+  # テスト隔離: 実環境の /tmp/claude-ctx-pct, /tmp/claude-serena-fail-count を参照しない
+  export CLAUDE_CTX_FILE="${HOME}/_ctx_pct_unset"
+  export CLAUDE_SERENA_FAIL_COUNT="${HOME}/_serena_unset"
 }
 
 teardown() {
