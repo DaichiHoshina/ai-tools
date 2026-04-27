@@ -115,10 +115,21 @@ Hooksがプロンプトやツール呼び出しに応じて、適切な設定を
 ### コードレビュー
 
 ```bash
-/review
+/review                  # 11観点 + 信頼度80フィルタ（日常）
+/review --deep           # pr-review-toolkit 6 専門agent並列（観点深掘り）
+/review --multi <PR>     # comprehensive + codex + plugin + coderabbit 4手段並列
+/review --plugin <PR>    # 公式 code-review plugin 委譲（PR comment 自動投稿）
 ```
 
-変更ファイルを分析し、セキュリティ・パフォーマンス・設計など該当する観点を自動判定してレビュー。
+変更ファイルを分析し、11観点（architecture / quality / readability / security / docs / test-coverage / root-cause / logging / writing / silent-failure / type-design）を自動判定してレビュー。各 finding に信頼度0-100を付与、80未満は Warning 降格。
+
+レビュー履歴は `<repo>/.claude/review-history.jsonl` に jsonl で蓄積、同一箇所3回以上の指摘を 🔁 として検出。`/analytics` で観点別件数・信頼度分布・時系列推移が見える。
+
+`/review-fix-push` で「レビュー → 修正 → 再レビュー → push」が1コマンド（修正で新たな問題を作らない regression loop 付き）。
+
+`/git-push --pr --auto-review` で PR 作成と同時に code-review plugin と coderabbit を並列起動（opt-in）。
+
+ファイル編集時は機密リテラル（AWS Key / GitHub PAT / sk- / Slack token / Private key block）を hook が自動ブロック、SSRF クラウドメタデータ・SQL文字列連結も警告。
 
 ### インフラ構築
 

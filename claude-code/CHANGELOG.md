@@ -2,6 +2,49 @@
 
 このリポジトリの主要な変更履歴。[Conventional Commits](https://www.conventionalcommits.org/) に準拠。
 
+## [Unreleased] - 2026-04-27
+
+### Added: レビュー強化フルパッケージ
+
+#### Phase 1: comprehensive-review 11観点化 + 信頼度フィルタ
+
+- 観点を 9→11 に拡張: `silent-failure`（エラー握りつぶし）/`type-design`（型不変条件）追加
+- 各 finding に **信頼度0-100** を付与、80未満は Warning 降格・25未満は破棄
+- False positive チェックリスト導入（`code-review` plugin の rubric 準拠）
+- `/review --deep`（pr-review-toolkit 6専門agent並列）/ `--multi <PR>`（4手段並列+PR fetch）/ `--plugin <PR>`（公式委譲） オプション追加
+
+#### Phase 2: PR作成時の自動レビュー（opt-in）
+
+- `/git-push --pr --auto-review` で PR 作成完了後に `code-review:code-review` + `coderabbit:code-review` を `Bash run_in_background:true` で並列起動
+- `BashOutput` で各プロセスのエラー集約、失敗時は exit code・stderr 末尾10行を表示
+- デフォルト OFF（CodeRabbit 課金影響配慮）、GitHub 限定
+
+#### Phase 3: regression loop + 履歴蓄積 + 繰り返し検出
+
+- `/review-fix-push` に Step 4 regression check 追加（修正後再レビュー、最大3回）
+- レビュー履歴を `<repo>/.claude/review-history.jsonl` に jsonl 形式で蓄積
+- 起動時に過去90日履歴をロード、同一 file:line±3+focus が3回以上で 🔁 繰り返し指摘マーク
+
+#### Phase 4: analytics 履歴統計 + hook 危険パターン検出
+
+- `/analytics` の `--mode full` に「レビュー履歴」セクション追加（観点TOP5・信頼度分布・繰り返し TOP5・前期比トレンド）
+- `pre-tool-use.sh` に `detect_dangerous_patterns` 追加: AWS Key/PAT/sk-/Slack/Private key リテラルを Forbidden 昇格でブロック、SSRFクラウドメタデータ・SQL文字列連結・credential ハードコードを Boundary 警告
+
+#### テスト
+
+- `pre-tool-use.bats` に detect_dangerous_patterns 12件追加（hook 自身の検出を避けるため bash 隣接連結でリテラル分割）
+- `tests/unit/scripts/test_analytics_review_history.py` 新設（stdlib unittest 12件）
+
+#### 既存 bats 修正
+
+- Forbidden 系8テストの `result=$(...)` で exit 2 を捕捉できない既存問題を `run bash -c` パターンへ移行
+- 結果: 50/58 pass → **70/70 全 pass**
+
+#### ドキュメント
+
+- `references/command-resource-map.md` 新設（主要4コマンド × skill/guideline/agent/hook/rule 対応マップ）
+- `references/review-commands.md` 全モード使い分け表に再構成
+
 ## [2.1.39] - 2026-02-23
 
 ### Fixed

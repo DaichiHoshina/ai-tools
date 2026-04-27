@@ -33,6 +33,43 @@ echo "SERENA_PATH=$HOME/serena" >> ~/.env
 npm install -g @openai/codex
 ```
 
+### CodeRabbit CLI（推奨、`/review --multi` / `/git-push --auto-review` 使用時）
+
+```bash
+brew install coderabbitai/tap/coderabbit
+coderabbit auth login
+```
+
+未認証なら自動レビューは skip される。詳細・料金: `~/.claude/projects/.../memory/reference_coderabbit_plugin.md`
+
+## 2.5 レビュー強化用 Plugin（推奨）
+
+`/review --plugin` `/review --multi` `/review --deep` および `/git-push --pr --auto-review` で使用する Anthropic 公式 plugin 群。`claude plugin install` で導入。
+
+| Plugin | 役割 | 必須度 |
+|--------|------|--------|
+| `code-review` | 5並列Sonnet+Haiku信頼度80フィルタ→PR comment 自動投稿 | `--plugin`/`--multi`/`--auto-review` で必須 |
+| `security-guidance` | Edit/Write 時の eval/exec 系セキュリティ警告 hook | 推奨（既存自作 hook と相補） |
+| `pr-review-toolkit` | code-reviewer / silent-failure-hunter / type-design-analyzer / comment-analyzer / pr-test-analyzer / code-simplifier の6専門agent | `--deep` で必須 |
+| `coderabbit` | 40+ 静的解析、PR コメント自動投稿 | `--multi`/`--auto-review` で使用 |
+
+**導入コマンド**:
+
+```bash
+claude plugin install code-review@claude-plugins-official
+claude plugin install security-guidance@claude-plugins-official
+claude plugin install pr-review-toolkit@claude-plugins-official
+claude plugin install coderabbit@claude-plugins-official
+```
+
+**動作確認**:
+
+```bash
+# 利用可能 skill 一覧から確認
+ls ~/.claude/plugins/cache/claude-plugins-official/ | grep -E "code-review|security-guidance|pr-review-toolkit|coderabbit"
+# /review --plugin <PR番号> でテスト実行
+```
+
 ### JIRA/Confluence（オプション）
 
 プロジェクト固有の `.mcp.json` に追記:
@@ -143,6 +180,8 @@ API 呼び出しの詳細デバッグが必要な時のみ一時的に `"1"` を
 - [ ] install.sh 実行完了
 - [ ] Serena MCP インストール
 - [ ] Codex インストール
+- [ ] CodeRabbit CLI インストール（自動レビュー使用時）
+- [ ] レビュー強化 plugin 導入（code-review / security-guidance / pr-review-toolkit / coderabbit）
 - [ ] Hooks 動作確認（主要Hook）
 - [ ] 通知音設定（オプション）
 - [ ] Serena オンボーディング成功（`mcp__serena__check_onboarding_performed` で確認）
