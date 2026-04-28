@@ -23,6 +23,28 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 
+# 同期対象（apply_changes / show_diff の共通定義）
+# 二重管理によるドリフト防止のためここで一元管理する。
+# 追加するファイル/ディレクトリはここにのみ書き、両関数で参照する。
+SYNC_ITEMS=(
+    "VERSION"
+    "CLAUDE.md"
+    "CANONICAL.md"
+    "commands"
+    "guidelines"
+    "skills"
+    "agents"
+    "scripts"
+    "lib"
+    "statusline.js"
+    "sync.sh"
+    "output-styles"
+    "hooks"
+    "rules"
+    "config"
+    "references"
+)
+
 # Load security library (Critical #4, #7対策)
 LIB_DIR="${SCRIPT_DIR}/lib"
 # shellcheck source=lib/security-functions.sh
@@ -193,23 +215,7 @@ sync_to_local() {
         check_repo_freshness || true
     fi
 
-    local items=(
-        "VERSION"
-        "CLAUDE.md"
-        "CANONICAL.md"
-        "commands"
-        "guidelines"
-        "skills"
-        "agents"
-        "scripts"
-        "lib"
-        "statusline.js"
-        "output-styles"
-        "hooks"
-        "rules"
-        "config"
-        "references"
-    )
+    local items=("${SYNC_ITEMS[@]}")
 
     for item in "${items[@]}"; do
         local src="$SCRIPT_DIR/$item"
@@ -406,8 +412,7 @@ sync_gitlab_mcp_template() {
 show_diff() {
     print_header "差分確認"
 
-    # apply_changes() の items 配列と一致させる（references/lib の取りこぼし対策）
-    local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "commands" "guidelines" "skills" "agents" "scripts" "lib" "statusline.js" "output-styles" "hooks" "rules" "config" "references")
+    local items=("${SYNC_ITEMS[@]}")
     local has_diff=false
 
     # groove差分チェック
