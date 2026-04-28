@@ -63,16 +63,26 @@ npm install -D @playwright/test && npx playwright install chromium
 
 ## Step 4: PRコメント投稿
 
-テスト結果をテキストでPRコメントに投稿:
+テスト結果をテキストでPRコメントに投稿。**`~/.claude/rules/ai-output.md` の PREP 3点 + self-check 4問通過必須**。テスト出力が長い場合は `<details>` 折りたたみ。
 
 ```bash
 gh pr comment --body "$(cat <<'BODY'
-## ローカル動作確認 ✅
+## 結論
+ローカル動作確認 ✅ / 致命傷なし → レビュー継続可
 
-### テスト結果
+## 理由
+{lint-test の主要結果を 1-2 行サマリ。具体的な数字 or 件数で}
+
+## 次アクション
+{レビュワー確認事項 or 残課題。なければ「特になし」}
+
+<details>
+<summary>テスト出力詳細</summary>
+
 \`\`\`
-{lint-test の出力}
+{lint-test の全出力}
 \`\`\`
+</details>
 
 ### スクショ
 <!-- クリップボードからペースト、またはファイルをドラッグ＆ドロップ -->

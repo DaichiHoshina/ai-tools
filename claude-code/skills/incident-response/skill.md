@@ -86,7 +86,9 @@ requires-guidelines:
 
 ### Step 4: チケット作成
 
-Jira MCP（`mcp__jira__jira_post`）で作成。必須項目: summary（`[影響レベル] 概要`）、description（現象/影響範囲/原因/対応方針）、priority（影響レベル準拠）、labels（`["incident"]`）。
+Jira MCP（`mcp__jira__jira_post`）で作成。必須項目: summary（`[影響レベル] 概要`、80字以内）、description（PREP 3点: 結論=対応方針 / 理由=現象+影響範囲+原因 / 次アクション=担当+期限）、priority（影響レベル準拠）、labels（`["incident"]`）。
+
+**投稿前 self-check（`~/.claude/rules/ai-output.md` の 4問）通過必須**。詳細ログは `<details>` 折りたたみ。違反時は draft 修正して再 self-check。
 
 ### Step 5: 記録
 
