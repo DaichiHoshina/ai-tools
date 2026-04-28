@@ -78,6 +78,8 @@ Design Doc、PR description、長文レポートは **最初の1-3文で結論**
 |----|-----|
 | 本ドキュメントでは User Profile API の設計について述べる。API の設計においては複数の観点が〜 | User Profile API を新設する。既存 `/api/users` は認証情報を返すので、顧客向けプロフィール表示には使えない。本稿で設計と移行計画を決める。|
 
+**短文 comment / ticket / Slack 系は PREP 3点（結論→理由→次アクション）で書く**。詳細ルール・self-check は `~/.claude/rules/ai-output.md`「issue/ticket/コメント投稿の禁止事項」セクション参照。本ガイドの 4問・5原則は **長文ドキュメント（Notion/Design Doc/PRD/RCA）** に適用。
+
 ### 2. 言い切りには根拠を併記
 
 「〜が必須」「〜を推奨」を書くなら、**直後または直前に1文で根拠**を置く。読み手が「なぜ？」と聞く前に答える。
