@@ -406,7 +406,8 @@ sync_gitlab_mcp_template() {
 show_diff() {
     print_header "差分確認"
 
-    local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "commands" "guidelines" "skills" "agents" "scripts" "statusline.js" "output-styles" "hooks" "rules" "config")
+    # apply_changes() の items 配列と一致させる（references/lib の取りこぼし対策）
+    local items=("VERSION" "CLAUDE.md" "CANONICAL.md" "commands" "guidelines" "skills" "agents" "scripts" "lib" "statusline.js" "output-styles" "hooks" "rules" "config" "references")
     local has_diff=false
 
     # groove差分チェック
