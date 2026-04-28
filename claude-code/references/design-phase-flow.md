@@ -87,6 +87,7 @@
 - `design-doc-writing-guide.md` — DesignDoc 書き方の実践ノウハウ（原則・アンチパターン・セルフチェック）
 - `design-doc-scope-guide.md` — テンプレ選択・粒度・行数目安
 - `design-doc-template.md` — 12 セクションのフルテンプレート
+- `document-iteration-patterns.md` — 書き直しのフェーズ進行と修正パターン（動的補完）
 - `prd-review-checkpoints.md` — PRD レビューで人間が集中すべき観点
 - `decision-quality-checklist.md` — 意思決定品質の 5 問チェック
 - `performance-issue-template.md` — パフォーマンス改善 issue の計測→分析→段階改善→負荷試験

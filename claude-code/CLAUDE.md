@@ -146,3 +146,4 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 | PRD レビュー観点（人間レビュアー用） | `references/prd-review-checkpoints.md` |
 | パフォーマンス改善 issue 進め方 | `references/performance-issue-template.md` |
 | レビュー指摘パターン集（汎用） | `references/review-patterns-universal.md` |
+| ドキュメント書き直しのフェーズ進行 | `references/document-iteration-patterns.md` |
