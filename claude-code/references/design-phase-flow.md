@@ -81,3 +81,13 @@
 
 両方必要なケース: 大型機能。`/design-doc` で「設計を伝える」→ `/plan` で「実装手順に落とす」。
 小型修正は `/plan` のみで十分なことが多い。
+
+## 関連
+
+- `design-doc-writing-guide.md` — DesignDoc 書き方の実践ノウハウ（原則・アンチパターン・セルフチェック）
+- `design-doc-scope-guide.md` — テンプレ選択・粒度・行数目安
+- `design-doc-template.md` — 12 セクションのフルテンプレート
+- `prd-review-checkpoints.md` — PRD レビューで人間が集中すべき観点
+- `decision-quality-checklist.md` — 意思決定品質の 5 問チェック
+- `performance-issue-template.md` — パフォーマンス改善 issue の計測→分析→段階改善→負荷試験
+- `review-patterns-universal.md` — 設計判断・SQL 方言で頻出するレビュー指摘

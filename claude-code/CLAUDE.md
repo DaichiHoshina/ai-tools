@@ -140,3 +140,8 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 | 設計フェーズ遷移（brainstorm→prd→design-doc→plan→dev→docs） | `references/design-phase-flow.md` |
 | /flow vs /groove 使い分け | `references/flow-vs-groove.md` |
 | 主要コマンド × リソース対応表 | `references/command-resource-map.md` |
+| DesignDoc 書き方の実践ノウハウ | `references/design-doc-writing-guide.md` |
+| DesignDoc 粒度・テンプレ選択 | `references/design-doc-scope-guide.md` |
+| PRD レビュー観点（人間レビュアー用） | `references/prd-review-checkpoints.md` |
+| パフォーマンス改善 issue 進め方 | `references/performance-issue-template.md` |
+| レビュー指摘パターン集（汎用） | `references/review-patterns-universal.md` |

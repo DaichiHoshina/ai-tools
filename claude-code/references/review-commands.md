@@ -29,3 +29,8 @@
 ## 自動レビュー（PR作成時、opt-in）
 
 `/git-push --pr --auto-review` で `code-review:code-review` + `coderabbit:code-review` 並列起動。詳細・失敗時挙動: [`commands/git-push.md`](../commands/git-push.md)
+
+## 関連
+
+- [`review-modes-advanced.md`](review-modes-advanced.md) — Deep / Multi モードの実行詳細・集約方針
+- [`review-patterns-universal.md`](review-patterns-universal.md) — 設計判断・SQL 方言など頻出するレビュー指摘パターン
