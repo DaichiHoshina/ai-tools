@@ -33,7 +33,7 @@ requires-guidelines:
 - `comprehensive-review --focus=docs` - テスト・ドキュメント品質チェック（Phase 2-5で統合済み、旧スキル名も動作）
 - `comprehensive-review --focus=quality` - テスト型安全性・構造品質（Phase 2-5で統合済み、旧スキル名も動作）
 
-詳細は [SKILL-MIGRATION.md](../SKILL-MIGRATION.md) 参照。
+詳細は [SKILL-MIGRATION.md](../tutorials/SKILL-MIGRATION.md) 参照。
 
 **自動レビュー:**
 テスト作成後、`comprehensive-review --focus=docs` Skillを自動実行:

@@ -165,7 +165,7 @@ focusパラメータで指定された観点のみ実行。`all`の場合は全8
 | 型定義変更（`*.d.ts`, `types/*`, struct/interface追加） | `type-design` |
 | MySQL bulk INSERT（`.go`/`.sql` で `INSERT INTO` 含む変更） | `bulk-insert-correctness` |
 
-**bulk-insert-correctness 観点のチェック項目**（[backend/mysql-performance.md §12](../../guidelines/backend/mysql-performance.md#12-bulk-insert-auto_increment-採番安全パターン) 準拠）:
+**bulk-insert-correctness 観点のチェック項目**（[backend/mysql-performance.md §12](../../guidelines/backend/mysql-performance.md) 準拠）:
 
 | チェック | NG | 重み |
 |---------|----|------|

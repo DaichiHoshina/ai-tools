@@ -39,7 +39,7 @@ requires-guidelines:
 - `clean-architecture-ddd` - クリーンアーキテクチャ・DDD原則
 - `comprehensive-review --focus=quality` - 設計・コード品質・型安全性の統合チェック（Phase 2-5で統合済み、旧スキル名も動作）
 
-詳細は [SKILL-MIGRATION.md](../SKILL-MIGRATION.md) 参照。
+詳細は [SKILL-MIGRATION.md](../tutorials/SKILL-MIGRATION.md) 参照。
 
 ## フロー
 
