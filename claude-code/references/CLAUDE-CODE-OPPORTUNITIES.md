@@ -15,13 +15,22 @@
 
 ---
 
+## 2.1.121 (2026-04-28 検出)
+
+- [ ] **MCP server `alwaysLoad: true` オプション**: tool-search deferral をスキップして全ツール常時利用可能化。serena 等の頻繁に使う MCP に適用余地 — 検討箇所: `templates/settings.json.template` の `mcpServers`
+- [ ] **PostToolUse `hookSpecificOutput.updatedToolOutput` 全tool拡張** (旧 MCP-only): hook が tool 出力を書き換え可能。秘密情報マスク、長文要約等に応用余地 — 検討箇所: `claude-code/hooks/post-tool-use.sh`（`enterprise-security.md` の出力サニタイズ実装基盤）
+- [ ] **`claude plugin prune` / `plugin uninstall --prune`**: 孤立 plugin 依存削除。手動運用、CI 不要 — 検討箇所: ドキュメント参照のみ（採用なし、Info）
+
+## 2.1.120 (2026-04-26 検出)
+
+- [ ] **`claude ultrareview [target]` 非対話 subcommand**: CI/script から `/ultrareview` 起動可能、`--json` で機械可読、exit code でゲート化 — 検討箇所: `commands/review.md`（`--ultra` モードの CI 連携）、GitHub Actions PR レビュー workflow への組込
+- [ ] **Skills 内 `${CLAUDE_EFFORT}` 変数展開**: skill 本文で現在 effort level 参照可。high effort 時のみ追加検証ステップ起動等の分岐実装可能 — 検討箇所: `skills/comprehensive-review/SKILL.md`、`skills/dev/SKILL.md`（low/medium/high で挙動差別化）
+
 ## 2.1.119 (2026-04-24 検出)
 
-- [x] **`PostToolUse` / `PostToolUseFailure` hook に `duration_ms`** (採用 2026-04-25): hooks の jq 抽出に `DURATION_MS` 追加、`analytics_insert_tool_event` シグネチャを `duration_ms` `exit_code` 受取に拡張、failure hook も analytics に exit_code=1 で記録。非数値は NULL 正規化（SQL injection 防止）
 - [ ] **Statusline stdin に `effort.level` / `thinking.enabled`**: 現在 Opus/Sonnet 名のみ表示。高 effort や thinking ON を視覚化できる — 検討箇所: `claude-code/statusline.js` の `displayStatusLine`
 - [ ] **`prUrlTemplate` 設定**: `owner/repo#N` 等の展開先を github.com 以外（GHE/GitLab self-hosted）へ差し替え可能 — 検討箇所: `templates/settings.json.template`（社内 GitLab 環境利用時のみ有効）
 - [ ] **`CLAUDE_CODE_HIDE_CWD` env var**: startup logo で cwd を隠す。機密ディレクトリや録画時に有用 — 検討箇所: `templates/settings.json.template` の `env` セクション（常時ONはtoo much、opt-in）
-- ~~**`--from-pr` GitLab/Bitbucket/GHE 対応**~~ (obsolete 2026-04-25): review.md に GitHub 固定記述なし、汎化作業不要
 
 ## 2.1.118 (2026-04-23 検出)
 
