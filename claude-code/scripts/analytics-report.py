@@ -467,17 +467,13 @@ def run_brief(conn: sqlite3.Connection) -> str:
         f"{t['tool_name']}({t['cnt']})" for t in tools["top_tools"][:3]
     )
 
-    # Skill利用率
-    skill_count = tools["category_breakdown"].get("skill", 0)
-    skill_rate = (skill_count / tool_total * 100) if tool_total > 0 else 0.0
-
     lines = [
         "先週のClaude Code利用状況:",
         f"  セッション: {session_count}回（前週比 {session_diff_str}）| ツール使用: {tool_total:,}回",
         f"  よく使うツール: {top3}",
     ]
 
-    suggestions = _build_suggestions(tools, tool_total, sess["model_breakdown"])
+    suggestions = _build_suggestions(tools, tool_total)
     if suggestions:
         lines.append(f"  {suggestions[0]}")
 
@@ -540,7 +536,7 @@ def run_full(conn: sqlite3.Connection) -> str:
     trend_section = "\n".join(trend_lines) if trend_lines else "- トレンドデータなし"
 
     # 提案
-    suggestions = _build_suggestions(tools, tool_total, sess["model_breakdown"])
+    suggestions = _build_suggestions(tools, tool_total)
     suggestion_lines = "\n".join(
         f"{i+1}. {s}" for i, s in enumerate(suggestions)
     ) if suggestions else "1. 特に問題なし"
@@ -642,37 +638,32 @@ def _cleanup_old_reports() -> None:
 # 提案ロジック
 # =====================================================================
 
+# Agent 利用率の警告閾値（%）。
+# CLAUDE.md「general-purpose agent は原則使わない」「軽い調査は agent 起動しない」
+# 方針から、Agent はピンポイント用途で数% 程度が想定運用。30% 超は濫用シグナル。
+AGENT_OVERUSE_THRESHOLD_PCT = 30
+
+
 def _build_suggestions(
     tools: dict,
     tool_total: int,
-    model_breakdown: list[dict],
 ) -> list[str]:
-    suggestions: list[str] = []
+    """改善提案を組み立てる。
 
-    # SlashCommand は既に tool_category='skill' で集計されるため category_breakdown のみ参照
-    skill_count = tools["category_breakdown"].get("skill", 0)
-    skill_rate = (skill_count / tool_total * 100) if tool_total > 0 else 0.0
-    if skill_rate < 5:
-        suggestions.append(
-            f"**Skill活用**: Skill利用率 {skill_rate:.0f}%。/dev, /flow を活用すると効率UP"
-        )
+    プロジェクト方針（CLAUDE.md）と整合する判定のみを行う:
+    - Skill/Agent 利用率の "低さ" は健全とみなす（直接実行・軽量調査を選好）
+    - Agent 過剰起動のみ逆方向ガードとして警告
+    - 未使用スキルは情報として提示
+    """
+    suggestions: list[str] = []
 
     agent_count = tools["category_breakdown"].get("agent", 0)
     agent_rate = (agent_count / tool_total * 100) if tool_total > 0 else 0.0
-    if agent_rate < 5:
+    if agent_rate > AGENT_OVERUSE_THRESHOLD_PCT:
         suggestions.append(
-            f"**Agent活用**: サブエージェント利用率 {agent_rate:.0f}%。並列タスクで /flow を検討"
+            f"**Agent起動コスト注意**: サブエージェント利用率 {agent_rate:.0f}%。"
+            "起動コスト中央値が数十秒〜数分のため、軽い調査は Bash grep / serena MCP 直接呼び出しを検討"
         )
-
-    opus_count = sum(m["cnt"] for m in model_breakdown if "opus" in (m.get("model") or ""))
-    if opus_count > 0:
-        suggestions.append(
-            f"**コスト最適化**: opus使用セッションが{opus_count}件。sonnetで十分な場面あり"
-        )
-
-    # Bashでgrep/find使用の検出（tool_input_summary への参照は困難なため category=builtin かつ Bash の推定）
-    # tool_events をカテゴリ別で確認: bash_grep は別途クエリが必要なため省略し固定メッセージを使う
-    # （実際の検出は full query が必要なため suggestion は tool_total に応じて出す）
 
     used_skills = {s["skill"] for s in tools["skill_breakdown"]}
     unused = [sk for sk in get_known_skills() if sk not in used_skills]
