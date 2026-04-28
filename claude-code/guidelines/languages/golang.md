@@ -200,6 +200,7 @@ Go 1.26.2対応（2026年4月時点）。共通ガイドラインは `~/.claude/
 - INSERT/UPDATE は ORM の Insert/Update（生SQL禁止）
 - テーブルエイリアスの `AS` 禁止（自己結合除く）
 - `SELECT *` 禁止（必要なカラムのみ指定）
+- 例外的に生SQL bulk INSERT を書く場合、`lastInsertID + i` 採番は単純挿入限定（[backend/mysql-performance.md §12](../backend/mysql-performance.md#12-bulk-insert-auto_increment-採番安全パターン)）
 
 ---
 

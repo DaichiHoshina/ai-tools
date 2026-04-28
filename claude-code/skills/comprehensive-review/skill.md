@@ -163,6 +163,17 @@ focusパラメータで指定された観点のみ実行。`all`の場合は全8
 | UIファイル（`components/*`, `*.tsx`） | `uiux-review`（別スキル） |
 | ロジック変更（テストファイル以外の`.go`, `.ts`, `.py`） | `test-coverage` + `silent-failure` |
 | 型定義変更（`*.d.ts`, `types/*`, struct/interface追加） | `type-design` |
+| MySQL bulk INSERT（`.go`/`.sql` で `INSERT INTO` 含む変更） | `bulk-insert-correctness` |
+
+**bulk-insert-correctness 観点のチェック項目**（[backend/mysql-performance.md §12](../../guidelines/backend/mysql-performance.md#12-bulk-insert-auto_increment-採番安全パターン) 準拠）:
+
+| チェック | NG | 重み |
+|---------|----|------|
+| **`INSERT ... SELECT` 共存** | `lastInsertID + i` 採番関数と同テーブルへの `INSERT ... SELECT` を行う他関数が同 transaction / 同サービスに追加される | Critical |
+| **`ON DUPLICATE KEY UPDATE` 付き bulk** | multi-row VALUES + `ON DUPLICATE KEY UPDATE` で `LastInsertId() + i` 採番 | Critical |
+| **混合モード挿入** | id 列の一部明示・一部 NULL/省略の VALUES に対する `LastInsertId()` 利用 | Critical |
+| **動的行数 INSERT** | `placeholders` と `values` の長さが ループ条件依存で `len(entities)` と一致保証なし | Warning |
+| **migration での同テーブル backfill** | maintenance 外実行で並行 bulk insert を破壊 | Warning |
 
 ### Step 4.5: 信頼度スコアリング（必須・ノイズ除去）
 

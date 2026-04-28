@@ -182,9 +182,70 @@ ALTER TABLE orders ADD COLUMN note TEXT, ALGORITHM=INSTANT, LOCK=NONE;
 
 ---
 
-## 12. 参考
+## 12. Bulk INSERT AUTO_INCREMENT 採番安全パターン
 
-- MySQL 8.4 LTS Reference Manual
+multi-row `VALUES` の `INSERT` 後に `lastInsertID + i` で entity に ID を割り当てるパターンは、MySQL の AUTO_INCREMENT 仕様上「単純挿入（simple inserts）」のときだけ連番保証される。「一括挿入（bulk inserts）」や「混合モード挿入（mixed-mode inserts）」では順序・連続性が保証されないため、以下の追加・変更で前提が崩壊する。
+
+### NG パターン
+
+| # | パターン | 何が起きるか |
+|---|---------|------------|
+| 1 | 同テーブルへの `INSERT ... SELECT` 追加 | bulk inserts 扱いになり、並行する単純挿入の連番ブロック予約が崩れる |
+| 2 | `ON DUPLICATE KEY UPDATE` 付き bulk INSERT | 実行時まで INSERT 行数が確定せず一括挿入扱い、UPDATE 行は ID 消費しない |
+| 3 | migration での `INSERT ... SELECT` backfill | maintenance 外で実行されるとその時刻の単純挿入を破壊。運用ルール依存になる |
+| 4 | 混合モード挿入（id 列の一部明示・一部自動採番） | `LastInsertId()` が返す値・連番ともに保証なし（並行に関係なく壊れる） |
+| 5 | 動的に行数が決まるループ INSERT | placeholder と values 数のズレで `len(entities) ≠ INSERT 実行行数` になり ID ズレ |
+
+### コード例（汎用）
+
+```go
+// NG 1: INSERT ... SELECT（同テーブル）
+tx.Exec(`INSERT INTO entities (col_a, col_b) SELECT col_a, col_b FROM legacy WHERE migrated = 0`)
+
+// NG 2: ON DUPLICATE KEY UPDATE 付き bulk
+query := `INSERT INTO entities (...) VALUES (?,...), (?,...) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)`
+res, _ := tx.Exec(query, args...)
+firstID, _ := res.LastInsertId()
+for i := range entities { entities[i].ID = int(firstID) + i }  // UPDATE 行は ID 消費せず連番崩れる
+
+// NG 4: 混合モード（id 一部明示）
+query := `INSERT INTO entities (id, col_a) VALUES (?, ?), (NULL, ?)`  // LastInsertId 不定
+
+// ✅ 安全 1: 単純挿入 multi-row VALUES、行数事前確定、id 全行自動採番
+query := `INSERT INTO entities (col_a, col_b) VALUES (?,?), (?,?), (?,?)`
+res, _ := tx.Exec(query, values...)
+firstID, _ := res.LastInsertId()
+for i := range entities { entities[i].ID = int(firstID) + i }  // innodb_autoinc_lock_mode=2 でも連番保証
+
+// ✅ 安全 2: ORM の 1 行ずつ Insert（lock mode 完全非依存）
+for i := range entities { tx.Insert(&entities[i]) }
+```
+
+### 該当関数の警告コメント雛形
+
+`lastInsertID + i` 採番に依存する bulk insert 関数には以下を冒頭に貼る。レビュアーが NG パターン追加を検知できる。
+
+```go
+// bulkInsert は単純挿入（multi-row VALUES、行数事前確定、id 全行自動採番）の
+// 連番採番（lastInsertID + i）に依存している。
+// 以下を追加するときはこの関数の前提が崩れるため要見直し:
+//   - 同テーブルへの INSERT ... SELECT / LOAD DATA / ON DUPLICATE KEY UPDATE
+//   - 混合モード挿入（id 指定行と自動採番行の混在）
+//   - migration での同テーブル大量データ backfill
+// 参照: https://dev.mysql.com/doc/refman/8.4/en/innodb-auto-increment-handling.html
+```
+
+### 検知ヒント
+
+`/review` 時、Go ファイルに以下が共起する場合は要精査:
+- `lastInsertID` または `LastInsertId` の戻り値に対する `+ i` 加算ループ
+- 同関数または同 transaction 内の `INSERT .* SELECT` / `ON DUPLICATE KEY UPDATE` / 混合 id 指定 INSERT
+
+---
+
+## 13. 参考
+
+- MySQL 8.4 LTS Reference Manual — [InnoDB AUTO_INCREMENT Handling](https://dev.mysql.com/doc/refman/8.4/en/innodb-auto-increment-handling.html)
 - High Performance MySQL（Schwartz et al.）
 - Percona Database Performance Blog
 - 関連: `backend/database-performance.md`（PG版）、`backend/distributed-transactions.md`（分離レベル）、`backend/caching-strategies.md`
