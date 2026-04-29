@@ -186,8 +186,8 @@ ensure_worktree_memory_link() {
 
   # パスをプロジェクトIDに変換（/ → -）
   local wt_id main_id
-  wt_id=$(echo "${target_dir}" | sed 's|/|-|g')
-  main_id=$(echo "${main_repo}" | sed 's|/|-|g')
+  wt_id=${target_dir//\//-}
+  main_id=${main_repo//\//-}
 
   local projects_dir="${HOME}/.claude/projects"
   local wt_mem="${projects_dir}/${wt_id}/memory"
