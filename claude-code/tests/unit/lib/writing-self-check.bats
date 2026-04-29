@@ -174,3 +174,102 @@ EOF
   [ "$status" -eq 0 ]
   [ -z "$output" ]
 }
+
+# =============================================================================
+# コードフェンス除外: 新規テスト 4 件（RED フェーズ）
+# =============================================================================
+
+@test "writing-self-check: コードブロック内の NG 語は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+以下はコード例です。
+```
+function setup() {
+  # 必須の初期化処理
+  pushd /path/to/dir
+}
+```
+処理は完了。
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: コードブロック外の NG 語は検出" {
+  cat > "$TMP_FILE" <<'EOF'
+これは必須項目です。
+```
+echo "推奨パターン"
+```
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  # 1行目（地の文）は検出、フェンス内は除外
+  [[ "$output" =~ "L1" ]]
+  ! [[ "$output" =~ "L4" ]]
+}
+
+@test "writing-self-check: 複数のコードブロックがある場合も全て除外" {
+  cat > "$TMP_FILE" <<'EOF'
+最初のコードブロック:
+```
+必須の初期化
+```
+中間の地の文：普通の記述
+```
+echo "推奨パターン"
+```
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: mermaid 図（\`\`\`mermaid）の内部の NG 語も除外" {
+  cat > "$TMP_FILE" <<'EOF'
+以下は図です。
+```mermaid
+graph TD
+    A[必須: 初期化処理]
+    B[推奨: キャッシュ有効化]
+    A --> B
+```
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+# =============================================================================
+# コードフェンス境界値: unbalanced / 空フェンス
+# =============================================================================
+
+@test "writing-self-check: unbalanced フェンス（閉じない）でも安全に動作" {
+  # printf で ``` を含む内容を書き込む（heredoc 内では ``` がネスト不可なため）
+  printf '%s\n' \
+    '通常の必須項目（地の文）' \
+    '```bash' \
+    'echo "推奨パターン"' \
+    '# 必須の処理' > "$TMP_FILE"
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  # L1（地の文）は検出される
+  [[ "$output" =~ "L1" ]]
+  # フェンス開始以降（L2-L4）は除外される
+  ! [[ "$output" =~ "L3" ]]
+  ! [[ "$output" =~ "L4" ]]
+}
+
+@test "writing-self-check: 空コードブロック（開閉直後）でも安全に動作" {
+  # 空フェンス: ``` 直後すぐ ``` — 内部は空
+  printf '%s\n' \
+    '```' \
+    '```' \
+    'これは必須項目（フェンス外の地の文）' > "$TMP_FILE"
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  # フェンス外 L3 のみ検出
+  [[ "$output" =~ "L3" ]]
+  ! [[ "$output" =~ "L1" ]]
+  ! [[ "$output" =~ "L2" ]]
+}

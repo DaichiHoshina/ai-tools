@@ -62,6 +62,7 @@ _writing_build_pattern() {
 # Output: stdout に "L<num>: <line>" 形式（ヒット時のみ）
 #
 # False positive 抑制:
+# - コードフェンス（``` で囲まれた範囲）内も除外
 # - 表行（行頭が `|`）は構造化データとして除外（地の文ではないため）
 # - 見出し行（行頭が `#`）はラベル用途として除外
 # - 引用ブロック（行頭が `>`）は引用なので除外
@@ -77,9 +78,15 @@ run_writing_check() {
   local pattern
   pattern=$(_writing_build_pattern)
 
+  # awk でコードフェンス内行を空行に置換（行番号は元ファイルと一致）
   # grep -nE のヒット 0 件は exit 1 → || true で吸収
   # 行頭 `|` 表 / `#` 見出し / `>` 引用 / `- **xx**:` ラベルを除外
-  grep -nE "${pattern}" "${file_path}" 2>/dev/null \
+  awk '
+    /^[[:space:]]*```/ { in_code = !in_code; print ""; next }
+    in_code { print ""; next }
+    { print }
+  ' "${file_path}" \
+    | grep -nE "${pattern}" 2>/dev/null \
     | grep -vE "^[0-9]+:[[:space:]]*\|" \
     | grep -vE "^[0-9]+:[[:space:]]*#" \
     | grep -vE "^[0-9]+:[[:space:]]*>" \
