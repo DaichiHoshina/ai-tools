@@ -60,6 +60,10 @@ _writing_build_pattern() {
 # md ファイル 1つに対して NG 辞書 grep を実行
 # Usage: run_writing_check <file_path>
 # Output: stdout に "L<num>: <line>" 形式（ヒット時のみ）
+#
+# False positive 抑制:
+# - 表行（行頭が `|`）は構造化データとして除外（地の文ではないため）
+# - -m 20 で警告過多を抑制
 run_writing_check() {
   local file_path="${1:-}"
 
@@ -71,8 +75,10 @@ run_writing_check() {
   pattern=$(_writing_build_pattern)
 
   # grep -nE のヒット 0 件は exit 1 → || true で吸収
-  # -m 20 で過多警告抑制（dogfood 後に調整）
-  grep -nE -m 20 "${pattern}" "${file_path}" 2>/dev/null \
+  # 行頭 `|` の表行は除外（grep -v）
+  grep -nE "${pattern}" "${file_path}" 2>/dev/null \
+    | grep -vE "^[0-9]+:[[:space:]]*\|" \
+    | head -n 20 \
     | sed -e 's/^/L/' \
     || true
 }

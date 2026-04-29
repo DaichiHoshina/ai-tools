@@ -104,3 +104,34 @@ EOF
   line_count=$(echo "$output" | wc -l | tr -d ' ')
   [ "$line_count" -le 20 ]
 }
+
+# =============================================================================
+# False positive 抑制: 表行除外
+# =============================================================================
+
+@test "writing-self-check: 表行（行頭 |）の NG 語は除外される" {
+  cat > "$TMP_FILE" <<'EOF'
+| 操作 | ルール |
+|------|--------|
+| git merge | ユーザー確認必須 |
+| ブランチ削除 | ユーザー確認必須 |
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: 表行除外しつつ地の文 NG は検出" {
+  cat > "$TMP_FILE" <<'EOF'
+これは必須の項目
+| 操作 | 必須かどうか |
+|------|-------------|
+| backup | 推奨 |
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  # 1行目（地の文）は検出、2-4行目（表）は除外
+  [[ "$output" =~ "L1" ]]
+  ! [[ "$output" =~ "L2" ]]
+  ! [[ "$output" =~ "L4" ]]
+}
