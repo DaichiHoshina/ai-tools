@@ -159,3 +159,4 @@ Claude の誤動作・非自明な成功は設定（CLAUDE.md / skill / hook / a
 | パフォーマンス改善 issue 進め方 | `references/performance-issue-template.md` |
 | レビュー指摘パターン集（汎用） | `references/review-patterns-universal.md` |
 | ドキュメント書き直しのフェーズ進行 | `references/document-iteration-patterns.md` |
+| Compounding Engineering サイクル（同位置指摘 N 回 → 構造修正） | `references/compounding-engineering-cycle.md` |
