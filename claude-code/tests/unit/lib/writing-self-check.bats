@@ -135,3 +135,32 @@ EOF
   ! [[ "$output" =~ "L2" ]]
   ! [[ "$output" =~ "L4" ]]
 }
+
+@test "writing-self-check: 見出し行（# 始まり）の NG 語は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+## 推奨パターン
+### 必須要件
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: bullet ラベル（- **xx**:）の NG 語は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+- **推奨**: 後続の説明文がある
+- **必須**: こちらも説明あり
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: 通常の bullet（**でなく単純）は除外しない" {
+  cat > "$TMP_FILE" <<'EOF'
+- 必須項目を確認する
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "L1" ]]
+}
