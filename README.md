@@ -15,10 +15,10 @@
 /dev 上記PRDで実装                  → 技術スタック自動検出、ガイドライン適用、実装
 /review                             → 変更内容を分析し、適切な観点で統合レビュー
 /diagnose この認証エラーを修正      → ログ解析、原因特定、修正提案
-/commit                             → diff分析、コミットメッセージ生成
+/git-push                           → コミット→push→PR/MR作成を1コマンドで
 ```
 
-他にも `/test`, `/refactor`, `/explore`, `/docs`, `/flow` など30コマンドを収録。
+他にも `/test`, `/refactor`, `/explore`, `/docs`, `/flow` など37コマンドを収録。
 
 ---
 
@@ -44,10 +44,10 @@ cp .mcp.json.example .mcp.json
 ```
 ai-tools/
 ├── claude-code/
-│   ├── commands/        # 30コマンド（/dev, /review, /plan, /prd ...）
-│   ├── skills/          # 22スキル（レビュー、開発、インフラ、ユーティリティ）
+│   ├── commands/        # 37コマンド（/dev, /review, /plan, /prd ...）
+│   ├── skills/          # 21スキル（レビュー、開発、インフラ、ユーティリティ）
 │   ├── agents/          # 7エージェント（PO, Manager, Developer ...）
-│   ├── guidelines/      # 48ガイドライン（言語・設計・インフラ・運用）
+│   ├── guidelines/      # 61ガイドライン（言語・設計・インフラ・運用）
 │   ├── hooks/           # 16イベントHook
 │   ├── output-styles/   # 返信フォーマット定義
 │   ├── scripts/         # ユーティリティスクリプト
@@ -80,6 +80,16 @@ Hooksがプロンプトやツール呼び出しに応じて、適切な設定を
 ↓ UserPromptSubmit Hook
 🔍 Skills: incident-response
 ```
+
+### Claude Code 2.1.123 取り込み
+
+直近の CLI アップデート連動機能（`/claude-update-fix` で追従、未採用機能は [`claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md`](./claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md) で追跡）:
+
+- **statusline**: `effort=high`/`low` バッジと thinking 💭 の視覚化
+- **`/resume`**: 検索ボックスに PR URL 貼付で該当セッション復元（GitHub/GHE/GitLab/Bitbucket）
+- **`claude ultrareview <PR>`**: 非対話 subcommand を CI 連携用に [`commands/review.md`](./claude-code/commands/review.md) に追記（`--json` 出力でゲート化）
+- **`comprehensive-review` skill**: `${CLAUDE_EFFORT}` 連動で信頼度閾値が変動（low: 90+ / medium: 80+ / high: 70+）
+- **serena MCP**: `alwaysLoad: true` で tool-search deferral を排除しレイテンシ改善
 
 ### スキルとガイドライン
 
@@ -171,7 +181,8 @@ OpenAI Codexにも対応しています。詳細は [CODEX-SETUP.md](./CODEX-SET
 
 | ドキュメント | 内容 |
 |-------------|------|
-| [claude-code/README.md](./claude-code/README.md) | 詳細ガイド |
+| [claude-code/README.md](./claude-code/README.md) | claude-code 配下の構成・コマンド・スキル一覧 |
+| [claude-code/QUICKSTART.md](./claude-code/QUICKSTART.md) | 5分で動かす |
 | [claude-code/SETUP.md](./claude-code/SETUP.md) | セットアップ手順 |
 | [claude-code/hooks/README.md](./claude-code/hooks/README.md) | Hooks詳細 |
 | [claude-code/output-styles/README.md](./claude-code/output-styles/README.md) | Output Styles詳細 |

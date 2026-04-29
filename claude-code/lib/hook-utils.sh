@@ -32,6 +32,21 @@ read_hook_input() {
   cat
 }
 
+# MESSAGE 変数への append（複数 hook 分岐の警告共存）
+# 既存メッセージが空なら代入、非空なら改行結合。
+# Usage: MESSAGE=$(append_message "$MESSAGE" "新しい警告")
+append_message() {
+  local current="${1:-}"
+  local addition="${2:-}"
+  if [[ -z "${addition}" ]]; then
+    printf '%s' "${current}"
+  elif [[ -z "${current}" ]]; then
+    printf '%s' "${addition}"
+  else
+    printf '%s\n%s' "${current}" "${addition}"
+  fi
+}
+
 # JSONフィールド取得
 # Usage: get_field "$INPUT" "field_name" "default_value"
 get_field() {

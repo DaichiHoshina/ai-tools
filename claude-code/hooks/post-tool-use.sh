@@ -7,6 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+source "${SCRIPT_DIR}/../lib/writing-self-check.sh"
 
 # JSON入力を読み込む
 INPUT=$(cat)
@@ -33,9 +34,9 @@ has_prettier_config() {
   return 1
 }
 
-# Edit/Writeツールの場合のみフォーマット実行
+# Edit/Write/MultiEditツールの場合のみフォーマット実行
 case "$TOOL_NAME" in
-  "Edit"|"Write")
+  "Edit"|"Write"|"MultiEdit")
     if [ -n "$FILE_PATH" ] && [ -f "$FILE_PATH" ]; then
       EXT="${FILE_PATH##*.}"
 
@@ -43,9 +44,9 @@ case "$TOOL_NAME" in
         "go")
           if command -v gofmt &> /dev/null; then
             if gofmt -w "$FILE_PATH" 2>/dev/null; then
-              MESSAGE=" Auto-formatted (Go): $FILE_PATH"
+              MESSAGE=$(append_message "$MESSAGE" " Auto-formatted (Go): $FILE_PATH")
             else
-              MESSAGE="  gofmt warning: $FILE_PATH (non-blocking)"
+              MESSAGE=$(append_message "$MESSAGE" "  gofmt warning: $FILE_PATH (non-blocking)")
             fi
           fi
           ;;
@@ -54,7 +55,7 @@ case "$TOOL_NAME" in
           # prettier設定があるプロジェクト配下のみ実行（node起動コスト削減）
           if has_prettier_config "$FILE_PATH" && command -v npx &> /dev/null; then
             if npx --no-install prettier --write "$FILE_PATH" 2>/dev/null; then
-              MESSAGE=" Auto-formatted (Prettier): $FILE_PATH"
+              MESSAGE=$(append_message "$MESSAGE" " Auto-formatted (Prettier): $FILE_PATH")
             fi
             # prettier未インストールならmessage無し（警告抑制）
           fi
@@ -64,8 +65,24 @@ case "$TOOL_NAME" in
           # bash -n で syntax error 検出（実行はしない）
           if command -v bash &> /dev/null; then
             _SYNTAX_ERR=$(bash -n "$FILE_PATH" 2>&1) || {
-              MESSAGE="⚠ Shell syntax error: ${FILE_PATH}\n${_SYNTAX_ERR}"
+              MESSAGE=$(append_message "$MESSAGE" "⚠ Shell syntax error: ${FILE_PATH}"$'\n'"${_SYNTAX_ERR}")
             }
+          fi
+          ;;
+
+        "md")
+          # ai-tools リポジトリの CLAUDE.md / references/*.md だけ writing self-check
+          # 別リポジトリの同名構造での誤発火を多段判定で防止
+          REAL_PATH=$(realpath "$FILE_PATH" 2>/dev/null || echo "")
+          if [ -n "$REAL_PATH" ]; then
+            GIT_ROOT=$(git -C "$(dirname "$REAL_PATH")" rev-parse --show-toplevel 2>/dev/null || echo "")
+            if [ "$(basename "$GIT_ROOT")" = "ai-tools" ] \
+               && [[ "$REAL_PATH" =~ /claude-code/(CLAUDE\.md|references/.+\.md)$ ]]; then
+              _WRITING_HITS=$(run_writing_check "$REAL_PATH")
+              if [ -n "$_WRITING_HITS" ]; then
+                MESSAGE=$(append_message "$MESSAGE" "⚠ writing self-check: ${REAL_PATH}"$'\n'"${_WRITING_HITS}")
+              fi
+            fi
           fi
           ;;
       esac

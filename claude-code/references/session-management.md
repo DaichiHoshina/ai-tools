@@ -97,4 +97,6 @@ claude  # 新規起動、SPEC.md を @ で参照
 - セッション間で context を口頭共有（再現不能）
 - 5 並列超え（人間が追えない、通知洪水）
 
+上記3アンチパターンに共通する本質は「人間が状況を追えなくなる」こと。並列度より追跡可能性を優先する。
+
 参考: [howborisusesclaudecode.com](https://howborisusesclaudecode.com/)
