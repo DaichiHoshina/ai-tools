@@ -208,3 +208,59 @@ line2'"
 line1
 line2" ]
 }
+
+# =============================================================================
+# extract_json_fields テスト
+# =============================================================================
+
+@test "extract_json_fields: 単一フィールド抽出" {
+  local input='{"name": "test", "value": 42}'
+  run bash -c "source '$LIB_FILE' && extract_json_fields '$input' '.name'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "test" ]
+}
+
+@test "extract_json_fields: 複数フィールドを TSV で取得" {
+  local input='{"a": "x", "b": "y", "c": "z"}'
+  run bash -c "source '$LIB_FILE' && extract_json_fields '$input' '.a' '.b' '.c'"
+  [ "$status" -eq 0 ]
+  [ "$output" = $'x\ty\tz' ]
+}
+
+@test "extract_json_fields: デフォルト値付き jq 式" {
+  local input='{"a": "x"}'
+  run bash -c "source '$LIB_FILE' && extract_json_fields '$input' '.a // \"default_a\"' '.missing // \"default_b\"'"
+  [ "$status" -eq 0 ]
+  [ "$output" = $'x\tdefault_b' ]
+}
+
+@test "extract_json_fields: ネストフィールド抽出" {
+  local input='{"outer": {"inner": "nested_value"}}'
+  run bash -c "source '$LIB_FILE' && extract_json_fields '$input' '.outer.inner'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "nested_value" ]
+}
+
+@test "extract_json_fields: 数値フィールドも文字列化される" {
+  local input='{"count": 100}'
+  run bash -c "source '$LIB_FILE' && extract_json_fields '$input' '.count'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "100" ]
+}
+
+# =============================================================================
+# require_jq テスト
+# =============================================================================
+
+@test "require_jq: jq インストール済み環境で exit 0" {
+  run bash -c "source '$LIB_FILE' && require_jq && echo SUCCESS"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "SUCCESS" ]]
+}
+
+@test "require_jq: PATH から jq を外すと exit 1" {
+  # env で PATH を上書き（bash -c の引数内では PATH= は意味しない）
+  run env -i PATH=/nonexistent HOME="$HOME" bash -c "source '$LIB_FILE' && require_jq"
+  # require_jq は jq 不在時 exit 1
+  [ "$status" -ne 0 ]
+}
