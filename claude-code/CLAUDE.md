@@ -123,6 +123,18 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 
 対症療法（エラーを隠す）ではなく根本治療（原因を取り除く）。**再現→原因特定→設計判断→検証** の4ステップ必須。詳細: `/root-cause` skill, `/protection-mode` 品質ガード。
 
+## Compounding Engineering（複利的改善）
+
+Claude の誤動作・非自明な成功は設定（CLAUDE.md / skill / hook / auto-memory）に未反映の判断が残っているサイン。ユーザーまたは Claude 自身が即追記することで、同種ケースが翌セッション以降は自動回避され、追記コストが N 回ぶんの修正手間を消すため複利で効く（Boris流）。
+
+- **誤動作**: CLAUDE.md / skill / hook に追記して再発防止（最優先。auto-memory は補助）
+- **非自明な成功**: 同様に CLAUDE.md / skill 化を最優先（再現可能な「ルール」として固定。詳細: `references/memory-usage.md` §記録対象）
+- 修正指示の末尾にユーザーが「CLAUDE.md か該当 skill を更新して同じ判断を再現できるように」と付け加えれば、Claude が同会話で設定追記まで実行する
+- 補助記憶として auto-memory（Claude 自動判断で書き込み）と Serena memory（`/memory-save` 手動）あり。書き込み経路の整理は `references/memory-usage.md` 参照
+- 参考: [howborisusesclaudecode.com](https://howborisusesclaudecode.com/)
+
+実運用は「誤動作 → 即 CLAUDE.md/skill 追記 → 翌セッションで自動回避」を1サイクルとして回す。
+
 ## 詳細リファレンス
 
 | トピック | ファイル |

@@ -1,6 +1,9 @@
 # Serena プロジェクト固有ファイル（個人情報・機密情報を含む可能性）
 .serena/
 
+# comprehensive-review skill の履歴（個人作業ログ、別開発者と混ざるのを防ぐ）
+.claude/review-history.jsonl
+
 # MCP設定（環境依存のため除外、.mcp.json.exampleを参照）
 .mcp.json
 

@@ -73,3 +73,28 @@ claude  # 新規起動、SPEC.md を @ で参照
 - checkpoint はセッション終了後も保持（ターミナル閉じても残る）
 - セッションA で実装 → 別の日に `--resume` → `Esc+Esc` で checkpoint 復元可能
 - ただし git commit は別レイヤー。checkpoint は Claude の変更のみ追跡
+
+## マルチセッション並列運用（Boris流）
+
+複雑機能・独立タスク並走時の運用パターン。Boris Cherny の公開運用例（howborisusesclaudecode.com）では複数セッション並列を主回路として扱う。理由は単一セッションの待ち時間（thinking / tool 実行）が直列ボトルネックになるため、複数セッション同時走行で人間側の手待ちを解消する。
+
+| 項目 | 推奨 |
+|------|------|
+| 同時セッション数 | 3〜5（Boris 公開運用例の上限。それ超で通知洪水と context 追跡破綻） |
+| 作業ディレクトリ | 各セッション別 git worktree（`git worktree add`） |
+| 識別 | ターミナルタブに番号 1〜5、`/rename {type}-{scope}` |
+| 通知 | `hooks/teammate-idle.sh` で入力催促を OS 通知 |
+| 用途 | 独立タスク（FE/BE/test）、A/B 試行、長時間 verify と並行実装 |
+
+**worktree 自動化との使い分け:**
+
+- 短期・自動独立タスク → `/flow --auto` の `isolation: "worktree"`（自動作成・自動クリーンアップ。詳細: `commands/flow.md`）
+- 長期・人間判断介在 → 手動 `git worktree add` + 個別ターミナルセッション
+
+**避けるべきパターン:**
+
+- 同一ファイル並列編集（衝突確定）
+- セッション間で context を口頭共有（再現不能）
+- 5 並列超え（人間が追えない、通知洪水）
+
+参考: [howborisusesclaudecode.com](https://howborisusesclaudecode.com/)
