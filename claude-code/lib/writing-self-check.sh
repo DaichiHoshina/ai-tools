@@ -17,6 +17,9 @@
 # - block しない（exit 0 維持、警告のみ）
 # - false positive 許容（文脈無視 grep のため、根拠併記済の正当な使用も hit する）
 # - NG 辞書は配列で保持、変更容易
+# - 本配列（_WRITING_NG_EVAL / _WRITING_NG_STOCK）は
+#   skills/comprehensive-review/skill.md writing 観点表の SoT。
+#   配列の追加削除時は skill.md の例示も同期更新する。
 # =============================================================================
 set -euo pipefail
 

@@ -142,3 +142,48 @@ setup() {
   prompt=$(bash -c "source '$LIB_FILE' && get_field '$input' 'prompt'")
   [ "$prompt" = "test" ]
 }
+
+# =============================================================================
+# append_message テスト
+# =============================================================================
+
+@test "append_message: 両空 → 空" {
+  run bash -c "source '$LIB_FILE' && append_message '' ''"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "append_message: current 空 + addition 値 → addition そのまま" {
+  run bash -c "source '$LIB_FILE' && append_message '' 'first'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "first" ]
+}
+
+@test "append_message: current 値 + addition 空 → current そのまま" {
+  run bash -c "source '$LIB_FILE' && append_message 'existing' ''"
+  [ "$status" -eq 0 ]
+  [ "$output" = "existing" ]
+}
+
+@test "append_message: current 値 + addition 値 → 改行結合" {
+  run bash -c "source '$LIB_FILE' && append_message 'first' 'second'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "first
+second" ]
+}
+
+@test "append_message: 連続 append で複数行蓄積" {
+  result=$(bash -c "source '$LIB_FILE' && M=''; M=\$(append_message \"\$M\" 'a'); M=\$(append_message \"\$M\" 'b'); M=\$(append_message \"\$M\" 'c'); printf '%s' \"\$M\"")
+  [ "$result" = "a
+b
+c" ]
+}
+
+@test "append_message: addition が多行文字列でも正しく結合" {
+  run bash -c "source '$LIB_FILE' && append_message 'first' 'line1
+line2'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "first
+line1
+line2" ]
+}
