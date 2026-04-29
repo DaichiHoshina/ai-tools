@@ -164,3 +164,13 @@ EOF
   [ "$status" -eq 0 ]
   [[ "$output" =~ "L1" ]]
 }
+
+@test "writing-self-check: 引用ブロック（>）の NG 語は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+> 必須要件を満たすこと
+> 推奨パターンに従う
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}

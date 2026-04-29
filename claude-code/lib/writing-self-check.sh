@@ -64,6 +64,7 @@ _writing_build_pattern() {
 # False positive 抑制:
 # - 表行（行頭が `|`）は構造化データとして除外（地の文ではないため）
 # - 見出し行（行頭が `#`）はラベル用途として除外
+# - 引用ブロック（行頭が `>`）は引用なので除外
 # - 「**ラベル**:」形式の bullet 先頭ラベルも除外（後続説明で根拠隣接が一般的）
 # - -m 20 で警告過多を抑制
 run_writing_check() {
@@ -77,10 +78,11 @@ run_writing_check() {
   pattern=$(_writing_build_pattern)
 
   # grep -nE のヒット 0 件は exit 1 → || true で吸収
-  # 行頭 `|` の表行、`#` の見出し行、`- **xx**:` 形式のラベル行を除外
+  # 行頭 `|` 表 / `#` 見出し / `>` 引用 / `- **xx**:` ラベルを除外
   grep -nE "${pattern}" "${file_path}" 2>/dev/null \
     | grep -vE "^[0-9]+:[[:space:]]*\|" \
     | grep -vE "^[0-9]+:[[:space:]]*#" \
+    | grep -vE "^[0-9]+:[[:space:]]*>" \
     | grep -vE "^[0-9]+:[[:space:]]*-?[[:space:]]*\*\*[^*]+\*\*:" \
     | head -n 20 \
     | sed -e 's/^/L/' \
