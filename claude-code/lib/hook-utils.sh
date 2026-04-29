@@ -65,8 +65,13 @@ get_field() {
 #   get_nested_field "$INPUT" "items[0].name"
 #
 # Notes:
-# - path は英数字 / `_` / `.` / `[N]` のみ許可（jq filter injection 防止）。
-#   許可外の文字を含む場合は default を返す（fail-safe）
+# - path は jq の構造的に valid な dotted path / 配列添字のみ許可。
+#   field        : 英字 or `_` で始まり、英数字 / `_` のみ
+#   field.sub    : `.` で連結（連続 `.` や末尾 `.` は不可）
+#   field[0]     : `[]` 内は数字のみ（空・英字は不可）
+#   組み合わせ   : `a.b[0].c[1]` のような chain 可
+#   構造的に不正な path（`..x` / `[abc]` / `]x[` / `[0]` 単独 等）は default 返却。
+#   許可外文字や jq 演算子（` `, `,`, `|` 等）混入も同様。
 # - default 値は jq 式リテラル内に直挿入される。`"` / バックスラッシュは escape
 #   されない。printable ASCII リテラル前提（caller 責任）
 # - $input 由来の値を path に渡してはいけない（許可文字内でも論理上 path traversal）
@@ -74,9 +79,9 @@ get_nested_field() {
   local input="$1"
   local path="$2"
   local default="${3:-}"
-  # ホワイトリスト: 英数字 / underscore / dot / `[` `]` のみ
-  # character class 内では `]` を先頭に置く（bash regex の慣習）
-  if [[ ! "$path" =~ ^[][A-Za-z0-9_.]+$ ]]; then
+  # 構造validation: jq path として有効な形のみ通す（jq filter injection 防止 + jq 構文エラー回避）
+  local valid_path_re='^[A-Za-z_][A-Za-z0-9_]*((\.[A-Za-z_][A-Za-z0-9_]*)|(\[[0-9]+\]))*$'
+  if [[ ! "$path" =~ $valid_path_re ]]; then
     echo "$default"
     return 0
   fi

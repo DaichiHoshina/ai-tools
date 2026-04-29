@@ -3,6 +3,8 @@
 # BATS Tests for hook-utils.sh
 # =============================================================================
 
+bats_require_minimum_version 1.5.0
+
 setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
   export LIB_FILE="${PROJECT_ROOT}/lib/hook-utils.sh"
@@ -148,6 +150,76 @@ setup() {
   [ "$output" = "safe" ]
 }
 
+@test "security: get_nested_field rejects leading dot → default" {
+  local input='{"a": 1}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' '.a' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects double dot → default" {
+  local input='{"a": {"b": 1}}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' 'a..b' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects trailing dot → default" {
+  local input='{"a": 1}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' 'a.' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects bracket with non-digit → default" {
+  local input='{"a": 1}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' 'a[xyz]' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects empty bracket → default" {
+  local input='{"a": [1,2]}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' 'a[]' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects bracket-only path → default" {
+  local input='{"a": [1]}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' '[0]' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects reversed brackets → default" {
+  local input='{"a": 1}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' ']abc[' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects leading digit → default" {
+  local input='{"1abc": 1}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' '1abc' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects hyphen in path → default" {
+  local input='{"a-b": 1}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' 'a-b' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects bracket without separator → default" {
+  local input='{"a": [{"b": 1}]}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' 'a[0]b' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
 # =============================================================================
 # 統合テスト
 # =============================================================================
@@ -259,8 +331,7 @@ line2" ]
 }
 
 @test "require_jq: PATH から jq を外すと exit 1" {
-  # env で PATH を上書き（bash -c の引数内では PATH= は意味しない）
-  run env -i PATH=/nonexistent HOME="$HOME" bash -c "source '$LIB_FILE' && require_jq"
-  # require_jq は jq 不在時 exit 1
-  [ "$status" -ne 0 ]
+  # bash 本体は $BASH で絶対パス解決（PATH=/nonexistent でも子bash起動可能）
+  # → jq だけ非到達 → require_jq の exit 1 を厳格検証（127 = command not found を排除）
+  run -1 env -i PATH=/nonexistent HOME="$HOME" "$BASH" -c "source '$LIB_FILE' && require_jq"
 }
