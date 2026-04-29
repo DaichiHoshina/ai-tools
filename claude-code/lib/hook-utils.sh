@@ -47,13 +47,40 @@ append_message() {
   fi
 }
 
-# JSONフィールド取得
-# Usage: get_field "$INPUT" "field_name" "default_value"
+# JSONフィールド取得（フラット or dotted path 両対応）
+# Usage:
+#   get_field "$INPUT" "field_name" "default_value"
+#   get_field "$INPUT" "workspace.current_dir"   # dotted path も可
 get_field() {
   local input="$1"
   local field="$2"
   local default="${3:-}"
   echo "$input" | jq -r ".${field} // \"${default}\""
+}
+
+# ネストJSONフィールド取得（dotted path / 配列添字対応）
+# Usage:
+#   get_nested_field "$INPUT" "workspace.current_dir"
+#   get_nested_field "$INPUT" "a.b.c" "default"
+#   get_nested_field "$INPUT" "items[0].name"
+#
+# Notes:
+# - path は英数字 / `_` / `.` / `[N]` のみ許可（jq filter injection 防止）。
+#   許可外の文字を含む場合は default を返す（fail-safe）
+# - default 値は jq 式リテラル内に直挿入される。`"` / バックスラッシュは escape
+#   されない。printable ASCII リテラル前提（caller 責任）
+# - $input 由来の値を path に渡してはいけない（許可文字内でも論理上 path traversal）
+get_nested_field() {
+  local input="$1"
+  local path="$2"
+  local default="${3:-}"
+  # ホワイトリスト: 英数字 / underscore / dot / `[` `]` のみ
+  # character class 内では `]` を先頭に置く（bash regex の慣習）
+  if [[ ! "$path" =~ ^[][A-Za-z0-9_.]+$ ]]; then
+    echo "$default"
+    return 0
+  fi
+  echo "$input" | jq -r ".${path} // \"${default}\""
 }
 
 # 複数JSONフィールドを1回のjq呼び出しでTSV取得（fork削減）

@@ -127,6 +127,27 @@ setup() {
   [ "$output" = "first" ]
 }
 
+@test "security: get_nested_field rejects path with space → default" {
+  local input='{"a": 1}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' 'a + 100' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects path with comma → default" {
+  local input='{"a": 1, "b": 2}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' '.a, .b' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
+@test "security: get_nested_field rejects path with pipe → default" {
+  local input='{"a": 1}'
+  run bash -c "source '$LIB_FILE' && get_nested_field '$input' 'a | length' 'safe'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "safe" ]
+}
+
 # =============================================================================
 # 統合テスト
 # =============================================================================
