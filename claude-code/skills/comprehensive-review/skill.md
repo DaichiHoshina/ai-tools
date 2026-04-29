@@ -50,6 +50,18 @@ parameters:
 | silent-failure | エラー握りつぶし検出のみ |
 | type-design | 型設計のみ |
 
+## Effort 連動モード（`${CLAUDE_EFFORT}`）
+
+実行時の effort level（`${CLAUDE_EFFORT}`）で挙動を変える。Claude Code 2.1.120+ で `${CLAUDE_EFFORT}` は `low` / `medium` / `high` のいずれかに展開される。
+
+| effort | Critical 信頼度閾値 | 履歴クロスチェック | 観点制御 |
+|--------|---------------------|-------------------|---------|
+| `low` | 90+（false positive 極小化） | スキップ | writing / type-design / docs を省略 |
+| `medium`（既定） | 80+ | 過去 90 日 | 全 11 観点 |
+| `high` | 70+（過検出寄り） | 全履歴 | + 設計トレードオフ・前提依存の問い詰め（adversarial 視点） |
+
+`${CLAUDE_EFFORT}` が未展開（環境変数なし）の場合は `medium` 扱い。Step 4.5 の信頼度フィルタリング、Step 0 の履歴ロード範囲、Step 4 の観点選択でこの値を参照する。
+
 ## 実行フロー
 
 ### Step 0: 履歴ロード（繰り返し指摘の検出）
@@ -189,11 +201,11 @@ focusパラメータで指定された観点のみ実行。`all`の場合は全8
 | 75-89  | 高確度。再確認済み・実運用でヒット濃厚、または CLAUDE.md 明示違反 |
 | 90-100 | 確実。証拠が直接示す。頻発する実バグ |
 
-**フィルタリング規則**:
+**フィルタリング規則**（`${CLAUDE_EFFORT}` で閾値変動。表は medium 既定値）:
 
 | スコア帯 | 扱い |
 |---------|------|
-| 80以上  | Critical のまま出力 |
+| 80以上（low では 90+、high では 70+） | Critical のまま出力 |
 | 50-79   | **Warning に降格**（元 Critical でも） |
 | 25-49   | Warning のまま出力 |
 | 25未満  | **破棄**（出力しない） |

@@ -119,6 +119,18 @@ function displayStatusLine(data) {
   const sep = `${C.darkGray}\u2502${C.R}`;
   const termWidth = process.stdout.columns || 80;
 
+  const effortLevel =
+    (data.effort && data.effort.level) || data.effort_level || null;
+  const thinkingOn =
+    (data.thinking && data.thinking.enabled === true) ||
+    data.thinking_enabled === true;
+  const badges = [];
+  if (effortLevel === "high")
+    badges.push(`${C.bold}${C.red}\u26a1high${C.R}`);
+  else if (effortLevel === "low") badges.push(`${C.dim}low${C.R}`);
+  if (thinkingOn) badges.push(`${C.magenta}\u{1F4AD}${C.R}`);
+  const badgeStr = badges.length ? ` ${badges.join(" ")}` : "";
+
   let pctColor;
   let suffix = "";
   if (pct >= 90) {
@@ -137,7 +149,7 @@ function displayStatusLine(data) {
   const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
   const wt = isWorktree(cwd);
   const wtTag = wt ? ` ${C.yellow}[wt]` : "";
-  const modelPart = `${C.modelColor}${model}${C.R}`;
+  const modelPart = `${C.modelColor}${model}${C.R}${badgeStr}`;
   const pctPart = `${pctColor}${C.bold}${pct}%${C.R}${suffix}`;
 
   // 右寄せ出力

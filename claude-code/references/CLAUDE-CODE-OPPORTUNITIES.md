@@ -15,35 +15,42 @@
 
 ---
 
+## 2.1.122 (2026-04-29 検出)
+
+- [x] **`/resume` 検索で PR URL 受付** (採用 2026-04-29): `references/session-management.md` に追記済（運用 tips、コード変更不要）
+- ~~**`ANTHROPIC_BEDROCK_SERVICE_TIER` env var**~~ (obsolete 2026-04-29): Anthropic 直接 API 利用、Bedrock 未使用
+- ~~**OpenTelemetry `claude_code.at_mention` log event**~~ (obsolete 2026-04-29): OTel 集計基盤未実装、計測項目追加の前段階が無い
+- ~~**malformed `hooks` entry が settings.json 全体を無効化しなくなった**~~ (obsolete 2026-04-29): Info、防御的改善のみで採用判断不要
+
 ## 2.1.121 (2026-04-28 検出)
 
-- [ ] **MCP server `alwaysLoad: true` オプション**: tool-search deferral をスキップして全ツール常時利用可能化。serena 等の頻繁に使う MCP に適用余地 — 検討箇所: `templates/settings.json.template` の `mcpServers`
-- [ ] **PostToolUse `hookSpecificOutput.updatedToolOutput` 全tool拡張** (旧 MCP-only): hook が tool 出力を書き換え可能。秘密情報マスク、長文要約等に応用余地 — 検討箇所: `claude-code/hooks/post-tool-use.sh`（`enterprise-security.md` の出力サニタイズ実装基盤）
-- [ ] **`claude plugin prune` / `plugin uninstall --prune`**: 孤立 plugin 依存削除。手動運用、CI 不要 — 検討箇所: ドキュメント参照のみ（採用なし、Info）
+- [x] **MCP server `alwaysLoad: true` オプション** (採用 2026-04-29): `templates/.mcp.json.template`、`templates/settings-ghq.json.template`、`settings/mcp-servers/serena.json.template` の serena に適用済
+- [ ] **PostToolUse `hookSpecificOutput.updatedToolOutput` 全tool拡張** (旧 MCP-only): hook が tool 出力を書き換え可能。秘密情報マスク、長文要約等に応用余地 — 検討箇所: `claude-code/hooks/post-tool-use.sh`（`enterprise-security.md` の出力サニタイズ実装基盤）。**重量実装、別タスク化**
+- ~~**`claude plugin prune` / `plugin uninstall --prune`**~~ (obsolete 2026-04-29): Info、ドキュメント参照のみで採用なし
 
 ## 2.1.120 (2026-04-26 検出)
 
-- [ ] **`claude ultrareview [target]` 非対話 subcommand**: CI/script から `/ultrareview` 起動可能、`--json` で機械可読、exit code でゲート化 — 検討箇所: `commands/review.md`（`--ultra` モードの CI 連携）、GitHub Actions PR レビュー workflow への組込
-- [ ] **Skills 内 `${CLAUDE_EFFORT}` 変数展開**: skill 本文で現在 effort level 参照可。high effort 時のみ追加検証ステップ起動等の分岐実装可能 — 検討箇所: `skills/comprehensive-review/SKILL.md`、`skills/dev/SKILL.md`（low/medium/high で挙動差別化）
+- [x] **`claude ultrareview [target]` 非対話 subcommand** (採用 2026-04-29): `commands/review.md` に CI 連携記述追加済
+- [x] **Skills 内 `${CLAUDE_EFFORT}` 変数展開** (採用 2026-04-29): `skills/comprehensive-review/skill.md` に effort 連動モード追加済（dev skill は不在のため対象外）
 
 ## 2.1.119 (2026-04-24 検出)
 
-- [ ] **Statusline stdin に `effort.level` / `thinking.enabled`**: 現在 Opus/Sonnet 名のみ表示。高 effort や thinking ON を視覚化できる — 検討箇所: `claude-code/statusline.js` の `displayStatusLine`
-- [ ] **`prUrlTemplate` 設定**: `owner/repo#N` 等の展開先を github.com 以外（GHE/GitLab self-hosted）へ差し替え可能 — 検討箇所: `templates/settings.json.template`（社内 GitLab 環境利用時のみ有効）
-- [ ] **`CLAUDE_CODE_HIDE_CWD` env var**: startup logo で cwd を隠す。機密ディレクトリや録画時に有用 — 検討箇所: `templates/settings.json.template` の `env` セクション（常時ONはtoo much、opt-in）
+- [x] **Statusline stdin に `effort.level` / `thinking.enabled`** (採用 2026-04-29): `claude-code/statusline.js` に effort `high`/`low` バッジ + thinking 💭 表示追加済
+- ~~**`prUrlTemplate` 設定**~~ (obsolete 2026-04-29): 社内 GitLab self-hosted 未使用、github.com のみ
+- ~~**`CLAUDE_CODE_HIDE_CWD` env var**~~ (obsolete 2026-04-29): opt-in 用途で常時 ON 不要、必要時のみ手動
 
 ## 2.1.118 (2026-04-23 検出)
 
-- [ ] **Hooks から MCP tool 直接呼出 (`type: "mcp_tool"`)**: shellスクリプト経由でなくhook定義から MCP tool を直接起動可能 — 検討箇所: `claude-code/hooks/*.sh`（session-end/task-completed 等で Notion/Slack を直接叩く余地）、`templates/settings.json.template` の `hooks` セクション
-- [ ] **`DISABLE_UPDATES` env var**: `claude update` 手動実行も含めて完全ブロック（`DISABLE_AUTOUPDATER` より厳格）— 検討箇所: `templates/settings.json.template` / `templates/settings-ghq.json.template`。現状 `DISABLE_AUTOUPDATER` のみ。Enterprise Policy で更新完全固定したい場合のみ切替
-- [ ] **`/usage` コマンド統合**: `/cost` と `/stats` が `/usage` にマージ（旧名もshortcutとして残存）— 検討箇所: `claude-code/commands/dashboard.md`, `commands/analytics.md` 等で `/cost`/`/stats` 参照していないか再確認（現状検出なし、参照形式のみ監視）
-- [ ] **名前付きカスタムテーマ (`/theme` + `~/.claude/themes/`)**: JSON直接編集 or plugins `themes/` ディレクトリ配布可能 — 検討箇所: `claude-code/templates/` 配下にテーマ追加可否（現 `ui-themes/` は Tailwind トークン用で別物）
+- [ ] **Hooks から MCP tool 直接呼出 (`type: "mcp_tool"`)**: shellスクリプト経由でなくhook定義から MCP tool を直接起動可能 — 検討箇所: `claude-code/hooks/*.sh`（session-end/task-completed 等で Notion/Slack を直接叩く余地）、`templates/settings.json.template` の `hooks` セクション。**重量実装、別タスク化**
+- ~~**`DISABLE_UPDATES` env var**~~ (obsolete 2026-04-29): `DISABLE_AUTOUPDATER` で十分、Enterprise Policy 用途は不要
+- ~~**`/usage` コマンド統合**~~ (obsolete 2026-04-29): 監視のみ、リポジトリ内に `/cost` / `/stats` 参照なし
+- ~~**名前付きカスタムテーマ (`/theme` + `~/.claude/themes/`)**~~ (obsolete 2026-04-29): 適用余地小、`ui-themes/` は Tailwind トークン用で別物
 
 ## 2.1.117 (2026-04-22 検出)
 
-- [ ] **Agent frontmatter `mcpServers:` (main-thread 経由)**: `--agent` で main-thread 実行時にも agent 側 mcpServers が読み込まれる。2.1.116 の `hooks:` と同系統 — 検討箇所: `claude-code/agents/*.md`
-- [ ] **Native build の Glob/Grep → Bash 統合 (bfs/ugrep)**: macOS/Linux native ビルドで Glob/Grep tool が Bash 経由の組込 bfs/ugrep に置換。ラウンドトリップ削減で高速化。npm build は影響なし — 検討箇所: `agents/*.md` の `allowed-tools` から Glob/Grep 削除可否（native 前提時のみ）
+- ~~**Agent frontmatter `mcpServers:` (main-thread 経由)**~~ (obsolete 2026-04-29): リポジトリ内で `--agent` 経由 main-thread 実行を使用していない
+- ~~**Native build の Glob/Grep → Bash 統合 (bfs/ugrep)**~~ (obsolete 2026-04-29): native ビルド使用中だが、agent の `allowed-tools` 削除はパフォーマンス改善のみで現状で問題なし
 
 ## 2.1.116 (2026-04-21 検出)
 
-- [ ] **Agent frontmatter `hooks:` (main-thread 経由)**: `--agent` で main-thread 実行時にも agent 側 hooks が発火可能に — 検討箇所: `claude-code/agents/*.md`
+- ~~**Agent frontmatter `hooks:` (main-thread 経由)**~~ (obsolete 2026-04-29): リポジトリ内で `--agent` 経由 main-thread 実行を使用していない

@@ -7,7 +7,7 @@
 | コマンド | 用途 |
 |---------|------|
 | `claude --continue` | 直前セッション再開（最も高頻度） |
-| `claude --resume` | 最近のセッションから選択再開 |
+| `claude --resume` | 最近のセッションから選択再開。検索ボックスに PR URL 貼付で該当 PR を作成したセッションを検索（GitHub/GHE/GitLab/Bitbucket 対応、2.1.122+） |
 | `/rename <name>` | 現在のセッションに名前付与 |
 | `Esc + Esc` / `/rewind` | checkpoint復元（セッション終了後も永続） |
 | `/clear` | コンテキスト完全リセット（別タスク切替時） |

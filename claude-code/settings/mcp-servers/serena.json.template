@@ -11,6 +11,7 @@
       "${PROJECT_ROOT}"
     ],
     "env": {},
-    "_comment": "Serena MCP - Symbolic code analysis and project memory management (project-specific)"
+    "alwaysLoad": true,
+    "_comment": "Serena MCP - Symbolic code analysis and project memory management. alwaysLoad: tool-search deferral skip (頻繁利用、2.1.121+)"
   }
 }

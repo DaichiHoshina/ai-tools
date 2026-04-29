@@ -22,7 +22,8 @@
     "serena": {
       "command": "uvx",
       "args": ["--from", "serena-mcp", "serena"],
-      "env": {}
+      "env": {},
+      "alwaysLoad": true
     },
     "context7": {
       "command": "npx",
