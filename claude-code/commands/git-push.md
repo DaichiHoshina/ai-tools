@@ -72,6 +72,8 @@ commit → push → PR/MR作成を1コマンドで実行。
 git remote get-url origin | grep -q "gitlab"   # GitLab → glab、そうでなければ gh
 ```
 
+**判定不能時** (`git remote get-url` 失敗 / origin 未設定): push 段階で停止し、「remote 未設定 — `git remote add origin <url>` を実行してください」と案内。PR/MR 作成スキップ。
+
 ## コミットメッセージ
 
 Conventional Commits 形式: `<type>(<scope>): <subject>`
@@ -106,7 +108,7 @@ Conventional Commits 形式: `<type>(<scope>): <subject>`
 
 ## Jiraチケットリンク
 
-push/MR 作成後、コミットメッセージやブランチ名に Jira チケット ID が含まれる場合、該当チケットに MR/PR URL を `mcp__jira__jira_post` で自動コメント追加。ID 未検出時は警告。
+push/MR 作成後、コミットメッセージやブランチ名に Jira チケット ID が含まれる場合、該当チケットに MR/PR URL を `mcp__jira__jira_post` で自動コメント追加。ID 未検出時は警告のみ表示し、push/MR 作成自体は成功扱い（Jira 連携は補助機能、本流を止めない）。
 
 **自動コメント本文も `~/.claude/rules/ai-output.md` の PREP 3点 + self-check 4問通過必須**。デフォルト template 例: 「結論: PR 作成完了 → レビュー依頼 / 理由: <ブランチ名+変更概要> / 次アクション: <レビュワー指定 or 不明>」。
 
