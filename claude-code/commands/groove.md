@@ -88,6 +88,10 @@ Agent(
 
 逐次ステップでは isolation 不使用（前ステップの変更参照が必要なため）。
 
+**`general-purpose` 利用方針**:
+- 結論: groove では `general-purpose` を例外的に許可（`/flow` で完結する場合は `/flow` を優先）
+- 理由: YAML で任意 agent 定義を動的に組む用途のため、専用 agent（po/manager/developer/reviewer/explore）では対応不能
+
 **parallel:**
 
 単一メッセージで複数Agent並列起動。edit mode のサブステップには `isolation: "worktree"` を自動付与。集約は `aggregate.priority` の先頭にマッチした結果を採用:

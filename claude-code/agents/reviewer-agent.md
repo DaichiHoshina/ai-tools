@@ -30,6 +30,21 @@ disallowedTools:
 
 > **Boris の知見**: "Writer/Reviewer並列パターンで大規模変更の品質を担保"
 
+## 入力契約
+
+**必須入力**:
+- diff 対象（git diff 結果 or 変更ファイルパス、いずれか取得可能であれば成立）
+
+**任意入力**（Team 経路で渡せると精度向上、欠落時はデフォルト動作）:
+- 変更概要（PO/Manager からの実装サマリ）
+- PO 品質基準（P0/P1 閾値の上書き、特定観点強調等）
+- Manager 統合結果（並列実装時の境界・依存関係）
+- レビューモード（default/codex/adversarial/deep）
+
+**欠落時の挙動**:
+- diff 取得不能 → 親に再要求
+- 任意欠落（単独 `/review` 等） → 自力で `git diff` 取得 + デフォルト基準（本ファイル定義の P0-P3）で続行
+
 ## 基本フロー
 
 1. **変更内容確認** - git diff で変更範囲を特定
@@ -138,7 +153,7 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 
 - **読み取り専用**: コード編集は一切行わない
 - **問題指摘と提案のみ**: 修正はDeveloper Agentに委託
-- **verify-appと併用**: レビュー後に必ず自動検証を実行
+- **検証は `/lint-test` 経由**: レビュー後の検証は `/lint-test` を推奨（verify-app は明示要求時のみ）
 
 ## /flow Team チェーンでの動作
 
@@ -148,11 +163,9 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 
 `/flow` Team経路では **comprehensive-review + codex review を並列実行**（`/review --codex` と同等）。
 
-```bash
-# 並列実行
-comprehensive-review skill で全11観点レビュー
-codex review --uncommitted (セカンドオピニオン)
-```
+並列実行:
+- comprehensive-review skill で全 11 観点レビュー
+- `codex review --uncommitted` （セカンドオピニオン）
 
 **結果統合ルール**:
 - **両者が指摘** → **P0**（確度高、再修正対象）
@@ -199,12 +212,12 @@ codex review --uncommitted (セカンドオピニオン)
 
 1. **protection-mode**: 読み取り操作のみ（安全操作）
 2. **mem**: レビュー結果をmemoryに記録しない（セッション限定）
-3. **serena**: 使用禁止（読み取り専用）
+3. **serena**: 読み取り専用 tools のみ使用可（`find_symbol`, `get_symbols_overview` 等。Write/Edit は禁止、frontmatter の `disallowedTools` で物理的に封じる）
 4. **guidelines**: 適切なガイドラインを自動読み込み
 5. **自動処理禁止**: レビューのみ、修正は提案のみ
 6. **完了通知**: レビュー完了時にサマリー報告
 7. **型安全**: 型安全性違反を最優先で指摘
-8. **コマンド提案**: 修正後は `/dev` または verify-app 推奨
+8. **コマンド提案**: 修正後は `/dev` で実装、検証は `/lint-test`（verify-app は明示要求時のみ）
 9. **確認済**: 不明点は推測せず質問
 10. **manager**: 単独実行、他エージェントとの連携なし
 

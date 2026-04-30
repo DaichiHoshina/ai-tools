@@ -31,11 +31,12 @@ cp ~/.claude/templates/keybindings.json.template ~/.claude/keybindings.json
 # 必要に応じて編集
 ```
 
-**定義済みショートカット**:
+**定義済みショートカット**（一部抜粋。全リストは `keybindings.json.template` 参照）:
 - `Ctrl+Shift+F`: `/flow`
 - `Ctrl+Shift+C`: `/git-push --pr`
 - `Ctrl+Shift+R`: `/review`
 - `Ctrl+Shift+T`: `/test`
+- `Ctrl+Shift+V`: `/lint-test`
 
 ### settings-ghq.json.template
 

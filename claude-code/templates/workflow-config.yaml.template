@@ -14,21 +14,26 @@ workflows:
       #   after: /test
       #   required: false
       
-      # verify-app の引数をカスタマイズ
-      - agent: verify-app
-        args: "--e2e"  # E2Eテストを含む検証
+      # 検証ステップ追加（通常は /lint-test で十分）
+      - command: /lint-test
         after: /test
+      # verify-app は明示要求時のみコメントアウト解除して使用
+      # - agent: verify-app
+      #   args: "--e2e"  # E2Eテストを含む包括検証
+      #   after: /test
   
-  # バグ修正ワークフローのカスタマイズ例
+  # バグ修正ワークフローのカスタマイズ例（通常は /lint-test を推奨）
   # bugfix:
   #   steps:
-  #     - agent: verify-app
-  #       args: "--unit-only"  # ユニットテストのみ
+  #     - command: /lint-test
+  #     # verify-app は明示要求時のみ（包括検証が必要な場合）
+  #     # - agent: verify-app
+  #     #   args: "--unit-only"  # ユニットテストのみ
 
 # 必須ステップの指定（チーム標準化用）
 required_steps:
   - /review       # コードレビュー必須
-  - verify-app    # 検証必須
+  - /lint-test    # 検証必須（verify-app は明示要求時のみ）
 
 # スキップ可能なステップ（省略可）
 # optional_steps:

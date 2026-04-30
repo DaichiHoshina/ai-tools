@@ -27,7 +27,7 @@
     },
     {
       "key": "ctrl+shift+v",
-      "command": "/verify-app"
+      "command": "/lint-test"
     },
     {
       "key": "ctrl+shift+s",
