@@ -28,12 +28,14 @@ classify_bash_command() {
   local cmd_without_msg_arg
 
   # commit message 内の危険語リテラル誤発火を防止
-  # git commit -m "..." の -m 引数値内容を除外してから危険語マッチ評価
-  # ヒアドキュメント対応は v2.2.2 TODO（現在は -m "..." のみ）
+  # git commit -m "..." / -m '...' / -F file の引数値内容を除外してから危険語マッチ評価
+  # ヒアドキュメント (cat <<EOF...EOF) 対応は v2.2.3 TODO
   cmd_without_msg_arg="$cmd"
-  if [[ "$cmd_without_msg_arg" =~ git[[:space:]]+commit[[:space:]]+.*-m[[:space:]]*\" ]]; then
-    # -m "..." 形式を空白に置換（末尾の閉じクォートまで）
-    cmd_without_msg_arg=$(printf '%s' "$cmd_without_msg_arg" | sed 's/-m[[:space:]]*"[^"]*"/ /g')
+  if [[ "$cmd_without_msg_arg" =~ git[[:space:]]+commit[[:space:]] ]]; then
+    cmd_without_msg_arg=$(printf '%s' "$cmd_without_msg_arg" \
+      | sed -E 's/-m[[:space:]]*"[^"]*"/ /g' \
+      | sed -E "s/-m[[:space:]]*'[^']*'/ /g" \
+      | sed -E 's/-F[[:space:]]+[^[:space:]]+/ /g')
   fi
 
   # 禁止操作チェック（危険なコマンド）

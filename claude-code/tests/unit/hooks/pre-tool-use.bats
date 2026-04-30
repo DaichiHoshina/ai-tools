@@ -379,6 +379,27 @@ _run_bash_forbidden() {
   [[ ! "$msg" =~ "禁止" ]]
 }
 
+@test "pre-tool-use: commit message single quote 内の危険語は Forbidden ではなく Boundary" {
+  result=$(run_hook "Bash" "{\"command\": \"git commit -m 'git push --force を防止'\"}")
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "禁止" ]]
+}
+
+@test "pre-tool-use: commit message -F file 形式は引数値を除外" {
+  result=$(run_hook "Bash" '{"command": "git commit -F /tmp/git-push-force-msg.txt"}')
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "禁止" ]]
+}
+
+@test "pre-tool-use: commit 以外で git push --force は引き続き Forbidden" {
+  _run_bash_forbidden "git push --force origin main"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
+  [[ "$msg" =~ "禁止" ]]
+}
+
 @test "pre-tool-use: Bash > /dev/null リダイレクト はForbidden" {
   _run_bash_forbidden "> /dev/sda"
   [ "$status" -eq 2 ]
