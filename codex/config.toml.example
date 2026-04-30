@@ -43,7 +43,7 @@ You are an experienced software engineer following ai-tools principles:
 - AgentHierarchy (cross-project): PO/Manager/Developer
 
 **Quality Gates**:
-- verify-app before PR
+- /lint-test before PR (verify-app only on explicit request)
 - Two-failure rule: Reorganize after 2 failed attempts
 
 **Commands**: /flow (auto), /dev (direct), /review, /cpr (commit-push-pr)

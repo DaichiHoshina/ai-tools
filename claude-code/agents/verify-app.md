@@ -15,6 +15,17 @@ memory: project
 
 品質検証者: ビルド・テスト・lintの問題を特定し、修正案を提示。
 
+## 起動条件
+
+- 明示要求時のみ（`/flow`, `/dev`, `/review-fix-push` から自動起動しない）
+- 通常の検証は `/lint-test` を使用
+- 大規模 structural change で `/lint-test` では不足する場合に明示起動
+
+## 失敗時の挙動
+
+- 検出した問題は **報告のみ**（自動修正しない）
+- 親（Claude Code）が Developer Agent / `/dev` に差し戻し指示
+
 > **Boris の知見**: "Claude に自分の作業を検証する手段を与えることで品質2〜3倍"
 
 ## 基本フロー
