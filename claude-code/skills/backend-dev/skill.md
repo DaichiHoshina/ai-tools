@@ -1,6 +1,6 @@
 ---
 name: backend-dev
-description: バックエンド開発 - Go/TypeScript/Python/Rust対応（言語自動検出）
+description: バックエンド開発（Go/TypeScript/Python/Rust）。言語を自動検出して規約適用
 requires-guidelines:
   - common
   - clean-architecture

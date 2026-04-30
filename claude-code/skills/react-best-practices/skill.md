@@ -1,6 +1,6 @@
 ---
 name: react-best-practices
-description: Vercel React/Next.jsパフォーマンス最適化 - 45ルール8カテゴリ、ウォーターフォール排除からバンドル最適化まで。React/Next.js実装時に使用
+description: React/Next.jsパフォーマンス最適化（Vercel）。45ルール8カテゴリ。ウォーターフォール排除・バンドル最適化
 requires-guidelines:
   - nextjs-react
 hooks:

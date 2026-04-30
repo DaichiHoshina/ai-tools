@@ -1,6 +1,6 @@
 ---
 name: context7
-description: ライブラリ・フレームワークの最新ドキュメントをContext7 API経由で取得。ドキュメント検索、APIの正しい使い方の確認、トレーニングデータ以降の変更確認時に使用。
+description: ライブラリ最新ドキュメントをContext7 API経由で取得。トレーニングデータ以降のAPI仕様確認時に使用
 ---
 
 # context7 - ライブラリドキュメント検索

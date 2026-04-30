@@ -1,6 +1,6 @@
 ---
 name: incident-response
-description: インシデント対応 - エラー分類→影響範囲判定→原因特定→チケット作成→記録の統合フロー
+description: インシデント対応。エラー分類→影響判定→原因特定→チケット作成→記録の統合フロー
 requires-guidelines:
   - operations
 ---

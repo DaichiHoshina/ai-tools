@@ -1,6 +1,6 @@
 ---
 name: terraform
-description: Terraform IaC設計 - モジュール設計、状態管理、セキュリティベストプラクティス。terraform plan/apply、IaCコードレビュー、モジュール設計、状態管理の見直し時に使用。
+description: Terraform IaC設計。モジュール設計・状態管理・セキュリティBP。plan/apply・IaCレビュー時
 requires-guidelines:
   - terraform
   - common

@@ -1,6 +1,6 @@
 ---
 name: mcp-setup-guide
-description: MCP設定ガイド - Claude Code向けMCPサーバーのセットアップ・トラブルシュート
+description: MCP設定ガイド。Claude Code向けMCPサーバーのセットアップ・トラブルシュート
 ---
 
 # mcp-setup-guide - MCP設定ガイド
