@@ -8,12 +8,6 @@ requires-guidelines:
 
 # grpc-protobuf - gRPC/Protobuf開発
 
-## 使用タイミング
-
-- proto定義の新規作成・変更時
-- gRPCサービスの実装時
-- proto-syncによるコード生成時
-
 ## 開発フロー
 
 ```

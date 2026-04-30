@@ -8,13 +8,6 @@ requires-guidelines:
 
 # terraform - Terraform IaC設計
 
-## 使用タイミング
-
-- インフラ構築・変更時
-- IaCコードレビュー時
-- モジュール設計時
-- 状態管理の見直し時
-
 ## チェック項目サマリー
 
 ### Critical（修正必須）

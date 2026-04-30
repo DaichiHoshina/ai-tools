@@ -33,17 +33,6 @@ parameters:
 | **silent-failure** | エラー握りつぶし、空 catch | `silent-failure.md` |
 | **type-design** | 型による不変条件表現、enum乱用回避 | `type-design.md` |
 
-## パラメータ
-
-`--focus`で観点を絞る（デフォルト: all）。各値で対応する観点のみ実行。
-
-| 値 | 実行観点 |
-|---|---------|
-| all | 全11観点（デフォルト） |
-| architecture / quality / readability / security | 各単一観点 |
-| docs / test-coverage / root-cause / logging | 各単一観点 |
-| writing / silent-failure / type-design | 各単一観点 |
-
 ## Effort 連動モード（`${CLAUDE_EFFORT}`）
 
 実行時の effort level で信頼度閾値と検査範囲が変動。

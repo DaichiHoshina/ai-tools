@@ -12,13 +12,6 @@ hooks:
 
 **目標**: 「6ヶ月以上SQLを1行も書いていない」を実現
 
-## 使用タイミング
-
-- **データ探索時**: 自然言語で質問 → SQL自動生成
-- **レポート作成時**: クエリ結果を可視化提案
-- **複数DB統合時**: BigQuery + PostgreSQL の JOIN
-- **CSV/JSON解析時**: ファイルベース分析
-
 ## 対応データソース
 
 | データソース | CLI/接続方法 | 認証 |
@@ -58,31 +51,6 @@ hooks:
 |------|------|
 | 全テーブルスキャン | インデックス活用（`WHERE created_at >= '2024-01-01'`） |
 | BigQuery大量スキャン | パーティション指定（`WHERE _PARTITIONTIME >= TIMESTAMP(...)`） |
-
-## データソース別コマンド早見表
-
-| DB | 接続 | テーブル確認 |
-|----|------|------------|
-| BigQuery | `bq ls` | `bq ls project:dataset` |
-| PostgreSQL | `psql "postgresql://user:pass@host/db"` | `\dt` |
-| MySQL | `mysql -h host -u user -p db` | `SHOW TABLES;` |
-| SQLite | `sqlite3 data.db` | `.tables` |
-| pandas | `pd.read_csv('data.csv')` | `df.describe()` |
-
-## チェックリスト
-
-### 実行前確認
-- [ ] クエリは読み取り専用（SELECT/SHOW のみ）
-- [ ] 機密データ（パスワード、クレカ）をマスク
-- [ ] BigQuery: パーティション指定（コスト削減）
-- [ ] 推定スキャンサイズ・実行時間を確認
-- [ ] 接続情報（パスワード）は環境変数から取得
-
-### セキュリティ
-- [ ] UPDATE/DELETE/DROP は絶対禁止
-- [ ] 本番DBは読み取り専用ユーザーを使用
-- [ ] パスワードをログに残さない
-- [ ] 実行前に必ずユーザー確認
 
 ## 出力形式
 

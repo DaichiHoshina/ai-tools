@@ -8,12 +8,6 @@ requires-guidelines:
 
 # api-design - API設計
 
-## 使用タイミング
-
-- API設計時（新規エンドポイント追加）/ APIレビュー時 / ドキュメント作成時
-
----
-
 ## レビュー観点
 
 ### 🔴 Critical（修正必須）

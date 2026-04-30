@@ -12,13 +12,6 @@ hooks:
 
 > **Version**: 0.1.0 | **Source**: [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills)
 
-## 使用タイミング
-
-- **React/Next.jsコンポーネント実装時**
-- **パフォーマンス最適化・レビュー時**
-- **バンドルサイズ削減時**
-- **データフェッチ設計時**
-
 ## ルールカテゴリ（優先度順）
 
 | 優先度 | カテゴリ | 影響度 | プレフィックス |
