@@ -57,18 +57,21 @@ done
 # 6. review-history.jsonl 同位置3回以上 (Compounding Engineering: hook化推奨閾値)
 # warn のみ (failed には影響しない)。既存問題への気付き材料、新規commit強制ブロックしない
 # line は 5刻みで丸めて範囲一致 (analytics の ±3 と同程度の感度。line 128 と 131 を同グループ集約)
+# 同一 base commit 内の review/followup/re-review は1回扱い。異なる commit で再発した位置のみ構造的問題と判定
 HIST=".claude/review-history.jsonl"
 if [ -f "$HIST" ] && command -v jq >/dev/null 2>&1; then
   recurring=$(jq -c '.' "$HIST" 2>/dev/null \
     | jq -s 'group_by(.file + ":" + (((.line // 0) / 5) | floor | tostring) + ":" + .focus)
+            | map(unique_by((.commit // "unknown") | split("-")[0]))
             | map(select(length >= 3)) | length' 2>/dev/null \
     || echo "0")
   if [ "${recurring:-0}" != "0" ] && [ "${recurring:-0}" != "" ]; then
-    echo "⚠ review-history.jsonl: 同位置3回以上の指摘 ${recurring} 件 → hook化推奨"
+    echo "⚠ review-history.jsonl: 異なるコミットで同位置3回以上の指摘 ${recurring} 件 → hook化推奨"
     jq -c '.' "$HIST" 2>/dev/null \
       | jq -s -r 'group_by(.file + ":" + (((.line // 0) / 5) | floor | tostring) + ":" + .focus)
+                | map(unique_by((.commit // "unknown") | split("-")[0]))
                 | map(select(length >= 3)) | sort_by(-length)
-                | .[] | "  " + .[0].file + ":~" + (.[0].line // 0 | tostring) + " [" + .[0].focus + "] (" + (length | tostring) + "回)"' 2>/dev/null
+                | .[] | "  " + .[0].file + ":~" + (.[0].line // 0 | tostring) + " [" + .[0].focus + "] (" + (length | tostring) + " commits)"' 2>/dev/null
   fi
 fi
 

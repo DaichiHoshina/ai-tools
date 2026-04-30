@@ -73,10 +73,9 @@ cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null  # 未採用
 ## Phase 5: 終了処理（Phase 4 の確認適用完了後）
 
 1. `claude-code/VERSION` を現行版に更新
-2. `claude-code-version`（リポルート）も `@anthropic-ai/claude-code@<現行版>` に同期（Renovate 起点と整合）
-3. `./claude-code/sync.sh to-local --yes` 実行（このタイミングのみ）
-4. Opportunity 追跡ファイル更新（Phase 3-B の差分反映）
-5. 大きな変更（3+ファイル or 非自明判断）があれば Serena memory に `claude-update-YYYYMMDD` で保存
+2. `./claude-code/sync.sh to-local --yes` 実行（このタイミングのみ）
+3. Opportunity 追跡ファイル更新（Phase 3-B の差分反映）
+4. 大きな変更（3+ファイル or 非自明判断）があれば Serena memory に `claude-update-YYYYMMDD` で保存
 
 ## Opportunity 追跡フォーマット
 
