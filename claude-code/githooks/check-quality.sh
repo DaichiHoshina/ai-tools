@@ -54,6 +54,23 @@ for f in claude-code/commands/*.md; do
   check_size "$f" 150 || failed=1
 done
 
+# 6. review-history.jsonl 同位置5回以上 (Compounding Engineering: hook化推奨閾値)
+# warn のみ (failed には影響しない)。既存問題への気付き材料、新規commit強制ブロックしない
+HIST=".claude/review-history.jsonl"
+if [ -f "$HIST" ] && command -v jq >/dev/null 2>&1; then
+  recurring=$(jq -c '.' "$HIST" 2>/dev/null \
+    | jq -s 'group_by(.file + ":" + (.line // 0 | tostring) + ":" + .focus)
+            | map(select(length >= 5)) | length' 2>/dev/null \
+    || echo "0")
+  if [ "${recurring:-0}" != "0" ] && [ "${recurring:-0}" != "" ]; then
+    echo "⚠ review-history.jsonl: 同位置5回以上の指摘 ${recurring} 件 → hook化推奨"
+    jq -c '.' "$HIST" 2>/dev/null \
+      | jq -s -r 'group_by(.file + ":" + (.line // 0 | tostring) + ":" + .focus)
+                | map(select(length >= 5)) | sort_by(-length)
+                | .[] | "  " + .[0].file + ":" + (.[0].line // 0 | tostring) + " [" + .[0].focus + "] (" + (length | tostring) + "回)"' 2>/dev/null
+  fi
+fi
+
 if [ "$failed" -ne 0 ]; then
   echo ""
   echo "Quality check failed."
