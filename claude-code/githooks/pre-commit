@@ -1,0 +1,77 @@
+#!/bin/bash
+# Pre-commit hook: skill / agent / command / メタファイルの品質劣化を防止。
+#
+# セットアップ: git config core.hooksPath claude-code/githooks
+# 一時迂回: git commit --no-verify （恒常的な使用は避ける）
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+failed=0
+
+# 1. skill-lint --strict (description 形式・トリガー語句・ディレクトリ名一致)
+if [ -x "./claude-code/scripts/skill-lint.sh" ]; then
+  if ! ./claude-code/scripts/skill-lint.sh --strict 2>&1; then
+    echo "✗ skill-lint failed"
+    failed=1
+  fi
+fi
+
+# 2. メタファイル肥大検出 (リファクタ後の現状値+α を上限)
+declare -A META_LIMITS=(
+  ["claude-code/CLAUDE.md"]=200
+  ["claude-code/SKILLS-MAP.md"]=150
+  ["claude-code/SKILLS-USAGE.md"]=130
+  ["claude-code/COMMANDS-GUIDE.md"]=150
+)
+for f in "${!META_LIMITS[@]}"; do
+  if [ -f "$f" ]; then
+    lines=$(wc -l < "$f" | tr -d ' ')
+    limit="${META_LIMITS[$f]}"
+    if [ "$lines" -gt "$limit" ]; then
+      echo "✗ $f: $lines lines (limit $limit)"
+      failed=1
+    fi
+  fi
+done
+
+# 3. skill body 行数 (CLAUDE.md目安: 100-130行、150を超えたら fail)
+for f in claude-code/skills/*/SKILL.md; do
+  [ -f "$f" ] || continue
+  lines=$(wc -l < "$f" | tr -d ' ')
+  if [ "$lines" -gt 150 ]; then
+    echo "✗ $f: $lines lines (skill body limit 150)"
+    failed=1
+  fi
+done
+
+# 4. agent 行数 (CLAUDE.md目安: 300以下)
+for f in claude-code/agents/*.md; do
+  [ -f "$f" ] || continue
+  lines=$(wc -l < "$f" | tr -d ' ')
+  if [ "$lines" -gt 300 ]; then
+    echo "✗ $f: $lines lines (agent limit 300)"
+    failed=1
+  fi
+done
+
+# 5. command 行数 (CLAUDE.md目安: 150以下)
+for f in claude-code/commands/*.md; do
+  [ -f "$f" ] || continue
+  lines=$(wc -l < "$f" | tr -d ' ')
+  if [ "$lines" -gt 150 ]; then
+    echo "✗ $f: $lines lines (command limit 150)"
+    failed=1
+  fi
+done
+
+if [ "$failed" -ne 0 ]; then
+  echo ""
+  echo "Pre-commit check failed."
+  echo "  - 行数を削減するか --no-verify で意図的に迂回"
+  exit 1
+fi
+
+echo "✓ Pre-commit checks passed"
