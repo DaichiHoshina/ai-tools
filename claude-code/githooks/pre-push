@@ -1,0 +1,4 @@
+#!/bin/bash
+# Pre-push: 共通品質チェックを再実行
+# pre-commit を --no-verify で迂回された場合の二重防御
+exec "$(dirname "$0")/check-quality.sh"
