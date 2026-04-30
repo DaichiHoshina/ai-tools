@@ -38,7 +38,7 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 | 調査規模 | ツール |
 |---------|--------------|
 | 1-2ファイル・特定シンボル | Bash grep/find または `mcp__serena__find_symbol` |
-| 3-4クエリの広域探索 | `/explore`（explore-agent×4 並列） |
+| 3-4クエリの広域探索 | `/explore`（曖昧時 2 並列、領域 3 つ以上で全 4 並列） |
 | Claude Code CLI/SDK/API の仕様質問 | claude-code-guide agent |
 | それ以外で本当に広域分析が必要 | Explore（built-in、最終手段） |
 
@@ -92,6 +92,10 @@ agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
 | "レビュー→修正→push", "まとめてレビュー対応" | `/review-fix-push`（review + dev 全修正 + 再review + push） |
 | "ブレスト", "設計検討" | `/brainstorm` |
 | "{strict\|fast\|normal} mode" | `/session-mode {強度}` |
+| "並列実行で" | `/flow --parallel`（worktree 提案、PO 確認必須） |
+| "Developer 並列で" | `/flow --parallel`（同上） |
+| "worktree 分けて" | `/flow --parallel`（同上） |
+| "wt 分けて" | `/flow --parallel`（同上） |
 
 上記以外は自然語解釈しない。明示コマンドを使う（誤判定・トークン消費回避）。全リスト: `references/natural-language-triggers.md`
 

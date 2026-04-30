@@ -21,10 +21,15 @@ description: 並列探索コマンド - 複数の観点から同時調査
 | 探索目的 | 選択 |
 |---------|------|
 | プロジェクト全体理解 | explore1-4 全て |
+| 領域 3 つ以上にまたがる | explore1-4 全て |
+| 依存関係が横断的に不明 | explore1-4 全て |
 | API機能調査 | explore1 + explore2 |
 | UI機能調査 | explore1 + explore3 |
 | テスト調査 | explore1 + explore4 |
 | 依存関係分析 | explore1 + explore2 + explore3 |
+| 曖昧時 / 領域 2 件以下 | explore1 + 関連 1 つ（2 並列推奨） |
+
+注: 全 4 並列は上記 3 条件いずれかを満たす場合のみ。実測 explore-agent 平均 123s と高コストのため、曖昧依頼で安易に全 4 起動しない。
 
 ## 実行手順
 

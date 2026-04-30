@@ -81,6 +81,12 @@ worktree 適用判定: `references/PARALLEL-PATTERNS.md#worktree 適用判定フ
 ## 実行方式
 [並列 / 段階的 / 順次]
 
+## 並列度
+[N=4（独立、判定式 PASS） / Stage1: 3 + Stage2: 2 等]
+
+## Worktree 要否
+[要（独立タスク 2 件以上 + 判定式 PASS） / 不要（単一タスク）]
+
 ## タスク配分
 
 ### Developer 1 (Frontend)
@@ -100,6 +106,8 @@ Stage 2: Dev3（Stage 1完了後）
 ## Worktree情報
 パス: [POから受け取った情報]
 ```
+
+注: 5 タスク以上ある場合は **4 以下に束ねる or Stage 分割**（4 Developer 上限）。判定式・LPT スケジューリング詳細: `references/PARALLEL-PATTERNS.md` 参照。
 
 ## Developer 配分計画フォーマット（親が起動時に使用）
 

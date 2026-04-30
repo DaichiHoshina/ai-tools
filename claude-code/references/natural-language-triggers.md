@@ -22,6 +22,10 @@
 | "strict mode", "厳格モード" | `/session-mode strict`（本番作業向け） |
 | "fast mode", "高速モード", "プロトタイプモード" | `/session-mode fast` |
 | "normal mode", "通常モード" | `/session-mode normal` |
+| "並列実行で" | `/flow --parallel`（worktree 提案、PO 確認必須） |
+| "Developer 並列で" | `/flow --parallel`（同上） |
+| "worktree 分けて" | `/flow --parallel`（同上） |
+| "wt 分けて" | `/flow --parallel`（同上） |
 
 ## 解釈しない例
 

@@ -15,6 +15,7 @@ setup() {
   export MANAGER_FILE="${PROJECT_ROOT}/agents/manager-agent.md"
   export FLOW_FILE="${PROJECT_ROOT}/commands/flow.md"
   export DEV_FILE="${PROJECT_ROOT}/commands/dev.md"
+  export CLAUDEMD_FILE="${PROJECT_ROOT}/CLAUDE.md"
 }
 
 # セクション抽出: 指定見出しから次の同レベル以下の見出しまでを出力
@@ -165,4 +166,35 @@ extract_yaml_list() {
       fi
     done <<< "$forbidden_phrases"
   done <<< "$target_files"
+}
+
+# =============================================================================
+# 境界 3 で有効化されるテスト（+2 項目、計 10）
+# =============================================================================
+
+# CLAUDE.md トリガー表セクション抽出: ## 自然言語トリガー... 〜 次 ## まで
+extract_trigger_table() {
+  awk '
+    /^## 自然言語トリガー/ { inside = 1; next }
+    inside && /^## / { exit }
+    inside { print }
+  ' "$CLAUDEMD_FILE"
+}
+
+@test "trigger_table_no_forbidden: トリガー表に「同時に」「並走で」非含有" {
+  local section
+  section=$(extract_trigger_table)
+  [[ -n "$section" ]] || { echo "anchor missing: ## 自然言語トリガー"; false; }
+  ! echo "$section" | grep -qF "同時に" || { echo "trigger table contains 同時に"; false; }
+  ! echo "$section" | grep -qF "並走で" || { echo "trigger table contains 並走で"; false; }
+}
+
+@test "trigger_table_four_phrases: トリガー表に 4 句ちょうど存在" {
+  local section
+  section=$(extract_trigger_table)
+  [[ -n "$section" ]] || { echo "anchor missing: ## 自然言語トリガー"; false; }
+  echo "$section" | grep -qF '"並列実行で"' || { echo "missing 並列実行で"; false; }
+  echo "$section" | grep -qF '"Developer 並列で"' || { echo "missing Developer 並列で"; false; }
+  echo "$section" | grep -qF '"worktree 分けて"' || { echo "missing worktree 分けて"; false; }
+  echo "$section" | grep -qF '"wt 分けて"' || { echo "missing wt 分けて"; false; }
 }
