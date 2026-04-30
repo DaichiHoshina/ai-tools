@@ -8,6 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 source "${SCRIPT_DIR}/../lib/writing-self-check.sh"
+source "${SCRIPT_DIR}/../lib/bats-self-check.sh"
 
 # JSON入力を読み込む
 INPUT=$(cat)
@@ -67,6 +68,21 @@ case "$TOOL_NAME" in
             _SYNTAX_ERR=$(bash -n "$FILE_PATH" 2>&1) || {
               MESSAGE=$(append_message "$MESSAGE" "⚠ Shell syntax error: ${FILE_PATH}"$'\n'"${_SYNTAX_ERR}")
             }
+          fi
+          ;;
+
+        "bats")
+          # ai-tools リポジトリの *.bats ファイルだけ bats self-check（pass-by-coincidence 検出）
+          REAL_PATH=$(realpath "$FILE_PATH" 2>/dev/null || echo "")
+          if [ -n "$REAL_PATH" ]; then
+            GIT_ROOT=$(git -C "$(dirname "$REAL_PATH")" rev-parse --show-toplevel 2>/dev/null || echo "")
+            if [ "$(basename "$GIT_ROOT")" = "ai-tools" ] \
+               && [[ "$REAL_PATH" =~ /claude-code/tests/.+\.bats$ ]]; then
+              _BATS_HITS=$(run_bats_check "$REAL_PATH")
+              if [ -n "$_BATS_HITS" ]; then
+                MESSAGE=$(append_message "$MESSAGE" "⚠ bats pass-by-coincidence: ${REAL_PATH}"$'\n'"${_BATS_HITS}")
+              fi
+            fi
           fi
           ;;
 
