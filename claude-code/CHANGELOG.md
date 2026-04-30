@@ -2,7 +2,26 @@
 
 このリポジトリの主要な変更履歴。[Conventional Commits](https://www.conventionalcommits.org/) に準拠。
 
-## [Unreleased] - 2026-04-27
+## [Unreleased] - 2026-04-30
+
+### Added: 並列実行リファクタ（境界 1-4）
+
+#### 4 Developer 上限と worktree 責務統一（境界 1-2b）
+
+- `PARALLEL-PATTERNS.md` を単一ソース化、並列実行の適用条件・worktree 隔離フロー・メモリ上限の根拠を一元管理
+- `/flow --parallel` と `/dev --parallel` を分離：worktree は `/flow` 側（PO 管理）、`/dev` は通常実行に統一
+- po-agent, manager-agent, developer-agent の worktree 責務を再設計：isolation 属性で自動化、PO 確認 → Manager task 分割 → Developer 並列実行
+
+#### Manager 出力形式拡張 + 自然言語トリガー固定化（境界 3）
+
+- Manager の出力に「並列実行 4 句のいずれか」を自然言語判定（`/flow --parallel`, `並列実行で`, `Developer 並列で`, `worktree 分けて`, `wt 分けて`）
+- `/explore` 4 並列を最大許容としたトークンコスト最適化、曖昧な大規模探索は agent team 並列に統一
+- 自然言語トリガー 4 句を `natural-language-triggers.md` に固定化、其他の曖昧トリガーは削除
+
+#### 4 Developer 上限根拠・anchor テスト完全化（境界 4）
+
+- `tests/integration/test_parallel_boundary.bats` に4 Developer上限anchor追加：同時セッション上限 5（親 + Dev×4）がメモリ実測根拠、PARALLEL-PATTERNS.md の判定式と同期
+- bats 18 項目全 PASS、4 Developer 並列の safety assertion 実装完了
 
 ### Added: レビュー強化フルパッケージ
 

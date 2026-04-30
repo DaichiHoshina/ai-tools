@@ -2,7 +2,7 @@
 
 > スキル間の依存関係と推奨組み合わせを可視化
 
-**注記**: Phase 2-5でスキル統合を実施（24スキル→18スキル）。本ドキュメントは新スキル名で更新済み。旧スキル名も動作します。詳細は [SKILL-MIGRATION.md](../tutorials/SKILL-MIGRATION.md) 参照。
+**注記**: Phase 2-5でスキル統合を実施（24スキル→21スキル）。本ドキュメントは新スキル名で更新済み。旧スキル名も動作します。詳細は [SKILL-MIGRATION.md](../tutorials/SKILL-MIGRATION.md) 参照。
 
 ## スキル依存関係全体図
 
@@ -12,69 +12,61 @@ flowchart TB
         LG[load-guidelines]
     end
 
-    subgraph "言語スキル"
-        GO[go-backend]
+    subgraph "言語・開発スキル（5+1）"
         TS[backend-dev]
         React[react-best-practices]
-        Python[python-backend]
-        Rust[rust-backend]
-        Java[java-backend]
-        Vue[vue-best-practices]
-        Svelte[svelte-best-practices]
-    end
-
-    subgraph "設計スキル"
         CA[clean-architecture-ddd]
         API[api-design]
-        MS[microservices-monorepo]
         GRPC[grpc-protobuf]
+        Diagram[architecture-diagram]
     end
 
-    subgraph "インフラスキル"
-        Docker[dockerfile-best-practices]
-        K8s[kubernetes]
-        TF[terraform]
-        DT[docker-troubleshoot]
-    end
-
-    subgraph "レビュースキル"
-        CQ[comprehensive-review --focus=quality]
-        SE[comprehensive-review --focus=security]
-        DT2[comprehensive-review --focus=docs]
-        UI[uiux-review]
+    subgraph "UI・レビュー系（3）"
+        CReview[comprehensive-review]
+        UIReview[uiux-review]
         UIS[ui-skills]
     end
 
-    subgraph "ユーティリティ"
-        Tasks[Claude Code Tasks]
-        SM[session-mode]
-        GM[guideline-maintenance]
+    subgraph "インフラスキル（3）"
+        Container[container-ops]
+        TF[terraform]
+        MS[microservices-monorepo]
+    end
+
+    subgraph "ユーティリティ（9）"
+        C7[context7]
         CE[cleanup-enforcement]
         MCP[mcp-setup-guide]
+        SM[session-mode]
+        DA[data-analysis]
+        TD[techdebt]
+        IR[incident-response]
+        RC[root-cause]
+        CTX7[context7]
     end
 
     %% ガイドライン依存
-    LG --> GO & TS & React & Python & Rust & Java & Vue & Svelte
-    LG --> CA & API & Docker & K8s & TF
+    LG --> TS & React & CA & API & GRPC & Container & TF & MS
 
-    %% 設計依存
-    CA --> GO & TS & Python & Rust & Java
-    API --> GO & TS & GRPC
-    MS --> Docker & K8s
+    %% 開発スキル依存
+    CA --> TS & API & GRPC
+    API --> GRPC
+    MS --> Container & TF
+    Diagram --> CA & MS
+
+    %% レビュー系依存
+    CReview --> CA
+    UIReview --> UIS & React
+    UIS --> React
+
+    %% ユーティリティ依存
+    CE --> CReview & TS
+    TD --> CA & CE
+    IR --> RC & CReview
+    RC -.-> all
 
     %% インフラ依存
-    Docker --> K8s
-    K8s --> TF
-    DT -.-> Docker
-
-    %% レビュー関連
-    CQ --> CA
-    SE --> CQ
-    DT2 --> CQ
-
-    %% UI関連
-    UI --> UIS
-    UIS --> React & Vue & Svelte
+    Container --> TF
 ```
 
 ## カテゴリ別依存関係
@@ -83,36 +75,14 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    subgraph "Go"
-        GO_LG[load-guidelines]
-        GO_BE[go-backend]
-        GO_CA[clean-architecture-ddd]
-        GO_GRPC[grpc-protobuf]
+    subgraph "Go/TypeScript/Python/Rust"
+        LG[load-guidelines]
+        BE[backend-dev]
+        CA[clean-architecture-ddd]
+        GRPC[grpc-protobuf]
     end
 
-    GO_LG --> GO_BE --> GO_CA --> GO_GRPC
-```
-
-```mermaid
-flowchart LR
-    subgraph "TypeScript"
-        TS_LG[load-guidelines]
-        TS_BE[backend-dev --lang=typescript]
-        TS_CA[clean-architecture-ddd]
-    end
-
-    TS_LG --> TS_BE --> TS_CA
-```
-
-```mermaid
-flowchart LR
-    subgraph "Python"
-        PY_LG[load-guidelines]
-        PY_BE[python-backend]
-        PY_CA[clean-architecture-ddd]
-    end
-
-    PY_LG --> PY_BE --> PY_CA
+    LG --> BE --> CA --> GRPC
 ```
 
 ### フロントエンド開発
@@ -134,12 +104,12 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph "コンテナ〜クラウド"
-        I_DF[dockerfile-best-practices]
-        I_K8[kubernetes]
+        I_CO[container-ops]
         I_TF[terraform]
+        I_MS[microservices-monorepo]
     end
 
-    I_DF --> I_K8 --> I_TF
+    I_CO --> I_TF & I_MS
 ```
 
 ### 品質レビュー
@@ -147,12 +117,12 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph "レビューフロー"
-        R_CQ[comprehensive-review --focus=quality]
-        R_SE[comprehensive-review --focus=security]
-        R_DT[comprehensive-review --focus=docs]
+        R_CR[comprehensive-review]
+        R_UI[uiux-review]
+        R_UIS[ui-skills]
     end
 
-    R_CQ --> R_SE --> R_DT
+    R_CR --> R_UI & R_UIS
 ```
 
 ## 推奨スキル組み合わせ
@@ -161,29 +131,27 @@ flowchart LR
 
 | 用途 | スキル組み合わせ |
 |------|-----------------|
-| **Go + gRPC** | `go-backend` → `clean-architecture-ddd` → `grpc-protobuf` |
-| **TypeScript** | `backend-dev --lang=typescript` → `clean-architecture-ddd` → `api-design` |
+| **バックエンド（Go/TS/Python/Rust）** | `backend-dev` → `clean-architecture-ddd` → `api-design` / `grpc-protobuf` |
+| **マイクロサービス** | `backend-dev` + `clean-architecture-ddd` + `microservices-monorepo` → `api-design` |
 | **React/Next.js** | `react-best-practices` → `ui-skills` → `uiux-review` |
-| **Python FastAPI** | `python-backend` → `clean-architecture-ddd` → `api-design` |
-| **Rust CLI** | `rust-backend` → `clean-architecture-ddd` |
-| **Vue/Nuxt** | `vue-best-practices` → `ui-skills` → `uiux-review` |
+| **設計重視** | `clean-architecture-ddd` → `architecture-diagram` |
 
 ### インフラ構築
 
 | 用途 | スキル組み合わせ |
 |------|-----------------|
-| **コンテナ化** | `dockerfile-best-practices` |
-| **K8s デプロイ** | `dockerfile-best-practices` → `kubernetes` |
-| **クラウド全体** | `dockerfile-best-practices` → `kubernetes` → `terraform` |
-| **Docker トラブル** | `docker-troubleshoot` |
+| **コンテナ化** | `container-ops` |
+| **Kubernetes デプロイ** | `container-ops` → `microservices-monorepo` |
+| **クラウド全体** | `container-ops` → `terraform` |
+| **コンテナトラブル** | `container-ops --mode=troubleshoot` |
 
 ### 品質保証
 
 | 用途 | スキル組み合わせ |
 |------|-----------------|
-| **コード品質** | `comprehensive-review --focus=quality` |
-| **セキュリティ** | `comprehensive-review --focus=quality` → `comprehensive-review --focus=security` |
-| **フルレビュー** | `comprehensive-review --focus=quality` → `comprehensive-review --focus=security` → `comprehensive-review --focus=docs` |
+| **コード品質** | `comprehensive-review` |
+| **セキュリティ＆品質** | `comprehensive-review` + `root-cause` |
+| **インシデント対応** | `incident-response` → `root-cause` |
 | **UI/UX** | `uiux-review` → `ui-skills` |
 
 ## スキル自動選択フロー
@@ -197,24 +165,21 @@ flowchart TD
     Input --> ErrorCheck{エラーログ検出}
     Input --> GitCheck{Git状態検出}
 
-    FileCheck -->|"*.go"| GO[go-backend]
-    FileCheck -->|"*.ts/tsx"| TS[backend-dev --lang=typescript]
-    FileCheck -->|"*.py"| Python[python-backend]
-    FileCheck -->|"*.rs"| Rust[rust-backend]
-    FileCheck -->|"*.java"| Java[java-backend]
-    FileCheck -->|"*.vue"| Vue[vue-best-practices]
-    FileCheck -->|"Dockerfile"| Docker[dockerfile-best-practices]
+    FileCheck -->|"*.go/ts/py/rs"| BE[backend-dev]
+    FileCheck -->|"*.tsx/jsx"| React[react-best-practices]
+    FileCheck -->|"Dockerfile"| Container[container-ops]
 
     KeywordCheck -->|"リファクタ"| CA[clean-architecture-ddd]
-    KeywordCheck -->|"セキュリティ"| SE[comprehensive-review --focus=security]
-    KeywordCheck -->|"テスト"| DT[comprehensive-review --focus=docs]
+    KeywordCheck -->|"セキュリティ"| CR[comprehensive-review]
+    KeywordCheck -->|"UI/デザイン"| UI[ui-skills/uiux-review]
 
-    ErrorCheck -->|"Docker接続"| DT2[docker-troubleshoot]
-    ErrorCheck -->|"型エラー"| TS2[backend-dev --lang=typescript]
-    ErrorCheck -->|"ModuleNotFoundError"| Python2[python-backend]
+    ErrorCheck -->|"コンテナ"| CT[container-ops --mode=troubleshoot]
+    ErrorCheck -->|"型エラー"| BE2[backend-dev]
+    ErrorCheck -->|"マイク障害"| IR[incident-response]
 
     GitCheck -->|"feature/api"| API[api-design]
     GitCheck -->|"refactor/"| CA2[clean-architecture-ddd]
+    GitCheck -->|"fix/incident"| RC[root-cause]
 ```
 
 ## 優先度ルール
@@ -230,10 +195,12 @@ flowchart TD
 
 | スキル | 必要ガイドライン |
 |--------|-----------------|
-| `go-backend` | `languages/go-backend.md` |
-| `backend-dev` | `languages/typescript.md`（typescript検出時）、`languages/golang.md`（go検出時）|
+| `backend-dev` | `languages/golang.md`, `languages/typescript.md`, `languages/python.md`, `languages/rust.md`（言語検出時） |
 | `react-best-practices` | `languages/react-best-practices.md` |
-| `python-backend` | `languages/python-backend.md` |
-| `rust-backend` | `languages/rust-backend.md` |
 | `clean-architecture-ddd` | `design/clean-architecture-ddd.md` |
 | `api-design` | `design/api-design.md` |
+| `grpc-protobuf` | `languages/golang.md`, `design/grpc-protobuf.md` |
+| `container-ops` | `infrastructure/docker-kubernetes.md` |
+| `terraform` | `infrastructure/terraform.md` |
+| `microservices-monorepo` | `infrastructure/microservices-kubernetes.md` |
+| `comprehensive-review` | `common/review-guidelines.md` |

@@ -25,15 +25,25 @@ ADDITIONAL_CONTEXT=""
 # ====================================
 classify_bash_command() {
   local cmd="$1"
+  local cmd_without_msg_arg
+
+  # commit message 内の危険語リテラル誤発火を防止
+  # git commit -m "..." の -m 引数値内容を除外してから危険語マッチ評価
+  # ヒアドキュメント対応は v2.2.2 TODO（現在は -m "..." のみ）
+  cmd_without_msg_arg="$cmd"
+  if [[ "$cmd_without_msg_arg" =~ git[[:space:]]+commit[[:space:]]+.*-m[[:space:]]*\" ]]; then
+    # -m "..." 形式を空白に置換（末尾の閉じクォートまで）
+    cmd_without_msg_arg=$(printf '%s' "$cmd_without_msg_arg" | sed 's/-m[[:space:]]*"[^"]*"/ /g')
+  fi
 
   # 禁止操作チェック（危険なコマンド）
   # grep外部プロセスを bash [[ =~ ]] に置換して高速化（v2.2.1）
   # /dev/null へのリダイレクトは安全、それ以外の /dev/ は禁止
   local _dev_forbidden=0
-  if [[ "$cmd" =~ [0-9]*\>[[:space:]]*/dev/ ]] && ! [[ "$cmd" =~ [0-9]*\>[[:space:]]*/dev/null ]]; then
+  if [[ "$cmd_without_msg_arg" =~ [0-9]*\>[[:space:]]*/dev/ ]] && ! [[ "$cmd_without_msg_arg" =~ [0-9]*\>[[:space:]]*/dev/null ]]; then
     _dev_forbidden=1
   fi
-  if [[ "$_dev_forbidden" -eq 1 ]] || [[ "$cmd" =~ (rm[[:space:]]+-rf[[:space:]]+/|rm[[:space:]]+-rf[[:space:]]+\*|:\(\)\{|sudo[[:space:]]+rm|git[[:space:]]+push[[:space:]]+--force|git[[:space:]]+push[[:space:]]+-f) ]]; then
+  if [[ "$_dev_forbidden" -eq 1 ]] || [[ "$cmd_without_msg_arg" =~ (rm[[:space:]]+-rf[[:space:]]+/|rm[[:space:]]+-rf[[:space:]]+\*|:\(\)\{|sudo[[:space:]]+rm|git[[:space:]]+push[[:space:]]+--force|git[[:space:]]+push[[:space:]]+-f) ]]; then
     GUARD_CLASS="Forbidden"
     MESSAGE="${ICON_CRITICAL} 禁止: 危険なコマンド検出"
     ADDITIONAL_CONTEXT="破壊的コマンド検出。実行を中止し安全な代替手段を提案"

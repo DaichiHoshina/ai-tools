@@ -5,6 +5,17 @@ model: opus
 color: blue
 permissionMode: fast
 memory: user
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - mcp__serena__find_symbol
+  - mcp__serena__get_symbols_overview
+disallowedTools:
+  - Write
+  - Edit
+  - MultiEdit
 ---
 
 # Reviewer Agent（レビューエージェント）
@@ -80,14 +91,12 @@ git diff
 
 ### 3. レビュー実行
 
-各スキルを順次実行し、問題を収集:
+comprehensive-review skill を観点別に順次実行:
 
-```
-Skill("comprehensive-review", "--focus=quality")
-Skill("comprehensive-review", "--focus=security")
-Skill("comprehensive-review", "--focus=docs")
-Skill("comprehensive-review", "--focus=root-cause")
-```
+- `comprehensive-review --focus=quality` で品質観点をレビュー
+- `comprehensive-review --focus=security` でセキュリティ観点をレビュー
+- `comprehensive-review --focus=docs` でドキュメント・テスト観点をレビュー
+- `comprehensive-review --focus=root-cause` で恒久対応観点をレビュー
 
 ### 4. 結果統合とレポート生成
 
@@ -141,8 +150,8 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 
 ```bash
 # 並列実行
-Skill("comprehensive-review")          # 7観点レビュー
-codex review --uncommitted             # セカンドオピニオン
+comprehensive-review skill で全11観点レビュー
+codex review --uncommitted (セカンドオピニオン)
 ```
 
 **結果統合ルール**:

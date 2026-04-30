@@ -364,6 +364,21 @@ _run_bash_forbidden() {
   [[ "$msg" =~ "禁止" ]]
 }
 
+@test "pre-tool-use: commit message 内の危険語リテラル（git push --force）は Forbidden ではなく Boundary" {
+  result=$(run_hook "Bash" '{"command": "git commit -m \"git push --force を防止する hook 修正\""}')
+  msg=$(get_system_message "$result")
+  # git commit は変更系（Boundary）。commit message 内の危険語は検出対象外になるため、禁止にはならない
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "禁止" ]]
+}
+
+@test "pre-tool-use: commit message 内の危険語リテラル（rm -rf）は Forbidden ではなく Boundary" {
+  result=$(run_hook "Bash" '{"command": "git commit -m \"rm -rf を禁止\""}')
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "禁止" ]]
+}
+
 @test "pre-tool-use: Bash > /dev/null リダイレクト はForbidden" {
   _run_bash_forbidden "> /dev/sda"
   [ "$status" -eq 2 ]

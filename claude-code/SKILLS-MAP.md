@@ -1,6 +1,6 @@
 # スキル依存関係マップ（統合後）
 
-全19スキルの依存関係と推奨組み合わせ
+全21スキルの依存関係と推奨組み合わせ
 
 > **関連ドキュメント**: [commands/](commands/) | [QUICKSTART.md](QUICKSTART.md) | [GLOSSARY.md](GLOSSARY.md)
 
@@ -66,7 +66,7 @@
 - **often-used-with**: backend-dev, api-design, microservices-monorepo
 - **用途**: proto定義、コード生成、バックエンド実装のワークフロー
 
-## インフラ系（4スキル）
+## インフラ系（3スキル）
 
 ### container-ops
 （上記参照）
@@ -81,7 +81,7 @@
 - **often-used-with**: container-ops, clean-architecture-ddd, grpc-protobuf
 - **用途**: サービス分割、通信パターン、モノレポ構成
 
-## ユーティリティ（7スキル）
+## ユーティリティ（9スキル）
 
 ### load-guidelines
 - **requires-guidelines**: なし
@@ -118,6 +118,21 @@
 - **often-used-with**: cleanup-enforcement
 - **用途**: 重複コード・DRY違反検出とリファクタリング提案
 
+### incident-response
+- **requires-guidelines**: common
+- **often-used-with**: comprehensive-review, root-cause
+- **用途**: インシデント対応フロー・根本原因分析・復旧手順書
+
+### root-cause
+- **requires-guidelines**: common
+- **often-used-with**: incident-response
+- **用途**: 問題の再現条件→原因特定→設計判断→検証の4ステップ
+
+### architecture-diagram
+- **requires-guidelines**: common
+- **often-used-with**: clean-architecture-ddd, microservices-monorepo
+- **用途**: アーキテクチャ可視化・Mermaid 図自動生成
+
 ---
 
 ## 統合サマリー
@@ -128,7 +143,7 @@
 | 開発系 | 5 |
 | インフラ系 | 3 |
 | ユーティリティ | 9 |
-| **合計** | **20** |
+| **合計** | **21** |
 
 **実質的な機能数**: パラメータ化により多数の独立機能（comprehensive-review=7観点、backend-dev=4言語、container-ops=3プラットフォーム×3モード）
 
