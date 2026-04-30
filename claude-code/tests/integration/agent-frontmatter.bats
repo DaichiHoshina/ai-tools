@@ -77,3 +77,15 @@ get_frontmatter() {
   local fm=$(get_frontmatter "${AGENTS_DIR}/developer-agent.md")
   ! [[ "$fm" =~ Task\( ]]
 }
+
+# =============================================================================
+# 4 Developer 上限: 並列実行の N <= 4 の根拠が PARALLEL-PATTERNS.md に明示
+# =============================================================================
+
+@test "four_developer_limit_anchor: PARALLEL-PATTERNS.md に 4 Developer 上限根拠が存在" {
+  local file="${PROJECT_ROOT}/references/PARALLEL-PATTERNS.md"
+  if ! grep -qxF "### 4 Developer 上限の根拠" "$file"; then
+    echo "anchor missing: ### 4 Developer 上限の根拠 (in $file)" >&2
+    return 1
+  fi
+}
