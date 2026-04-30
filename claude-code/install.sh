@@ -193,13 +193,38 @@ copy_directory_contents() {
 # 3. settings.json の設定
 # configure_settings_json は lib/env-configurator.sh にて定義
 
-# 4. 最終処理
+# 4. リポジトリ git hooks 設定
+# pre-commit / pre-push で skill-lint・行数上限・review-history 検出を強制
+setup_git_hooks() {
+    local repo_root="${SCRIPT_DIR%/*}"
+    if [ ! -d "${repo_root}/.git" ]; then
+        print_info "git リポジトリ外のためフック設定をスキップ"
+        return 0
+    fi
+    if [ ! -d "${SCRIPT_DIR}/githooks" ]; then
+        print_warning "claude-code/githooks/ が見つかりません"
+        return 0
+    fi
+
+    local current
+    current=$(git -C "${repo_root}" config core.hooksPath 2>/dev/null || true)
+    if [ "${current}" = "claude-code/githooks" ]; then
+        print_info "core.hooksPath は既に設定済み"
+        return 0
+    fi
+
+    git -C "${repo_root}" config core.hooksPath claude-code/githooks
+    chmod +x "${SCRIPT_DIR}/githooks/"*.sh "${SCRIPT_DIR}/githooks/pre-commit" "${SCRIPT_DIR}/githooks/pre-push" 2>/dev/null || true
+    print_success "git hooks を有効化しました (core.hooksPath=claude-code/githooks)"
+}
+
+# 5. 最終処理
 finalize_installation() {
     print_info "最終処理を実行中..."
 
     # Generate gitlab-mcp.sh
     generate_gitlab_mcp_sh
-    
+
     # Generate .mcp.json for ai-tools project
     if [ -d "$SCRIPT_DIR" ]; then
         generate_mcp_json "$SCRIPT_DIR"
@@ -215,6 +240,9 @@ finalize_installation() {
             print_success "~/bin/$cmd_name をリンクしました"
         fi
     done
+
+    # リポジトリ git hooks 設定
+    setup_git_hooks
 
     print_success "最終処理が完了しました"
 }
@@ -239,7 +267,7 @@ install_settings() {
     # 3. settings.json設定
     configure_settings_json
 
-    # 4. 最終処理
+    # 4. 最終処理（git hooks 設定含む）
     finalize_installation
 
     print_success "Claude Code 設定のインストール完了"
