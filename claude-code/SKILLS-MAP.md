@@ -1,267 +1,104 @@
-# スキル依存関係マップ（統合後）
+# スキル依存関係マップ
 
-全21スキルの依存関係と推奨組み合わせ
+全21スキルの依存関係と推奨組み合わせ。各 skill の詳細は `skills/<name>/SKILL.md` 参照。
 
-> **関連ドキュメント**: [commands/](commands/) | [QUICKSTART.md](QUICKSTART.md) | [GLOSSARY.md](GLOSSARY.md)
+> **関連**: [QUICKSTART.md](QUICKSTART.md) | [SKILLS-USAGE.md](SKILLS-USAGE.md) | [COMMANDS-GUIDE.md](COMMANDS-GUIDE.md)
 
-## 統合スキル（3スキル）
+## カテゴリ別一覧
 
-### comprehensive-review
-- **パラメータ**: `--focus={quality|security|docs|all}`（デフォルト: all）
-- **requires-guidelines**: common, typescript
-- **用途**: 包括的コードレビュー - 品質・セキュリティ・ドキュメント/テストを統合評価
-- **統合前**: code-quality-review, security-error-review, docs-test-review（廃止通知済み）
+### レビュー系（3）
 
-### backend-dev
-- **パラメータ**: `--lang={auto|go|typescript|python|rust}`（デフォルト: auto）
-- **requires-guidelines**: common + 言語別（golang, typescript, python, rust）
-- **用途**: バックエンド開発 - 多言語対応、自動検出
-- **統合前**: go-backend, typescript-backend（廃止通知済み）
+| skill | パラメータ | requires-guidelines | often-used-with |
+|-------|-----------|---------------------|-----------------|
+| comprehensive-review | `--focus={all\|architecture\|quality\|security\|...}` (11観点) | common, clean-architecture, ddd | - |
+| uiux-review | - | common, nextjs-react, tailwind, shadcn | ui-skills, react-best-practices |
+| ui-skills | - | nextjs-react, tailwind, shadcn | uiux-review, react-best-practices |
 
-### container-ops
-- **パラメータ**: 
-  - `--platform={auto|docker|kubernetes|podman}`（デフォルト: auto）
-  - `--mode={auto|troubleshoot|best-practices|deploy}`（デフォルト: auto）
-- **requires-guidelines**: common + kubernetes（platform=kubernetesの場合）
-- **用途**: コンテナ運用 - Docker/Kubernetes/Podman対応
-- **統合前**: docker-troubleshoot, kubernetes（廃止通知済み）
+### 開発系（5）
 
-## レビュー系（3スキル）
+| skill | パラメータ | requires-guidelines | often-used-with |
+|-------|-----------|---------------------|-----------------|
+| backend-dev | `--lang={auto\|go\|typescript\|python\|rust}` | common + 言語別 | api-design, clean-architecture-ddd |
+| react-best-practices | - | nextjs-react | ui-skills, uiux-review |
+| api-design | - | common, clean-architecture | backend-dev, grpc-protobuf |
+| clean-architecture-ddd | - | common, clean-architecture, ddd | backend-dev, microservices-monorepo |
+| grpc-protobuf | - | golang, common | backend-dev, api-design |
 
-### comprehensive-review
-（上記参照）
+### インフラ系（3）
 
-### uiux-review
-- **requires-guidelines**: ui-ux, nextjs-react
-- **often-used-with**: ui-skills, react-best-practices
-- **用途**: Material Design 3 + WCAG 2.2 AA + Nielsen 10原則で実装に直結するレビュー
+| skill | パラメータ | requires-guidelines | often-used-with |
+|-------|-----------|---------------------|-----------------|
+| container-ops | `--platform={auto\|docker\|kubernetes\|podman}`, `--mode={auto\|troubleshoot\|best-practices\|deploy}` | common (+kubernetes) | terraform |
+| terraform | - | terraform, common | container-ops |
+| microservices-monorepo | - | common, clean-architecture, ddd | container-ops, clean-architecture-ddd, grpc-protobuf |
 
-### ui-skills
-- **requires-guidelines**: nextjs-react, tailwind
-- **often-used-with**: uiux-review, react-best-practices
-- **用途**: Tailwind CSS/motion/react特化のエージェント向けUI構築制約
+### ユーティリティ（10）
 
-## 開発系（5スキル）
+| skill | requires-guidelines | often-used-with |
+|-------|---------------------|-----------------|
+| load-guidelines | - | 全 skill（前提） |
+| cleanup-enforcement | common | comprehensive-review, 開発系全般 |
+| mcp-setup-guide | - | - |
+| session-mode | - | - |
+| context7 | - | backend-dev, react-best-practices |
+| data-analysis | common | - |
+| techdebt | common, clean-architecture | cleanup-enforcement |
+| incident-response | operations | comprehensive-review, root-cause |
+| root-cause | common, clean-architecture | incident-response |
+| architecture-diagram | - | clean-architecture-ddd, microservices-monorepo |
 
-### backend-dev
-（上記参照）
+## 推奨組み合わせ
 
-### react-best-practices
-- **requires-guidelines**: nextjs-react
-- **often-used-with**: ui-skills, uiux-review
-- **用途**: Vercel React/Next.jsパフォーマンス最適化 - 45ルール8カテゴリ、ウォーターフォール排除からバンドル最適化まで
+| シーン | スキル組み合わせ |
+|-------|----------------|
+| フルレビュー | `comprehensive-review --focus=all` |
+| Go バックエンド開発 | `backend-dev --lang=go` + `clean-architecture-ddd` + `api-design` |
+| TypeScript バックエンド | `backend-dev --lang=typescript` + `api-design` |
+| React/Next.js | `react-best-practices` + `ui-skills` + `uiux-review` |
+| コンテナ調査 | `container-ops --mode=troubleshoot` |
+| インフラ全体 | `container-ops` + `terraform` |
+| インシデント | `incident-response` + `root-cause` |
 
-### api-design
-- **requires-guidelines**: common
-- **often-used-with**: backend-dev, grpc-protobuf
-- **用途**: REST/GraphQL設計原則、バージョニング、エラーハンドリング、ドキュメント
-
-### clean-architecture-ddd
-- **requires-guidelines**: clean-architecture, ddd
-- **often-used-with**: backend-dev, microservices-monorepo
-- **用途**: レイヤー設計、ドメインモデリング、依存関係管理
-
-### grpc-protobuf
-- **requires-guidelines**: golang, common
-- **often-used-with**: backend-dev, api-design, microservices-monorepo
-- **用途**: proto定義、コード生成、バックエンド実装のワークフロー
-
-## インフラ系（3スキル）
-
-### container-ops
-（上記参照）
-
-### terraform
-- **requires-guidelines**: terraform, common
-- **often-used-with**: container-ops
-- **用途**: モジュール設計、状態管理、セキュリティベストプラクティス
-
-### microservices-monorepo
-- **requires-guidelines**: microservices-kubernetes, common
-- **often-used-with**: container-ops, clean-architecture-ddd, grpc-protobuf
-- **用途**: サービス分割、通信パターン、モノレポ構成
-
-## ユーティリティ（9スキル）
-
-### load-guidelines
-- **requires-guidelines**: なし
-- **often-used-with**: すべてのスキル（前提として機能）
-- **用途**: プロジェクトの技術スタックを検出し、必要なガイドラインのみをセッションに適用。トークン節約。
-
-### cleanup-enforcement
-- **requires-guidelines**: common
-- **often-used-with**: comprehensive-review, すべての開発系スキル
-- **用途**: 後方互換残骸・未使用コード・進捗コメントを徹底削除
-
-### mcp-setup-guide
-- **requires-guidelines**: なし
-- **often-used-with**: なし（初回セットアップのみ）
-- **用途**: Claude Code向けMCPサーバーのセットアップ・トラブルシュート
-
-### session-mode
-- **requires-guidelines**: なし
-- **often-used-with**: なし（セッション設定）
-- **用途**: strict/normal/fast で操作ガードの動作を変更。Serena Memoryで状態永続化。
-
-### context7
-- **requires-guidelines**: なし
-- **often-used-with**: backend-dev, react-best-practices
-- **用途**: Context7 API経由でライブラリドキュメント取得
-
-### data-analysis
-- **requires-guidelines**: common
-- **often-used-with**: なし
-- **用途**: SQL自動生成・BigQuery/PostgreSQL/MySQL/CSV分析
-
-### techdebt
-- **requires-guidelines**: common
-- **often-used-with**: cleanup-enforcement
-- **用途**: 重複コード・DRY違反検出とリファクタリング提案
-
-### incident-response
-- **requires-guidelines**: common
-- **often-used-with**: comprehensive-review, root-cause
-- **用途**: インシデント対応フロー・根本原因分析・復旧手順書
-
-### root-cause
-- **requires-guidelines**: common
-- **often-used-with**: incident-response
-- **用途**: 問題の再現条件→原因特定→設計判断→検証の4ステップ
-
-### architecture-diagram
-- **requires-guidelines**: common
-- **often-used-with**: clean-architecture-ddd, microservices-monorepo
-- **用途**: アーキテクチャ可視化・Mermaid 図自動生成
-
----
-
-## 統合サマリー
-
-| カテゴリ | スキル数 |
-|---------|---------|
-| レビュー系 | 3 |
-| 開発系 | 5 |
-| インフラ系 | 3 |
-| ユーティリティ | 9 |
-| **合計** | **21** |
-
-**実質的な機能数**: パラメータ化により多数の独立機能（comprehensive-review=7観点、backend-dev=4言語、container-ops=3プラットフォーム×3モード）
-
----
-
-## 依存関係統計
-
-### guidelines別スキル数
-
-| ガイドライン | 依存スキル数 |
-|-------------|-------------|
-| common | 10 |
-| typescript | 2 |
-| golang | 2 |
-| nextjs-react | 3 |
-| kubernetes | 1 |
-| terraform | 1 |
-| clean-architecture | 1 |
-| ddd | 1 |
-| ui-ux | 1 |
-| tailwind | 1 |
-| microservices-kubernetes | 1 |
-
-### 推奨組み合わせパターン
-
-#### フルスタックレビュー
-```bash
-/skill comprehensive-review --focus=all  # 全観点レビュー
-```
-
-#### バックエンド開発（Go）
-```bash
-/skill backend-dev --lang=go
-/skill backend-dev + clean-architecture-ddd  # 設計重視
-/skill backend-dev + api-design  # API開発
-```
-
-#### バックエンド開発（TypeScript）
-```bash
-/skill backend-dev --lang=typescript
-/skill backend-dev + api-design
-```
-
-#### React/Next.js開発
-```bash
-/skill react-best-practices + ui-skills + uiux-review
-```
-
-#### コンテナトラブルシューティング
-```bash
-/skill container-ops --platform=docker --mode=troubleshoot
-/skill container-ops --platform=kubernetes --mode=troubleshoot
-```
-
-#### インフラ・Kubernetes
-```bash
-/skill container-ops --platform=kubernetes
-/skill container-ops + terraform  # IaC統合
-```
-
----
-
-## 使用ガイド
-
-### スキル選択フローチャート
+## スキル選択フロー
 
 ```
 タスク開始
   ↓
-[レビュー系?] → Yes → /skill comprehensive-review
+レビュー系? → Yes → /skill comprehensive-review
   ↓ No
-[技術スタック検出済み?] → No → /load-guidelines実行
+技術スタック検出済み? → No → /load-guidelines
   ↓ Yes
-[問題タイプは?]
-  ├ バックエンド開発 → backend-dev（言語自動検出）
-  ├ コンテナ運用 → container-ops（プラットフォーム自動検出）
-  ├ API開発 → api-design
-  ├ UI/UX → uiux-review or ui-skills
-  ├ インフラ → container-ops, terraform
-  └ エラー・障害 → container-ops --mode=troubleshoot, comprehensive-review --focus=security
+問題タイプ
+  ├ バックエンド → backend-dev
+  ├ フロント → react-best-practices, ui-skills
+  ├ コンテナ → container-ops
+  ├ API → api-design
+  ├ UI/UX → uiux-review
+  ├ インフラ → terraform, container-ops
+  └ エラー・障害 → incident-response, root-cause
 ```
 
-### 自動推奨の優先順位
+## 自動推奨の優先順位
 
-1. **エラーログ検出**（最優先、問題解決）
-2. **ファイルパス検出**（変更箇所から推論）
-3. **Git状態検出**（ブランチ名・コミット履歴）
-4. **キーワード検出**（プロンプト内容）
+`user-prompt-submit.sh` が以下順で検出して systemMessage で推奨スキルを表示:
 
-user-prompt-submit.shが上記順序で検出し、systemMessageで推奨スキルを表示。
+1. エラーログ検出（最優先・問題解決）
+2. ファイルパス検出（変更箇所推論）
+3. Git状態検出（ブランチ名・コミット履歴）
+4. キーワード検出（プロンプト内容）
 
----
+## 廃止スキル（後方互換）
 
-## 廃止スキル（後方互換性維持）
+`detect-from-*.sh` が自動的に新スキル名+パラメータに変換。
 
-以下のスキルは統合され、廃止通知が追加されています。detect-from-*.shが自動的に新スキル名+パラメータに変換します。
+| 旧名 | 新名 |
+|------|------|
+| code-quality-review | `comprehensive-review --focus=quality` |
+| security-error-review | `comprehensive-review --focus=security` |
+| docs-test-review | `comprehensive-review --focus=docs` |
+| go-backend | `backend-dev --lang=go` |
+| typescript-backend | `backend-dev --lang=typescript` |
+| docker-troubleshoot | `container-ops --platform=docker --mode=troubleshoot` |
+| kubernetes | `container-ops --platform=kubernetes` |
 
-### レビュー系
-- **code-quality-review** → `comprehensive-review --focus=quality`
-- **security-error-review** → `comprehensive-review --focus=security`
-- **docs-test-review** → `comprehensive-review --focus=docs`
-
-### 開発系
-- **go-backend** → `backend-dev --lang=go`
-- **typescript-backend** → `backend-dev --lang=typescript`
-
-### インフラ系
-- **docker-troubleshoot** → `container-ops --platform=docker --mode=troubleshoot`
-- **kubernetes** → `container-ops --platform=kubernetes`
-
-→ 移行詳細: [SKILL-MIGRATION.md](./SKILL-MIGRATION.md)
-
----
-
-## 参照
-
-- [QUICKSTART.md](QUICKSTART.md): 新規ユーザー向けガイド
-- [GLOSSARY.md](GLOSSARY.md): 用語集
-- [COMMANDS-GUIDE.md](COMMANDS-GUIDE.md): コマンド詳細・使い分け
-- [commands/](commands/): コマンド定義
-- [skills/](skills/): スキル定義
+詳細: [SKILL-MIGRATION.md](./SKILL-MIGRATION.md)
