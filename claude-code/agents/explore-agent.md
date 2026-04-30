@@ -55,8 +55,8 @@ disallowedTools:
 ## 基本フロー
 
 1. **タスク受信** - Managerからの指示を確認
-2. **Worktree移動** - 指定されたworktree配下に移動（該当する場合）
-3. **Serena初期化** - `mcp__serena__activate_project`でプロジェクト初期化
+2. **Worktree移動** - 指定されたworktree配下に移動（指定なし時はカレントディレクトリで続行）
+3. **Serena初期化** - `mcp__serena__activate_project`でプロジェクト初期化（失敗時は Read/Grep/Glob fallback、報告に `serena: unavailable` を明記）
 4. **探索・分析** - 自分の観点で徹底調査
 5. **報告** - Markdown形式で発見事項を報告
 
@@ -114,6 +114,8 @@ disallowedTools:
 ### 注目点
 - [重要な発見事項]
 ```
+
+**ゼロ件時の表記ルール**: 観点内に該当事項が無い場合も上記3セクションを省略しない。`### 主要な発見: 該当なし（理由: <調査範囲と結論>）` の形式で明示し、「未実施」と区別可能にする。
 
 ### 観点別のポイント
 
