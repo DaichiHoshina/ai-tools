@@ -88,8 +88,10 @@ claude  # 新規起動、SPEC.md を @ で参照
 
 **worktree 自動化との使い分け:**
 
-- 短期・自動独立タスク → `/flow --auto` の `isolation: "worktree"`（自動作成・自動クリーンアップ。詳細: `commands/flow.md`）
+- 短期・自動独立タスク → `/flow --parallel` / `/flow --parallel --auto` / `/dev --parallel` の `isolation: "worktree"`（自動作成・自動クリーンアップ）
 - 長期・人間判断介在 → 手動 `git worktree add` + 個別ターミナルセッション
+
+判定式・適用条件・後片付け方針詳細: `references/PARALLEL-PATTERNS.md` 参照。
 
 **避けるべきパターン:**
 

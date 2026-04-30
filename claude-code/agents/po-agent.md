@@ -82,11 +82,14 @@ disallowedTools:
 - 新機能開発
 - 大規模リファクタリング
 - 実験的な変更
+- **独立並列タスク 2 件以上 + 判定式 PASS**（`/flow --parallel` 経由）
 
 **作成しない場合:**
 - バグ修正（既存ブランチで対応）
 - 小規模な改善
 - ドキュメント更新
+
+`--auto` 時は 4 条件すべて満たす場合のみ確認スキップ可。worktree 適用判定: `references/PARALLEL-PATTERNS.md#worktree 適用判定フロー` 参照。
 
 ## 使用可能ツール
 

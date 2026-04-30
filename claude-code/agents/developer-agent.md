@@ -149,8 +149,12 @@ Agent tool呼び出し時に`isolation: "worktree"`を指定すると、Claude C
 
 | 使用シーン | worktree管理 |
 |-----------|-------------|
-| Teamフロー（PO→Manager→Dev） | POが共有worktree作成。`isolation`不使用 |
+| Teamフロー（`/flow`、PO→Manager→Dev） | POが共有worktree作成。`isolation`不使用 |
+| Team 並列（`/flow --parallel`） | PO 確認後 isolation を Dev×N に並列適用 |
+| 直接実行並列（`/dev --parallel`） | 親が isolation を Dev×N に並列適用（PO 経由なし） |
 | スタンドアロン（`/dev`等） | `isolation: "worktree"`で自動管理可 |
+
+並列起動時の上限は **N <= 4**（`同時セッション数 = 親 + Developer × N <= 5` より）。判定式・適用条件詳細: `references/PARALLEL-PATTERNS.md` 参照。
 
 ---
 
