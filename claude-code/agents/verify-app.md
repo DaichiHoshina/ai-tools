@@ -17,9 +17,14 @@ memory: project
 
 ## 起動条件
 
-- 明示要求時のみ（`/flow`, `/dev`, `/review-fix-push` から自動起動しない）
-- 通常の検証は `/lint-test` を使用
-- 大規模 structural change で `/lint-test` では不足する場合に明示起動
+許可される起動経路は以下のみ。それ以外（`/dev`, `/review`, `/review-fix-push`, `/flow`, `/flow --auto`, `/git-push --pr` 等）からは自動起動しない（通常検証は `/lint-test` を使用）。
+
+| 経路 | 例 | 補足 |
+|------|----|------|
+| **明示要求** | 「verify-app で検証して」「リリース前検証」 | 主経路 |
+| **workflow 必須ステップ** | `.claude/workflow-config.yaml` の `required_steps` に `verify-app` を含むワークフロー | プロジェクト側で明示宣言した場合のみ |
+
+大規模 structural change で `/lint-test` では不足する場合に明示起動。
 
 ## 失敗時の挙動
 
@@ -27,20 +32,6 @@ memory: project
 - 親（Claude Code）が Developer Agent / `/dev` に差し戻し指示
 
 > **Boris の知見**: "Claude に自分の作業を検証する手段を与えることで品質2〜3倍"
-
-## 起動条件
-
-許可される起動経路は以下のみ。それ以外（`/dev`, `/review`, `/review-fix-push` 等）からは自動起動しない（通常検証は `/lint-test` を使用）。
-
-| 経路 | 例 | 補足 |
-|------|----|------|
-| **明示要求** | 「verify-app で検証して」「リリース前検証」 | 主経路 |
-| **workflow 必須ステップ** | `.claude/workflow-config.yaml` の `required_steps` に `verify-app` を含むワークフロー | プロジェクト側で明示宣言した場合のみ |
-| **`/flow --auto` の background 検証** | 実装完了後の非同期 verify（v2.1.50+） | `/flow --auto` 明示時に限定、通常 `/flow` では走らない |
-
-それ以外（単独 `/dev` 完了時、`/review` 完了時、`/git-push --pr` 経路等）からの自動起動はしない（通常検証は `/lint-test` を使用）。大規模 structural change で `/lint-test` では不足する場合に明示起動。
-
-> **注**: `claude-code/agents/README.md §6` 等に「PR 作成前必ず自動起動」と記載があるが、実態の `/git-push.md` フローには verify-app 呼び出しが含まれない。実態と整合する本ファイル側を正とし、README.md の文言修正は別タスク。
 
 ## 適用フロー分岐
 

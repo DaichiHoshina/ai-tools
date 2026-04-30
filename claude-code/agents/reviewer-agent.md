@@ -204,7 +204,7 @@ codex 利用可否の判定順（`/review --codex` と整合）:
 **ゼロ件時もセクション省略禁止**（`### P0: 0件` で明示）。**縮退モード時は冒頭 WARN 行必置**。
 
 ```markdown
-> [WARN] codex 未インストール → comprehensive-review 単独で実行（縮退モード）  ← 縮退時のみ
+> [WARN] codex 利用不可（plugin / CLI 検出失敗） → comprehensive-review 単独実行（縮退モード）  ← 縮退時のみ
 
 ## Team レビュー結果
 
