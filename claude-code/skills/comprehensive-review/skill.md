@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: 包括的コードレビュー - 設計・品質・可読性・セキュリティ・ドキュメント・テスト充足度・恒久対応・ログを統合評価。/reviewコマンドで自動選択。--focusで観点を絞れる。
+description: 包括的コードレビュー（11観点：設計/品質/可読性/セキュリティ/ドキュメント/テスト/根本原因/ログ等）。/reviewから呼ばれる、--focusで絞り込み
 context: fork
 agent: reviewer-agent
 requires-guidelines:
@@ -32,17 +32,6 @@ parameters:
 | **writing** | ヒト向けドキュメント文章品質 | `writing-docs.md` |
 | **silent-failure** | エラー握りつぶし、空 catch | `silent-failure.md` |
 | **type-design** | 型による不変条件表現、enum乱用回避 | `type-design.md` |
-
-## パラメータ
-
-`--focus`で観点を絞る（デフォルト: all）。各値で対応する観点のみ実行。
-
-| 値 | 実行観点 |
-|---|---------|
-| all | 全11観点（デフォルト） |
-| architecture / quality / readability / security | 各単一観点 |
-| docs / test-coverage / root-cause / logging | 各単一観点 |
-| writing / silent-failure / type-design | 各単一観点 |
 
 ## Effort 連動モード（`${CLAUDE_EFFORT}`）
 

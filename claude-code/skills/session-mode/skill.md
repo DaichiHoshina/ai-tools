@@ -1,6 +1,6 @@
 ---
 name: session-mode
-description: セッションモード切替 - strict/normal/fast で操作ガードの動作を変更。Serena Memoryで状態永続化。本番環境作業(strict)、通常開発(normal)、プロトタイピング(fast)時に使用。
+description: セッションモード切替（strict/normal/fast）。本番作業・通常開発・プロトタイピングで操作ガード強度を変更
 ---
 
 # session-mode - セッションモード切替

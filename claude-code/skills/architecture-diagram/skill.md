@@ -1,6 +1,6 @@
 ---
 name: architecture-diagram
-description: アーキテクチャ図生成 - ダークテーマのHTML/SVG図を自動生成。システム構成図、クラウドアーキテクチャ、マイクロサービス、ネットワーク構成に対応。
+description: アーキテクチャ図生成。HTML/SVGでシステム構成・クラウド・マイクロサービス・ネットワーク図をダークテーマで作成
 ---
 
 # Architecture Diagram Skill

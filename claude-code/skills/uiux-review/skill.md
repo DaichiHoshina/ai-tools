@@ -1,6 +1,6 @@
 ---
 name: uiux-review
-description: UI/UXレビュー - Material Design 3 + WCAG 2.2 AA + Nielsen 10原則で実装に直結するレビュー。画面実装時に使用
+description: UI/UXレビュー。Material Design 3 + WCAG 2.2 AA + Nielsen 10原則で実装直結のレビュー
 requires-guidelines:
   - common
   - nextjs-react
@@ -10,40 +10,7 @@ requires-guidelines:
 
 # uiux-review - UI/UXレビュー
 
-## 使用タイミング
-
-- **UIコンポーネント実装時**
-- **アクセシビリティチェック時**
-- **デザインシステム構築時**
-- **レビュー・改善提案時**
-
----
-
-## 鉄板3原則レビュー（優先順）
-
-### 1️⃣ Material Design 3（コンポーネント実装）⭐
-
-**レビュー観点**:
-- コンポーネント状態の完全性（8種：default, hover, focus, active, disabled, loading, error, success）
-- デザイントークンの一貫性
-- スペーシング（4pxベース）
-
-### 2️⃣ WCAG 2.2 AA（アクセシビリティ）⭐
-
-**レビュー観点**:
-- コントラスト比（4.5:1以上）
-- キーボード操作（Tab/Enter/Escape）
-- フォーカス表示（2px以上のリング）
-- タッチターゲット（44x44px以上）
-
-### 3️⃣ Nielsen 10原則（ユーザビリティ）⭐
-
-**レビュー観点**:
-- システム状態の可視化
-- 一貫性と標準
-- エラー防止と回復
-
----
+3原則 (Material Design 3 / WCAG 2.2 AA / Nielsen 10) を順に Critical → Warning でチェック。
 
 ## レビュー手順
 

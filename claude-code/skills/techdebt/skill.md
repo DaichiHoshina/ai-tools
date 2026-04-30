@@ -1,6 +1,6 @@
 ---
 name: techdebt
-description: 技術的負債検出 - 重複コード、DRY原則違反を自動検出してリファクタリング提案。負債解消時に使用
+description: 技術的負債検出。重複コード・DRY原則違反を検出してリファクタリング提案
 requires-guidelines:
   - common
   - clean-architecture
@@ -9,13 +9,6 @@ requires-guidelines:
 # techdebt - 技術的負債検出
 
 > **出典**: Boris氏のヒント#4「スキル作成」 - 1日2回以上実行するタスクはスキル化
-
-## 使用タイミング
-
-- セッション終了時（定期チェック）
-- リファクタリング前（現状把握）
-- コードレビュー時（品質確認）
-- プロジェクト引き継ぎ前（負債可視化）
 
 ## 実行フロー
 

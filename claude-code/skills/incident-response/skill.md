@@ -1,17 +1,11 @@
 ---
 name: incident-response
-description: インシデント対応 - エラー分類→影響範囲判定→原因特定→チケット作成→記録の統合フロー
+description: インシデント対応。エラー分類→影響判定→原因特定→チケット作成→記録の統合フロー
 requires-guidelines:
   - operations
 ---
 
 # incident-response - インシデント対応スキル
-
-## 使用タイミング
-
-- エラーログを貼られた時
-- 「インシデント」「障害」「調査して」と指示された時
-- 本番/tes環境のエラー報告時
 
 ## インフラ障害 クイック診断
 

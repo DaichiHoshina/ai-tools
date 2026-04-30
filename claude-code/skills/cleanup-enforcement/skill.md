@@ -1,6 +1,6 @@
 ---
 name: cleanup-enforcement
-description: コードクリーンアップ強制 - 後方互換残骸・未使用コード・進捗コメントを徹底削除
+description: コードクリーンアップ強制。後方互換残骸・未使用コード・進捗コメントを削除
 requires-guidelines:
   - common
   - typescript  # lang=typescript の場合
@@ -8,12 +8,6 @@ requires-guidelines:
 ---
 
 # cleanup-enforcement - コードクリーンアップ強制
-
-## 使用タイミング
-
-- 実装完了後のコードクリーンアップ時
-- リファクタリング後の不要コード除去時
-- PR作成前の最終チェック時
 
 ## 目的
 

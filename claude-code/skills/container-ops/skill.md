@@ -1,6 +1,6 @@
 ---
 name: container-ops
-description: コンテナ運用 - Docker/Kubernetes/Podman対応（プラットフォーム自動検出）
+description: コンテナ運用（Docker/Kubernetes/Podman）。プラットフォームを自動検出
 requires-guidelines:
   - kubernetes  # platform=kubernetes の場合
   - common

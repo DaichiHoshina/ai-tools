@@ -1,6 +1,6 @@
 ---
 name: microservices-monorepo
-description: マイクロサービス・モノレポ設計 - サービス分割、通信パターン、モノレポ構成の設計時に使用
+description: マイクロサービス・モノレポ設計。サービス分割・通信パターン・モノレポ構成
 requires-guidelines:
   - common
   - clean-architecture
@@ -8,14 +8,6 @@ requires-guidelines:
 ---
 
 # microservices-monorepo - マイクロサービス・モノレポ設計
-
-## 使用タイミング
-
-- サービス分割検討時（モノリスからの移行）
-- 新規マイクロサービス設計時
-- モノレポ構成設計時
-
----
 
 ## 設計パターン
 

@@ -1,6 +1,6 @@
 ---
 name: ui-skills
-description: UI Skills - Tailwind CSS/motion/react特化のエージェント向けUI構築制約 + UIデザインシステム + Playwrightビジュアル検証。React/Tailwind実装、アニメーション、アクセシブルコンポーネント構築時に使用。
+description: UI構築制約（Tailwind/motion/react）+ UIデザインシステム + Playwrightビジュアル検証。アニメーション・A11y対応
 requires-guidelines:
   - nextjs-react
   - tailwind
