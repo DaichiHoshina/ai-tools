@@ -118,10 +118,11 @@ EOF
   mkdir -p "${CLAUDE_DIR}"
   echo '{"old": "config"}' > "${CLAUDE_DIR}/settings.json"
 
-  # configure_settings_json が呼ばれると confirm() は 0 を返すので、
-  # generate_settings_json が実行される
-  # 簡略化: template 파일이 있으면 생성된다는 것을 확인
-  [ -f "${SCRIPT_DIR}/templates/settings.json.template" ]
+  # 実関数を呼び出し - confirm は yes (0) を返すと仮定
+  run bash -c "source '$COMMON_LIB' && source '$LIB_FILE' && configure_settings_json" <<< "y" 2>/dev/null
+  [ "$status" -eq 0 ]
+  # settings.json が新しい内容で更新されている
+  grep -q '"new"' "${CLAUDE_DIR}/settings.json"
 }
 
 # =============================================================================
@@ -133,21 +134,33 @@ EOF
   # setup_env_file は confirm() の戻り値に依存
   # confirm が 0 を返す（yes）と仮定して、setup_env_interactive の入力なしでも成功
   run bash -c "source '$COMMON_LIB' && source '$LIB_FILE' && setup_env_file" < /dev/null 2>&1
-  # setup_env_interactive が呼ばれるが、stdin=empty なので read はスキップ
-  [ "$status" -eq 0 ] || true
+  [ "$status" -eq 0 ]
 }
 
 @test "setup_env_file: .env がなければ template をコピー + setup_env_interactive 呼ぶ" {
-  cat > "${SCRIPT_DIR}/templates/.env.example" << 'EOF'
+  cat > "${SCRIPT_DIR}/templates/.env.example" << 'TMPL'
 EXAMPLE_KEY=example_value
-EOF
+TMPL
   # env ファイルは存在しない
   [ ! -f "${ENV_FILE}" ]
 
-  run bash -c "source '$COMMON_LIB' && source '$LIB_FILE' && setup_env_file" < /dev/null 2>&1
-  [ "$status" -eq 0 ] || true
+  # setup_env_interactive が read で EOF に遭遇しないよう、
+  # 10 個の read に空行で応答（改行のみで全スキップ）
+  run bash -c "export SCRIPT_DIR='${SCRIPT_DIR}' && export ENV_FILE='${ENV_FILE}' && source '$COMMON_LIB' && source '$LIB_FILE' && setup_env_file" << 'STDIN'
+
+
+
+
+
+
+
+
+
+
+STDIN
+  [ "$status" -eq 0 ]
   # template がコピーされている
-  [ -f "${ENV_FILE}" ] || true
+  [ -f "${ENV_FILE}" ]
 }
 
 # =============================================================================
@@ -155,16 +168,34 @@ EOF
 # =============================================================================
 
 @test "setup_env_interactive: stdin=empty なら何も追加されない" {
+  # .env を作成して初期化（変更前）
   touch "${ENV_FILE}"
-  # stdin が empty の場合、各 read コマンドが EOF を返すため skip
-  # 実装では read -rp でプロンプト出力後 EOF で空文字列を返す
-  [ -f "${ENV_FILE}" ]
+  local size_before=$(wc -c < "${ENV_FILE}")
+
+  # setup_env_interactive に 10 個の空行を供給（read は EOF ではなく空文字を返す）
+  run bash -c "export ENV_FILE='${ENV_FILE}' && source '$COMMON_LIB' && source '$LIB_FILE' && setup_env_interactive" << 'STDIN'
+
+
+
+
+
+
+
+
+
+
+STDIN
+  [ "$status" -eq 0 ]
+
+  # .env サイズが変わらないことを確認（何も追加されない）
+  local size_after=$(wc -c < "${ENV_FILE}")
+  [ "$size_after" -eq "$size_before" ]
 }
 
 @test "setup_env_interactive: stdin で値を入力すると update_env_var が呼ばれる" {
   touch "${ENV_FILE}"
   # stdin で各質問に回答（改行で区切る）
-  bash -c "source '$COMMON_LIB' && source '$LIB_FILE' && setup_env_interactive" << 'EOF' 2>/dev/null
+  run bash -c "export ENV_FILE='${ENV_FILE}' && source '$COMMON_LIB' && source '$LIB_FILE' && setup_env_interactive" << 'EOF' 2>/dev/null
 https://gitlab.example.com/api/v4
 
 https://confluence.example.com
@@ -179,6 +210,7 @@ sk-1234567890
 
 /opt/serena
 EOF
-  # 各キーが .env に記録される
-  grep -q "GITLAB_API_URL" "${ENV_FILE}" || true
+  [ "$status" -eq 0 ]
+  # GITLAB_API_URL が .env に記録されることを確認（|| true なし）
+  grep -q "GITLAB_API_URL" "${ENV_FILE}"
 }

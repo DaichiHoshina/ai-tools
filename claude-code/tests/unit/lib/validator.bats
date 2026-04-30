@@ -11,6 +11,7 @@ setup() {
   export COMMON_LIB="${PROJECT_ROOT}/lib/common.sh"
   export TEST_TMPDIR="$(mktemp -d)"
   export HOME="${TEST_TMPDIR}/home"
+  export ORIG_PATH="${PATH}"
   export PATH="${TEST_TMPDIR}/bin:${PATH}"
   mkdir -p "${HOME}/.claude"
   mkdir -p "${TEST_TMPDIR}/bin"
@@ -20,7 +21,8 @@ setup() {
 
 teardown() {
   rm -rf "${TEST_TMPDIR}"
-  unset TEST_TMPDIR HOME PATH SCRIPT_DIR
+  export PATH="${ORIG_PATH}"
+  unset TEST_TMPDIR HOME ORIG_PATH SCRIPT_DIR
 }
 
 # =============================================================================
@@ -41,8 +43,9 @@ true
 EOF
   chmod +x "${TEST_TMPDIR}/bin/npx"
 
-  run bash -c "PATH='${TEST_TMPDIR}/bin:${PATH}' source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
-  [ "$status" -eq 0 ] || [ "$status" -eq 1 ]
+  run bash -c "PATH='${TEST_TMPDIR}/bin:${ORIG_PATH}' source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "前提条件のチェック完了" ]]
 }
 
 @test "check_prerequisites: node が見つからない場合をテスト（PATH 制限）" {
@@ -53,10 +56,11 @@ true
 EOF
   chmod +x "${TEST_TMPDIR}/bin/npx"
 
-  # PATH を制限してテスト
-  run bash -c "PATH='${TEST_TMPDIR}/bin' source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
-  # status != 0 または error出力を확인
-  [ "$status" -ne 0 ] || [[ "$output" =~ "node" ]]
+  # PATH を制限してテスト - node が見つからないので exit 1
+  # 標準的なコマンド PATH (/usr/bin など) を含めて基本的なコマンドは利用可能にする
+  run bash -c "export PATH='${TEST_TMPDIR}/bin:/usr/bin:/bin:/usr/local/bin' && source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "node" ]]
 }
 
 @test "check_prerequisites: npx が見つからない場合をテスト（PATH 制限）" {
@@ -67,10 +71,11 @@ echo "v16.0.0"
 EOF
   chmod +x "${TEST_TMPDIR}/bin/node"
 
-  # PATH を制限してテスト
-  run bash -c "PATH='${TEST_TMPDIR}/bin' source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
-  # status != 0 または error出力を확인
-  [ "$status" -ne 0 ] || [[ "$output" =~ "npx" ]]
+  # PATH を制限してテスト - npx が見つからないので exit 1
+  # 標準的なコマンド PATH (/usr/bin など) を含めて基本的なコマンドは利用可能にする
+  run bash -c "export PATH='${TEST_TMPDIR}/bin:/usr/bin:/bin:/usr/local/bin' && source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "npx" ]]
 }
 
 # =============================================================================

@@ -482,56 +482,121 @@ teardown_ensure_worktree() {
 
 @test "ensure_worktree_memory_link: worktree + memory dir なし → 作成 + symlink 構築" {
   setup_ensure_worktree
-  # 簡略版：memory dir 関連の動作をテスト（worktree 検出は別で可）
-  local wt_id=$(echo "${TEST_WORKTREE_ROOT}/wt1" | sed 's|/|-|g')
+  local main_repo="${TEST_WORKTREE_ROOT}/main"
+  local wt_root="${TEST_WORKTREE_ROOT}/wt1"
+
+  # main repo を初期化
+  mkdir -p "${main_repo}"
+  git -C "${main_repo}" init 2>/dev/null
+  git -C "${main_repo}" config user.email "test@example.com" 2>/dev/null
+  git -C "${main_repo}" config user.name "Test" 2>/dev/null
+
+  # worktree を作成
+  git -C "${main_repo}" worktree add "${wt_root}" 2>/dev/null
+
+  # git の出力からパス情報を取得（symlink 先の絶対パスを git-common-dir 親から計算）
+  local abs_common
+  abs_common=$(git -C "${wt_root}" rev-parse --git-common-dir 2>/dev/null)
+  local calc_main_repo
+  calc_main_repo=$(dirname "${abs_common}")
+
+  # ID を git 出力から計算
+  local wt_id main_id
+  wt_id=${wt_root//\//-}
+  main_id=${calc_main_repo//\//-}
+
   local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
+  local main_mem="${HOME}/.claude/projects/${main_id}/memory"
 
-  # memory dir がなければ作成される、という仮定でテスト
-  mkdir -p "$(dirname "${wt_mem}")"
-
-  # テスト実行
-  run bash -c "HOME='${HOME}' source '$LIB_FILE' && [ ! -d '${wt_mem}' ] && mkdir -p '${wt_mem}'"
+  # 関数を実呼び出し - memory dir なし、symlink 構築を検証
+  run bash -c "HOME='${HOME}' source '$LIB_FILE' && ensure_worktree_memory_link '${wt_root}'"
   [ "$status" -eq 0 ]
-  [ -d "${wt_mem}" ]
+  [ -L "${wt_mem}" ]
+  [ "$(readlink "${wt_mem}")" = "${main_mem}" ]
   teardown_ensure_worktree
 }
 
 @test "ensure_worktree_memory_link: 既存 symlink → idempotent（何もしない）" {
   setup_ensure_worktree
-  local wt_id=$(echo "${TEST_WORKTREE_ROOT}/wt1" | sed 's|/|-|g')
+  local main_repo="${TEST_WORKTREE_ROOT}/main"
+  local wt_root="${TEST_WORKTREE_ROOT}/wt1"
+
+  # main repo を初期化
+  mkdir -p "${main_repo}"
+  git -C "${main_repo}" init 2>/dev/null
+  git -C "${main_repo}" config user.email "test@example.com" 2>/dev/null
+  git -C "${main_repo}" config user.name "Test" 2>/dev/null
+
+  # worktree を作成
+  git -C "${main_repo}" worktree add "${wt_root}" 2>/dev/null
+
+  # git の出力からパス情報を取得
+  local abs_common
+  abs_common=$(git -C "${wt_root}" rev-parse --git-common-dir 2>/dev/null)
+  local calc_main_repo
+  calc_main_repo=$(dirname "${abs_common}")
+
+  # ID を git 出力から計算
+  local wt_id main_id
+  wt_id=${wt_root//\//-}
+  main_id=${calc_main_repo//\//-}
+
   local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
-  local main_mem="${HOME}/.claude/projects/main/memory"
+  local main_mem="${HOME}/.claude/projects/${main_id}/memory"
 
   # 事前に symlink を作成
   mkdir -p "${main_mem}"
   mkdir -p "$(dirname "${wt_mem}")"
   ln -s "${main_mem}" "${wt_mem}"
 
-  run bash -c "HOME='${HOME}' source '$LIB_FILE' && ensure_worktree_memory_link '${TEST_WORKTREE_ROOT}/wt1'"
+  # 関数を実呼び出し - idempotent チェック
+  run bash -c "HOME='${HOME}' source '$LIB_FILE' && ensure_worktree_memory_link '${wt_root}'"
   [ "$status" -eq 0 ]
   [ -L "${wt_mem}" ]
+  [ "$(readlink "${wt_mem}")" = "${main_mem}" ]
   teardown_ensure_worktree
 }
 
 @test "ensure_worktree_memory_link: 既存 dir（symlink ではない） → 退避して symlink" {
   setup_ensure_worktree
-  local wt_id=$(echo "${TEST_WORKTREE_ROOT}/wt1" | sed 's|/|-|g')
-  local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
-  local main_mem="${HOME}/.claude/projects/main/memory"
+  local main_repo="${TEST_WORKTREE_ROOT}/main"
+  local wt_root="${TEST_WORKTREE_ROOT}/wt1"
 
-  # 既存 dir を作成
+  # main repo を初期化
+  mkdir -p "${main_repo}"
+  git -C "${main_repo}" init 2>/dev/null
+  git -C "${main_repo}" config user.email "test@example.com" 2>/dev/null
+  git -C "${main_repo}" config user.name "Test" 2>/dev/null
+
+  # worktree を作成
+  git -C "${main_repo}" worktree add "${wt_root}" 2>/dev/null
+
+  # git の出力からパス情報を取得
+  local abs_common
+  abs_common=$(git -C "${wt_root}" rev-parse --git-common-dir 2>/dev/null)
+  local calc_main_repo
+  calc_main_repo=$(dirname "${abs_common}")
+
+  # ID を git 出力から計算
+  local wt_id main_id
+  wt_id=${wt_root//\//-}
+  main_id=${calc_main_repo//\//-}
+
+  local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
+  local main_mem="${HOME}/.claude/projects/${main_id}/memory"
+
+  # 既存 memory dir を作成（ファイル含む）
   mkdir -p "${wt_mem}"
-  touch "${wt_mem}/test.md"
+  echo "test content" > "${wt_mem}/test.md"
   mkdir -p "${main_mem}"
 
-  # ファイル移動をシミュレート（cp + rm）
-  cp -rn "${wt_mem}/"* "${main_mem}/" 2>/dev/null || true
-  rm -rf "${wt_mem}"
-  ln -s "${main_mem}" "${wt_mem}"
-
-  # 検証
+  # 関数を実呼び出し - 既存 dir を退避して symlink を構築
+  run bash -c "HOME='${HOME}' source '$LIB_FILE' && ensure_worktree_memory_link '${wt_root}'"
+  [ "$status" -eq 0 ]
   [ -L "${wt_mem}" ]
+  [ "$(readlink "${wt_mem}")" = "${main_mem}" ]
   [ -f "${main_mem}/test.md" ]
+  grep -q "test content" "${main_mem}/test.md"
   teardown_ensure_worktree
 }
 
@@ -544,19 +609,42 @@ teardown_ensure_worktree() {
 
 @test "ensure_worktree_memory_link: memory dir ソース側に既存 .md → 退避先で温存" {
   setup_ensure_worktree
-  local wt_id=$(echo "${TEST_WORKTREE_ROOT}/wt1" | sed 's|/|-|g')
-  local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
-  local main_mem="${HOME}/.claude/projects/main/memory"
+  local main_repo="${TEST_WORKTREE_ROOT}/main"
+  local wt_root="${TEST_WORKTREE_ROOT}/wt1"
 
+  # main repo を初期化
+  mkdir -p "${main_repo}"
+  git -C "${main_repo}" init 2>/dev/null
+  git -C "${main_repo}" config user.email "test@example.com" 2>/dev/null
+  git -C "${main_repo}" config user.name "Test" 2>/dev/null
+
+  # worktree を作成
+  git -C "${main_repo}" worktree add "${wt_root}" 2>/dev/null
+
+  # git の出力からパス情報を取得
+  local abs_common
+  abs_common=$(git -C "${wt_root}" rev-parse --git-common-dir 2>/dev/null)
+  local calc_main_repo
+  calc_main_repo=$(dirname "${abs_common}")
+
+  # ID を git 出力から計算
+  local wt_id main_id
+  wt_id=${wt_root//\//-}
+  main_id=${calc_main_repo//\//-}
+
+  local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
+  local main_mem="${HOME}/.claude/projects/${main_id}/memory"
+
+  # worktree 側に memory dir と .md ファイルを作成
   mkdir -p "${wt_mem}"
   echo "old content" > "${wt_mem}/existing.md"
   mkdir -p "${main_mem}"
 
-  # 既存ファイルを移動
-  cp -rn "${wt_mem}/"* "${main_mem}/" 2>/dev/null || true
-  rm -rf "${wt_mem}"
-
-  # 検証
+  # 関数を実呼び出し - 既存ファイルを main_mem に退避
+  run bash -c "HOME='${HOME}' source '$LIB_FILE' && ensure_worktree_memory_link '${wt_root}'"
+  [ "$status" -eq 0 ]
+  [ -L "${wt_mem}" ]
+  [ "$(readlink "${wt_mem}")" = "${main_mem}" ]
   [ -f "${main_mem}/existing.md" ]
   grep -q "old content" "${main_mem}/existing.md"
   teardown_ensure_worktree
