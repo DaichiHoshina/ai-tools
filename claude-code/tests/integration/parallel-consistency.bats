@@ -13,6 +13,8 @@ setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
   export PATTERNS_FILE="${PROJECT_ROOT}/references/PARALLEL-PATTERNS.md"
   export MANAGER_FILE="${PROJECT_ROOT}/agents/manager-agent.md"
+  export FLOW_FILE="${PROJECT_ROOT}/commands/flow.md"
+  export DEV_FILE="${PROJECT_ROOT}/commands/dev.md"
 }
 
 # セクション抽出: 指定見出しから次の同レベル以下の見出しまでを出力
@@ -67,4 +69,37 @@ require_anchor() {
   ! grep -qF "パターン2: 段階的実行" "$MANAGER_FILE"
   ! grep -qF "パターン3: 順次実行" "$MANAGER_FILE"
   ! grep -qF "同一ファイル変更? → Yes → 順次" "$MANAGER_FILE"
+}
+
+# =============================================================================
+# 境界 2a で有効化されるテスト（+3 項目、計 6）
+# =============================================================================
+
+@test "flow_dev_pattern_ref: flow.md / dev.md 両方に PARALLEL-PATTERNS.md 参照" {
+  grep -qE 'references/PARALLEL-PATTERNS\.md' "$FLOW_FILE" \
+    || { echo "missing PARALLEL-PATTERNS.md ref in flow.md"; false; }
+  grep -qE 'references/PARALLEL-PATTERNS\.md' "$DEV_FILE" \
+    || { echo "missing PARALLEL-PATTERNS.md ref in dev.md"; false; }
+}
+
+@test "flow_parallel_three_axis: flow.md / dev.md 各々に --parallel 3 軸記述" {
+  for file in "$FLOW_FILE" "$DEV_FILE"; do
+    grep -qF "並列度評価" "$file" || { echo "missing 並列度評価 in $file"; false; }
+    grep -qF "worktree 提案" "$file" || { echo "missing worktree 提案 in $file"; false; }
+    grep -qF "worktree 作成" "$file" || { echo "missing worktree 作成 in $file"; false; }
+  done
+}
+
+@test "flow_auto_four_conditions_with_cleanup: flow.md / dev.md に --auto 4 条件 + 後片付け 3 項目" {
+  for file in "$FLOW_FILE" "$DEV_FILE"; do
+    # --auto 4 条件
+    grep -qF "判定式 PASS" "$file" || { echo "missing 判定式 PASS in $file"; false; }
+    grep -qF "clean worktree" "$file" || { echo "missing clean worktree in $file"; false; }
+    grep -qE "(branch|worktree).*衝突" "$file" || { echo "missing 衝突なし in $file"; false; }
+    grep -qE "(フォールバック|自動フォールバック)" "$file" || { echo "missing フォールバック in $file"; false; }
+    # 後片付け 3 項目
+    grep -qF "変更あり" "$file" || { echo "missing 変更あり in $file"; false; }
+    grep -qF "変更なし" "$file" || { echo "missing 変更なし in $file"; false; }
+    grep -qF "マージ衝突" "$file" || { echo "missing マージ衝突 in $file"; false; }
+  done
 }
