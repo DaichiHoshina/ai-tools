@@ -273,3 +273,57 @@ EOF
   ! [[ "$output" =~ "L1" ]]
   ! [[ "$output" =~ "L2" ]]
 }
+
+# =============================================================================
+# Context-aware 除外: 同行括弧 / 隣接行 引用・表
+# =============================================================================
+
+@test "writing-self-check: 同行内丸括弧（重要 X（具体例: foo, bar））は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+重要な設定ポイント（具体例: config.json, .env）について説明します。
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: 同行内鉤括弧（必須 X「具体例」）は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+必須要件「詳細は設計ドキュメント参照」を確認してください。
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: 前行に引用ブロック（最優先課題は\\n> Y のため）は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+理由としては以下の通りです:
+> パフォーマンス改善は最優先課題です
+最優先課題への対応が必須です。
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: 後行に表（推奨実装\\n| col1 | col2 |）は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+推奨実装パターン:
+| 方法 | 説明 |
+|------|------|
+| A | 最適解 |
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "writing-self-check: NG 語単独（括弧なし、隣接行なし）は検出される（negative case）" {
+  cat > "$TMP_FILE" <<'EOF'
+重要だ。
+EOF
+  run bash -c "source '$LIB_FILE' && run_writing_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "L1" ]]
+}
