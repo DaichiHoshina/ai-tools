@@ -1,6 +1,6 @@
 ---
 name: root-cause
-description: 根本原因分析（5つのなぜ）。バグ原因特定・再発防止・構造的修正戦略
+description: 根本原因分析（5つのなぜ）。バグ原因特定・再発防止・構造的修正戦略、根本原因分析時に使用
 allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*
 model: sonnet
 requires-guidelines:

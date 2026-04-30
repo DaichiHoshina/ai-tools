@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: API設計（REST/GraphQL）。設計原則・バージョニング・エラーハンドリング・ドキュメント方針
+description: API設計（REST/GraphQL）。設計原則・バージョニング・エラーハンドリング・ドキュメント方針。新規API設計・レビュー時に使用
 requires-guidelines:
   - common
   - clean-architecture

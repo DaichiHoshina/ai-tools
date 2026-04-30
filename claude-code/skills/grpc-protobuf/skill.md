@@ -1,6 +1,6 @@
 ---
 name: grpc-protobuf
-description: gRPC/Protobuf開発。proto定義・コード生成・バックエンド実装のワークフロー
+description: gRPC/Protobuf開発。proto定義・コード生成・バックエンド実装のワークフロー、gRPCサービス実装時に使用
 requires-guidelines:
   - golang
   - common

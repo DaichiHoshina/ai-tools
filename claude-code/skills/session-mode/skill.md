@@ -1,6 +1,6 @@
 ---
 name: session-mode
-description: セッションモード切替（strict/normal/fast）。本番作業・通常開発・プロトタイピングで操作ガード強度を変更
+description: セッションモード切替（strict/normal/fast）。本番作業・通常開発・プロトタイピングで操作ガード強度を変更、モード切替時に使用
 ---
 
 # session-mode - セッションモード切替

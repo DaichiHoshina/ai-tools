@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: 包括的コードレビュー（11観点：設計/品質/可読性/セキュリティ/ドキュメント/テスト/根本原因/ログ等）。/reviewから呼ばれる、--focusで絞り込み
+description: 包括的コードレビュー（11観点：設計/品質/可読性/セキュリティ/ドキュメント/テスト/根本原因/ログ等）。/reviewから呼ばれる、--focusで絞り込み、コードレビュー時に使用
 context: fork
 agent: reviewer-agent
 requires-guidelines:
