@@ -59,6 +59,10 @@ _bats_check_impl() {
 }
 
 _check_violation() {
+  # 設計: 1 @test ブロック内に複数違反があっても最初のマッチで return。
+  # Hook 用途では「最初の違反を見せれば修正動機が働く」ため許容。
+  # TODO(後続): `run` あり + assert 0 個（$output/$result/$status 言及なし）の検出を pattern 5 として追加検討。
+  # TODO(後続): _BSC_DEBUG=1 で grep の stderr を見せるオプション追加検討（現状は regex syntax error が見えない）。
   local test_line="$1"
   local block="$2"
 
