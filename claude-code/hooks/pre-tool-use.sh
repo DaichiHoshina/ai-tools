@@ -209,6 +209,13 @@ case "$TOOL_NAME" in
   "Task")
     GUARD_CLASS="Safe"
     # エージェント起動はSafe（実際の操作は各エージェント内で判定）
+    # ただし general-purpose は CLAUDE.md「原則使わない」最大コスト源 → Boundary 警告
+    SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
+    if [ "${SUBAGENT_TYPE}" = "general-purpose" ]; then
+      GUARD_CLASS="Boundary"
+      MESSAGE="${ICON_WARNING} general-purpose agent（CLAUDE.md「原則使わない」、最大コスト源）"
+      ADDITIONAL_CONTEXT="代替: claude-code-guide / Explore / 直接 grep+find / serena MCP（references/performance-insights.md 参照）"
+    fi
     ;;
 
   "Skill")
