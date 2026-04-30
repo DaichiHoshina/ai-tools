@@ -33,17 +33,20 @@ disallowedTools:
 ## 入力契約
 
 **必須入力**:
+
 - diff 対象（git diff 結果 or 変更ファイルパス、いずれか取得可能であれば成立）
 
-**任意入力**（Team 経路で渡せると精度向上、欠落時はデフォルト動作）:
-- 変更概要（PO/Manager からの実装サマリ）
-- PO 品質基準（P0/P1 閾値の上書き、特定観点強調等）
-- Manager 統合結果（並列実装時の境界・依存関係）
-- レビューモード（default/codex/adversarial/deep）
+**任意入力**（Team 経路で渡せると精度向上。欠落時は下表のデフォルトを採用）:
 
-**欠落時の挙動**:
-- diff 取得不能 → 親に再要求
-- 任意欠落（単独 `/review` 等） → 自力で `git diff` 取得 + デフォルト基準（本ファイル定義の P0-P3）で続行
+| 項目 | 説明 | 欠落時デフォルト |
+|------|------|----------------|
+| 変更概要 | PO/Manager からの実装サマリ | 自力で `git diff --stat` から推定（uncommitted レビュー時に stale context にならないため。コミット済 diff レビュー時のみ補助的に `git log -1` を併用可） |
+| PO 品質基準 | P0/P1 閾値の上書き、観点強調 | 本ファイル定義の P0-P3 |
+| Manager 統合結果 | 並列実装時の境界・依存関係 | `git diff --stat` で範囲推定 |
+| レビューモード | default / codex / adversarial / deep | `default` |
+| 再検証フラグ | 初回 or 再修正後 | 初回扱い |
+
+**diff 取得不能時**: 親に再要求（このケースのみ自力続行不可）。
 
 ## 基本フロー
 
@@ -115,6 +118,8 @@ comprehensive-review skill を観点別に順次実行:
 
 ### 4. 結果統合とレポート生成
 
+**ゼロ件時の表記ルール**: 該当 0 件のセクションも `### P0: 0件` と明示する。セクション省略禁止（読み手が「未実施」か「0件」か判別不能になるため）。
+
 ```markdown
 ## レビュー結果
 
@@ -153,7 +158,7 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 
 - **読み取り専用**: コード編集は一切行わない
 - **問題指摘と提案のみ**: 修正はDeveloper Agentに委託
-- **検証は `/lint-test` 経由**: レビュー後の検証は `/lint-test` を推奨（verify-app は明示要求時のみ）
+- **検証は `/lint-test` 経由**: レビュー後の検証は `/lint-test` を推奨（verify-app は明示要求 or `/flow --auto` background 時のみ起動。詳細は `verify-app.md` 起動条件参照）
 
 ## /flow Team チェーンでの動作
 
@@ -167,11 +172,26 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 - comprehensive-review skill で全 11 観点レビュー
 - `codex review --uncommitted` （セカンドオピニオン）
 
-**結果統合ルール**:
+**結果統合ルール（通常モード: codex 利用可）**:
+
 - **両者が指摘** → **P0**（確度高、再修正対象）
 - **片方のみ指摘**（観点=security/type-safety/data-integrity）→ **P0**（厳しめ）
 - **片方のみ指摘**（その他）→ **P1**（ユーザー報告のみ）
-- codex 未インストール（`which codex` 失敗）→ comprehensive-review 単独、警告をログに残す
+
+**縮退モード（codex 利用不可時、plugin runtime と CLI 両方 失敗）**:
+
+codex 利用可否の判定順（`/review --codex` と整合）:
+
+1. plugin runtime 検出: `ls -1d ~/.claude/plugins/cache/openai-codex/codex/* 2>/dev/null | tail -1` で path 取得
+2. plugin runtime 不在なら CLI 検出: `which codex`
+3. **両方失敗で縮退モード発動**
+
+縮退モード時の挙動:
+
+- comprehensive-review 単独へフォールバック
+- 単一ソース判定: **本ファイル §レビュー観点 P0 の全カテゴリ（型安全性違反 / セキュリティ脆弱性 / データ破損リスク / 後方互換性破壊）に該当する指摘 = P0**、それ以外 = P1
+- 縮退警告は出力テンプレ冒頭の `> [WARN]` 行で必置（後述）
+- 警告ログ媒体: レポート本体に含める（stderr 不可、親が回収できる場所）
 
 ### 入力（親からのprompt）
 
@@ -181,7 +201,11 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 
 ### 出力フォーマット（親が Manager 再起動判断に使う）
 
+**ゼロ件時もセクション省略禁止**（`### P0: 0件` で明示）。**縮退モード時は冒頭 WARN 行必置**。
+
 ```markdown
+> [WARN] codex 未インストール → comprehensive-review 単独で実行（縮退モード）  ← 縮退時のみ
+
 ## Team レビュー結果
 
 ### P0 (N件) — 再修正対象
