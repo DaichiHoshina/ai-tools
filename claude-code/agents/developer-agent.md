@@ -99,6 +99,51 @@ tools:
 - **SOLID原則**: 単一責任、依存性注入
 - **テスト**: AAA パターン、カバレッジ意識
 
+## bats テスト記述標準（必須遵守）
+
+bats 編集時、以下を**強制適用**。違反は CI で機械検知される。
+
+### 禁止パターン（pass-by-coincidence）
+
+実装を全削除しても緑のままになるテスト = 価値ゼロ。以下は絶対禁止。
+
+| パターン | 理由 |
+|---------|------|
+| `[ -f "${LIB_FILE}" ]` 単独 | ファイル存在確認のみ、関数実行なし |
+| `grep "^funcname()" "$LIB_FILE"` | 関数定義の有無確認のみ |
+| `[ "$status" -eq 0 ] \|\| [ "$status" -eq 1 ]` | 二択 assert、すべての結果が緑 |
+| `grep -q ... \|\| true` | grep 失敗を握りつぶし |
+| `echo 'ok'` 末尾 | abort しない限り常に成功 |
+| `unset PATH` teardown | 後続テストの mktemp/rm 失敗 |
+
+### 必須パターン
+
+- ✅ **実関数呼び出し**: `run bash -c "source '$LIB_FILE' && <function> <args>"`
+- ✅ **実値 assert**: 戻り値・stdout・ファイル生成・環境変数・nameref 出力を検証
+- ✅ **外部コマンド検証**: PATH 経由 stub script で実呼び出し検証
+- ✅ **teardown 安全性**: `export PATH="$ORIG_PATH"`（setup で退避）
+- ✅ **出力値検証**: `[[ "$output" =~ "<文字列>" ]]` または `[[ "$result" -ge N ]]`
+
+### 自己検証（必須）
+
+新規 bats / 既存 bats 修正後、対象関数を一時的に `return 0` で no-op 化 → bats 再実行 → **対応テストが赤化することを確認** → `git checkout` で復元。
+
+赤化しないテストは pass-by-coincidence 確定、書き直し必須。
+
+### 報告フォーマット強制
+
+bats 関連タスク完了時、以下を**必ず含める**:
+
+```
+## bats 自己検証結果
+- 旧テスト件数 / 新テスト件数: XX / YY
+- 関数 A 削除時赤化: ✓ (N 件)
+- 関数 B 削除時赤化: ✓ (N 件)
+- 全体テスト: ✓ (YY 件)
+```
+
+自己検証結果が報告にない場合、reviewer は pass-by-coincidence を疑い差し戻す。
+
 ## Worktree共有メカニズム
 
 PO→Manager→Developer間のデータ引き継ぎはJSON形式で行う。
