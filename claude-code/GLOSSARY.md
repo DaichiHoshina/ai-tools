@@ -62,7 +62,7 @@ Claude Codeが外部ツールと連携するためのプロトコル。
 - **インフラ系**: container-ops（統合スキル、`--platform={docker|kubernetes|podman}`）, dockerfile-best-practices, terraform
   - ※ kubernetes, docker-troubleshootは統合済み（後方互換性あり）
 
-**詳細**: [SKILL-MIGRATION.md](./SKILL-MIGRATION.md) 参照
+**詳細**: [SKILL-MIGRATION.md](./tutorials/SKILL-MIGRATION.md) 参照
 
 ---
 

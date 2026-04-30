@@ -1,6 +1,6 @@
 # Commands Guide - コマンド使い分けガイド
 
-Claude Codeの27コマンドの使い分けとベストプラクティス。
+Claude Codeの37コマンドの使い分けとベストプラクティス。
 
 ## 📌 推奨: Core 3コマンド
 
