@@ -78,16 +78,73 @@ run_writing_check() {
   local pattern
   pattern=$(_writing_build_pattern)
 
-  # awk でコードフェンス内行を空行に置換（行番号は元ファイルと一致）
+  # awk で 1 パス：
+  # 1) 全行を配列に読み込み、コードフェンス内行に is_code フラグをセット
+  # 2) END ブロックで context-aware 判定を実施（コード内行は除外）
   # grep -nE のヒット 0 件は exit 1 → || true で吸収
   # 行頭 `|` 表 / `#` 見出し / `>` 引用 / `- **xx**:` ラベルを除外
-  awk '
-    /^[[:space:]]*```/ { in_code = !in_code; print ""; next }
-    in_code { print ""; next }
-    { print }
-  ' "${file_path}" \
-    | grep -nE "${pattern}" 2>/dev/null \
-    | grep -vE "^[0-9]+:[[:space:]]*\|" \
+  awk -v pattern="${pattern}" '
+    {
+      lines[NR] = $0
+      is_code[NR] = in_code
+      line_count = NR
+
+      if (/^[[:space:]]*```/) {
+        in_code = !in_code
+      }
+    }
+
+    END {
+      for (i = 1; i <= line_count; i++) {
+        curr = lines[i]
+
+        # コードフェンス内の行は除外
+        if (is_code[i]) {
+          continue
+        }
+
+        # curr 行がパターンに完全マッチするかチェック
+        if (match(curr, pattern)) {
+          should_output = 1
+
+          # a) curr 行内に 丸括弧で根拠を示す （具体例:|例:|詳細: ... または複数 , を含む）
+          #    または 鉤括弧 「[^」]+」 を含む（文脈が明示的）
+          if (match(curr, /（（具体例:|例:|詳細:|参考:)[^）]*(, |，)|「[^」]+」/)) {
+            should_output = 0
+          }
+
+          if (should_output) {
+            prev1 = (i > 1 && !is_code[i - 1]) ? lines[i - 1] : ""
+            next1 = (i < line_count && !is_code[i + 1]) ? lines[i + 1] : ""
+
+            # b) prev1 が引用ブロック
+            if (match(prev1, /^[[:space:]]*>/)) {
+              should_output = 0
+            }
+
+            # d) prev1 が表行
+            if (should_output && match(prev1, /^[[:space:]]*\|/)) {
+              should_output = 0
+            }
+
+            # c) next1 が表/引用、かつ curr が「ラベル行」（末尾が : または） で示す区切り）
+            #    つまり curr が説明行のような役割 → 除外
+            if (should_output && (match(next1, /^[[:space:]]*>/) || match(next1, /^[[:space:]]*\|/))) {
+              # curr が行末 : や・・・）などで終わる → ラベル行の可能性あり
+              if (match(curr, /:$/) || match(curr, /）$|）[[:space:]]*$/)) {
+                should_output = 0
+              }
+            }
+          }
+
+          if (should_output) {
+            print i ":" curr
+          }
+        }
+      }
+    }
+  ' "${file_path}" | \
+    grep -vE "^[0-9]+:[[:space:]]*\|" \
     | grep -vE "^[0-9]+:[[:space:]]*#" \
     | grep -vE "^[0-9]+:[[:space:]]*>" \
     | grep -vE "^[0-9]+:[[:space:]]*-?[[:space:]]*\*\*[^*]+\*\*:" \
