@@ -98,11 +98,7 @@ hooks:
 
 ## 出力形式
 
-🔴 **CRITICAL**: `ファイル:行` - ルールID - 問題と修正案
-🟠 **HIGH**: `ファイル:行` - ルールID - 問題と修正案
-🟡 **MEDIUM**: `ファイル:行` - ルールID - 問題と修正案
-📊 **Summary**: Critical X件 / High Y件 / Medium Z件
+🔴 CRITICAL / 🟠 HIGH / 🟡 MEDIUM `ファイル:行` - ルールID - 問題と修正案
+📊 Summary: Critical X / High Y / Medium Z
 
-## 関連ガイドライン
-
-- `~/.claude/guidelines/languages/nextjs-react.md`
+ガイドライン: `~/.claude/guidelines/languages/nextjs-react.md`

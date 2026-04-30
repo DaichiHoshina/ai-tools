@@ -90,21 +90,7 @@ requires-guidelines:
 
 ## GraphQL パターン
 
-| 観点 | ベストプラクティス |
-|------|-------------------|
-| スキーマ | 明確な命名・型定義 |
-| ページネーション | Connection pattern |
-| N+1問題 | DataLoader使用 |
-
----
-
-## チェックリスト
-
-**REST**: リソースベースURL / 適切なステータス / エラー統一 / バージョニング / ページネーション / レート制限
-
-**GraphQL**: 明確なスキーマ / Null許容設定 / DataLoader / Connection pattern
-
-**共通**: 認証・認可 / CORS / OpenAPI/GraphQLドキュメント / セキュリティヘッダー
+明確な命名・型定義 / Connection pattern でページネーション / N+1問題は DataLoader / Null許容設定 / 共通: 認証・認可・CORS・ドキュメント・セキュリティヘッダー
 
 ---
 
@@ -116,9 +102,4 @@ requires-guidelines:
 📊 Summary: Critical X件 / Warning Y件
 ```
 
----
-
-## 外部リソース
-
-- **Context7**: OpenAPI 3.x、GraphQL公式、Google/Microsoft API Design Guide、RFC 7807
-- **Serena memory**: プロジェクト固有のAPI規約・バージョニング戦略
+外部参照: Context7 で OpenAPI 3.x / GraphQL公式 / Google/Microsoft API Design Guide / RFC 7807

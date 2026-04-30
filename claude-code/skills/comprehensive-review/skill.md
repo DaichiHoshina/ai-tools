@@ -115,17 +115,9 @@ golangci-lint run && go vet ./...
 Total: Critical N件 / Warning N件 / 破棄M件 / 🔁 繰り返しK件
 ```
 
-## コメント添字
-
-| 添字 | 意味 | 扱い |
-|------|------|------|
-| `must` | 修正必須 | Critical |
-| `imo` | 提案（任意） | Warning |
-| `nits` | 細かい指摘 | Warning |
-| `q` | 質問 | 情報提供 |
-
 ## 注意事項
 
-- focus=all の場合は全11観点を並列実行
-- 大量の差分 → 1ファイルずつ、Critical優先
-- 問題指摘だけでなく具体的な修正案を提示
+- focus=all は全11観点を並列実行
+- 大量の差分は1ファイルずつ、Critical優先
+- 指摘だけでなく具体的な修正案を提示
+- コメント添字: `must`=Critical / `imo`,`nits`=Warning / `q`=質問
