@@ -51,6 +51,8 @@ parameters:
 
 リポジトリの `.claude/review-history.jsonl` を読み、同一 `file:line±3行` + 同一 `focus` の指摘が **過去履歴に3回以上** ある場合、`🔁 繰り返し指摘（Nth時）` と prefix（チームレベルの問題示唆）。
 
+**履歴不在時** (`.claude/review-history.jsonl` 未生成 / 空 / jq 不在): 繰り返し検出をスキップし、Step 1 から続行。出力末尾に `history: unavailable` と明記。
+
 ### Step 1: 変更ファイル分析
 
 `git diff --name-only`で言語・ファイル種別・変更規模を判断し、自動追加観点を決定。
@@ -71,6 +73,8 @@ npm run lint && npx tsc --noEmit
 # Go
 golangci-lint run && go vet ./...
 ```
+
+**ツール不在時** (`npm` / `golangci-lint` / `tsc` 等が PATH に無い): 該当言語の静的解析をスキップし、出力に `static-analysis: skipped (<理由>)` を記録。レビュー自体は続行。
 
 ### Step 3: cleanup-enforcement確認
 
@@ -114,6 +118,8 @@ golangci-lint run && go vet ./...
 
 Total: Critical N件 / Warning N件 / 破棄M件 / 🔁 繰り返しK件
 ```
+
+**ゼロ件時の表記ルール**: 各セクション (Critical / Warning) は省略禁止。該当 0 件の場合も `### Critical: 0件` と明示し、「未実施」と区別可能にする。skip された観点は実行した観点リストから除外し、`### skipped: <観点名> (<理由>)` セクションを追加。
 
 ## 注意事項
 
