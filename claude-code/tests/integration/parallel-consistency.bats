@@ -16,6 +16,7 @@ setup() {
   export FLOW_FILE="${PROJECT_ROOT}/commands/flow.md"
   export DEV_FILE="${PROJECT_ROOT}/commands/dev.md"
   export CLAUDEMD_FILE="${PROJECT_ROOT}/CLAUDE.md"
+  export TRIGGERS_FILE="${PROJECT_ROOT}/references/natural-language-triggers.md"
 }
 
 # セクション抽出: 指定見出しから次の同レベル以下の見出しまでを出力
@@ -189,12 +190,19 @@ extract_trigger_table() {
   ! echo "$section" | grep -qF "並走で" || { echo "trigger table contains 並走で"; false; }
 }
 
-@test "trigger_table_four_phrases: トリガー表に 4 句ちょうど存在" {
+@test "trigger_table_main_phrases: CLAUDE.md トリガー表に主要 2 句存在" {
+  # CLAUDE.md は「主要のみ」、全 4 句は references/natural-language-triggers.md に集約
   local section
   section=$(extract_trigger_table)
   [[ -n "$section" ]] || { echo "anchor missing: ## 自然言語トリガー"; false; }
   echo "$section" | grep -qF '"並列実行で"' || { echo "missing 並列実行で"; false; }
-  echo "$section" | grep -qF '"Developer 並列で"' || { echo "missing Developer 並列で"; false; }
-  echo "$section" | grep -qF '"worktree 分けて"' || { echo "missing worktree 分けて"; false; }
   echo "$section" | grep -qF '"wt 分けて"' || { echo "missing wt 分けて"; false; }
+}
+
+@test "trigger_table_four_phrases_in_references: 全リスト references に 4 句存在" {
+  [[ -f "$TRIGGERS_FILE" ]] || { echo "missing $TRIGGERS_FILE"; false; }
+  grep -qF '"並列実行で"' "$TRIGGERS_FILE" || { echo "missing 並列実行で in references"; false; }
+  grep -qF '"Developer 並列で"' "$TRIGGERS_FILE" || { echo "missing Developer 並列で in references"; false; }
+  grep -qF '"worktree 分けて"' "$TRIGGERS_FILE" || { echo "missing worktree 分けて in references"; false; }
+  grep -qF '"wt 分けて"' "$TRIGGERS_FILE" || { echo "missing wt 分けて in references"; false; }
 }
