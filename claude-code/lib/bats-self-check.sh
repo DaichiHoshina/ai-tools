@@ -66,11 +66,13 @@ _check_violation() {
   local has_real_assert=0
 
   # run keyword check or bash -c invocation
-  if grep -E '^\s*run\s+|^\s*run\s+-[0-9]|bash\s+-c' <<< "$block" > /dev/null 2>&1; then
+  # NOTE: BSD grep (macOS) は `\s` 非対応のため [[:space:]] を使う
+  if grep -E '^[[:space:]]*run[[:space:]]+|bash[[:space:]]+-c' <<< "$block" > /dev/null 2>&1; then
     has_run=1
   fi
 
-  # real assert check
+  # real assert check (出力値 / nameref / bash -c source 経由の実値検証)
+  # shellcheck disable=SC2016 # $output / $result はリテラルとして grep する意図
   if grep -E '\[\[.*\$output' <<< "$block" > /dev/null 2>&1 || \
      grep -E 'result=.*\$\(bash' <<< "$block" > /dev/null 2>&1 || \
      grep -E '\[\[.*\$result' <<< "$block" > /dev/null 2>&1; then
@@ -79,34 +81,36 @@ _check_violation() {
 
   # pattern 1: no run + weak assert only
   if [ $has_run -eq 0 ]; then
-    if grep -E '^\s*\[\s*-f\s+' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
+    if grep -E '^[[:space:]]*\[[[:space:]]*-f[[:space:]]+' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
       echo "L${test_line}: $(echo "$block" | head -1)"
       return 0
     fi
-    if grep -E 'grep\s+-q' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
+    if grep -E 'grep[[:space:]]+-q' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
       echo "L${test_line}: $(echo "$block" | head -1)"
       return 0
     fi
-    if grep -E '^\s*\[\s*"\$status"\s*-eq' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
+    # shellcheck disable=SC2016 # $status はリテラル検索
+    if grep -E '^[[:space:]]*\[[[:space:]]*"\$status"[[:space:]]*-eq' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
       echo "L${test_line}: $(echo "$block" | head -1)"
       return 0
     fi
   fi
 
   # pattern 2: binary assert
-  if grep -E '\[\s*"\$status"\s*-eq\s*[0-9]\s*\]\s*\|\|\s*\[\s*"\$status"\s*-eq' <<< "$block" > /dev/null 2>&1; then
+  # shellcheck disable=SC2016 # $status はリテラル検索
+  if grep -E '\[[[:space:]]*"\$status"[[:space:]]*-eq[[:space:]]*[0-9][[:space:]]*\][[:space:]]*\|\|[[:space:]]*\[[[:space:]]*"\$status"[[:space:]]*-eq' <<< "$block" > /dev/null 2>&1; then
     echo "L${test_line}: $(echo "$block" | head -1)"
     return 0
   fi
 
-  # pattern 3: grep suppress
-  if grep -E 'grep\s+-q.*\|\s*true' <<< "$block" > /dev/null 2>&1; then
+  # pattern 3: grep suppress (`grep -q ... || true`)
+  if grep -E 'grep[[:space:]]+-q.*\|\|[[:space:]]*true' <<< "$block" > /dev/null 2>&1; then
     echo "L${test_line}: $(echo "$block" | head -1)"
     return 0
   fi
 
   # pattern 4: echo 'ok' tail
-  if echo "$block" | tail -1 | grep -qE '^\s*echo\s+['"'"'"]ok['"'"'"]'; then
+  if echo "$block" | tail -2 | head -1 | grep -qE "^[[:space:]]*echo[[:space:]]+['\"]ok['\"]"; then
     echo "L${test_line}: $(echo "$block" | head -1)"
     return 0
   fi
