@@ -163,11 +163,9 @@ Task(subagent_type: "reviewer-agent", prompt: "実装後にレビュー実行")
 
 `/flow` Team経路では **comprehensive-review + codex review を並列実行**（`/review --codex` と同等）。
 
-```bash
-# 並列実行
-comprehensive-review skill で全11観点レビュー
-codex review --uncommitted (セカンドオピニオン)
-```
+並列実行:
+- comprehensive-review skill で全 11 観点レビュー
+- `codex review --uncommitted` （セカンドオピニオン）
 
 **結果統合ルール**:
 - **両者が指摘** → **P0**（確度高、再修正対象）

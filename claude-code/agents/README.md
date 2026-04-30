@@ -30,7 +30,7 @@ Claude Codeで使用されるエージェント（自律的なサブプロセス
 
 `*` は N<10 の参考値（サンプル少、母数拡大で値ブレうる）。運用判断は使用頻度の多い agent（N≥20）の傾向を優先。
 
-**最終更新**: 2026-04-30。再計算は `~/.claude/hooks/subagent-events.log` から `references/performance-insights.md` の集計スクリプトで実行。
+**再計算**: `~/.claude/hooks/subagent-events.log` を `references/performance-insights.md` の集計スクリプトで処理（最終更新日は `git log -1 --format=%cs agents/README.md` で取得可）。
 
 運用ルール（判定表）は `claude-code/CLAUDE.md` の「探索・調査の使い分け」、計測方法・hook vs agent のコスト構造は [`references/performance-insights.md`](../references/performance-insights.md) 参照。
 
