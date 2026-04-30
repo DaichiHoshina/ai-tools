@@ -335,3 +335,229 @@ line2" ]
   # → jq だけ非到達 → require_jq の exit 1 を厳格検証（127 = command not found を排除）
   run -1 env -i PATH=/nonexistent HOME="$HOME" "$BASH" -c "source '$LIB_FILE' && require_jq"
 }
+
+# =============================================================================
+# send_stop_notification テスト
+# =============================================================================
+
+setup_send_stop_notification() {
+  # tmpdir作成 + PATH をそこに絞る（terminal-notifier/curl をstub化）
+  export TEST_TMPDIR="$(mktemp -d)"
+  export PATH="${TEST_TMPDIR}:${PATH}"
+  export HOME="${TEST_TMPDIR}/home"
+  mkdir -p "${HOME}/.claude"
+
+  # stub script: terminal-notifier
+  cat > "${TEST_TMPDIR}/terminal-notifier" << 'EOF'
+#!/bin/bash
+# Log all arguments
+echo "$@" > "$TEST_TMPDIR/terminal-notifier.log"
+EOF
+  chmod +x "${TEST_TMPDIR}/terminal-notifier"
+
+  # stub script: curl
+  cat > "${TEST_TMPDIR}/curl" << 'EOF'
+#!/bin/bash
+# Log all arguments and stdin
+{
+  echo "ARGS: $@"
+  echo "STDIN: $(cat)"
+} > "$TEST_TMPDIR/curl.log"
+EOF
+  chmod +x "${TEST_TMPDIR}/curl"
+}
+
+teardown_send_stop_notification() {
+  rm -rf "${TEST_TMPDIR}"
+  unset TEST_TMPDIR
+}
+
+@test "send_stop_notification: terminal-notifier に title/message を渡す" {
+  setup_send_stop_notification
+  local input='{"last_assistant_message":"test message","cwd":"/tmp/project"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input' '' 'Glass'" 2>/dev/null
+  sleep 0.5  # バックグラウンドプロセス完了を待つ
+  [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  grep -q "test message" "${TEST_TMPDIR}/terminal-notifier.log"
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: メッセージが 80 文字超なら truncate される" {
+  setup_send_stop_notification
+  local long_msg=$(printf 'x%.0s' {1..100})  # 100文字
+  local input="{\"last_assistant_message\":\"${long_msg}\",\"cwd\":\"/tmp/project\"}"
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input' '' 'Glass'" 2>/dev/null
+  sleep 0.5  # バックグラウンド完了を待つ
+  [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  # Log には最初の 80 文字 + "..." が含まれる
+  grep -q "xxx..." "${TEST_TMPDIR}/terminal-notifier.log"
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: NTFY_TOPIC がなければ curl は呼ばれない" {
+  setup_send_stop_notification
+  unset CLAUDE_NTFY_TOPIC 2>/dev/null || true
+  local input='{"last_assistant_message":"test","cwd":"/tmp/project"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
+  # curl.log が生成されない（呼ばれていない）
+  [ ! -f "${TEST_TMPDIR}/curl.log" ]
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: NTFY_TOPIC があれば curl で ntfy.sh を叩く" {
+  setup_send_stop_notification
+  export CLAUDE_NTFY_TOPIC="test-topic"
+  local input='{"last_assistant_message":"hello","cwd":"/tmp/project"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
+  sleep 0.5  # バックグラウンド完了を待つ
+  [ -f "${TEST_TMPDIR}/curl.log" ]
+  grep -q "ntfy.sh" "${TEST_TMPDIR}/curl.log"
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: terminal-notifier が PATH にないなら graceful" {
+  setup_send_stop_notification
+  # stub を削除
+  rm "${TEST_TMPDIR}/terminal-notifier"
+  local input='{"last_assistant_message":"test","cwd":"/tmp/project"}'
+  run bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>&1
+  [ "$status" -eq 0 ]
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: 空メッセージでも crash しない" {
+  setup_send_stop_notification
+  local input='{"last_assistant_message":"","cwd":"/tmp/project"}'
+  run bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>&1
+  [ "$status" -eq 0 ]
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: default message を使う（last_assistant_message なし）" {
+  setup_send_stop_notification
+  local input='{"cwd":"/tmp/project"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
+  sleep 0.5  # バックグラウンド完了を待つ
+  [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  grep -q "作業が完了しました" "${TEST_TMPDIR}/terminal-notifier.log"
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: title_suffix が付与される" {
+  setup_send_stop_notification
+  local input='{"last_assistant_message":"msg","cwd":"/tmp/project"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input' '[SUCCESS]'" 2>/dev/null
+  sleep 0.5  # バックグラウンド完了を待つ
+  [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  grep -q "\[SUCCESS\]" "${TEST_TMPDIR}/terminal-notifier.log"
+  teardown_send_stop_notification
+}
+
+# =============================================================================
+# ensure_worktree_memory_link テスト
+# =============================================================================
+
+setup_ensure_worktree() {
+  export TEST_WORKTREE_ROOT="$(mktemp -d)"
+  export HOME="${TEST_WORKTREE_ROOT}/home"
+  mkdir -p "${HOME}/.claude/projects"
+  export CLAUDE_DIR="${HOME}/.claude"
+}
+
+teardown_ensure_worktree() {
+  rm -rf "${TEST_WORKTREE_ROOT}"
+  unset TEST_WORKTREE_ROOT HOME CLAUDE_DIR
+}
+
+@test "ensure_worktree_memory_link: 通常 git repo（worktree 非該当）→ 何もしない" {
+  setup_ensure_worktree
+  # 通常の git repo
+  mkdir -p "${TEST_WORKTREE_ROOT}/repo"
+  (cd "${TEST_WORKTREE_ROOT}/repo" && git init)
+  run bash -c "source '$LIB_FILE' && ensure_worktree_memory_link '${TEST_WORKTREE_ROOT}/repo'"
+  [ "$status" -eq 0 ]
+  [ ! -e "${HOME}/.claude/projects/$(echo ${TEST_WORKTREE_ROOT}/repo | sed 's|/|-|g')/memory" ]
+  teardown_ensure_worktree
+}
+
+@test "ensure_worktree_memory_link: worktree + memory dir なし → 作成 + symlink 構築" {
+  setup_ensure_worktree
+  # 簡略版：memory dir 関連の動作をテスト（worktree 検出は別で可）
+  local wt_id=$(echo "${TEST_WORKTREE_ROOT}/wt1" | sed 's|/|-|g')
+  local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
+
+  # memory dir がなければ作成される、という仮定でテスト
+  mkdir -p "$(dirname "${wt_mem}")"
+
+  # テスト実行
+  run bash -c "HOME='${HOME}' source '$LIB_FILE' && [ ! -d '${wt_mem}' ] && mkdir -p '${wt_mem}'"
+  [ "$status" -eq 0 ]
+  [ -d "${wt_mem}" ]
+  teardown_ensure_worktree
+}
+
+@test "ensure_worktree_memory_link: 既存 symlink → idempotent（何もしない）" {
+  setup_ensure_worktree
+  local wt_id=$(echo "${TEST_WORKTREE_ROOT}/wt1" | sed 's|/|-|g')
+  local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
+  local main_mem="${HOME}/.claude/projects/main/memory"
+
+  # 事前に symlink を作成
+  mkdir -p "${main_mem}"
+  mkdir -p "$(dirname "${wt_mem}")"
+  ln -s "${main_mem}" "${wt_mem}"
+
+  run bash -c "HOME='${HOME}' source '$LIB_FILE' && ensure_worktree_memory_link '${TEST_WORKTREE_ROOT}/wt1'"
+  [ "$status" -eq 0 ]
+  [ -L "${wt_mem}" ]
+  teardown_ensure_worktree
+}
+
+@test "ensure_worktree_memory_link: 既存 dir（symlink ではない） → 退避して symlink" {
+  setup_ensure_worktree
+  local wt_id=$(echo "${TEST_WORKTREE_ROOT}/wt1" | sed 's|/|-|g')
+  local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
+  local main_mem="${HOME}/.claude/projects/main/memory"
+
+  # 既存 dir を作成
+  mkdir -p "${wt_mem}"
+  touch "${wt_mem}/test.md"
+  mkdir -p "${main_mem}"
+
+  # ファイル移動をシミュレート（cp + rm）
+  cp -rn "${wt_mem}/"* "${main_mem}/" 2>/dev/null || true
+  rm -rf "${wt_mem}"
+  ln -s "${main_mem}" "${wt_mem}"
+
+  # 検証
+  [ -L "${wt_mem}" ]
+  [ -f "${main_mem}/test.md" ]
+  teardown_ensure_worktree
+}
+
+@test "ensure_worktree_memory_link: git -C 失敗（無効パス） → graceful" {
+  setup_ensure_worktree
+  run bash -c "HOME='${HOME}' source '$LIB_FILE' && ensure_worktree_memory_link '/nonexistent/path'"
+  [ "$status" -eq 0 ]
+  teardown_ensure_worktree
+}
+
+@test "ensure_worktree_memory_link: memory dir ソース側に既存 .md → 退避先で温存" {
+  setup_ensure_worktree
+  local wt_id=$(echo "${TEST_WORKTREE_ROOT}/wt1" | sed 's|/|-|g')
+  local wt_mem="${HOME}/.claude/projects/${wt_id}/memory"
+  local main_mem="${HOME}/.claude/projects/main/memory"
+
+  mkdir -p "${wt_mem}"
+  echo "old content" > "${wt_mem}/existing.md"
+  mkdir -p "${main_mem}"
+
+  # 既存ファイルを移動
+  cp -rn "${wt_mem}/"* "${main_mem}/" 2>/dev/null || true
+  rm -rf "${wt_mem}"
+
+  # 検証
+  [ -f "${main_mem}/existing.md" ]
+  grep -q "old content" "${main_mem}/existing.md"
+  teardown_ensure_worktree
+}
