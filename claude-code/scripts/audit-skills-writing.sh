@@ -34,6 +34,10 @@ SKILLS_DIR="${SCRIPT_DIR}/skills"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dir)
+      if [[ $# -lt 2 ]] || [[ "${2:-}" == --* ]]; then
+        echo "Error: --dir requires a path argument" >&2
+        exit 1
+      fi
       SKILLS_DIR="$2"
       shift 2
       ;;
@@ -47,7 +51,10 @@ done
 # skill.md 走査ループ
 total_hits=0
 skills_with_hits=0
-declare -A hit_counts
+tmp_files=()
+
+# cleanup trap（ループ外で定義）
+trap 'rm -f "${tmp_files[@]}"' EXIT
 
 # find で skill.md を列挙（ソート済み）
 while IFS= read -r skill_file; do
@@ -57,13 +64,18 @@ while IFS= read -r skill_file; do
 
   # tmpfile 作成（frontmatter 除外の前処理用）
   tmp_file=$(mktemp)
-  trap 'rm -f "$tmp_file"' EXIT
+  tmp_files+=("$tmp_file")
 
   # frontmatter を空行に置換（行番号維持）
   awk '
     /^---$/ { fm = !fm; print ""; next }
     fm { print ""; next }
     { print }
+    END {
+      if (fm == 1) {
+        print "Warning: unclosed frontmatter in " FILENAME > "/dev/stderr"
+      }
+    }
   ' "$skill_file" > "$tmp_file"
 
   # run_writing_check 実行（NG 辞書チェック）
@@ -79,13 +91,9 @@ while IFS= read -r skill_file; do
 
     # ヒット件数をカウント
     hit_count=$(echo "$check_output" | wc -l)
-    hit_counts["$skill_file"]="$hit_count"
     ((total_hits += hit_count))
     ((skills_with_hits += 1))
   fi
-
-  rm -f "$tmp_file"
-  trap - EXIT
 done < <(find "$SKILLS_DIR" -name "skill.md" -type f | sort)
 
 # サマリ出力
