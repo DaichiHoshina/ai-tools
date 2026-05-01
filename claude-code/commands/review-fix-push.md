@@ -79,6 +79,26 @@ loop iteration = 1..max_iterations:
 
 `--from-pr` 指定時は Step 0 で `claude --from-pr <N>` 相当のコンテキスト復元、そのPR差分に対してレビュー。
 
+## 出力フォーマット
+
+ループ進捗:
+
+```
+Iteration 1/3: Critical 3 → 0 / Warning 5 → 2 (収束)
+Iteration 2/3: skip (収束済み)
+
+Result: PASS → push 進行
+```
+
+ループ未収束:
+
+```
+Iteration 3/3: Critical 1 残存 (同一指摘 2 回連続)
+> [WARN] 自動修正できない指摘あり、ユーザー介入要請
+push 中断、Critical 一覧:
+  - {ファイル:行} - {指摘内容}
+```
+
 ## 注意
 
 - 修正前にレビュー結果をユーザーに表示し確認を得る

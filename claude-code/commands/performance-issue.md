@@ -53,6 +53,7 @@ go tool pprof -top {file}.block.pprof
 | CPUサンプル率 | 判定 | 次のアクション |
 |-------------|------|--------------|
 | 高い（>20%） | CPU bound | アルゴリズム改善、計算量削減 |
+| 中間（10-20%） | mixed | block profile + trace で I/O 待ちと CPU 比率を再判定、両方改善余地あり |
 | 低い（<10%） | I/O bound | DB round-trip削減、バルク化、クエリ最適化 |
 
 | flat top上位 | 意味 |
@@ -96,5 +97,13 @@ go tool pprof -top {file}.block.pprof
 4. **生データは添付**: 本文は要約+分析、生ログは別ファイル
 5. **`<details>`活用**: 長い分析は折りたたみ
 6. **スコープ判断を明文化**: 根拠付きで「やる/送る」を宣言
+
+## 失敗時の挙動
+
+| 状況 | 動作 |
+|------|------|
+| issue 番号取得不能 | AskUserQuestion で issue URL 要求、応答なければ Phase 1 をローカル概要のみで進行 |
+| pprof 取得失敗（コンパイル不可・bench 不在） | 計測コマンドの ad-hoc 化提案、ユーザー確認後に再試行 |
+| 改善後計測で悪化検出 | rollback 提案、原因分析を Phase 4 へ差戻し |
 
 ARGUMENTS: $ARGUMENTS

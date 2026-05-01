@@ -44,4 +44,12 @@ effort: low
 - compact前の手動バックアップ
 - 別セッションへの引き継ぎ
 
+## 失敗時の挙動
+
+| 状況 | 動作 |
+|------|------|
+| serena 接続失敗 | ローカル `~/.claude/memory-fallback/{name}.md` に保存、warning ログ |
+| 書込失敗（権限エラー等） | 内容をチャットに出力してユーザーに手動保存案内 |
+| memory 名衝突 | suffix `-2`, `-3` を自動付与 |
+
 ARGUMENTS: $ARGUMENTS
