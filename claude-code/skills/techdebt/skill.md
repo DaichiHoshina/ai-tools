@@ -18,6 +18,13 @@ requires-guidelines:
 
 **制限**: `max_files: 10,000`（超過時は警告）、タイムアウト: 30秒
 
+**ツール失敗時 fallback**:
+
+| 失敗 | 動作 |
+|------|------|
+| serena 接続不可 / タイムアウト | `find . -type f` に降格、warning ログ出力 |
+| max_files 超過 | スキャン中止、対象ディレクトリ絞り込み要求して停止 |
+
 ### Phase 2: 除外フィルタ
 
 | カテゴリ | パターン |
@@ -28,7 +35,7 @@ requires-guidelines:
 
 ### Phase 3: 重複コード検出
 
-**ツール**: `mcp__serena__search_for_pattern`
+**ツール**: `mcp__serena__search_for_pattern`（失敗時 → `grep -rn` に降格、検出精度低下を warning ログで通知）
 
 #### 3.1 完全一致検出
 
@@ -57,6 +64,8 @@ requires-guidelines:
 
 ## 出力フォーマット
 
+通常ケース:
+
 ```markdown
 # 技術的負債検出結果
 **スキャン範囲**: {project_path}
@@ -74,6 +83,38 @@ requires-guidelines:
 
 ## 推奨アクション
 即座対応: Critical / 次スプリント: Warning / 週次: 定期実行
+```
+
+ゼロ件:
+
+```markdown
+# 技術的負債検出結果
+**スキャン範囲**: {project_path}
+
+## サマリー
+スキャン対象 N ファイル、検出ゼロ件。
+
+## Critical / Warning
+- Critical: 0件
+- Warning: 0件
+
+## 推奨アクション
+継続監視（週次定期実行を推奨）
+```
+
+部分結果（タイムアウト / serena fallback）:
+
+```markdown
+# 技術的負債検出結果（部分結果）
+> [WARN] 30秒タイムアウトで打ち切り、または serena → grep 降格中
+> スキャン完了率: X% / 検出精度: 低下
+
+## サマリー
+（通常と同じ。N は確認済み分のみ）
+
+## 未スキャン領域
+- {dir1}, {dir2} ...
+- 完全スキャンは対象を絞って再実行推奨
 ```
 
 ## エッジケース対応
