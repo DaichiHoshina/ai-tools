@@ -326,6 +326,18 @@
           }
         ]
       }
+    ],
+    "WorktreeRemove": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/worktree-remove.sh",
+            "async": true
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
