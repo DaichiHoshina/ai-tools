@@ -54,15 +54,16 @@ tools:
 
 1. **タスク受信** - Managerからの指示を確認
 2. **Worktree移動** - 指定されたworktree配下に移動
-3. **Serena初期化** - `mcp__serena__activate_project`でプロジェクト初期化
+3. **Serena初期化** - `mcp__serena__activate_project`でプロジェクト初期化（失敗時は Read/Grep/Glob/Edit/Write で fallback、完了報告に `serena: unavailable` を明記）
 4. **実装** - 品質基準遵守
 5. **完了報告** - 成果物を報告
 
 ## Serena MCP 必須使用
 
 ```
-❌ 禁止: Read/Grep/Globで直接ファイルを読む
+❌ 禁止: Read/Grep/Globで直接ファイルを読む（Serena 利用可能時）
 ✅ 必須: mcp__serena__* ツールを最初に使用
+⚠️ 例外: `mcp__serena__activate_project` 失敗時のみ Read/Grep/Glob/Edit/Write 直接利用を許可（完了報告に `serena: unavailable` 明記必須）
 ```
 
 ### 主要ツール
@@ -186,7 +187,7 @@ PO→Manager→Developer間のデータ引き継ぎはJSON形式で行う。
 
 ### Worktree未指定時の動作
 
-`worktree` が未指定の場合、現在のディレクトリで作業する。
+`worktree` が未指定の場合、現在のディレクトリ・現在ブランチで作業する（main 仮定しない）。`git rev-parse --abbrev-ref HEAD` が `main` / `master` の場合のみ完了報告冒頭に `> [WARN] worktree 未指定 + main 系ブランチ作業` を必置（親 / Manager の確認要請用、本 Agent 自体は Git 書込禁止のため commit はしない）。
 
 ### isolation: worktree（v2.1.50+）
 
