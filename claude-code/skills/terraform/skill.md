@@ -38,10 +38,28 @@ requires-guidelines:
 
 ## 出力形式
 
+通常ケース:
+
 ```text
 Critical: `ファイル:行` - セキュリティリスク/バージョン未固定 - 修正案
 Warning: `ファイル:行` - 設計改善推奨 - 改善案
 Summary: Critical X件 / Warning Y件
+```
+
+ゼロ件:
+
+```text
+✅ Terraform 指摘なし (対象 N ファイル)
+Summary: Critical 0件 / Warning 0件
+推奨: terraform plan で実環境差分を継続確認
+```
+
+レビュー対象不在（Terraform ファイル未検出）:
+
+```text
+> [WARN] *.tf / *.tfvars 未検出
+> 検索対象: . / terraform/ / infrastructure/
+> 該当なし → スキップ
 ```
 
 ## Troubleshooting

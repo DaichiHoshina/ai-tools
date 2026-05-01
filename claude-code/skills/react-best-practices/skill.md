@@ -98,7 +98,29 @@ hooks:
 
 ## 出力形式
 
+通常ケース:
+
+```
 🔴 CRITICAL / 🟠 HIGH / 🟡 MEDIUM `ファイル:行` - ルールID - 問題と修正案
 📊 Summary: Critical X / High Y / Medium Z
+```
+
+ゼロ件:
+
+```
+✅ パフォーマンス指摘なし (対象 N ファイル / 45ルール検査)
+📊 Summary: Critical 0 / High 0 / Medium 0
+
+### 推奨アクション
+- 継続監視（次回 Lighthouse / Web Vitals 計測時に再実行）
+```
+
+レビュー対象不在（React/Next.js 検出失敗）:
+
+```
+> [WARN] React/Next.js 検出失敗
+> 検索対象: package.json (react / next 依存) / *.tsx / *.jsx
+> 該当なし → スキップ
+```
 
 ガイドライン: `~/.claude/guidelines/languages/nextjs-react.md`

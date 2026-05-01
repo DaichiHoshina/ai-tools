@@ -21,6 +21,26 @@ parameters:
 
 Docker/Kubernetes/Podman対応のコンテナ運用スキル。`--platform`と`--mode`で指定（デフォルト: エラーメッセージや変更ファイルから自動検出）。
 
+## platform 自動検出 (platform=auto)
+
+| 状況 | 動作 |
+|------|------|
+| エラーメッセージに `kubectl` / `pod` 出現 | kubernetes |
+| エラーメッセージに `docker` / `Dockerfile` 出現 | docker |
+| `Dockerfile` / `docker-compose.yml` のみ存在 | docker |
+| `*.yaml` (k8s manifest) 存在 | kubernetes |
+| 複数該当 | 変更ファイル数多い側を選択、両プラットフォームの ベストプラクティスを並列表示 |
+| 検出ゼロ件 | ユーザーに `--platform` 明示要求して停止 |
+
+## mode 自動検出 (mode=auto)
+
+| 入力に含まれるシグナル | mode |
+|------|------|
+| エラー / クラッシュ / 失敗 | troubleshoot |
+| 設計 / 構成 / レビュー | best-practices |
+| デプロイ / リリース | deploy |
+| 不明 | best-practices（デフォルト） |
+
 ## Docker - トラブルシューティング
 
 | 問題 | 診断コマンド | 対策 |

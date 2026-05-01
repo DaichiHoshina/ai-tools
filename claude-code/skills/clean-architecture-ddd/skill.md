@@ -70,6 +70,8 @@ requires-guidelines:
 
 ## 出力形式
 
+通常ケース:
+
 ```
 📋 **レイヤー構成**
 - Domain: [エンティティ一覧]
@@ -78,6 +80,21 @@ requires-guidelines:
 
 🔴 **Critical**: ファイル:行 - 違反内容 - 修正案
 🟡 **Warning**: ファイル:行 - 改善推奨 - リファクタ案
+```
+
+ゼロ件・レイヤー未構成（CA/DDD 適用前）:
+
+```
+📋 **レイヤー構成**
+> [WARN] CA/DDD レイヤー構成未検出（Domain/Application/Infrastructure ディレクトリなし）
+> 既存コードは「単層」と判定。レイヤー分割提案のみ出力
+
+🔴 **Critical**: 0件
+🟡 **Warning**: 0件（適用前のため判定対象なし）
+
+### 推奨アクション
+- Domain/Application/Infrastructure の 3 ディレクトリ作成
+- 既存コードの責務別配置案（別途出力）
 ```
 
 ---

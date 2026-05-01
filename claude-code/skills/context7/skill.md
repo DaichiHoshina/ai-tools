@@ -83,3 +83,12 @@ curl -s "https://context7.com/api/v2/context?libraryId=/fastapi/fastapi&query=de
 - If the first search result is not correct, check additional results in the array
 - URL-encode query parameters containing spaces (use `+` or `%20`)
 - No API key is required for basic usage (rate-limited)
+
+## 失敗時の挙動
+
+| 状況 | 動作 |
+|------|------|
+| API 接続失敗 (timeout / DNS) | knowledge cutoff 時点の知識で代替、warning ログ出力 |
+| 429 Rate Limit | exponential backoff 1 回（1s → 4s）、それでも失敗なら知識代替 |
+| 検索結果ゼロ件 | 別キーワード提案（例: `react-hooks` → `react hooks`）、それでもゼロなら未検出を明示 |
+| `libraryId` 解決後にコンテキスト取得失敗 | 別 libraryId 候補（results[1], results[2]）で再試行、最大 3 候補 |

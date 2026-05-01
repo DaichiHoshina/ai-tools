@@ -84,10 +84,28 @@ requires-guidelines:
 
 ## 出力形式
 
+通常ケース:
+
 ```text
 Critical: `ファイル:行` - 違反内容 → 修正案
 Warning: `ファイル:行` - 改善推奨 → 推奨案
 Summary: Critical X件 / Warning Y件
+```
+
+ゼロ件:
+
+```text
+✅ UI 制約違反なし (対象 N コンポーネント)
+Summary: Critical 0件 / Warning 0件
+推奨: Playwright ビジュアル検証で実描画確認
+```
+
+レビュー対象不在（UI ファイル未検出）:
+
+```text
+> [WARN] React/Vue/Svelte コンポーネント未検出
+> 検索対象: *.tsx / *.jsx / *.vue / *.svelte
+> 該当なし → スキップ
 ```
 
 ## 参考リンク

@@ -92,5 +92,29 @@ requires-guidelines:
 ✅ **総合評価**: Critical問題を優先的に修正してください
 ```
 
+ゼロ件:
+
+```
+## UI/UXレビュー結果
+
+✅ 全 3 原則 (Material Design 3 / WCAG 2.2 AA / Nielsen 10) 違反なし
+
+📊 **Summary**:
+- Material Design 3: Critical 0件 / Warning 0件
+- WCAG 2.2 AA: Critical 0件 / Warning 0件
+- Nielsen 10原則: Critical 0件 / Warning 0件
+
+### 推奨アクション
+- スクリーンショットでの実描画確認（自動検査では検出困難な視覚問題）
+- ユーザビリティテスト（実利用者観点）
+```
+
+レビュー対象不在（UI ファイル未検出）:
+
+```
+> [WARN] UI コンポーネント未検出 (対象: *.tsx / *.jsx / *.vue)
+> レビューを skip
+```
+
 ---
 
