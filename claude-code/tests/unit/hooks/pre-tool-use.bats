@@ -393,6 +393,66 @@ _run_bash_forbidden() {
   [[ ! "$msg" =~ "禁止" ]]
 }
 
+# =============================================================================
+# HEREDOC 本文除去テスト（v2.2.3）
+# git commit -m "$(cat <<'EOF' ... EOF)" 形式の commit message 内危険語誤発火防止
+# =============================================================================
+
+@test "pre-tool-use: HEREDOC 内の rm -rf / リテラル（git commit）は Boundary" {
+  local cmd
+  cmd=$'git commit -m "$(cat <<\'EOF\'\nrm -rf / を防止する\nEOF\n)"'
+  local input
+  input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "禁止" ]]
+}
+
+@test "pre-tool-use: HEREDOC 内の git push --force リテラルは Boundary" {
+  local cmd
+  cmd=$'git commit -m "$(cat <<EOF\ngit push --force を禁止\nEOF\n)"'
+  local input
+  input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "禁止" ]]
+}
+
+@test "pre-tool-use: <<-DELIM (タブ削減) ヒアドキュメント本文も除去" {
+  # <<- は終端マーカー先頭のタブを許容
+  local cmd
+  cmd=$'git commit -m "$(cat <<-EOF\n\trm -rf / を語る\n\tEOF\n)"'
+  local input
+  input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "禁止" ]]
+}
+
+@test "pre-tool-use: HEREDOC 終端後の rm -rf / は Forbidden（除去対象外）" {
+  # HEREDOC 本文除去はマーカー～終端行のみ。終端後の本物の危険コマンドは検出継続
+  local cmd
+  cmd=$'cat <<EOF > /tmp/x\nbody\nEOF\nrm -rf /'
+  _run_bash_forbidden "$cmd"
+  [ "$status" -eq 2 ]
+  msg=$(get_system_message "$output")
+  [[ "$msg" =~ "禁止" ]]
+}
+
+@test "pre-tool-use: 引用符付きマーカー <<\"DELIM\" の本文除去" {
+  local cmd
+  cmd=$'git commit -m "$(cat <<"EOF"\nrm -rf / 注意喚起\nEOF\n)"'
+  local input
+  input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "禁止" ]]
+}
+
 @test "pre-tool-use: commit 以外で git push --force は引き続き Forbidden" {
   _run_bash_forbidden "git push --force origin main"
   [ "$status" -eq 2 ]

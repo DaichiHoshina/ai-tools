@@ -29,8 +29,42 @@ classify_bash_command() {
 
   # commit message 内の危険語リテラル誤発火を防止
   # git commit -m "..." / -m '...' / -F file の引数値内容を除外してから危険語マッチ評価
-  # ヒアドキュメント (cat <<EOF...EOF) 対応は v2.2.3 TODO
+  # v2.2.3: ヒアドキュメント (cat <<EOF...EOF) 本文も除去（git commit -m "$(cat <<'EOF' ... EOF)" 対策）
   cmd_without_msg_arg="$cmd"
+
+  # HEREDOC 本文除去（POSIX awk 互換、行ごと処理）
+  # 開始: <<-?[[:space:]]*['"]?DELIM['"]? を検出 → in_h=1、開始行のマーカー以降を切り捨て
+  # 終端: 行全体が DELIM と一致（<<- は先頭タブ削減許容）→ in_h=0、終端行はスキップ
+  # <<<here-string は <<<DELIM が "[A-Za-z_]" 直前の文字制約で不一致のため誤検出されない
+  case "$cmd_without_msg_arg" in
+    *'<<'*)
+      cmd_without_msg_arg=$(printf '%s' "$cmd_without_msg_arg" | awk '
+        BEGIN { in_h = 0; delim = ""; tab_strip = 0 }
+        {
+          if (in_h) {
+            line = $0
+            if (tab_strip) { sub(/^\t+/, "", line) }
+            if (line == delim) { in_h = 0; delim = ""; tab_strip = 0 }
+            next
+          }
+          pos = match($0, /<<-?[[:space:]]*['"'"'"]?[A-Za-z_][A-Za-z0-9_]*['"'"'"]?/)
+          if (pos > 0) {
+            m = substr($0, pos, RLENGTH)
+            if (substr(m, 3, 1) == "-") { tab_strip = 1 }
+            d = m
+            sub(/^<<-?[[:space:]]*['"'"'"]?/, "", d)
+            sub(/['"'"'"]?$/, "", d)
+            delim = d
+            in_h = 1
+            print substr($0, 1, pos - 1)
+            next
+          }
+          print
+        }
+      ')
+      ;;
+  esac
+
   if [[ "$cmd_without_msg_arg" =~ git[[:space:]]+commit[[:space:]] ]]; then
     cmd_without_msg_arg=$(printf '%s' "$cmd_without_msg_arg" \
       | sed -E 's/-m[[:space:]]*"[^"]*"/ /g' \
