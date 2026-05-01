@@ -90,11 +90,19 @@ requires-guidelines:
 
 ## GraphQL パターン
 
-明確な命名・型定義 / Connection pattern でページネーション / N+1問題は DataLoader / Null許容設定 / 共通: 認証・認可・CORS・ドキュメント・セキュリティヘッダー
+| 観点 | ルール | 補足 |
+|------|--------|------|
+| 命名・型定義 | 一貫した命名規則、明示的型定義 | snake_case / camelCase をスキーマ全体で統一 |
+| ページネーション | Connection pattern (Relay 仕様) | `edges` / `pageInfo` / `cursor` |
+| N+1 対策 | DataLoader によるバッチング | resolver 内の直接 query 禁止 |
+| Null 設計 | 必須/任意を schema で明示 | デフォルト nullable、必須は `!` 付与 |
+| 共通 | 認証・認可・CORS・ドキュメント・セキュリティヘッダー | REST と同様、persistedQueries 推奨 |
 
 ---
 
 ## 出力形式
+
+通常ケース:
 
 ```
 🔴 Critical: エンドポイント - 問題 - 修正案
@@ -102,4 +110,19 @@ requires-guidelines:
 📊 Summary: Critical X件 / Warning Y件
 ```
 
-外部参照: Context7 で OpenAPI 3.x / GraphQL公式 / Google/Microsoft API Design Guide / RFC 7807
+ゼロ件・縮退モード:
+
+```
+🔴 Critical: 0件
+🟡 Warning: 0件
+📊 Summary: 指摘なし (対象 N エンドポイント / N スキーマ)
+```
+
+レビュー対象不在時（API 定義ファイル未検出）:
+
+```
+> [WARN] OpenAPI / GraphQL schema 未検出。レビューを skip。
+> 検索対象: openapi.yaml / *.graphql / *Controller.{ts,go,py} / routes/*
+```
+
+外部参照: Context7 で OpenAPI 3.x / GraphQL公式 / Google/Microsoft API Design Guide / RFC 7807（取得失敗時 → knowledge cutoff 時点の知識で代替、warning ログ）
