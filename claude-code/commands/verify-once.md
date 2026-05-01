@@ -48,4 +48,23 @@ Result: VERIFIED. 再検証不要。
 - 既存の `/lint-test` はCI一括実行、`/verify-once` は構造変更専用の **挙動検証**
 - 統合テスト未整備なら先にテスト追加してから本検証（ADR 0001 方式）
 
+## 失敗時の挙動
+
+| 状況 | 動作 |
+|------|------|
+| `bash` / `jq` / `bats` 不在 | 該当 step を skip、Result に「skipped (tool not found)」記載 |
+| 統合テスト未整備 | ADR 0001 方式に従い、先にテスト追加要求して停止 |
+| install 反映後の再テスト失敗 | rollback 提案、原因を Phase 別に切り分け（syntax/unit/integration） |
+
+失敗時の出力例:
+
+```
+1. syntax      : ✗ (1 file: hooks/foo.sh)
+2. unit        : - skipped (syntax failed)
+...
+
+Result: FAILED at step 1
+Root cause: hooks/foo.sh:42 - bash syntax error 'unexpected EOF'
+```
+
 ARGUMENTS: $ARGUMENTS
