@@ -74,7 +74,18 @@ npm run lint && npx tsc --noEmit
 golangci-lint run && go vet ./...
 ```
 
-**ツール不在時** (`npm` / `golangci-lint` / `tsc` 等が PATH に無い): 該当言語の静的解析をスキップし、出力に `static-analysis: skipped (<理由>)` を記録。レビュー自体は続行。
+**ツール不在判定**: コマンド実行結果で判定する（PATH 探索ではない）。`npx tsc` / `npm run <script>` は `node_modules/.bin/` 経由で解決されるため、グローバル PATH に存在しなくても実行可能。
+
+**判定優先順位**: 下記表の上から順に評価し、最初に一致した行で確定（メッセージマッチ優先、exit code は最後）。
+
+| # | 判定条件 | 扱い | skipped 理由表記 |
+|---|---------|------|-----------------|
+| 1 | stderr に `command not found` / `npm ERR! Missing script` / `could not determine executable` を含む | skip | `static-analysis: skipped (<コマンド or pkg>: not installed / script missing / not in node_modules)` |
+| 2 | exit 127 (シェル「コマンド未検出」固定値) | skip | `static-analysis: skipped (<コマンド>: not found)` |
+| 3 | exit 0 / 1 かつ stdout または stderr に analyzer 自身の出力 (lint 違反 / type エラー / `error TS` 等) あり | 結果を取り込み続行 | — |
+| 4 | その他の非ゼロ exit (#1-#3 いずれにも該当せず) | Warning として出力に含めレビュー続行 | — |
+
+レビュー自体はいかなる場合も続行する。
 
 ### Step 3: cleanup-enforcement確認
 
