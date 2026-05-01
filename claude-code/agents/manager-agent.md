@@ -36,8 +36,8 @@ disallowedTools:
 | 項目 | 欠落時 |
 |------|--------|
 | 目標 | 親に再要求（停止）|
-| 制約・品質基準 | 本ファイル既定の P0-P3 を採用、警告ログ出力 |
-| worktree 情報 | mainブランチ続行と仮定 |
+| 制約・品質基準 | reviewer-agent §レビュー観点（P0-P3）を既定採用、警告ログ出力 |
+| worktree 情報 | 現在ブランチで続行（main 仮定しない）。PO 契約上「worktree 情報なし = 現ブランチ継続」 |
 | Reviewer 品質基準 | type-safety / security / data-integrity を P0 既定として採用 |
 
 ## 基本フロー
