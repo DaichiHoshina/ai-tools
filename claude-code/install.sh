@@ -25,6 +25,17 @@ source "${LIB_DIR}/env-configurator.sh"
 
 # Utility Functions
 
+# private-*/local-* prefix を保護しつつディレクトリ同期
+# rsync --exclude で個人非公開設定を上書きから守る
+sync_dir_preserving_private() {
+    local src="$1"
+    local dst="$2"
+    mkdir -p "$dst"
+    rsync -a --delete \
+        --exclude='private-*' --exclude='local-*' \
+        "$src/" "$dst/"
+}
+
 # Create symlink with backup
 create_symlink() {
     local source="$1"
@@ -132,9 +143,8 @@ copy_directory_contents() {
     # Agents
     copy_files "$SCRIPT_DIR/agents" "$CLAUDE_DIR/agents" "agents"
 
-    # Skills（ディレクトリ構造ごとコピー）
-    rm -rf "$CLAUDE_DIR/skills"
-    cp -r "$SCRIPT_DIR/skills" "$CLAUDE_DIR/skills"
+    # Skills（ディレクトリ構造ごとコピー、private-*/local-* は保護）
+    sync_dir_preserving_private "$SCRIPT_DIR/skills" "$CLAUDE_DIR/skills"
     print_success "skills をコピーしました"
 
     # Scripts
@@ -154,10 +164,9 @@ copy_directory_contents() {
         chmod +x "$CLAUDE_DIR/lib/"*.sh 2>/dev/null || true
     fi
 
-    # Hooks（ディレクトリ構造ごとコピー）
+    # Hooks（ディレクトリ構造ごとコピー、private-*/local-* は保護）
     if [ -d "$SCRIPT_DIR/hooks" ]; then
-        rm -rf "$CLAUDE_DIR/hooks"
-        cp -r "$SCRIPT_DIR/hooks" "$CLAUDE_DIR/hooks"
+        sync_dir_preserving_private "$SCRIPT_DIR/hooks" "$CLAUDE_DIR/hooks"
         rm -f "$CLAUDE_DIR/hooks"/test-*.sh 2>/dev/null || true
         chmod +x "$CLAUDE_DIR/hooks/"*.sh 2>/dev/null || true
         print_success "hooks をコピーしました"

@@ -112,6 +112,38 @@ restore_gh_skills() {
 }
 
 # =============================================================================
+# Private Items Protection
+# private-* / local-* prefix のファイル/ディレクトリを破壊的同期から保護する。
+# 個人レポ管理外（~/.claude/ 直置き）の非公開設定を維持するための仕組み。
+# =============================================================================
+
+preserve_private() {
+    local dst="$1" bak_dir="$2"
+    [ -d "$dst" ] || return 0
+    local entry name
+    shopt -s nullglob
+    for entry in "$dst"/private-* "$dst"/local-*; do
+        [ -e "$entry" ] || continue
+        name=$(basename "$entry")
+        mv "$entry" "${bak_dir}/${name}"
+    done
+    shopt -u nullglob
+}
+
+restore_private() {
+    local dst="$1" bak_dir="$2"
+    [ -d "$bak_dir" ] || return 0
+    local entry name
+    shopt -s nullglob
+    for entry in "$bak_dir"/private-* "$bak_dir"/local-*; do
+        [ -e "$entry" ] || continue
+        name=$(basename "$entry")
+        mv "$entry" "${dst}/${name}"
+    done
+    shopt -u nullglob
+}
+
+# =============================================================================
 # Repo Freshness Check
 # sync_to_local 実行前に origin/main の未取り込みコミットを警告。
 # race condition（push 直後の sync が古い workspace を反映する事故）を防ぐ。
@@ -223,6 +255,12 @@ sync_to_local() {
 
         if [ -e "$src" ]; then
             if [ -d "$src" ]; then
+                # private-*/local-* prefix を全ディレクトリで退避（個人非公開設定保護）
+                local private_bak=""
+                if [ -d "$dst" ]; then
+                    private_bak=$(mktemp -d)
+                    preserve_private "$dst" "$private_bak"
+                fi
                 # skills のみ gh skill 管理のディレクトリを退避してから削除
                 local gh_bak=""
                 if [ "$item" = "skills" ] && [ -d "$dst" ]; then
@@ -233,11 +271,13 @@ sync_to_local() {
                 if ! rm -rf "${dst:?}"; then
                     print_error "削除失敗: $dst"
                     [ -n "$gh_bak" ] && rm -rf "$gh_bak"
+                    [ -n "$private_bak" ] && rm -rf "$private_bak"
                     return 1
                 fi
                 if ! cp -r "$src" "$dst"; then
                     print_error "コピー失敗: $src -> $dst"
                     [ -n "$gh_bak" ] && rm -rf "$gh_bak"
+                    [ -n "$private_bak" ] && rm -rf "$private_bak"
                     return 1
                 fi
                 # hooksディレクトリの場合、テストファイルを除外
@@ -250,6 +290,11 @@ sync_to_local() {
                     restore_gh_skills "$dst" "$gh_bak"
                     rmdir "$gh_bak" 2>/dev/null || true
                     print_info "  → gh skill 管理スキルを保護"
+                fi
+                # 退避していた private-*/local-* を復元
+                if [ -n "$private_bak" ]; then
+                    restore_private "$dst" "$private_bak"
+                    rmdir "$private_bak" 2>/dev/null || true
                 fi
             else
                 if ! cp "$src" "$dst"; then
@@ -310,16 +355,15 @@ sync_from_local() {
     done
 
     # Directories
+    # rsync で private-*/local-* を除外 → public repo に個人非公開設定が漏れない
     local dirs=("commands" "guidelines" "skills" "agents" "scripts" "lib" "output-styles" "hooks" "rules" "config" "references")
     for dir in "${dirs[@]}"; do
         if [ -d "$CLAUDE_DIR/$dir" ]; then
-            # 例外伝播の明示化（Critical #7対策）
-            if ! rm -rf "${SCRIPT_DIR:?}/${dir}"; then
-                print_error "削除失敗: $SCRIPT_DIR/$dir"
-                return 1
-            fi
-            if ! cp -r "$CLAUDE_DIR/$dir" "$SCRIPT_DIR/$dir"; then
-                print_error "コピー失敗: $dir"
+            mkdir -p "$SCRIPT_DIR/$dir"
+            if ! rsync -a --delete \
+                --exclude='private-*' --exclude='local-*' \
+                "$CLAUDE_DIR/$dir/" "$SCRIPT_DIR/$dir/"; then
+                print_error "同期失敗: $dir"
                 return 1
             fi
             # hooksディレクトリの場合、テストファイルを除外
