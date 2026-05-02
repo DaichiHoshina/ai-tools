@@ -15,6 +15,10 @@
 
 ---
 
+## 2.1.126 (2026-05-02 検出)
+
+- [ ] **`claude project purge [path]` サブコマンド**: プロジェクト state（transcripts/tasks/file history/config entry）を一括削除。`--dry-run` / `-y` / `-i` / `--all` 対応 — 検討箇所: `claude-code/references/session-management.md`（トラブルシュート節）, `claude-code/SETUP.md`
+
 ## 2.1.121 (2026-04-28 検出)
 
 - [ ] **PostToolUse `hookSpecificOutput.updatedToolOutput` 全tool拡張** (旧 MCP-only): hook が tool 出力を書き換え可能。秘密情報マスク、長文要約等に応用余地 — 検討箇所: `claude-code/hooks/post-tool-use.sh`（`enterprise-security.md` の出力サニタイズ実装基盤）。**重量実装、別タスク化**

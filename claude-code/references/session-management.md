@@ -18,7 +18,7 @@
 |------|------|
 | 通常モード | デフォルト。重要操作は都度承認 |
 | Auto Mode（Max/Team/Enterprise 限定） | `claude --help` の `auto-mode` subcommand 参照。許可リスト整備済み環境で都度承認を抑制 |
-| `--dangerously-skip-permissions` | 常用非推奨。sandbox 等の隔離環境専用 |
+| `--dangerously-skip-permissions` | 常用非推奨。sandbox 等の隔離環境専用。2.1.126 以降は `.claude/`、`.git/`、`.vscode/`、shell 設定ファイルへの書き込みもバイパス対象（catastrophic 削除のみ確認継続） |
 
 > 出典: Opus 4.7 リリース後の運用ガイド（[Qiita @ot12 2026-04-16](https://qiita.com/ot12/items/06420caf41a34a910c53)、二次情報）。Anthropic 公式 docs での明文化は未確認のため、運用判断材料として扱う。
 
