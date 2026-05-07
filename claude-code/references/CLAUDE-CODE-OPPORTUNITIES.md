@@ -30,3 +30,8 @@
 ## 2.1.118 (2026-04-23 検出)
 
 - [ ] **Hooks から MCP tool 直接呼出 (`type: "mcp_tool"`)**: shellスクリプト経由でなくhook定義から MCP tool を直接起動可能 — 検討箇所: `claude-code/hooks/*.sh`（session-end/task-completed 等で Notion/Slack を直接叩く余地）、`templates/settings.json.template` の `hooks` セクション。**重量実装、別タスク化**
+
+## 2.1.111 (2026-04-22 検出)
+
+- [ ] **`OTEL_LOG_RAW_API_BODIES`**: 問題調査時のみ追加検討（通常運用では不要） — 検討箇所: `claude-code/templates/settings.json.template`
+- [ ] **Bash permission 緩和**: Glob patterns / cd-prefixed コマンド permission 不要化、冗長エントリ削除可 — 検討箇所: `claude-code/templates/settings.json.template`
