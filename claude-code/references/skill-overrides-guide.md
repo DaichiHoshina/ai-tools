@@ -68,6 +68,22 @@ tail -1000 ~/.claude/history.jsonl | jq -r '.display // empty' | grep -E "^/" | 
 
 このリポジトリでは `claude-code/templates/settings.json.template` に記載 → `sync.sh` で `~/.claude/settings.json` にマージされる（CLI 2.1.132+ 時点）。
 
+## sync.sh の同期挙動（重要）
+
+`sync_settings_skill_overrides` は **追加・更新のみ** で、自動削除はしない。理由はユーザーが live で個別追加した override を破壊しないため。
+
+| 操作 | 挙動 |
+|------|------|
+| template に追加 | live に反映（追加） |
+| template の値変更 | live に反映（上書き） |
+| **template から削除** | **live に残置 → sync 時に warning 出力** |
+
+template から削除した override を live にも反映したい場合は手動削除:
+
+```bash
+jq 'del(.skillOverrides["削除したいキー"])' ~/.claude/settings.json > /tmp/s.json && mv /tmp/s.json ~/.claude/settings.json
+```
+
 ## 失敗からのチェックリスト
 
 新規 skillOverrides 追加・変更前に確認:

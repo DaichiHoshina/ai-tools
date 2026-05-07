@@ -261,6 +261,23 @@ sync_settings_skill_overrides() {
     else
         rm -f "$tmpfile"
         print_error "settings.json skillOverrides のマージに失敗しました"
+        return
+    fi
+
+    # 孤立 override 検出: template から削除されたが live に残るキー
+    # 削除はユーザー判断（個別追加した override を破壊しないため警告のみ）
+    local orphans
+    orphans=$(jq -r --argjson tmpl "$template_overrides" \
+        '((.skillOverrides // {}) | keys) - ($tmpl | keys) | .[]' \
+        "$live" 2>/dev/null || true)
+
+    if [ -n "${orphans}" ]; then
+        print_warning "skillOverrides に template 管理外のキー検出:"
+        while IFS= read -r key; do
+            [ -z "${key}" ] && continue
+            echo "  - ${key}" >&2
+        done <<< "${orphans}"
+        echo "  → 意図的でなければ ~/.claude/settings.json から削除推奨" >&2
     fi
 }
 
