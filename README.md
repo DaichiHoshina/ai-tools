@@ -190,9 +190,9 @@ OpenAI Codexにも対応しています。詳細は [CODEX-SETUP.md](./CODEX-SET
 
 ### 継続課題
 
-既知のバグ・未対応改善・検証待ち事項をまとめています。
+Claude Code CLI の未採用機能・取り込み待ち事項をまとめています。
 
-[docs/pending-improvements.md](./docs/pending-improvements.md)
+[claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md](./claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md)
 
 ---
 
