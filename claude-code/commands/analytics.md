@@ -36,4 +36,3 @@ bash claude-code/scripts/dashboard.sh
 ## 関連
 
 - `/retrospective` 振り返り・改善案生成（セッション履歴 + Serena memory 分析）
-- `/dashboard` 本コマンド `--ui` への別名（後方互換）

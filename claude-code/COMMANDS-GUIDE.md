@@ -43,8 +43,7 @@ Claude Code 37 コマンドの使い分け。
 | コマンド | 用途 |
 |---------|------|
 | `/explore` | 並列探索（複数観点） |
-| `/analytics` | Claude Code 利用状況分析 |
-| `/dashboard` | 利用状況ダッシュボード |
+| `/analytics` | Claude Code 利用状況分析（`--ui` でダッシュボード起動） |
 | `/retrospective` | セッション振り返り |
 
 ### ドキュメント系
