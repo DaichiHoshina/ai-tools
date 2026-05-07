@@ -234,6 +234,36 @@ check_settings_hooks_diff() {
     fi
 }
 
+sync_settings_skill_overrides() {
+    if ! check_jq; then
+        return
+    fi
+
+    local template="$SCRIPT_DIR/templates/settings.json.template"
+    local live="$CLAUDE_DIR/settings.json"
+
+    if [ ! -f "$template" ] || [ ! -f "$live" ]; then
+        return
+    fi
+
+    local template_overrides
+    template_overrides=$(jq '.skillOverrides // {}' "$template" 2>/dev/null)
+
+    if [ "$template_overrides" = "{}" ]; then
+        return
+    fi
+
+    local tmpfile
+    tmpfile=$(mktemp)
+    if jq --argjson to "$template_overrides" '.skillOverrides = ((.skillOverrides // {}) + $to)' "$live" > "$tmpfile"; then
+        mv "$tmpfile" "$live"
+        print_success "settings.json skillOverrides を同期しました"
+    else
+        rm -f "$tmpfile"
+        print_error "settings.json skillOverrides のマージに失敗しました"
+    fi
+}
+
 # =============================================================================
 # Sync: to-local (リポジトリ → ローカル)
 # =============================================================================
@@ -329,8 +359,9 @@ sync_to_local() {
         print_success "groove → ~/.groove/"
     fi
 
-    # settings.json hooksをテンプレートからマージ
+    # settings.json hooks / skillOverrides をテンプレートからマージ
     sync_settings_hooks
+    sync_settings_skill_overrides
 
     print_success "ローカルへの同期が完了しました"
 }
