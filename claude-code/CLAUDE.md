@@ -16,6 +16,14 @@ claude-code/
 └── references/    参考資料（必要時参照）
 ```
 
+## GitHub issues 運用方針
+
+- 新規タスク（機能/改善/バグ）は issue 起票してから着手
+- 既存 OPPORTUNITIES.md TODO は移行せず両立（OPPORTUNITIES.md = リリース対応 catalog、issue = アクションアイテム）
+- template: `.github/ISSUE_TEMPLATE/feature.md` (機能/改善) / `bug.md` (バグ)
+- issue 本文は短く（PREP 3点、400字目安、`enterprise-security.md` PII 注意）
+- PR には `Closes #N` で連結、マージで自動クローズ
+
 ## 編集時の注意
 
 - `install.sh`/`sync.sh` 更新後は `~/.claude/` に同期必要
