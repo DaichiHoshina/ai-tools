@@ -21,6 +21,10 @@ python3 "$HOME/ai-tools/claude-code/scripts/analytics-report.py" --mode full
 
 出力された Markdown をユーザーに解説・補足しながら伝える。「提案」セクションは普段の使い方を踏まえてコメントする。
 
+### 続けて依存セキュリティ監査
+
+analytics 解説後、`/audit --severity high` を続けて実行（依存パッケージ CVE 監査）。CLI モードのみ、UI モードでは実行しない。Critical/High 検出時のみ詳細を提示、0件なら1行で「audit クリア」と報告。
+
 ## UI モード
 
 ```bash
