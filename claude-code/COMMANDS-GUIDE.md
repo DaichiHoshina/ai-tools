@@ -1,6 +1,6 @@
 # Commands Guide - コマンド使い分けガイド
 
-Claude Code 37 コマンドの使い分け。
+Claude Code 36 コマンドの使い分け。
 
 ## Core 3 コマンド（推奨）
 
