@@ -15,6 +15,10 @@
 
 ---
 
+## 2.1.132 (2026-05-07 検出)
+
+- [ ] **`--plugin-url <url>` / `--plugin-dir <zip>`**: URL/zip からの plugin 取得。配布形式拡張（2.1.128 + 2.1.129） — 検討箇所: `claude-code/skills/skills-manage`（gh source 以外の配布チャネル候補）
+
 ## 2.1.126 (2026-05-02 検出)
 
 - [ ] **`claude project purge [path]` サブコマンド**: プロジェクト state（transcripts/tasks/file history/config entry）を一括削除。`--dry-run` / `-y` / `-i` / `--all` 対応 — 検討箇所: `claude-code/references/session-management.md`（トラブルシュート節）, `claude-code/SETUP.md`

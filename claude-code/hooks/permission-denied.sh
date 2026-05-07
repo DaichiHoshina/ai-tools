@@ -17,6 +17,7 @@ IFS=$'\t' read -r TOOL_NAME SESSION_ID CWD < <(
     '.session_id // "unknown"' \
     '.cwd // "."'
 )
+SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 PROJECT=$(basename "$CWD")
 
 # --- Analytics記録 ---

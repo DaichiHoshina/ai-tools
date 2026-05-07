@@ -21,6 +21,7 @@ _SS_INPUT=$(cat)
 
 # jq 1回で全フィールド取得（v2.2.1 fork削減）
 eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "unknown") _CWD=\(.cwd // "")"' <<< "${_SS_INPUT}")"
+_SS_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SS_SESSION_ID}}"
 _SS_PROJECT=$(basename "${_CWD:-.}")
 
 # ====================================

@@ -107,6 +107,7 @@ if [[ "$prompt" == /* ]]; then
         source "${LIB_DIR}/analytics-writer.sh"
         # jq 1回で session_id と cwd を取得
         eval "$(jq -r '@sh "_CMD_SESSION_ID=\(.session_id // "unknown") _CMD_CWD=\(.cwd // ".")"' <<< "$input")"
+        _CMD_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_CMD_SESSION_ID}}"
         _CMD_PROJECT=$(basename "$_CMD_CWD")
         analytics_insert_tool_event "${_CMD_SESSION_ID}" "${_CMD_PROJECT}" "SlashCommand" "${_CMD_NAME}" 2>/dev/null || true
     fi

@@ -30,6 +30,7 @@ IFS=$'\t' read -r SESSION_ID PROJECT_DIR TOTAL_TOKENS TOTAL_MESSAGES DURATION _M
     '.cache_write_tokens // 0' \
     '.output_tokens // 0'
 )
+SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 PROJECT_NAME=$(basename "$PROJECT_DIR")
 
 # ログ保存

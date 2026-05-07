@@ -15,6 +15,7 @@ INPUT=$(cat)
 
 # 全フィールドを1回のjqで取得（fork削減）
 eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "")"' <<< "$INPUT")"
+SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 
 # デフォルトメッセージ
 MESSAGE=""
