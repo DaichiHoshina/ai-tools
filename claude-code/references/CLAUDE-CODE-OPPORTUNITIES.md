@@ -34,4 +34,4 @@
 ## 2.1.111 (2026-04-22 検出)
 
 - ~~**`OTEL_LOG_RAW_API_BODIES`**~~ (obsolete 2026-05-07): 通常運用では不要、デバッグ時のみ手動追加で対応する運用に確定。
-- [ ] **Bash permission 緩和**: Glob patterns / cd-prefixed コマンド permission 不要化、冗長エントリ削除可。**要詳細調査**（2.1.111 リリースノート確認 + 不要エントリ特定が前提） — 検討箇所: `claude-code/templates/settings.json.template`
+- ~~**Bash permission 緩和**~~ (調査済み 2026-05-07): 2.1.111 で read-only コマンド + glob と `cd <project-dir> &&` プレフィックスは自動許可化されたが、`settings.json.template` の既存 `Bash(npm *)` 等サフィックスワイルドカードや deny エントリは引き続き明示必要。**削除対象なし、対応不要**。参考: <https://code.claude.com/docs/en/permissions.md>（Compound commands / Read-only commands セクション）
