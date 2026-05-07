@@ -93,6 +93,19 @@ SKILL="<skill-name>"; [ -n "$SKILL" ] && rm -rf "$HOME/.claude/skills/$SKILL"
 
 ai-toolsリポジトリのgit管理には載らないため、各マシンで `gh skill install` 再実行する。
 
+## Plugin 配布チャネル（`--plugin-url` / `--plugin-dir`、CLI 2.1.128+）
+
+skill 単体でなく plugin（hooks / commands / skills の bundle）を配布する場合、`gh skill` 以外に CLI 標準の plugin インストールが利用可能。
+
+```bash
+claude plugin install --plugin-url <url>      # URL 直接取得（2.1.128）
+claude plugin install --plugin-dir <path>     # ローカル zip / ディレクトリ（2.1.129）
+```
+
+- 用途: 社内専用 plugin を private URL / S3 / Artifactory で配布、PR レビュー前の試験 plugin をローカル zip で配布
+- skill 単体は引き続き `gh skill install` 推奨（tree SHA 検証 + source tracking）
+- plugin manifest（`plugin.json`）必須、`agentskills.io/specification` 準拠
+
 ## sync.sh 連携
 
 `./claude-code/sync.sh to-local` は `~/.claude/skills/` を削除→ai-tools 側から再配置するが、`gh skill` でインストールしたスキルは frontmatter の `metadata.github-repo` を sync.sh が自動検知して退避→復元する。sync によって消失しない。
