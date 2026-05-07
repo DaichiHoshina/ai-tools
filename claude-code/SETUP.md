@@ -158,6 +158,7 @@ bats tests/
 | Serena が動作しない | `cd ~/serena && uv sync` |
 | Codex が動作しない | `npm install -g @openai/codex` |
 | ハードリンクエラー | `./claude-code/sync.sh` |
+| プロジェクト state が壊れた / 巨大化 | `claude project purge --dry-run` で対象確認 → `claude project purge -y` で transcripts/tasks/file history/config entry 一括削除（CLI 2.1.126+）。詳細: [`references/session-management.md`](./references/session-management.md) |
 
 ## 設定オプション
 

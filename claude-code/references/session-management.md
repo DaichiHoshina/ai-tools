@@ -68,6 +68,21 @@ claude  # 新規起動、SPEC.md を @ で参照
 - **長引いた session の修正合戦**: 2回以上の修正失敗 → `/clear` して better prompt で再起動
 - **名前なしで複数並行**: `--resume` リストが全て `Untitled` で識別不能
 
+## プロジェクト state リセット（`claude project purge`）
+
+セッション履歴・タスク・file history・config entry が壊れた / 巨大化した場合の最終手段（CLI 2.1.126+）。
+
+| コマンド | 動作 |
+|---------|------|
+| `claude project purge --dry-run [path]` | 削除対象表示、実行なし |
+| `claude project purge -y [path]` | 確認なし削除 |
+| `claude project purge -i [path]` | 対話的選択削除 |
+| `claude project purge --all` | 全プロジェクト削除（要慎重） |
+
+- `path` 省略時は CWD のプロジェクト
+- 削除対象: transcripts（`~/.claude/projects/<sanitized>/`）/ tasks / file history / config entry
+- セッション履歴も消えるため `--resume` 不可、必要なら削除前に export
+
 ## checkpoint との関係
 
 - checkpoint はセッション終了後も保持（ターミナル閉じても残る）

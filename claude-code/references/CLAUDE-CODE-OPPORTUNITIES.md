@@ -21,7 +21,7 @@
 
 ## 2.1.126 (2026-05-02 検出)
 
-- [ ] **`claude project purge [path]` サブコマンド**: プロジェクト state（transcripts/tasks/file history/config entry）を一括削除。`--dry-run` / `-y` / `-i` / `--all` 対応 — 検討箇所: `claude-code/references/session-management.md`（トラブルシュート節）, `claude-code/SETUP.md`
+- [x] **`claude project purge [path]` サブコマンド**: プロジェクト state（transcripts/tasks/file history/config entry）を一括削除。`--dry-run` / `-y` / `-i` / `--all` 対応 — 採用箇所: `claude-code/SETUP.md`（トラブルシュート表）, `claude-code/references/session-management.md`（専用セクション）
 
 ## 2.1.121 (2026-04-28 検出)
 
