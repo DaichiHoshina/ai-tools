@@ -1,8 +1,18 @@
-# スキル依存関係マップ
+# スキル一覧・使い分け（SKILLS-MAP）
 
-全21スキルの依存関係と推奨組み合わせ。各 skill の詳細は `skills/<name>/SKILL.md` 参照。
+全21スキルの依存関係・使い分け・自動選択の仕組み。各 skill 詳細は `skills/<name>/SKILL.md`。
 
-> **関連**: [QUICKSTART.md](QUICKSTART.md) | [SKILLS-USAGE.md](SKILLS-USAGE.md) | [COMMANDS-GUIDE.md](COMMANDS-GUIDE.md)
+> **関連**: [QUICKSTART.md](QUICKSTART.md) | [COMMANDS-GUIDE.md](COMMANDS-GUIDE.md)
+
+## 原則: 自動選択に任せる
+
+ほとんどのスキルは**自動選択**される。明示指定は不要。
+
+- **UserPromptSubmit Hook**: プロンプトから技術スタック自動検出
+- **`/review` コマンド**: 問題タイプに応じてスキル選択
+- **`requires-guidelines`**: スキル実行時に関連ガイドライン自動読込
+
+明示指定が必要なケース: 自動検出されない専門領域（data-analysis, context7）/ 特定レビュー観点のみ（uiux-review）/ 設定・運用（mcp-setup-guide, session-mode）。
 
 ## カテゴリ別一覧
 
@@ -101,4 +111,45 @@
 | docker-troubleshoot | `container-ops --platform=docker --mode=troubleshoot` |
 | kubernetes | `container-ops --platform=kubernetes` |
 
-詳細: [SKILL-MIGRATION.md](./SKILL-MIGRATION.md)
+詳細: [SKILL-MIGRATION.md](./tutorials/SKILL-MIGRATION.md)
+
+## skill-lint（品質検証）
+
+`scripts/skill-lint.sh` で `skills/*/SKILL.md` の frontmatter 検証。
+
+```bash
+./claude-code/scripts/skill-lint.sh                 # 全スキル
+./claude-code/scripts/skill-lint.sh --skill <name>  # 単一
+./claude-code/scripts/skill-lint.sh --strict        # warning も exit 1（push 前 hook 用）
+```
+
+検査項目: `name` 必須+ディレクトリ名一致 / `description` 必須・30〜200字 / トリガー語（`〜時`、`使用`、`Use this`等）/ `requires-guidelines` 配列形式。
+
+## skill-eval（発火率計測）
+
+`scripts/skill-eval.sh` で `~/.claude/projects/*/*.jsonl` から Skill ツール発火回数を集計、死蔵スキル可視化。
+
+```bash
+./claude-code/scripts/skill-eval.sh             # 直近30日
+./claude-code/scripts/skill-eval.sh --all       # 全期間
+./claude-code/scripts/skill-eval.sh --unused    # 死蔵のみ
+./claude-code/scripts/skill-eval.sh --skill <name>
+```
+
+注: Skill ツール明示呼び出しのみカウント。コマンド経由（`/dev` 等）の暗黙呼び出しは別計測。
+
+## 新規スキル追加
+
+`/skill-add <name>` で skill-creator → skill-lint → 同期を一括実行。詳細: `commands/skill-add.md`。
+
+## ベストプラクティス
+
+```
+# NG: スキル列挙
+backend-dev --lang=go、api-design、clean-architecture-dddで
+
+# OK: 自動選択
+/dev ユーザー認証APIを実装して
+```
+
+`/load-guidelines` は毎セッション推奨（軽量サマリのみ、必要に応じ `full`）。

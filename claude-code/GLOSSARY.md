@@ -1,46 +1,38 @@
 # 用語集（GLOSSARY）
 
-Claude Code 設定で使用される主要な用語の定義。
-
----
+Claude Code 設定で使用される主要用語の定義。
 
 ## Agent（エージェント）
 
-特定の役割を持つ自律的なタスク実行者。Task toolで起動し、専門分野のタスクを担当する。
+特定の役割を持つタスク実行者。Task tool で起動、専門分野を担当。
 
-| エージェント | 役割 | 実装禁止 |
-|-------------|------|:--------:|
-| `po-agent` | 戦略決定・Worktree管理 | Yes |
-| `manager-agent` | タスク分割・配分計画 | Yes |
-| `developer-agent` | 実装担当（dev1-4で並列実行） | No |
-| `explore-agent` | 探索・分析担当（explore1-4） | Yes |
-| `code-simplifier` | コード簡素化 | No |
-| `verify-app` | ビルド・テスト検証 | Yes |
-| `workflow-orchestrator` | ワークフロー自動化 | Yes |
-
----
+| エージェント | 役割 | 実装 |
+|-------------|------|:----:|
+| `po-agent` | 戦略決定・Worktree 管理 | × |
+| `manager-agent` | タスク分割・配分計画 | × |
+| `developer-agent` | 実装担当（dev1-4 並列） | ✅ |
+| `explore-agent` | 探索・分析（explore1-4） | × |
+| `reviewer-agent` | レビュー担当 | × |
+| `verify-app` | ビルド・テスト検証 | × |
+| `root-cause-analyzer` | 根本原因分析 | × |
 
 ## MCP（Model Context Protocol）
 
-Claude Codeが外部ツールと連携するためのプロトコル。
+Claude Code が外部ツールと連携するためのプロトコル。
 
 | MCP Server | 用途 |
-|------------|------|
+|-----------|------|
 | `serena` | コード解析・メモリ管理 |
 | `context7` | ライブラリドキュメント取得 |
-| `jira` | Jira連携 |
-| `confluence` | Confluence連携 |
-| `codex` | OpenAI Codex連携 |
-
----
+| `codex` | OpenAI Codex 連携 |
 
 ## Hook（フック）
 
-特定のイベント発生時に自動実行されるスクリプト。
+特定イベント発生時に自動実行されるスクリプト。
 
-| フック | トリガー | 用途 |
-|--------|----------|------|
-| `session-start` | セッション開始 | Serena接続確認 |
+| Hook | トリガー | 用途 |
+|------|---------|------|
+| `session-start` | セッション開始 | Serena 接続確認 |
 | `user-prompt-submit` | プロンプト送信 | 技術スタック検出 |
 | `pre-tool-use` | ツール実行前 | 自動処理禁止チェック |
 | `post-tool-use` | ツール実行後 | 自動フォーマット |
@@ -48,80 +40,46 @@ Claude Codeが外部ツールと連携するためのプロトコル。
 | `stop` | 停止時 | 統計保存 |
 | `session-end` | セッション終了 | 完了通知 |
 
----
-
 ## Skill（スキル）
 
-特定の技術領域に関する専門知識セット。`/skill-name` で呼び出し可能。
-
-**カテゴリ:**
-- **レビュー系**: comprehensive-review（統合スキル、`--focus={quality|security|docs}`）, uiux-review, ui-skills
-  - ※ code-quality-review, security-error-review, docs-test-reviewは統合済み（後方互換性あり）
-- **開発系**: backend-dev（統合スキル、`--lang={auto|go|typescript|python|rust}`）, react-best-practices, api-design, clean-architecture-ddd
-  - ※ go-backend, typescript-backendは統合済み（後方互換性あり）
-- **インフラ系**: container-ops（統合スキル、`--platform={docker|kubernetes|podman}`）, dockerfile-best-practices, terraform
-  - ※ kubernetes, docker-troubleshootは統合済み（後方互換性あり）
-
-**詳細**: [SKILL-MIGRATION.md](./tutorials/SKILL-MIGRATION.md) 参照
-
----
+特定技術領域の専門知識セット。`/skill-name` で呼び出し可能。一覧・依存関係: [SKILLS-MAP.md](./SKILLS-MAP.md)。
 
 ## Command（コマンド）
 
-ユーザーが `/command` 形式で呼び出すショートカット。
-
-| コマンド | 説明 |
-|---------|------|
-| `/flow` | タスク自動判定→最適ワークフロー実行 |
-| `/dev` | 実装モード |
-| `/review` | コードレビュー |
-| `/plan` | 設計・計画モード |
-| `/commit` | コミット支援 |
-
----
+`/command` 形式で呼び出すショートカット。一覧: [COMMANDS-GUIDE.md](./COMMANDS-GUIDE.md)。
 
 ## Guideline（ガイドライン）
 
 言語・フレームワーク固有のベストプラクティス集。
 
-**構成:**
-- `summaries/` - 要約版（トークン節約用、優先読み込み）
-- `languages/` - 言語固有（Go, TypeScript, React等）
+- `summaries/` - 要約版（トークン節約・優先読込）
+- `languages/` - 言語固有（Go, TypeScript, React 等）
 - `common/` - 共通ルール
 - `design/` - 設計パターン
 - `infrastructure/` - インフラ関連
 
----
-
-## protection-mode（Protection Mode（操作保護モード））
+## protection-mode（操作保護モード）
 
 操作の安全性を3層で分類する思考フレームワーク。
 
-| 層 | 分類 | 例 |
-|----|------|-----|
-| 安全操作 | 即実行可 | Read, Glob, git status |
-| 要確認操作 | 要確認 | Edit, Write, git commit |
-| 禁止操作 | 拒否 | rm -rf /, secrets漏洩 |
-
----
+| 層 | 例 |
+|----|-----|
+| 安全操作（即実行） | Read, Glob, git status |
+| 要確認操作 | Edit, Write, git commit |
+| 禁止操作（拒否） | rm -rf /, secrets 漏洩 |
 
 ## Worktree
 
-Gitの機能で、同一リポジトリから複数の作業ディレクトリを作成する。並列開発に使用。
+Git 機能、同一リポジトリから複数の作業ディレクトリを作成。並列開発に使用。
 
 ```bash
-# 作成
 git worktree add -b feature/new wt-feat-new main
-
-# 削除
 git worktree remove wt-feat-new
 ```
 
----
-
 ## additionalContext
 
-フックからモデルに追加情報を提供する仕組み（v2.1.9+）。JSON形式で返却。
+Hook からモデルに追加情報を提供する仕組み（v2.1.9+）。JSON 形式で返却。
 
 ```json
 {
