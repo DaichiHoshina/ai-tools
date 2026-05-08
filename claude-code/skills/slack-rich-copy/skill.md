@@ -1,6 +1,6 @@
 ---
 name: slack-rich-copy
-description: HTMLをSlack/Notion/Gmailで貼れるリッチテキスト（public.html + RTF + plain text）としてmacOSクリップボードに設定。リンク付きリストやテーブルをそのまま貼付できる。Slackにリンク一覧を送るとき等に使用。
+description: HTMLをSlack/Notion/Gmail で貼れるリッチテキスト（HTML+RTF+plain）として macOS クリップボードへ。リンク一覧・テーブル貼付時に使用。
 ---
 
 # slack-rich-copy
