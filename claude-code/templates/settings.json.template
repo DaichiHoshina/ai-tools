@@ -24,6 +24,9 @@
       ]
     }
   },
+  "worktree": {
+    "baseRef": "fresh"
+  },
   "permissions": {
     "allow": [
       "Bash(git *)",
