@@ -15,13 +15,9 @@
 
 ---
 
-## 2.1.132 (2026-05-07 検出)
+## 2.1.133 (2026-05-08 検出)
 
-- [x] **`--plugin-url <url>` / `--plugin-dir <zip>`**: URL/zip からの plugin 取得。配布形式拡張（2.1.128 + 2.1.129） — 採用箇所: `claude-code/commands/skills-manage.md`（「Plugin 配布チャネル」節、gh skill 併記）
-
-## 2.1.126 (2026-05-02 検出)
-
-- [x] **`claude project purge [path]` サブコマンド**: プロジェクト state（transcripts/tasks/file history/config entry）を一括削除。`--dry-run` / `-y` / `-i` / `--all` 対応 — 採用箇所: `claude-code/SETUP.md`（トラブルシュート表）, `claude-code/references/session-management.md`（専用セクション）
+- [ ] **`worktree.baseRef: "head"` 個別指定**: デフォルト `fresh`（origin/<default> ベース）採用済み。未push commit を新worktree に持ち込みたい高度ユースケース時のみ個別 settings で `"head"` 指定する運用 — 検討箇所: `~/.claude/settings.local.json`（個別タスク用）、`/flow --parallel` のドキュメント補足
 
 ## 2.1.121 (2026-04-28 検出)
 
@@ -30,8 +26,3 @@
 ## 2.1.118 (2026-04-23 検出)
 
 - [ ] **Hooks から MCP tool 直接呼出 (`type: "mcp_tool"`)**: shellスクリプト経由でなくhook定義から MCP tool を直接起動可能 — 検討箇所: `claude-code/hooks/*.sh`（session-end/task-completed 等で Notion/Slack を直接叩く余地）、`templates/settings.json.template` の `hooks` セクション。**重量実装、別タスク化**
-
-## 2.1.111 (2026-04-22 検出)
-
-- ~~**`OTEL_LOG_RAW_API_BODIES`**~~ (obsolete 2026-05-07): 通常運用では不要、デバッグ時のみ手動追加で対応する運用に確定。
-- ~~**Bash permission 緩和**~~ (調査済み 2026-05-07): 2.1.111 で read-only コマンド + glob と `cd <project-dir> &&` プレフィックスは自動許可化されたが、`settings.json.template` の既存 `Bash(npm *)` 等サフィックスワイルドカードや deny エントリは引き続き明示必要。**削除対象なし、対応不要**。参考: <https://code.claude.com/docs/en/permissions.md>（Compound commands / Read-only commands セクション）
