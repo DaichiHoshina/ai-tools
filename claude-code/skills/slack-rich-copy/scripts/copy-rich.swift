@@ -47,7 +47,12 @@ let rtf = try attr.data(
 
 let plain: String
 if args.count >= 3 {
-    plain = (try? String(contentsOfFile: args[2], encoding: .utf8)) ?? attr.string
+    do {
+        plain = try String(contentsOfFile: args[2], encoding: .utf8)
+    } catch {
+        FileHandle.standardError.write(Data("warning: failed to read plain_file '\(args[2])': \(error.localizedDescription) -- falling back to HTML-derived text\n".utf8))
+        plain = attr.string
+    }
 } else {
     plain = attr.string
 }
