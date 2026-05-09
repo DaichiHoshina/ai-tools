@@ -15,6 +15,10 @@
 
 ---
 
+## 2.1.136 (2026-05-09 検出)
+
+- [ ] **`settings.autoMode.hard_deny`**: auto mode 分類器の無条件ブロックルール。`/flow-auto` で危険操作（force push / DB drop 等）を確実に止める安全網として有用 — 検討箇所: `claude-code/templates/settings.json.template`（`autoMode` セクション新設）、`/flow-auto` skill ドキュメント
+
 ## 2.1.133 (2026-05-08 検出)
 
 - [ ] **`worktree.baseRef: "head"` 個別指定**: デフォルト `fresh`（origin/<default> ベース）採用済み。未push commit を新worktree に持ち込みたい高度ユースケース時のみ個別 settings で `"head"` 指定する運用 — 検討箇所: `~/.claude/settings.local.json`（個別タスク用）、`/flow --parallel` のドキュメント補足
