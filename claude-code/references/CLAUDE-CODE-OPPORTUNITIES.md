@@ -17,7 +17,7 @@
 
 ## 2.1.136 (2026-05-09 検出)
 
-- [ ] **`settings.autoMode.hard_deny`**: auto mode 分類器の無条件ブロックルール。`/flow-auto` で危険操作（force push / DB drop 等）を確実に止める安全網として有用 — 検討箇所: `claude-code/templates/settings.json.template`（`autoMode` セクション新設）、`/flow-auto` skill ドキュメント
+- ~~**`settings.autoMode.hard_deny`**~~ (obsolete 2026-05-11): `permissions.deny` で force push / rm -rf / sudo / secret read 等を既に網羅、`autoMode` は shared project settings から読まれない仕様（公式 docs）で repo template 配置は無効、incremental value 小
 
 ## 2.1.133 (2026-05-08 検出)
 
