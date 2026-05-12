@@ -23,6 +23,10 @@ paths:
 | `-----BEGIN.*PRIVATE KEY-----` | 秘密鍵 |
 | 64文字以上の Base64 | 連続英数字 |
 
+**コード強制 (LLM 判断に依存しない hook 層)**:
+- 入力側: `hooks/pre-tool-use.sh` が Write/Edit 入力を検査、検出時 block
+- 出力側: `hooks/post-tool-use.sh` が Bash `tool_response.stdout` を `lib/output-sanitizer.sh` で `[REDACTED]` 置換 (Phase 1、上記表 5 パターン対象、`hookSpecificOutput.updatedToolOutput` で書換 + `additionalContext` で Claude に通知)
+
 ## 3. クラウドメタデータ保護（SSRF防止）
 
 アクセス禁止: `169.254.169.254` (AWS/Azure) / `metadata.google.internal` (GCP) / `100.100.100.200` (Alibaba)

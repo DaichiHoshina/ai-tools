@@ -125,6 +125,21 @@ case "$TOOL_NAME" in
     ;;
 esac
 
+# --- Output Sanitization (Bash 出力のシークレット検出/REDACT) ---
+# rules/enterprise-security.md §2 のコード強制実装 (Phase 1: Bash のみ)
+SANITIZE_COUNT=0
+SANITIZED_STDOUT=""
+if [[ "${TOOL_NAME}" == "Bash" ]]; then
+  BASH_STDOUT=$(jq -r '.tool_response.stdout // ""' <<< "$INPUT")
+  if [[ -n "${BASH_STDOUT}" ]] && [[ -f "${SCRIPT_DIR}/../lib/output-sanitizer.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "${SCRIPT_DIR}/../lib/output-sanitizer.sh"
+    _SANITIZE_RESULT=$(sanitize_text "${BASH_STDOUT}")
+    SANITIZE_COUNT="${_SANITIZE_RESULT%%$'\x1f'*}"
+    SANITIZED_STDOUT="${_SANITIZE_RESULT#*$'\x1f'}"
+  fi
+fi
+
 # --- Analytics記録 ---
 _LIB_DIR="${SCRIPT_DIR}/../lib"
 if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
@@ -139,8 +154,18 @@ if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
 fi
 
 # JSON出力
-if [ -n "$MESSAGE" ]; then
-  jq -n --arg msg "$MESSAGE" '{systemMessage: $msg}'
+if [[ "${SANITIZE_COUNT}" -gt 0 ]]; then
+  # シークレット検出 → tool 出力を書換 + Claude に通知
+  _CTX="Secrets redacted: ${SANITIZE_COUNT} occurrence(s) in Bash stdout (rules/enterprise-security.md §2)"
+  if [ -n "${MESSAGE}" ]; then
+    jq -n --arg msg "${MESSAGE}" --arg out "${SANITIZED_STDOUT}" --arg ctx "${_CTX}" \
+      '{systemMessage: $msg, hookSpecificOutput: {hookEventName: "PostToolUse", updatedToolOutput: $out, additionalContext: $ctx}}'
+  else
+    jq -n --arg out "${SANITIZED_STDOUT}" --arg ctx "${_CTX}" \
+      '{hookSpecificOutput: {hookEventName: "PostToolUse", updatedToolOutput: $out, additionalContext: $ctx}}'
+  fi
+elif [ -n "${MESSAGE}" ]; then
+  jq -n --arg msg "${MESSAGE}" '{systemMessage: $msg}'
 else
   echo "{}"
 fi
