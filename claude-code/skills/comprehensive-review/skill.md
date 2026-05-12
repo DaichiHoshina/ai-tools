@@ -66,6 +66,15 @@ parameters:
 
 `git diff --name-only`で言語・ファイル種別・変更規模を判断し、自動追加観点を決定。
 
+**コードファイルの探索は Serena 優先**（grep より精度高、参照漏れ防止）:
+- 影響範囲 → `find_referencing_symbols`
+- interface ↔ impl → `find_implementations`
+- 宣言位置 → `find_declaration`
+- 型診断 → `get_diagnostics_for_file` (外部 typecheck 不要、LSP 直接)
+- 構造把握 → `get_symbols_overview`、シンボル探索 → `find_symbol`
+
+非コードファイル（md/yaml/json/toml/lockfile/.env）は Grep/Read 使用（Serena 対象外）。
+
 | 条件 | 追加観点 |
 |------|---------|
 | テストファイル（`*_test.*`, `*.spec.*`） | `docs` |

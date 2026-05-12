@@ -12,6 +12,11 @@ tools:
   - Bash
   - mcp__serena__find_symbol
   - mcp__serena__get_symbols_overview
+  - mcp__serena__find_referencing_symbols
+  - mcp__serena__find_declaration
+  - mcp__serena__find_implementations
+  - mcp__serena__get_diagnostics_for_file
+  - mcp__serena__get_diagnostics_for_symbol
 disallowedTools:
   - Write
   - Edit
@@ -110,6 +115,21 @@ git status
 # 差分確認
 git diff
 ```
+
+### 1.5. コードファイルの探索は Serena 優先
+
+変更がコードファイル（.go/.ts/.py/.rs/.java/.kt/.dart/.swift 等）を含む時は **Serena 経由**で探索する（grep より精度高）。
+
+| やりたいこと | 使うツール |
+|------------|-----------|
+| 影響範囲・呼び出し元の全列挙 | `find_referencing_symbols` |
+| interface ↔ impl の追跡 | `find_implementations` |
+| 宣言位置の特定 | `find_declaration` |
+| ファイル構造の把握 | `get_symbols_overview` |
+| シンボル単体探索 | `find_symbol` |
+| 型エラー・LSP 診断 | `get_diagnostics_for_file` / `_for_symbol` |
+
+非コードファイル（md/yaml/json/toml/lockfile/.env）は Grep/Read 使用。Serena 対象外。
 
 ### 2. 関連スキルの適用
 
