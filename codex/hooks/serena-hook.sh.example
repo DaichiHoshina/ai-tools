@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Serena reminder hooks wrapper for Codex
+# Usage: serena-hook.sh <subcmd>
+#   subcmd: activate | remind | cleanup
+
+set -euo pipefail
+
+SUBCMD="${1:-}"
+case "$SUBCMD" in
+  activate|remind|cleanup) ;;
+  *)
+    echo "Usage: $(basename "$0") <activate|remind|cleanup>" >&2
+    exit 64
+    ;;
+esac
+
+SERENA_DIR="${SERENA_PATH:-$HOME/serena}"
+if [[ ! -d "$SERENA_DIR" ]]; then
+  exit 0
+fi
+
+if ! command -v uv >/dev/null 2>&1; then
+  exit 0
+fi
+
+# UV_CACHE_DIR: keep hook execution off the default cache path used by the sandboxed CLI.
+# PYTHONWARNINGS=ignore: Python 3.14 + Pydantic V1 warning noise suppression.
+# SERENA_USAGE_REPORTING=false: reduce background network/reporting noise in hook calls.
+exec env UV_CACHE_DIR=/tmp/uv-cache PYTHONWARNINGS=ignore SERENA_USAGE_REPORTING=false uv run --directory "$SERENA_DIR" serena-hooks "$SUBCMD" --client=codex

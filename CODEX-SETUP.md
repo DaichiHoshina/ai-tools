@@ -50,6 +50,7 @@ mkdir -p ~/.codex/hooks
 cp ~/ai-tools/codex/config.toml.example ~/.codex/config.toml
 cp ~/ai-tools/codex/AGENTS.md.example ~/.codex/AGENTS.md
 cp ~/ai-tools/codex/COMMANDS.md ~/.codex/COMMANDS.md
+cp ~/ai-tools/codex/hooks.json.example ~/.codex/hooks.json
 cp ~/ai-tools/codex/hooks/*.example ~/.codex/hooks/
 
 # 3. hooksファイルをリネーム（.exampleを削除）
@@ -77,6 +78,7 @@ codex
 |---------|------|-----------|
 | `config.toml` | メイン設定（MCPサーバー、プロファイル等） | ✅ パス変更必須 |
 | `AGENTS.md` | Codex運用ガイド | ❌ そのまま使用可 |
+| `hooks.json` | Codex lifecycle hooks 設定 | ❌ そのまま使用可 |
 | `hooks/*.sh` | セッション開始/終了時の処理 | ❌ そのまま使用可 |
 
 ## 共有リソース
@@ -86,6 +88,12 @@ Commands、Skills、Guidelinesは Claude Code と共有されます：
 - **Commands**: `/flow`, `/dev`, `/review` 等
 - **Skills**: `go-backend`, `typescript-backend` 等
 - **Guidelines**: 開発原則、型安全性ガイド等
+
+Serena は Codex 専用 context で起動します。
+
+- MCP: `serena start-mcp-server --project-from-cwd --context=codex`
+- Hooks: `codex_hooks = true` + `~/.codex/hooks.json`
+- Hook wrapper: `~/.codex/hooks/serena-hook.sh`
 
 ## 同期・更新
 

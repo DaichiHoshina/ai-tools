@@ -54,6 +54,10 @@ include-plan-tool = true
 [defaults]
 profile = "compact"
 
+[features]
+memories = true
+codex_hooks = true
+
 # ═══════════════════════════════════════════════════════════
 # MCP Servers Configuration
 # ═══════════════════════════════════════════════════════════
@@ -71,12 +75,16 @@ args = [
   "run",
   "--directory",
   "$HOME/serena",
-  "serena-mcp-server",
-  "--project",
-  "$HOME"
+  "serena",
+  "start-mcp-server",
+  "--project-from-cwd",
+  "--context=codex"
 ]
-env = {}
 startup_timeout_sec = 90
+
+[mcp_servers.serena.env]
+UV_CACHE_DIR = "/tmp/uv-cache"
+PYTHONWARNINGS = "ignore"
 
 # Context7: 最新ドキュメント取得（計画時に必須）
 [mcp_servers.context7]

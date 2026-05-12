@@ -25,6 +25,7 @@
 |---------|------|---------|
 | `config.toml` | メイン設定 | ⚠️ 慎重に編集（バックアップ推奨） |
 | `AGENTS.md` | 運用ガイド | 🔒 保護セクション以外は編集可 |
+| `hooks.json` | Codex lifecycle hooks | ⚠️ Serena 最適化時のみ編集 |
 | `.serena/project.yml` | Serena設定 | ⚠️ 最適化時のみ編集 |
 | `hooks/*.sh` | フック処理 | ⚠️ 動作確認後に編集 |
 | `.gitignore` | Git除外設定 | ✅ 必要に応じて追加 |
@@ -79,6 +80,9 @@ cd ~/ai-tools
 | **playwright** | ブラウザ自動化 | 任意 |
 
 設定詳細: `config.toml` 参照
+
+Codex の Serena は `--project-from-cwd --context=codex` を基本形とする。
+`[features] codex_hooks = true` と `hooks.json` により、起動時 activate / Bash 前 remind / 終了時 cleanup を行う。
 
 **Note**: Codex自体はMCPサーバーではなく、gpt-5.2-codexモデルを使用するCLIツールです。
 

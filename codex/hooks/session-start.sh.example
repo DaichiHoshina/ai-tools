@@ -18,11 +18,11 @@ if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
   cat <<EOF
 {
   "systemMessage": "✅ .codex session initialized",
-  "additionalContext": "**Serena MCP active**: onboarding memory loaded
+  "additionalContext": "**Serena MCP active**: repo-local analysis ready
 
 **AI運用7原則**:
 1. 質問時: \`afplay ~/button.mp3\`
-2. 全指示を \`/serena\` で実行
+2. コード探索は Serena symbolic tools を優先
 3. 計画時は Context7 で最新ドキュメント確認
 4. 勝手な整形・lint禁止（git差分範囲のみ）
 5. 完了時: \`afplay ~/notification.mp3\` + トークン表示
@@ -34,7 +34,7 @@ if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
 - 🚫 禁止操作: dangerous operations blocked
 - Type safety: Avoid 'any', minimize 'as'
 
-Run: \`mcp__serena__list_memories\`, \`mcp__serena__check_onboarding_performed\`"
+Run: \`mcp__serena__initial_instructions\`, \`mcp__serena__list_memories\`, \`mcp__serena__check_onboarding_performed\`"
 }
 EOF
 else
@@ -43,7 +43,7 @@ else
   "systemMessage": "⚠️ Serena not configured - basic mode",
   "additionalContext": "**AI運用7原則**:
 1. 質問時: \`afplay ~/button.mp3\`
-2. 全指示を \`/serena\` で実行
+2. コード探索は repo の既存ツールを優先
 3. 計画時は Context7 で最新ドキュメント確認
 4. 勝手な整形・lint禁止
 5. 完了時: \`afplay ~/notification.mp3\`

@@ -174,8 +174,13 @@ copy_templates() {
         print_success "更新: COMMANDS.md"
     fi
 
+    # Codex lifecycle hooks
+    if [ -f "$SCRIPT_DIR/hooks.json.example" ]; then
+        copy_template "$SCRIPT_DIR/hooks.json.example" "$CODEX_DIR/hooks.json" "hooks.json"
+    fi
+
     # Hooks
-    for hook in session-start session-end user-prompt-submit pre-tool-use stop pre-compact; do
+    for hook in session-start session-end user-prompt-submit pre-tool-use stop pre-compact serena-hook; do
         local template="$SCRIPT_DIR/hooks/${hook}.sh.example"
         local target="$CODEX_DIR/hooks/${hook}.sh"
 
@@ -255,8 +260,8 @@ main() {
     echo ""
     print_info "次のステップ:"
     echo "  1. ~/.codex/config.toml を確認・編集してください"
-    echo "  2. ~/.codex/hooks/*.sh を必要に応じてカスタマイズ"
-    echo "  3. Codex を起動して動作確認: codex"
+    echo "  2. ~/.codex/hooks.json と ~/.codex/hooks/*.sh を必要に応じて確認"
+    echo "  3. Codex を起動して Serena hooks / MCP を動作確認: codex"
     echo ""
     print_info "利用可能な機能:"
     echo "  - 8種類のエージェント (po, manager, developer, explore, ...)"
