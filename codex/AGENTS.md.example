@@ -40,15 +40,16 @@
 
 ## Claude Code リソース統合（Level 4）
 
-**シンボリックリンク方式**: 以下のリソースがClaude Codeと完全同期されます。
+**シンボリックリンク方式**: 以下の共有リソースを Claude Code と同期し、Codex native skills は維持します。
 
 | リソース | パス | 内容 |
 |---------|------|------|
 | **agents** | `~/.codex/agents/` → `~/ai-tools/claude-code/agents/` | 8種類のエージェント定義 |
-| **skills** | `~/.codex/skills/` → `~/ai-tools/claude-code/skills/` | 24種類のスキル定義 |
 | **guidelines** | `~/.codex/guidelines/` → `~/ai-tools/claude-code/guidelines/` | 29種類のガイドライン |
 | **commands** | `~/.codex/commands/` → `~/ai-tools/claude-code/commands/` | 19種類のコマンド |
 | **lib** | `~/.codex/lib/` → `~/ai-tools/claude-code/lib/` | 共通ライブラリ |
+
+`~/.codex/skills/` は Codex 自体が管理する native directory として保持する。
 
 ### セットアップ
 

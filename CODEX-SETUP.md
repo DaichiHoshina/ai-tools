@@ -1,10 +1,10 @@
 # Codex (gpt-5.2-codex) セットアップ
 
-このリポジトリはCodexにも対応しています。Claude Codeのリソース（agents, skills, guidelines, commands, lib）をシンボリックリンクで共有します。
+このリポジトリはCodexにも対応しています。Claude Codeの共有リソース（agents, guidelines, commands, lib）をシンボリックリンクで共有し、`~/.codex/skills` は Codex native directory を維持します。
 
 ## Level 4: フル同期セットアップ（推奨）
 
-**特徴**: Claude Codeと完全同等の機能を実現
+**特徴**: Claude Code 由来の共有資産を Codex に同期しつつ、Codex 固有 skills を保持
 
 ```bash
 # 自動セットアップスクリプトを実行
@@ -12,7 +12,7 @@ cd ~/ai-tools
 ./codex/install.sh
 
 # 実行内容:
-# ✅ シンボリックリンク自動作成（agents, skills, guidelines, commands, lib）
+# ✅ シンボリックリンク自動作成（agents, guidelines, commands, lib）
 # ✅ テンプレートファイル自動コピー
 # ✅ インストール検証
 
@@ -26,7 +26,7 @@ codex
 # シンボリックリンク確認
 ls -la ~/.codex/
 # agents@ -> ~/ai-tools/claude-code/agents/
-# skills@ -> ~/ai-tools/claude-code/skills/
+# skills/ は Codex native directory のまま維持
 # guidelines@ -> ~/ai-tools/claude-code/guidelines/
 # commands@ -> ~/ai-tools/claude-code/commands/
 # lib@ -> ~/ai-tools/claude-code/lib/
@@ -59,7 +59,6 @@ for f in *.example; do mv "$f" "${f%.example}"; done
 
 # 4. 共有リソースのシンボリックリンク作成
 ln -sf ~/ai-tools/claude-code/agents ~/.codex/agents
-ln -sf ~/ai-tools/claude-code/skills ~/.codex/skills
 ln -sf ~/ai-tools/claude-code/guidelines ~/.codex/guidelines
 ln -sf ~/ai-tools/claude-code/commands ~/.codex/commands
 ln -sf ~/ai-tools/claude-code/lib ~/.codex/lib
@@ -83,11 +82,11 @@ codex
 
 ## 共有リソース
 
-Commands、Skills、Guidelinesは Claude Code と共有されます：
+Commands と Guidelines は Claude Code と共有されます。Skills は Codex 側の native skills を維持します。
 
 - **Commands**: `/flow`, `/dev`, `/review` 等
-- **Skills**: `go-backend`, `typescript-backend` 等
 - **Guidelines**: 開発原則、型安全性ガイド等
+- **Skills**: `~/.codex/skills` の Codex native skills を維持
 
 Serena は Codex 専用 context で起動します。
 

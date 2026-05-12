@@ -135,7 +135,7 @@ setup_directories() {
 create_symlinks() {
     print_header "シンボリックリンクの作成"
 
-    local SHARED_RESOURCES=("agents" "skills" "guidelines" "commands" "lib")
+    local SHARED_RESOURCES=("agents" "guidelines" "commands" "lib")
 
     for resource in "${SHARED_RESOURCES[@]}"; do
         local source="$AI_TOOLS_DIR/claude-code/$resource"
@@ -203,7 +203,7 @@ verify_installation() {
     local errors=0
 
     # Check symlinks
-    for resource in agents skills guidelines commands lib; do
+    for resource in agents guidelines commands lib; do
         if [ -L "$CODEX_DIR/$resource" ]; then
             print_success "$resource/ のシンボリックリンクが存在します"
         else
@@ -211,6 +211,12 @@ verify_installation() {
             ((errors++))
         fi
     done
+
+    if [ -d "$CODEX_DIR/skills" ]; then
+        print_success "skills/ は Codex native directory として存在します"
+    else
+        print_warning "skills/ が見つかりません（Codex 側で自動生成される場合があります）"
+    fi
 
     # Check config files
     if [ -f "$CODEX_DIR/config.toml" ]; then
@@ -242,8 +248,8 @@ verify_installation() {
 main() {
     print_header "Codex Configuration Installer (Level 4)"
 
-    echo "このスクリプトは Claude Code のリソースを Codex と完全同期します。"
-    echo "シンボリックリンクにより agents, skills, guidelines, commands, lib を共有します。"
+    echo "このスクリプトは Claude Code の共有リソースを Codex に同期します。"
+    echo "シンボリックリンクにより agents, guidelines, commands, lib を共有します。skills は Codex native directory を維持します。"
     echo ""
 
     if ! confirm "インストールを開始しますか？" "y"; then
