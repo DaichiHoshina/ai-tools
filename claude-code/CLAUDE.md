@@ -22,6 +22,7 @@ claude-code/
 - 🔒 PROTECTED SECTION（CLAUDE.md内）は変更禁止
 - frontmatter（---で囲まれた部分）は正確なYAML形式を維持
 - **`claude-code/VERSION` は Claude Code CLI本体のバージョン追従用**。CLI リリース取り込み時のみ更新（`/claude-update-fix` 担当）
+- **`claude-code/SERENA_VERSION` は Serena MCP のバージョン追従用**。Serena リリース取り込み時のみ更新（`/serena-update-fix` 担当）
 
 ## 定義ファイルのトークン節約原則
 

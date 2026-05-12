@@ -28,6 +28,7 @@ CLAUDE_DIR="$HOME/.claude"
 # 追加するファイル/ディレクトリはここにのみ書き、両関数で参照する。
 SYNC_ITEMS=(
     "VERSION"
+    "SERENA_VERSION"
     "CLAUDE.md"
     "CANONICAL.md"
     "commands"
@@ -391,7 +392,7 @@ sync_from_local() {
     print_header "ローカル → リポジトリ 同期"
 
     # 単体ファイル同期
-    local files=("VERSION" "CLAUDE.md" "CANONICAL.md")
+    local files=("VERSION" "SERENA_VERSION" "CLAUDE.md" "CANONICAL.md")
     for file in "${files[@]}"; do
         if [ -f "$CLAUDE_DIR/$file" ]; then
             if ! cp "$CLAUDE_DIR/$file" "$SCRIPT_DIR/$file"; then
