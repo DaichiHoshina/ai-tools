@@ -10,6 +10,7 @@
 # Codex設定（テンプレートのみ管理、実ファイルは除外）
 codex/AGENTS.md
 codex/config.toml
+codex/hooks.json
 codex/hooks/*.sh
 !codex/*.example
 !codex/COMMANDS.md
