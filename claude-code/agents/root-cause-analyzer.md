@@ -181,4 +181,16 @@ mcp__serena__write_memory("rca-{YYYYMMDD}-{要約}", レポート内容)
 
 ## Serena MCP必須使用
 
-すべてのコード操作で Serena MCP ツール（`find_symbol` / `find_referencing_symbols` / `search_for_pattern` / `read_file` / `get_symbols_overview` / `write_memory`）を使用。詳細は各 Step の用例参照。
+すべてのコード操作で Serena MCP ツール使用。役割別マッピング:
+
+| 用途 | ツール |
+|------|-------|
+| 構造把握 | `get_symbols_overview`, `find_symbol` |
+| 参照追跡（呼び出し元・依存方向） | `find_referencing_symbols` |
+| interface ↔ impl 追跡 | `find_implementations` (v1.3.0) |
+| 宣言/定義位置 | `find_declaration` (v1.3.0) |
+| 型エラー・LSP 診断 | `get_diagnostics_for_file` / `_for_symbol` (v1.3.0) |
+| パターン横断検索 | `search_for_pattern` |
+| 結果保存 | `write_memory` |
+
+詳細は各 Step の用例参照。

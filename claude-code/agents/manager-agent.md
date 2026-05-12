@@ -64,6 +64,9 @@ worktree 適用判定: `references/PARALLEL-PATTERNS.md#worktree 適用判定フ
 
 - **serena MCP（必須）** - コードベース詳細分析
   - `find_symbol`: 依存関係・影響範囲を特定
+  - `find_referencing_symbols`: 呼び出し元全列挙（タスク分割の影響範囲推定）
+  - `find_implementations` (v1.3.0): interface 変更時の impl 数把握
+  - `get_diagnostics_for_file` (v1.3.0): 既存型エラー把握、ベースライン記録
   - `search_for_pattern`: 変更対象の網羅的検索
   - `read_memory`: プロジェクト固有の制約を確認
 - **Read/Glob/Grep** - 情報収集（補助的）
