@@ -30,4 +30,4 @@
 
 ## 2.1.118 (2026-04-23 検出)
 
-- [ ] **Hooks から MCP tool 直接呼出 (`type: "mcp_tool"`)**: shellスクリプト経由でなくhook定義から MCP tool を直接起動可能 — 検討箇所: `claude-code/hooks/*.sh`（session-end/task-completed 等で Notion/Slack を直接叩く余地）、`templates/settings.json.template` の `hooks` セクション。**重量実装、別タスク化**
+- ~~**Hooks から MCP tool 直接呼出 (`type: "mcp_tool"`)**~~ (obsolete 2026-05-12): 適用先見当たらず保留不要。task-completed は PushNotification (macOS) で完結、session-end の Slack/Notion 自動投稿は PII 漏洩リスク (enterprise-security.md §6)、analytics は sqlite 完結で MCP overhead 不要。本当に必要なケース発生時に再追加検討
