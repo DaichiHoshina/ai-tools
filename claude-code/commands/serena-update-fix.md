@@ -76,7 +76,12 @@ CONFIG タグで schema breaking change がある時、全プロジェクトの 
 2. 接続検証: `claude mcp list` で `serena: ... ✓ Connected` 確認
 3. `./sync.sh to-local --yes` 実行（template 変更があった場合のみ）
 4. Opportunity 追跡ファイル更新（Phase 3-B 差分反映）
-5. 3+ファイル変更 or 非自明判断あれば Serena memory に `serena-update-YYYYMMDD` で保存
+5. CC system prompt override ファイル再生成（cc-system-prompt-override 採用時のみ）:
+   ```bash
+   PYTHONWARNINGS=ignore uv run --directory ~/serena serena prompts print-cc-system-prompt-override > ~/.claude/serena-cc-prompt.txt
+   ```
+   運用詳細: `references/serena-cc-prompt-setup.md`
+6. 3+ファイル変更 or 非自明判断あれば Serena memory に `serena-update-YYYYMMDD` で保存
 
 ## 注意
 

@@ -17,12 +17,12 @@
 
 ## 2.1.139 (2026-05-12 検出)
 
-- [ ] **hook `args: string[]` (exec form)**: shell を介さず直接 spawn、path 引数の quoting 不要。`claude-code/hooks/*.sh` を呼ぶ template hook 定義で path placeholder 含むケース時に検討 — 検討箇所: `claude-code/templates/settings.json.template` の hooks セクション
+- [ ] **hook `args: string[]` (exec form)**: shell を介さず直接 spawn、path 引数の quoting 不要 — 検討箇所: `claude-code/templates/settings.json.template` の hooks セクション。**技術的障壁** (2026-05-12 検証): 公式 docs (`code.claude.com/docs/en/hooks`) で exec form では `~` / `$HOME` **展開不可**と明言、user-scope global hook 用の placeholder (`${CLAUDE_USER_HOME}` 等) は未提供。`${CLAUDE_PROJECT_DIR}` は project 用。Claude Code 側に user-global placeholder 追加されるまで保留
 - [ ] **PostToolUse `continueOnBlock: true`**: hook の rejection 理由を Claude にフィードバックして turn 継続。`post-tool-use-failure.sh` の block 動作と組合せ余地 — 検討箇所: `claude-code/hooks/post-tool-use-failure.sh`, settings template
 
 ## 2.1.133 (2026-05-08 検出)
 
-- [ ] **`worktree.baseRef: "head"` 個別指定**: デフォルト `fresh`（origin/<default> ベース）採用済み。未push commit を新worktree に持ち込みたい高度ユースケース時のみ個別 settings で `"head"` 指定する運用 — 検討箇所: `~/.claude/settings.local.json`（個別タスク用）、`/flow --parallel` のドキュメント補足
+- [x] **`worktree.baseRef: "head"` 個別指定** ✅ 採用 (2026-05-12): `commands/flow.md` の `--parallel` セクションに「高度ユースケース」として運用補足追記、デフォルト `fresh` 維持で個別 `settings.local.json` override 案内
 
 ## 2.1.121 (2026-04-28 検出)
 

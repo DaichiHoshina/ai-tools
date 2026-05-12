@@ -28,4 +28,5 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 # PYTHONWARNINGS=ignore: Python 3.14 + Pydantic V1 互換警告（毎回 stderr）を抑制
-exec env PYTHONWARNINGS=ignore uv run --directory "$SERENA_DIR" serena-hooks "$SUBCMD" --client=claude-code
+# SERENA_USAGE_REPORTING=false: usage data 送信 OFF（v1.1.2+、PII なしだが network ノイズ削減）
+exec env PYTHONWARNINGS=ignore SERENA_USAGE_REPORTING=false uv run --directory "$SERENA_DIR" serena-hooks "$SUBCMD" --client=claude-code

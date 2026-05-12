@@ -64,6 +64,10 @@ Team 経路で worktree 並列を強制評価。判定式詳細は `references/P
 
 変更あり → ブランチ返却・親がマージ・worktree 削除 / 変更なし → 自動削除 / 衝突 → 順次降格・worktree 残置。
 
+### `worktree.baseRef` 設定（高度ユースケース）
+
+デフォルト `fresh`（`origin/<default>` ベース）採用済み = clean main で worktree 作成。`~/.claude/settings.local.json` で個別タスク単位に `"head"` 指定すると未 push commit を新 worktree に持ち込める（in-progress branch から派生したい時のみ）。常用非推奨（main 汚染リスク）。
+
 ## --auto 完全自律モード
 
 | 判断 | 動作 |

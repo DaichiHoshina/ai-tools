@@ -23,8 +23,8 @@
 
 ## v1.2.0 (2026-05-12 検出 / 過去遡及)
 
-- [ ] **`print-cc-system-prompt-override` CLI**: `serena prompts print-cc-system-prompt-override` で CC 用プロンプト上書き取得。前回 follow-up #3「cc-system-prompt-override 採用」が CLI 経由で実現可能に — 検討箇所: alias 経由で CC 起動時に注入 or CLAUDE.md に inline 化、reminder hooks (`be89e99`) との重複検証必要
-- [ ] **`SERENA_USAGE_REPORTING=false` 環境変数** (v1.1.2): usage data 送信 OFF 化可能（version/backend/OS のみ送信、PII なし）— 検討箇所: `hooks/serena-hook.sh` の `exec env` で設定、または `.envrc`/shell rc。プライバシー / network ノイズ削減
+- [x] **`print-cc-system-prompt-override` CLI** ✅ 採用 (2026-05-12): プロンプトファイル `~/.claude/serena-cc-prompt.txt` 生成 + alias 経由起動。運用ガイド `references/serena-cc-prompt-setup.md`、Phase 5 再生成手順組込。reminder hooks (`be89e99`) と補完関係（messages レイヤ vs system prompt レイヤ）
+- [x] **`SERENA_USAGE_REPORTING=false` 環境変数** (v1.1.2) ✅ 部分採用 (2026-05-12): `hooks/serena-hook.sh` で `exec env` 設定済。MCP 起動側 (user-scope) は `claude mcp` 再登録必要 → 別タスク
 
 ## v1.1.0 (2026-05-12 検出 / 過去遡及)
 
