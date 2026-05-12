@@ -8,13 +8,16 @@
         "run",
         "--directory",
         "${SERENA_PATH}",
-        "serena-mcp-server",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "claude-code",
         "--project",
         "${PROJECT_ROOT}"
       ],
       "env": {},
       "alwaysLoad": true,
-      "_comment": "Serena MCP - Symbolic code analysis and project memory management (project-specific). alwaysLoad: tool-search deferral skip (頻繁利用、2.1.121+)"
+      "_comment": "Serena MCP v1.3.0+ — start-mcp-server サブコマンド + --context claude-code（旧 serena-mcp-server は廃止）。alwaysLoad: tool-search deferral skip (頻繁利用、2.1.121+)"
     }
   }
 }
