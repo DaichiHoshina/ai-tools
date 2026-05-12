@@ -24,7 +24,7 @@
 ## v1.2.0 (2026-05-12 検出 / 過去遡及)
 
 - [x] **`print-cc-system-prompt-override` CLI** ✅ 採用 (2026-05-12): プロンプトファイル `~/.claude/serena-cc-prompt.txt` 生成 + alias 経由起動。運用ガイド `references/serena-cc-prompt-setup.md`、Phase 5 再生成手順組込。reminder hooks (`be89e99`) と補完関係（messages レイヤ vs system prompt レイヤ）
-- [x] **`SERENA_USAGE_REPORTING=false` 環境変数** (v1.1.2) ✅ 部分採用 (2026-05-12): `hooks/serena-hook.sh` で `exec env` 設定済。MCP 起動側 (user-scope) は `claude mcp` 再登録必要 → 別タスク
+- [x] **`SERENA_USAGE_REPORTING=false` 環境変数** (v1.1.2) ✅ 完全採用 (2026-05-12): `hooks/serena-hook.sh` の `exec env` 設定済 + MCP user-scope に `claude mcp add -e SERENA_USAGE_REPORTING=false` で再登録済。次回 CC 再起動以降全経路で usage data 送信 OFF
 
 ## v1.1.0 (2026-05-12 検出 / 過去遡及)
 
