@@ -58,11 +58,18 @@ _bats_check_impl() {
   fi
 }
 
+_bsc_grep_q() {
+  # _BSC_DEBUG=1 で grep の stderr (regex syntax error 等) を露出
+  if [[ "${_BSC_DEBUG:-0}" == "1" ]]; then
+    grep "$@" >/dev/null
+  else
+    grep "$@" >/dev/null 2>&1
+  fi
+}
+
 _check_violation() {
   # 設計: 1 @test ブロック内に複数違反があっても最初のマッチで return。
   # Hook 用途では「最初の違反を見せれば修正動機が働く」ため許容。
-  # TODO(後続): `run` あり + assert 0 個（$output/$result/$status 言及なし）の検出を pattern 5 として追加検討。
-  # TODO(後続): _BSC_DEBUG=1 で grep の stderr を見せるオプション追加検討（現状は regex syntax error が見えない）。
   local test_line="$1"
   local block="$2"
 
@@ -71,30 +78,30 @@ _check_violation() {
 
   # run keyword check or bash -c invocation
   # NOTE: BSD grep (macOS) は `\s` 非対応のため [[:space:]] を使う
-  if grep -E '^[[:space:]]*run[[:space:]]+|bash[[:space:]]+-c' <<< "$block" > /dev/null 2>&1; then
+  if _bsc_grep_q -E '^[[:space:]]*run[[:space:]]+|bash[[:space:]]+-c' <<< "$block"; then
     has_run=1
   fi
 
   # real assert check (出力値 / nameref / bash -c source 経由の実値検証)
   # shellcheck disable=SC2016 # $output / $result はリテラルとして grep する意図
-  if grep -E '\[\[.*\$output' <<< "$block" > /dev/null 2>&1 || \
-     grep -E 'result=.*\$\(bash' <<< "$block" > /dev/null 2>&1 || \
-     grep -E '\[\[.*\$result' <<< "$block" > /dev/null 2>&1; then
+  if _bsc_grep_q -E '\[\[.*\$output' <<< "$block" || \
+     _bsc_grep_q -E 'result=.*\$\(bash' <<< "$block" || \
+     _bsc_grep_q -E '\[\[.*\$result' <<< "$block"; then
     has_real_assert=1
   fi
 
   # pattern 1: no run + weak assert only
   if [ $has_run -eq 0 ]; then
-    if grep -E '^[[:space:]]*\[[[:space:]]*-f[[:space:]]+' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
+    if _bsc_grep_q -E '^[[:space:]]*\[[[:space:]]*-f[[:space:]]+' <<< "$block" && [ $has_real_assert -eq 0 ]; then
       echo "L${test_line}: $(echo "$block" | head -1)"
       return 0
     fi
-    if grep -E 'grep[[:space:]]+-q' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
+    if _bsc_grep_q -E 'grep[[:space:]]+-q' <<< "$block" && [ $has_real_assert -eq 0 ]; then
       echo "L${test_line}: $(echo "$block" | head -1)"
       return 0
     fi
     # shellcheck disable=SC2016 # $status はリテラル検索
-    if grep -E '^[[:space:]]*\[[[:space:]]*"\$status"[[:space:]]*-eq' <<< "$block" > /dev/null 2>&1 && [ $has_real_assert -eq 0 ]; then
+    if _bsc_grep_q -E '^[[:space:]]*\[[[:space:]]*"\$status"[[:space:]]*-eq' <<< "$block" && [ $has_real_assert -eq 0 ]; then
       echo "L${test_line}: $(echo "$block" | head -1)"
       return 0
     fi
@@ -102,19 +109,26 @@ _check_violation() {
 
   # pattern 2: binary assert
   # shellcheck disable=SC2016 # $status はリテラル検索
-  if grep -E '\[[[:space:]]*"\$status"[[:space:]]*-eq[[:space:]]*[0-9][[:space:]]*\][[:space:]]*\|\|[[:space:]]*\[[[:space:]]*"\$status"[[:space:]]*-eq' <<< "$block" > /dev/null 2>&1; then
+  if _bsc_grep_q -E '\[[[:space:]]*"\$status"[[:space:]]*-eq[[:space:]]*[0-9][[:space:]]*\][[:space:]]*\|\|[[:space:]]*\[[[:space:]]*"\$status"[[:space:]]*-eq' <<< "$block"; then
     echo "L${test_line}: $(echo "$block" | head -1)"
     return 0
   fi
 
   # pattern 3: grep suppress (`grep -q ... || true`)
-  if grep -E 'grep[[:space:]]+-q.*\|\|[[:space:]]*true' <<< "$block" > /dev/null 2>&1; then
+  if _bsc_grep_q -E 'grep[[:space:]]+-q.*\|\|[[:space:]]*true' <<< "$block"; then
     echo "L${test_line}: $(echo "$block" | head -1)"
     return 0
   fi
 
   # pattern 4: echo 'ok' tail
-  if echo "$block" | tail -2 | head -1 | grep -qE "^[[:space:]]*echo[[:space:]]+['\"]ok['\"]"; then
+  if echo "$block" | tail -2 | head -1 | _bsc_grep_q -E "^[[:space:]]*echo[[:space:]]+['\"]ok['\"]"; then
+    echo "L${test_line}: $(echo "$block" | head -1)"
+    return 0
+  fi
+
+  # pattern 5: run あり + $status/$output/$result/$lines のいずれも未参照
+  # shellcheck disable=SC2016 # bats 標準変数はリテラル検索
+  if [ $has_run -eq 1 ] && ! _bsc_grep_q -E '\$status|\$output|\$result|\$lines' <<< "$block"; then
     echo "L${test_line}: $(echo "$block" | head -1)"
     return 0
   fi

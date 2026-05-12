@@ -138,6 +138,15 @@ teardown() {
   [[ "$result" =~ L1: ]]
 }
 
+@test "bats-self-check: 異常系6: run のみ + 結果参照ゼロ → 検出あり" {
+  printf '%s\n' \
+    '@test "sample" {' \
+    '  run bash -c "echo hello"' \
+    '}' > "$TMP_FILE"
+  result=$(LIB_FILE="$LIB_FILE" TMP_FILE="$TMP_FILE" bash -c 'source "$LIB_FILE" && run_bats_check "$TMP_FILE"')
+  [[ "$result" =~ L1: ]]
+}
+
 # -----------------------------------------------------------------------------
 # 境界（3 ケース）
 # -----------------------------------------------------------------------------
@@ -164,6 +173,16 @@ teardown() {
 # -----------------------------------------------------------------------------
 # 統合（正常+異常混在、1 ケース）
 # -----------------------------------------------------------------------------
+
+@test "bats-self-check: debug: _BSC_DEBUG=1 でも正常系は検出ゼロ" {
+  printf '%s\n' \
+    '@test "sample" {' \
+    '  run bash -c "echo a"' \
+    '  [[ "$output" =~ "a" ]]' \
+    '}' > "$TMP_FILE"
+  result=$(LIB_FILE="$LIB_FILE" TMP_FILE="$TMP_FILE" _BSC_DEBUG=1 bash -c 'source "$LIB_FILE" && run_bats_check "$TMP_FILE"')
+  [ -z "$result" ]
+}
 
 @test "bats-self-check: 統合: 正常+異常混在 → 異常のみ検出" {
   printf '%s\n' \
