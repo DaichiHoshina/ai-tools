@@ -15,9 +15,10 @@
 
 ---
 
-## 2.1.136 (2026-05-09 検出)
+## 2.1.139 (2026-05-12 検出)
 
-- ~~**`settings.autoMode.hard_deny`**~~ (obsolete 2026-05-11): `permissions.deny` で force push / rm -rf / sudo / secret read 等を既に網羅、`autoMode` は shared project settings から読まれない仕様（公式 docs）で repo template 配置は無効、incremental value 小
+- [ ] **hook `args: string[]` (exec form)**: shell を介さず直接 spawn、path 引数の quoting 不要。`claude-code/hooks/*.sh` を呼ぶ template hook 定義で path placeholder 含むケース時に検討 — 検討箇所: `claude-code/templates/settings.json.template` の hooks セクション
+- [ ] **PostToolUse `continueOnBlock: true`**: hook の rejection 理由を Claude にフィードバックして turn 継続。`post-tool-use-failure.sh` の block 動作と組合せ余地 — 検討箇所: `claude-code/hooks/post-tool-use-failure.sh`, settings template
 
 ## 2.1.133 (2026-05-08 検出)
 
