@@ -27,4 +27,5 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 0
 fi
 
-exec uv run --directory "$SERENA_DIR" serena-hooks "$SUBCMD" --client=claude-code
+# PYTHONWARNINGS=ignore: Python 3.14 + Pydantic V1 互換警告（毎回 stderr）を抑制
+exec env PYTHONWARNINGS=ignore uv run --directory "$SERENA_DIR" serena-hooks "$SUBCMD" --client=claude-code
