@@ -166,6 +166,15 @@
             "command": "~/.claude/hooks/session-start.sh"
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/serena-hook.sh activate"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -186,6 +195,24 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/pre-tool-use.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/serena-hook.sh remind"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__serena__*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/serena-hook.sh auto-approve"
           }
         ]
       }
@@ -289,6 +316,16 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/stop.sh",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/serena-hook.sh cleanup",
             "async": true
           }
         ]
