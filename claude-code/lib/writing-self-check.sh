@@ -160,3 +160,89 @@ run_writing_check() {
     | sed -e 's/^/L/' \
     || true
 }
+
+# md ファイルで「5連続以上の bullet + 前後に地の文0行」を検出
+# Usage: run_bullet_density_check <file_path>
+# Output: "L<num>: bullet金太郎飴 (N連続, 地の文0)" 形式（ヒット時のみ）
+#
+# 検出ロジック:
+# - 連続 bullet（行頭 `-` `*` `+` または `N.`）を5以上カウント
+# - その bullet 集合の直前3行・直後3行に「地の文」（=非bullet・非空・非見出し・非表・非引用・非コードフェンス）が無い → 警告
+# - コードフェンス内は除外
+run_bullet_density_check() {
+  local file_path="${1:-}"
+
+  if [[ -z "${file_path}" ]] || [[ ! -f "${file_path}" ]]; then
+    return 0
+  fi
+
+  awk '
+    {
+      lines[NR] = $0
+      is_code[NR] = in_code
+      if (/^[[:space:]]*```/) {
+        in_code = !in_code
+      }
+    }
+    END {
+      bullet_start = 0
+      bullet_count = 0
+      for (i = 1; i <= NR; i++) {
+        curr = lines[i]
+        if (is_code[i]) {
+          bullet_count = 0
+          bullet_start = 0
+          continue
+        }
+        # bullet 行判定
+        is_bullet = match(curr, /^[[:space:]]*[-*+][[:space:]]/) || \
+                    match(curr, /^[[:space:]]*[0-9]+\.[[:space:]]/)
+        if (is_bullet) {
+          if (bullet_count == 0) bullet_start = i
+          bullet_count++
+        } else if (match(curr, /^[[:space:]]*$/)) {
+          # 空行は連続を断ち切らない
+          continue
+        } else {
+          # 連続 bullet 終わり、評価
+          if (bullet_count >= 5) {
+            # 前後3行内に地の文があるか
+            has_prose = 0
+            for (j = bullet_start - 3; j < bullet_start; j++) {
+              if (j < 1) continue
+              prev = lines[j]
+              if (is_code[j]) continue
+              if (match(prev, /^[[:space:]]*$/)) continue
+              if (match(prev, /^[[:space:]]*[-*+][[:space:]]/)) continue
+              if (match(prev, /^[[:space:]]*[0-9]+\.[[:space:]]/)) continue
+              if (match(prev, /^[[:space:]]*#/)) continue
+              if (match(prev, /^[[:space:]]*\|/)) continue
+              if (match(prev, /^[[:space:]]*>/)) continue
+              has_prose = 1
+              break
+            }
+            if (!has_prose) {
+              for (j = i; j <= i + 2 && j <= NR; j++) {
+                nxt = lines[j]
+                if (is_code[j]) continue
+                if (match(nxt, /^[[:space:]]*$/)) continue
+                if (match(nxt, /^[[:space:]]*[-*+][[:space:]]/)) continue
+                if (match(nxt, /^[[:space:]]*[0-9]+\.[[:space:]]/)) continue
+                if (match(nxt, /^[[:space:]]*#/)) continue
+                if (match(nxt, /^[[:space:]]*\|/)) continue
+                if (match(nxt, /^[[:space:]]*>/)) continue
+                has_prose = 1
+                break
+              }
+            }
+            if (!has_prose) {
+              printf "L%d: bullet金太郎飴 (%d連続, 前後に地の文なし)\n", bullet_start, bullet_count
+            }
+          }
+          bullet_count = 0
+          bullet_start = 0
+        }
+      }
+    }
+  ' "${file_path}" | head -n 5 || true
+}

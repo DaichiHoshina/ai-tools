@@ -84,6 +84,10 @@ case "$TOOL_NAME" in
               if [ -n "$_WRITING_HITS" ]; then
                 MESSAGE=$(append_message "$MESSAGE" "⚠ writing self-check: ${REAL_PATH}"$'\n'"${_WRITING_HITS}")
               fi
+              _BULLET_HITS=$(run_bullet_density_check "$REAL_PATH")
+              if [ -n "$_BULLET_HITS" ]; then
+                MESSAGE=$(append_message "$MESSAGE" "⚠ bullet density (writing-principles 違反): ${REAL_PATH}"$'\n'"${_BULLET_HITS}")
+              fi
             fi
           fi
           ;;
