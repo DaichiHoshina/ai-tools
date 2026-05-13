@@ -210,6 +210,23 @@ detect_from_keywords() {
     _context="${_context}\\n- 🧠 Serena MCP detected: Use mcp__serena__* tools for project analysis"
   fi
 
+  # 執筆意図検出（ヒト向けdoc執筆時に writing-principles を強制ロード）
+  # 対象: Notion/Design Doc/PRD/PR description/issue本文/RCA/記事/まとめ
+  # genshijin chat 応答とは別軸（doc出力前のみ発火）
+  if echo "$prompt_lower" | grep -qE '書いて|まとめて|ドラフト|draft|design.?doc|デザインドック|prd|要件定義|notion|記事|レポート|議事録|報告書|執筆|文章|pr.?description|pr本文|issue本文|rca|障害報告|振り返り|retrospective|プレスリリース|お知らせ|案内文|提案書'; then
+    _context="${_context}
+📝 **執筆検出**: ヒト向けドキュメント出力前に \`claude-code/references/writing-principles.md\` を必ず Read して原則適用。最低限の遵守事項:
+- **書く前4問に答える**: 読み手は具体的に誰／読後の行動／裏付ける数字or事例／なぜ必要
+- **AI定型語禁止**: 効果的に/効率的に/シームレスに/革新的な/より良い/〜を実現します/〜を可能にします/本稿では〜について述べる/ご紹介します
+- **評価語に根拠1文併記**: 必須/推奨/重要/適切な/最適な → 直後に「なぜ・事例・数字」を1文
+- **抽象→数字置換**: 大幅改善→「p99 1.2s→320ms (-73%)」、強化→「5xx 120件→8件」
+- **難語は削るな定義併記**: idempotency（同リクエスト2回叩いても結果不変）
+- **短文(issue/PR本体/Slack)はPREP 3点400字、長文はTL;DR冒頭1-3文＋常体統一**
+- **指示語禁止**: これ/上記/前述 → 具体名
+- **出力前セルフチェック6項目を内心で実行**（5項目以上で合格、未達は書き直し）
+詳細・NG辞書全リスト・Design Doc 12セクション・書き直しPhase 1-8 は writing-principles.md 参照。"
+  fi
+
   # 検出結果をキャッシュに保存（set -u対応）
   local langs_str=""
   set +u
