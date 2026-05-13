@@ -213,7 +213,7 @@ detect_from_keywords() {
   # 執筆意図検出（ヒト向けdoc執筆時に writing-principles を強制ロード）
   # 対象: Notion/Design Doc/PRD/PR description/issue本文/RCA/記事/まとめ
   # genshijin chat 応答とは別軸（doc出力前のみ発火）
-  if echo "$prompt_lower" | grep -qE '書いて|まとめて|ドラフト|draft|design.?doc|デザインドック|prd|要件定義|notion|記事|レポート|議事録|報告書|執筆|文章|pr.?description|pr本文|issue本文|rca|障害報告|振り返り|retrospective|プレスリリース|お知らせ|案内文|提案書'; then
+  if echo "$prompt_lower" | grep -qE '書いて|まとめて|ドラフト|draft|design.?doc|デザインドック|prd|要件定義|要件定|notion|記事|レポート|議事録|報告書|執筆|文章|pr.?description|pr本文|issue本文|rca|障害報告|振り返り|retrospective|プレスリリース|お知らせ|案内文|提案書|adr|技術選定|意思決定記録|ears|受け入れ基準|productspec|techspec|技術仕様書|プロダクト仕様'; then
     _context="${_context}
 📝 **執筆検出**: ヒト向けドキュメント出力前に \`claude-code/references/writing-principles.md\` を必ず Read して原則適用。最低限の遵守事項:
 - **書く前4問に答える**: 読み手は具体的に誰／読後の行動／裏付ける数字or事例／なぜ必要

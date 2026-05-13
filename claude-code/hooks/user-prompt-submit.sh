@@ -143,8 +143,8 @@ lang_count=${#detected_langs[@]}
 skill_count=${#detected_skills[@]}
 set -u
 
-# 検出されたスキル・言語・テクニックがない場合
-if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ] && [ -z "$technique_recommendation" ]; then
+# 検出されたスキル・言語・テクニック・additional_context すべて無い場合
+if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ] && [ -z "$technique_recommendation" ] && [ -z "$additional_context" ]; then
   if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
     jq -n --arg msg "${_COMPACT_NOTICE_MSG}" '{"systemMessage": $msg}'
   else
