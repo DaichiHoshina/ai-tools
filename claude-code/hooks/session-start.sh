@@ -25,6 +25,21 @@ _SS_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SS_SESSION_ID}}"
 _SS_PROJECT=$(basename "${_CWD:-.}")
 
 # ====================================
+# statusline マーカー初期化
+# ====================================
+# /tmp/claude-wt-${SESSION_ID} は post-tool-use.sh が cd 検出時に書き込み、
+# statusline.js が cwd 解決の優先元として読む。session 開始時に最新の cwd で
+# 初期化することで、過去 session で書かれた古いマーカーが残るのを防ぐ
+# （例: 同セッションで一時的 cd した後、cd 含まない Bash が続いてマーカーが
+# 古いままになるケースの再発防止は別途必要、ここでは session 境界のみ対処）。
+if [[ -n "${_SS_SESSION_ID}" && "${_SS_SESSION_ID}" != "unknown" && -n "${_CWD:-}" && -d "${_CWD:-}" ]]; then
+  if git -C "${_CWD}" rev-parse --git-dir >/dev/null 2>&1; then
+    _SS_ABS=$(cd "${_CWD}" && pwd)
+    echo "${_SS_ABS}" > "/tmp/claude-wt-${_SS_SESSION_ID}"
+  fi
+fi
+
+# ====================================
 # ハーネス自己診断（24時間キャッシュ）
 # ====================================
 _HARNESS_WARNINGS=()

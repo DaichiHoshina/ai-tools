@@ -111,18 +111,35 @@ case "$TOOL_NAME" in
     ;;
 
   "Bash")
-    # cdでgitリポジトリに移動した場合、作業ディレクトリをマーカーに記録
-    if [ -n "$COMMAND" ] && [ -n "$SESSION_ID" ]; then
-      # bash 正規表現でcd検出（grep外部プロセス削減）
+    # statusline マーカー更新ロジック
+    # 1. cd 検出時: cd 先で書く（worktree/repo 移動の明示的追跡）
+    # 2. cd 無し時: data.cwd で書く（session 認識する cwd へ巻き戻し）
+    # ただし既存マーカーが worktree (/private/tmp/wt-*) を指す場合は保護
+    # （/snkr-issue 等の長期worktree作業で cd 含まない Bash 続行ケース）
+    if [ -n "$SESSION_ID" ]; then
+      MARKER_PATH="/tmp/claude-wt-${SESSION_ID}"
       CD_TARGET=""
-      if [[ "$COMMAND" =~ cd[[:space:]]+([^[:space:]\&\|\;]+) ]]; then
+      if [ -n "$COMMAND" ] && [[ "$COMMAND" =~ cd[[:space:]]+([^[:space:]\&\|\;]+) ]]; then
         CD_TARGET="${BASH_REMATCH[1]}"
       fi
       if [ -n "$CD_TARGET" ] && [ -d "$CD_TARGET" ]; then
+        # cd 検出 → cd 先で書く
         if git -C "$CD_TARGET" rev-parse --git-dir >/dev/null 2>&1; then
           ABS_PATH=$(cd "$CD_TARGET" && pwd)
-          echo "$ABS_PATH" > "/tmp/claude-wt-${SESSION_ID}"
+          echo "$ABS_PATH" > "${MARKER_PATH}"
           ensure_worktree_memory_link "$ABS_PATH" 2>/dev/null || true
+        fi
+      elif [ -n "$CWD" ] && [ -d "$CWD" ]; then
+        # cd 無し → CWD で更新（worktree マーカーは保護）
+        EXISTING_MARKER=""
+        [ -f "${MARKER_PATH}" ] && EXISTING_MARKER=$(cat "${MARKER_PATH}" 2>/dev/null)
+        if [[ ! "${EXISTING_MARKER}" =~ ^/private/tmp/wt- ]] && [[ ! "${EXISTING_MARKER}" =~ /worktrees?/ ]]; then
+          if git -C "$CWD" rev-parse --git-dir >/dev/null 2>&1; then
+            ABS_CWD=$(cd "$CWD" && pwd)
+            if [ "$ABS_CWD" != "${EXISTING_MARKER}" ]; then
+              echo "$ABS_CWD" > "${MARKER_PATH}"
+            fi
+          fi
         fi
       fi
     fi
