@@ -177,6 +177,32 @@ run_bullet_density_check() {
   fi
 
   awk '
+    function is_prose_line(line, code_flag) {
+      if (code_flag) return 0
+      if (match(line, /^[[:space:]]*$/)) return 0
+      if (match(line, /^[[:space:]]*[-*+][[:space:]]/)) return 0
+      if (match(line, /^[[:space:]]*[0-9]+\.[[:space:]]/)) return 0
+      if (match(line, /^[[:space:]]*#/)) return 0
+      if (match(line, /^[[:space:]]*\|/)) return 0
+      if (match(line, /^[[:space:]]*>/)) return 0
+      return 1
+    }
+    function evaluate_bullets(start, count, after_index,    j, has_prose) {
+      if (count < 5) return
+      has_prose = 0
+      for (j = start - 3; j < start; j++) {
+        if (j < 1) continue
+        if (is_prose_line(lines[j], is_code[j])) { has_prose = 1; break }
+      }
+      if (!has_prose) {
+        for (j = after_index; j <= after_index + 2 && j <= NR; j++) {
+          if (is_prose_line(lines[j], is_code[j])) { has_prose = 1; break }
+        }
+      }
+      if (!has_prose) {
+        printf "L%d: bullet金太郎飴 (%d連続, 前後に地の文なし)\n", start, count
+      }
+    }
     {
       lines[NR] = $0
       is_code[NR] = in_code
@@ -190,58 +216,27 @@ run_bullet_density_check() {
       for (i = 1; i <= NR; i++) {
         curr = lines[i]
         if (is_code[i]) {
+          evaluate_bullets(bullet_start, bullet_count, i)
           bullet_count = 0
           bullet_start = 0
           continue
         }
-        # bullet 行判定
         is_bullet = match(curr, /^[[:space:]]*[-*+][[:space:]]/) || \
                     match(curr, /^[[:space:]]*[0-9]+\.[[:space:]]/)
         if (is_bullet) {
           if (bullet_count == 0) bullet_start = i
           bullet_count++
         } else if (match(curr, /^[[:space:]]*$/)) {
-          # 空行は連続を断ち切らない
           continue
         } else {
-          # 連続 bullet 終わり、評価
-          if (bullet_count >= 5) {
-            # 前後3行内に地の文があるか
-            has_prose = 0
-            for (j = bullet_start - 3; j < bullet_start; j++) {
-              if (j < 1) continue
-              prev = lines[j]
-              if (is_code[j]) continue
-              if (match(prev, /^[[:space:]]*$/)) continue
-              if (match(prev, /^[[:space:]]*[-*+][[:space:]]/)) continue
-              if (match(prev, /^[[:space:]]*[0-9]+\.[[:space:]]/)) continue
-              if (match(prev, /^[[:space:]]*#/)) continue
-              if (match(prev, /^[[:space:]]*\|/)) continue
-              if (match(prev, /^[[:space:]]*>/)) continue
-              has_prose = 1
-              break
-            }
-            if (!has_prose) {
-              for (j = i; j <= i + 2 && j <= NR; j++) {
-                nxt = lines[j]
-                if (is_code[j]) continue
-                if (match(nxt, /^[[:space:]]*$/)) continue
-                if (match(nxt, /^[[:space:]]*[-*+][[:space:]]/)) continue
-                if (match(nxt, /^[[:space:]]*[0-9]+\.[[:space:]]/)) continue
-                if (match(nxt, /^[[:space:]]*#/)) continue
-                if (match(nxt, /^[[:space:]]*\|/)) continue
-                if (match(nxt, /^[[:space:]]*>/)) continue
-                has_prose = 1
-                break
-              }
-            }
-            if (!has_prose) {
-              printf "L%d: bullet金太郎飴 (%d連続, 前後に地の文なし)\n", bullet_start, bullet_count
-            }
-          }
+          evaluate_bullets(bullet_start, bullet_count, i)
           bullet_count = 0
           bullet_start = 0
         }
+      }
+      # ファイル末尾まで bullet が連続して終わった場合の評価
+      if (bullet_count >= 5) {
+        evaluate_bullets(bullet_start, bullet_count, NR + 1)
       }
     }
   ' "${file_path}" | head -n 5 || true

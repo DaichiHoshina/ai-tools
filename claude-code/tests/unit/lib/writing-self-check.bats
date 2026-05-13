@@ -327,3 +327,123 @@ EOF
   [ "$status" -eq 0 ]
   [[ "$output" =~ "L1" ]]
 }
+
+# =============================================================================
+# bullet density check: bullet 5連続 + 前後地の文0 を検出
+# =============================================================================
+
+@test "bullet density: 5連続 bullet + 前後地の文0 → 検出" {
+  cat > "$TMP_FILE" <<'EOF'
+# 見出し
+
+## サブ見出し
+
+- 項目1
+- 項目2
+- 項目3
+- 項目4
+- 項目5
+
+# 次の見出し
+EOF
+  run bash -c "source '$LIB_FILE' && run_bullet_density_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "bullet金太郎飴" ]]
+  [[ "$output" =~ "5連続" ]]
+}
+
+@test "bullet density: 前に地の文1行 → 検出されない（false positive 抑制）" {
+  cat > "$TMP_FILE" <<'EOF'
+# 見出し
+
+直前にこの説明文がある段落。
+
+- 項目1
+- 項目2
+- 項目3
+- 項目4
+- 項目5
+
+# 次の見出し
+EOF
+  run bash -c "source '$LIB_FILE' && run_bullet_density_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "bullet density: 4連続 bullet → 閾値未満で検出されない" {
+  cat > "$TMP_FILE" <<'EOF'
+# 見出し
+
+- 項目1
+- 項目2
+- 項目3
+- 項目4
+
+# 次の見出し
+EOF
+  run bash -c "source '$LIB_FILE' && run_bullet_density_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "bullet density: ファイル末尾まで bullet が連続して終わるケースも検出" {
+  cat > "$TMP_FILE" <<'EOF'
+# 見出し
+
+## サブ見出し
+
+- 項目1
+- 項目2
+- 項目3
+- 項目4
+- 項目5
+EOF
+  run bash -c "source '$LIB_FILE' && run_bullet_density_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "bullet金太郎飴" ]]
+}
+
+@test "bullet density: コードブロック内の bullet は除外" {
+  cat > "$TMP_FILE" <<'EOF'
+# 見出し
+
+```
+- 項目1
+- 項目2
+- 項目3
+- 項目4
+- 項目5
+```
+
+# 次の見出し
+EOF
+  run bash -c "source '$LIB_FILE' && run_bullet_density_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "bullet density: 不存在ファイル → 空出力 + exit 0" {
+  run bash -c "source '$LIB_FILE' && run_bullet_density_check '/tmp/__no_such_$$.md'"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "bullet density: 番号付きリスト（1. 2. ...）も検出対象" {
+  cat > "$TMP_FILE" <<'EOF'
+# 見出し
+
+## サブ見出し
+
+1. 項目1
+2. 項目2
+3. 項目3
+4. 項目4
+5. 項目5
+
+# 次の見出し
+EOF
+  run bash -c "source '$LIB_FILE' && run_bullet_density_check '$TMP_FILE'"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "bullet金太郎飴" ]]
+}

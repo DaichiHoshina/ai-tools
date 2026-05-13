@@ -240,9 +240,11 @@ case "$TOOL_NAME" in
     MESSAGE="🔶 要確認: Jira/Confluence変更"
     ;;
 
-  "mcp__claude_ai_Notion__notion-create-pages"|"mcp__claude_ai_Notion__notion-update-page"|"mcp__claude_ai_Notion__notion-create-comment"|"mcp__claude_ai_Slack__slack_send_message"|"mcp__claude_ai_Slack__slack_send_message_draft"|"mcp__claude_ai_Slack__slack_create_canvas"|"mcp__claude_ai_Slack__slack_update_canvas")
+  "mcp__claude_ai_Notion__notion-create-pages"|"mcp__claude_ai_Notion__notion-update-page"|"mcp__claude_ai_Notion__notion-create-comment"|"mcp__claude_ai_Slack__slack_send_message")
     GUARD_CLASS="Safe"
-    # 投稿系MCP使用前に writing-principles 再注入（analytics で上位使用 MCP）
+    # 実投稿系 MCP 使用前に writing-principles 再注入（analytics で上位使用、確定送信のみ対象）
+    # 除外: slack_send_message_draft / slack_create_canvas / slack_update_canvas
+    #   理由: draft / canvas 編集は実投稿前段階、書き直し前提のためノイズ防止
     ADDITIONAL_CONTEXT="📝 投稿前チェック: 認知負荷を下げる/1回で理解できる/「で、つまり何？」と思わせない を最優先。出力直前の自問: ①読み手が「で、つまり何？」と思わないか ②初見の人が途中で止まらないか ③各段落の役割（背景/理由/具体例/結論/注意点）が明確か ④抽象名詞（可観測性/疎結合等）の羅列で段落が終わっていないか ⑤bullet が5連続以上 + 前後に地の文が無い金太郎飴になっていないか。詳細: claude-code/references/writing-principles.md"
     ;;
 
