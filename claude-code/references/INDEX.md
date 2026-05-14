@@ -1,6 +1,6 @@
 # References Index
 
-CLAUDE.md からオンデマンドで参照される詳細資料の索引。Claude が判断して必要時に Read する。
+主要トピックの索引 (CLAUDE.md からオンデマンドで参照)。テンプレート・トラッカー等の補助ファイル (`*-template.md`, `*-OPPORTUNITIES.md`, `*-FLOWCHART.md` 等) は未収録、`ls references/` で探索。
 
 ## モデル選択 / セッション管理
 
