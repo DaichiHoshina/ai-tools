@@ -12,4 +12,10 @@ require_jq
 INPUT=$(cat)
 send_stop_notification "$INPUT" "" "Glass" "robot" "default"
 
-echo '{}'
+CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
+PROJECT_NAME=$(basename "${CWD:-unknown}")
+LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // "Done"')
+NOTIFY_BODY="${LAST_MSG:0:80}"
+TERM_SEQ=$(build_terminal_sequence "Claude Code [${PROJECT_NAME}] ${ICON_SUCCESS} Done" "${NOTIFY_BODY}" "true")
+
+jq -n --arg ts "$TERM_SEQ" '{terminalSequence: $ts}'

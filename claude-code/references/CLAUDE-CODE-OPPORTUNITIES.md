@@ -15,6 +15,12 @@
 
 ---
 
+## 2.1.141 (2026-05-14 検出)
+
+- [x] **hook JSON output `terminalSequence`** (採用 2026-05-14): `stop.sh` と `stop-failure.sh` で OSC 0 (window title) + OSC 9 (iTerm2 notification) + BEL を出力。`lib/hook-utils.sh::build_terminal_sequence` 追加。allowlist: OSC 0/1/2/9/99/777 + BEL (bundle binary より確認)。`task-completed.sh`/`subagent-stop.sh` は agent run 中多発のため bell spam 回避で除外
+
+その他 (Info/bugfix のみ): `CLAUDE_CODE_PLUGIN_PREFER_HTTPS` (SSH 鍵なし環境、当方 SSH 鍵あり影響なし)、`ANTHROPIC_WORKSPACE_ID` (workload identity federation、未使用)、`claude agents --cwd`、`/feedback` recent sessions、Rewind "Summarize up to here"、spinner amber、plugin menu 改善。リポジトリ側影響箇所 grep 確認済み (`terminalSequence` 未使用)。
+
 ## 2.1.140 (2026-05-13 検出)
 
 新規 Opportunity なし。全エントリ bugfix/Info（`subagent_type` case-insensitive 化、`/goal` hang fix、settings hot-reload、`Read` offset whitespace 許容、Plugins folder 無視警告 等）。リポジトリ側影響箇所 grep 確認済み（`plugin.json` 不在、whitespace-offset 利用なし）。

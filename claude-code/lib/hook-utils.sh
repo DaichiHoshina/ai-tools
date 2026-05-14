@@ -163,6 +163,25 @@ send_stop_notification() {
   fi
 }
 
+# terminalSequence (v2.1.141+) 用エスケープシーケンス生成
+# OSC 0 (window title) + OSC 9 (iTerm2 notification) + BEL を結合。
+# Claude Code allowlist: OSC 0/1/2/9/99/777 と BEL のみ許可。
+# Usage: build_terminal_sequence "WINDOW_TITLE" "NOTIFY_BODY" [include_bell:true|false]
+# Output: stdout に raw escape sequence (JSON 埋め込みは jq --arg で安全化)
+build_terminal_sequence() {
+  local title="$1"
+  local body="${2:-}"
+  local include_bell="${3:-true}"
+  # ESC = \x1b, BEL = \x07
+  local esc=$'\x1b'
+  local bel=$'\x07'
+  local seq=""
+  [ -n "$title" ] && seq+="${esc}]0;${title}${bel}"
+  [ -n "$body" ] && seq+="${esc}]9;${body}${bel}"
+  [ "$include_bell" = "true" ] && seq+="${bel}"
+  printf '%s' "$seq"
+}
+
 # git worktreeのmemoryディレクトリをメインリポジトリにシンボリックリンク
 # Usage: ensure_worktree_memory_link "/path/to/worktree"
 ensure_worktree_memory_link() {

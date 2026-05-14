@@ -10,4 +10,8 @@ require_jq
 INPUT=$(cat)
 send_stop_notification "$INPUT" "APIエラー" "Basso" "warning,robot" "high"
 
-echo '{"systemMessage":"API error detected."}'
+CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
+PROJECT_NAME=$(basename "${CWD:-unknown}")
+TERM_SEQ=$(build_terminal_sequence "Claude Code [${PROJECT_NAME}] ${ICON_WARNING} API Error" "API error detected" "true")
+
+jq -n --arg ts "$TERM_SEQ" '{systemMessage: "API error detected.", terminalSequence: $ts}'
