@@ -17,3 +17,4 @@
 - 分割例: migration → model/repository → usecase → handler → frontend
 - 未使用コードの先行投入はOK（次PRで使う前提）
 - migrationは単独PRでリリース（他変更と混ぜない）
+- 数値閾値（10ファイル / 500行 / migration単独）の詳細: `ticket-to-pr-workflow.md` §4
