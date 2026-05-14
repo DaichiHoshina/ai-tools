@@ -57,7 +57,7 @@ TODAY=$(date -u +"%Y-%m-%d")
 COMPLETED_TODAY=$(grep -c "${TODAY}.*COMPLETED" "$LOG_FILE" 2>/dev/null || echo "0")
 
 # 結果を返す
+# systemMessage のみ。additionalContext の boilerplate は CLAUDE.md の /memory-save ガイドと重複のため削除
 jq -n \
-  --arg sm "${ICON_SUCCESS} Task completed: ${TASK_SUBJECT} (${TASK_ID}) by ${TEAMMATE_NAME} | Today: ${COMPLETED_TODAY} tasks done" \
-  --arg ctx "タスク完了をtask-diary.logに記録済み。重要な学びがあれば /memory-save でSerena memoryにも保存を検討。" \
-  '{systemMessage: $sm, additionalContext: $ctx}'
+  --arg sm "${ICON_SUCCESS} Task completed: ${TASK_SUBJECT} (${TASK_ID}) by ${TEAMMATE_NAME} | Today: ${COMPLETED_TODAY}" \
+  '{systemMessage: $sm}'

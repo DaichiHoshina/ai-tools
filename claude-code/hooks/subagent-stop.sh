@@ -76,12 +76,8 @@ else
 fi
 
 # 結果を返す（jqで安全にJSON生成）
-AC_MSG="**Agent ID**: ${AGENT_ID}
-**Type**: ${AGENT_TYPE}
-**Duration**: ${DURATION}
-**Recent Activity**: ${RECENT_COUNT} subagents completed in last 24h
-
-Subagent logs: ~/.claude/logs/subagent-events.log"
+# AC は 1 行に圧縮（busy session で cumulative token 削減、詳細はログファイル参照）
+AC_MSG="${AGENT_TYPE} | ${DURATION} | 24h:${RECENT_COUNT} | logs: ~/.claude/logs/subagent-events.log"
 
 jq -n \
   --arg sm "✅ Subagent completed: ${AGENT_TYPE}" \
