@@ -71,7 +71,7 @@ claude --version
 ### 上級者（1ヶ月目）
 
 1. **エージェント階層**
-   - `AGENT-FLOWCHART.md` で連携フロー理解
+   - `references/PARALLEL-PATTERNS.md` で並列判定・連携理解
    - 複雑なタスクの分割
    - 並列実行パターン
 
@@ -99,9 +99,8 @@ claude --version
 
 | ファイル | 内容 |
 |---------|------|
-| `references/AGENT-FLOWCHART.md` | エージェント連携図 |
-| `references/SKILLS-DEPENDENCY-GRAPH.md` | スキル依存関係 |
-| `references/PARALLEL-PATTERNS.md` | 並列実行パターン |
+| `references/PARALLEL-PATTERNS.md` | 並列実行パターン・agent 階層判定 |
+| `references/INDEX.md` | 主要トピック索引 |
 
 ---
 
