@@ -80,7 +80,7 @@ Conventional Commits 形式: `<type>(<scope>): <subject>`
 
 ## PR description テンプレート
 
-`guidelines/common/user-voice.md` の 4 問に対応した 4 セクション。
+`guidelines/writing/long-form-doc.md` の 4 問に対応した 4 セクション。
 
 ```markdown
 ## Why
@@ -96,7 +96,7 @@ Conventional Commits 形式: `<type>(<scope>): <subject>`
 <レビュワーに見てほしい箇所 or 意思決定を求める選択肢>
 ```
 
-**短文 PR description（H3 3個未満 or 400字以下）の場合は `~/.claude/rules/ai-output.md` の PREP 3点ルール + self-check 4問を通過させる**。長文 PR description（Design Doc 級）は user-voice.md の 4問+5原則。判定基準は H3 数 / 文字数 / スクロール 1 画面に収まるか。
+**短文 PR description（H3 3個未満 or 400字以下）の場合は `~/.claude/rules/ai-output.md` の PREP 3点ルール + self-check 4問を通過させる**。長文 PR description（Design Doc 級）は long-form-doc.md の 4問+5原則。判定基準は H3 数 / 文字数 / スクロール 1 画面に収まるか。
 
 **Testing の書き方**:
 

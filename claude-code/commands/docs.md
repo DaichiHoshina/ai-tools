@@ -13,7 +13,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 
 **必読**: Notion投稿時は以下のガイドラインに従うこと:
 - `guidelines/common/notion-writing.md` — 構成・見出し・文体・表記ルール（コア）
-- `guidelines/common/user-voice.md` — ユーザー文体ガイド + 対話型チェック辞書
+- `guidelines/writing/long-form-doc.md` — ユーザー文体ガイド + 対話型チェック辞書
 - `guidelines/common/notion-design.md` — デザインパターン
 - `guidelines/common/notion-database.md` — DB設計・テンプレート
 - `guidelines/common/notion-operations.md` — AI活用・権限・外部連携
@@ -24,7 +24,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 |--------|-----------|----------------------|
 | API仕様 | api, endpoint | Skill(`api-design`) |
 | 障害対応 | incident, 障害 | Skill(`incident-response`), Skill(`root-cause`) |
-| レシピ | recipe, パターン, tips | `guidelines/common/documentation-strategy.md`（❌/✅形式必須） |
+| レシピ | recipe, パターン, tips | `guidelines/writing/strategy.md`（❌/✅形式必須） |
 | 手順書 | runbook, 手順 | `guidelines/common/development-process.md` |
 | 変更履歴 | changelog, 変更 | git log/diffから自動抽出 |
 | 自由記述 | （上記以外） | ユーザー指示に従う |
@@ -44,7 +44,7 @@ description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
 タイプに応じた連携ガイドライン/スキルを読み込む。
 
 - **障害対応**: incident-responseスキルのフォーマット（分類→影響範囲→原因→再発防止）に準拠
-- **レシピ**: documentation-strategy.md の❌/✅形式を**必ず**使用。コード例5行以内、テーブル優先
+- **レシピ**: strategy.md の❌/✅形式を**必ず**使用。コード例5行以内、テーブル優先
 - **API仕様**: api-designスキルのエンドポイント記述規約に準拠
 
 ### Step 3: コード分析
@@ -72,7 +72,7 @@ Grep / Read → 関連コード読解
 
 `notion-create-pages` 実行前に、draft 本文（Step 5 で投稿する text）を AI 自身が検査する。対象は md 化された draft で、まだ Notion に送られていない段階。
 
-検査項目は `skills/comprehensive-review/skill.md` の writing 観点 NG 表と `guidelines/common/user-voice.md` の NG 辞書。
+検査項目は `skills/comprehensive-review/skill.md` の writing 観点 NG 表と `guidelines/writing/long-form-doc.md` の NG 辞書。
 
 - Critical 1件以上、または Warning 4件以上ヒット → draft を書き直してから再検査（最大2 loop）
 - 合格後に Step 5 へ進む
@@ -114,7 +114,7 @@ Grep / Read → 関連コード読解
 
 ### Step 5.5: 対話型リライト（必須）
 
-詳細・辞書・テンプレは `guidelines/common/user-voice.md` 参照。
+詳細・辞書・テンプレは `guidelines/writing/long-form-doc.md` 参照。
 
 - 事前読込: `~/.claude/projects/{project}/memory/user_vocabulary.md`（既知語スキップ）
 - 3層（Intent / Understanding / Expression）を順に実行、合計9件以内
@@ -136,8 +136,8 @@ Grep / Read → 関連コード読解
 
 ## 品質ガード
 
-- **秘匿情報禁止**: APIキー、パスワード、実URLはプレースホルダーに置換（`guidelines/common/documentation-strategy.md` セキュリティ節準拠）
-- **コード例**: 5行以内（documentation-strategy.md ルール）
+- **秘匿情報禁止**: APIキー、パスワード、実URLはプレースホルダーに置換（`guidelines/writing/strategy.md` セキュリティ節準拠）
+- **コード例**: 5行以内（strategy.md ルール）
 - **投稿前確認**: ユーザーにプレビューを見せて承認を得る
 - **Mermaid図**: Notionのコードブロック（mermaid指定）で記述
 

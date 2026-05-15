@@ -112,5 +112,5 @@ c) 中止
 ## 関連
 
 - ルール本体: `~/.claude/rules/ai-output.md`「issue/ticket/コメント投稿の禁止事項」
-- 長文版: `~/.claude/guidelines/common/user-voice.md`
+- 長文版: `~/.claude/guidelines/writing/long-form-doc.md`
 - 既存組み込み: `/git-push --pr`, `/test-local`, `incident-response` skill

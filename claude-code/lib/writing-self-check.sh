@@ -2,7 +2,7 @@
 # =============================================================================
 # Writing Self-Check (Boris流 Compounding Engineering)
 #
-# md ファイル編集後に user-voice.md NG 辞書 grep を実行し、根拠なき評価語・
+# md ファイル編集後に long-form-doc.md NG 辞書 grep を実行し、根拠なき評価語・
 # 定型語のヒット行を行番号付きで出力する。
 #
 # Usage:

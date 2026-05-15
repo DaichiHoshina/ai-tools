@@ -17,9 +17,9 @@ paths:
 
 ## issue/ticket/コメント投稿（短文向け PREP 3点）
 
-> 長文ドキュメント（Notion/Design Doc/PRD/RCA）は `~/.claude/guidelines/common/user-voice.md` の 4問+5原則。本セクションは短文 comment / ticket / Slack 通知向け。
+> 長文ドキュメント（Notion/Design Doc/PRD/RCA）は `~/.claude/guidelines/writing/long-form-doc.md` の 4問+5原則。本セクションは短文 comment / ticket / Slack 通知向け。
 
-**対象**: GitHub issue/PR 本体・コメント、Jira（`mcp__jira__jira_post`）、Notion（`mcp__claude_ai_Notion__*`）、Slack、Linear（Design Doc 級長文 PR description は user-voice.md 側）
+**対象**: GitHub issue/PR 本体・コメント、Jira（`mcp__jira__jira_post`）、Notion（`mcp__claude_ai_Notion__*`）、Slack、Linear（Design Doc 級長文 PR description は long-form-doc.md 側）
 
 **構造（PREP 3点）**:
 1. 結論: 読み手に何を判断/実行させるか（1行）

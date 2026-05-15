@@ -62,7 +62,7 @@ Dockerに関連するエラーの場合、以下のスキルを適用:
 
 ## 長文レポート出力時のヒト向け執筆ルール
 
-調査レポートや RCA 報告を Notion / md に残すとき、`guidelines/common/user-voice.md` の原則を適用する:
+調査レポートや RCA 報告を Notion / md に残すとき、`guidelines/writing/long-form-doc.md` の原則を適用する:
 
 - 冒頭1-3文で結論（「X が原因。Y の変更で解決済み / 解決案」）
 - 「必須」「推奨」「重要」には根拠1文併記

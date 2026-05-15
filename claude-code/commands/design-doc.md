@@ -63,14 +63,14 @@ update モード時の Step 4 は **既存 Q1-Q5 セクションを Read → 差
 | Step | 動作 |
 |------|------|
 | 1. 入力特定 | `--prd <path>` 優先 / 引数あり→トピック / なし→`git log/diff` + AskUserQuestion |
-| 2. ガイドライン読込 | `guidelines/design/clean-architecture.md`, `domain-driven-design.md`, `references/design-doc-template.md`, `references/decision-quality-checklist.md`, `guidelines/common/user-voice.md` |
+| 2. ガイドライン読込 | `guidelines/design/clean-architecture.md`, `domain-driven-design.md`, `references/design-doc-template.md`, `references/decision-quality-checklist.md`, `guidelines/writing/long-form-doc.md` |
 | 3. コード分析 | `mcp__serena__*` で既存シンボル・依存関係把握 |
-| 4. draft 生成 | テンプレ12セクション（タイプ別調整、`references/design-doc-template.md` 準拠）。`guidelines/common/user-voice.md` の4問・原則5点を**生成時に参照**し織り込む。**Q1-Q5 の取扱は下記「Q1-Q5 継承ルール」参照** |
+| 4. draft 生成 | テンプレ12セクション（タイプ別調整、`references/design-doc-template.md` 準拠）。`guidelines/writing/long-form-doc.md` の4問・原則5点を**生成時に参照**し織り込む。**Q1-Q5 の取扱は下記「Q1-Q5 継承ルール」参照** |
 | 5. 設計判断確認 | AskUserQuestion で代替案採否・移行境界・未解決事項（3-5問） |
 | 6. 品質ガード | タイプ別必須項目チェック、**Q1-Q5 充足検査**（継承時は転記済か確認、再評価時は NG パターン該当を Critical）、不足は補強質問 or `Edit` で書き直し（最大2 loop） |
-| 7. 対話型リライト | `guidelines/common/user-voice.md` 準拠（合計9件以内、Layer 2 回答はそのまま織込） |
+| 7. 対話型リライト | `guidelines/writing/long-form-doc.md` 準拠（合計9件以内、Layer 2 回答はそのまま織込） |
 | 8. ファイル書き出し | `--out` > `docs/design/` > `design/` > カレント、`YYYY-MM-DD_<slug>.md`。`--dry` 時は書き出さず次ステップで stdin として扱う |
-| 8.5. **writing 検査（ファイル対象）** | 書き出した md を `Read` して内容を取得。`guidelines/common/user-voice.md` の NG 辞書と `skills/comprehensive-review/skill.md` の writing 観点 NG 表で違反を数える。Critical 1件以上 or Warning 4件以上 → `Edit` で書き直し、最大2 loop。最終結果をユーザーに出力 |
+| 8.5. **writing 検査（ファイル対象）** | 書き出した md を `Read` して内容を取得。`guidelines/writing/long-form-doc.md` の NG 辞書と `skills/comprehensive-review/skill.md` の writing 観点 NG 表で違反を数える。Critical 1件以上 or Warning 4件以上 → `Edit` で書き直し、最大2 loop。最終結果をユーザーに出力 |
 | 9. Notion 取り込み案内 | 完了後、必要なら `/docs --from <path>` を案内 |
 
 ## 設計タイプ
@@ -98,9 +98,9 @@ update モード時の Step 4 は **既存 Q1-Q5 セクションを Read → 差
 
 ## 文章品質の担保（ガイドライン参照 + 書き出し後レビュー）
 
-Draft 生成時は `guidelines/common/user-voice.md` の原則（4問・結論先行・根拠併記・難語定義・抽象語排除・プロサ繋ぎ）を参照して書く。
+Draft 生成時は `guidelines/writing/long-form-doc.md` の原則（4問・結論先行・根拠併記・難語定義・抽象語排除・プロサ繋ぎ）を参照して書く。
 
-**書き出し後のレビュー（Step 8.5）**: ファイルに書き出した後、`Read` で内容を取り、`skills/comprehensive-review/skill.md` の writing 観点 NG 表（根拠なき評価語・抽象語放置・難語未定義 等）と `guidelines/common/user-voice.md` の NG 辞書でヒット件数を数える。`/review --focus=writing` は git diff ベースなので、書き出し直後の新規ファイルを安定して検査するため、ここでは **Read + AI 自身による NG 判定** を使う。
+**書き出し後のレビュー（Step 8.5）**: ファイルに書き出した後、`Read` で内容を取り、`skills/comprehensive-review/skill.md` の writing 観点 NG 表（根拠なき評価語・抽象語放置・難語未定義 等）と `guidelines/writing/long-form-doc.md` の NG 辞書でヒット件数を数える。`/review --focus=writing` は git diff ベースなので、書き出し直後の新規ファイルを安定して検査するため、ここでは **Read + AI 自身による NG 判定** を使う。
 
 - Critical 1件以上、または Warning 4件以上 → `Edit` で書き直し、再検査（最大2 loop）
 - `--dry` モードでは書き出さず、生成した draft text を直接対象にして同じ検査を行う
