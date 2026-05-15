@@ -6,7 +6,7 @@ type: reference
 
 # ドキュメント書き直しのフェーズ進行パターン
 
-長期間レビュー・書き直しを繰り返した DesignDoc/PRD の commit 履歴から抽出した、書き直しの典型フェーズと各フェーズで発生する修正パターン。書き直しの「動的進化」を扱う点で、原則・アンチパターン静的ガイドの `design-doc-writing-guide.md` と補完関係。
+長期間レビュー・書き直しを繰り返した DesignDoc/PRD の commit 履歴から抽出した、書き直しの典型フェーズと各フェーズで発生する修正パターン。書き直しの「動的進化」を扱う点で、原則・アンチパターン静的ガイドの `../guidelines/writing/design-doc-protocol.md` と補完関係。
 
 ## フェーズ進行（典型的な順序）
 
@@ -132,11 +132,11 @@ Phase 1〜7 は基本フロー、Phase 8 は中盤に発生して全体を Phase
 2. **テンプレ準拠で初稿を書く**: 自由形式は Phase 2 の全面書き直しを誘発
 3. **Phase 3-4 を自分で先に実行**: 自レビュー＋コード突合をしてからレビュー依頼
 4. **方針転換が予感されたら軽量版で書く**: フル版を捨てるのは精神的コストが高い
-5. **削除候補リストを意識する**: `design-doc-writing-guide.md` の「削除候補セクション」表を参照
+5. **削除候補リストを意識する**: `../guidelines/writing/design-doc-protocol.md` の「アンチパターン」「セルフチェック 18」を参照
 
 ## 関連
 
-- `design-doc-writing-guide.md` — 原則・アンチパターン・セルフチェック（静的ガイド）
-- `design-doc-scope-guide.md` — テンプレ選択（軽量 vs フル vs 分割）
+- `../guidelines/writing/design-doc-protocol.md` — DD 原則・アンチパターン・テンプレ選択・セルフチェック (静的ガイド)
+- `../guidelines/writing/PRINCIPLES.md` — 共通文章原則 (4 問・媒体別構造)
 - `decision-quality-checklist.md` — 意思決定品質の 5 問チェック（Phase 1 で適用）
 - `review-patterns-universal.md` — レビュー指摘の汎用パターン

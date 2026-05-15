@@ -36,12 +36,13 @@
 
 | トピック | ファイル |
 |---------|---------|
-| DesignDoc 書き方・粒度 | `design-doc-writing-guide.md`, `design-doc-scope-guide.md` |
+| DesignDoc 書き方・粒度 | `../guidelines/writing/design-doc-protocol.md` |
 | PRD レビュー観点 | `prd-review-checkpoints.md` |
 | パフォーマンス改善 issue | `performance-issue-template.md` |
 | レビュー指摘パターン集 | `review-patterns-universal.md` |
 | ドキュメント書き直し | `document-iteration-patterns.md` |
-| 文章執筆ナレッジ集約（5軸） | `writing-principles.md` |
+| 文章執筆 共通原則 | `../guidelines/writing/PRINCIPLES.md` |
+| 文章執筆 補足パターン (書き直し Phase / textlint 等) | `writing-patterns.md` |
 
 ## その他
 

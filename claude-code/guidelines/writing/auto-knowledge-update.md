@@ -24,8 +24,8 @@
 
 | トリガー領域 | 追記先 (例) |
 |---|---|
-| DesignDoc 書き方 (AI 臭 / 用語置換 / bullet 構造) | `guidelines/writing/design-doc-protocol.md` / プロジェクト側 `design-doc-writing-guide` |
-| DesignDoc 粒度・section 選択 | プロジェクト側 `design-doc-scope-guide` |
+| DesignDoc 書き方 (AI 臭 / 用語置換 / bullet 構造) | `guidelines/writing/design-doc-protocol.md` (global) / プロジェクト側 `design-doc-writing-guide.md` (各 repo 独自命名で持つ場合) |
+| DesignDoc 粒度・section 選択 | `guidelines/writing/design-doc-protocol.md` (global、テンプレ選択章) / プロジェクト側 `design-doc-scope-guide.md` (各 repo 独自) |
 | レビュー指摘パターン (言語別) | プロジェクト側 `review-patterns` / `guidelines/languages/{lang}.md` |
 | リリース運用 | プロジェクト側 `release-flow` / `common/release-management.md` |
 | 実装方針・アーキテクチャ判断 | プロジェクト側 `implementation-policy` / `guidelines/design/` |

@@ -210,7 +210,7 @@ detect_from_keywords() {
     _context="${_context}\\n- 🧠 Serena MCP detected: Use mcp__serena__* tools for project analysis"
   fi
 
-  # 執筆意図検出（ヒト向けdoc執筆時に writing-principles を強制ロード）
+  # 執筆意図検出（ヒト向けdoc執筆時に PRINCIPLES を強制ロード）
   # 対象: Notion/Design Doc/PRD/PR description/issue本文/RCA/記事/まとめ
   # genshijin chat 応答とは別軸（doc出力前のみ発火）
   if echo "$prompt_lower" | grep -qE '書いて|まとめて|ドラフト|draft|design.?doc|デザインドック|prd|要件定義|要件定|notion|記事|レポート|議事録|報告書|執筆|文章|pr.?description|pr本文|issue本文|rca|障害報告|振り返り|retrospective|プレスリリース|お知らせ|案内文|提案書|adr|技術選定|意思決定記録|ears|受け入れ基準|productspec|techspec|技術仕様書|プロダクト仕様'; then
@@ -238,7 +238,7 @@ detect_from_keywords() {
 
 出力直前の自問: ①「で、つまり何？」と思わせないか ②初見が途中で止まらないか ③各段落の役割が明確か
 
-詳細: claude-code/references/writing-principles.md"
+詳細: claude-code/guidelines/writing/PRINCIPLES.md"
   fi
 
   # 検出結果をキャッシュに保存（set -u対応）

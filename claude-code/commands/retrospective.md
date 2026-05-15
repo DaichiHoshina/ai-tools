@@ -58,7 +58,7 @@ metadata:
 {AI 側の根本原因。例: 抽象名詞を並べた / 暗黙知を前提にした / 段落の役割が曖昧 等}
 
 ## 再発防止
-{次回どう書けば回避できるか。writing-principles の該当軸を引用}
+{次回どう書けば回避できるか。PRINCIPLES.md の該当軸を引用}
 ```
 
 蓄積された memory は `~/.claude/CLAUDE.md` 経由で session start 時に context 注入されるため、次セッションで同じ失敗を踏まない。
