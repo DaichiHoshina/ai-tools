@@ -1,29 +1,72 @@
 # writing/ — チーム外向け文章ガイドライン
 
-PR・Issue コメント・Slack・Notion・DesignDoc 等、**他者が読む文章** を書くときの汎用原則。
+PR・Issue コメント・Slack・Notion・DesignDoc 等、**他者が読む文章** を書くときの汎用原則を集約。
 
 プロジェクト固有のテンプレ・宛先・添字規約は各プロジェクトの `CLAUDE.md` に残し、本ディレクトリは横断的な書き方原則のみ扱う。
 
-## ファイル
+## 責務マップ — 「どこに何を書くか」
+
+| 層 | 責務 | 文体 | 行数目安 |
+|---|---|---|---|
+| `rules/` | **強制ルール** (機械可読、grep 高速) | 短文・表中心 | < 30 |
+| `guidelines/writing/` | **原則・手順** (中粒度、汎用化済) | 表 + 箇条書き | 30-300 |
+| `references/` | **補足事例・パターン詳細** (必要時のみ load) | 段落 + 詳細例 | 100-600 |
+
+迷ったとき: rules で禁止リスト確認 → guidelines/writing/ で原則と適用先確認 → references/ で詳細パターン参照。
+
+## ファイル一覧
+
+### 共通
 
 | ファイル | 用途 | 適用タイミング |
 |---|---|---|
-| [commit-message.md](commit-message.md) | コミットメッセージ | `git commit` 前 |
-| [pr-description.md](pr-description.md) | PR 本文 + レビュー応答 | PR 作成・修正対応時 |
-| [external-post.md](external-post.md) | PR コメント / Slack / Issue / Notion 共通 | 外部向け投稿前 |
-| [design-doc-protocol.md](design-doc-protocol.md) | DesignDoc 4 Step + 10 パターン | DD 着手・レビュー対応時 |
+| [PRINCIPLES.md](PRINCIPLES.md) | 共通文章原則 (4 問 / 7 指針 / 3 変換 / 媒体別構造 / セルフチェック 6) | 全ヒト向け doc 着手前 |
 | [auto-knowledge-update.md](auto-knowledge-update.md) | 指摘・指示の自動追記ワークフロー | セッション中の気づき検出時 |
 
-## 共通原則
+### 適用先別
+
+| ファイル | 用途 | 適用タイミング |
+|---|---|---|
+| [commit-message.md](commit-message.md) | コミットメッセージ (抽象化 / NG/OK 例) | `git commit` 前 |
+| [pr-description.md](pr-description.md) | PR 本文 + レビュー応答 (must/imo/nits/q) | PR 作成・修正対応時 |
+| [external-post.md](external-post.md) | 短文 (PR コメント / Slack / Issue / Notion) + 5 軸採点 | 外部向け投稿前 |
+| [long-form-doc.md](long-form-doc.md) | 長文 doc (DD / PRD / RCA / Notion ページ) + ADR/PRD/EARS テンプレ | 長文 doc 執筆時 |
+| [design-doc-protocol.md](design-doc-protocol.md) | DesignDoc 4 Step + 10 パターン + アンチパターン + セルフチェック 18 | DD 着手・レビュー対応時 |
+| [strategy.md](strategy.md) | ドキュメント戦略 (6 種別役割分担 / 保存先 / 命名規則 / Bounded Context) | 「どこに何を書くか」判断時 |
+
+### 関連 (他層)
+
+| 場所 | ファイル | 用途 |
+|---|---|---|
+| `rules/` | `ai-output.md` | AI 出力強制ルール (禁止リスト、超短い) |
+| `rules/` | `markdown.md` | markdown 構造ルール |
+| `guidelines/common/` | `notion-writing.md` | Notion 固有フォーマット仕様 |
+| `references/` | `writing-patterns.md` | 詳細パターン (書き直し Phase 1-8 / レビュー3段 / textlint / フェーズ境界) |
+| `references/` | `document-iteration-patterns.md` | 書き直しの動的パターン |
+| `references/` | `review-patterns-universal.md` | 汎用レビュー指摘パターン |
+
+## 共通原則 (要約、詳細は PRINCIPLES.md)
 
 - **箇条書きファースト**: 散文を避け、scan できる構造に
-- **構造（場所）で束ねる**: ファイル / モジュール / レイヤー単位。抽象観点 (what/why/how) で section を割らない
+- **構造 (場所) で束ねる**: ファイル / モジュール / レイヤー単位。抽象観点 (what/why/how) で section を割らない
 - **section 重複を排除**: 同じ事実は 1 ヶ所のみ
 - **長さは内容に従う**: 自明は数行、設計判断含む変更は原因や代替案も
 - **AI 臭の禁止**: 「Generated with X」「AI が生成」等の内部用語、過剰絵文字、定型フッターを残さない
 
-## 関連
+## 媒体別 quick reference
 
-- `common/notion-writing.md` — Notion 形式仕様（フォーマット詳細）
-- `writing/strategy.md` — ドキュメント戦略
-- `common/team-development-workflow.md` — チーム開発フロー
+| 書く対象 | 主参照 | 補足 |
+|---|---|---|
+| commit message | commit-message.md | PRINCIPLES.md (AI 臭 3 変換) |
+| PR 本文 | pr-description.md | PRINCIPLES.md (媒体別構造 / PR description 4 セクション) |
+| PR コメント / Slack / Issue | external-post.md | PRINCIPLES.md (媒体別構造 / 短文 PREP) |
+| Design Doc | design-doc-protocol.md | long-form-doc.md (テンプレ) / PRINCIPLES.md |
+| PRD | long-form-doc.md (PRD MoSCoW テンプレ) | strategy.md (保存先) |
+| ADR | long-form-doc.md (ADR テンプレ) | strategy.md (命名規則) |
+| RCA / Notion ページ | long-form-doc.md | `common/notion-writing.md` (Notion 固有) |
+| 受け入れ基準 | long-form-doc.md (EARS) | PRINCIPLES.md |
+
+## 衝突時優先順位
+
+Notion 固有仕様 > 長文 doc 原則 > 短文向け原則 > 共通 PRINCIPLES。
+プロジェクト固有 CLAUDE.md > global guidelines/writing/。
