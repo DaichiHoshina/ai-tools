@@ -103,4 +103,4 @@ migration が単独 PR でないと困る理由: ロールバック時に applic
 - `design-phase-flow.md` — 上流のコマンド遷移（/brainstorm → /prd → ...）
 - `prd-review-checkpoints.md` — 受け入れ条件・時刻境界条件の検証観点
 - `multi-repo-workflow.md` — worktree 並列実行パターン
-- `design-doc-writing-guide.md` — Design Doc 12 セクション構成
+- `../guidelines/writing/design-doc-protocol.md` — Design Doc 4 Step + 12 セクション / 軽量 5 節テンプレ

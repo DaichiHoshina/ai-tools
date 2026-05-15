@@ -67,6 +67,6 @@ DesignDoc・想定 SQL でも採用 DB の構文で書く。AI 生成時に他 D
 
 ## 関連
 
-- `design-doc-writing-guide.md` — DesignDoc 書き方の実践ノウハウ
+- `../guidelines/writing/design-doc-protocol.md` — DesignDoc 4 Step + アンチパターン + セルフチェック 18
 - `decision-quality-checklist.md` — 意思決定品質の 5 問チェック
 - `~/ai-tools/claude-code/guidelines/common/technical-pitfalls.md` — 技術的な落とし穴

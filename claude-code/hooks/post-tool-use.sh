@@ -88,7 +88,7 @@ case "$TOOL_NAME" in
               fi
               _BULLET_HITS=$(run_bullet_density_check "$REAL_PATH")
               if [ -n "$_BULLET_HITS" ]; then
-                MESSAGE=$(append_message "$MESSAGE" "⚠ bullet density (writing-principles 違反): ${REAL_PATH}"$'\n'"${_BULLET_HITS}")
+                MESSAGE=$(append_message "$MESSAGE" "⚠ bullet density (PRINCIPLES 違反): ${REAL_PATH}"$'\n'"${_BULLET_HITS}")
               fi
             fi
           fi
