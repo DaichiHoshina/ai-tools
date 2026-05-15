@@ -13,8 +13,11 @@ claude-code/
 ├── hooks/         イベントフック
 ├── guidelines/    言語・設計ガイドライン
 ├── agents/        エージェント定義
-└── references/    参考資料（必要時参照）
+├── references/    参考資料（必要時参照）
+└── _archive/      退避置場（SYNC_ITEMS 外、~/.claude/ に同期されない）
 ```
+
+死蔵検出: `scripts/usage-stats.sh [--days N] [--zero]` — 過去 N 日に呼ばれてない commands/skills を表示、archive 判断材料に使う。
 
 ## 編集時の注意
 
