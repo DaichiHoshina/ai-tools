@@ -21,6 +21,7 @@ _OUTPUT_SANITIZER_LOADED=1
 
 # パターン定義: "正規表現|ラベル" 形式
 # enterprise-security.md §2 から
+# ⚠️ パターン追加時は _SANITIZE_FAST_PATH_REGEX も必ず同期更新（fast path 漏れ防止）
 _SANITIZE_PATTERNS=(
   'AKIA[0-9A-Z]{16}|AWS Access Key'
   'ghp_[a-zA-Z0-9]{36}|GitHub PAT'
@@ -28,12 +29,25 @@ _SANITIZE_PATTERNS=(
   'xox[bp]-[a-zA-Z0-9-]+|Slack Token'
 )
 
+# Fast path 判定用 regex: 上記パターンの prefix 部分のみを OR で連結 + PRIVATE KEY block
+# 全パターンを 1 つの grep で判定し、no-match なら sanitize_text を早期 return
+# ⚠️ _SANITIZE_PATTERNS と必ず同期維持（不一致 = false negative）
+_SANITIZE_FAST_PATH_REGEX='AKIA[0-9A-Z]|ghp_[a-zA-Z0-9]|sk-[a-zA-Z0-9]|xox[bp]-|-----BEGIN .* PRIVATE KEY-----'
+
 # サニタイズ実行
 # 引数: $1 = 入力文字列
 # 出力: stdout = "<件数>\x1f<サニタイズ済テキスト>"
 # 注意: $() で呼ぶとサブシェルになるためグローバル変数は使えない (戻り値合体方式)
 sanitize_text() {
   local input="$1"
+
+  # Fast path: いずれのシークレット候補文字列も含まないなら
+  # パターンごとの grep+sed (10 fork) をスキップして即返却
+  if ! printf '%s' "$input" | grep -qE "$_SANITIZE_FAST_PATH_REGEX" 2>/dev/null; then
+    printf '0\x1f%s' "$input"
+    return 0
+  fi
+
   local count=0
   local out="$input"
 

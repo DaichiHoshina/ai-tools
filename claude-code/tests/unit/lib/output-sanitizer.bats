@@ -156,3 +156,50 @@ suffix"
   [ "$count" -eq 0 ]
   [ "$text" = "$input" ]
 }
+
+# --- Fast path 関連 (Phase 2 最適化) ---
+# _SANITIZE_FAST_PATH_REGEX と _SANITIZE_PATTERNS の同期保証の回帰検出
+
+@test "fast path: 空文字は count=0 で即返却" {
+  local result count text
+  result=$(sanitize_text "")
+  count=$(_count_of "$result")
+  text=$(_text_of "$result")
+  [ "$count" -eq 0 ]
+  [ "$text" = "" ]
+}
+
+@test "fast path: 通常テキスト (候補文字列ゼロ) は入力一致を保つ" {
+  local input="ls -la /tmp/file.txt && echo done"
+  local result count text
+  result=$(sanitize_text "$input")
+  count=$(_count_of "$result")
+  text=$(_text_of "$result")
+  [ "$count" -eq 0 ]
+  [ "$text" = "$input" ]
+}
+
+@test "fast path sync: 全 _SANITIZE_PATTERNS + PRIVATE KEY block が fast path を通過して REDACT される" {
+  # _SANITIZE_FAST_PATH_REGEX が _SANITIZE_PATTERNS および PRIVATE KEY block を
+  # 漏れなく捕まえるか保証。漏れ = 該当 secret が fast path で false negative → 素通り
+  local key_aws key_pat key_oai key_slack
+  key_aws=$(_aws_key); key_pat=$(_github_pat); key_oai=$(_openai_key); key_slack=$(_slack_token)
+  local pk_begin pk_end
+  pk_begin=$(printf '%s%s' "-----BEGIN " "RSA PRIVATE KEY-----")
+  pk_end=$(printf '%s%s' "-----END " "RSA PRIVATE KEY-----")
+  local input
+  input=$(printf '%s\n' \
+    "aws=${key_aws} pat=${key_pat}" \
+    "oai=${key_oai} slack=${key_slack}" \
+    "${pk_begin}" "BODY" "${pk_end}")
+  local result count text
+  result=$(sanitize_text "$input")
+  count=$(_count_of "$result")
+  text=$(_text_of "$result")
+  [ "$count" -eq 5 ]
+  [[ "$text" == *"[REDACTED: AWS Access Key]"* ]]
+  [[ "$text" == *"[REDACTED: GitHub PAT]"* ]]
+  [[ "$text" == *"[REDACTED: OpenAI/Anthropic Key]"* ]]
+  [[ "$text" == *"[REDACTED: Slack Token]"* ]]
+  [[ "$text" == *"[REDACTED: Private Key Block]"* ]]
+}
