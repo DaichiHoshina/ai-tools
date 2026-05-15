@@ -17,7 +17,10 @@ claude-code/
 └── _archive/      退避置場（SYNC_ITEMS 外、~/.claude/ に同期されない）
 ```
 
-死蔵検出: `scripts/usage-stats.sh [--days N] [--zero]` — 過去 N 日に呼ばれてない commands/skills を表示、archive 判断材料に使う。
+健康診断:
+- `scripts/health-check.sh [--bench-skip]` — usage-stats + hook-bench 統合、markdown 出力 (月次目安で手動実行)
+- `scripts/usage-stats.sh [--days N] [--zero]` — 過去 N 日に呼ばれてない commands/skills を抽出
+- `scripts/hook-bench.sh [--hook NAME]` — hook の median/p95 計測 (副作用 hook は skip)
 
 ## 編集時の注意
 
