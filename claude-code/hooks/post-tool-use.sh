@@ -7,14 +7,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
-source "${SCRIPT_DIR}/../lib/writing-self-check.sh"
-source "${SCRIPT_DIR}/../lib/bats-self-check.sh"
+# writing-self-check.sh / bats-self-check.sh は md/bats case 内で lazy source
 
 # JSON入力を読み込む
 INPUT=$(cat)
 
 # 全フィールドを1回のjqで取得（fork削減）
-eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "")"' <<< "$INPUT")"
+# BASH_STDOUT は Bash 時のみ実値、それ以外は空文字（巨大 stdout のメモリ転送回避）
+eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "") BASH_STDOUT=\(if .tool_name == "Bash" then (.tool_response.stdout // "") else "" end)"' <<< "$INPUT")"
 SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 
 # デフォルトメッセージ
@@ -80,6 +80,8 @@ case "$TOOL_NAME" in
             GIT_ROOT=$(git -C "$(dirname "$REAL_PATH")" rev-parse --show-toplevel 2>/dev/null || echo "")
             if [ "$(basename "$GIT_ROOT")" = "ai-tools" ] \
                && [[ "$REAL_PATH" =~ /claude-code/(CLAUDE\.md|references/.+\.md)$ ]]; then
+              # shellcheck disable=SC1091
+              source "${SCRIPT_DIR}/../lib/writing-self-check.sh"
               _WRITING_HITS=$(run_writing_check "$REAL_PATH")
               if [ -n "$_WRITING_HITS" ]; then
                 MESSAGE=$(append_message "$MESSAGE" "⚠ writing self-check: ${REAL_PATH}"$'\n'"${_WRITING_HITS}")
@@ -99,6 +101,8 @@ case "$TOOL_NAME" in
             GIT_ROOT=$(git -C "$(dirname "$REAL_PATH")" rev-parse --show-toplevel 2>/dev/null || echo "")
             if [ "$(basename "$GIT_ROOT")" = "ai-tools" ] \
                && [[ "$REAL_PATH" =~ /claude-code/tests/.+\.bats$ ]]; then
+              # shellcheck disable=SC1091
+              source "${SCRIPT_DIR}/../lib/bats-self-check.sh"
               _BATS_HITS=$(run_bats_check "$REAL_PATH")
               if [ -n "$_BATS_HITS" ]; then
                 MESSAGE=$(append_message "$MESSAGE" "⚠ bats-self-check: ${REAL_PATH}"$'\n'"${_BATS_HITS}")
@@ -151,8 +155,8 @@ esac
 SANITIZE_COUNT=0
 SANITIZED_STDOUT=""
 if [[ "${TOOL_NAME}" == "Bash" ]]; then
-  BASH_STDOUT=$(jq -r '.tool_response.stdout // ""' <<< "$INPUT")
-  if [[ -n "${BASH_STDOUT}" ]] && [[ -f "${SCRIPT_DIR}/../lib/output-sanitizer.sh" ]]; then
+  # BASH_STDOUT は冒頭の jq で取得済（重複 jq 排除）
+  if [[ -n "${BASH_STDOUT:-}" ]] && [[ -f "${SCRIPT_DIR}/../lib/output-sanitizer.sh" ]]; then
     # shellcheck disable=SC1091
     source "${SCRIPT_DIR}/../lib/output-sanitizer.sh"
     _SANITIZE_RESULT=$(sanitize_text "${BASH_STDOUT}")
