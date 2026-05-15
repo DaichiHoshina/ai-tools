@@ -96,7 +96,7 @@ Conventional Commits 形式: `<type>(<scope>): <subject>`
 <レビュワーに見てほしい箇所 or 意思決定を求める選択肢>
 ```
 
-**短文 PR description（H3 3個未満 or 400字以下）の場合は `~/.claude/rules/ai-output.md` の PREP 3点ルール + self-check 4問を通過させる**。長文 PR description（Design Doc 級）は long-form-doc.md の 4問+5原則。判定基準は H3 数 / 文字数 / スクロール 1 画面に収まるか。
+**短文 PR description（H3 3個未満 or 400字以下）の場合は `~/.claude/rules/ai-output.md` の PREP 3 点ルール + PRINCIPLES.md の「書く前の 4 問」+「出力前セルフチェック 6 項目」を通過させる**。長文 PR description（Design Doc 級）は long-form-doc.md の 4問+5原則。判定基準は H3 数 / 文字数 / スクロール 1 画面に収まるか。
 
 **Testing の書き方**:
 
@@ -110,7 +110,7 @@ Conventional Commits 形式: `<type>(<scope>): <subject>`
 
 push/MR 作成後、コミットメッセージやブランチ名に Jira チケット ID が含まれる場合、該当チケットに MR/PR URL を `mcp__jira__jira_post` で自動コメント追加。ID 未検出時は警告のみ表示し、push/MR 作成自体は成功扱い（Jira 連携は補助機能、本流を止めない）。
 
-**自動コメント本文も `~/.claude/rules/ai-output.md` の PREP 3点 + self-check 4問通過必須**。デフォルト template 例: 「結論: PR 作成完了 → レビュー依頼 / 理由: <ブランチ名+変更概要> / 次アクション: <レビュワー指定 or 不明>」。
+**自動コメント本文も `~/.claude/rules/ai-output.md` の PREP 3 点 + PRINCIPLES.md の「書く前の 4 問」+「出力前セルフチェック 6 項目」通過必須**。デフォルト template 例: 「結論: PR 作成完了 → レビュー依頼 / 理由: <ブランチ名+変更概要> / 次アクション: <レビュワー指定 or 不明>」。
 
 ## 注意
 

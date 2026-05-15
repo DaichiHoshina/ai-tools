@@ -63,7 +63,7 @@ npm install -D @playwright/test && npx playwright install chromium
 
 ## Step 4: PRコメント投稿
 
-テスト結果をテキストでPRコメントに投稿。**`~/.claude/rules/ai-output.md` の PREP 3点 + self-check 4問通過必須**。テスト出力が長い場合は `<details>` 折りたたみ。
+テスト結果をテキストでPRコメントに投稿。**`~/.claude/rules/ai-output.md` の PREP 3 点 + PRINCIPLES.md の「書く前の 4 問」+「出力前セルフチェック 6 項目」通過必須**。テスト出力が長い場合は `<details>` 折りたたみ。
 
 ```bash
 gh pr comment --body "$(cat <<'BODY'
