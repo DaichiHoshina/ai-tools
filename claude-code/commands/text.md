@@ -65,7 +65,7 @@ PRINCIPLES.md 主要セクション:
 | 検出キー | 追加ロード |
 |---------|-----------|
 | Notion / page | `guidelines/common/notion-writing.md` |
-| Design Doc / ADR / RCA | `guidelines/writing/design-doc-protocol.md` + `guidelines/writing/long-form-doc.md` |
+| Design Doc / ADR / RCA | `guidelines/writing/design-doc-protocol.md` (PR-B で `long-form-doc.md` 本実装時に追加予定) |
 | PR / pull request | `guidelines/writing/pr-description.md` |
 | 書き直し / リライト | `references/document-iteration-patterns.md` + `references/writing-patterns.md` の `## 書き直し Phase 1-8` |
 

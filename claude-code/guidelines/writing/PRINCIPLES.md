@@ -169,7 +169,7 @@
 - [commit-message.md](commit-message.md) — コミットメッセージ固有
 - [pr-description.md](pr-description.md) — PR 本文 + レビュー応答
 - [external-post.md](external-post.md) — 短文向け詳細 (PREP / ストーリー型 / 5 軸採点)
-- [long-form-doc.md](long-form-doc.md) — 長文向け詳細 (TL;DR / 3 層リライト / ADR/PRD/EARS テンプレ)
+- [long-form-doc.md](long-form-doc.md) — 長文向け詳細 (TL;DR / 3 層リライト / ADR/PRD/EARS テンプレ、**PR-B で本実装予定、現状 stub**)
 - [design-doc-protocol.md](design-doc-protocol.md) — DesignDoc 専用プロトコル
 - [auto-knowledge-update.md](auto-knowledge-update.md) — セッション中の学び追記
 - `references/writing-patterns.md` — 詳細パターン集 (textlint / 図表型 / 書き直し Phase / 専門用語置換)
