@@ -133,3 +133,5 @@ Topic index: `references/INDEX.md` (others: `ls references/`)
 ## Writing Guide (PR / commit / Slack / DesignDoc / PRD / RCA)
 
 Before writing or rewriting external-facing prose, consult `guidelines/writing/README.md` as entry point. **Responsibility map + per-medium quick reference** → navigate to relevant file (3-layer structure: rules / guidelines/writing / references).
+
+**genshijin boundary**: genshijin mode (taigen-dome / minimal particles) applies to **chat replies only**. For human-facing prose (PR / commit / Issue / Slack / Notion / DD / PRD / RCA / comments) and draft output from `/plan` `/design-doc` `/prd` `/post-comment` `/git-push --pr` `/docs`, switch to plain JP — full sentences (〜する/〜した), explicit subjects, no demonstratives (「これ」「それ」「上記」→ concrete names). Details: `rules/genshijin.md` 適用範囲 section + `guidelines/writing/PRINCIPLES.md` L66-71 chat vs document table.
