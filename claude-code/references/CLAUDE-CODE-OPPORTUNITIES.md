@@ -15,6 +15,10 @@
 
 ---
 
+## 2.1.143 (2026-05-16 検出)
+
+新規 Opportunity なし。全エントリ bugfix/Info（`worktree.bgIsolation: "none"` setting [worktree impractical 環境向け、当方 `/flow --parallel` で wt 活用中ゆえ N/A]、`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` env [stop.sh/stop-failure.sh/subagent-stop.sh は通知のみで非 block、N/A]、`claude agents` dashboard への `--permission-mode`/`--model`/`--effort`/`--dangerously-skip-permissions` 適用拡大 [2.1.142 で記録済み、運用変更不要]、plugin dependency enforcement、`/plugin` marketplace 推定 token cost、Shift+Tab auto mode cycle、`/loop` Esc キャンセル fix、markdown table 描画 fix、その他 50+ bugfix）。Windows/PowerShell/Bedrock/Vertex/Foundry 系は環境的に N/A。リポジトリ影響 grep 確認済み（`bgIsolation` 不在、stop hook 全て exit 0）。
+
 ## 2.1.142 (2026-05-15 検出)
 
 新規 Opportunity なし。全エントリ bugfix/Info（Fast mode default Opus 4.7 化 + `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE` pin env、`claude agents` 起動フラグ拡張 `--add-dir`/`--settings`/`--mcp-config`/`--plugin-dir`/`--permission-mode`/`--model`/`--effort`/`--dangerously-skip-permissions`、plugin root-level `SKILL.md` 単独サポート、`MCP_TOOL_TIMEOUT` 60s cap fix、background sessions worktree/sleep-wake/upgrade 周り fix、reactive compaction 改善、SessionStart/Setup/SubagentStart に prompt/agent type hook 指定時のエラーメッセージ改善 等）。リポジトリ影響 grep 確認済み（`/fast` 不使用 / 旧 sonnet ID 不在 / 既存 hook 全 type=command / `MCP_TOOL_TIMEOUT` 不使用）。
