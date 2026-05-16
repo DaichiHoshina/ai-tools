@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: Comprehensive code review (11 perspectives: design/quality/readability/security/docs/test/root-cause/logging). Called from /review, filter with --focus. Use when reviewing code.
+description: "Comprehensive code review (11 perspectives - design/quality/readability/security/docs/test/root-cause/logging). Called from /review, filter with --focus. Use when reviewing code."
 context: fork
 agent: reviewer-agent
 requires-guidelines:

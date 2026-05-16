@@ -86,23 +86,23 @@ require_anchor() {
 
 @test "flow_parallel_three_axis: flow.md / dev.md 各々に --parallel 3 軸記述" {
   for file in "$FLOW_FILE" "$DEV_FILE"; do
-    grep -qF "並列度評価" "$file" || { echo "missing 並列度評価 in $file"; false; }
-    grep -qF "worktree 提案" "$file" || { echo "missing worktree 提案 in $file"; false; }
-    grep -qF "worktree 作成" "$file" || { echo "missing worktree 作成 in $file"; false; }
+    grep -qE "^## --parallel" "$file" || { echo "missing ## --parallel section in $file"; false; }
+    grep -qF "worktree proposal" "$file" || { echo "missing worktree proposal in $file"; false; }
+    grep -qF "worktree creation" "$file" || { echo "missing worktree creation in $file"; false; }
   done
 }
 
 @test "flow_auto_four_conditions_with_cleanup: flow.md / dev.md に --auto 4 条件 + 後片付け 3 項目" {
   for file in "$FLOW_FILE" "$DEV_FILE"; do
-    # --auto 4 条件
-    grep -qF "判定式 PASS" "$file" || { echo "missing 判定式 PASS in $file"; false; }
+    # --auto skip conditions
+    grep -qF "formula PASS" "$file" || { echo "missing formula PASS in $file"; false; }
     grep -qF "clean worktree" "$file" || { echo "missing clean worktree in $file"; false; }
-    grep -qE "(branch|worktree).*衝突" "$file" || { echo "missing 衝突なし in $file"; false; }
-    grep -qE "(フォールバック|自動フォールバック)" "$file" || { echo "missing フォールバック in $file"; false; }
-    # 後片付け 3 項目
-    grep -qF "変更あり" "$file" || { echo "missing 変更あり in $file"; false; }
-    grep -qF "変更なし" "$file" || { echo "missing 変更なし in $file"; false; }
-    grep -qF "マージ衝突" "$file" || { echo "missing マージ衝突 in $file"; false; }
+    grep -qE "(branch|worktree).*collision" "$file" || { echo "missing collision in $file"; false; }
+    grep -qE "(fallback|downgrade)" "$file" || { echo "missing fallback/downgrade in $file"; false; }
+    # cleanup 3 items
+    grep -qF "Changes present" "$file" || { echo "missing Changes present in $file"; false; }
+    grep -qF "no changes" "$file" || { echo "missing no changes in $file"; false; }
+    grep -qF "collision" "$file" || { echo "missing collision in $file"; false; }
   done
 }
 
@@ -173,10 +173,10 @@ extract_yaml_list() {
 # 境界 3 で有効化されるテスト（+2 項目、計 10）
 # =============================================================================
 
-# CLAUDE.md トリガー表セクション抽出: ## 自然言語トリガー... 〜 次 ## まで
+# CLAUDE.md トリガー表セクション抽出: ## Natural Language Triggers... 〜 次 ## まで
 extract_trigger_table() {
   awk '
-    /^## 自然言語トリガー/ { inside = 1; next }
+    /^## Natural Language Triggers/ { inside = 1; next }
     inside && /^## / { exit }
     inside { print }
   ' "$CLAUDEMD_FILE"
@@ -185,7 +185,7 @@ extract_trigger_table() {
 @test "trigger_table_no_forbidden: トリガー表に「同時に」「並走で」非含有" {
   local section
   section=$(extract_trigger_table)
-  [[ -n "$section" ]] || { echo "anchor missing: ## 自然言語トリガー"; false; }
+  [[ -n "$section" ]] || { echo "anchor missing: ## Natural Language Triggers"; false; }
   ! echo "$section" | grep -qF "同時に" || { echo "trigger table contains 同時に"; false; }
   ! echo "$section" | grep -qF "並走で" || { echo "trigger table contains 並走で"; false; }
 }
@@ -194,7 +194,7 @@ extract_trigger_table() {
   # CLAUDE.md は「主要のみ」、全 4 句は references/natural-language-triggers.md に集約
   local section
   section=$(extract_trigger_table)
-  [[ -n "$section" ]] || { echo "anchor missing: ## 自然言語トリガー"; false; }
+  [[ -n "$section" ]] || { echo "anchor missing: ## Natural Language Triggers"; false; }
   echo "$section" | grep -qF '"並列実行で"' || { echo "missing 並列実行で"; false; }
   echo "$section" | grep -qF '"wt 分けて"' || { echo "missing wt 分けて"; false; }
 }
