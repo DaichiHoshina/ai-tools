@@ -1,76 +1,75 @@
 ---
 name: session-mode
-description: セッションモード切替（strict/normal/fast）。本番作業・通常開発・プロトタイピングで操作ガード強度を変更、モード切替時に使用
+description: Switch session modes (strict/normal/fast). Vary operation guard strength for prod/normal dev/prototyping. Use when switching modes.
 ---
 
-# session-mode - セッションモード切替
+# session-mode - Session Mode Switching
 
-Claude Codeの動作モードをセッション単位で切り替える。
-モードに応じて操作ガードの挙動、読み込む仕様、確認フローが変化。
+Switch Claude Code behavior mode per-session. Operation guard behavior, loaded specs, confirm flow vary by mode.
 
-## モード定義
+## Mode Definitions
 
-### strict モード
+### strict Mode
 
-| 項目 | 内容 |
+| Item | Content |
 |------|------|
-| 読み込み | `session-modes.md` + `guardrails.md` |
-| git commit/push | 必ず確認 |
-| 設定変更 | 必ず確認 |
-| npm install | 必ず確認 |
-| disableSkillShellExecution | `true`（スキル内シェル実行を無効化） |
-| ユースケース | 本番環境作業、重要なリファクタリング |
+| Load | `session-modes.md` + `guardrails.md` |
+| git commit/push | Always confirm |
+| Config change | Always confirm |
+| npm install | Always confirm |
+| disableSkillShellExecution | `true` (disable skill shell exec) |
+| Use case | Prod work, critical refactoring |
 
-### normal モード（デフォルト）
+### normal Mode (Default)
 
-| 項目 | 内容 |
+| Item | Content |
 |------|------|
-| 読み込み | CLAUDE.md（8原則）のみ |
-| git commit/push | 確認 |
-| 設定変更 | 確認 |
-| npm install（安全） | 自動許可 |
-| ユースケース | 通常の開発作業 |
+| Load | CLAUDE.md (8 principles) only |
+| git commit/push | Confirm |
+| Config change | Confirm |
+| npm install (safe) | Auto-approve |
+| Use case | Normal dev work |
 
-### fast モード
+### fast Mode
 
-| 項目 | 内容 |
+| Item | Content |
 |------|------|
-| 読み込み | 最小限 |
-| git commit | 自動許可（ローカルのみ） |
-| git push | feature branchは自動許可、main/masterは確認 |
-| npm install（安全） | 自動許可 |
-| ファイル編集 | 自動許可（削除のみ確認） |
-| ユースケース | プロトタイピング、探索的開発、Boris流日常開発 |
+| Load | Minimal |
+| git commit | Auto-approve (local only) |
+| git push | Feature branch auto-approve, main/master confirm |
+| npm install (safe) | Auto-approve |
+| File edit | Auto-approve (delete only confirm) |
+| Use case | Prototyping, exploratory dev, Boris daily |
 
-**SafeBoundary（fast モードで自動許可される操作）**:
-git commit（ローカル）、git push（feature branch）、npm install（安全なライブラリ）、format(code)、file_edit（既存ファイル）
+**SafeBoundary (auto-approved in fast)**:
+git commit (local), git push (feature branch), npm install (safe), format(code), file_edit (existing)
 
-**Agent階層での確認削減（fast モード）**:
-- `/flow`実行時: タスクタイプ判定後の確認をスキップ
-- `/dev`実行時: Plan確認をスキップ
-- AskUserQuestion: 選択肢1つの場合は自動選択
-- 中間確認: 全てスキップ（/prdのPhase 1は除外）
-- エラー修正: 自明なエラーは確認なしで即修正
+**Reduce confirms in fast mode**:
+- `/flow` run: Skip post-type-detect confirm
+- `/dev` run: Skip Plan confirm
+- AskUserQuestion: Single option = auto-select
+- Mid confirms: Skip all (except /prd Phase 1)
+- Error fix: Obvious errors = instant fix, no confirm
 
-## 失敗時の挙動
+## Failure Behavior
 
-| 状況 | 動作 |
+| Situation | Action |
 |------|------|
-| モード切替指定が enum 外（例: `extreme`） | normal にフォールバック、警告出力 |
-| `session-modes.md` 読込失敗（strict 指定時） | normal に降格、warning ログ。ユーザーに strict 設定 reinstall 案内 |
-| 切替後も hook 設定が古いまま | hook 再読込（Claude Code 再起動）を案内 |
+| Mode switch not in enum (e.g. `extreme`) | Fallback to normal, warn |
+| `session-modes.md` load fail (strict) | Downgrade to normal, warning log. Guide user to reinstall strict config |
+| Old hook config after switch | Guide to reload hooks (Claude Code restart) |
 
-## 出力形式（モード切替時）
+## Output Format (Mode Switch)
 
 ```
-🔄 セッションモード切替: {old_mode} → {new_mode}
-- 読み込み: {ファイル一覧}
-- 自動許可範囲: {SafeBoundary 一覧 / fast の場合}
-- ユースケース: {説明}
+🔄 Mode switch: {old_mode} → {new_mode}
+- Load: {file list}
+- Auto-approve: {SafeBoundary list (if fast)}
+- Use case: {description}
 
-⚠️ {fast 時のみ} 本番環境では `/session-mode strict` への切替を推奨
+⚠️ {fast only} Recommend `/session-mode strict` for prod
 ```
 
-## 関連
+## Related
 
-- `/protection-mode` - 圏論的思考法ロード
+- `/protection-mode` - Load categorical thinking method

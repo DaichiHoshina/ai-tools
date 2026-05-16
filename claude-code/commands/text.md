@@ -1,142 +1,144 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Edit, Write, mcp__serena__*
-description: ヒト向け文章の執筆・校正専用モード（読みやすさ・伝達性にフォーカス）
+description: Human-facing prose quality mode (readability/visibility/clarity focus)
 ---
 
-## /text - 文章品質コマンド
+## /text - Writing Quality Command
 
-ヒト向け文章（PR本文・Design Doc 本文・Notion・ブログ・Slack・メール）の
-**可読性・視認性・伝達性**を上げる。コード本体・コードコメント・docstring は対象外。
+Improve human-facing prose (PR body, Design Doc body, Notion, blog, Slack, email) **readability, visibility, clarity**.
 
-> **責務分離**:
-> - `/docs` = 書式・構造・テンプレ準拠（Notion 投稿/API docs/README）
-> - `/design-doc` = 設計判断ドキュメントの組み立て
-> - `/text` = **文章そのものの質**（語彙・文長・段落・伝達順）
+Code body, code comments, docstrings out of scope.
 
-## サブコマンド
+> **Responsibility split**:
+> - `/docs` = format/structure/template compliance (Notion post/API docs/README)
+> - `/design-doc` = assemble design decision document
+> - `/text` = **prose quality itself** (vocab, sentence length, paragraph, signal)
 
-| sub | 用途 | 入力 | 出力 |
-|-----|------|------|------|
-| `write` (default) | ゼロから執筆 | 目的/読者/トピック | 草稿 |
-| `rewrite` | 既存リライト | ファイル or 貼付 | 改稿 + 差分理由（3行以内/件） |
-| `review` | 校正のみ（変更なし） | ファイル or 貼付 | 5軸チェック結果 + 指摘リスト |
-| `outline` | 構成案のみ | 目的/読者/トピック | 見出し階層 + 各節の狙い |
+## Subcommand
 
-引数なし or `write` → write モード。
-**ARGUMENTS 解釈**: 最初の token を sub 名と照合、未マッチなら全引数を write モードのトピックとして扱う。
+| sub | purpose | input | output |
+|-----|---------|-------|--------|
+| `write` (default) | write from scratch | goal/reader/topic | draft |
+| `rewrite` | rewrite existing | file or paste | revision + reason (3 line max per change) |
+| `review` | proofread (no edit) | file or paste | 5-axis check + finding list |
+| `outline` | structure only | goal/reader/topic | heading hierarchy + intent per section |
 
-## 起動時の処理（必須順序）
+no arg or `write` → write mode.
+**ARGUMENTS parse**: first token vs subcommand match, no match → treat whole arg as write topic.
 
-### 1. genshijin 一時 OFF（出力種別ごと）
+## Pre-execution (required order)
 
-| 出力種別 | 文体 |
-|---------|------|
-| write/rewrite の本文・草稿 | 通常日本語 |
-| outline の見出し・狙い | 通常日本語 |
-| review の指摘・スコア | genshijin |
-| 進捗・確認・エラー報告 | genshijin |
+### 1. Temp Turn OFF genshijin (by output type)
 
-### 2. 4問チェック（書き出し前に必ず通過）
+| Output Type | Prose |
+|---------|----------|
+| write/rewrite body/draft | normal Japanese |
+| outline heading/intent | normal Japanese |
+| review finding/score | genshijin |
+| progress/confirm/error | genshijin |
+
+### 2. 4-Question Checkpoint (pre-write, mandatory)
 
 ```
-1. 誰が読む？（読者の前提知識・関心）
-2. 何を判断/理解させたい？
-3. 読後どう行動してほしい？
-4. 主張に根拠（数字/事例/比較）あるか？
+1. Who reads? (reader background/interest)
+2. What decide/understand? (target judgment)
+3. How act after? (intended behavior)
+4. Evidence for claim? (number/case/compare)
 ```
 
-未確定の問があれば**最重要1つ**（優先度: 読者 > 判断 > 行動 > 根拠）だけ確認。
-回答後も未確定の問は以下デフォルトで続行し、設計メモに `推定: {問}={値}` と明記:
+If any unconfirmed, ask **top 1 only** (priority: reader > judgment > action > evidence).
+Post-answer, if still unconfirmed, continue with design-memo default:
 
-- 読者 = 同職種エンジニア / 判断 = 理解促進 / 行動 = 次ステップは読者任意 / 根拠 = 任意
+- reader = same-role engineer / judgment = boost understanding / action = reader optional / evidence = optional
 
-### 3. リソースロード (見出しアンカー抽出)
+**Mark in design memo: `estimated: {Q}={value}`**.
 
-主リソース: `guidelines/writing/PRINCIPLES.md` (約 180 行) 全ロード可。詳細パターンは必要時のみ `references/writing-patterns.md` を見出しアンカー抽出。
+### 3. Load Resources (heading anchor extract)
 
-PRINCIPLES.md 主要セクション:
+Main: `guidelines/writing/PRINCIPLES.md` (~180 line) full load OK. Detailed pattern: need? load `references/writing-patterns.md` heading anchor only.
 
-- `## 最優先 — 読み手の認知負荷を下げる` / `## 書く前の 4 問` / `## 守る指針 (7 原則)` / `## 媒体別構造`
-- `## AI 臭を消す 3 変換` + 配下 `### NG 辞書 (削除対象)`
-- `## 避けるパターン` / `## 出力前セルフチェック (6 項目、5 項目以上で合格)`
+PRINCIPLES.md main sections:
 
-### 4. 種別判定で動的追加ロード
+- `## Top Priority — Lower Reader Cognition Load` / `## Pre-write 4 Questions` / `## Keep (7 principles)` / `## Avoid Patterns`
+- `## Kill AI Smell 3 Transform` + nested `### NG Dictionary (delete targets)`
+- `## Avoid Patterns` / `## Pre-output Self-Check (6 items, 5+ pass)`
 
-| 検出キー | 追加ロード |
+### 4. Dynamic Load by Type
+
+| Detect Keyword | Extra Load |
 |---------|-----------|
 | Notion / page | `guidelines/common/notion-writing.md` |
-| Design Doc / ADR / RCA | `guidelines/writing/design-doc-protocol.md` (PR-B で `long-form-doc.md` 本実装時に追加予定) |
+| Design Doc / ADR / RCA | `guidelines/writing/design-doc-protocol.md` |
 | PR / pull request | `guidelines/writing/pr-description.md` |
-| 書き直し / リライト | `references/document-iteration-patterns.md` + `references/writing-patterns.md` の `## 書き直し Phase 1-8` |
+| rewrite | `references/document-iteration-patterns.md` + `references/writing-patterns.md` "Rewrite Phase 1-8" |
 
-## 5軸チェック（review/rewrite で必須）
+## 5-Axis Check (review/rewrite required)
 
 ```
-[A] 可読性: 1文 60字以内 / 段落 3-5文 / 主語明示
-[B] 視認性: 見出し階層 / 箇条書き活用 / 図表で型固定
-[C] 伝達性: PREP or TL;DR+詳細 / 結論先出し
-[D] 根拠性: 評価語に数字/事例併記（AI臭3変換）
-[E] 整合性: 用語ブレなし / 重複なし / NG辞書ヒット 0
+[A] readability: 1 sentence ≤60 chars / paragraph 3-5 sentences / explicit subject
+[B] visibility: heading hierarchy / bullet use / tables for types
+[C] signal: PREP or TL;DR+detail / conclusion first
+[D] evidence: praise word + number/case (AI smell 3-transform)
+[E] coherence: term consistency / no duplication / NG dict hit 0
 ```
 
-各軸 0-3 点、合計 11/15 以上で合格（= 平均 2.2、全軸2点以上＋1軸満点を想定した実用閾値）。
-未達は指摘ポイント明示。
+Each 0-3 pts, total 11/15+ pass (= avg 2.2, all ≥2 + 1 full assumed practical threshold). Below: cite specific point.
 
-> **5軸 vs セルフチェック6項目の責務**:
-> - 5軸 = 出力**評価**スコア（review/rewrite 出力の品質判定）
-> - セルフチェック6項目 = 出力**直前**の最終ゲート（PRINCIPLES.md 由来、5項目以上で合格）
-> 両方通過して初めて完了扱い。
+> **5-axis vs 6-item pre-output**:
+> - 5-axis = **evaluate** output quality (review/rewrite output score)
+> - 6-item pre-output = **gate** just-before-output (PRINCIPLES.md derived, 5+ pass)
+> Both pass = done.
 
-## 出力フォーマット
+## Output Format
 
 ### write / rewrite
 
 ```
-## 草稿
-（本文）
+## Draft
+(body)
 
-## 設計メモ（3行以内）
-- 読者想定: ...
-- 主張順: ...
-- 落とした論点: ...
+## Design Memo (≤3 line)
+- reader: ...
+- argument order: ...
+- dropped topic: ...
 ```
 
 ### review
 
 ```
-## 5軸スコア
-A:_/3 B:_/3 C:_/3 D:_/3 E:_/3  合計 _/15
+## 5-Axis Score
+A:_/3 B:_/3 C:_/3 D:_/3 E:_/3  total _/15
 
-## 指摘（重要度順、最大5件）
-1. [軸] 該当箇所 → 修正方向
+## Findings (priority order, max 5)
+1. [axis] location → fix direction
 ...
 ```
 
 ### outline
 
 ```
-## 構成案
-1. (見出し) — 狙い1行
-   - サブ見出し — 含める要素
+## Structure
+1. (heading) — intent 1 line
+   - subheading — contain what
 ...
 ```
 
-## 禁止事項
+## Forbidden
 
-- AI臭表現の生成（「重要な」「効果的に」「シームレスに」など根拠なし評価語）
-- 「以下に〜を示します」「〜することができます」等の冗長定型
-- 4問未通過での本文生成
-- writing-patterns 全ロード（トークン浪費。PRINCIPLES.md 主軸で十分）
-- コード本体/コードコメント/docstring への適用（責務外）
-- **`review` サブモードでの Edit/Write 実行**（出力は指摘リストのみ、ファイル変更禁止）
+- generate AI-smell prose ("important" "effectively" "seamlessly" etc unsupported)
+- verbose boilerplate ("below shows" "you can" etc)
+- execute write without 4-question pass
+- full load writing-patterns (token waste, PRINCIPLES focus enough)
+- apply to code body/comment/docstring (out of scope)
+- **run Edit/Write in `review` submode** (output = findings only, no file change)
 
-## 完了条件（サブ別）
+## Completion (per sub)
 
-| 条件 | write | rewrite | review | outline |
-|------|:---:|:---:|:---:|:---:|
-| 4問チェック通過 | ✓ | ✓ | – | ✓ |
-| 5軸スコア 11/15 以上 | ✓ | ✓ | ✓ | – |
-| セルフチェック6項目 5項目以上 | ✓ | ✓ | – | – |
-| NG 辞書ヒット 0 | ✓ | ✓ | – | – |
+| Condition | write | rewrite | review | outline |
+|-----------|:---:|:---:|:---:|:---:|
+| 4-question pass | ✓ | ✓ | – | ✓ |
+| 5-axis score 11/15+ | ✓ | ✓ | ✓ | – |
+| 6-item pre-output 5+ | ✓ | ✓ | – | – |
+| NG dict hit 0 | ✓ | ✓ | – | – |
 
 ARGUMENTS: $ARGUMENTS

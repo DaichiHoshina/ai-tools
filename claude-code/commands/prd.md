@@ -1,136 +1,136 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestion, Task, mcp__serena__*, mcp__context7__*, mcp__confluence__*, mcp__jira__*
-description: PRD作成 - 対話式で要件整理、数学的定式化（オプション）、10の専門家視点で厳格レビュー
+description: Create PRD - interactive requirements gathering, optional mathematical formalization, strict expert review from 11 angles
 ---
 
-# /prd - 要件定義・PRD作成コマンド
+# /prd - Requirements Definition & PRD Creation
 
-複雑な要件を整理し、あらゆる角度から抜け漏れを検出する。
+Organize complex requirements and detect gaps from multiple expert perspectives.
 
-> 全体フロー（brainstorm → prd → design-doc → plan → dev → docs）: `references/design-phase-flow.md`
+> Full flow (brainstorm → prd → design-doc → plan → dev → docs): `references/design-phase-flow.md`
 
-## 入力解釈（ARGUMENTS から自動分岐）
+## Input Parsing (auto-branch from ARGUMENTS)
 
-明示オプション（`--update <path>` `--scope Q1,Q3`）の他、自然言語からモードを推定する。
+Infer mode from natural language beyond explicit options (`--update <path>` `--scope Q1,Q3`).
 
-| 検出 | 条件 | 効果 |
-|------|------|------|
-| update モード | 「修正/直して/更新/アップデート/書き直し/リライト/変更」+ `.md` パス | `--update <path>` 相当 |
-| scope 限定 | 下記キーワード辞書を ARGUMENTS から検索 | 該当 Q のみ Phase 1.7 再評価 |
-| 新規モード | 上記いずれもなし | Phase 1 ヒアリングから |
+| Detection | Condition | Effect |
+|-----------|-----------|--------|
+| update mode | fix/update/rewrite keywords + `.md` path | `--update <path>` equivalent |
+| scope limit | search keyword dict in ARGUMENTS | re-evaluate only target Q in Phase 1.7 |
+| new mode | none of above | start from Phase 1 interview |
 
-**scope キーワード辞書**:
+**Scope keyword dictionary**:
 
-| Q | キーワード |
+| Q | Keywords |
 |---|----------|
-| Q1 | 目的 / 真の目的 / なぜ / Why / XY |
-| Q2 | やらない / 作らない / Null / 機会損失 |
-| Q3 | 代替 / 他案 / OSS / SaaS / 比較 / 選定 |
-| Q4 | 失敗 / プレモータム / リスク / 失敗ケース |
-| Q5 | 前提 / 崩れる / 仮定 / もし / 脆弱性 |
+| Q1 | purpose / true purpose / why / Why / XY problem |
+| Q2 | don't build / build nothing / Null / opportunity cost |
+| Q3 | alternatives / other options / OSS / SaaS / comparison / selection |
+| Q4 | failure / premortem / risks / failure scenarios |
+| Q5 | assumptions / break / assumption / if / vulnerability |
 
-**曖昧時**:
-- 修正キーワードあり・パスなし → `Glob "**/*prd*.md"` で候補提示し AskUserQuestion
-- パスあり・修正キーワードなし → AskUserQuestion で「新規参照用 / 既存修正」確認
+**When ambiguous**:
+- fix keyword present, path absent → `Glob "**/*prd*.md"` show candidates, AskUserQuestion
+- path present, fix keyword absent → AskUserQuestion confirm "new reference / existing update"
 
-update モード時の Phase 1.7 は **既存 1.5 セクションを Read → 不足/陳腐化のみ補完**（差分編集）。`--scope` 指定時は該当 Q のみ走る。
+Update mode Phase 1.7: **Read existing 1.5 section → patch only gaps/stale content** (diff edit). With `--scope`, run only target Q.
 
-## 実行フロー
+## Execution Flow
 
-### Phase 1: 情報収集（対話式・スキップ禁止）
+### Phase 1: Information Gathering (interactive, required)
 
-**autoモードでもスキップ不可。必ずAskUserQuestionで対話する。**
+**Cannot skip even in auto mode. Always use AskUserQuestion.**
 
-| Step | AskUserQuestion | 選択肢例 |
+| Step | AskUserQuestion | Example choices |
 |------|----------------|----------|
-| 1 | 何を実現したいですか？ | 新規機能 / 既存改善 / 不具合修正 |
-| 2 | どのサービスが関係？ | （コードベースから自動検出） |
-| 3 | 外部API・依存は？ | あり / なし / 不明 |
-| 4 | 主な利用者は？ | エンドユーザー / 管理者 / 開発者 |
-| 5 | 主要フローを教えてください | （自由入力） |
+| 1 | What do you want to realize? | new feature / existing improvement / bug fix |
+| 2 | Which services involved? | (auto-detect from codebase) |
+| 3 | External APIs / dependencies? | yes / no / unclear |
+| 4 | Primary users? | end user / admin / developer |
+| 5 | Walk through main flow | (free text) |
 
-### Phase 1.5: 数学的定式化（複雑な要件の場合）
+### Phase 1.5: Mathematical Formalization (complex requirements)
 
-AskUserQuestion → 「はい」の場合: 用語集、エンティティ、状態遷移表（現状態→イベント→次状態→Guard→pre/post→不変条件）、操作の合成、例外・境界条件、DDDマッピングを定式化。
+AskUserQuestion → if "yes": glossary, entities, state transition table (state→event→next→guard→pre/post→invariants), operation composition, exceptions/boundary conditions, DDD mapping.
 
-### Phase 1.7: 意思決定品質チェック（必須・スキップ禁止）
+### Phase 1.7: Decision Quality Check (required, no skip)
 
-`references/decision-quality-checklist.md` の5問を適用。Phase 2 の draft 生成前に **目的-手段一貫性** を確保する。
+Apply 5 questions from `references/decision-quality-checklist.md`. Ensure **goal-means consistency** before Phase 2 draft.
 
-| Q | 問い | 不足時の補完 |
-|---|------|------------|
-| Q1 | 真の目的か？（なぜを2回掘る） | AskUserQuestion で上位目的を確認 |
-| Q2 | 「作らない」を比較対象に入れたか？ | やらない/手作業/既存代替 を AI が draft 提示→ユーザー承認 |
-| Q3 | 代替手段を3つ以上洗ったか？ | 自前/OSS/SaaS/設計変更/運用回避 から3案を AI が draft 提示 |
-| Q4 | プレモータム3つ書いたか？ | 技術/運用/想定外利用 から各1つを AI が draft |
-| Q5 | 前提が崩れる条件を書いたか？ | 利用者数/認証/外部API/コンプラ から AI が候補提示 |
+| Q | Question | Complement if missing |
+|---|----------|------------|
+| Q1 | True goal? (dig 2 levels) | AskUserQuestion confirm parent goal |
+| Q2 | Include "build nothing" in comparison? | AI draft: do nothing / manual / existing alternative → user confirm |
+| Q3 | Explored 3+ alternatives? | AI draft: 3 options from build/OSS/SaaS/redesign/ops workaround |
+| Q4 | Three premortems written? | AI draft: 1 each from tech/ops/unexpected usage |
+| Q5 | Conditions where assumptions break? | AI candidate: user count / auth / external API / compliance |
 
-各問の出力は Phase 2 の PRD 内「**1.5 意思決定根拠**」セクションに織り込む（テンプレ参照）。NG パターン（checklist.md 参照）に該当したら Critical として再質問。
+Each output baked into Phase 2 PRD **"1.5 Decision Rationale"** section (see template). If any pattern matches NG list, escalate Critical + re-ask.
 
-### Phase 2: PRD自動生成
+### Phase 2: Auto-generate PRD
 
-概要、ユーザーストーリー、サービス依存関係（Mermaid図）、外部API仕様、状態遷移、受け入れ基準。`guidelines/writing/long-form-doc.md` の4問・原則5点を参照し文章品質を担保する。
+Overview, user stories, service dependencies (Mermaid), external API spec, state transitions, acceptance criteria. Reference `guidelines/writing/long-form-doc.md` 4-question principle for prose quality.
 
-### Phase 3: 多角的レビュー（11ペルソナ）
+### Phase 3: Multi-angle Review (11 personas)
 
-| ID | チェック | ID | チェック |
+| ID | Check | ID | Check |
 |----|---------|-----|---------|
-| SEC | 認証、暗号化、インジェクション | UX | エラー表示、待機UI |
-| PERF | N+1、ボトルネック、キャッシュ | DATA | 履歴、監査ログ、整合性 |
-| SRE | SPOF、障害検知、ロールバック | BIZ | ROI、優先度、MVP |
-| QA | エッジケース、境界値 | LEGAL | 個人情報、保持期間 |
-| ARCH | 依存関係、拡張性 | EXT | フォールバック、リトライ |
-| CUST | 顧客価値、WTP、体験ジャーニー、代替手段との比較 | — | — |
+| SEC | auth, encryption, injection | UX | error messages, wait UI |
+| PERF | N+1, bottlenecks, caching | DATA | history, audit log, consistency |
+| SRE | SPOF, failure detection, rollback | BIZ | ROI, priority, MVP |
+| QA | edge cases, boundary values | LEGAL | PII, retention |
+| ARCH | dependencies, extensibility | EXT | fallback, retry |
+| CUST | customer value, WTP, journey, vs alternatives | — | — |
 
-CUST は UX（操作性）と BIZ（事業 ROI）の中間。「ユーザーは本当にこの機能に対価を払うか／既存代替（Excel・他社・自前）から乗り換えるか」を問う観点。
+CUST = bridge between UX (usability) and BIZ (business ROI). "Will users really pay for this / switch from Excel/competitor/self-build?"
 
-レビュー手法: MECE、状態遷移完全性、条件分岐網羅、矛盾検出、反証質問
+Review technique: MECE, state completeness, branch coverage, contradiction detection, counter-questions.
 
-### Phase 4: 指摘一覧出力
+### Phase 4: Issue List
 
-Critical（必須対応）/ Warning（推奨対応）/ Info（検討推奨）
+Critical (must fix) / Warning (recommended) / Info (consider)
 
-### Phase 4.5: writing 観点の self-review（chat 出力直前）
+### Phase 4.5: Self-review on writing (pre-output)
 
-`/prd` は chat 出力で、ファイル化していないため `/review` の git diff 対象にならない。AI が出力直前に、生成済み draft 本文に対して以下を自己検査する:
+`/prd` is chat output, not persisted, so not in `/review` diff scope. AI self-checks draft before output against:
 
-- `skills/comprehensive-review/skill.md` の writing 観点 NG 表（結論先行・根拠なき評価語・抽象語放置・難語未定義・主語省略・5W1H 欠落・箇条書き金太郎飴・AI 定型語・読後アクション未明示）
-- `guidelines/writing/long-form-doc.md` の NG 辞書
+- `skills/comprehensive-review/skill.md` writing NG table (conclusion-first, unsupported praise, vague words, undefined jargon, omitted subject, missing 5W1H, repetitive bullets, AI boilerplate, unclear call-to-action)
+- `guidelines/writing/long-form-doc.md` NG dictionary
 
-Critical 1件以上、または Warning 4件以上ヒット → 該当箇所を修正してから Phase 5 に渡す（最大2 loop）。修正は推測せず、4問（読み手・読後アクション・数字・なぜ）の答えを本文に織り込む方向で行う。
+1+ Critical or 4+ Warning hit → fix before Phase 5 (max 2 loop). Fix by embedding answers to 4 questions (reader, call-to-action, numbers, why) in prose.
 
-**2 loop 超過時**: 残違反を「Phase 5 ユーザー確認事項」として報告、自動修正を打ち切り。loop 上限超過の理由（情報不足 / 判断保留）を明示してユーザー判断を仰ぐ。
+**Exceed 2 loops**: report remaining violations as "Phase 5 user confirm items", stop auto-fix. Declare loop limit reason (info gap / decision pending) + ask user.
 
-`--out <path>` オプションで PRD をファイル化した場合は、`/design-doc` の Step 8.5 と同等に `Read` + `Edit` の書き直し loop を使う。
+If PRD persisted via `--out <path>`, use `Read` + `Edit` rewrite loop like `/design-doc` Step 8.5.
 
-## 失敗時の挙動
+## Failure Handling
 
-| 状況 | 動作 |
-|------|------|
-| AskUserQuestion で回答が「不明」「未定」 | 該当 Q を draft の Open Questions セクションに保留、後続 Phase で再質問対象 |
-| 外部 API 仕様取得失敗 (WebFetch) | 「外部 API 仕様未取得」を Critical で記録、ユーザーに spec URL 明示要求 |
-| Serena 失敗 (サービス自動検出不可) | ユーザーに対象サービス明示要求、推測列挙は禁止 |
+| Situation | Behavior |
+|-----------|----------|
+| AskUserQuestion answer "unclear" / "pending" | defer to draft Open Questions, revisit later |
+| external API spec fetch fail (WebFetch) | log "external API spec not retrieved" Critical, ask user for spec URL |
+| Serena fail (service auto-detect) | ask user for explicit service, ban guessing |
 
-### Phase 5: 修正・承認
+### Phase 5: Fix & Approve
 
-AskUserQuestion → 修正 or 承認 → `/design-doc`（チーム共有用設計資料） or `/plan` or `/dev`
+AskUserQuestion → fix or approve → `/design-doc` (team-shared design) or `/plan` or `/dev`
 
-## 出力テンプレート
+## Output Template
 
 ```markdown
-# PRD: [機能名]
-## 1. 概要（目的/背景/スコープ）
-## 1.5 意思決定根拠（Q1-Q5: 真の目的/作らない比較/代替案3つ/プレモータム3つ/前提崩壊条件）
-## 2. ユーザー（ターゲット/ストーリー/権限）
-## 3. システム構成（依存関係/データフロー/外部API）
-## 4. 機能要件（状態遷移/ビジネスルール）
-## 4.5 定式化（複雑時のみ）
-## 5. 非機能要件
-## 6. 受け入れ基準
-## 7. レビュー結果
-## 8. 次のアクション
+# PRD: [Feature]
+## 1. Overview (purpose/background/scope)
+## 1.5 Decision Rationale (Q1-Q5: true goal / don't-build comparison / 3 alternatives / 3 premortems / assumption break conditions)
+## 2. Users (target/stories/roles)
+## 3. System (dependencies/data flow/external APIs)
+## 4. Functional Req (state transitions/business rules)
+## 4.5 Formalization (complex cases only)
+## 5. Non-functional Req
+## 6. Acceptance Criteria
+## 7. Review Result
+## 8. Next Steps
 ```
 
-**読み取り専用**: 実装はしない。外部APIはWebFetchで取得。反復可能。
+**Read-only**: no implementation. Fetch external APIs. Repeatable.
 
 ARGUMENTS: $ARGUMENTS

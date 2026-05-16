@@ -1,105 +1,105 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
-description: リファクタリング用コマンド（言語ガイドライン自動読み込み）
+description: Refactoring mode (auto-load language guidelines)
 ---
 
-## /refactor - リファクタリングモード
+## /refactor - Refactoring Mode
 
 ## protection-mode
 
-`/flow` 経由時は自動適用。単独実行時もファイル変更を伴う場合は `Skill("protection-mode")` を推奨。
+Auto-apply via `/flow`. Single run: recommend `Skill("protection-mode")` if changing files.
 
-## 思考モード（重要）
+## Think Mode (critical)
 
-**always ultrathink** - リファクタリングでは必ず深く思考してから実行。既存コードの意図を理解し、動作を変えずに改善する。
+**always ultrathink** - deep reflection before refactoring. Understand existing intent, preserve behavior while improving.
 
-## Step 0: ガイドライン自動読み込み（必須）
+## Step 0: Auto-load Guidelines (required)
 
-リファクタリング開始前に必要なガイドラインを読み込む:
+Load required guidelines before refactoring:
 
-### A. 言語ガイドライン
-`load-guidelines` スキルで自動検出:
+### A. Language Guidelines
+Auto-detect via `load-guidelines` skill:
 - TypeScript → `typescript.md`, `eslint.md`
 - Next.js → `nextjs-react.md`, `tailwind.md`, `shadcn.md`
 - Go → `golang.md`
 
-### B. 設計ガイドライン（必須）
+### B. Design Guidelines (required)
 ```
 requires-guidelines:
   - clean-architecture
   - ddd
 ```
 
-**読み込み:**
+**Load from:**
 - `~/.claude/guidelines/design/clean-architecture.md`
 - `~/.claude/guidelines/design/domain-driven-design.md`
 
-### C. Skill連携
-以下のSkillが自動的にガイドラインを読み込み:
-- `clean-architecture-ddd` - クリーンアーキテクチャ・DDD原則
-- `comprehensive-review --focus=quality` - 設計・コード品質・型安全性の統合チェック（Phase 2-5で統合済み、旧スキル名も動作）
+### C. Skill Coordination
+Auto-load guidelines:
+- `clean-architecture-ddd` - clean arch + DDD principles
+- `comprehensive-review --focus=quality` - design/quality/type safety integrated check (Phase 2-5 built-in, legacy names also work)
 
-詳細は [SKILL-MIGRATION.md](../tutorials/SKILL-MIGRATION.md) 参照。
+Detail: [SKILL-MIGRATION.md](../tutorials/SKILL-MIGRATION.md)
 
-## フロー
+## Flow
 
-1. **ガイドライン読み込み** - 上記Step 0を実行
-2. **分析** - Serena MCP で品質問題特定、影響範囲分析
-3. **計画作成** - リファクタリング計画を TaskCreate で管理
-4. **ユーザー確認**（必須）
-5. **実行** - 段階的にリファクタリング
-6. **テスト実行** - 動作が変わっていないことを確認
-7. **レポート** - Before/After 比較
+1. **Load guidelines** - execute Step 0 above
+2. **Analyze** - Serena MCP identify quality issues, analyze impact scope
+3. **Plan** - create refactoring plan via TaskCreate
+4. **User confirm** (required)
+5. **Execute** - refactor incrementally
+6. **Test** - confirm behavior unchanged
+7. **Report** - Before/After comparison
 
-## 優先順位
+## Priority
 
-1. **型安全性向上** - any/as 排除（最優先）
-2. **ガイドライン準拠**
-3. **アーキテクチャパターン** - Clean Architecture・DDD
-4. **重複コード排除** - DRY原則
-5. **可読性向上**
+1. **Type safety improvement** - eliminate any/as (highest)
+2. **Guideline compliance**
+3. **Architecture patterns** - Clean Architecture, DDD
+4. **Eliminate duplication** - DRY principle
+5. **Readability improvement**
 
-## 出力フォーマット
+## Output Format
 
 ```
-# Refactoring: [対象]
+# Refactoring: [target]
 
 ## Changes
-- Files: X件 / +Y -Z lines
+- Files: X / +Y -Z lines
 
 ## Improvements
-- ✅ any 型を X箇所削除
-- ✅ 複雑度 Y → Z に改善
+- ✅ removed X any types
+- ✅ complexity Y → Z
 
 ## Test: [PASS/FAIL]
 ```
 
-## 次のアクション
+## Next Steps
 
 ```
-/refactor 完了
-  → /lint-test（品質チェック・必須）
-  → /test（テスト実行・必須。動作不変の保証）
-  → /review（コードレビュー）
-  → /git-push（Git操作）
-  → テスト失敗時: /diagnose
+/refactor complete
+  → /lint-test (quality check, required)
+  → /test (test execution, required. verify behavior unchanged)
+  → /review (code review)
+  → /git-push (git operations)
+  → test fail: /diagnose
 ```
 
-## 関連コマンド
+## Related Commands
 
-| コマンド | 関係 |
+| Command | Relation |
 |---------|------|
-| `/dev` | 新機能実装。リファクタリングとは目的が異なる |
-| `/tdd` | テスト駆動。リファクタリングのRefactorフェーズと同等 |
-| `/lint-test` | CI相当チェック。リファクタリング後に必須 |
+| `/dev` | new feature implementation, different goal |
+| `/tdd` | test-driven. equal to refactor Refactor phase |
+| `/lint-test` | CI equivalent check, required after refactoring |
 
-## 失敗時の挙動
+## Failure Handling
 
-| 状況 | 動作 |
-|------|------|
-| Serena MCP 失敗 | grep / Glob で品質問題検出、影響範囲分析の精度低下を warning |
-| ガイドライン読込失敗 | common のみで継続、warning。設計判断は保守的に倒す |
-| リファクタリング不要（品質問題ゼロ件） | 「改善余地なし、現状維持を推奨」と報告して終了 |
-| テスト失敗（動作変更検出） | git stash で変更退避、原因報告して停止 |
+| Situation | Behavior |
+|-----------|----------|
+| Serena MCP fail | use grep/Glob for quality detection, reduce precision warning |
+| guideline load fail | continue with common only, warning. be conservative on design decisions |
+| no refactoring needed (zero quality issues) | report "no improvements, maintain status quo" → done |
+| test fail (behavior change detected) | git stash changes, report cause → stop |
 
-**リファクタリング前はユーザー確認必須。動作を変えない（テストで保証）。**
+**Require user confirm before refactoring. Don't change behavior (test guarantees it).**

@@ -1,117 +1,117 @@
-# Root Cause Analysis フレームワーク詳細
+# Root Cause Analysis Framework
 
-## 5つのなぜ分析テンプレート
+## 5 Why Analysis Template
 
 ```text
-Level 1: なぜ[症状]が発生する? → [直接原因]
-  証拠: [コード箇所、ログ、設定]
-  確信度: {0-100}%
+Level 1: Why [symptom]? → [immediate cause]
+  Evidence: [code, logs, config]
+  Confidence: {0-100}%
 
-Level 2: なぜ[直接原因]が起きた? → [中間原因]
-  証拠: [コード箇所、ログ、設定]
-  確信度: {0-100}%
+Level 2: Why [immediate cause]? → [intermediate cause]
+  Evidence: [code, logs, config]
+  Confidence: {0-100}%
 
-Level 3: なぜ[中間原因]が起きた? → [深層原因]
-  証拠: [コード箇所、ログ、設定]
-  確信度: {0-100}%
+Level 3: Why [intermediate cause]? → [deep cause]
+  Evidence: [code, logs, config]
+  Confidence: {0-100}%
 
-Level 4: なぜ[深層原因]が起きた? → [構造的原因]
-  証拠: [コード箇所、ログ、設定]
-  確信度: {0-100}%
+Level 4: Why [deep cause]? → [structural cause]
+  Evidence: [code, logs, config]
+  Confidence: {0-100}%
 
-Level 5: なぜ[構造的原因]が起きた? → [根本原因]
-  証拠: [コード箇所、ログ、設定]
-  確信度: {0-100}%
+Level 5: Why [structural cause]? → [root cause]
+  Evidence: [code, logs, config]
+  Confidence: {0-100}%
 ```
 
-**depthパラメータによる調整**:
-- `quick`: Level 1-3まで（単純なバグ向け）
-- `standard`: Level 1-5まで（デフォルト）
-- `deep`: Level 1-5 + 類似問題の網羅的検索
+**Depth parameter**:
+- `quick`: Levels 1-3 (simple bugs)
+- `standard`: Levels 1-5 (default)
+- `deep`: Levels 1-5 + exhaustive pattern search
 
-**確信度**: 85%以上で信頼できる結論とする。未満の場合は追加調査を実施。
+**Confidence threshold**: ≥85% = reliable. Below: investigate further.
 
-## 修正戦略の3段階
+## Fix Strategy (3 Levels)
 
-### L1: 対症療法（非推奨）
+### L1: Symptomatic Fix (Not recommended)
 
-| 項目 | 内容 |
+| Item | Note |
 |------|------|
-| リスク | 低 |
-| 再発リスク | 高 |
-| 説明 | 症状を直接抑える修正 |
-| 例 | Number()変換を追加、null checkを追加 |
-| 推奨 | 緊急時のみ、TODO必須 |
+| Risk | Low |
+| Recurrence risk | High |
+| Action | Suppress symptom directly |
+| Example | Add Number() cast, add null check |
+| When | Emergency only, requires TODO |
 
-### L2: 部分的治療
+### L2: Partial Fix
 
-| 項目 | 内容 |
+| Item | Note |
 |------|------|
-| リスク | 中 |
-| 再発リスク | 中 |
-| 説明 | 問題の直接原因を修正するが、類似問題は残る |
-| 例 | このエンドポイントに検証を追加 |
-| 推奨 | 時間制約がある場合 |
+| Risk | Medium |
+| Recurrence risk | Medium |
+| Action | Fix direct cause, similar issues remain |
+| Example | Add validation to this endpoint |
+| When | Time-constrained situations |
 
-### L3: 根本治療（推奨）
+### L3: Root Fix (Recommended)
 
-| 項目 | 内容 |
+| Item | Note |
 |------|------|
-| リスク | 高（変更範囲が広い） |
-| 再発リスク | 低 |
-| 説明 | 構造的な原因を取り除く |
-| 例 | Zod検証層を全エンドポイントに追加 |
-| 推奨 | 可能な限りこちらを選択 |
+| Risk | High (broad change scope) |
+| Recurrence risk | Low |
+| Action | Remove structural cause |
+| Example | Add Zod validation to all endpoints |
+| When | Preferred approach when possible |
 
-各戦略のpros/cons/effort/riskを提示し、AskUserQuestionでユーザーに選択を求める。
+Present pros/cons/effort/risk for each, ask user to choose.
 
-## 類似問題の検出
+## Similar Pattern Detection
 
-Serena MCPで同じパターンをコードベース全体から検索:
+Search codebase with Serena MCP:
 
-- `mcp__serena__search_for_pattern`: 根本原因と同じパターンを検索
-- `mcp__serena__find_symbol`: 関連シンボルを検索
-- `mcp__serena__find_referencing_symbols`: 影響を受ける箇所を検索
+- `mcp__serena__search_for_pattern`: Find same pattern across codebase
+- `mcp__serena__find_symbol`: Find related symbols
+- `mcp__serena__find_referencing_symbols`: Find affected locations
 
-検出結果:
-- 同一パターンの発生箇所リスト
-- 各箇所の影響度（高/中/低）
-- 修正の優先順位
+Output:
+- List of matching locations
+- Impact level (high/medium/low) per location
+- Fix priority order
 
-## レポートテンプレート
+## Report Template
 
 ```markdown
 # Root Cause Analysis Report
 
-## 症状
-{症状の詳細}
+## Symptom
+{symptom details}
 
-## 5つのなぜ分析
-{各レベルの分析結果}
+## 5 Why Analysis
+{results per level}
 
-## 根本原因
-- カテゴリ: {Architecture|Logic|Data|Integration|Assumption|Environment}
-- 説明: {根本原因の説明}
-- 確信度: {0-100}%
+## Root Cause
+- Category: {Architecture|Logic|Data|Integration|Assumption|Environment}
+- Description: {explanation}
+- Confidence: {0-100}%
 
-## 修正戦略
-### L1: 対症療法
-{内容、pros/cons}
+## Fix Strategies
+### L1: Symptomatic
+{details, pros/cons}
 
-### L2: 部分的治療
-{内容、pros/cons}
+### L2: Partial
+{details, pros/cons}
 
-### L3: 根本治療（推奨）
-{内容、pros/cons}
+### L3: Root (Recommended)
+{details, pros/cons}
 
-## 類似問題
-{検出された類似問題のリスト}
+## Similar Issues
+{detected patterns list}
 
-## 推奨アクション
-{具体的な修正手順}
+## Recommended Action
+{concrete fix steps}
 ```
 
-Serena Memoryへの保存:
+Save to Serena Memory:
 ```text
-mcp__serena__write_memory("rca-{日付}-{要約}", レポート内容)
+mcp__serena__write_memory("rca-{date}-{summary}", report)
 ```

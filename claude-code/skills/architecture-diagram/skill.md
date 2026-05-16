@@ -1,40 +1,40 @@
 ---
 name: architecture-diagram
-description: アーキテクチャ図生成。HTML/SVGでシステム構成・クラウド・マイクロサービス・ネットワーク図をダークテーマで作成、図作成時に使用
+description: Architecture diagram generation. HTML/SVG system, cloud, microservice, network diagrams in dark theme. Use when creating diagrams.
 ---
 
-# Architecture Diagram Skill
+# architecture-diagram
 
 Create professional technical architecture diagrams as self-contained HTML files with inline SVG graphics and CSS styling.
 
 ## Design System
 
-ダークテーマ（slate-950背景）、JetBrains Mono、セマンティックカラー（cyan=Frontend, emerald=Backend, violet=DB, amber=Cloud, rose=Security）。SVGコンポーネント間は40px以上の間隔。Legend は全boundary外側に配置。
+Dark theme (slate-950 bg), JetBrains Mono, semantic colors (cyan=Frontend, emerald=Backend, violet=DB, amber=Cloud, rose=Security). ≥40px spacing between SVG components. Legend placed outside all boundaries.
 
 ## Template
 
-Copy and customize the template at `assets/template.html`. Key customization points:
+Copy and customize `assets/template.html`. Key points:
 
-1. Update the `<title>` and header text
-2. Modify SVG viewBox dimensions if needed (default: `1000 x 680`)
+1. Update `<title>` and header
+2. Adjust SVG viewBox if needed (default: 1000 × 680)
 3. Add/remove/reposition component boxes
-4. Draw connection arrows between components
-5. Update the three summary cards
+4. Draw arrows between components
+5. Update summary cards
 6. Update footer metadata
 
 ## Output
 
-Always produce a single self-contained `.html` file with:
-- Embedded CSS (no external stylesheets except Google Fonts)
+Single self-contained `.html` file:
+- Embedded CSS (Google Fonts only external)
 - Inline SVG (no external images)
-- No JavaScript required (pure CSS animations)
+- No JS (CSS animations only)
 
-The file should render correctly when opened directly in any modern browser.
+Renders in any modern browser.
 
-## エラー時の挙動
+## Error handling
 
-| 状況 | 動作 |
-|------|------|
-| `assets/template.html` 不在 | 最小テンプレを内部生成（slate-950 背景 + JetBrains Mono）、warning ログ |
-| 出力ファイル名衝突 | suffix `-2`, `-3` を自動付与 |
-| SVG viewBox 自動算出失敗 | デフォルト `1000 x 680`、ユーザーに `--viewbox` 指定要求 |
+| Case | Behavior |
+|------|----------|
+| `assets/template.html` missing | Generate minimal template (slate-950 + JetBrains Mono), log warning |
+| Output filename conflict | Auto-suffix `-2`, `-3` |
+| ViewBox calc fails | Default 1000 × 680, request `--viewbox` flag |

@@ -1,36 +1,36 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Skill, TaskCreate, TaskUpdate
-description: 新規スキル追加 - skill-creator 起動 → skill-lint 検証 → 同期までを一括実行
+description: Add new skill - run skill-creator → validate with skill-lint → sync
 ---
 
-## /skill-add - 新規スキル追加コマンド
+## /skill-add - New Skill Addition
 
-`claude-code/skills/<name>/skill.md` を新規作成し、`scripts/skill-lint.sh` で検証してから `~/.claude/` に同期する。
+Create `claude-code/skills/<name>/skill.md`, validate via `scripts/skill-lint.sh`, then sync to `~/.claude/`.
 
-**前提**: 真実源は小文字 `skill.md`（`commands/claude-update-fix.md` 規約準拠）。
+**Source of truth**: lowercase `skill.md` (per `commands/claude-update-fix.md` convention).
 
-> **skill-creator について**: `skill-creator` は外部 plugin（Anthropic 公式 Superpowers 等）を想定。本リポジトリには同梱しないため、未インストール環境では自動的に最小テンプレートにフォールバックする。skill-creator を使いたい場合は対応 plugin を別途インストールする。常にテンプレートでよいなら `--skip-creator` を付与。
+> **skill-creator note**: expect external plugin (Anthropic Superpowers etc). This repo doesn't bundle it. On missing, auto-fallback to minimal template. To use skill-creator, install plugin separately. For template-only, pass `--skip-creator`.
 
-## 引数
+## Arguments
 
 ```
 /skill-add <skill-name> [--skip-creator]
 ```
 
-| 引数 | 説明 |
-|------|------|
-| `<skill-name>` | 新規スキル名（kebab-case 推奨。`skills/<name>/` ディレクトリ名と一致） |
-| `--skip-creator` | skill-creator を起動せず、最小テンプレートだけ作成（手動編集前提） |
+| Argument | Desc |
+|----------|------|
+| `<skill-name>` | new skill name (kebab-case recommended, matches `skills/<name>/` dir) |
+| `--skip-creator` | skip skill-creator, use minimal template (manual edit expected) |
 
-## 実行フロー
+## Execution Flow
 
 ```yaml
 steps:
   - id: validate-name
     rule: |
-      - kebab-case のみ許容（`^[a-z][a-z0-9-]+$`）
-      - 既存スキル名と重複していないこと（`skills/<name>/` が存在しない）
-      - 重複時は中断してユーザーに別名を提案
+      - kebab-case only (`^[a-z][a-z0-9-]+$`)
+      - no existing skill name duplicate (`skills/<name>/` must not exist)
+      - if dup, offer alternative names + stop
 
   - id: create-dir
     action: mkdir -p claude-code/skills/<name>
@@ -38,100 +38,100 @@ steps:
   - id: invoke-skill-creator
     when: not --skip-creator
     action: |
-      Skill ツールで `skill-creator` を呼び出す（存在しない場合は最小テンプレートにフォールバック）
-      対話で name / description / requires-guidelines / 本文を確定する
+      call Skill("skill-creator") (fallback to minimal template if missing)
+      dialog: name / description / requires-guidelines / body
 
   - id: minimal-template
-    when: --skip-creator OR skill-creator 不在
+    when: --skip-creator OR skill-creator absent
     action: |
-      `claude-code/skills/<name>/skill.md` に最小 frontmatter + 雛形を書き出す（下記テンプレ参照）
+      write `claude-code/skills/<name>/skill.md` with minimal frontmatter + skeleton
 
   - id: lint
     action: |
       ./claude-code/scripts/skill-lint.sh --skill <name>
-      失敗（exit != 0）したら frontmatter を修正し再実行（最大 3 回）
+      if fail: fix frontmatter, re-run (max 3x)
 
   - id: sync
     action: ./claude-code/sync.sh
-    note: 同期コマンドは `install.sh`/`sync.sh` 改修の影響範囲確認のため必ず実行
+    note: always run to check install.sh/sync.sh impact range
 
   - id: report
-    action: |
-      最終ステータス（pass / warn / fail）と発火率計測の参考コマンドを表示
+    action: show final status (pass/warn/fail) + bench-ref
 ```
 
-## 失敗時のロールバック
+## Rollback on Lint Failure
 
-`lint` ステップが 3 回連続で失敗した場合は、対話で原因を確定したうえで以下のいずれかを実行する:
+If lint fails 3x consecutive, try:
 
-- **修正再開**: `skills/<name>/skill.md` を手動編集して `skill-lint --skill <name>` で確認
-- **やり直し**: `rm -rf claude-code/skills/<name>` で初期化してから `/skill-add <name>` を再実行
-- **保留**: WIP 旨のコメントを `skill.md` 冒頭に書いて push し、別 PR で完成させる
+- **retry**: manual edit `skills/<name>/skill.md`, re-run `skill-lint --skill <name>`
+- **restart**: `rm -rf claude-code/skills/<name>`, run `/skill-add <name>` again
+- **defer**: WIP note in `skill.md` header, push for later completion
 
-`create-dir` 後に skill-creator がエラーで中断した場合も同じく `rm -rf claude-code/skills/<name>` で空ディレクトリを掃除する。
+If skill-creator fails after create-dir, cleanup: `rm -rf claude-code/skills/<name>`.
 
-## 最小テンプレート
+## Minimal Template
 
-下記は skill-lint をパスする最低限の構造。`description` のトリガー語を抜くと warning が出るため、必ず含める。新規 `claude-code/skills/<name>/skill.md`:
+Lint-passing minimum. Trigger words required (see below). New `claude-code/skills/<name>/skill.md`:
 
 ```markdown
 ---
 name: <name>
-description: <短く具体的な説明 - 30〜200字、トリガー語（〜時に使用 / 〜対応 等）を必ず含める>
+description: <concise desc 30-200 chars, must include trigger word>
 requires-guidelines:
   - common
 ---
 
-# <name> - <タイトル>
+# <name> - <title>
 
-## 使用タイミング
+## When to Use
 
-- <発火条件1>
-- <発火条件2>
+- <condition 1>
+- <condition 2>
 
-## 主要観点
+## Main Points
 
-<本文>
+<body>
 ```
 
-## description のトリガー語（必須）
+## Description Trigger Words (required)
 
-`scripts/skill-lint.sh` の検査基準に合致する語を含める:
+`scripts/skill-lint.sh` checks for these in `description:`:
 
-| 語 | 用例 |
-|----|------|
-| 〜時 / 〜時に使用 | 「API設計時に使用」 |
-| 〜対応 | 「Docker/Kubernetes対応」 |
-| 〜向け | 「バックエンド向け」 |
-| Use this / When | 「Use this when refactoring …」 |
+| Word | Example |
+|------|---------|
+| when used / when | "Use when refactoring …" |
+| corresponding | "Docker/Kubernetes support" |
+| for | "guide for backend" |
+| Use this / When | "Use this when refactoring …" |
 
-含めないと skill-lint が warning を出し、`--strict` 運用で CI/push 前検証が落ちる。
+Missing → lint warning, fails on `--strict`. Add one to pass.
 
-## 検証
+## Validate
 
 ```bash
-# 単一スキル検証（必須）
+# single skill
 ./claude-code/scripts/skill-lint.sh --skill <name>
 
-# 全スキル検証（推奨、warn 0 を維持するため）
+# all (recommended, keep warn=0)
 ./claude-code/scripts/skill-lint.sh --strict
 
-# 発火率の事後確認（追加から数日後に）
+# fire rate later (few days after)
 ./claude-code/scripts/skill-eval.sh --skill <name> --days 7
 ```
 
-## 失敗時の対応
+## Lint Failures
 
-| 状況 | 対応 |
-|------|------|
-| `name does not match dir name` | frontmatter の `name:` を `<name>` に修正 |
-| `description too short/long` | 30〜200字に収める |
-| `description lacks trigger phrase` | 上記トリガー語のいずれかを追加 |
-| `requires-guidelines must be a list` | `- common` 形式（YAML list）に修正 |
-| sync.sh で衝突 | `~/.claude/skills/<name>/` を退避してから再同期 |
+| Error | Fix |
+|------|-----|
+| `name does not match dir name` | fix frontmatter `name:` to `<name>` |
+| `description too short/long` | fit 30-200 chars |
+| `description lacks trigger phrase` | add one from table above |
+| `requires-guidelines must be list` | `- common` YAML format |
+| sync.sh conflict | stash `~/.claude/skills/<name>/`, re-sync |
 
-## スコープ外
+## Out of Scope
 
-- スキルの中身（プロンプト本体）の品質判定: `comprehensive-review` 別途実行
-- 既存スキルの description リライト: 個別 PR で対応
-- グローバル `~/.claude/skills/` 直下への直接追加: ai-tools リポジトリ管理外なので扱わない
+- skill content quality (use `comprehensive-review` separately)
+- existing skill description rewrite (separate PR)
+- direct add to global `~/.claude/skills/` (outside this repo)
+

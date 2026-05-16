@@ -1,78 +1,78 @@
 ---
 name: terraform
-description: Terraform IaC設計。モジュール設計・状態管理・セキュリティBP。plan/apply・IaCレビュー時
+description: Terraform IaC design. Module design, state management, security BP. Use when reviewing plan/apply & IaC.
 requires-guidelines:
   - terraform
   - common
 ---
 
-# terraform - Terraform IaC設計
+# terraform - Terraform IaC Design
 
-## チェック項目サマリー
+## Checklist Summary
 
-### Critical（修正必須）
+### Critical (Fix Required)
 
-| # | チェック | 概要 |
+| # | Check | Summary |
 |---|---------|------|
-| 1 | バージョン固定 | required_version + required_providers にバージョン指定 |
-| 2 | シークレット管理 | ハードコード禁止、Secrets Manager / SSM連携 |
-| 3 | リモートステート | S3 + DynamoDB、暗号化・バージョニング有効 |
-| 4 | IAM最小権限 | Action: "*" 禁止、必要な操作のみ許可 |
+| 1 | Version pinning | Set versions in required_version + required_providers |
+| 2 | Secret management | No hardcoding, use Secrets Manager / SSM |
+| 3 | Remote state | S3 + DynamoDB, encryption & versioning enabled |
+| 4 | IAM least privilege | No Action: "*", allow only necessary operations |
 
-### Warning（要改善）
+### Warning (Improve)
 
-| # | チェック | 概要 |
+| # | Check | Summary |
 |---|---------|------|
-| 1 | モジュール化 | main.tf肥大化 → modules/ に分離 |
-| 2 | タグ付け | 共通タグをlocalsで定義、全リソースに適用 |
-| 3 | 公式モジュール | terraform-aws-modules活用 |
+| 1 | Modularize | Split bloated main.tf → modules/ |
+| 2 | Tagging | Define common tags in locals, apply to all resources |
+| 3 | Official modules | Use terraform-aws-modules |
 
-## チェックリスト
+## Checklist
 
-| カテゴリ | 項目 |
+| Category | Items |
 |---------|------|
-| セキュリティ | シークレットハードコード禁止、IAM最小権限、S3暗号化、パブリックアクセス禁止、VPCエンドポイント |
-| 状態管理 | S3+DynamoDBリモートステート、環境ごとに分離、暗号化・バージョニング有効 |
-| コード品質 | terraform fmt/validate、変数にdescription+type、必須タグ設定 |
-| ワークフロー | terraform plan事前確認、PR計画結果共有、apply前レビュー |
+| Security | No secret hardcoding, IAM least privilege, S3 encryption, no public access, VPC endpoints |
+| State | S3+DynamoDB remote state, separate per env, encryption & versioning enabled |
+| Code Quality | terraform fmt/validate, variables have description+type, required tags set |
+| Workflow | terraform plan before apply, share plan in PR, review before apply |
 
-## 出力形式
+## Output Format
 
-通常ケース:
+Normal case:
 
 ```text
-Critical: `ファイル:行` - セキュリティリスク/バージョン未固定 - 修正案
-Warning: `ファイル:行` - 設計改善推奨 - 改善案
-Summary: Critical X件 / Warning Y件
+Critical: `file:line` - security risk/version not pinned - fix
+Warning: `file:line` - design improvement - suggestion
+Summary: Critical X / Warning Y
 ```
 
-ゼロ件:
+Zero findings:
 
 ```text
-✅ Terraform 指摘なし (対象 N ファイル)
-Summary: Critical 0件 / Warning 0件
-推奨: terraform plan で実環境差分を継続確認
+✅ Terraform findings: 0 (N files)
+Summary: Critical 0 / Warning 0
+Recommend: Continue checking environment diff with terraform plan
 ```
 
-レビュー対象不在（Terraform ファイル未検出）:
+No review target (Terraform files not found):
 
 ```text
-> [WARN] *.tf / *.tfvars 未検出
-> 検索対象: . / terraform/ / infrastructure/
-> 該当なし → スキップ
+> [WARN] *.tf / *.tfvars not found
+> Search: . / terraform/ / infrastructure/
+> Skipped
 ```
 
 ## Troubleshooting
 
-### エラー: State lock取得失敗
-原因: 前回のterraform apply/planが異常終了しロックが残存
-対処: `terraform force-unlock <LOCK_ID>` で解放（他作業者がいないことを確認）
+### Error: State lock acquisition failed
+Cause: Previous terraform apply/plan crashed, lock remains
+Fix: `terraform force-unlock <LOCK_ID>` (confirm no other users)
 
-### エラー: Provider version conflict
-原因: .terraform.lock.hcl と required_providers のバージョン不一致
-対処: `terraform init -upgrade` でプロバイダ更新
+### Error: Provider version conflict
+Cause: .terraform.lock.hcl vs required_providers version mismatch
+Fix: `terraform init -upgrade` to update providers
 
-## 関連
+## References
 
-- ガイドライン: `~/.claude/guidelines/infrastructure/terraform.md`
-- 最新ドキュメント確認: context7を活用
+- Guidelines: `~/.claude/guidelines/infrastructure/terraform.md`
+- Latest docs: Use context7

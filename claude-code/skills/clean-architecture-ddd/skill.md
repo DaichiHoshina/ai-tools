@@ -1,105 +1,105 @@
 ---
 name: clean-architecture-ddd
-description: クリーンアーキテクチャ・DDD設計。レイヤー分離・ドメインモデリング・依存関係管理、設計判断時に使用
+description: Clean architecture & DDD design. Layer separation, domain modeling, dependency management. Use when making design decisions.
 requires-guidelines:
   - common
   - clean-architecture
   - ddd
 ---
 
-# clean-architecture-ddd - クリーンアーキテクチャ・DDD設計
+# clean-architecture-ddd - Clean Architecture & DDD Design
 
-## レイヤー構成
+## Layer Structure
 
 ```
-依存方向: 外側 → 内側のみ
+Dependency: outer → inner only
 
 ┌─────────────────────────────────────┐
-│  Infrastructure (DB, API, Framework)│ ← 最外部
+│  Infrastructure (DB, API, Framework)│ ← outermost
 ├─────────────────────────────────────┤
-│  Interface (Controller, Presenter)  │ ← ユーザーIF層
+│  Interface (Controller, Presenter)  │ ← user IF layer
 ├─────────────────────────────────────┤
-│  Application (UseCase, Service)     │ ← ビジネスフロー
+│  Application (UseCase, Service)     │ ← business flow
 ├─────────────────────────────────────┤
-│  Domain (Entity, ValueObject, Repo) │ ← 最内部（依存なし）
+│  Domain (Entity, ValueObject, Repo) │ ← innermost (no deps)
 └─────────────────────────────────────┘
 ```
 
-## DDD戦術パターン
+## DDD Tactical Patterns
 
-| パターン | 責務 | 配置層 |
+| Pattern | Responsibility | Layer |
 |---------|------|--------|
-| Entity | ID識別、ライフサイクル、ビジネスロジック | Domain |
-| Value Object | 不変、値比較、副作用なし | Domain |
-| Aggregate | 一貫性境界、ルートエンティティ | Domain |
-| Repository | IF=Domain / 実装=Infra | Domain/Infra |
-| UseCase | アプリケーション固有ロジック | Application |
-| Domain Event | 過去形命名、疎結合 | Domain |
+| Entity | ID identity, lifecycle, business logic | Domain |
+| Value Object | Immutable, value equality, no side-effects | Domain |
+| Aggregate | Consistency boundary, root entity | Domain |
+| Repository | IF=Domain / Impl=Infra | Domain/Infra |
+| UseCase | App-specific logic | Application |
+| Domain Event | Past-tense naming, loose coupling | Domain |
 
 ---
 
-## アンチパターン（禁止事項）
+## Antipatterns (Forbidden)
 
-- **Domain → Infrastructure 依存**（例: `gorm.Model` を Domain に埋め込む）: DB技術への依存。ID/CreatedAt等は自前で定義
-- **貧血ドメインモデル**: getter/setterのみの Entity。ビジネスロジックを Entity/UseCase に置く
-- **Repository IF を Infra に配置**: IF は必ず Domain 層に定義
+- **Domain → Infrastructure dependency** (e.g. embed `gorm.Model` in Domain): Couples to DB tech. Define ID/CreatedAt yourself.
+- **Anemic domain model**: Entity with getter/setter only. Place business logic in Entity/UseCase.
+- **Repository IF in Infra**: IF must always be in Domain layer.
 
-> 実装例は `guidelines/design/clean-architecture.md` を参照。
-
----
-
-## チェックリスト
-
-### レイヤー設計
-- [ ] Domain層は外部依存なし
-- [ ] 依存方向が外側→内側
-- [ ] Repository IFはDomain層に定義
-
-### ドメインモデリング
-- [ ] ビジネスロジックがDomain/UseCaseにある
-- [ ] Entityにビジネスルール実装
-- [ ] Value Objectは不変
-- [ ] Aggregateは小さく（1-3エンティティ）
-
-### 依存関係
-- [ ] 循環依存なし
-- [ ] Controllerは薄い（入力変換→UseCase→出力変換）
-- [ ] DomainにORM/Framework型が漏れていない
+> Implementation examples: see `guidelines/design/clean-architecture.md`.
 
 ---
 
-## 出力形式
+## Checklist
 
-通常ケース:
+### Layer Design
+- [ ] Domain layer has no external deps
+- [ ] Dependency direction outer→inner
+- [ ] Repository IF in Domain layer
+
+### Domain Modeling
+- [ ] Business logic in Domain/UseCase
+- [ ] Business rules in Entity
+- [ ] Value Objects are immutable
+- [ ] Aggregates small (1-3 entities)
+
+### Dependencies
+- [ ] No circular deps
+- [ ] Controllers thin (input conversion → UseCase → output)
+- [ ] No ORM/Framework types leak into Domain
+
+---
+
+## Output Format
+
+Normal case:
 
 ```
-📋 **レイヤー構成**
-- Domain: [エンティティ一覧]
-- Application: [UseCase一覧]
-- Infrastructure: [実装一覧]
+📋 **Layer Structure**
+- Domain: [entity list]
+- Application: [UseCase list]
+- Infrastructure: [impl list]
 
-🔴 **Critical**: ファイル:行 - 違反内容 - 修正案
-🟡 **Warning**: ファイル:行 - 改善推奨 - リファクタ案
+🔴 **Critical**: file:line - violation - fix
+🟡 **Warning**: file:line - improvement - refactor
 ```
 
-ゼロ件・レイヤー未構成（CA/DDD 適用前）:
+Zero findings / No layer structure (before CA/DDD):
 
 ```
-📋 **レイヤー構成**
-> [WARN] CA/DDD レイヤー構成未検出（Domain/Application/Infrastructure ディレクトリなし）
-> 既存コードは「単層」と判定。レイヤー分割提案のみ出力
+📋 **Layer Structure**
+> [WARN] CA/DDD layers not detected (no Domain/Application/Infrastructure dirs)
+> Existing code treated as "monolith". Layer split proposal only.
 
-🔴 **Critical**: 0件
-🟡 **Warning**: 0件（適用前のため判定対象なし）
+🔴 **Critical**: 0
+🟡 **Warning**: 0 (not applicable yet)
 
-### 推奨アクション
-- Domain/Application/Infrastructure の 3 ディレクトリ作成
-- 既存コードの責務別配置案（別途出力）
+### Recommended Actions
+- Create Domain/Application/Infrastructure dirs
+- Propose responsibility-based placement (separate output)
 ```
 
 ---
 
-## 関連ガイドライン / Context7
+## Related Guidelines / Context7
 
 - `guidelines/design/clean-architecture.md`, `design/domain-driven-design.md`
 - Context7: "repository pattern", "dependency injection", "aggregate root", "value object immutable"

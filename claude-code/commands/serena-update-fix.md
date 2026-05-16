@@ -1,92 +1,92 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, mcp__serena__*
-description: Serena MCP アップデート対応 - 差分検出・自動適用・未採用機能トラッキング
+description: Serena MCP update - detect diff, auto-apply, track unused features
 ---
 
 # /serena-update-fix
 
-Serena local clone (`~/serena`) を更新し、CHANGELOG 差分に応じて claude-code 側の設定・ドキュメント・全 activate プロジェクトを追随させる。
+Update Serena local clone (`~/serena`), then adapt claude-code config/docs/all activated projects per CHANGELOG diff.
 
-## Phase 1: 差分検出
+## Phase 1: Detect Diff
 
 ```bash
-cd ~/serena && git pull --rebase --autostash               # main 同期
-git tag --sort=-v:refname | head -1                         # 最新タグ
-cat ~/ai-tools/claude-code/SERENA_VERSION                   # 確認済み
+cd ~/serena && git pull --rebase --autostash               # sync main
+git tag --sort=-v:refname | head -1                         # latest tag
+cat ~/ai-tools/claude-code/SERENA_VERSION                   # confirmed version
 cat ~/ai-tools/claude-code/references/SERENA-OPPORTUNITIES.md 2>/dev/null
 ```
 
-差分なし かつ Opportunity 未解決なし → 「最新確認済み」で終了。
-差分なし かつ Opportunity あり → Phase 3-B のみ実行。
-差分あり → Phase 2 へ。
+No diff AND no Opportunity unsolved → "latest confirmed" → done.
+No diff BUT Opportunity exists → run Phase 3-B only.
+Diff found → proceed Phase 2.
 
-## Phase 2: CHANGELOG 構造化抽出
+## Phase 2: Structured CHANGELOG Extract
 
-`~/serena/CHANGELOG.md` から確認済み〜現行の区間を抽出。各エントリを下表のいずれかにタグ付け（複数可）。
+Extract CHANGELOG.md from confirmed-to-current range. Tag each entry as one of:
 
-| タグ | キーワード | 後段アクション |
-|------|-----------|--------------|
+| Tag | Keywords | Next Action |
+|-----|----------|------------|
 | `RENAME` | removed, renamed, deprecated, Breaking change | → 3-1 |
-| `TOOL` | Add new tools, tool 名 (`find_*`, `get_*`, `jet_brains_*` 等) | → 3-2 |
+| `TOOL` | Add new tools, tool name (`find_*`, `get_*`, `jet_brains_*` etc) | → 3-2 |
 | `CONFIG` | project.yml, setting, `base_modes`, `added_modes`, `language_backend` | → 3-3 |
-| `MCP` | start-mcp-server, --context, --project, CLI 引数 | → 3-4 |
-| `LSP` | language server, LSP, `ls_specific_settings`, 言語追加 | → 3-5 |
-| `CONTEXT` | context (claude-code, agent), mode 追加 | → 3-6 |
+| `MCP` | start-mcp-server, --context, --project, CLI arg | → 3-4 |
+| `LSP` | language server, LSP, `ls_specific_settings`, lang add | → 3-5 |
+| `CONTEXT` | context (claude-code, agent), mode add | → 3-6 |
 
-タグなし（bugfix/perf/JetBrains 専用等）→ 無視。
+No tag (bugfix/perf/JetBrains-only) → ignore.
 
-## Phase 3: 拡張ポイントマップ
+## Phase 3: Extension Point Map
 
-| タグ | 検査対象 | 検出方法 |
-|------|---------|---------|
-| 3-1 RENAME | `agents/README.md` Serena ツール表、`agents/*.md` allowed-tools、`commands/*.md`、`CLAUDE.md` | 旧名を grep、新名に置換 |
-| 3-2 TOOL | `agents/README.md` ツールカタログ、`agents/*.md` `allowed-tools: ... mcp__serena__*` | 新ツール: ツールカタログに追記、関連 agent の allowed-tools 確認 |
-| 3-3 CONFIG | 全 activate プロジェクトの `.serena/project.yml` | 新キー: テンプレに追加提案。非推奨キー: 削除提案。schema breaking change は影響範囲を全プロジェクト grep |
-| 3-4 MCP | `templates/.mcp.json.template`、`settings/mcp-servers/serena.json.template`、`claude mcp list` の user-scope 登録引数 | 起動引数変更: 両 template 更新 + user-scope 再登録案内 |
-| 3-5 LSP | `.serena/project.yml` `languages:` / `ls_specific_settings:` | 言語追加: 該当プロジェクトで活用可能か確認 |
-| 3-6 CONTEXT | `templates/.mcp.json.template` `--context` 値、`settings/mcp-servers/serena.json.template` 同 | context 名変更/追加: template 更新 |
+| Tag | Inspect | Detect Method |
+|-----|---------|---------|
+| 3-1 RENAME | `agents/README.md` Serena tools table, `agents/*.md` allowed-tools, `commands/*.md`, `CLAUDE.md` | grep old name, replace → new name |
+| 3-2 TOOL | `agents/README.md` tool catalog, `agents/*.md` `allowed-tools: ... mcp__serena__*` | new tool: add to catalog, check related agent allowed-tools |
+| 3-3 CONFIG | all activated `.serena/project.yml` | new key: propose template add. deprecated key: propose delete. schema breaking = grep impact across projects |
+| 3-4 MCP | `templates/.mcp.json.template`, `settings/mcp-servers/serena.json.template`, `claude mcp list` user-scope arg | startup arg change: update both templates + re-register user-scope |
+| 3-5 LSP | `.serena/project.yml` `languages:` / `ls_specific_settings:` | lang add: check if applicable in activated projects |
+| 3-6 CONTEXT | `templates/.mcp.json.template` `--context` value, `settings/mcp-servers/serena.json.template` same | context rename/add: update template |
 
-### 3-B. Opportunity 再評価
+### 3-B. Re-evaluate Opportunity
 
-`references/SERENA-OPPORTUNITIES.md` 各項目を再チェック。採用済み/陳腐化 → クローズ。未採用かつ有効 → 継続。
+Re-check each in `references/SERENA-OPPORTUNITIES.md`. Adopted/obsolete → close. Unadopted + valid → keep.
 
-### Activate プロジェクト一覧取得
+### Activated Projects List
 
 ```bash
 grep -A 50 "^projects:" ~/.serena/serena_config.yml | grep "^- /"
 ```
 
-CONFIG タグで schema breaking change がある時、全プロジェクトの `.serena/project.yml` を一斉確認・更新。
+When CONFIG has schema breaking, check/update all `.serena/project.yml`.
 
-## Phase 4: 適用（層別）
+## Phase 4: Apply (stratified)
 
-重要度: **Critical**（schema 不整合・起動失敗）> **Warning**（非推奨削除）> **Auto**（ツール名置換等の機械的修正）> **Opportunity**（新機能活用）> **Info**
+Priority: **Critical** (schema mismatch/startup fail) > **Warning** (deprecated removal) > **Auto** (tool ID replace, template args, SERENA_VERSION bump) > **Opportunity** (new feature) > **Info**
 
-| 層 | 対象 | 動作 |
-|----|------|------|
-| **自動適用** | Auto（ツール名 ID 置換、template 引数更新、SERENA_VERSION bump） | 確認なしで Edit 実行 |
-| **確認適用** | Critical + Warning（schema 変更、user-scope 再登録など） | `AskUserQuestion` で 全適用 / 個別 / スキップ |
-| **追跡のみ** | Opportunity + Info | `references/SERENA-OPPORTUNITIES.md` に追記 |
+| Layer | Target | Behavior |
+|----|--------|----------|
+| **auto-apply** | Auto (tool rename, template args, SERENA_VERSION bump) | Edit without ask |
+| **ask-apply** | Critical + Warning (schema change, user-scope re-register etc) | AskUserQuestion all/individual/skip |
+| **track-only** | Opportunity + Info | add to `references/SERENA-OPPORTUNITIES.md` |
 
-自動適用後、すべての変更を diff で出力してから確認適用へ進む。
+After auto-apply, show all diffs, then ask-apply.
 
-## Phase 5: 終了処理
+## Phase 5: Cleanup
 
-1. `SERENA_VERSION` を現行タグに更新
-2. 接続検証: `claude mcp list` で `serena: ... ✓ Connected` 確認
-3. `./sync.sh to-local --yes` 実行（template 変更があった場合のみ）
-4. Opportunity 追跡ファイル更新（Phase 3-B 差分反映）
-5. CC system prompt override ファイル再生成（cc-system-prompt-override 採用時のみ）:
+1. bump `SERENA_VERSION` to current tag
+2. verify: `claude mcp list` show `serena: ... ✓ Connected`
+3. if template changed, run `./sync.sh to-local --yes`
+4. update Opportunity tracking (Phase 3-B diff)
+5. regen CC system prompt override (if cc-system-prompt-override in use):
    ```bash
    PYTHONWARNINGS=ignore uv run --directory ~/serena serena prompts print-cc-system-prompt-override > ~/.claude/serena-cc-prompt.txt
    ```
-   運用詳細: `references/serena-cc-prompt-setup.md`
-6. 3+ファイル変更 or 非自明判断あれば Serena memory に `serena-update-YYYYMMDD` で保存
+   ops detail: `references/serena-cc-prompt-setup.md`
+6. if 3+ file changes OR non-trivial judgment, save to Serena memory `serena-update-YYYYMMDD`
 
-## 注意
+## Notes
 
-- `~/serena` は local clone（user-scope MCP の起動元）。`git pull` は `--rebase --autostash` 限定
-- CHANGELOG が main の `# Unreleased` セクションを含む場合、リリース前変更は基本無視（次回タグリリース時に取り込み）。ただし Breaking change は即時追従検討
-- `--version` 確認は `uv run --directory ~/serena serena --version`（警告抑制は `hooks/serena-hook.sh` 同様 `PYTHONWARNINGS=ignore` で対応可）
-- v1.3.0+ で `serena-mcp-server` 廃止、`serena start-mcp-server` 必須
-- user-scope MCP は `--project-from-cwd` 起動が前提（全 activate プロジェクトで Connected）。project-scope `.mcp.json` を配置する場合は `${PROJECT_ROOT}` 明示
+- `~/serena` = local clone (user-scope MCP startup base). `git pull` = `--rebase --autostash` only
+- if CHANGELOG has main's `# Unreleased`, ignore pre-release changes (next tag-release pick them up). except Breaking change → adapt immediately
+- `--version` verify = `uv run --directory ~/serena serena --version` (warn suppress = `PYTHONWARNINGS=ignore` like hooks/serena-hook.sh)
+- v1.3.0+ dropped `serena-mcp-server`, now `serena start-mcp-server` required
+- user-scope MCP = `--project-from-cwd` startup assumed (all activated projects Connected). if placing project-scope `.mcp.json`, explicit `${PROJECT_ROOT}`

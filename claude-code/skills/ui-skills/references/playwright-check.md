@@ -1,18 +1,18 @@
-# Playwrightビジュアル検証
+# Playwright Visual Check
 
-## 実行フロー
+## Workflow
 
 ```text
-UI実装完了 → dev server起動 → Playwrightスクリーンショット撮影
-  → Claudeが /tmp/ui-visual-check/*.png をReadで読み込み
-  → 5観点で視覚評価（視覚的階層/余白/色/タイポグラフィ/アライメント）
-  → 問題あり → 修正 → 再撮影（最大3回） → 品質OK → 完了
+UI impl complete → start dev server → Playwright screenshot
+  → Claude reads /tmp/ui-visual-check/*.png
+  → Evaluate 5 aspects (hierarchy / whitespace / color / typography / alignment)
+  → Issues found → fix → re-screenshot (max 3 times) → quality OK → done
 ```
 
-テンプレート: `~/.claude/templates/ui-themes/playwright-visual-check.ts`
+Template: `~/.claude/templates/ui-themes/playwright-visual-check.ts`
 
-## 前提条件
+## Prerequisites
 
-- dev server起動（デフォルト: `http://localhost:3000`）
-- 異なるポート: `BASE_URL=http://localhost:5173 npx tsx ...`
-- `npx playwright install chromium`（初回のみ）
+- Dev server running (default: `http://localhost:3000`)
+- Different port: `BASE_URL=http://localhost:5173 npx tsx ...`
+- `npx playwright install chromium` (first time only)

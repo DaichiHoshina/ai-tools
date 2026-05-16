@@ -1,100 +1,100 @@
 ---
 name: cleanup-enforcement
-description: コードクリーンアップ強制。後方互換残骸・未使用コード・進捗コメントを削除
+description: Code cleanup enforcement. Delete backward compat remnants, unused code, progress comments. Use when enforcing cleanup.
 requires-guidelines:
   - common
-  - typescript  # lang=typescript の場合
-  - golang  # lang=go の場合
+  - typescript  # if lang=typescript
+  - golang  # if lang=go
 ---
 
-# cleanup-enforcement - コードクリーンアップ強制
+# cleanup-enforcement - Code Cleanup Enforcement
 
-## 目的
+## Purpose
 
-CLAUDE.mdやコマンドで書いても従わない「削除系」の指示を強制する。
+Force "delete" instructions that CLAUDE.md/commands don't enforce.
 
-## 強制削除ルール
+## Forced Deletion Rules
 
-### 1. 未使用コードの即時削除
+### 1. Delete Unused Code Immediately
 
-- 未使用の import 文
-- 未使用の変数・定数
-- 未使用の関数・メソッド
-- 未使用の型定義・interface
+- Unused imports
+- Unused vars/constants
+- Unused functions/methods
+- Unused type defs/interfaces
 
-**判断基準**: IDE/Linterが警告を出すものは全て削除
+**Criterion**: Anything IDE/linter warns about → delete
 
-### 2. 後方互換残骸の禁止
+### 2. Forbid Backward Compat Remnants
 
-絶対禁止パターン: 未使用の旧名 re-export（`export { newName as oldName }`） / `_` prefix 未使用マーク / 後方互換のためだけの re-export。発見次第削除、使用箇所あれば同時修正。
+Absolutely forbidden: Unused old name re-export (`export { newName as oldName }`) / `_` prefix unused mark / backward compat only re-export. Delete on sight, fix usage if any.
 
-### 3. 進捗コメントの禁止
+### 3. Forbid Progress Comments
 
-禁止: `// 実装した` `// 完了` `// TODO: remove later` `// FIXME: temporary` `// 2024-01-15: added this`
-許可: 理由の説明（`// Workaround for Chrome bug #12345`、`// Required by external API spec`）
+Forbidden: `// implemented` `// done` `// TODO: remove later` `// FIXME: temporary` `// 2024-01-15: added this`
+Allowed: Reason explanations (`// Workaround for Chrome bug #12345`, `// Required by external API spec`)
 
-### 4. YAGNI違反の検出と削除
+### 4. YAGNI Violation Detection & Delete
 
-以下は**過剰な実装**として削除対象：
+Below = **over-engineering**, delete:
 
-| パターン | 判断基準 | アクション |
+| Pattern | Criterion | Action |
 |---------|---------|-----------|
-| 1回だけ呼ばれるヘルパー | 呼び出し元が1箇所のみ | インライン化 |
-| 使われていない抽象化 | interface/abstract classの実装が1つだけ | 削除 |
-| 過剰な設定可能性 | 現時点で使われていないオプション | 削除 |
-| 未来のための準備 | コメントに「将来」「予定」「future」 | 削除 |
+| Helper called once | Caller at 1 location only | Inline |
+| Unused abstraction | interface/abstract class has 1 impl | Delete |
+| Over-configuration | Unused option currently | Delete |
+| Future prep | Comment has "future", "plan", "future" | Delete |
 
-### 5. 削除すべきもの
+### 5. Deletion Targets
 
-| 対象 | アクション |
+| Target | Action |
 |------|-----------|
-| 空のファイル | 削除 |
-| 空の関数/クラス | 削除（スタブ以外） |
-| コメントアウトされたコード | 削除 |
-| console.log / print デバッグ | 削除 |
-| 到達不能コード | 削除 |
+| Empty file | Delete |
+| Empty function/class | Delete (except stubs) |
+| Commented code | Delete |
+| console.log / print debug | Delete |
+| Unreachable code | Delete |
 
-## 出力フォーマット
+## Output Format
 
 ```
 ## Cleanup Report
 
-### 削除済み
-- ✅ 未使用import 3件削除
-- ✅ 未使用変数 `oldConfig` 削除
-- ✅ 進捗コメント 2件削除
+### Deleted
+- ✅ Unused import 3 deleted
+- ✅ Unused var `oldConfig` deleted
+- ✅ Progress comments 2 deleted
 
-### 確認が必要
-- ⚠️ `legacyHandler` は外部から参照されている可能性あり
+### Needs Confirm
+- ⚠️ `legacyHandler` may be referenced externally
 
-### 統計
-- 削除行数: -45 lines
-- 削除ファイル: 0
+### Stats
+- Lines deleted: -45
+- Files deleted: 0
 ```
 
-## 削除フロー（Serena 必須）
+## Deletion Flow (Serena Required)
 
-コードファイル削除は **Serena symbolic tools 経由** が必須（grep だと参照漏れ）。
+Code file deletion **must use Serena symbolic tools** (grep misses refs).
 
-| ステップ | ツール | 用途 |
+| Step | Tool | Use |
 |---------|-------|------|
-| 1. 候補発見 | `mcp__serena__get_symbols_overview` / `find_symbol` | 削除対象シンボルの特定 |
-| 2. 参照確認 | `mcp__serena__find_referencing_symbols` | 残存参照の全列挙（grep 不可、漏れリスク） |
-| 3. 実装追跡 | `mcp__serena__find_implementations` | interface 削除時の impl 確認 |
-| 4. 安全削除 | `mcp__serena__safe_delete_symbol` | 参照確認付き削除（自動 fail-safe） |
-| 5. 診断確認 | `mcp__serena__get_diagnostics_for_file` | 削除後の型エラー検出 |
+| 1. Find candidates | `mcp__serena__get_symbols_overview` / `find_symbol` | Identify deletion targets |
+| 2. Confirm refs | `mcp__serena__find_referencing_symbols` | List all refs (grep can miss) |
+| 3. Track impls | `mcp__serena__find_implementations` | Check impl when deleting interface |
+| 4. Safe delete | `mcp__serena__safe_delete_symbol` | Delete with ref check (auto fail-safe) |
+| 5. Check diagnostics | `mcp__serena__get_diagnostics_for_file` | Detect post-delete type errors |
 
-非コードファイル（md/yaml/json 等）の進捗コメント削除は通常 Edit で OK。
+Progress comment deletion in non-code (md/yaml/json) → normal Edit OK.
 
-## 注意事項
+## Notes
 
-- **迷ったら削除**: 必要になったらgit履歴から復元できる
-- **テスト実行**: 削除後は必ずテスト実行
+- **When in doubt, delete**: Can restore from git history if needed
+- **Run tests**: Always test after delete
 
-## 失敗時の挙動
+## Failure Behavior
 
-| 状況 | 動作 |
+| Situation | Action |
 |------|------|
-| `mcp__serena__find_referencing_symbols` 失敗 | grep で再検索、検出精度低下を warning。判定不能なら「確認が必要」セクションに保留 |
-| 削除候補ゼロ件 | 出力フォーマットの「削除済み」を「削除候補なし」と記載、統計は 0 で出力 |
-| 削除後テスト失敗 | git stash で削除を退避、ユーザーに失敗内容報告して停止 |
+| `mcp__serena__find_referencing_symbols` fail | Grep retry, warn precision drop. If undecidable, hold in "Needs Confirm" |
+| Zero deletion candidates | Rewrite "Deleted" section to "No deletion candidates", show stats as 0 |
+| Post-delete test fail | Git stash the deletion, report failure to user & stop |

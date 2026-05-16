@@ -1,54 +1,54 @@
-# UIデザインシステム - テーマ
+# UI Design System - Themes
 
-## テーマプリセット
+## Theme presets
 
-| プリセット | 雰囲気 | 用途 | radius |
-|-----------|--------|------|--------|
-| **corporate** | 洗練・信頼・クリーン | 業務系ダッシュボード、管理画面 | 0.5rem |
-| **modern-dark** | ダーク・シャープ・技術的 | データ分析、モニタリング、開発ツール | 0.375rem |
-| **soft** | 柔らかい・親しみやすい | チームツール、SaaS、社内ツール | 0.75rem |
+| Preset | Vibe | Use case | radius |
+|--------|------|----------|--------|
+| **corporate** | Polished, trust, clean | Business dashboards, admin panels | 0.5rem |
+| **modern-dark** | Dark, sharp, technical | Data analysis, monitoring, dev tools | 0.375rem |
+| **soft** | Soft, approachable | Team tools, SaaS, internal tools | 0.75rem |
 
-## テンプレート（フレームワーク別）
+## Templates (by framework)
 
-| フレームワーク | パス | 形式 |
-|--------------|------|------|
-| **shadcn/ui** | `~/.claude/templates/ui-themes/shadcn/` | oklch CSS variables + @theme inline |
+| Framework | Path | Format |
+|-----------|------|--------|
+| **shadcn/ui** | `~/.claude/templates/ui-themes/shadcn/` | oklch CSS vars + @theme inline |
 | **Tailwind CSS / vanilla CSS** | `~/.claude/templates/ui-themes/tailwind/` | CSS Custom Properties |
-| **任意（トークン参照）** | `~/.claude/templates/ui-themes/tokens/` | JSON design tokens |
+| **Any (token ref)** | `~/.claude/templates/ui-themes/tokens/` | JSON design tokens |
 
-## フレームワーク自動検出
+## Auto-detect framework
 
 ```text
-UI実装リクエスト検出時:
-1. globals.css等にCSS変数定義あり → そのまま使用
-2. テーマなし → フレームワーク検出（上から順に判定）:
-   a. components.json あり → shadcn/ui → ui-themes/shadcn/から適用
-   b. tailwind.config.{js,ts,mjs} あり → ui-themes/tailwind/から適用
-   c. いずれにも該当しない → ui-themes/tokens/のJSONを参照
-3. AskUserQuestionでプリセット選択（または自動判定）
-4. テーマファイルの適用:
-   - shadcn → app/globals.cssに上書き
-   - tailwind → src/styles/theme.cssとして作成しglobals.cssで@import
-   - tokens → JSONを参照してプロジェクトのCSS変数に手動変換
+On UI impl request:
+1. CSS vars in globals.css → use as-is
+2. No theme → detect framework (top-down):
+   a. components.json exists → shadcn/ui → apply ui-themes/shadcn/
+   b. tailwind.config.{js,ts,mjs} → apply ui-themes/tailwind/
+   c. Neither → reference ui-themes/tokens/ JSON
+3. AskUserQuestion for preset (or auto-detect)
+4. Apply theme:
+   - shadcn → overwrite app/globals.css
+   - tailwind → create src/styles/theme.css, @import in globals.css
+   - tokens → ref JSON, manually convert to project CSS vars
 ```
 
-## テーマ自動判定ロジック
+## Auto-detect theme
 
-ユーザーがテーマを選ばない場合:
+If user doesn't choose:
 
-| 判定条件 | テーマ |
-|---------|--------|
-| 「経営」「業務」「管理」「レポート」「営業」 | corporate |
-| 「モニタリング」「分析」「ログ」「メトリクス」「API」「開発」 | modern-dark |
-| 「チーム」「社内」「タスク」「プロジェクト」「コラボ」 | soft |
-| 判定不能 | corporate（最も汎用的） |
+| Keyword | Theme |
+|---------|-------|
+| "management", "business", "admin", "report", "sales" | corporate |
+| "monitoring", "analytics", "logs", "metrics", "API", "dev" | modern-dark |
+| "team", "internal", "task", "project", "collab" | soft |
+| No match | corporate (most generic) |
 
-## デザインブリーフ（--detailedオプション時）
+## Design brief (--detailed option)
 
-| # | 要素 | 質問例 |
-|---|------|--------|
-| 1 | 情報優先度 | 画面で最も重要な情報は? |
-| 2 | レイアウト密度 | データ密度は高い? 余白重視? |
-| 3 | トーン | フォーマル? カジュアル? |
-| 4 | カラーアクセント | ブランドカラーは? |
-| 5 | 参考デザイン | 近いイメージは?（Linear風、Vercel風等） |
+| # | Element | Question |
+|---|---------|----------|
+| 1 | Information priority | Most critical info on screen? |
+| 2 | Layout density | High data density? Whitespace priority? |
+| 3 | Tone | Formal? Casual? |
+| 4 | Color accent | Brand color? |
+| 5 | Reference design | Similar style? (Linear-like, Vercel-like) |

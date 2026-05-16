@@ -1,109 +1,109 @@
 ---
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, AskUserQuestion
-description: パフォーマンス改善issueの進行管理（計測→pprof分析→段階的改善→負荷試験）
+description: Performance improvement issue management — measure → pprof → iterative improve → load test
 ---
 
-# /performance-issue - パフォーマンス改善フロー
+# /performance-issue - Performance improvement flow
 
-計測→分析→段階的改善→負荷試験の進行管理。issueコメントに作業ログを蓄積しながら段階的に改善する。
+Manage measure → analyze → iteratively improve → load test. Accumulate work logs in issue comments.
 
-## 入力
+## Input
 
-`$ARGUMENTS` からissue番号またはタスク概要を取得。なければAskUserQuestionで確認。
+Get issue number or task summary from `$ARGUMENTS`. If none, confirm w/ AskUserQuestion.
 
-## フロー
+## Flow
 
-| Phase | やること | 成果物 |
+| Phase | Action | Deliverable |
 |-------|---------|--------|
-| 1. 情報収集 | issue/チケット読み込み、関連リソース探索 | リンク集 |
-| 2. ベンチマーク基盤 | 対象コード特定、実行コマンド・プロファイル取得方法を記載 | コマンド+計測条件 |
-| 3. 改善前計測 | ベンチマーク実行、生ログ保存 | 結果+ボトルネック分析 |
-| 4. pprof分析 | プロファイル取得→分析→次アクション宣言 | CPU/IO判定+改善優先度 |
-| 5. 段階的改善 | **1改善=1計測**。before/after比較 | チェックリスト+効果検証 |
-| 6. スコープ判断 | 「やる/別チケットに送る」を根拠付きで判断 | 判断+DesignDoc素案 |
-| 7. 負荷試験 | dev環境で負荷試験実行 | 結果リンク |
-| 8. リリースタスク | DesignDoc/BE/FE/テスト/リリースのチェックリスト | PR番号・見積付き |
+| 1. Gather info | Read issue/ticket, explore related resources | Link collection |
+| 2. Benchmark foundation | Identify target code, document run command・profile-capture method | Command + measure conditions |
+| 3. Pre-improve measure | Run benchmark, save raw log | Results + bottleneck analysis |
+| 4. pprof analysis | Capture profile → analyze → declare next actions | CPU/IO judgment + improve priority |
+| 5. Iterative improve | **1 improve = 1 measure**. Compare before/after | Checklist + verify effect |
+| 6. Scope judge | Judge "do / send to different ticket" w/ evidence | Decision + Design Doc draft |
+| 7. Load test | Run load test in dev env | Result link |
+| 8. Release task | Checklist: DesignDoc/BE/FE/test/release | PR# ・estimate |
 
 ## Phase 4: pprof分析（詳細）
 
-### プロファイル取得コマンド（Go）
+### Profile capture command (Go)
 
 ```bash
 go test -tags serial \
-  -bench={ベンチマーク名} -benchmem -benchtime=1x \
+  -bench={benchmark-name} -benchmem -benchtime=1x \
   -cpuprofile /tmp/{name}.cpu.pprof \
   -blockprofile /tmp/{name}.block.pprof \
   -trace /tmp/{name}.trace \
   -run='^$' ./{package}/
 ```
 
-### 分析コマンド
+### Analysis commands
 
 ```bash
-# CPU: どの関数がCPU時間を消費しているか
+# CPU: which functions consume CPU time
 go tool pprof -top -cum {file}.cpu.pprof
 go tool pprof -top -flat {file}.cpu.pprof
 
-# Block: どこでgoroutineがブロックしているか
+# Block: where goroutines block
 go tool pprof -top {file}.block.pprof
 ```
 
-### 判断基準
+### Decision criteria
 
-| CPUサンプル率 | 判定 | 次のアクション |
+| CPU sample rate | Judgment | Next action |
 |-------------|------|--------------|
-| 高い（>20%） | CPU bound | アルゴリズム改善、計算量削減 |
-| 中間（10-20%） | mixed | block profile + trace で I/O 待ちと CPU 比率を再判定、両方改善余地あり |
-| 低い（<10%） | I/O bound | DB round-trip削減、バルク化、クエリ最適化 |
+| High (>20%) | CPU bound | Improve algorithm, reduce computation |
+| Medium (10-20%) | Mixed | Block profile + trace re-judge I/O wait vs CPU ratio, both improveable |
+| Low (<10%) | I/O bound | Reduce DB round-trips, bulk, optimize query |
 
-| flat top上位 | 意味 |
+| flat top high | Meaning |
 |-------------|------|
-| syscall/runtime | DB I/O待ち中心。Go側のCPU最適化余地なし |
-| アプリコード関数 | その関数がホットスポット。コード改善対象 |
+| syscall/runtime | DB I/O wait center. No Go-side CPU improve room |
+| App code function | That function is hotspot. Code improve target |
 
-### issueコメント形式
+### Issue comment format
 
 ```markdown
-## プロファイル分析（{方式名}）
+## Profile analysis ({method name})
 
-### 計測条件
-- ベンチマーク: `{名前}`
-- 結果: `{時間} / {メモリ} / {allocs}`
-- マシン: {CPU} / {DB環境}
+### Measure conditions
+- Benchmark: `{name}`
+- Results: `{time} / {memory} / {allocs}`
+- Machine: {CPU} / {DB env}
 
 <details>
-<summary>CPU Profile 分析</summary>
+<summary>CPU Profile analysis</summary>
 
-{flat top表 + cumulative top + 所見}
+{flat top table + cumulative top + findings}
 
 </details>
 
 <details>
-<summary>Block Profile 分析</summary>
+<summary>Block Profile analysis</summary>
 
-{待ち時間の内訳 + 所見}
+{wait time breakdown + findings}
 
 </details>
 
-### 結論
-{CPU bound / I/O bound判定、ボトルネック特定、次のアクション}
+### Conclusion
+{CPU bound / I/O bound judgment, bottleneck identify, next actions}
 ```
 
-## 原則
+## Principles
 
-1. **計測ファースト**: 改善前後で必ずベンチマーク
-2. **段階的改善**: 1改善ごとに効果確認。一気にやらない
-3. **作業ログ集約**: 検討・計測・分析・判断すべてissue/チケットに記録
-4. **生データは添付**: 本文は要約+分析、生ログは別ファイル
-5. **`<details>`活用**: 長い分析は折りたたみ
-6. **スコープ判断を明文化**: 根拠付きで「やる/送る」を宣言
+1. **Measure-first**: Always benchmark before & after improvement
+2. **Iterative improve**: Verify effect per 1 improvement. Don't do all at once
+3. **Work log aggregate**: Record all consideration・measure・analysis・judgment in issue/ticket
+4. **Raw data attached**: Body = summary + analysis, raw log = separate file
+5. **Use `<details>`**: Fold long analysis
+6. **Scope judgment explicit**: Declare "do / send" w/ evidence
 
-## 失敗時の挙動
+## Fail behavior
 
-| 状況 | 動作 |
+| Scenario | Action |
 |------|------|
-| issue 番号取得不能 | AskUserQuestion で issue URL 要求、応答なければ Phase 1 をローカル概要のみで進行 |
-| pprof 取得失敗（コンパイル不可・bench 不在） | 計測コマンドの ad-hoc 化提案、ユーザー確認後に再試行 |
-| 改善後計測で悪化検出 | rollback 提案、原因分析を Phase 4 へ差戻し |
+| Issue # get fail | AskUserQuestion request issue URL, if no response, proceed Phase 1 w/ local summary only |
+| pprof capture fail (compile fail・bench absent) | Propose ad-hoc measure cmd, re-try after user confirm |
+| Post-improve measure worse detected | Propose rollback, defer cause analysis back to Phase 4 |
 
 ARGUMENTS: $ARGUMENTS

@@ -1,128 +1,128 @@
 ---
 name: api-design
-description: API設計（REST/GraphQL）。設計原則・バージョニング・エラーハンドリング・ドキュメント方針。新規API設計・レビュー時に使用
+description: API design (REST/GraphQL). Design principles, versioning, error handling, documentation. Use when designing/reviewing APIs.
 requires-guidelines:
   - common
   - clean-architecture
 ---
 
-# api-design - API設計
+# api-design - API Design
 
-## レビュー観点
+## Review Perspectives
 
-### 🔴 Critical（修正必須）
+### 🔴 Critical (Fix Required)
 
-| 観点 | 検出パターン | 対策 |
+| Perspective | Detection | Fix |
 |------|-------------|------|
-| リソース設計違反 | 動詞ベースURL (`/createUser`) | リソース名詞 + HTTPメソッド |
-| ステータスコード誤用 | エラーでも200返却 | 適切なステータスコード |
-| エラー形式未統一 | バラバラなJSON構造 | RFC 7807 Problem Details |
+| Resource design violation | Verb-based URL (`/createUser`) | Resource noun + HTTP method |
+| Status code misuse | 200 even on error | Correct status code |
+| Error format inconsistent | Mixed JSON structures | RFC 7807 Problem Details |
 
-### 🟡 Warning（要改善）
+### 🟡 Warning (Improve)
 
-| 観点 | 検出パターン | 対策 |
+| Perspective | Detection | Fix |
 |------|-------------|------|
-| バージョニング未実装 | `/api/users` 固定 | `/api/v1/users` or ヘッダー |
-| ページネーション不足 | 全件取得 | カーソルベースページネーション |
-| レート制限なし | 認証APIに制限なし | express-rate-limit等 |
+| Versioning not implemented | Fixed `/api/users` | `/api/v1/users` or header |
+| Pagination missing | Fetch all | Cursor-based pagination |
+| No rate limiting | Auth API unlimited | express-rate-limit etc |
 
-**コード例が必要な場合**: Context7で「REST API design」「GraphQL best practices」を検索
+**Need code examples**: Search Context7 for "REST API design", "GraphQL best practices"
 
 ---
 
-## REST API パターン
+## REST API Patterns
 
-### リソース設計
+### Resource Design
 
-| パターン | URL | メソッド | 用途 |
+| Pattern | URL | Method | Use |
 |---------|-----|---------|------|
-| コレクション | `/users` | GET/POST | 一覧/作成 |
-| 単一リソース | `/users/123` | GET/PUT/PATCH/DELETE | CRUD |
-| サブリソース | `/users/123/posts` | GET | 関連取得 |
+| Collection | `/users` | GET/POST | List/create |
+| Single | `/users/123` | GET/PUT/PATCH/DELETE | CRUD |
+| Sub-resource | `/users/123/posts` | GET | Related get |
 
-### API粒度判定（新規 vs 既存拡張）
+### API Granularity Decision (New vs Extend)
 
-新規エンドポイント追加前に必ず判定。
+Always decide before adding endpoint.
 
-| 状況 | 推奨 | 理由 |
+| Situation | Recommended | Reason |
 |------|------|------|
-| 既存に類似あり、パラメータ追加で対応可 | 既存拡張（クエリ/ヘッダ） | URL増殖回避 |
-| 既存と類似だがレスポンス構造大差 | 別エンドポイント新設 | 責務分離 |
-| 同一リソースに対する操作違い | 同URL、メソッド/パラメータで分岐 | RESTful、検索性 |
-| 異なるリソース、関連あり | サブリソース `/parent/:id/child` | 関係性明示 |
-| 集計・統計（複数リソース横断） | `/stats/...`、`/reports/...` 別namespace | 責務分離 |
-| 1リクエストで複数操作 | バッチエンドポイント `/batch` | round-trip削減 |
-| クライアント別最適化 | BFF（Backend-For-Frontend）層 | サーバー API は汎用維持 |
+| Similar existing, add query param | Extend existing (query/header) | Avoid URL explosion |
+| Similar but different response | New endpoint | Separation of concerns |
+| Same resource, different ops | Same URL, method/param split | RESTful, searchable |
+| Different resource, related | Sub-resource `/parent/:id/child` | Show relationship |
+| Aggregate/stats (cross-resource) | `/stats/...`, `/reports/...` namespace | Separation |
+| Multiple ops, 1 request | Batch `/batch` | Reduce round-trips |
+| Client-specific optimize | BFF (Backend-For-Frontend) layer | Server API stays generic |
 
-**アンチパターン**:
-- ❌ `/createUser`, `/updateUser`, `/deleteUser` 動詞ベース → ⭕ `/users` + HTTPメソッド
-- ❌ 1ユースケース1エンドポイント乱立 → ⭕ 既存拡張優先（onClickActionでなくデータ操作粒度）
+**Antipatterns**:
+- ❌ `/createUser`, `/updateUser`, `/deleteUser` verb-based → ⭕ `/users` + HTTP method
+- ❌ 1 use-case 1 endpoint spam → ⭕ Extend existing (data op granularity, not UI action)
 
-**詳細ルール**: `~/.claude/rules/api-design.md` 準拠（UI都合の集計値埋込み禁止 等）
+**Details**: Follow `~/.claude/rules/api-design.md` (no UI aggregate values embedded, etc)
 
-### ステータスコード選択表
+### Status Code Decision Table
 
-| コード | 名称 | 使い分け |
+| Code | Name | Use |
 |--------|------|---------|
-| **200** | OK | 通常の成功（GET/PUT/PATCH） |
-| **201** | Created | リソース作成成功（POST、Location 推奨: RFC 9110 SHOULD） |
-| **202** | Accepted | 非同期処理を受付（即完了しない） |
-| **204** | No Content | 成功でレスポンスボディ無し（DELETE） |
-| **301/302/307** | Redirect | URL変更通知 |
-| **400** | Bad Request | リクエスト形式エラー（バリデーション失敗） |
-| **401** | Unauthorized | 認証情報不在/無効（認証必要） |
-| **403** | Forbidden | 認証はOKだが権限なし |
-| **404** | Not Found | リソース不在（存在自体を秘匿したい場合の権限隠蔽にも） |
-| **405** | Method Not Allowed | メソッド非対応（Allow ヘッダ必須: RFC 9110 MUST） |
-| **409** | Conflict | 競合（楽観ロック失敗、重複登録） |
-| **410** | Gone | リソース永久削除（404と区別: 再アクセス防止意図） |
-| **422** | Unprocessable Entity | 形式OKだが意味的に処理不能（業務ルール違反） |
-| **429** | Too Many Requests | レート制限超過（Retry-After 推奨: RFC 6585 MAY） |
-| **500** | Internal Server Error | サーバー内部エラー（詳細は隠蔽） |
-| **502/503/504** | Gateway/Unavailable/Timeout | 上流障害、Retry-After 推奨 |
+| **200** | OK | Normal success (GET/PUT/PATCH) |
+| **201** | Created | Resource created (POST, Location recommended: RFC 9110 SHOULD) |
+| **202** | Accepted | Async process accepted (not immediately complete) |
+| **204** | No Content | Success, no body (DELETE) |
+| **301/302/307** | Redirect | URL change notification |
+| **400** | Bad Request | Request format error (validation fail) |
+| **401** | Unauthorized | Auth missing/invalid |
+| **403** | Forbidden | Auth OK, permission denied |
+| **404** | Not Found | Resource missing (also for auth hiding) |
+| **405** | Method Not Allowed | Unsupported method (Allow header required: RFC 9110 MUST) |
+| **409** | Conflict | Conflict (optimistic lock fail, duplicate) |
+| **410** | Gone | Permanently deleted (distinct from 404) |
+| **422** | Unprocessable Entity | Format OK, semantic error (business rule) |
+| **429** | Too Many Requests | Rate limit exceeded (Retry-After recommended: RFC 6585 MAY) |
+| **500** | Internal Server Error | Server error (hide details) |
+| **502/503/504** | Gateway/Unavailable/Timeout | Upstream failure, Retry-After recommended |
 
-**境界判定**:
-- **400 vs 422**: 構文エラー（JSON parse失敗等）は 400、構文OKで意味エラー（業務ルール違反）は 422
-- **403 vs 404**: 認可失敗を明示してよい場合は 403。リソースの存在自体を秘匿したい場合（他組織リソース、認可階層秘匿等）は 404 で隠蔽
-- **404 vs 410**: 「もうない」と明示したい（再アクセス防止）なら 410、不明なら 404
+**Boundary decisions**:
+- **400 vs 422**: Syntax error (JSON parse fail) = 400, syntax OK semantic error (business rule) = 422
+- **403 vs 404**: Can reveal authz failure = 403. Hide resource existence (other org, authz level) = 404
+- **404 vs 410**: Explicitly "gone" (prevent retry) = 410, unknown = 404
 
 ---
 
-## GraphQL パターン
+## GraphQL Patterns
 
-| 観点 | ルール | 補足 |
+| Perspective | Rule | Note |
 |------|--------|------|
-| 命名・型定義 | 一貫した命名規則、明示的型定義 | snake_case / camelCase をスキーマ全体で統一 |
-| ページネーション | Connection pattern (Relay 仕様) | `edges` / `pageInfo` / `cursor` |
-| N+1 対策 | DataLoader によるバッチング | resolver 内の直接 query 禁止 |
-| Null 設計 | 必須/任意を schema で明示 | デフォルト nullable、必須は `!` 付与 |
-| 共通 | 認証・認可・CORS・ドキュメント・セキュリティヘッダー | REST と同様、persistedQueries 推奨 |
+| Naming & type | Consistent naming, explicit types | Unify snake_case / camelCase across schema |
+| Pagination | Connection pattern (Relay spec) | `edges` / `pageInfo` / `cursor` |
+| N+1 fix | Batch via DataLoader | No direct queries in resolvers |
+| Null design | Mark required/optional in schema | Default nullable, required = `!` |
+| Common | Auth, authz, CORS, docs, security headers | Same as REST, persistedQueries recommended |
 
 ---
 
-## 出力形式
+## Output Format
 
-通常ケース:
-
-```
-🔴 Critical: エンドポイント - 問題 - 修正案
-🟡 Warning: エンドポイント - 問題 - 改善案
-📊 Summary: Critical X件 / Warning Y件
-```
-
-ゼロ件・縮退モード:
+Normal case:
 
 ```
-🔴 Critical: 0件
-🟡 Warning: 0件
-📊 Summary: 指摘なし (対象 N エンドポイント / N スキーマ)
+🔴 Critical: endpoint - problem - fix
+🟡 Warning: endpoint - problem - improvement
+📊 Summary: Critical X / Warning Y
 ```
 
-レビュー対象不在時（API 定義ファイル未検出）:
+Zero findings:
 
 ```
-> [WARN] OpenAPI / GraphQL schema 未検出。レビューを skip。
-> 検索対象: openapi.yaml / *.graphql / *Controller.{ts,go,py} / routes/*
+🔴 Critical: 0
+🟡 Warning: 0
+📊 Summary: No findings (N endpoints / N schemas)
 ```
 
-外部参照: Context7 で OpenAPI 3.x / GraphQL公式 / Google/Microsoft API Design Guide / RFC 7807（取得失敗時 → knowledge cutoff 時点の知識で代替、warning ログ）
+No review target (API definition not found):
+
+```
+> [WARN] OpenAPI / GraphQL schema not found. Skip review.
+> Search: openapi.yaml / *.graphql / *Controller.{ts,go,py} / routes/*
+```
+
+External references: Context7 for OpenAPI 3.x / GraphQL official / Google/Microsoft API Design Guide / RFC 7807 (fetch fail → fallback to knowledge cutoff, warning log)

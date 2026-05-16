@@ -1,6 +1,6 @@
 ---
 name: uiux-review
-description: UI/UXレビュー。Material Design 3 + WCAG 2.2 AA + Nielsen 10原則で実装直結のレビュー、画面実装時に使用
+description: UI/UX review. Material Design 3 + WCAG 2.2 AA + Nielsen 10 heuristics. Use during screen implementation.
 requires-guidelines:
   - common
   - nextjs-react
@@ -8,112 +8,111 @@ requires-guidelines:
   - shadcn
 ---
 
-# uiux-review - UI/UXレビュー
+# uiux-review
 
-3原則 (Material Design 3 / WCAG 2.2 AA / Nielsen 10) を順に Critical → Warning でチェック。
+Review 3 principles (Material Design 3 / WCAG 2.2 AA / Nielsen 10) in order, flagging Critical → Warning.
 
-## レビュー手順
+## Review Checklist
 
-### Step 1: Material Design 3チェック
+### Step 1: Material Design 3
 
-#### 🔴 Critical確認事項
-- [ ] コンポーネント状態8種定義済み
-- [ ] デザイントークン使用（カスタムカラー乱用なし）
-- [ ] スペーシング4pxベース（4, 8, 12, 16, 24, 32, 48）
-- [ ] 角丸M3準拠（sm:8px, md:12px, lg:16px）
+#### 🔴 Critical
+- [ ] Component states defined (8 types)
+- [ ] Design tokens used (no custom color abuse)
+- [ ] Spacing on 4px base (4, 8, 12, 16, 24, 32, 48)
+- [ ] Radius M3 compliant (sm:8px, md:12px, lg:16px)
 
-### Step 2: WCAG 2.2 AAチェック
+### Step 2: WCAG 2.2 AA
 
-#### 🔴 Critical確認事項
-- [ ] コントラスト比4.5:1以上（通常テキスト）
-- [ ] コントラスト比3:1以上（UIコンポーネント）
-- [ ] キーボード操作可能（Tab, Enter, Escape）
-- [ ] フォーカス表示明確（2px以上のリング）
-- [ ] タッチターゲット44x44px以上
-- [ ] 画像にalt属性
-- [ ] フォームにlabel要素
-- [ ] 色だけに依存しない情報伝達
+#### 🔴 Critical
+- [ ] Contrast ≥ 4.5:1 (normal text)
+- [ ] Contrast ≥ 3:1 (UI components)
+- [ ] Keyboard operable (Tab, Enter, Escape)
+- [ ] Focus clearly visible (2px+ ring)
+- [ ] Touch target ≥ 44×44px
+- [ ] Images have alt text
+- [ ] Form inputs have labels
+- [ ] Info not conveyed by color alone
 
-### Step 3: Nielsen 10原則チェック
+### Step 3: Nielsen 10 Heuristics
 
-#### 🟡 Warning確認事項
-- [ ] 1. システム状態の可視化（Loading, Progress）
-- [ ] 2. 現実世界とのマッチ（自然な言葉）
-- [ ] 3. ユーザー制御と自由（Undo, Cancel）
-- [ ] 4. 一貫性と標準（統一されたUI）
-- [ ] 5. エラー防止（確認ダイアログ）
-- [ ] 6. 再認識 > 想起（アイコン+ラベル）
-- [ ] 7. 柔軟性と効率性（ショートカット）
-- [ ] 8. 美的でミニマル（情報過多を避ける）
-- [ ] 9. エラー認識・診断・回復（具体的なメッセージ）
-- [ ] 10. ヘルプとドキュメント（ツールチップ）
+#### 🟡 Warning
+- [ ] 1. System status visibility (Loading, Progress)
+- [ ] 2. Match real world (natural language)
+- [ ] 3. User control & freedom (Undo, Cancel)
+- [ ] 4. Consistency & standards (unified UI)
+- [ ] 5. Error prevention (confirmation dialogs)
+- [ ] 6. Recognition vs recall (icon + label)
+- [ ] 7. Flexibility & efficiency (shortcuts)
+- [ ] 8. Aesthetic & minimal (avoid clutter)
+- [ ] 9. Error reporting & recovery (clear messages)
+- [ ] 10. Help & documentation (tooltips)
 
 ---
 
+## Output Format
 
-## 出力形式
-
-### レビュー結果
+### Review result
 
 ```
-## UI/UXレビュー結果
+## UI/UX Review
 
 ### 1️⃣ Material Design 3
 
-🔴 **Critical**: `Button.tsx:15` - コンポーネント状態未定義
-- 問題: hover/focus/disabled状態が未定義
-- 修正案: [コード例]
+🔴 **Critical**: `Button.tsx:15` - component states missing
+- Issue: hover/focus/disabled undefined
+- Fix: [code example]
 
-🟡 **Warning**: `Card.tsx:8` - デザイントークン不使用
-- 問題: カスタムカラー#6750A4を直接指定
-- 改善案: bg-primary使用
+🟡 **Warning**: `Card.tsx:8` - design tokens not used
+- Issue: custom color #6750A4 hardcoded
+- Fix: use bg-primary
 
 ### 2️⃣ WCAG 2.2 AA
 
-🔴 **Critical**: `Form.tsx:42` - フォームラベルなし
-- 問題: input要素にlabel紐付けなし
-- 修正案: [コード例]
+🔴 **Critical**: `Form.tsx:42` - form label missing
+- Issue: input has no associated label
+- Fix: [code example]
 
-🔴 **Critical**: `Hero.tsx:20` - コントラスト比不足
-- 問題: text-gray-300 on bg-gray-200 (2.1:1)
-- 修正案: text-gray-900使用（7:1）
+🔴 **Critical**: `Hero.tsx:20` - insufficient contrast
+- Issue: text-gray-300 on bg-gray-200 (2.1:1)
+- Fix: use text-gray-900 (7:1)
 
-### 3️⃣ Nielsen 10原則
+### 3️⃣ Nielsen 10
 
-🟡 **Warning**: `DeleteButton.tsx:5` - エラー防止不足
-- 問題: 確認なしで削除実行（原則5違反）
-- 改善案: AlertDialog追加
-
-📊 **Summary**:
-- Material Design 3: Critical 1件 / Warning 1件
-- WCAG 2.2 AA: Critical 2件 / Warning 0件
-- Nielsen 10原則: Warning 1件
-
-✅ **総合評価**: Critical問題を優先的に修正してください
-```
-
-ゼロ件:
-
-```
-## UI/UXレビュー結果
-
-✅ 全 3 原則 (Material Design 3 / WCAG 2.2 AA / Nielsen 10) 違反なし
+🟡 **Warning**: `DeleteButton.tsx:5` - insufficient error prevention
+- Issue: delete without confirmation (heuristic 5 violation)
+- Fix: add AlertDialog
 
 📊 **Summary**:
-- Material Design 3: Critical 0件 / Warning 0件
-- WCAG 2.2 AA: Critical 0件 / Warning 0件
-- Nielsen 10原則: Critical 0件 / Warning 0件
+- Material Design 3: Critical 1 / Warning 1
+- WCAG 2.2 AA: Critical 2 / Warning 0
+- Nielsen 10: Warning 1
 
-### 推奨アクション
-- スクリーンショットでの実描画確認（自動検査では検出困難な視覚問題）
-- ユーザビリティテスト（実利用者観点）
+✅ **Overall**: Address Critical issues first
 ```
 
-レビュー対象不在（UI ファイル未検出）:
+Zero issues:
 
 ```
-> [WARN] UI コンポーネント未検出 (対象: *.tsx / *.jsx / *.vue)
-> レビューを skip
+## UI/UX Review
+
+✅ All 3 principles (Material Design 3 / WCAG 2.2 AA / Nielsen 10) compliant
+
+📊 **Summary**:
+- Material Design 3: Critical 0 / Warning 0
+- WCAG 2.2 AA: Critical 0 / Warning 0
+- Nielsen 10: Critical 0 / Warning 0
+
+### Recommended next steps
+- Verify visual rendering with screenshots (auto checks miss visual issues)
+- Usability testing (real user perspective)
+```
+
+No UI files detected:
+
+```
+> [WARN] No UI components found (*.tsx / *.jsx / *.vue)
+> Skipping review
 ```
 
 ---

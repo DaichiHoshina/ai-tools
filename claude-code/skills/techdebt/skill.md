@@ -1,146 +1,146 @@
 ---
 name: techdebt
-description: 技術的負債検出。重複コード・DRY原則違反を検出してリファクタリング提案、負債解消時に使用
+description: Technical debt detection. Detect duplicate code, DRY violations, propose refactoring. Use when resolving tech debt.
 requires-guidelines:
   - common
   - clean-architecture
 ---
 
-# techdebt - 技術的負債検出
+# techdebt - Technical Debt Detection
 
-> **出典**: Boris氏のヒント#4「スキル作成」 - 1日2回以上実行するタスクはスキル化
+> **Source**: Boris hint #4 "Skill Creation" - Tasks run 2+ times/day → skill candidate
 
-## 実行フロー
+## Execution Flow
 
-### Phase 1: スキャン対象収集
+### Phase 1: Collect Scan Targets
 
-**ツール**: `mcp__serena__list_dir(recursive: true)`
+**Tool**: `mcp__serena__list_dir(recursive: true)`
 
-**制限**: `max_files: 10,000`（超過時は警告）、タイムアウト: 30秒
+**Limits**: `max_files: 10,000` (warn if exceeded), timeout 30s
 
-**ツール失敗時 fallback**:
+**Tool failure fallback**:
 
-| 失敗 | 動作 |
+| Failure | Action |
 |------|------|
-| serena 接続不可 / タイムアウト | `find . -type f` に降格、warning ログ出力 |
-| max_files 超過 | スキャン中止、対象ディレクトリ絞り込み要求して停止 |
+| Serena unreachable / timeout | Fallback to `find . -type f`, warning log |
+| max_files exceeded | Stop, request target dir narrowing |
 
-### Phase 2: 除外フィルタ
+### Phase 2: Exclusion Filter
 
-| カテゴリ | パターン |
+| Category | Pattern |
 |---------|---------|
-| 機密情報 | `.env*`, `credentials*.json`, `secrets/**`, `*.key`, `*.pem` |
-| 依存/ビルド | `node_modules/**`, `.git/**`, `dist/**`, `build/**`, `.next/**` |
-| 生成ファイル | `*.min.{js,css}`, `*generated*`, `*_pb.ts`, `*.pb.go`, `__snapshots__/**` |
+| Secrets | `.env*`, `credentials*.json`, `secrets/**`, `*.key`, `*.pem` |
+| Deps/Build | `node_modules/**`, `.git/**`, `dist/**`, `build/**`, `.next/**` |
+| Generated | `*.min.{js,css}`, `*generated*`, `*_pb.ts`, `*.pb.go`, `__snapshots__/**` |
 
-### Phase 3: 重複コード検出
+### Phase 3: Duplicate Code Detection
 
-**ツール**: `mcp__serena__search_for_pattern`（失敗時 → `grep -rn` に降格、検出精度低下を warning ログで通知）
+**Tool**: `mcp__serena__search_for_pattern` (fail → fallback to `grep -rn`, warn precision drop)
 
-#### 3.1 完全一致検出
+#### 3.1 Exact Match
 
-- 条件: 5行以上の連続一致
-- アルゴリズム: 5行ずつ分割 → SHA-256ハッシュ計算 → 一致箇所をファイルパス・行番号で記録
+- Condition: 5+ consecutive lines identical
+- Algorithm: Split by 5 lines → SHA-256 hash → record matches by file:line
 
-#### 3.2 類似コード検出
+#### 3.2 Similar Code
 
-- 条件: 80%以上の類似度
-- 手法: Levenshtein距離計算、変数名・文字列リテラルを正規化後に比較
+- Condition: 80%+ similarity
+- Method: Levenshtein distance, normalize vars/strings, compare
 
-#### 3.3 DRY原則違反検出
+#### 3.3 DRY Violation Detection
 
-| 違反タイプ | 検出条件 | 例 |
+| Violation Type | Detection | Example |
 |-----------|----------|-----|
-| マジックナンバー | 同じ数値が3箇所以上 | `if (age > 18)` × 3 |
-| 繰り返しロジック | 同じif文・ループが3箇所以上 | `if (user.role === 'admin')` × 3 |
-| 重複バリデーション | 同じバリデーションロジック | メールアドレス検証 × 5 |
+| Magic numbers | Same number 3+ places | `if (age > 18)` × 3 |
+| Repeated logic | Same if/loop 3+ places | `if (user.role === 'admin')` × 3 |
+| Duplicate validation | Same validation logic | Email check × 5 |
 
-### Phase 4: リファクタリング提案
+### Phase 4: Refactoring Proposal
 
-各検出項目に対して以下を提示:
-- 重複コード: 共通関数への抽出先（ファイルパス）と import方法
-- DRY違反: 定数化（`src/constants/`）または共通関数化
-- 類似コード: 差分をパラメータ化した共通関数
+For each finding:
+- Duplicate code: Extract function target (file path) & import method
+- DRY violation: Constantize (`src/constants/`) or common function
+- Similar code: Common function with parameterized diffs
 
-## 出力フォーマット
+## Output Format
 
-通常ケース:
+Normal case:
 
 ```markdown
-# 技術的負債検出結果
-**スキャン範囲**: {project_path}
+# Technical Debt Detection Results
+**Scan scope**: {project_path}
 
-## サマリー
-| 項目 | 件数 |
+## Summary
+| Item | Count |
 |------|------|
-| スキャン対象ファイル | N |
-| 重複コード検出 | N箇所 |
-| DRY原則違反 | N箇所 |
-| 削減可能行数 | ~N行 |
+| Scanned files | N |
+| Duplicate code found | N locations |
+| DRY violations | N locations |
+| Reducible lines | ~N |
 
 ## Critical / Warning
-各項目: ファイル:行 - 違反内容 - 修正案
+Each item: file:line - violation - fix
 
-## 推奨アクション
-即座対応: Critical / 次スプリント: Warning / 週次: 定期実行
+## Recommended Actions
+Immediate: Critical / Next sprint: Warning / Weekly: Scheduled runs
 ```
 
-ゼロ件:
+Zero findings:
 
 ```markdown
-# 技術的負債検出結果
-**スキャン範囲**: {project_path}
+# Technical Debt Detection Results
+**Scan scope**: {project_path}
 
-## サマリー
-スキャン対象 N ファイル、検出ゼロ件。
+## Summary
+Scanned N files, zero findings.
 
 ## Critical / Warning
-- Critical: 0件
-- Warning: 0件
+- Critical: 0
+- Warning: 0
 
-## 推奨アクション
-継続監視（週次定期実行を推奨）
+## Recommended Actions
+Continue monitoring (weekly scan recommended)
 ```
 
-部分結果（タイムアウト / serena fallback）:
+Partial results (timeout / serena fallback):
 
 ```markdown
-# 技術的負債検出結果（部分結果）
-> [WARN] 30秒タイムアウトで打ち切り、または serena → grep 降格中
-> スキャン完了率: X% / 検出精度: 低下
+# Technical Debt Detection Results (Partial)
+> [WARN] Timeout at 30s or serena → grep fallback
+> Completion: X% / Precision: reduced
 
-## サマリー
-（通常と同じ。N は確認済み分のみ）
+## Summary
+(As above, N = confirmed only)
 
-## 未スキャン領域
+## Unscanned Areas
 - {dir1}, {dir2} ...
-- 完全スキャンは対象を絞って再実行推奨
+- Full scan recommended with narrower targets
 ```
 
-## エッジケース対応
+## Edge Cases
 
-| ケース | 対応 |
+| Case | Action |
 |--------|------|
-| 0ファイル検出 | "技術的負債は検出されませんでした" |
-| max_files超過 | "ファイル数が上限(10,000)を超過。対象ディレクトリを絞ってください" |
-| 除外パターンミス | 機密ファイルは絶対スキャンしない（Criticalエラー） |
-| タイムアウト | 30秒でタイムアウト、部分結果を返す |
+| 0 files | "No tech debt detected" |
+| max_files exceeded | "File count exceeds limit (10,000). Narrow target dirs." |
+| Exclusion pattern miss | Never scan secrets (Critical error) |
+| Timeout | 30s timeout, return partial |
 
-## 制限事項
+## Limits
 
-| 項目 | 制限値 | 理由 |
+| Item | Limit | Reason |
 |------|--------|------|
-| 最大ファイル数 | 10,000 | パフォーマンス |
-| 最小重複行数 | 5行 | ノイズ削減 |
-| 類似度閾値 | 80% | 誤検出防止 |
-| タイムアウト | 30秒 | UX維持 |
+| Max files | 10,000 | Performance |
+| Min duplicate lines | 5 | Noise reduction |
+| Similarity threshold | 80% | Prevent false positives |
+| Timeout | 30s | UX |
 
-## 使用例
+## Usage Examples
 
 ```
-/techdebt               # プロジェクト全体スキャン
-/techdebt src/auth      # 特定ディレクトリのみ（高速）
-/techdebt --verbose     # 除外ファイル・類似度詳細を出力
+/techdebt               # Full project scan
+/techdebt src/auth      # Specific dir only (fast)
+/techdebt --verbose     # Show exclusions, similarity details
 ```
 
-**鉄則**: 技術的負債は「見える化」が第一歩。定期実行で負債増加を防ぐ。
+**Rule**: Tech debt visibility first step. Regular scans prevent debt growth.

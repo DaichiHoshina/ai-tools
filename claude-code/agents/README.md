@@ -1,215 +1,215 @@
-# Agents - エージェント一覧
+# Agents - Agent List
 
-Claude Codeで使用されるエージェント（自律的なサブプロセス）の説明とマッピング。
+Description and mapping of agents (autonomous sub-processes) used by Claude Code.
 
-> **CLIコマンド**: `claude agents` で設定済みエージェントの一覧を表示できます（v2.1.47+）
+> **CLI command**: `claude agents` displays configured agents (v2.1.47+)
 
-## エージェント一覧
+## Agent list
 
-| エージェント | model | 役割 | 主な用途 |
-|------------|-------|------|---------|
-| **reviewer-agent** | opus | レビュー担当 | コード品質・セキュリティ・テストレビュー |
-| **root-cause-analyzer** | opus | 根本原因分析 | バグの5Whys分析・構造的修正提案 |
-| **po-agent** | sonnet | 戦略決定担当 | プロダクト戦略・Worktree管理・判断結果返却 |
-| **manager-agent** | sonnet | タスク分割・配分計画作成 | 大規模タスクの配分計画・完了時の統合検証 |
-| **developer-agent** | haiku | 実装担当 | コード実装・修正・追加 |
-| **explore-agent** | haiku | 探索・分析担当 | コードベース調査・並列探索 |
-| **verify-app** | haiku | 検証担当 | ビルド・テスト・lintの統合検証 |
+| Agent | Model | Role | Primary use |
+|-------|-------|------|-------------|
+| **reviewer-agent** | opus | Review owner | Code quality, security, test review |
+| **root-cause-analyzer** | opus | RCA specialist | 5Whys analysis, structural fixes |
+| **po-agent** | sonnet | Strategy decider | Product strategy, worktree mgmt, decision return |
+| **manager-agent** | sonnet | Task decomposition & allocation | Large task allocation, integration verify |
+| **developer-agent** | haiku | Implementer | Code impl, fix, add |
+| **explore-agent** | haiku | Explorer/analyzer | Codebase investigation, parallel search |
+| **verify-app** | haiku | Verifier | Build, test, lint integration check |
 
-## エージェント起動コスト（subagent-events.log 実測）
+## Agent startup cost (subagent-events.log actual measurement)
 
-| agent | N | 平均実時間 | 最大 | 備考 |
-|-------|---|-----------|------|------|
-| developer-agent | 2* | 17s | 23s | 最速、タスク明確時 |
-| manager-agent | 2* | 42s | 68s | 計画のみで軽量 |
+| Agent | N | Avg time | Max | Note |
+|-------|---|----------|-----|------|
+| developer-agent | 2* | 17s | 23s | Fastest, clear task |
+| manager-agent | 2* | 42s | 68s | Planning only, lightweight |
 | reviewer-agent | 27 | 82s | 161s | Opus + comprehensive-review |
-| po-agent | 9* | 96s | 365s | 戦略判断で膨らむ |
-| Explore (built-in) | 79 | 99s | 310s | 使用頻度最多 |
-| general-purpose | 21 | **115s** | **501s** | **使用を避ける** |
-| explore-agent | 7* | 123s | 289s | Haikuだがタスク範囲広く実時間長い |
+| po-agent | 9* | 96s | 365s | Strategy decision expands |
+| Explore (built-in) | 79 | 99s | 310s | Most frequent |
+| general-purpose | 21 | **115s** | **501s** | **Avoid** |
+| explore-agent | 7* | 123s | 289s | Haiku but broad task scope, long |
 
-`*` は N<10 の参考値（サンプル少、母数拡大で値ブレうる）。運用判断は使用頻度の多い agent（N≥20）の傾向を優先。
+`*` = reference values for N<10 (small sample, variance with larger N). Operations prioritize high-frequency agents (N≥20) trends.
 
-**再計算**: `~/.claude/hooks/subagent-events.log` を `references/performance-insights.md` の集計スクリプトで処理（最終更新日は `git log -1 --format=%cs agents/README.md` で取得可）。
+**Recalculate**: Process `~/.claude/hooks/subagent-events.log` via script in `references/performance-insights.md` (last update: `git log -1 --format=%cs agents/README.md`).
 
-運用ルール（判定表）は `claude-code/CLAUDE.md` の「探索・調査の使い分け」、計測方法・hook vs agent のコスト構造は [`references/performance-insights.md`](../references/performance-insights.md) 参照。
-
----
-
-## コマンド→エージェントマッピング
-
-| コマンド | 起動されるエージェント | フロー |
-|---------|---------------------|--------|
-| `/flow` | po-agent（軽量タスク事前判定で skip 可、それ以外は起動） | 親が PO → Manager → Developer × N を順次起動（Teamデフォルト） |
-| `/dev` | なし（直接実行） | Agent不使用。Agent Teamが必要なら `/flow` を使用 |
-| `/review` | reviewer-agent | レビュー自動実行 |
-| `/plan` | po-agent + manager-agent | 戦略策定 + タスク分割 |
-| `/explore` | explore-agent（並列） | 複数観点から同時調査 |
+Operations rule (table): `claude-code/CLAUDE.md` "exploration/investigation split". Measurement method & hook vs agent cost structure: [`references/performance-insights.md`](../references/performance-insights.md).
 
 ---
 
-## 自動起動されるエージェント
+## Command → Agent mapping
 
-ユーザーがコマンドを実行すると、内部で自動的にエージェントが起動されます：
+| Command | Agent launched | Flow |
+|---------|----------------|------|
+| `/flow` | po-agent (skip light task, else launch) | Parent: PO → Manager → Dev×N sequential (Team default) |
+| `/dev` | None (direct) | No agent. Need Team? Use `/flow` |
+| `/review` | reviewer-agent | Auto review |
+| `/plan` | po-agent + manager-agent | Strategy + task split |
+| `/explore` | explore-agent (parallel) | Concurrent multi-perspective search |
 
-### `/flow` のワークフロー（親ハンドリング型）
+---
 
-Claude Code の sub-agent 仕様上、sub-agent は他の sub-agent を spawn できない。**親（Claude Code）が各層を順次起動**する。
+## Auto-launched agents
+
+When user runs command, agents launch internally:
+
+### `/flow` workflow (parent-handling)
+
+Claude Code sub-agent spec: sub-agents cannot spawn other sub-agents. **Parent (Claude Code) launches each layer sequentially**.
 
 ```
-1. 親 → Task(po-agent) 起動
-   ↓ PO: 実行モード判断・Reviewer 品質基準 → 判断結果を親に返却
+1. Parent → Task(po-agent)
+   ↓ PO: judge exec mode, QA criteria → return decision
    ↓
-2. 親 → Task(manager-agent) 起動（Team使用時）
-   ↓ Manager: 配分計画を親に返却
+2. Parent → Task(manager-agent) (if Team)
+   ↓ Manager: return allocation plan
    ↓
-3. 親 → Task(developer-agent) × N を 1メッセージで並列起動
-   ↓ 全 Developer 完了
+3. Parent → Task(developer-agent)×N in 1 message (parallel)
+   ↓ All Devs complete
    ↓
-4. 親 → Task(manager-agent) 再起動（統合検証）
-   ↓ Manager: 統合結果を返却
+4. Parent → Task(manager-agent) relaunch (integrate)
+   ↓ Manager: return integration result
    ↓
-5. 親 → Task(reviewer-agent, --codex) 起動（comprehensive-review + codex 並列、両者共通指摘を優先）
-   ↓ Reviewer: P0/P1 分類で返却
-   ↓ P0 あり → 親 → Task(manager-agent) 再配分 → Task(developer-agent)×M → Task(reviewer-agent, --codex) 再検証（最大1ループ）
+5. Parent → Task(reviewer-agent, --codex) (comprehensive-review + codex parallel, prioritize common findings)
+   ↓ Reviewer: return P0/P1 classified
+   ↓ P0 exists → Parent → Task(manager-agent) reallocate → Task(developer-agent)×M → Task(reviewer-agent, --codex) re-verify (max 1 loop)
    ↓ P0 = 0
    ↓
-6. 親 → /lint-test → /git-push --pr
+6. Parent → /lint-test → /git-push --pr
 ```
 
-**直接実行推奨時**: PO が判断結果を親に返し、親が `/dev` を起動（Step 2-4 スキップ）。
+**Direct recommended**: PO returns decision to parent, parent launches `/dev` (skip Step 2-4).
 
 ---
 
-## エージェントの特徴
+## Agent characteristics
 
 ### 1. developer-agent (dev1-4)
 
-- **トリガー**: `/flow`（Team使用時、Manager経由で起動）
-- **役割**: 実装・修正・テスト作成
-- **特徴**: Serena MCP必須使用（シンボル操作）
+- **Trigger**: `/flow` (Team use, via Manager)
+- **Role**: Implement, fix, create tests
+- **Feature**: Serena MCP required (symbol ops)
 
 ### 2. reviewer-agent
 
-- **トリガー**: `/review`, `/flow` の最終ステップ
-- **役割**: Writer/Reviewer並列パターンでのレビュー
-- **特徴**: 実装完了後に自動起動
+- **Trigger**: `/review`, final step of `/flow`
+- **Role**: Review in Writer/Reviewer parallel pattern
+- **Feature**: Auto-launch after impl complete
 
 ### 3. explore-agent (explore1-4)
 
-- **トリガー**: `/explore`, 調査系タスク
-- **役割**: 読み取り専用の並列探索
-- **特徴**: Serena MCP必須、複数観点から同時調査
+- **Trigger**: `/explore`, investigation tasks
+- **Role**: Read-only parallel search
+- **Feature**: Serena MCP required, multi-perspective
 
 ### 4. manager-agent
 
-- **トリガー**: PO が Team使用判断時、親が起動
-- **役割**: タスク分割・配分計画作成・完了時の統合検証（実装なし、Developer 起動は親が担当）
-- **特徴**: 配分計画フォーマットを親に返し、親が `Task(developer-agent)` を並列起動
+- **Trigger**: Parent launches when PO decides Team use
+- **Role**: Task split, allocation creation, integration verify (no impl; parent starts Devs)
+- **Feature**: Return allocation format; parent spawns `Task(developer-agent)` parallel
 
 ### 5. po-agent
 
-- **トリガー**: `/flow`（軽量タスク事前判定で skip 可、それ以外は起動）, `/plan`
-- **役割**: 実行モード判断・戦略決定・Worktree管理・Manager への指示フォーマット作成（実装なし）
-- **特徴**: 判断結果（モード・worktree・Manager 指示）を親に返却。親が次層を起動
+- **Trigger**: `/flow` (skip light task, else launch), `/plan`
+- **Role**: Judge exec mode, decide strategy, manage worktree, create Manager instruction (no impl)
+- **Feature**: Return decision (mode, worktree, Manager instruction). Parent launches next layer
 
 ### 6. verify-app
 
-- **トリガー**: 明示要求時のみ（自動起動しない）。通常の検証は `/lint-test` を使用
-- **役割**: ビルド・テスト・lintの包括検証（structural change 等で `/lint-test` で不足な場合）
-- **特徴**: 失敗時は Developer に差し戻し（自動修正は行わない）
+- **Trigger**: Explicit request only (no auto). Standard checks use `/lint-test`
+- **Role**: Comprehensive build/test/lint (when `/lint-test` insufficient for structural change)
+- **Feature**: On fail, return to Developer (no auto-fix)
 
 ---
 
-## エージェント階層（Agent Hierarchy）
+## Agent hierarchy
 
-大規模タスクでは階層構造で実行。**親（Claude Code）が各層を順次起動**する親ハンドリング型（sub-agent 仕様準拠）。
+Large tasks execute in hierarchy. **Parent (Claude Code) launches each layer sequentially** — parent-handling (per sub-agent spec).
 
 ```
-親（Claude Code）
-  ├─ Task(po-agent)              # 戦略・Team判断 → 返却
-  ├─ Task(manager-agent)         # 配分計画 → 返却
-  ├─ Task(developer-agent) dev1  ┐ 1メッセージで
-  ├─ Task(developer-agent) dev2  │ 並列起動
+Parent (Claude Code)
+  ├─ Task(po-agent)              # Strategy & Team decision → return
+  ├─ Task(manager-agent)         # Allocation plan → return
+  ├─ Task(developer-agent) dev1  ┐ 1 message
+  ├─ Task(developer-agent) dev2  │ parallel
   ├─ Task(developer-agent) dev3  ┘
-  ├─ Task(manager-agent)         # 統合検証（再起動）
-  ├─ /lint-test                  # 実装完了後の検証（verify-app は明示要求時のみ）
-  └─ Task(reviewer-agent)        # 最終レビュー
+  ├─ Task(manager-agent)         # Integration verify (relaunch)
+  ├─ /lint-test                  # Post-impl checks (verify-app explicit only)
+  └─ Task(reviewer-agent)        # Final review
 ```
 
-**設計原則**:
-- sub-agent は他 sub-agent を spawn できない（Claude Code 仕様）
-- PO/Manager/Explore には `disallowedTools: Write, Edit, MultiEdit` を明示し、実装違反を物理防止
-- 並列起動は親が 1メッセージで複数 `Task` を同時呼び出しする
-- 並列実行パターン詳細・worktree 適用判定・責務分離: `references/PARALLEL-PATTERNS.md` 参照
+**Design principles**:
+- Sub-agents cannot spawn other sub-agents (Claude Code spec)
+- PO/Manager/Explore explicitly have `disallowedTools: Write, Edit, MultiEdit` to physically prevent implementation violations
+- Parent launches multiple `Task`s in 1 message for parallelism
+- Parallel patterns, worktree apply decision, responsibility separation: `references/PARALLEL-PATTERNS.md`
 
-> **⚠️ この設計を変更する前に必ず読む**: [ADR 0001: Agent Team は親ハンドリング型で構築する](../../docs/adr/0001-parent-handled-agent-hierarchy.md) — 自走型への回帰は公式 docs 違反のため不可。回帰防止の bats テスト `tests/integration/agent-frontmatter.bats` が CI で守っている。
+> **⚠️ Read before changing design**: [ADR 0001: Agent Team is parent-handled](../../docs/adr/0001-parent-handled-agent-hierarchy.md) — revert to self-running violates official docs. CI guards via bats test `tests/integration/agent-frontmatter.bats`.
 
 ---
 
-## Serena MCP ツールカタログ
+## Serena MCP tool catalog
 
-各 agent の `tools:` で `mcp__serena__*` wildcard 指定時に利用可能な**推奨利用パターン**。reviewer-agent のみ明示列挙（`find_symbol`, `get_symbols_overview`）で権限を絞っている。権限の最終制御は agent frontmatter の `tools` / `disallowedTools`。
+**Recommended usage patterns** available with `mcp__serena__*` wildcard in agent `tools:`. reviewer-agent only lists explicitly (`find_symbol`, `get_symbols_overview`) to narrow permissions. Final control: agent frontmatter `tools` / `disallowedTools`.
 
-**v1.3.0 新規ツール**: `find_declaration`, `find_implementations`, `get_diagnostics_for_file`, `get_diagnostics_for_symbol`（Serena 本体 CHANGELOG `v1.3.0 (2026-05-11)` の LSP Backend セクション参照。[oraios/serena GitHub CHANGELOG](https://github.com/oraios/serena/blob/main/CHANGELOG.md)）
+**v1.3.0 new tools**: `find_declaration`, `find_implementations`, `get_diagnostics_for_file`, `get_diagnostics_for_symbol` (Serena CHANGELOG v1.3.0 LSP Backend section. [oraios/serena GitHub CHANGELOG](https://github.com/oraios/serena/blob/main/CHANGELOG.md))
 
-### シンボル探索（読み取り）
+### Symbol search (read-only)
 
-| ツール | 用途 | 推奨利用 agent |
-|-------|------|---------------|
-| `find_symbol` | 名前・パス・型でシンボル検索 | reviewer, explore, developer |
-| `get_symbols_overview` | ファイル内シンボル俯瞰 | reviewer, explore |
-| `find_referencing_symbols` | 参照元の追跡 | explore, developer |
-| `find_declaration` (v1.3.0) | 宣言位置の特定 | explore, developer |
-| `find_implementations` (v1.3.0) | 実装位置（interface→impl） | explore, developer |
+| Tool | Purpose | Recommended agent |
+|------|---------|-------------------|
+| `find_symbol` | Search by name/path/type | reviewer, explore, developer |
+| `get_symbols_overview` | File symbol overview | reviewer, explore |
+| `find_referencing_symbols` | Trace reverse refs | explore, developer |
+| `find_declaration` (v1.3.0) | Locate declaration | explore, developer |
+| `find_implementations` (v1.3.0) | Locate impl (interface→impl) | explore, developer |
 
-### シンボル編集（書き込み）
+### Symbol edit (write)
 
-| ツール | 用途 | 推奨利用 agent |
-|-------|------|---------------|
-| `replace_symbol_body` | 関数・クラス本体の差し替え | developer |
-| `insert_before_symbol` / `insert_after_symbol` | 隣接挿入 | developer |
-| `rename_symbol` | リネーム＋参照一括更新 | developer |
-| `safe_delete_symbol` | 参照確認付き削除 | developer |
-| `replace_content` | テキスト置換（シンボル単位以外） | developer |
+| Tool | Purpose | Recommended agent |
+|------|---------|-------------------|
+| `replace_symbol_body` | Replace function/class body | developer |
+| `insert_before_symbol` / `insert_after_symbol` | Insert adjacent | developer |
+| `rename_symbol` | Rename + bulk update refs | developer |
+| `safe_delete_symbol` | Delete with ref check | developer |
+| `replace_content` | Text replace (non-symbol) | developer |
 
-### 診断
+### Diagnostics
 
-| ツール | 用途 | 推奨利用 agent |
-|-------|------|---------------|
-| `get_diagnostics_for_file` (v1.3.0) | LSP 診断（型エラー・警告）取得 | developer, verify-app |
-| `get_diagnostics_for_symbol` (v1.3.0) | 特定シンボルの診断 | developer |
+| Tool | Purpose | Recommended agent |
+|------|---------|-------------------|
+| `get_diagnostics_for_file` (v1.3.0) | Get LSP diagnostics (type errors, warnings) | developer, verify-app |
+| `get_diagnostics_for_symbol` (v1.3.0) | Specific symbol diagnostics | developer |
 
-### メモリ操作
+### Memory ops
 
-| ツール | 用途 | 推奨利用 agent |
-|-------|------|---------------|
-| `list_memories` / `read_memory` | 既存メモリ参照 | 全 agent |
-| `write_memory` | 新規メモリ書き込み | po, manager, developer |
-| `edit_memory` | 部分更新（全置換せず差分修正） | po, manager |
-| `rename_memory` | キー名変更 | po, manager |
-| `delete_memory` | 削除 | po, manager |
+| Tool | Purpose | Recommended agent |
+|------|---------|-------------------|
+| `list_memories` / `read_memory` | Read existing | All agents |
+| `write_memory` | Write new | po, manager, developer |
+| `edit_memory` | Partial update (diff not full replace) | po, manager |
+| `rename_memory` | Rename key | po, manager |
+| `delete_memory` | Delete | po, manager |
 
 ### Onboarding
 
-| ツール | 用途 |
-|-------|------|
-| `initial_instructions` | Serena 利用マニュアル取得（タスク開始時必須） |
-| `check_onboarding_performed` / `onboarding` | プロジェクト初期化チェック |
-| `serena_info` (v1.2.0) | usage info on-demand 取得（version/context/active project） |
+| Tool | Purpose |
+|------|---------|
+| `initial_instructions` | Get Serena manual (required at task start) |
+| `check_onboarding_performed` / `onboarding` | Check project init |
+| `serena_info` (v1.2.0) | On-demand usage info (version/context/active project) |
 
-### 使い分け原則
+### Usage principles
 
-- **シンボル単位の編集は `replace_symbol_body` 系を優先**: Edit より副作用が局所化される
-- **リネームは `rename_symbol`**: grep → 個別 Edit より参照漏れリスク低
-- **削除は `safe_delete_symbol`**: 参照残存を事前検出
-- **メモリ更新は `edit_memory`**: `write_memory` で全置換すると差分が見えにくい
+- **Symbol edit**: Prefer `replace_symbol_body` family over Edit for tighter side-effect scope
+- **Rename**: Use `rename_symbol` over grep→Edit for lower ref-miss risk
+- **Delete**: Use `safe_delete_symbol` to pre-detect dangling refs
+- **Memory update**: Use `edit_memory` over `write_memory` to keep diffs visible
 
 ---
 
-## 詳細情報
+## Details
 
-各エージェントの詳細は、対応する `.md` ファイルを参照：
+Per-agent details: see corresponding `.md` files
 
 - [developer-agent.md](./developer-agent.md)
 - [reviewer-agent.md](./reviewer-agent.md)

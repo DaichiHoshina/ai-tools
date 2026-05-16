@@ -1,108 +1,108 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*, mcp__context7__*
-description: 設計・計画用コマンド - PO Agent で戦略策定（読み取り専用）
+description: Design & planning — strategy formulation via PO Agent (read-only)
 ---
 
-## /plan - 設計・計画モード
+## /plan - Design & planning mode
 
-## /design-doc との境界
+## Boundary w/ `/design-doc`
 
-| 観点 | `/design-doc` | `/plan` |
-|------|--------------|---------|
-| 主目的 | チームに**設計判断**を伝える | 実装の**Phase 分け**を決める |
-| 出力 | 12 セクション md（Why/比較/失敗/移行） | Phase 1/2/... + Worktree 要否 |
-| 入力 | PRD or 自然言語 | Design Doc or 設計済前提 |
-| Agent | なし（直接 Edit） | PO Agent（複雑時） |
+| Aspect | `/design-doc` | `/plan` |
+|--------|--------------|---------|
+| Primary goal | communicate **design decisions** to team | decide impl **phase breakdown** |
+| Output | 12-section md (Why/comparison/failure/migration) | Phase 1/2/... + worktree needed? |
+| Input | PRD or natural language | Design Doc or settled design |
+| Agent | none (direct Edit) | PO Agent (for complexity) |
 
-大型機能は両方（design-doc → plan）。小型修正は plan のみ。詳細: `references/design-phase-flow.md`。
+Large feature: both (design-doc → plan). Small fix: plan only. Detail: `references/design-phase-flow.md`.
 
-## Step 0: ガイドライン自動読込（必須）
+## Step 0: Auto-load guidelines (required)
 
-### A. 設計ガイドライン（必須）
+### A. Design guidelines (required)
 
 - `~/.claude/guidelines/design/clean-architecture.md`
 - `~/.claude/guidelines/design/domain-driven-design.md`
 
-### B. 言語ガイドライン（`load-guidelines` 自動検出）
+### B. Language guidelines (auto-detect via `load-guidelines`)
 
-TypeScript → `typescript.md`, `eslint.md` / Next.js → `nextjs-react.md`, `tailwind.md`, `shadcn.md` / Go → `golang.md`。
+TypeScript → `typescript.md`, `eslint.md` / Next.js → `nextjs-react.md`, `tailwind.md`, `shadcn.md` / Go → `golang.md`.
 
-### C. プロジェクト種別
+### C. Project type
 
-インフラ → `infrastructure/terraform.md`, `infrastructure/aws-eks.md`。
+Infrastructure → `infrastructure/terraform.md`, `infrastructure/aws-eks.md`.
 
-### D. Skill 連携
+### D. Skill coordination
 
-`clean-architecture-ddd` / `api-design` / `microservices-monorepo`（検出時）が自動でガイドライン読込。詳細: `references/command-resource-map.md`。
+`clean-architecture-ddd` / `api-design` / `microservices-monorepo` (on detect) auto-load guidelines. Detail: `references/command-resource-map.md`.
 
-## Agent 使用判断
+## Agent use judgment
 
-| 種別 | 対象 |
+| Type | Target |
 |------|------|
-| PO Agent 使用 | 新機能設計 / アーキテクチャ決定 / 複数コンポーネント / Worktree 必要 |
-| 直接実行 | 単一ファイル修正 / 小規模改善 |
+| PO Agent use | New feature design / architecture decision / multi-component / worktree needed |
+| Direct execution | Single file fix / small improvement |
 
-## PO Agent フロー
+## PO Agent flow
 
 ```
-Task(subagent_type: "po-agent") 起動
-  → 要件分析 → アーキテクチャ設計 → Worktree 要否（要確認） → 実装方針
-  → 設計ドキュメント出力
-  → 次アクション提案（/dev へ）
+Launch Task(subagent_type: "po-agent")
+  → requirement analysis → architecture design → worktree necessary? (confirm) → implementation approach
+  → output design document
+  → propose next actions (to `/dev`)
 ```
 
-## 直接実行フロー
+## Direct execution flow
 
-1. ガイドライン読込（Step 0）
-2. Serena MCP でコードベース分析
-3. 設計ドキュメント作成
-4. `/dev` 実装計画提案
+1. Load guidelines (Step 0)
+2. Analyze codebase w/ Serena MCP
+3. Create design document
+4. Propose implementation plan for `/dev`
 
-## 計画保存
+## Plan storage
 
-`plansDirectory`（既定 `~/.claude/plans`）に保存。
+Stored in `plansDirectory` (default `~/.claude/plans`).
 
 ```
 ~/.claude/plans/YYYY-MM-DD_[project]_[feature].md
 ```
 
-セッション間で参照可、`/reload` で読込。
+Reference across sessions, load w/ `/reload`.
 
-## 出力フォーマット
+## Output format
 
 ```
-# Design: [機能名]
+# Design: [feature name]
 
-## 要件
-- [ ] 要件1
+## Requirements
+- [ ] requirement 1
 
-## アーキテクチャ
-- パターン: [選択理由]
-- 構成: [ディレクトリ構造]
+## Architecture
+- Pattern: [selection reason]
+- Structure: [directory structure]
 
-## 実装計画
-Phase 1: [タスク]
-Phase 2: [タスク]
+## Implementation plan
+Phase 1: [task]
+Phase 2: [task]
 
 ## Worktree
-- 必要: Yes/No
-- ブランチ名: [提案]
+- Needed: Yes/No
+- Branch name: [propose]
 ```
 
-## 優先順位
+## Priority
 
-1. 要件の明確化
-2. アーキテクチャ適合性
-3. 拡張性・保守性
-4. テスタビリティ
+1. Requirement clarity
+2. Architecture fit
+3. Extensibility・maintainability
+4. Testability
 
-## 失敗時の挙動
+## Fail behavior
 
-| 状況 | 動作 |
+| Scenario | Action |
 |------|------|
-| PO Agent 起動失敗 | 直接実行降格、warning。複雑タスクは要件分割提案 |
-| ガイドライン読込失敗 | common のみで継続、設計判断は保守側 |
-| Serena MCP 失敗 | grep/Glob で代替、精度低下を warning |
-| `plansDirectory` 書込失敗 | チャット出力のみ、手動保存案内 |
+| PO Agent launch fail | Downgrade to direct, warn. Complex tasks propose requirement split |
+| Guideline load fail | Continue w/ common only, design decision on maintainer |
+| Serena MCP fail | Substitute w/ grep/Glob, warn precision drop |
+| `plansDirectory` write fail | Chat output only, guide manual save |
 
-**読み取り専用** - 実装は `/dev`。
+**Read-only** - Implementation via `/dev`.

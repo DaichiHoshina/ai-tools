@@ -1,136 +1,136 @@
 ---
 name: groove
-description: 軽量マルチエージェントオーケストレーター。YAMLワークフロー定義に従い、複数のAgentを協調実行する。外部依存なし。
+description: Lightweight multi-agent orchestrator. Execute agents in coordination per YAML workflow. No external deps.
 ---
 
-# /groove - マルチエージェントオーケストレーター
+# /groove - Multi-agent orchestrator
 
-> `/flow`（命令的判定型）との使い分け: `references/flow-vs-groove.md`
+> When to use vs `/flow` (imperative detection): `references/flow-vs-groove.md`
 
-## 使用方法
+## Usage
 
 ```text
-/groove <task>                    # ワークフロー自動選択
-/groove <workflow> <task>         # ワークフロー指定
-/groove --auto <task>             # 自動モード（COMPLETE後にcommit+push）
-/groove list                      # ワークフロー一覧
+/groove <task>                    # auto-select workflow
+/groove <workflow> <task>         # specify workflow
+/groove --auto <task>             # auto mode (commit+push post-COMPLETE)
+/groove list                      # list workflows
 ```
 
-## ワークフロー自動選択
+## Workflow auto-selection
 
-| キーワード | ワークフロー |
-|-----------|------------|
-| VSDD, vsdd, 品質重視, 仕様駆動テスト | `vsdd` |
-| テスト, TDD, test | `tdd` |
-| それ以外 | `spec-driven` |
+| Keyword | Workflow |
+|---------|----------|
+| VSDD, vsdd, quality-first, spec-driven test | `vsdd` |
+| test, TDD, test | `tdd` |
+| else | `spec-driven` |
 
-## パス解決（プロジェクト優先→ホームフォールバック）
+## Path resolution (project priority → home fallback)
 
-| 種類 | 1st | 2nd |
+| Type | 1st | 2nd |
 |------|-----|-----|
-| ワークフロー | `.groove/workflows/` | `~/.groove/workflows/` |
-| Agent定義 | `.groove/agents/` | `~/.groove/agents/` |
+| Workflow | `.groove/workflows/` | `~/.groove/workflows/` |
+| Agent definition | `.groove/agents/` | `~/.groove/agents/` |
 
-## 実行手順
+## Execution procedure
 
-メインAgentが直接ループを回す。外部CLIは使わない。スキーマ仕様は `~/.groove/schema.md` 参照。
+Main Agent directly runs loop. No external CLI. Schema spec: see `~/.groove/schema.md`.
 
-### 1. 初期化
+### 1. Initialize
 
-YAMLをReadで読み込み、最初のstepから開始。
+Read YAML, start from first step.
 
-- `version` フィールドを確認（未指定は v0 として警告のみ）
-- `defaults` を抽出。各ステップの未指定フィールドに適用（ステップ値が優先）
-- 内部変数で状態管理（step_count, loop_count, retry_count）
+- Check `version` field (unspecified = v0, warn only)
+- Extract `defaults`. Apply to unspecified step fields (step value priority)
+- Manage state w/ internal vars (step_count, loop_count, retry_count)
 
-### 2. ステップ実行ループ
+### 2. Step execution loop
 
 ```text
 WHILE current_step != COMPLETE && current_step != ABORT:
   1. step_count >= max_steps → ABORT
   2. loop_count[step] >= loop_limit → ABORT
-  3. Agent定義をReadで読み込み
-  4. Agent起動（下記ルール、defaults適用済みの値で）
-  5. 出力から GROOVE_RESULT を抽出
-     - Agent失敗/タイムアウト時 → retry処理へ
-  6. rulesマッチングで次step決定
+  3. Read Agent definition
+  4. Launch Agent (rules below, w/ defaults-applied values)
+  5. Extract GROOVE_RESULT from output
+     - On Agent fail/timeout → goto retry handling
+  6. Determine next step via rules matching
   7. step_count++, loop_count[step]++
 ```
 
-### 2a. retry / error処理
+### 2a. retry / error handling
 
 ```text
 ON agent_error OR timeout:
   IF retry_count[step] < step.retry:
     retry_count[step]++
-    → 同じステップを再実行
+    → re-execute same step
   ELSE:
-    GROOVE_RESULT = error として rules評価
-    → rules の on: error にマッチするnextへ遷移
-    → 該当ルール未定義なら ABORT
+    GROOVE_RESULT = error, evaluate rules
+    → transition to next matching rules.on:error
+    → if no matching rule, ABORT
 ```
 
-v0 互換挙動の詳細は `~/.groove/schema.md#移行ルールv0--v1` を参照。
+v0 compat behavior detail: see `~/.groove/schema.md#migration-rules-v0--v1`.
 
-### 3. Agent起動ルール
+### 3. Agent launch rules
 
-**通常（逐次ステップ）:**
+**Normal (sequential step):**
 
 ```text
-Agent定義のfrontmatter から model を抽出。
+Extract model from Agent definition frontmatter.
 Agent(
   subagent_type: "general-purpose",
-  model: frontmatter.model（haiku/sonnet/opus）、なければ省略,
+  model: frontmatter.model (haiku/sonnet/opus), omit if absent,
   mode: edit→"bypassPermissions" / readonly→"default",
-  prompt: "{Agent定義本文（frontmatter除く）}\n\n## タスク\n{task}\n\n## 前ステップ結果\n{prev_result}"
+  prompt: "{Agent definition body (sans frontmatter)}\n\n## Task\n{task}\n\n## Prior step result\n{prev_result}"
 )
 ```
 
-逐次ステップでは isolation 不使用（前ステップの変更参照が必要なため）。
+Sequential step: don't use isolation (need to reference prior step changes).
 
-**`general-purpose` 利用方針**:
-- 結論: groove では `general-purpose` を例外的に許可（`/flow` で完結する場合は `/flow` を優先）
-- 理由: YAML で任意 agent 定義を動的に組む用途のため、専用 agent（po/manager/developer/reviewer/explore）では対応不能
+**`general-purpose` use policy**:
+- Conclusion: groove permits `general-purpose` exceptionally (prefer `/flow` if `/flow` completes it)
+- Reason: YAML dynamically composes arbitrary agent defs, specialist agents (po/manager/developer/reviewer/explore) can't handle
 
 **parallel:**
 
-単一メッセージで複数Agent並列起動。edit mode のサブステップには `isolation: "worktree"` を自動付与。集約は `aggregate.priority` の先頭にマッチした結果を採用:
+Launch multiple Agents parallel in single message. edit-mode substeps auto-get `isolation: "worktree"`. Aggregate adopts first match from `aggregate.priority`:
 
 ```yaml
 aggregate:
   priority: [spec_issue, any_fail, all_pass]
 ```
 
-- `spec_issue`: いずれかの出力が spec_issue
-- `any_fail`: いずれかが fail
-- `all_pass`: 全員 pass
+- `spec_issue`: any output is spec_issue
+- `any_fail`: any fail
+- `all_pass`: all pass
 
-`aggregate` 未定義時のデフォルト priority: `[spec_issue, any_fail, all_pass]`。
+Default priority when `aggregate` undefined: `[spec_issue, any_fail, all_pass]`.
 
-worktree に変更が残る場合は親へマージ/チェリーピック統合。変更なしは自動クリーンアップ。
+If changes remain in worktree, merge/cherry-pick to parent. No changes: auto-cleanup.
 
 **provider: codex:**
 
-Bash toolで `codex` コマンド実行。未インストール時は error（rules.on:error に従う）。
+Run `codex` command w/ Bash tool. If uninstalled: error (follow rules.on:error).
 
 **ask_user: true:**
 
-needs_input 時に AskUserQuestion で質問、回答を追記して再実行。
+On needs_input, AskUserQuestion to ask, append answer & re-execute.
 
-### 4. 結果解析
+### 4. Parse result
 
-`GROOVE_RESULT: {値}` を検索。見つからない場合:
+Search for `GROOVE_RESULT: {value}`. If not found:
 
 - edit → `done`
 - readonly → `pass`
-- agent エラー/timeout → `error`
+- agent error/timeout → `error`
 
-### 5. 完了
+### 5. Complete
 
-- COMPLETE → 実行履歴表示。`--auto` なら `/git-push --pr` 実行 → PushNotification
-- ABORT → 失敗理由表示 → PushNotification
+- COMPLETE → display execution history. On `--auto`, run `/git-push --pr` → PushNotification
+- ABORT → display failure reason → PushNotification
 
-## 参考
+## References
 
-- スキーマ仕様・フィールド定義: `~/.groove/schema.md`
-- 利用可能ワークフロー一覧: `~/.groove/README.md`（または `/groove list`）
+- Schema spec & field definitions: `~/.groove/schema.md`
+- Available workflow list: `~/.groove/README.md` (or `/groove list`)

@@ -1,96 +1,96 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestion, mcp__serena__*
-description: Claude Codeアップデート対応 - 差分検出・自動適用・未採用機能トラッキング
+description: Claude Code update adaptation — detect diffs, auto-apply safe changes, track unimplemented features
 ---
 
 # /claude-update-fix
 
-CLIアップデートに合わせてリポジトリを能動的に追随させる。低リスク修正は即適用、未採用機能は継続追跡。
+Proactively align repo w/ CLI updates. Auto-apply low-risk fixes, track unimplemented features.
 
-## Phase 1: 差分検出
+## Phase 1: Diff detection
 
 ```bash
-claude --version                                      # 現行
-cat claude-code/VERSION                               # 確認済み
-cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null  # 未採用機能（前回蓄積）
+claude --version                                      # current
+cat claude-code/VERSION                               # last confirmed
+cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null  # unimplemented features (from prior)
 ```
 
-差分なし かつ Opportunity 未解決なし → 「最新確認済み」で終了。
-差分なし かつ Opportunity あり → Phase 3-B（再評価）のみ実行。
-差分あり → Phase 2 へ（Phase 3 で 3-B も再評価）。
+no diff + no unresolved opportunities → "already up to date" & exit.
+no diff + opportunities exist → Phase 3-B (re-evaluate) only.
+diff exists → proceed to Phase 2 (Phase 3 also re-evaluates 3-B).
 
-## Phase 2: CHANGELOG構造化抽出
+## Phase 2: CHANGELOG structured extraction
 
-取得（優先順）:
+Fetch (priority order):
 1. `WebFetch`: `https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md`
-2. `npm view @anthropic-ai/claude-code time` → バージョン↔日付マップ取得
-3. `WebSearch`: "claude code changelog {バージョン}"
+2. `npm view @anthropic-ai/claude-code time` → version ↔ date map
+3. `WebSearch`: "claude code changelog {version}"
 
-確認済み〜現行の区間を切り出し、各エントリを下表のいずれかにタグ付け（複数可）。
+Extract confirmed-to-current range, tag each entry (multi-tag OK):
 
-| タグ | キーワード（case-insensitive） | 後段アクション |
-|------|---------------------------|--------------|
+| Tag | Keywords (case-insensitive) | Next action |
+|-----|------------------------------|-------------|
 | `RENAME` | removed, renamed, deprecated | → 3-1 |
 | `HOOK` | hook, event, PreCompact, PostCompact, SessionStart | → 3-2 |
 | `SETTING` | setting, config, option, env var, permission | → 3-3 |
 | `MODEL` | model, claude-sonnet, claude-opus, claude-haiku | → 3-4 |
 | `TOOL` | tool, parameter, Task, Bash, Edit, EnterWorktree | → 3-5 |
-| `SKILL` | skill, frontmatter, description 文字数 | → 3-6 |
-| `COMMAND` | slash command, `/` 始まりの新コマンド名 | → 3-7 |
+| `SKILL` | skill, frontmatter, description char-limit | → 3-6 |
+| `COMMAND` | slash command, new `/` command names | → 3-7 |
 
-タグなし（UI/perf/bugfix等）→ 無視。
+no tag (UI/perf/bugfix etc) → ignore.
 
-## Phase 3: 拡張ポイントマップ（固定対応表）
+## Phase 3: Extension point map (fixed mapping table)
 
-各タグに対し**決定的な検出位置**で grep/read を実行。見つかれば修正案を生成。
+For each tag, run grep/read at **decisive detection points**. Generate fix suggestions if found.
 
-| タグ | 検査対象 | 検出方法 |
-|------|---------|---------|
-| 3-1 RENAME | `claude-code/agents/*.md`, `commands/*.md`, `skills/*/skill.md`, `CLAUDE.md`, `hooks/*.sh`, `templates/settings.json.template` | 旧名を grep、該当行を新名に置換 |
-| 3-2 HOOK | `claude-code/hooks/*.sh`, `templates/settings.json.template` の `hooks` セクション | 新イベント: 未登録なら雛形作成提案。I/O変更: 既存hookの入出力 schema を grep |
-| 3-3 SETTING | `claude-code/templates/settings.json.template`, `.claude/settings.json` | 新キー: テンプレに追加提案。非推奨: 削除提案 |
-| 3-4 MODEL | `claude-code/CLAUDE.md`, `agents/*.md` frontmatter, `skills/*/skill.md`, `scripts/**/*.{sh,py}` | 旧モデルID を grep、全置換 |
-| 3-5 TOOL | `claude-code/agents/*.md` の `allowed-tools:` / tool 一覧 | ツール名変更: 置換。新ツール: 該当エージェントで有用なら追記提案 |
-| 3-6 SKILL | `claude-code/skills/*/skill.md` frontmatter | description 長さ制約等の新ルール検証 |
-| 3-7 COMMAND | `claude-code/commands/*.md` のファイル名 vs built-in 新コマンド名 | ファイル名衝突: 接頭辞付与リネーム提案（`_custom` 等） |
+| Tag | Inspection target | Detection method |
+|-----|------------------|------------------|
+| 3-1 RENAME | `claude-code/agents/*.md`, `commands/*.md`, `skills/*/skill.md`, `CLAUDE.md`, `hooks/*.sh`, `templates/settings.json.template` | grep old name, replace w/ new name |
+| 3-2 HOOK | `claude-code/hooks/*.sh`, `hooks` section in `templates/settings.json.template` | new event: suggest template if unregistered. I/O change: grep existing hook schema |
+| 3-3 SETTING | `claude-code/templates/settings.json.template`, `.claude/settings.json` | new key: suggest add to template. deprecated: suggest remove |
+| 3-4 MODEL | `claude-code/CLAUDE.md`, `agents/*.md` frontmatter, `skills/*/skill.md`, `scripts/**/*.{sh,py}` | grep old model ID, replace all |
+| 3-5 TOOL | `allowed-tools:` and tool lists in `claude-code/agents/*.md` | tool rename: replace. new tool: suggest if useful for agent |
+| 3-6 SKILL | `claude-code/skills/*/skill.md` frontmatter | validate new rules (e.g. description length) |
+| 3-7 COMMAND | file names in `claude-code/commands/*.md` vs built-in new names | name collision: suggest rename w/ prefix (e.g. `_custom`) |
 
-### 3-B. Opportunity 再評価
+### 3-B. Opportunity re-evaluation
 
-前回の `CLAUDE-CODE-OPPORTUNITIES.md` 各項目について現状を再チェック。採用済み/陳腐化 → クローズ。未採用かつ有効 → 継続。
+Re-check each item in prior `CLAUDE-CODE-OPPORTUNITIES.md`. Adopted/stale → close. Unimplemented + valid → continue.
 
-## Phase 4: 適用（層別）
+## Phase 4: Application (by tier)
 
-重要度: **Critical**（衝突・破壊） > **Warning**（非推奨削除） > **Auto**（機械的置換） > **Opportunity**（新機能活用） > **Info**
+Priority: **Critical** (collision/breakage) > **Warning** (deprecated removal) > **Auto** (mechanical replace) > **Opportunity** (new feature) > **Info**
 
-| 層 | 対象 | 動作 |
-|----|------|------|
-| **自動適用** | Auto（モデル名ID 置換、deprecated option 削除、frontmatter キー順序正規化）+ VERSION bump | 確認なしで Edit 実行。本文表現・説明文の書き換えは対象外 |
-| **確認適用** | Critical + Warning | `AskUserQuestion` で 全適用 / 個別 / スキップ |
-| **追跡のみ** | Opportunity + Info | `references/CLAUDE-CODE-OPPORTUNITIES.md` に追記（実行はしない） |
+| Tier | Scope | Action |
+|------|-------|--------|
+| **Auto-apply** | Auto (model ID replace, deprecated option remove, frontmatter key order normalize) + VERSION bump | Edit w/o confirm. Skip prose/desc rewrites |
+| **Confirm-apply** | Critical + Warning | AskUserQuestion: apply all / individual / skip |
+| **Track only** | Opportunity + Info | append to `references/CLAUDE-CODE-OPPORTUNITIES.md` (no execution) |
 
-自動適用後、すべての変更を diff で出力してからユーザーに確認適用へ進む。
+After auto-apply, output all diffs then proceed to confirm-apply.
 
-## Phase 5: 終了処理（Phase 4 の確認適用完了後）
+## Phase 5: Cleanup (after Phase 4 confirm-apply)
 
-1. `claude-code/VERSION` を現行版に更新
-2. `./claude-code/sync.sh to-local --yes` 実行（このタイミングのみ）
-3. Opportunity 追跡ファイル更新（Phase 3-B の差分反映）
-4. 大きな変更（3+ファイル or 非自明判断）があれば Serena memory に `claude-update-YYYYMMDD` で保存
+1. Update `claude-code/VERSION` to current
+2. Run `./claude-code/sync.sh to-local --yes` (at this step only)
+3. Update opportunity file (reflect Phase 3-B diffs)
+4. If major changes (3+ files or non-obvious decisions), save to Serena memory as `claude-update-YYYYMMDD`
 
-## Opportunity 追跡フォーマット
+## Opportunity tracking format
 
 `claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md`:
 
 ```markdown
-## <version> (YYYY-MM-DD 検出)
-- [ ] **<機能名>**: <概要> — 検討箇所: <ファイル/エージェント>
+## <version> (YYYY-MM-DD detected)
+- [ ] **<feature name>**: <summary> — review at: <file/agent>
 ```
 
-- 採用時: チェック済みにしてコミットメッセージで参照
-- 陳腐化: `~~<機能名>~~ (obsolete YYYY-MM-DD)` で打ち消し
+- when adopted: check & reference in commit msg
+- when stale: strike out as `~~<feature name>~~ (obsolete YYYY-MM-DD)`
 
-## 注意
+## Notes
 
-- `claude doctor` は対話型で不可。`claude --version` を使用
-- CHANGELOG 取得失敗時: `claude --help` + npm view で最小限分析
-- 自動適用は**必ず** git 差分で確認可能な範囲に留める（sync.sh 実行は確認適用後）
+- `claude doctor` is interactive; use `claude --version` instead
+- if CHANGELOG fetch fails: minimal analysis w/ `claude --help` + npm view
+- auto-apply must remain git-diff-reviewable (do not run sync.sh until after confirm-apply)

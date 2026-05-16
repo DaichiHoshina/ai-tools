@@ -1,61 +1,57 @@
 ---
 allowed-tools: Read, mcp__serena__*
-description: CLAUDE.mdを再読み込みしてcompaction後のコンテキストを復元
+description: Restore context - reload CLAUDE.md after compaction to restore session context
 effort: low
 ---
 
-# /reload - コンテキスト復元
+# /reload - Context Restore
 
-compaction（会話の圧縮）後や「続き」と言いたい場面で使用。
-CLAUDE.md + Serena memoryの両方からコンテキストを復元する。
+Use after compaction (conversation compression) or when saying "continue". Restore context from both CLAUDE.md + Serena memory.
 
-> **自動化**: `/compact` 実行時は `post-compact-reload.sh`（SessionStart compact hook）が
-> 自動でこの復元処理を実行する。手動での `/reload` は不要。
-> 手動実行は compaction以外でコンテキストを再読み込みしたい場合に使用。
+> **Automation**: `/compact` execution auto-runs `post-compact-reload.sh` (SessionStart compact hook) to execute this restore. Manual `/reload` only needed outside compaction.
 
-**session-start.shとの違い**: session-startはセッション開始時にSerena状態チェックと
-memory読み込みを自動実行する。`/reload`はcompaction後の**再復元**専用。
+**vs session-start.sh**: session-start runs auto at session start with Serena state check + memory load. `/reload` is **post-compaction re-restore** only.
 
-## 使い方
+## Usage
 
 ```bash
 /reload
 ```
 
-## タスク実行
+## Task Execution
 
-以下の手順を**すべて自動で**実行してください：
+Execute all steps below **automatically**:
 
-### 1. CLAUDE.md読み込み
+### 1. Load CLAUDE.md
 
-`$HOME/.claude/CLAUDE.md` を読み込み、指示を理解する。
+Read `$HOME/.claude/CLAUDE.md`, understand instructions.
 
-### 2. Serena memory復元（重要）
+### 2. Restore Serena Memory (critical)
 
 ```
 mcp__serena__list_memories
-→ 1. compact-restore-* メモリを最新のもの1つ読み込む（最優先）
-→ 2. work-context-* メモリで当日分があれば読み込む
-→ 3. プロジェクト固有メモリ（あれば読み込む）
-→ 4. 読み込んだcompact-restore-*は内容確認後に削除（蓄積防止）
+→ 1. load latest 1 compact-restore-* memory (top priority)
+→ 2. if today has work-context-*, load it
+→ 3. load project-specific memory (if exists)
+→ 4. after review, delete loaded compact-restore-* (prevent accumulation)
 ```
 
-### 3. プロジェクトCLAUDE.md読み込み
+### 3. Load Project CLAUDE.md
 
-カレントディレクトリに `CLAUDE.md` または `.claude/rules/` があれば読み込む。
+If cwd has `CLAUDE.md` or `.claude/rules/`, load it.
 
-### 4. 状態復元サマリー
+### 4. Restore Summary
 
-復元した情報を簡潔に報告：
-- 読み込んだmemoryの一覧
-- 前回のタスク状態（compact-restoreから）
-- 次にやるべきこと
+Report restored info concisely:
+- list of loaded memories
+- previous task state (from compact-restore)
+- what to do next
 
-## 「続き」の代替
+## "Continue" Alternative
 
-ユーザーが「続き」と入力する代わりに `/reload` を使うことで：
-- compaction後のコンテキスト消失を防げる
-- Serena memoryから作業状態を完全復元
-- 前回の作業を中断なく再開可能
+Instead of saying "continue", use `/reload` to:
+- prevent post-compaction context loss
+- fully restore work state from Serena memory
+- resume prior work uninterrupted
 
 ARGUMENTS: $ARGUMENTS

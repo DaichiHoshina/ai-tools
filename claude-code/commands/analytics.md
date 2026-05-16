@@ -1,38 +1,38 @@
 ---
-description: Claude Code利用状況を分析してインサイトを提示（--ui でダッシュボード起動）
+description: Analyze Claude Code usage & present insights (--ui launches dashboard)
 ---
 
-# /analytics - Claude Code 利用状況分析
+# /analytics - Claude Code usage analysis
 
-利用状況を分析し、改善提案を行う。CLI（テキスト）と UI（ブラウザ）の2モード。
+Analyze usage patterns, auto-generate improvement suggestions. Two modes: CLI (text) + UI (browser).
 
-## 実行モード
+## Execution modes
 
-| モード | 起動方法 | 用途 |
-|------|---------|------|
-| CLI（デフォルト） | `/analytics` | テキスト解説・改善提案・bot会話用 |
-| UI | `/analytics --ui` | ブラウザで対話的に深掘り |
+| Mode | Launch | Use |
+|------|--------|-----|
+| CLI (default) | `/analytics` | Text summary, suggestions, bot-friendly |
+| UI | `/analytics --ui` | Interactive browser dashboard |
 
-## CLI モード
+## CLI mode
 
 ```bash
 python3 "$HOME/ai-tools/claude-code/scripts/analytics-report.py" --mode full
 ```
 
-出力された Markdown をユーザーに解説・補足しながら伝える。「提案」セクションは普段の使い方を踏まえてコメントする。
+Output markdown with contextual commentary. "Suggestions" section customized to actual workflow.
 
-### 続けて依存セキュリティ監査
+### Auto-follow: dependency audit
 
-analytics 解説後、`/audit --severity high` を続けて実行（依存パッケージ CVE 監査）。CLI モードのみ、UI モードでは実行しない。Critical/High 検出時のみ詳細を提示、0件なら1行で「audit クリア」と報告。
+After analytics summary, run `/audit --severity high` (scan package CVEs). CLI mode only; UI mode skips audit. Show detail only if Critical/High detected; else report "audit clear" in one line.
 
-## UI モード
+## UI mode
 
 ```bash
 bash claude-code/scripts/dashboard.sh
 ```
 
-`~/.claude/analytics/analytics.db` 不在時はバックフィルスクリプトを実行、`http://localhost:8765` で起動、ブラウザを自動オープン。
+On first run: backfill `~/.claude/analytics/analytics.db`, launch `http://localhost:8765`, auto-open browser.
 
-## 関連
+## Related
 
-- `/retrospective` 振り返り・改善案生成（セッション履歴 + Serena memory 分析）
+- `/retrospective` — session review + memory-based improvement suggestions

@@ -1,124 +1,124 @@
 ---
 allowed-tools: Bash, Read, Glob, Grep, AskUserQuestion
-description: ローカル動作確認→スクショ撮影→PRコメント投稿
+description: Local verification + screenshot → PR comment
 ---
 
-# /test-local - ローカル動作確認 & PR添付
+# /test-local - Local Verification & PR Attach
 
-変更をローカルで確認し、テスト結果とスクショをPRに添付する。
+Confirm changes locally, capture screenshot, attach results to PR.
 
-## Step 1: PR確認
+## Step 1: PR Confirm
 
 ```bash
 gh pr view --json number,title,url
 ```
 
-PRがなければ作成を提案してから続行。
+If no PR, offer to create.
 
-## Step 2: lint-test実行（`--with-test` 指定時のみ）
+## Step 2: Run lint-test (only if `--with-test`)
 
-引数に `--with-test` がある場合のみ `/lint-test` を実行し結果を記録。省略時はスキップ。
+If arg has `--with-test`, execute `/lint-test` and record results. Otherwise skip.
 
-## Step 2.5: テストデータ確認・作成
+## Step 2.5: Test Data Confirm/Create
 
-スクショ前にページが意味ある状態か確認。AskUserQuestionで:
-- 「テストデータは必要ですか？（自動作成 / 手動で用意済み / スキップ）」
+Before screenshot, verify page in meaningful state. AskUserQuestion:
+- "Need test data? (auto-create / manual ready / skip)"
 
-自動作成を選んだ場合、プロジェクトのseed/fixture方法を検出して実行:
+If auto-create selected, detect & run seed method:
 
-| 検出条件 | 実行コマンド |
-|---------|-------------|
+| Detect | Command |
+|--------|---------|
 | `db/seeds.rb` or `seeds/` | `rails db:seed` or `bundle exec rails db:seed` |
 | `prisma/seed.ts` | `npx prisma db seed` |
-| `scripts/seed.*` | そのスクリプトを実行 |
-| `Makefile` に `seed` target | `make seed` |
-| 上記なし | AskUserQuestion「seedコマンドを教えてください」 |
+| `scripts/seed.*` | execute it |
+| `Makefile` seed target | `make seed` |
+| none | AskUserQuestion "what's the seed command?" |
 
-seed実行後、指定URLにアクセスしてデータが表示されているか確認してからスクショへ進む。
+After seed, visit URL to verify data shown, then screenshot.
 
-## Step 3: スクショ撮影（Playwright）
+## Step 3: Screenshot (Playwright)
 
-AskUserQuestionで確認:
-- 「スクショを撮るURLを教えてください（例: http://localhost:3000/items）」
+AskUserQuestion:
+- "Screenshot URL? (e.g. http://localhost:3000/items)"
 
 ```bash
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 SCREENSHOT=/tmp/test-local-${TIMESTAMP}.png
-URL="<入力されたURL>"
+URL="<input>"
 
-# Playwright CLIでスクショ撮影
+# Playwright CLI screenshot
 npx playwright screenshot "${URL}" "${SCREENSHOT}" --full-page
 
-# クリップボードにコピー（macOS）
+# copy to clipboard (macOS)
 osascript -e "set the clipboard to (read (POSIX file \"${SCREENSHOT}\") as JPEG picture)"
 ```
 
-Playwrightが未インストールの場合:
+If Playwright missing:
 ```bash
 npm install -D @playwright/test && npx playwright install chromium
 ```
 
-`--fullscreen` 指定時は `--full-page` を付与（デフォルト）。
-`--viewport WxH` でビューポート指定（例: `--viewport 375x812` でモバイル）。
+`--fullscreen` → add `--full-page` (default).
+`--viewport WxH` specify (e.g. `--viewport 375x812` mobile).
 
-## Step 4: PRコメント投稿
+## Step 4: PR Comment
 
-テスト結果をテキストでPRコメントに投稿。**`~/.claude/rules/ai-output.md` の PREP 3 点 + PRINCIPLES.md の「書く前の 4 問」+「出力前セルフチェック 6 項目」通過必須**。テスト出力が長い場合は `<details>` 折りたたみ。
+Post test results as comment. **Must pass `~/.claude/rules/ai-output.md` PREP 3-point + `PRINCIPLES.md` "4 pre-write questions" + "6 pre-output checks"**. If lengthy, use `<details>` fold.
 
 ```bash
 gh pr comment --body "$(cat <<'BODY'
-## 結論
-ローカル動作確認 ✅ / 致命傷なし → レビュー継続可
+## Conclusion
+local verification ✅ / no blockers → review continue
 
-## 理由
-{lint-test の主要結果を 1-2 行サマリ。具体的な数字 or 件数で}
+## Reasoning
+{1-2 line lint-test summary. concrete numbers or counts}
 
-## 次アクション
-{レビュワー確認事項 or 残課題。なければ「特になし」}
+## Next
+{reviewer todo or none. if none: "none"}
 
 <details>
-<summary>テスト出力詳細</summary>
+<summary>test output detail</summary>
 
 \`\`\`
-{lint-test の全出力}
+{full lint-test output}
 \`\`\`
 </details>
 
-### スクショ
-<!-- クリップボードからペースト、またはファイルをドラッグ＆ドロップ -->
+### screenshot
+<!-- paste from clipboard or drag-drop file -->
 BODY
 )"
 ```
 
-## Step 5: スクショ添付案内
+## Step 5: Screenshot Location Guide
 
-スクショを撮った場合、以下を案内:
+Show:
 
 ```
-📸 スクショ保存先: /tmp/local-test-{timestamp}.png
-📋 クリップボードにもコピー済み
+📸 saved: /tmp/local-test-{timestamp}.png
+📋 copied to clipboard
 
-→ gh pr view --web でPRを開き、コメントにペーストしてください
+→ gh pr view --web, paste in comment
 ```
 
-自動でブラウザを開く:
+Auto-open browser:
 ```bash
 gh pr view --web
 ```
 
-## オプション
+## Options
 
-| 引数 | 動作 |
-|------|------|
-| (なし) | URL指定→Playwrightスクショ→PRコメント |
-| `--with-test` | lint-test も実行してから添付 |
-| `--no-screenshot` | スクショスキップ |
-| `--viewport 375x812` | モバイルサイズでスクショ |
+| Arg | Behavior |
+|-----|----------|
+| (none) | URL specify→Playwright screenshot→PR comment |
+| `--with-test` | also run lint-test → attach |
+| `--no-screenshot` | skip screenshot |
+| `--viewport 375x812` | mobile size screenshot |
 
-## 注意
+## Notes
 
-- スクショのGitHub自動アップロードは非対応（CLI制限）
-- `gh pr view --web` で開いてペーストが最速
-- `ARGUMENTS` にPR番号指定で特定PRに添付: `gh pr comment {番号}`
+- GitHub auto-upload screenshot: not supported (CLI limit)
+- `gh pr view --web` + manual paste = fastest
+- `ARGUMENTS` with PR number: `gh pr comment {num}`
 
 ARGUMENTS: $ARGUMENTS

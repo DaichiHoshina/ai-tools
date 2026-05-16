@@ -1,36 +1,36 @@
 ---
 allowed-tools: Bash, Read, AskUserQuestion, mcp__serena__*
-description: Serenaデータとメモリーを最新化・整理
+description: Refresh Serena data and memory - update symbol DB and organize
 ---
 
 ## /serena-refresh
 
-大規模変更後に serena のシンボルデータベースとメモリーを最新化。
+Update serena symbol database and memory after large changes.
 
-## 使用タイミング
+## When to Use
 
-- 大規模リファクタリング後
-- 多数のファイル追加・削除後
-- シンボル検索で期待結果が得られない場合
-- 古いメモリーを整理したい場合
+- large refactoring completed
+- many files added/deleted
+- symbol search not returning expected results
+- want to organize old memory
 
-## フロー
+## Flow
 
-1. **状態確認** - `pwd`, `ls -la .serena`
-2. **再アクティベート** - `mcp__serena__activate_project(project=".")`
-3. **オンボーディング確認** - 未実施なら実行
-4. **シンボル更新** - 主要ファイルで `get_symbols_overview` 実行
-5. **メモリー整理**
-   - 一覧取得 → 内容確認 → 不要なもの特定
-   - **ユーザー確認後に削除**（勝手に削除しない）
-   - 関連メモリーの統合提案
-6. **完了報告**
+1. **Check state** - `pwd`, `ls -la .serena`
+2. **Re-activate** - `mcp__serena__activate_project(project=".")`
+3. **Confirm onboarding** - run if not done
+4. **Update symbols** - run `get_symbols_overview` on main files
+5. **Organize memory**
+   - list all → review content → identify unused
+   - **ask user before deleting** (don't delete unilaterally)
+   - propose memory consolidation
+6. **Report done**
 
-## メモリー整理基準
+## Memory Cleanup Criteria
 
-- タスク完了済みで不要
-- 重複情報
-- 古くなった情報
-- 統合可能なもの
+- completed task, now obsolete
+- duplicate info
+- outdated info
+- consolidatable content
 
-**コードファイルは変更しない。.serena のデータベースとメモリーのみ更新。**
+**Don't modify code files. Update only .serena database and memory.**

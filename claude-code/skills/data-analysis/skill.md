@@ -1,6 +1,6 @@
 ---
 name: data-analysis
-description: データ分析（BigQuery/PostgreSQL/MySQL/SQLite/CSV）。SQL不要、データ分析時に使用
+description: Data analysis (BigQuery/PostgreSQL/MySQL/SQLite/CSV). SQL-free querying for data exploration.
 requires-guidelines:
   - common
 hooks:
@@ -8,108 +8,108 @@ hooks:
     command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
-# data-analysis - データ分析
+# data-analysis
 
-**目標**: 「6ヶ月以上SQLを1行も書いていない」を実現
+**Goal**: "6 months without writing a single SQL line"
 
-## 対応データソース
+## Supported Data Sources
 
-| データソース | CLI/接続方法 | 認証 |
-|------------|-------------|------|
+| Source | CLI/Connection | Auth |
+|--------|----------------|------|
 | BigQuery | `bq` CLI | gcloud auth |
-| PostgreSQL | `psql` | 接続文字列/環境変数 |
-| MySQL | `mysql` CLI | 接続文字列/my.cnf |
-| SQLite | `sqlite3` | ファイルパス |
-| CSV/JSON | `python pandas` | ローカルファイル |
+| PostgreSQL | `psql` | connection string / env var |
+| MySQL | `mysql` CLI | connection string / my.cnf |
+| SQLite | `sqlite3` | file path |
+| CSV/JSON | `python pandas` | local file |
 
-## 基本フロー
-
-```
-自然言語質問 → データソース特定 → SQL生成 → 実行前確認 → クエリ実行 → 結果整形 → 可視化提案
-```
-
-### ステップ例
-
-1. **質問受付**: 「過去30日間の売上トップ10商品を教えて」
-2. **SQL自動生成**: 対象テーブル推定 → SELECT/GROUP BY/ORDER BY/LIMIT 組み立て
-3. **実行確認**: データソース・推定実行時間・スキャンサイズ・読み取り専用確認 → `[Y/n]`
-4. **結果整形**: テーブル表示 + 可視化提案（棒グラフ/円グラフ/トレンドライン）
-
-## セキュリティ
-
-### Critical（絶対禁止）
-
-| 違反 | 対応 |
-|------|------|
-| 書き込みクエリ（UPDATE/DELETE/DROP） | 実行拒否、`SET TRANSACTION READ ONLY`を強制 |
-| 機密データ平文表示（password/クレカ） | マスク処理（`'***masked***'`、`RIGHT(card, 4)`） |
-| パスワードを環境変数に直接設定 | 1Password CLI / Secrets Manager を使用 |
-
-### Warning（要確認）
-
-| 状況 | 対応 |
-|------|------|
-| 全テーブルスキャン | インデックス活用（`WHERE created_at >= '2024-01-01'`） |
-| BigQuery大量スキャン | パーティション指定（`WHERE _PARTITIONTIME >= TIMESTAMP(...)`） |
-
-## 出力形式
-
-通常ケース:
+## Workflow
 
 ```
-データソース: {DB種別} ({接続先})
-推定スキャン: {サイズ/行数}
-推定コスト: {BigQuery の場合}
+Natural language → Data source detection → SQL generation → pre-exec confirm → query run → result format → viz suggestion
+```
 
-生成SQL:
-{整形されたSQL}
+### Example flow
 
-実行しますか? [Y/n]
+1. **Input**: "Show top 10 products by revenue for past 30 days"
+2. **Auto SQL**: Infer table → build SELECT/GROUP BY/ORDER BY/LIMIT
+3. **Confirm**: Data source, ETA, scan size, read-only check → `[Y/n]`
+4. **Output**: Formatted table + viz suggestions (bar/pie/trend)
+
+## Security
+
+### Critical (Forbidden)
+
+| Violation | Action |
+|-----------|--------|
+| Write queries (UPDATE/DELETE/DROP) | Reject, enforce `SET TRANSACTION READ ONLY` |
+| Sensitive data in plaintext (password/card) | Mask with `'***masked***'`, `RIGHT(card, 4)` |
+| Password in env var | Use 1Password CLI / Secrets Manager |
+
+### Warning (Confirm)
+
+| Case | Action |
+|------|--------|
+| Full table scan | Use indices (`WHERE created_at >= '2024-01-01'`) |
+| Large BigQuery scan | Partition: `WHERE _PARTITIONTIME >= TIMESTAMP(...)` |
+
+## Output Format
+
+Normal case:
+
+```
+Data source: {DB type} ({connection})
+Scan estimate: {size / rows}
+Cost estimate: {BigQuery if applicable}
+
+Generated SQL:
+{formatted SQL}
+
+Execute? [Y/n]
 
 ---
 
-結果:
-{テーブル形式}
+Result:
+{table format}
 
-可視化提案:
-  - {グラフ種別1}: {用途}
-  - {グラフ種別2}: {用途}
+Viz suggestions:
+  - {graph type 1}: {use case}
+  - {graph type 2}: {use case}
 ```
 
-結果ゼロ件:
+Zero rows:
 
 ```
-データソース: {DB種別}
-生成SQL: ...
-結果: 0行
+Data source: {DB type}
+SQL: ...
+Result: 0 rows
 
-> [WARN] 該当データなし
-推定原因: 期間条件 / フィルタ条件 / テーブル名 のいずれかが不一致
-次アクション提案: WHERE 条件緩和 / テーブル一覧確認 (`\dt` / `bq ls`)
+> [WARN] No data matched
+Possible cause: date range / filter / table name mismatch
+Next steps: relax WHERE clause / check table list (`\dt` / `bq ls`)
 ```
 
-接続失敗・実行エラー:
+Connection/exec error:
 
 ```
-> [ERROR] 接続失敗 / クエリ実行エラー
-データソース: {DB種別}
-エラー種別: {認証 / ネットワーク / 構文 / 権限}
-原因: {詳細}
-次アクション:
-  - 認証: gcloud auth login / 接続文字列確認
-  - 権限: 読み取り権限の付与依頼
-  - 構文: 生成 SQL 修正案を提示
+> [ERROR] Connection failed / Query error
+Data source: {DB type}
+Error type: {auth / network / syntax / permission}
+Details: {reason}
+Next steps:
+  - Auth: gcloud auth login / verify connection string
+  - Permission: request read access
+  - Syntax: provide corrected SQL
 ```
 
-## 外部知識ベース
+## Reference
 
-最新のSQL構文・関数確認には context7 を活用:
-- BigQuery 公式ドキュメント
-- PostgreSQL 公式ドキュメント
-- pandas API リファレンス
+For latest SQL syntax and function checks, use context7:
+- BigQuery official docs
+- PostgreSQL official docs
+- pandas API reference
 
-## 関連スキル
+## Related skills
 
-- **context7**: 最新ドキュメント参照
-- **security-error-review**: クエリのセキュリティレビュー
-- **docs-test-review**: データ分析スクリプトのドキュメント
+- **context7**: latest docs reference
+- **security-error-review**: query security review
+- **docs-test-review**: data analysis script documentation

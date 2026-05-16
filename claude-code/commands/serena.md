@@ -1,30 +1,30 @@
 ---
 allowed-tools: Read, Glob, Grep, mcp__serena__*
-description: 旧コマンド。/dev または /diagnose を使用（Serena MCP は両者で利用可能）
+description: Legacy command. Use /dev or /diagnose (Serena MCP available in both)
 ---
 
-# /serena（deprecated）
+# /serena (deprecated)
 
-このコマンドは廃止予定。後続コマンドへの最小リダイレクト。
+Legacy command, redirect to newer.
 
-**削除予定**: 後方互換のためファイル自体は残す（`feedback_command_deletion.md` 規則）。新規ドキュメントから本コマンドへの誘導禁止、参照は全て `/dev` `/diagnose` `/refactor` `/plan` に置換済み（`docs/commands-quickref.md` `claude-code/COMMANDS-GUIDE.md` 等）。
+**Phase out**: keep file for backwards compat (`feedback_command_deletion.md` rule). No new doc links to this command. All refs replaced with `/dev` `/diagnose` `/refactor` `/plan` (see `docs/commands-quickref.md` `claude-code/COMMANDS-GUIDE.md`).
 
-> ユーザーが `/serena` を起動した場合、Claude は下記移行表に従って引数（`-q`/`-d`/`-c`/`-s`/`-r`/`--lang`）を変換し、対応する新コマンドを自動実行する。表にない引数は最も近い意図のコマンドを推定して呼ぶ。
+> When user runs `/serena`, Claude converts args (`-q`/`-d`/`-c`/`-s`/`-r`/`--lang`) per table below and auto-exec new command. Args not in table → infer closest intent.
 
-## 移行先
+## Migration Paths
 
-| 旧オプション | 新コマンド |
+| Old Option | New Command |
 |------------|---------|
 | `/serena "..." -q` | `/dev --quick "..."` |
-| `/serena "..." -d` | `/diagnose "..."` または `/refactor "..."`（深い分析） |
-| `/serena "..." -c` | `/dev "..."`（コード操作はデフォルトで Serena MCP 経由） |
-| `/serena "..." -s` | `/plan "..."` → `/dev "..."`（Phase 分割） |
-| `/serena "..." -r` | `/dev "..." --research`（Context7 連携） |
-| `/serena "..." --lang=go` | `/dev "..." --lang=go`（言語ガイドライン自動読込） |
-| `/serena オンボーディング` | `Skill(load-guidelines)` + `mcp__serena__list_memories` |
+| `/serena "..." -d` | `/diagnose "..."` or `/refactor "..."` (deep analysis) |
+| `/serena "..." -c` | `/dev "..."` (code ops default use Serena MCP) |
+| `/serena "..." -s` | `/plan "..."` → `/dev "..."` (phase split) |
+| `/serena "..." -r` | `/dev "..." --research` (Context7 integration) |
+| `/serena "..." --lang=go` | `/dev "..." --lang=go` (auto-load language guideline) |
+| `/serena onboarding` | `Skill(load-guidelines)` + `mcp__serena__list_memories` |
 
-## なぜ廃止か
+## Why Deprecated
 
-Serena MCP は `/dev` `/diagnose` `/refactor` `/plan` `/explore` の **全実装系コマンドで既定利用**。`/serena` 独自の付加価値はオンボーディング memory 連携のみだったが、これは `Skill(load-guidelines)` で代替可能。
+Serena MCP is default in `/dev` `/diagnose` `/refactor` `/plan` `/explore`. `/serena` only unique thing: onboarding memory bridge, now done via `Skill(load-guidelines)`.
 
 ARGUMENTS: $ARGUMENTS

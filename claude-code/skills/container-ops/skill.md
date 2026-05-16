@@ -1,101 +1,101 @@
 ---
 name: container-ops
-description: コンテナ運用（Docker/Kubernetes/Podman）。プラットフォームを自動検出、コンテナ運用時に使用
+description: Container operations (Docker/Kubernetes/Podman). Auto-detect platform. Use when operating containers.
 requires-guidelines:
-  - kubernetes  # platform=kubernetes の場合
+  - kubernetes  # if platform=kubernetes
   - common
 parameters:
   platform:
     type: enum
     values: [auto, docker, kubernetes, podman]
     default: auto
-    description: コンテナプラットフォーム（auto=変更ファイル/エラーから自動検出）
+    description: Container platform (auto = detect from changed files/errors)
   mode:
     type: enum
     values: [auto, troubleshoot, best-practices, deploy]
     default: auto
-    description: 実行モード
+    description: Execution mode
 ---
 
-# container-ops - コンテナ運用
+# container-ops - Container Operations
 
-Docker/Kubernetes/Podman対応のコンテナ運用スキル。`--platform`と`--mode`で指定（デフォルト: エラーメッセージや変更ファイルから自動検出）。
+Docker/Kubernetes/Podman-compatible. Specify `--platform` & `--mode` (default: auto-detect from changed files/errors).
 
-## platform 自動検出 (platform=auto)
+## Platform Auto-Detection (platform=auto)
 
-| 状況 | 動作 |
+| Situation | Action |
 |------|------|
-| エラーメッセージに `kubectl` / `pod` 出現 | kubernetes |
-| エラーメッセージに `docker` / `Dockerfile` 出現 | docker |
-| `Dockerfile` / `docker-compose.yml` のみ存在 | docker |
-| `*.yaml` (k8s manifest) 存在 | kubernetes |
-| 複数該当 | 変更ファイル数多い側を選択、両プラットフォームの ベストプラクティスを並列表示 |
-| 検出ゼロ件 | ユーザーに `--platform` 明示要求して停止 |
+| Error msg has `kubectl` / `pod` | kubernetes |
+| Error msg has `docker` / `Dockerfile` | docker |
+| Only `Dockerfile` / `docker-compose.yml` | docker |
+| `*.yaml` (k8s manifest) present | kubernetes |
+| Multiple match | Choose by file count, show both platform BP side-by-side |
+| Zero match | Request explicit `--platform`, stop |
 
-## mode 自動検出 (mode=auto)
+## Mode Auto-Detection (mode=auto)
 
-| 入力に含まれるシグナル | mode |
+| Signal in Input | Mode |
 |------|------|
-| エラー / クラッシュ / 失敗 | troubleshoot |
-| 設計 / 構成 / レビュー | best-practices |
-| デプロイ / リリース | deploy |
-| 不明 | best-practices（デフォルト） |
+| Error / crash / failure | troubleshoot |
+| Design / config / review | best-practices |
+| Deploy / release | deploy |
+| Unclear | best-practices (default) |
 
-## Docker - トラブルシューティング
+## Docker - Troubleshooting
 
-| 問題 | 診断コマンド | 対策 |
+| Issue | Diagnostic | Fix |
 |------|------------|------|
-| Daemon接続エラー | `docker version`, `docker context ls` | Docker Desktop起動確認。Lima: `limactl start` |
-| コンテナ起動失敗 | `docker logs <id>`, `docker inspect <id>` | ログからエラー原因特定 |
-| ポートバインドエラー | `lsof -i :<port>` | 別ポート使用 or 競合プロセス停止 |
+| Daemon connect error | `docker version`, `docker context ls` | Confirm Docker Desktop running. Lima: `limactl start` |
+| Container startup fail | `docker logs <id>`, `docker inspect <id>` | Identify error from logs |
+| Port bind error | `lsof -i :<port>` | Use different port or stop conflicting process |
 
-## Docker - ベストプラクティス
+## Docker - Best Practices
 
-| 重要度 | ルール |
+| Priority | Rule |
 |--------|--------|
-| Critical | マルチステージビルド（builder→alpine/distroless） |
-| Critical | 非rootユーザーで実行（`USER appuser`） |
-| Critical | レイヤーキャッシュ最適化（`package*.json` → `npm install` → `COPY .`） |
-| Critical | `.dockerignore`必須（.git, node_modules, .env*等） |
-| Critical | Distrolessベースイメージ推奨（`gcr.io/distroless/static:nonroot`） |
-| Warning | 脆弱性スキャン実施（`docker scout cves` or `trivy image`） |
-| Warning | Hadolint使用（`hadolint Dockerfile`） |
+| Critical | Multi-stage build (builder→alpine/distroless) |
+| Critical | Non-root user (`USER appuser`) |
+| Critical | Layer cache optimization (`package*.json` → `npm install` → `COPY .`) |
+| Critical | `.dockerignore` required (.git, node_modules, .env* etc) |
+| Critical | Distroless base recommended (`gcr.io/distroless/static:nonroot`) |
+| Warning | Vulnerability scan (`docker scout cves` or `trivy image`) |
+| Warning | Hadolint (`hadolint Dockerfile`) |
 
-## Kubernetes - トラブルシューティング
+## Kubernetes - Troubleshooting
 
-| 問題 | 診断コマンド | 主な原因 |
+| Issue | Diagnostic | Main Cause |
 |------|------------|---------|
-| CrashLoopBackOff | `kubectl logs <pod> --previous`, `kubectl describe pod <pod>` | アプリクラッシュ、設定ミス、OOMKilled |
-| ImagePullBackOff | `kubectl describe pod <pod>`, `kubectl get secret` | イメージ名/タグ誤り、認証設定不足 |
-| Pending | `kubectl describe nodes`, `kubectl get events` | リソース不足、PV未作成、NodeSelector不一致 |
+| CrashLoopBackOff | `kubectl logs <pod> --previous`, `kubectl describe pod <pod>` | App crash, config error, OOMKilled |
+| ImagePullBackOff | `kubectl describe pod <pod>`, `kubectl get secret` | Image name/tag error, auth config missing |
+| Pending | `kubectl describe nodes`, `kubectl get events` | Resource shortage, PV missing, NodeSelector mismatch |
 
-## Kubernetes - ベストプラクティス
+## Kubernetes - Best Practices
 
-| 重要度 | ルール |
+| Priority | Rule |
 |--------|--------|
-| Critical | リソース制限必須（`resources.requests` + `resources.limits`） |
-| Critical | Liveness/Readiness Probe設定（`/healthz`, `/ready`） |
-| Critical | セキュリティコンテキスト（`runAsNonRoot: true`, `readOnlyRootFilesystem: true`） |
-| Warning | PodDisruptionBudget設定（本番環境） |
+| Critical | Resource limits required (`resources.requests` + `resources.limits`) |
+| Critical | Liveness/Readiness Probes (`/healthz`, `/ready`) |
+| Critical | Security context (`runAsNonRoot: true`, `readOnlyRootFilesystem: true`) |
+| Warning | PodDisruptionBudget (prod) |
 
 ## Podman
 
-Dockerデーモン不要（rootless）。コマンドは`docker` → `podman`に置き換え。`docker-compose` → `podman-compose`。
+No daemon required (rootless). Replace `docker` → `podman`, `docker-compose` → `podman-compose`.
 
-## チェックリスト
+## Checklist
 
 ### Docker
-- [ ] マルチステージビルド使用
-- [ ] 非rootユーザーで実行
-- [ ] レイヤーキャッシュ最適化
-- [ ] .dockerignore作成
+- [ ] Multi-stage build used
+- [ ] Non-root user
+- [ ] Layer cache optimized
+- [ ] .dockerignore created
 
 ### Kubernetes
-- [ ] リソース制限設定
-- [ ] Liveness/Readiness Probe設定
-- [ ] セキュリティコンテキスト設定
+- [ ] Resource limits set
+- [ ] Liveness/Readiness Probes set
+- [ ] Security context set
 
-## 外部リソース
+## External Resources
 
-- **Context7**: Docker/Kubernetes公式ドキュメント
-- **Serena memory**: プロジェクト固有のデプロイ設定
+- **Context7**: Docker/Kubernetes official docs
+- **Serena memory**: Project-specific deploy config

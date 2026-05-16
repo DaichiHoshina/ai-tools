@@ -1,109 +1,109 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Skill, AskUserQuestion, mcp__serena__*, mcp__context7__*
-description: レビュー→修正→regression check→プッシュを1コマンドで実行。/review + /dev 全修正 + 再レビュー + /git-push --pr。
+description: Review→fix→regression check→push in 1 command. /review + /dev all fixes + re-review + /git-push --pr
 ---
 
-## /review-fix-push - レビュー・修正・regression・プッシュ
+## /review-fix-push - Review, Fix, Regression, Push
 
-レビューで見つけた問題を修正→**再レビューで regression なし確認**→push→PR作成。修正で新たな Critical を作らない保証付き。
+Find issues via review → fix → **verify no regression via re-review** → push → create PR. Fix doesn't introduce new Critical issues.
 
-## フロー
+## Flow
 
-### Step 1: 初回レビュー
+### Step 1: Initial Review
 
 ```text
 Skill("comprehensive-review")
 ```
 
-11観点 + 信頼度80フィルタ。Critical/Warning 別に分類。完了後 difit でブラウザ表示（`--no-difit` で抑制）。
+11 angles + confidence-80 filter. Categorize by Critical/Warning. On finish, show diff in browser (`--no-difit` suppresses).
 
-### Step 2: 判断
+### Step 2: Decide
 
-| 状態 | 動作 |
+| State | Behavior |
 |------|------|
-| Critical 0件 & Warning 0件 | Step 5 へ（push のみ） |
-| 指摘あり | Step 3 へ |
+| Critical 0 & Warning 0 | skip to Step 5 (push only) |
+| any findings | proceed to Step 3 |
 
-### Step 3: 修正
+### Step 3: Fix
 
-| 種別 | 方針 |
+| Type | Policy |
 |------|------|
-| Critical | 全件修正（必須） |
-| Warning | 全件修正（`--critical-only` 指定時はスキップ） |
+| Critical | fix all (required) |
+| Warning | fix all (`--critical-only` skips) |
 
-`/dev` 同等（ガイドライン読込・静的解析確認含む）。
+Equivalent to `/dev` (include guideline load, static analysis).
 
-### Step 4: regression check（ループ）
+### Step 4: Regression Check (loop)
 
-修正で新規問題を作っていないか **再レビュー**。
+Verify fix didn't create new issues **via re-review**.
 
 ```text
 loop iteration = 1..max_iterations:
-    Skill("comprehensive-review") on (修正後 diff)
-    if 新規 Critical 0件:
-        if 既存 Warning ≤ 初回の件数:
-            break  # 収束、Step 5 へ
+    Skill("comprehensive-review") on (post-fix diff)
+    if 0 new Critical:
+        if existing Warning ≤ initial count:
+            break  # converged, go Step 5
         else:
-            warn ユーザー、Step 5 へ（無限修正回避）
+            warn user, go Step 5 (prevent infinite fix)
     else:
-        Step 3 を再実行（新規 Critical のみ修正）
+        re-execute Step 3 (fix new Critical only)
 ```
 
-**ループ脱出条件**:
+**Loop exit conditions**:
 
-| 条件 | 動作 |
-|------|------|
-| 新規 Critical 0件 | 収束、push へ進む |
-| iteration >= max_iterations（デフォルト3） | ユーザーに状況提示→続行確認 |
-| 同一指摘が連続2回出現（修正できてない） | ループ中断、ユーザーに手動修正要請 |
+| Condition | Behavior |
+|-----------|----------|
+| 0 new Critical | converge, proceed to push |
+| iteration >= max_iterations (default 3) | show user status, ask to continue |
+| same finding appears 2 consecutive iterations | stop loop, ask user for manual fix |
 
-### Step 5: プッシュ
+### Step 5: Push
 
 ```text
 /git-push --pr
 ```
 
-修正コミット→ブランチ push→PR 作成。
+commit fix → push branch → create PR.
 
-## オプション
+## Options
 
-| 引数 | 説明 |
-|------|------|
-| (なし) | 全工程実行（regression loop 含む） |
-| `--critical-only` | Critical のみ修正 |
-| `--dry-run` | レビューのみ（修正・push しない） |
-| `--no-difit` | difit 起動抑制 |
-| `--no-regression` | Step 4 を skip（旧来挙動） |
-| `--max-iterations <N>` | regression ループ上限（デフォルト3） |
-| `--from-pr <N>` | PR セッション復元してレビュー |
+| Argument | Behavior |
+|----------|----------|
+| (none) | full pipeline (regression loop included) |
+| `--critical-only` | fix Critical only |
+| `--dry-run` | review only (no fix/push) |
+| `--no-difit` | suppress difit startup |
+| `--no-regression` | skip Step 4 (legacy behavior) |
+| `--max-iterations <N>` | regression loop limit (default 3) |
+| `--from-pr <N>` | restore PR session, review its diff |
 
-`--from-pr` 指定時は Step 0 で `claude --from-pr <N>` 相当のコンテキスト復元、そのPR差分に対してレビュー。
+With `--from-pr`, Step 0 does context restore like `claude --from-pr <N>`, then review that PR diff.
 
-## 出力フォーマット
+## Output Format
 
-ループ進捗:
-
-```
-Iteration 1/3: Critical 3 → 0 / Warning 5 → 2 (収束)
-Iteration 2/3: skip (収束済み)
-
-Result: PASS → push 進行
-```
-
-ループ未収束:
+Loop progress:
 
 ```
-Iteration 3/3: Critical 1 残存 (同一指摘 2 回連続)
-> [WARN] 自動修正できない指摘あり、ユーザー介入要請
-push 中断、Critical 一覧:
-  - {ファイル:行} - {指摘内容}
+Iteration 1/3: Critical 3 → 0 / Warning 5 → 2 (converged)
+Iteration 2/3: skip (already converged)
+
+Result: PASS → proceed to push
 ```
 
-## 注意
+Loop unconverged:
 
-- 修正前にレビュー結果をユーザーに表示し確認を得る
-- force push 禁止
-- 修正後に lint/type check 自動実行
-- regression ループは **修正で新たな問題を作らない保証** が目的。止まらない場合は手動介入
+```
+Iteration 3/3: Critical 1 remains (same finding 2x)
+> [WARN] cannot auto-fix, need user intervention
+push aborted, Critical list:
+  - {file:line} - {finding}
+```
+
+## Notes
+
+- Show review results to user before fixing, get confirm
+- force push forbidden
+- auto-run lint/type-check after fix
+- regression loop **guarantees fix doesn't create new issues**. if it doesn't stop, manual intervention
 
 ARGUMENTS: $ARGUMENTS

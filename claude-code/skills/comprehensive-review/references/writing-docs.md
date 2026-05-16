@@ -1,42 +1,42 @@
-# writing観点 - ヒト向けドキュメント文章品質
+# Writing: Document Quality
 
-## 対象ファイル
+## Scope
 
-md（Design Doc、README、ADR、調査レポート）、Notion投稿下書き、PR description、PRD。コード・コードコメントは対象外（コードは `readability` focus で扱う）。
+md files (Design Docs, READMEs, ADRs, reports), Notion drafts, PR descriptions, PRDs. Excludes code & code comments (code covered under `readability`).
 
-## 最優先（判定の起点）
+## First principle
 
-すべてのチェックは「読み手の認知負荷を下げる」「1回読めば理解できる」「で、つまり何？と思わせない」「賢そうでなく伝わる」から派生する。観点に迷ったら「これは読み手の負荷をどう下げるか」を自問する。詳細は `claude-code/guidelines/writing/PRINCIPLES.md`。
+All checks derive from: "reduce reader cognitive load", "one read → understand", "avoid 'so what?'", "clarity over cleverness". When unsure: "does this reduce reader burden?". Details: `claude-code/guidelines/writing/PRINCIPLES.md`.
 
-## チェック項目
+## Checklist
 
-NG辞書の **single source of truth** は `claude-code/lib/writing-self-check.sh` の `_WRITING_NG_EVAL`（評価語）/ `_WRITING_NG_STOCK`（定型語）配列。本表の例示と乖離があれば lib/ 側を正とする。
+Single source of truth: `claude-code/lib/writing-self-check.sh` arrays `_WRITING_NG_EVAL` (evaluative) / `_WRITING_NG_STOCK` (stock). When divergent, trust lib/.
 
-| チェック | NG 例 | 重み |
-|---------|-------|------|
-| **結論先行** | 「本稿では〜について説明します」導入、数段落後に結論 | Warning |
-| **根拠なき評価語** | `_WRITING_NG_EVAL` 配列の語（「適切な」「最適な」「重要」「必須」「推奨」「最優先」「強化する」「向上させる」）を根拠1文なしで使用 | Critical |
-| **抽象語の放置** | 「改善」「最適化」「効率化」「強化」に数字 or 事例が隣接していない | Critical |
-| **用語の羅列** | 「可観測性」「疎結合」「スケーラビリティ」を関係説明なしで並べる抽象ポエム段落、絵が浮かばない | Critical |
-| **暗黙知の前提化** | 「いつもの」「ご存知の通り」「言うまでもなく」を使い、その内容を1文で書いていない | Warning |
-| **難語の未定義** | 初出の idempotency / Saga / RLS / CQRS 等を定義併記なしで使用 | Warning |
-| **段落の役割不明** | 段落が「背景/理由/具体例/結論/注意点」のどれにも該当しない、もしくは混在 | Warning |
-| **見出しがラベル止まり** | 「アーキテクチャ」「設計判断」のような名詞ラベルで主張が無い（OK 例:「読み書きを分離して負荷を分散する」） | Warning |
-| **次の疑問放置** | 段落末に読み手の自然な疑問が想起されるが、次段落でその答えが書かれていない | Info |
-| **主語の省略** | 誰が・何がが不明な文（「対応しました」「実施する」） | Warning |
-| **5W1H 欠落** | When / Where / Who が不明な決定記述 | Warning |
-| **箇条書き金太郎飴** | 3項目以上の bullet の前後に地の文が1文もない | Warning |
-| **AI 定型語** | `_WRITING_NG_STOCK` 配列の語（「効果的に」「効率的に」「シームレスに」「革新的な」「を実現します」「を可能にします」「を実施します」「を行います」「と思われる」「と考えられる」「3つの観点」「以下のメリット」）等 | Warning |
-| **読後アクション未明示** | 末尾に「レビュワーは X を確認」「次は Y を実行」が無い | Warning |
+| Check | Bad example | Level |
+|-------|-------------|-------|
+| **Conclusion late** | "This document explains...", actual conclusion paragraphs later | Warning |
+| **Unsupported claims** | Evaluative words ("appropriate", "optimal", "critical") without supporting sentence | Critical |
+| **Vague abstractions** | "improve", "optimize", "enhance" with no adjacent numbers/examples | Critical |
+| **Term dump** | "Observability", "loose coupling", "scalability" strung together, no context | Critical |
+| **Implicit knowledge** | "As you know", "obviously", content not in 1 sentence | Warning |
+| **Technical term undefined** | idempotency / Saga / RLS / CQRS first use without definition | Warning |
+| **Paragraph role unclear** | Paragraph neither context / reason / example / conclusion / caveat | Warning |
+| **Heading label-only** | Noun only ("Architecture", "Design decision") vs assertive ("Separate read/write to distribute load") | Warning |
+| **Unanswered question** | Natural next question at end, not answered next | Info |
+| **Implicit subject** | "Implemented", "will execute" — who/what unclear | Warning |
+| **Missing 5W1H** | Decision lacking When / Where / Who | Warning |
+| **Bullet no context** | 3+ bullets with no prose before/after | Warning |
+| **AI stock phrases** | "effectively", "seamlessly", "innovative", "is considered" | Warning |
+| **No reader action** | Missing "Reviewer check X", "Next: run Y" | Warning |
 
-## 判定基準
+## Judgment
 
-- **Critical**: 1箇所でもあれば書き直し必須
-- **Warning**: 3箇所以下なら修正推奨、4箇所以上で書き直し必須
+- **Critical**: 1+ → rewrite
+- **Warning**: ≤3 → fix, ≥4 → rewrite
 
-## 出力例
+## Example
 
 ```
-🔴 Critical: [writing] 根拠なき「必須」使用（docs/design/oripa.md:45）
-修正案: 「SET LOCAL 必須」→ 「SET LOCAL 必須。session-scoped の SET は connection pool で次 request に tenant が漏洩するため」
+🔴 Critical: [writing] Unsupported "required" (docs/design/oripa.md:45)
+Fix: "SET LOCAL required" → "SET LOCAL required; session-scoped SET on pool leaks tenant to next request"
 ```

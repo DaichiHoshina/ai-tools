@@ -1,26 +1,26 @@
-# ダッシュボード設計パターン
+# Dashboard Design Patterns
 
-## 視覚的階層（最重要）
+## Visual Hierarchy (Critical)
 
 ```text
-NG: 全要素が同じサイズ・色・余白
-OK: KPI大きく → トレンド中 → 詳細テーブル小さく
+Bad: All elements same size, color, spacing
+Good: Large KPI → medium trend → small detail table
 ```
 
-### 3層構造
+### 3-tier structure
 
-| Layer | 役割 | スタイル |
-|-------|------|---------|
-| Layer 1: Hero Metrics | 最重要KPI | text-3xl/4xl + font-bold、primaryアクセント |
-| Layer 2: Trends | 傾向把握 | チャート、中サイズカード |
-| Layer 3: Details | 詳細データ | テーブル、text-sm、控えめスタイル |
+| Tier | Purpose | Style |
+|------|---------|-------|
+| Layer 1: Hero Metrics | Critical KPI | text-3xl/4xl + bold, primary accent |
+| Layer 2: Trends | Trend spotting | Charts, medium cards |
+| Layer 3: Details | Detail data | Table, text-sm, muted style |
 
-## レイアウト原則
+## Layout principles
 
-| 原則 | 実装 |
-|------|------|
-| グリッドの強弱 | `grid-cols-3`で1つだけ`col-span-2` |
-| 余白のリズム | セクション間`gap-6`、カード内`p-6` |
-| 色の使い分け | primaryは1箇所だけ強調、他はmuted/secondary |
-| タイポグラフィ階層 | 最低3段階（h2 text-2xl / h3 text-lg / body text-sm） |
-| データ表示 | 数値は`font-mono tabular-nums` |
+| Principle | Implementation |
+|-----------|-----------------|
+| Grid weight | `grid-cols-3` with one `col-span-2` |
+| Whitespace rhythm | `gap-6` between sections, `p-6` in cards |
+| Color hierarchy | primary accent 1 place only, rest muted/secondary |
+| Typography levels | Min 3 levels (h2 text-2xl / h3 text-lg / body text-sm) |
+| Numeric display | `font-mono tabular-nums` |

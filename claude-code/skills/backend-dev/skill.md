@@ -1,111 +1,108 @@
 ---
 name: backend-dev
-description: バックエンド開発（Go/TypeScript/Python/Rust）。言語を自動検出して規約適用、バックエンド実装時に使用
+description: Backend development (Go/TypeScript/Python/Rust). Auto-detect language and apply conventions. Use during backend implementation.
 requires-guidelines:
   - common
   - clean-architecture
   - ddd
-  - golang  # lang=go の場合
-  - typescript  # lang=typescript の場合
-  - python  # lang=python の場合
-  - rust  # lang=rust の場合
-# backend/ 配下（database-performance, caching-strategies, distributed-transactions,
-# observability-design, security-hardening, scalability-patterns）は自動読込しない。
-# タスクのサブトピック検出時に load-guidelines が個別読込する方針（トークン節約）。
+  - golang
+  - typescript
+  - python
+  - rust
 parameters:
   lang:
     type: enum
     values: [auto, go, typescript, python, rust]
     default: auto
-    description: 開発言語（auto=変更ファイルから自動検出）
+    description: "Programming language (auto: detect from file extensions)"
 hooks:
   - event: PreSkillUse
     command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
-# backend-dev - バックエンド開発
+# backend-dev
 
-複数言語対応のバックエンド開発スキル。`--lang`で言語指定（デフォルト: 変更ファイルの拡張子から自動検出）。
+Multi-language backend skill. Use `--lang` to specify (default: auto-detect from file extensions).
 
-## 言語自動検出 (lang=auto)
+## Auto-detection (lang=auto)
 
-| 状況 | 動作 |
-|------|------|
-| 単一言語のみ検出 | その言語の規約を適用 |
-| 複数言語検出 | 変更行数最大の言語を主軸、他は副次（Critical のみ並列適用） |
-| 拡張子から判定不能（.md / 設定ファイルのみ） | common + clean-architecture + ddd のみ適用、言語固有ルール skip |
-| 検出ゼロ件（新規ファイルなし） | プロジェクトルートの主要 manifest（`go.mod` / `package.json` / `pyproject.toml` / `Cargo.toml`）から推定。該当なし → ユーザーに `lang` 明示要求して停止 |
+| Case | Behavior |
+|------|----------|
+| Single language detected | Apply that language's conventions |
+| Multiple languages | Primary: lang with most changes, others: Critical only |
+| No extension match (.md / config files) | Apply common + clean-architecture + ddd only, skip lang-specific |
+| Zero files detected | Infer from `go.mod` / `package.json` / `pyproject.toml` / `Cargo.toml`. Absent: request explicit `--lang` |
 
-## 外部リソース利用条件
+## External resources
 
-| リソース | 呼び出し条件 | 失敗時の挙動 |
-|---------|-------------|------------|
-| Context7 | 言語の最新仕様確認時（deprecated API / 新機能利用） | skip 続行、knowledge cutoff 時点の知識で代替、warning ログ |
-| Serena memory | プロジェクト固有規約の確認（セッション開始時 1 回） | skip 続行、warning ログ出力（規約は guideline 既定値で代替） |
+| Resource | When | On failure |
+|----------|------|-----------|
+| Context7 | Verify lang spec (deprecated API / new features) | Skip, use knowledge cutoff, warn |
+| Serena memory | Confirm project conventions (session start) | Skip, warn, use guideline defaults |
 
-## 共通ベストプラクティス
+## Common best practices
 
-### Critical（全言語共通）
+### Critical (all languages)
 
-| カテゴリ | ルール |
-|---------|--------|
-| エラーハンドリング | エラーを無視しない。適切なメッセージを付与。型安全なエラー処理 |
-| セキュリティ | パラメータ化クエリ必須。機密情報のログ出力禁止。認証・認可の適切な実装 |
-| テスト | 単体テスト作成。正常系・異常系両方。モックの適切な使用 |
+| Category | Rule |
+|----------|------|
+| Error handling | Don't ignore errors. Provide clear messages. Type-safe error handling |
+| Security | Parameterized queries required. No secrets in logs. Proper auth/authz |
+| Testing | Unit tests for happy & sad paths. Use mocks appropriately |
 
-### Warning（全言語共通）
+### Warning (all languages)
 
-| カテゴリ | ルール |
-|---------|--------|
-| パフォーマンス | N+1クエリ禁止。不要なメモリ確保回避。非効率アルゴリズム回避 |
-| 保守性 | 関数は1つの責務のみ。マジックナンバーの定数化 |
+| Category | Rule |
+|----------|------|
+| Performance | Avoid N+1 queries. Prevent unnecessary allocations. Avoid inefficient algorithms |
+| Maintainability | One responsibility per function. Const-ify magic numbers |
 
-## 言語固有ルール
+## Language-specific rules
 
 ### Go
 
-| 重要度 | ルール |
-|--------|--------|
-| Critical | エラーは必ず`if err != nil`で処理。`_`で握りつぶさない |
-| Critical | goroutineリーク防止: `context.Context`でキャンセル制御 |
-| Critical | Accept interfaces, return structs（必要な場所でのみinterface定義） |
-| Warning | 全外部呼び出しに`context.Context`を渡す |
-| Warning | テーブル駆動テスト使用 |
+| Severity | Rule |
+|----------|------|
+| Critical | Always handle errors with `if err != nil`. Don't suppress with `_` |
+| Critical | Prevent goroutine leaks: control cancellation via `context.Context` |
+| Critical | Accept interfaces, return structs (define interfaces only where needed) |
+| Warning | Pass `context.Context` to all external calls |
+| Warning | Use table-driven tests |
 
 ### TypeScript
 
-| 重要度 | ルール |
-|--------|--------|
-| Critical | `any`禁止。厳格な型定義（Branded Types推奨） |
-| Critical | Result型パターン（`{ ok: true; value: T } | { ok: false; error: E }`） |
-| Critical | Non-null assertion (`!`) 禁止。明示的nullチェック |
-| Warning | 依存性注入（constructor injection）活用 |
+| Severity | Rule |
+|----------|------|
+| Critical | Forbid `any`. Strict types (Branded Types recommended) |
+| Critical | Use Result pattern (`{ ok: true; value: T } \| { ok: false; error: E }`) |
+| Critical | Forbid non-null assertions (`!`). Explicit null checks |
+| Warning | Leverage dependency injection (constructor injection) |
 
 ### Python
 
-| 重要度 | ルール |
-|--------|--------|
-| Critical | 全関数に型ヒント必須 |
-| Critical | 汎用`except Exception`禁止。具体的な例外を捕捉 |
-| Warning | `@dataclass`でデータモデル定義 |
+| Severity | Rule |
+|----------|------|
+| Critical | Type hints on all functions |
+| Critical | Forbid `except Exception`. Catch specific exceptions |
+| Warning | Define data models with `@dataclass` |
 
 ### Rust
 
-| 重要度 | ルール |
-|--------|--------|
-| Critical | `Result<T, E>`型でエラーハンドリング。`?`演算子活用 |
-| Critical | 所有権と借用を明示。不要な`clone()`回避 |
+| Severity | Rule |
+|----------|------|
+| Critical | Use `Result<T, E>` for error handling. Leverage `?` operator |
+| Critical | Explicit ownership & borrowing. Avoid unnecessary `clone()` |
 
-## チェックリスト
+## Checklist
 
-- [ ] すべてのエラーを適切に処理（型安全なエラー処理）
-- [ ] SQLインジェクション対策（パラメータ化クエリ）
-- [ ] 機密情報のログ出力なし
-- [ ] 単体テスト作成（正常系・異常系）
-- [ ] N+1クエリなし
-- [ ] 並行処理の適切な使用・メモリリークなし
+- [ ] All errors handled appropriately (type-safe error handling)
+- [ ] SQL injection protected (parameterized queries)
+- [ ] No secrets in logs
+- [ ] Unit tests for happy & sad paths
+- [ ] No N+1 queries
+- [ ] Proper concurrency use & no memory leaks
 
-## 外部リソース
+## Resources
 
-- **Context7**: 言語別公式ドキュメント参照（呼出条件・失敗時挙動は本文「外部リソース利用条件」表を参照）
-- **Serena memory**: プロジェクト固有の規約・パターン（同上）
+- **Context7**: Lang-specific docs (see "External resources" table above)
+- **Serena memory**: Project conventions & patterns (see "External resources" table above)

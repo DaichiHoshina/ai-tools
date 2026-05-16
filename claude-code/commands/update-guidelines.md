@@ -1,117 +1,117 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, mcp__context7__*, WebSearch, WebFetch
-description: ガイドライン陳腐化チェック&自動修正 - バージョン/廃止機能/冗長性/AI可読性を3軸検査
+description: Guideline staleness/redundancy/AI-readability check & auto-fix via 3-axis
 ---
 
-# /update-guidelines - ガイドライン総合レビュー&自動修正
+# /update-guidelines - Guideline Review & Auto-fix
 
-`guidelines/` 配下を**3軸で検査**し、安全な修正は自動適用する。
+Inspect `guidelines/` via **3 axes**, auto-apply safe fixes.
 
-| 軸 | 対象 |
-|----|------|
-| 🕰 陳腐化 | バージョン番号・リリース日・廃止API・非推奨パターン |
-| 🗜 冗長性 | ファイル内/ファイル間の重複記述、冗長な前置き、余剰な例 |
-| 🤖 AI可読性 | 表形式優先・短文化・判定ロジック明示・冒頭1行要約 |
+| Axis | Target |
+|------|--------|
+| 🕰 staleness | version num, release date, defunct API, deprecated pattern |
+| 🗜 redundancy | within-file / cross-file duplication, verbose preamble, surplus examples |
+| 🤖 AI-readability | table format priority, short prose, explicit judgment, inline code, emoji trim |
 
-## 使用方法
+## Usage
 
 ```
-/update-guidelines                      # 全guideline 3軸検査→自動修正
-/update-guidelines <path>               # 特定ファイルのみ
-/update-guidelines --dry                # 検出のみ、修正なし
-/update-guidelines --check-only         # --dry エイリアス（後方互換）
-/update-guidelines --only=staleness     # 陳腐化のみ
-/update-guidelines --only=redundancy    # 冗長性のみ
-/update-guidelines --only=readability   # AI可読性のみ
+/update-guidelines                      # full scan 3-axis, auto-fix
+/update-guidelines <path>               # single file
+/update-guidelines --dry                # detect, no fix
+/update-guidelines --check-only         # --dry alias
+/update-guidelines --only=staleness     # staleness only
+/update-guidelines --only=redundancy    # redundancy only
+/update-guidelines --only=readability   # AI readability only
 ```
 
-`--only` 値（1文字略記も可）: `staleness|s` / `redundancy|r` / `readability|a`
+`--only` values (1-char abbrev ok): `staleness|s` / `redundancy|r` / `readability|a`
 
-## フロー
+## Flow
 
-| Step | 動作 |
-|------|------|
-| 1. 対象特定 | 引数あり→該当ファイル / なし→`claude-code/guidelines/**/*.md` 全走査 |
-| 2. 並列検査 | 3軸を並列で検査（各軸ごとに抽出→判定） |
-| 3. 最新情報取得 | Context7 → 失敗時 WebSearch（陳腐化軸のみ） |
-| 4. 自動修正 | 「安全」判定の修正のみ適用（判定表参照） |
-| 5. 要レビュー集約 | 自動修正できない項目を列挙 |
-| 6. 完了報告 | 3軸別 Critical/Warning/Info 集計 + 修正サマリー |
+| Step | Action |
+|------|--------|
+| 1. identify target | arg? → file / else → `claude-code/guidelines/**/*.md` full scan |
+| 2. parallel scan | 3 axes in parallel (each extract → judge) |
+| 3. get latest | Context7 → fallback WebSearch (staleness axis only) |
+| 4. auto-fix | apply "safe" judgment only (see table) |
+| 5. collect require-review | list auto-unable items |
+| 6. report | Critical/Warning/Info per axis + fix summary |
 
-## 軸1: 陳腐化検査
+## Axis 1: Staleness Check
 
-| 種別 | 検出パターン | 重要度 | 自動修正 |
+| Type | Detect Pattern | Severity | Auto-fix |
 |------|-------------|--------|---------|
-| 廃止API/機能 | 公式廃止アナウンス済（Firebase Dynamic Links等） | 🔴 Critical | 打ち消し+代替言及（削除しない） |
-| メジャーVer乖離 | 記載 Go 1.20、最新 1.26 | 🟡 Warning | ✅ バージョン+日付更新 |
-| マイナーVer乖離 | TS 5.7、最新 5.9.x | 🟢 Info | ✅ バージョン更新 |
-| 非推奨パターン | Next.js pages/ router中心 | 🟡 Warning | 要レビュー（パターン変更は意味変化あり） |
+| defunct API/feature | official deprecation posted (Firebase Dynamic Links etc) | 🔴 Critical | strikethrough + mention replacement (don't delete) |
+| major version gap | doc Go 1.20, latest 1.26 | 🟡 Warning | ✅ update version + date |
+| minor version gap | TS 5.7, latest 5.9.x | 🟢 Info | ✅ update version |
+| deprecated pattern | Next.js pages/ router focus | 🟡 Warning | ask (pattern change = semantic shift) |
 
-**抽出パターン**:
-- 言語/FW: `(TypeScript|Go|Python|Rust|Next\.js|React)\s*[\d.]+(対応|\+|時点)`
-- リリース日: `\d{4}年\d{1,2}月(時点|リリース)`
+**Extract patterns**:
+- language/FW: `(TypeScript|Go|Python|Rust|Next\.js|React)\s*[\d.]+((対応|supported)|(\+|plus)|(時点|as.?of))` 
+- release date: `\d{4}年\d{1,2}月((時点|as.?of)|(リリース|release))`
 
-## 軸2: 冗長性検査
+## Axis 2: Redundancy Check
 
-| 種別 | 検出方法 | 重要度 | 自動修正 |
+| Type | Detect Method | Severity | Auto-fix |
 |------|---------|--------|---------|
-| ファイル内重複 | 同一見出し2回、同じ表の再掲 | 🟡 Warning | ✅ 後者削除、前者へ統合 |
-| ファイル間重複 | 2ファイル以上で同内容3行以上一致 | 🟡 Warning | 要レビュー（どちらが一次情報か判定必要） |
-| 冗長な前置き | 「このガイドラインは〜について説明します」等 | 🟢 Info | ✅ 削除 |
-| 余剰な例 | 同じ原則に3例以上 | 🟢 Info | 2例に縮約提案（要レビュー） |
-| 長文説明 | 1段落 200字超 | 🟢 Info | 表形式への分解提案（要レビュー） |
+| within-file dup | same heading 2x, same table re-show | 🟡 Warning | ✅ delete latter, consolidate to first |
+| cross-file dup | 2+ files, 3+ lines identical | 🟡 Warning | ask (which is primary?) |
+| verbose preamble | "this guideline explains…" | 🟢 Info | ✅ delete |
+| surplus examples | 3+ per principle | 🟢 Info | propose 2, ask |
+| long para | 1 para 200+ chars | 🟢 Info | propose table, ask |
 
-## 軸3: AI可読性検査
+## Axis 3: AI-Readability Check
 
-| 種別 | チェック | 重要度 | 自動修正 |
-|------|---------|--------|---------|
-| 冒頭1行要約 | H1直後にファイル目的の1行があるか | 🟡 Warning | ✅ frontmatter description or 先頭1行追加 |
-| 判定ロジック明示 | if/when系は表か箇条書きか | 🟡 Warning | 要レビュー（文章→表変換は意味精査必要） |
-| 冗長な接続詞 | 「〜なので」「〜ですから」等敬語連発 | 🟢 Info | ✅ 体言止めに変換 |
-| コード例過剰 | 同一原則に5行超の例 | 🟢 Info | 5行以内に短縮提案（要レビュー） |
-| 絵文字過剰 | 1ファイルに絵文字10個超 | 🟢 Info | 必須マーカー（✅❌⚠️）以外を削減提案 |
-| 英数字周りスペース | 日本語中の半角英数字前後の全/半スペース混入（例: 「Go 1.26 対応」の半角スペース、まれに全角も） | 🟢 Info | ✅ `~/.claude/rules/markdown.md` 準拠で削除（全/半両対応） |
+| Type | Check | Severity | Auto-fix |
+|------|------|--------|---------|
+| no 1-line summary | H1 post missing file purpose 1-line | 🟡 Warning | ✅ add to frontmatter `description` or header-next 1-line |
+| logic unclear | if/when → text, not table/bullets | 🟡 Warning | ask (text→table = needs review) |
+| wordy connector | "so" / "because" / honorific repeat | 🟢 Info | ✅ convert to telegraphic |
+| code surplus | 5+ lines per principle | 🟢 Info | propose ≤5, ask |
+| emoji excess | 10+ per file | 🟢 Info | trim non-essential (keep ✅❌⚠️) propose, ask |
+| ASCII-around-space | Japanese + en-digit spacing variance | 🟢 Info | ✅ align to `~/.claude/rules/markdown.md` (strip all/half both) |
 
-## 修正の安全策
+## Fix Safety
 
-- **意味を変えない修正のみ自動化**: バージョン数字、冗長前置き削除、体言止め変換、全角スペース削除
-- **構造変更は要レビュー**: 表形式への変換、パターン変更、ファイル間統合
-- **Critical は --dry 強制**: 廃止API削除は必ずユーザー確認
-- **diff 出力**: 修正後に `git diff --stat` で変更行数報告
+- **auto-safe**: version number, verbose preamble delete, telegraphic convert, space delete
+- **ask-needed**: table convert, pattern change, cross-file merge
+- **Critical→--dry forced**: defunct API delete always user-confirm
+- **diff output**: report changed line count post-fix
 
-## 出力形式
+## Output format
 
 ```
-## ガイドライン3軸レビュー結果
+## Guideline 3-Axis review
 
-### 🕰 陳腐化
-Critical: N件 / Warning: N件 / Info: N件
+### 🕰 Staleness
+Critical: N / Warning: N / Info: N
 
-### 🗜 冗長性
-Warning: N件 / Info: N件
+### 🗜 Redundancy
+Warning: N / Info: N
 
-### 🤖 AI可読性
-Warning: N件 / Info: N件
+### 🤖 AI-readability
+Warning: N / Info: N
 
-### 修正サマリー
-- ✅ 自動修正: N件（Nファイル）
-- ⚠️ 要レビュー: N件（列挙）
-- ⏭ スキップ: N件
+### Fix summary
+- ✅ auto: N items (N files)
+- ⚠️ ask: N items (list)
+- ⏭ skip: N items
 
-### 変更ファイル
+### Changed files
 - path (+X -Y)
 
-### 次アクション
-- sync.sh to-local → commit 提案
+### Next
+- sync.sh to-local → commit proposed
 ```
 
-## スコープ外
+## Out of Scope
 
-- 新規ガイドライン作成（`/design-doc` or 手動）
-- rules/references/skills の検査（guidelines に限定）
-- コード本体（`/dev` の仕事）
+- new guideline creation (`/design-doc` or manual)
+- rules/references/skills scan (guidelines only)
+- code body (`/dev` job)
 
-## 実行後
+## Post-execution
 
 ```
 ./claude-code/sync.sh to-local

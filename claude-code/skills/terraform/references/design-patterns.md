@@ -1,11 +1,11 @@
-# Terraform設計パターン詳細
+# Terraform Design Patterns
 
-## Critical（修正必須）
+## Critical (Must fix)
 
-### 1. バージョン固定なし
+### 1. No version pinning
 
 ```hcl
-# Bad: バージョン未固定
+# Bad: unpinned
 terraform {
   required_providers {
     aws = {
@@ -14,7 +14,7 @@ terraform {
   }
 }
 
-# Good: バージョン固定
+# Good: pinned
 terraform {
   required_version = "~> 1.9.0"
 
@@ -27,16 +27,16 @@ terraform {
 }
 ```
 
-### 2. ハードコードされたシークレット
+### 2. Hardcoded secrets
 
 ```hcl
-# Bad: シークレットをハードコード
+# Bad: hardcoded
 resource "aws_db_instance" "main" {
   username = "admin"
   password = "hardcoded_password"
 }
 
-# Good: Secrets Managerから取得
+# Good: from Secrets Manager
 data "aws_secretsmanager_secret_version" "db_password" {
   secret_id = "db-password"
 }
@@ -47,10 +47,10 @@ resource "aws_db_instance" "main" {
 }
 ```
 
-### 3. リモートステート未使用
+### 3. No remote state
 
 ```hcl
-# Good: S3 + DynamoDBでリモートステート
+# Good: S3 + DynamoDB remote state
 terraform {
   backend "s3" {
     bucket         = "terraform-state-bucket"
@@ -62,10 +62,10 @@ terraform {
 }
 ```
 
-### 4. 過度にpermissiveなIAMポリシー
+### 4. Overly permissive IAM
 
 ```hcl
-# Bad: 全権限付与
+# Bad: full access
 resource "aws_iam_role_policy" "bad" {
   policy = jsonencode({
     Version = "2012-10-17"
@@ -77,7 +77,7 @@ resource "aws_iam_role_policy" "bad" {
   })
 }
 
-# Good: 最小権限の原則
+# Good: least privilege
 resource "aws_iam_role_policy" "good" {
   policy = jsonencode({
     Version = "2012-10-17"
@@ -93,14 +93,14 @@ resource "aws_iam_role_policy" "good" {
 }
 ```
 
-## Warning（要改善）
+## Warning (Improve)
 
-### 1. モジュール化されていない
+### 1. Not modularized
 
 ```hcl
-# Bad: すべてのリソースをmain.tfに記述
+# Bad: all resources in main.tf
 
-# Good: モジュール化
+# Good: modularized
 # modules/vpc/main.tf
 resource "aws_vpc" "main" { ... }
 resource "aws_subnet" "public" {
@@ -119,10 +119,10 @@ module "vpc" {
 }
 ```
 
-### 2. タグ付けなし
+### 2. No tagging
 
 ```hcl
-# Good: 共通タグをローカル変数で定義
+# Good: common tags as locals
 locals {
   common_tags = {
     Environment = var.environment
@@ -139,10 +139,10 @@ resource "aws_instance" "app" {
 }
 ```
 
-### 3. 公式モジュール未使用
+### 3. Not using official modules
 
 ```hcl
-# Good: 公式モジュールを活用
+# Good: leverage official modules
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"

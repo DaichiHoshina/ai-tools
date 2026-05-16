@@ -1,10 +1,10 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*
-description: 完全自律ワークフロー - /flow --auto のショートカット。質問なし・承認スキップ・自動push。
+description: Fully autonomous workflow — shortcut for /flow --auto. No questions, skip approvals, auto-push.
 ---
 
-## /flow-auto - `/flow --auto` のショートカット
+## /flow-auto - `/flow --auto` shortcut
 
-`/flow --auto` を実行する。動作詳細は `/flow` の `--auto` セクションを参照。
+Run `/flow --auto`. See `/flow` `--auto` section for behavior details.
 
 ARGUMENTS: $ARGUMENTS

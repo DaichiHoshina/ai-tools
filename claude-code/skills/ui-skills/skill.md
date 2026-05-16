@@ -1,114 +1,114 @@
 ---
 name: ui-skills
-description: UI構築制約（Tailwind/motion/react）+ UIデザインシステム + Playwrightビジュアル検証。アニメーション・A11y対応
+description: UI build constraints (Tailwind/motion/react) + design system + Playwright visual checks. Animation & A11y-ready.
 requires-guidelines:
   - nextjs-react
   - tailwind
   - shadcn
 ---
 
-# ui-skills - UI構築制約
+# ui-skills
 
-## テクノロジースタック
+## Tech Stack
 
-| 要素 | 要件 |
-|------|------|
-| スタイリング | **MUST** Tailwind CSS defaults |
-| アニメーション | **MUST** `motion/react` |
-| クラス管理 | **MUST** `cn`（`clsx` + `tailwind-merge`） |
+| Element | Requirement |
+|---------|------------|
+| Styling | **MUST** Tailwind CSS defaults |
+| Animation | **MUST** `motion/react` |
+| Class util | **MUST** `cn` (`clsx` + `tailwind-merge`) |
 
-## ルール早見表
+## Rules
 
 ### Components
 
-| 区分 | ルール |
-|------|--------|
-| MUST | アクセシブルコンポーネントプリミティブ使用（Base UI, React Aria, Radix） |
-| MUST | アイコンのみボタンに`aria-label` |
-| NEVER | 同一インタラクション内で複数プリミティブシステム混在 |
-| NEVER | キーボード・フォーカス動作の手動実装 |
+| Category | Rule |
+|----------|------|
+| MUST | Use accessible component primitives (Base UI, React Aria, Radix) |
+| MUST | Icon-only buttons need `aria-label` |
+| NEVER | Don't mix multiple primitive systems in same interaction |
+| NEVER | Don't manually implement keyboard/focus behavior |
 
 ### Interaction
 
-| 区分 | ルール |
-|------|--------|
-| MUST | 破壊的アクション → `AlertDialog`必須 |
-| MUST | エラーはアクション発生場所の隣に表示 |
-| MUST | 固定要素に`safe-area-inset`尊重 |
-| NEVER | `h-screen`使用（`h-dvh`に置換） |
-| NEVER | `input`/`textarea`のペースト禁止 |
+| Category | Rule |
+|----------|------|
+| MUST | Destructive action → `AlertDialog` required |
+| MUST | Show errors near action location |
+| MUST | Respect `safe-area-inset` on fixed elements |
+| NEVER | Don't use `h-screen` (use `h-dvh`) |
+| NEVER | Don't disable paste on `input`/`textarea` |
 
 ### Animation
 
-| 区分 | ルール |
-|------|--------|
-| MUST | 明示的リクエストなしのアニメーション追加禁止 |
-| MUST | `transform`, `opacity`のみアニメート |
-| NEVER | レイアウト属性の動画化（`width`, `height`, `margin`等） |
-| NEVER | インタラクションフィードバック200ms超 |
+| Category | Rule |
+|----------|------|
+| MUST | No animations without explicit request |
+| MUST | Animate only `transform` & `opacity` |
+| NEVER | Don't animate layout attrs (`width`, `height`, `margin`) |
+| NEVER | Interaction feedback must be < 200ms |
 
 ### Typography / Layout / Performance / Design
 
-| 区分 | ルール |
-|------|--------|
-| MUST | 見出し → `text-balance`、本文 → `text-pretty`、データ → `tabular-nums` |
-| MUST | 固定z-indexスケール（任意`z-[999]`禁止） |
-| MUST | 空状態に明確な次アクションを用意 |
-| NEVER | 大規模`blur()`/`backdrop-filter`の動画化 |
-| NEVER | レンダーロジックで可能な処理に`useEffect` |
-| NEVER | 明示要求なしのグラデーション、紫色/マルチカラーグラデーション |
-| SHOULD | ローディングは構造的スケルトン表示 |
-| SHOULD | `prefers-reduced-motion`尊重 |
-| SHOULD | 正方形要素は`size-*`（`w-* h-*`より優先） |
-| SHOULD | 既存テーマ/Tailwind標準色を優先 |
+| Category | Rule |
+|----------|------|
+| MUST | Headings → `text-balance`, body → `text-pretty`, data → `tabular-nums` |
+| MUST | Fixed z-index scale (no random `z-[999]`) |
+| MUST | Empty states need clear next action |
+| NEVER | Don't animate large `blur()` / `backdrop-filter` |
+| NEVER | Don't put `useEffect` for render logic |
+| NEVER | No gradients/purple/multicolor without request |
+| SHOULD | Loading → structural skeleton |
+| SHOULD | Respect `prefers-reduced-motion` |
+| SHOULD | Square elements use `size-*` (prefer over `w-* h-*`) |
+| SHOULD | Prefer existing theme / Tailwind default colors |
 
-## 初回実装品質ガード
+## Quality Guard for First Implementation
 
-### 実装前確認
+### Pre-implementation checklist
 
-| # | 確認項目 | 方法 |
-|---|---------|------|
-| 1 | 既存UIとの一貫性 | 同プロジェクト内の類似画面を確認 |
-| 2 | モーダル/ポップアップのサイズ | 内容量に応じた適切なサイズ |
-| 3 | 表示データの具体性 | IDではなくタイトル・名前など人間が読める情報 |
+| # | Item | How |
+|---|------|-----|
+| 1 | Consistency with existing UI | Check similar screens in project |
+| 2 | Modal/popup sizing | Appropriate size for content |
+| 3 | Concrete display data | Use titles/names, not IDs |
 
-### 実装後セルフチェック
+### Post-implementation self-check
 
-| # | チェック | よくある失敗 |
-|---|---------|-------------|
-| 1 | z-indexの競合 | モーダルが背面に隠れる |
-| 2 | ローディング状態 | 非同期処理中の表示がない |
-| 3 | 空状態/エラー状態 | データなし時の表示が未定義 |
-| 4 | API所要時間の事前確認 | 重い処理をUI内で同期実行 |
-| 5 | レスポンシブ確認 | サイズが画面に対して不適切 |
+| # | Check | Common failure |
+|---|-------|-----------------|
+| 1 | z-index conflicts | Modal hidden behind |
+| 2 | Loading states | No indicator during async |
+| 3 | Empty/error states | Undefined when no data |
+| 4 | API latency check | Heavy ops run sync in UI |
+| 5 | Responsive check | Size wrong for screen |
 
-## 出力形式
+## Output Format
 
-通常ケース:
-
-```text
-Critical: `ファイル:行` - 違反内容 → 修正案
-Warning: `ファイル:行` - 改善推奨 → 推奨案
-Summary: Critical X件 / Warning Y件
-```
-
-ゼロ件:
+Normal case:
 
 ```text
-✅ UI 制約違反なし (対象 N コンポーネント)
-Summary: Critical 0件 / Warning 0件
-推奨: Playwright ビジュアル検証で実描画確認
+Critical: `file:line` - violation → fix
+Warning: `file:line` - improvement → suggestion
+Summary: Critical X / Warning Y
 ```
 
-レビュー対象不在（UI ファイル未検出）:
+Zero issues:
 
 ```text
-> [WARN] React/Vue/Svelte コンポーネント未検出
-> 検索対象: *.tsx / *.jsx / *.vue / *.svelte
-> 該当なし → スキップ
+✅ No UI constraint violations (N components)
+Summary: Critical 0 / Warning 0
+Recommended: Playwright visual check for render confirmation
 ```
 
-## 参考リンク
+No files found:
+
+```text
+> [WARN] No React/Vue/Svelte components found
+> Target: *.tsx / *.jsx / *.vue / *.svelte
+> Skipping
+```
+
+## References
 
 - [ui-skills](https://github.com/ibelick/ui-skills)
 - [Base UI](https://base-ui.com/) / [React Aria](https://react-spectrum.adobe.com/react-aria/) / [Radix UI](https://www.radix-ui.com/)

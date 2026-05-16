@@ -1,6 +1,6 @@
 ---
 name: react-best-practices
-description: React/Next.jsパフォーマンス最適化（Vercel）。45ルール8カテゴリ。ウォーターフォール排除・バンドル最適化、React/Next.js実装時に使用
+description: React/Next.js performance optimization (Vercel). 45 rules, 8 categories. Eliminate waterfalls, optimize bundles. Use when implementing React/Next.js.
 requires-guidelines:
   - nextjs-react
 hooks:
@@ -8,13 +8,13 @@ hooks:
     command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
-# react-best-practices - React/Next.jsパフォーマンス最適化
+# react-best-practices - React/Next.js Performance Optimization
 
 > **Version**: 0.1.0 | **Source**: [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills)
 
-## ルールカテゴリ（優先度順）
+## Rule Categories (Priority Order)
 
-| 優先度 | カテゴリ | 影響度 | プレフィックス |
+| Priority | Category | Impact | Prefix |
 |--------|----------|--------|----------------|
 | 1 | Eliminating Waterfalls | CRITICAL | `async-` |
 | 2 | Bundle Size Optimization | CRITICAL | `bundle-` |
@@ -25,102 +25,102 @@ hooks:
 | 7 | JavaScript Performance | LOW-MEDIUM | `js-` |
 | 8 | Advanced Patterns | LOW | `advanced-` |
 
-## クイックリファレンス
+## Quick Reference
 
-### 1. Eliminating Waterfalls（CRITICAL）
+### 1. Eliminating Waterfalls (CRITICAL)
 
-- `async-defer-await` - awaitを必要なブランチに移動
-- `async-parallel` - 独立操作にPromise.all()
-- `async-dependencies` - 部分依存にbetter-all
-- `async-api-routes` - APIルートで早期Promise開始
-- `async-suspense-boundaries` - Suspenseでストリーミング
+- `async-defer-await` - Move await to needed branches
+- `async-parallel` - Promise.all() for independent ops
+- `async-dependencies` - Partial deps with better-all
+- `async-api-routes` - Early Promise start in API routes
+- `async-suspense-boundaries` - Stream with Suspense
 
-### 2. Bundle Size Optimization（CRITICAL）
+### 2. Bundle Size Optimization (CRITICAL)
 
-- `bundle-barrel-imports` - barrel fileを避け直接import
-- `bundle-dynamic-imports` - 重いコンポーネントにnext/dynamic
-- `bundle-defer-third-party` - hydration後にanalytics読み込み
-- `bundle-conditional` - 機能有効化時のみモジュール読み込み
-- `bundle-preload` - hover/focusでpreload
+- `bundle-barrel-imports` - Avoid barrel, import direct
+- `bundle-dynamic-imports` - Heavy components with next/dynamic
+- `bundle-defer-third-party` - Load analytics post-hydration
+- `bundle-conditional` - Load modules on feature enable
+- `bundle-preload` - Preload on hover/focus
 
-### 3. Server-Side Performance（HIGH）
+### 3. Server-Side Performance (HIGH)
 
-- `server-cache-react` - リクエスト単位でReact.cache()
-- `server-cache-lru` - リクエスト横断でLRUキャッシュ
-- `server-serialization` - Client Componentへの最小限データ
-- `server-parallel-fetching` - コンポーネント構成でフェッチ並列化
-- `server-after-nonblocking` - after()で非ブロッキング処理
+- `server-cache-react` - React.cache() per request
+- `server-cache-lru` - LRU across requests
+- `server-serialization` - Minimal data to Client Component
+- `server-parallel-fetching` - Parallelize fetches in component tree
+- `server-after-nonblocking` - Non-blocking with after()
 
-### 4. Client-Side Data Fetching（MEDIUM-HIGH）
+### 4. Client-Side Data Fetching (MEDIUM-HIGH)
 
-- `client-swr-dedup` - SWRで自動重複排除
-- `client-event-listeners` - グローバルイベントリスナー重複排除
+- `client-swr-dedup` - Auto dedup with SWR
+- `client-event-listeners` - Dedup global listeners
 
-### 5. Re-render Optimization（MEDIUM）
+### 5. Re-render Optimization (MEDIUM)
 
-- `rerender-defer-reads` - コールバックのみで使う状態を購読しない
-- `rerender-memo` - 高コスト処理をmemo化コンポーネントに抽出
-- `rerender-dependencies` - effect依存はプリミティブに
-- `rerender-derived-state` - 生値でなく派生booleanを購読
-- `rerender-functional-setstate` - 関数式setStateで安定callback
-- `rerender-lazy-state-init` - 高コスト初期値は関数でuseState
-- `rerender-transitions` - startTransitionで非緊急更新
+- `rerender-defer-reads` - Don't subscribe to state used only in callbacks
+- `rerender-memo` - Extract expensive work to memo component
+- `rerender-dependencies` - Keep effect deps primitive
+- `rerender-derived-state` - Subscribe to derived boolean, not raw value
+- `rerender-functional-setstate` - Functional setState for stable callback
+- `rerender-lazy-state-init` - Expensive init = function with useState
+- `rerender-transitions` - startTransition for non-urgent updates
 
-### 6. Rendering Performance（MEDIUM）
+### 6. Rendering Performance (MEDIUM)
 
-- `rendering-animate-svg-wrapper` - SVG要素でなくdivラッパーをアニメーション
-- `rendering-content-visibility` - 長いリストにcontent-visibility
-- `rendering-hoist-jsx` - 静的JSXをコンポーネント外に抽出
-- `rendering-svg-precision` - SVG座標精度を削減
-- `rendering-hydration-no-flicker` - インラインスクリプトでちらつき防止
-- `rendering-activity` - show/hideにActivityコンポーネント
-- `rendering-conditional-render` - &&でなく三項演算子で条件レンダリング
+- `rendering-animate-svg-wrapper` - Animate div wrapper, not SVG
+- `rendering-content-visibility` - content-visibility for long lists
+- `rendering-hoist-jsx` - Extract static JSX outside component
+- `rendering-svg-precision` - Reduce SVG coordinate precision
+- `rendering-hydration-no-flicker` - Inline script to prevent flicker
+- `rendering-activity` - Activity component for show/hide
+- `rendering-conditional-render` - Ternary, not && for conditionals
 
-### 7. JavaScript Performance（LOW-MEDIUM）
+### 7. JavaScript Performance (LOW-MEDIUM)
 
-- `js-batch-dom-css` - CSSをclassまたはcssTextでまとめて変更
-- `js-index-maps` - 繰り返し検索にMap構築
-- `js-cache-property-access` - ループ内でプロパティアクセスをキャッシュ
-- `js-cache-function-results` - 関数結果をモジュールレベルMapでキャッシュ
-- `js-cache-storage` - localStorage/sessionStorage読み取りをキャッシュ
-- `js-combine-iterations` - 複数filter/mapを1ループに統合
-- `js-length-check-first` - 高コスト比較前に配列長チェック
-- `js-early-exit` - 関数から早期return
-- `js-hoist-regexp` - RegExp生成をループ外に巻き上げ
-- `js-min-max-loop` - min/maxにsortでなくループ使用
-- `js-set-map-lookups` - O(1)検索にSet/Map使用
-- `js-tosorted-immutable` - イミュータビリティにtoSorted()
+- `js-batch-dom-css` - Batch CSS with class or cssText
+- `js-index-maps` - Build Map for repeated lookups
+- `js-cache-property-access` - Cache property access in loops
+- `js-cache-function-results` - Cache results in module-level Map
+- `js-cache-storage` - Cache localStorage/sessionStorage reads
+- `js-combine-iterations` - Combine multiple filter/map → 1 loop
+- `js-length-check-first` - Check array length before expensive compare
+- `js-early-exit` - Early return from function
+- `js-hoist-regexp` - Hoist RegExp creation outside loop
+- `js-min-max-loop` - Use loop, not sort for min/max
+- `js-set-map-lookups` - Use Set/Map for O(1) lookup
+- `js-tosorted-immutable` - toSorted() for immutability
 
-### 8. Advanced Patterns（LOW）
+### 8. Advanced Patterns (LOW)
 
-- `advanced-event-handler-refs` - イベントハンドラをrefに格納
-- `advanced-use-latest` - 安定callbackにuseLatest
+- `advanced-event-handler-refs` - Store event handlers in refs
+- `advanced-use-latest` - useLatest for stable callbacks
 
-## 出力形式
+## Output Format
 
-通常ケース:
+Normal case:
 
 ```
-🔴 CRITICAL / 🟠 HIGH / 🟡 MEDIUM `ファイル:行` - ルールID - 問題と修正案
+🔴 CRITICAL / 🟠 HIGH / 🟡 MEDIUM `file:line` - rule ID - problem & fix
 📊 Summary: Critical X / High Y / Medium Z
 ```
 
-ゼロ件:
+Zero findings:
 
 ```
-✅ パフォーマンス指摘なし (対象 N ファイル / 45ルール検査)
+✅ No performance findings (N files / 45 rules checked)
 📊 Summary: Critical 0 / High 0 / Medium 0
 
-### 推奨アクション
-- 継続監視（次回 Lighthouse / Web Vitals 計測時に再実行）
+### Recommended Actions
+- Continue monitoring (re-run on next Lighthouse/Web Vitals)
 ```
 
-レビュー対象不在（React/Next.js 検出失敗）:
+No review target (React/Next.js detection failed):
 
 ```
-> [WARN] React/Next.js 検出失敗
-> 検索対象: package.json (react / next 依存) / *.tsx / *.jsx
-> 該当なし → スキップ
+> [WARN] React/Next.js detection failed
+> Search: package.json (react/next deps) / *.tsx / *.jsx
+> Not found → skip
 ```
 
-ガイドライン: `~/.claude/guidelines/languages/nextjs-react.md`
+Guidelines: `~/.claude/guidelines/languages/nextjs-react.md`

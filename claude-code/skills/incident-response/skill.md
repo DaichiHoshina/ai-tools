@@ -1,150 +1,150 @@
 ---
 name: incident-response
-description: インシデント対応。エラー分類→影響判定→原因特定→チケット作成→記録の統合フロー
+description: Incident response. Classify error → assess impact → identify cause → create ticket → document. Use when responding to incidents.
 requires-guidelines:
   - operations
 ---
 
-# incident-response - インシデント対応スキル
+# incident-response - Incident Response Skill
 
-## インフラ障害 クイック診断
+## Infrastructure Failure Quick Diagnosis
 
 ### 403 Forbidden
 
-| チェック順 | 確認項目 | コマンド例 |
+| Check Order | Item | Command |
 |-----------|---------|-----------|
-| 1 | IAMロール/権限 | `aws iam simulate-principal-policy` |
-| 2 | ALB/API Gatewayルール | ALBコンソール → ルール確認 |
-| 3 | CORSヘッダー | `curl -v -X OPTIONS <URL>` |
-| 4 | サービスアカウント | `kubectl describe sa <name>` |
-| 5 | 直近のデプロイ変更 | `git log --oneline -10` / ArgoCD |
+| 1 | IAM role/permission | `aws iam simulate-principal-policy` |
+| 2 | ALB/API Gateway rule | ALB console → check rule |
+| 3 | CORS header | `curl -v -X OPTIONS <URL>` |
+| 4 | Service account | `kubectl describe sa <name>` |
+| 5 | Recent deploy change | `git log --oneline -10` / ArgoCD |
 
-### ワーカー起動失敗
+### Worker Startup Failure
 
-| チェック順 | 確認項目 | コマンド例 |
+| Check Order | Item | Command |
 |-----------|---------|-----------|
-| 1 | Pod状態確認 | `kubectl get pods -n <ns>` |
-| 2 | 起動ログ確認 | `kubectl logs <pod> --previous` |
-| 3 | リソース不足 | `kubectl describe node` |
+| 1 | Pod status | `kubectl get pods -n <ns>` |
+| 2 | Startup log | `kubectl logs <pod> --previous` |
+| 3 | Resource shortage | `kubectl describe node` |
 | 4 | ConfigMap/Secret | `kubectl describe pod <pod>` → Events |
-| 5 | DB接続/外部依存 | 接続先サービスのヘルスチェック |
+| 5 | DB connect/external dep | Health check on target service |
 
-> 繰り返す場合は根本原因分析（`/root-cause`）を実行し、恒久対応を必ず提案すること。
+> If repeating, run root cause analysis (`/root-cause`), always propose permanent fix.
 
-## 対応フロー
+## Response Flow
 
 ```
-エラー受領 → Step 1-5 を順に実行
+Receive error → Execute Step 1-5 in order
 ```
 
-### Step 1: 分類
+### Step 1: Classify
 
-| 分類 | 判定基準 | 次アクション |
+| Classification | Criteria | Next |
 |------|---------|-------------|
-| 既知・想定内 | 認証失敗（未登録メール等）、rate limit | ユーザーに報告して終了 |
-| 既知・要対応 | 設定ミス、リソース不足、依存サービス障害 | Step 2へ |
-| 未知 | 過去に見たことがないエラー | Step 2へ（優先度上げ） |
-| 分類不能 | エラー情報不足（スタックトレース欠落、ログ未取得） | ユーザーに追加情報要求して停止 |
+| Known, Expected | Auth fail (unregistered email), rate limit | Report to user & done |
+| Known, Requires Action | Config error, resource shortage, service down | Proceed to Step 2 |
+| Unknown | Never seen this error | Proceed to Step 2 (elevate priority) |
+| Unclassifiable | Missing info (no stack trace, no logs) | Request info from user & stop |
 
-### Step 2: 影響範囲
+### Step 2: Impact Scope
 
-| レベル | 条件 | 対応速度 |
+| Level | Condition | Response Time |
 |--------|------|---------|
-| Critical | 本番ユーザー影響あり・データ不整合 | 即時対応 |
-| High | 本番一部機能停止・tes環境全停止 | 当日中 |
-| Medium | 本番ログエラーのみ・tes一部不具合 | 次スプリント |
-| Low | dev環境のみ・警告レベル | バックログ |
+| Critical | Prod user affected, data mismatch | Immediate |
+| High | Prod feature down, test env down | Same day |
+| Medium | Prod log error only, test partial fail | Next sprint |
+| Low | Dev only, warning level | Backlog |
 
-### Step 3: 原因特定
+### Step 3: Root Cause Identification
 
-1. エラーログからスタックトレース・エラーコード抽出
-2. 関連サービスのログ横断確認（k8s pods/logs）
-3. 直近のデプロイ・設定変更確認（git log/ArgoCD）
-4. 根本原因特定（対症療法禁止 → `/root-cause` 参照）
+1. Extract stack trace, error code from logs
+2. Cross-check logs across related services (k8s pods/logs)
+3. Verify recent deploy, config changes (git log/ArgoCD)
+4. Identify root cause (no band-aids → see `/root-cause`)
 
-調査が長引く場合は3ステップごとに「確定事項 / 未確定事項 / 次アクション / 判断必要な点」を再出力（ユーザーの「つまり？」「残タスクは？」を予防）。
+If investigation drags, re-output every 3 steps: "confirmed / unconfirmed / next action / decision needed" (prevents user "so what?", "remaining?").
 
-### Step 4: チケット作成
+### Step 4: Create Ticket
 
-Jira MCP（`mcp__jira__jira_post`）で作成。必須項目: summary（`[影響レベル] 概要`、80字以内）、description（PREP 3点: 結論=対応方針 / 理由=現象+影響範囲+原因 / 次アクション=担当+期限）、priority（影響レベル準拠）、labels（`["incident"]`）。
+Use Jira MCP (`mcp__jira__jira_post`). Required: summary (`[Impact Level] summary`, <80 chars), description (PREP 3: conclusion=action / reason=symptom+scope+cause / next=owner+deadline), priority (matches impact), labels (`["incident"]`).
 
-**投稿前 self-check（`~/.claude/guidelines/writing/PRINCIPLES.md` の「書く前の 4 問」）通過必須**。詳細ログは `<details>` 折りたたみ。違反時は draft 修正して再 self-check。
+**Must pass self-check** before post (`~/.claude/guidelines/writing/PRINCIPLES.md` "4 questions"). Detailed logs in `<details>` fold. If fail, fix draft & re-check.
 
-**MCP 失敗時 fallback**:
+**MCP failure fallback**:
 
-| 失敗 | 動作 |
+| Failure | Action |
 |------|------|
-| `mcp__jira__jira_post` 接続不可 | チケット本文を draft として出力フォーマットに含め、ユーザーに手動投稿案内 |
-| 認証エラー | 認証 URL を提示して停止（draft は保持） |
-| priority 値拒否 | `Medium` で再投稿、warning ログ |
+| `mcp__jira__jira_post` unreachable | Include ticket body as draft in output, guide user to manual post |
+| Auth error | Show auth URL & stop (keep draft) |
+| Priority value rejected | Retry with `Medium`, warning log |
 
-### Step 5: 記録
+### Step 5: Document
 
-Confluence MCP（`mcp__confluence__conf_post`）でインシデント記録作成、必要ならSlack通知。
+Create incident record with Confluence MCP (`mcp__confluence__conf_post`), notify Slack if needed.
 
-**MCP 失敗時 fallback**: ローカルに `incidents/{YYYY-MM-DD}-{topic}.md` で保存、後続で手動アップロード案内。Slack 通知失敗は warning のみ（記録の方を優先）。
+**MCP failure fallback**: Save locally as `incidents/{YYYY-MM-DD}-{topic}.md`, guide manual upload later. Slack notification failure = warning only (prioritize record).
 
-## 出力フォーマット
+## Output Format
 
-通常ケース:
+Normal case:
 
 ```markdown
-## インシデント報告
+## Incident Report
 
-| 項目 | 内容 |
+| Item | Content |
 |------|------|
-| 分類 | 既知/未知 |
-| 影響レベル | Critical/High/Medium/Low |
-| 環境 | dev/tes/prd |
-| 発生日時 | YYYY-MM-DD HH:MM |
+| Classification | Known/Unknown |
+| Impact Level | Critical/High/Medium/Low |
+| Environment | dev/test/prod |
+| Time | YYYY-MM-DD HH:MM |
 
-### エラー内容
-（ログ引用）
+### Error
+(log excerpt)
 
-### 原因
-（根本原因の説明）
+### Root Cause
+(explanation)
 
-### 対応
-- [ ] 修正方針
-- [ ] チケットURL
+### Action
+- [ ] Fix approach
+- [ ] Ticket URL
 ```
 
-原因未確定（Step 3 で特定不能時）:
+Cause unconfirmed (Step 3 fail):
 
 ```markdown
-## インシデント報告（調査中）
-> [WARN] 根本原因未特定。暫定対応のみ実施、継続調査が必要。
+## Incident Report (Under Investigation)
+> [WARN] Root cause not identified. Temporary action only, ongoing investigation needed.
 
-| 項目 | 内容 |
+| Item | Content |
 |------|------|
-| 分類 | 未知 |
-| 影響レベル | Critical/High/Medium/Low |
+| Classification | Unknown |
+| Impact Level | Critical/High/Medium/Low |
 
-### 確定事項
-- 現象: ...
-- 影響範囲: ...
+### Confirmed
+- Symptom: ...
+- Impact scope: ...
 
-### 未確定事項
-- 原因: 候補 A / B / C のうち切り分け未完
-- 再現条件: ...
+### Unconfirmed
+- Cause: Candidates A/B/C, not isolated yet
+- Repro: ...
 
-### 暫定対応
-- [ ] rollback / feature flag off 等
-- [ ] 継続調査タスク（担当 / 期限）
+### Temporary Action
+- [ ] rollback / feature flag off etc
+- [ ] Ongoing investigation task (owner / deadline)
 ```
 
-チケット作成失敗時:
+Ticket creation failed:
 
 ```markdown
-## インシデント報告（手動投稿要）
-> [WARN] Jira MCP 失敗。下記 draft を Jira UI に手動投稿してください。
+## Incident Report (Manual Post Required)
+> [WARN] Jira MCP failed. Manually post draft below to Jira UI.
 
-### Jira draft
-- summary: [影響レベル] 概要
+### Jira Draft
+- summary: [Impact Level] summary
 - description: ...
 - priority: ...
 - labels: ["incident"]
 
-### 投稿先 URL
+### Post URL
 {jira-base-url}/secure/CreateIssue.jspa
 ```

@@ -1,103 +1,103 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, mcp__serena__*
-description: 振り返り - 過去のセッションを分析し、スキル・設定の改善案を提案
+description: Retrospective - analyze past sessions, auto-propose skill/config improvements
 ---
 
-# /retrospective - 振り返り・自己改善
+# /retrospective - Session Review & Self-improvement
 
-過去のセッション履歴・作業記録を分析し、改善案を自動生成する。
+Analyze past session history and work records, auto-generate improvement proposals.
 
-## 実行フロー
+## Execution Flow
 
-### Phase 1: データ収集
+### Phase 1: Data Collection
 
-- セッション履歴: `~/.claude/history.jsonl`（直近100件）
-- 過去のTODO: `~/.claude/todos/`
-- Serena memory: `mcp__serena__list_memories` → 各memory読み込み
+- Session history: `~/.claude/history.jsonl` (recent 100)
+- past TODOs: `~/.claude/todos/`
+- Serena memory: `mcp__serena__list_memories` → load each
 
-### Phase 2: パターン分析
+### Phase 2: Pattern Analysis
 
-| 分析対象 | 抽出内容 |
+| Analysis Target | Extract |
 |---------|---------|
-| 失敗パターン | エラー頻発タスク、リトライ多発、中断タスク |
-| 非効率パターン | 繰り返し質問、毎回同じ設定説明、手動反復作業 |
-| 成功パターン | 効率的ワークフロー、うまくいったアプローチ |
+| failure patterns | high-error tasks, retry spikes, dropped tasks |
+| inefficiency patterns | repeated questions, each-session config explain, manual iteration churn |
+| success patterns | efficient workflows, what-worked approaches |
 
-### Phase 3: 改善案生成
+### Phase 3: Generate Improvements
 
-| カテゴリ | 内容 |
+| Category | Content |
 |---------|------|
-| 新スキル提案 | 頻出パターンのスキル化 |
-| 既存スキル改善 | 関連質問が多い機能の追加 |
-| CLAUDE.md追記 | 毎回確認している内容の定義化 |
-| Hook自動化 | 手動反復作業の自動化 |
+| new skill proposal | common patterns → skill-ify |
+| existing skill improvement | related Qs common → add feature |
+| CLAUDE.md addition | recurring confirms → define once |
+| hook automation | manual repetition → auto-run |
 
-### Phase 3.5: writing 失敗例の memory 蓄積（Compounding Engineering）
+### Phase 3.5: Accumulate Writing Failure Examples (Compounding Engineering)
 
-writing 関連の失敗例（ユーザから「読みにくい」「AI臭い」「で、つまり何？と思った」等の指摘）を検出した場合、memory に蓄積して次セッション以降の hook で参照可能にする。
+If writing failures detected (user feedback "hard to read" / "AI-smelling" / "so what?"), accumulate examples to memory for next session's hook reference.
 
-保存先: `~/.claude/projects/{project}/memory/writing_failure_{topic}.md`
+Save to: `~/.claude/projects/{project}/memory/writing_failure_{topic}.md`
 
-フォーマット:
+Format:
 ```markdown
 ---
 name: writing-failure-{topic}
-description: {失敗パターンの1行要約}
+description: {1-line failure pattern summary}
 metadata:
   type: writing-failure
   date: YYYY-MM-DD
 ---
 
-## 何が起きたか
-{ユーザの具体的な指摘}
+## What Happened
+{user's specific feedback}
 
-## 該当箇所
-{該当ファイル:行 or 投稿内容の抜粋}
+## Relevant Location
+{file:line or excerpt}
 
-## なぜ起きたか
-{AI 側の根本原因。例: 抽象名詞を並べた / 暗黙知を前提にした / 段落の役割が曖昧 等}
+## Root Cause
+{AI side root cause. e.g., stacked abstract nouns / implicit knowledge / ambiguous paragraph role}
 
-## 再発防止
-{次回どう書けば回避できるか。PRINCIPLES.md の該当軸を引用}
+## Prevention
+{how to avoid next time. cite relevant axis from PRINCIPLES.md}
 ```
 
-蓄積された memory は `~/.claude/CLAUDE.md` 経由で session start 時に context 注入されるため、次セッションで同じ失敗を踏まない。
+Accumulated memories injected via `~/.claude/CLAUDE.md` at session start, so next session avoids same failure.
 
-### Phase 4: 採用・反映
+### Phase 4: Adopt & Apply
 
-AskUserQuestion → 採用案を選択 → 新スキル作成 / 既存ファイル編集 / CLAUDE.md追記 / memory保存
+AskUserQuestion → select proposals → implement (new skill / edit existing / add to CLAUDE.md / save memory)
 
-## 出力フォーマット
+## Output Format
 
 ```markdown
 # Retrospective Report
-## 分析期間: YYYY-MM-DD 〜 YYYY-MM-DD（直近N件）
-## 問題パターン（頻度: 高/中/低）
-## 成功パターン
-## 改善提案（新スキル / 既存改善 / 自動化）各：名前、理由、優先度
-## 次のアクション
+## Analysis Period: YYYY-MM-DD ~ YYYY-MM-DD (recent N)
+## Problem Patterns (frequency: high/mid/low)
+## Success Patterns
+## Improvement Proposals (new skill / existing / auto-run) each: name, why, priority
+## Next Steps
 ```
 
-## 出力文体
+## Output Prose
 
-レポートは Notion/md で他人が読む前提。`guidelines/writing/long-form-doc.md` の原則を適用:
+Report for Notion/md for others. Apply `guidelines/writing/long-form-doc.md` principles:
 
-- 結論（主な学び）を冒頭に
-- 「改善した」「効率化した」の抽象語でなく、頻度・件数・時間の数字で
-- 「推奨」には根拠1文併記
-- 末尾に次アクション（いつ・誰が・何を）を明示
+- conclusion (main learnings) first
+- "improved" / "efficient" → numbers: frequency / count / time
+- "recommend" + 1-line rationale
+- end with next action (when/who/what)
 
-## 失敗時の挙動
+## Failure Handling
 
-| 状況 | 動作 |
-|------|------|
-| `~/.claude/history.jsonl` 不在 | Serena memory のみで分析続行、warning ログ |
-| Serena memory 接続失敗 | history.jsonl のみで分析続行、改善案精度低下を明示 |
-| 直近セッション 10件未満 | 分析対象不足、「データ蓄積中」と報告して終了 |
-| 全データ取得失敗 | 改善案生成不能、ユーザーに手動振り返りを案内 |
+| Situation | Behavior |
+|-----------|----------|
+| `~/.claude/history.jsonl` missing | continue with Serena memory alone, warn |
+| Serena memory connect fail | continue with history.jsonl alone, note precision loss |
+| recent sessions < 10 | insufficient data, report "accumulating" → done |
+| all data fetch fail | cannot generate proposals, guide user to manual review |
 
-## 注意事項
+## Notes
 
-- 履歴にはセンシティブ情報が含まれる可能性あり。外部送信しない
-- 改善は必ずユーザー承認後に実行
-- 週1回程度の実行を推奨
+- History may contain sensitive data. Never send externally
+- Always get user approval before applying improvements
+- weekly execution recommended

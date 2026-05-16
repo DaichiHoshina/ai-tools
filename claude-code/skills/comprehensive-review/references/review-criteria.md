@@ -1,143 +1,143 @@
-# レビュー観点 詳細チェック項目
+# Review Criteria
 
-## architecture（設計）
-
-### Critical
-
-| チェック項目 | 説明 |
-|-------------|------|
-| レイヤー違反 | Domain → Infrastructure参照、UseCaseでフレームワーク固有処理 |
-| 依存方向の逆転不備 | Repository実装にDomainが依存、DI未使用 |
-| 貫通型アクセス | Controller → DB直接、UseCase未経由 |
-| ビジネスロジック配置ミス | Controller / Infrastructureにビジネスロジック |
-| 貧血ドメインモデル | Entityがgetter/setterのみでロジック不在 |
-| 集約境界違反 | 集約ルート外からの直接アクセス |
-
-### Warning
-
-| チェック項目 | 説明 |
-|-------------|------|
-| 過剰な抽象化 | 不要なインターフェース・レイヤー |
-| Fat Service | 1つのServiceに複数責務が集中 |
-| ユビキタス言語不一致 | コード上の命名がドメイン用語と乖離 |
-| OCP違反の分岐 | switch/ifで種別・キャリア等を分岐 → Strategy/Specificationパターンでの置き換えを提案 |
-| 型の意味的共有 | 構造が同じという理由で異なるドメイン概念に同一型を流用（変更/削除時に無関係な機能が巻き添え） |
-
-## quality（品質）
+## Architecture (Design)
 
 ### Critical
 
-| チェック項目 | 説明 |
-|-------------|------|
-| 型安全性 | `any`使用、無検証`as`、`interface{}` |
-| パフォーマンス | N+1問題、メモリリーク |
-| 古いパターン | 言語別ガイドラインの「古いパターン検出」参照 |
-| DB機能未活用 | アプリ側フィルタ/変換をDB固有機能でSQL完結できないか検討 |
+| Item | Description |
+|------|-------------|
+| Layer violation | Domain referencing Infrastructure, UseCase with framework-specific logic |
+| Dependency inversion broken | Domain depends on Repository impl, missing DI |
+| Bypass access | Controller → DB direct, skipping UseCase |
+| Business logic in wrong layer | Logic in Controller / Infrastructure |
+| Anemic domain model | Entity is getter/setter only |
+| Aggregate boundary violation | Direct access outside aggregate root |
 
 ### Warning
 
-| チェック項目 | 説明 |
-|-------------|------|
-| コード臭 | 長い関数（100行超）、マジックナンバー |
-| 非効率アルゴリズム | O(n^2)でO(n) / O(n log n)が可能 |
-| 未使用コード混入 | PRの差分に、そのPRで使わないinterfaceメソッド・関数が含まれている |
-| ステータスコード誤用 | サーバー側不整合に400、リソース未検出にBadRequest等、原因と不一致のHTTPステータス |
+| Item | Description |
+|------|-------------|
+| Over-abstraction | Unnecessary interfaces / layers |
+| Fat Service | Multiple responsibilities in one Service |
+| Ubiquitous language mismatch | Naming diverges from domain terminology |
+| OCP-violating conditionals | switch/if for type/carrier → suggest Strategy/Specification |
+| Semantic type sharing | Same type for different domain concepts (coupling risk) |
 
-## readability（可読性）
+## Quality
 
 ### Critical
 
-| チェック項目 | 説明 |
-|-------------|------|
-| 誤解を招く命名 | 名前と実際の振る舞いが異なる |
-| 暗号的コード | 意図が読み取れない複雑なワンライナー |
+| Item | Description |
+|------|-------------|
+| Type safety | `any`, unvalidated `as`, `interface{}` |
+| Performance | N+1, memory leaks |
+| Outdated patterns | See lang guidelines "detect old patterns" |
+| Unused DB features | Can DB-specific SQL complete filtering/transform vs app-side? |
 
 ### Warning
 
-| チェック項目 | 説明 |
-|-------------|------|
-| 認知的複雑度 | 深いネスト（3階層超）、長い条件式 |
-| 命名の質 | 省略しすぎ（`usr`, `tmp`）、対称性の欠如 |
-| 関数の長さ・引数 | 50行超は分割検討、引数4個超はオブジェクト化 |
-| 一貫性 | 同一プロジェクト内で命名規則・パターンが不統一 |
-| 構造の明瞭さ | ガード節未使用、否定条件の連鎖、bool引数 |
-| 過剰な複雑性（YAGNI違反） | 使われていない抽象化、1回だけ呼ばれるヘルパー |
-| 冗長な共通化 | 呼び出し元で分岐済みなのに内部でさらに分岐するヘルパー、常にtrueな条件分岐 |
+| Item | Description |
+|------|-------------|
+| Code smell | Functions >100 lines, magic numbers |
+| Inefficient algorithm | Possible O(n) or O(n log n) for O(n²) |
+| Unused code in diff | PR includes unused interface methods / functions |
+| HTTP status mismatch | 400 for server issue, BadRequest for not found, etc |
 
-## security（セキュリティ）
+## Readability
 
 ### Critical
 
-| チェック項目 | 説明 |
-|-------------|------|
-| インジェクション | SQL（文字列結合）、XSS（innerHTML）、コマンドインジェクション |
-| 認証不備 | パスワード平文、セッション漏洩 |
-| エラー握りつぶし | 空catch、エラー無視 |
-| 機密情報漏洩 | password/token/secretのログ出力 |
+| Item | Description |
+|------|-------------|
+| Misleading names | Name ≠ actual behavior |
+| Cryptic code | Intent unclear, complex one-liners |
 
 ### Warning
 
-| チェック項目 | 説明 |
-|-------------|------|
-| ヘッダー不足 | CSP/HSTS/X-Frame-Options |
-| レート制限なし | 公開APIにスロットリング未実装 |
+| Item | Description |
+|------|-------------|
+| Cognitive complexity | Deep nesting (3+ levels), long conditionals |
+| Naming quality | Over-abbreviated (`usr`, `tmp`), lack of symmetry |
+| Function size/arity | >50 lines: split, >4 args: objectify |
+| Consistency | Inconsistent naming rules / patterns within project |
+| Structure clarity | Missing guard clauses, negation chains, bool flags |
+| Over-engineering (YAGNI) | Unused abstractions, helpers called once |
+| Redundant shared code | Caller-side branching + internal branching, always-true conditionals |
 
-## docs（ドキュメント・テスト）
+## Security
 
 ### Critical
 
-| チェック項目 | 説明 |
-|-------------|------|
-| 公開APIに説明なし | exportedな型・関数にドキュメントなし |
-| 嘘のコメント | 実装と不一致のコメント |
-| 実質的検証がないテスト | `expect(user).toBeDefined()`のみ、assertionなし |
-| 過剰なモック | 全モックで実際の動作検証なし |
+| Item | Description |
+|------|-------------|
+| Injection | SQL (string concat), XSS (innerHTML), command injection |
+| Auth broken | Plaintext passwords, session leaks |
+| Error suppression | Empty catch, ignored errors |
+| Secret leaks | password/token/secret in logs |
 
 ### Warning
 
-| チェック項目 | 説明 |
-|-------------|------|
-| テスト独立性欠如 | 共有状態、実行順序依存 |
-| カバレッジ不足 | 異常系・境界値テスト欠如 |
-| 冗長なテストコード | 過剰なセットアップ、実装の詳細に依存しすぎ |
+| Item | Description |
+|------|-------------|
+| Missing headers | CSP, HSTS, X-Frame-Options |
+| No rate limit | Public API missing throttling |
 
-## root-cause（恒久対応）
+## Docs & Testing
 
 ### Critical
 
-| チェック項目 | 説明 |
-|-------------|------|
-| 対症療法 | null check/try-catch/条件分岐で問題を隠している |
-| エラー握りつぶし | エラーを無視して処理を続行（空catch、`_ = err`） |
-| 同一パターン再発 | 同じ種類の問題がコードベース内の他箇所にも存在 |
+| Item | Description |
+|------|-------------|
+| Missing public API docs | Exported types / functions undocumented |
+| False comments | Comments diverge from implementation |
+| No real assertion | `expect(user).toBeDefined()` only |
+| Over-mocking | All mocks, no actual behavior verified |
 
 ### Warning
 
-| チェック項目 | 説明 |
-|-------------|------|
-| 局所的修正 | 1箇所だけ修正しているが同じパターンが3箇所以上ある |
-| 構造的不整合 | 修正が既存の設計パターンと矛盾する |
-| 原因未特定 | なぜ直ったか説明できない修正 |
+| Item | Description |
+|------|-------------|
+| Test isolation | Shared state, execution order dependency |
+| Coverage gaps | Missing error/boundary case tests |
+| Verbose test code | Excessive setup, over-dependency on implementation details |
 
-## logging（ログ）
-
-詳細基準はCLAUDE.mdの「ログ設計基準」参照。
+## Root Cause (Permanent fix)
 
 ### Critical
 
-| チェック項目 | 説明 |
-|-------------|------|
-| 機密情報ログ出力 | password/token/Cookie/PII生値/request body丸ごと |
-| エラー情報の欠落 | エラーログにerror object/stacktraceなし |
-| 非構造化ログ | 文字列結合でのログ出力（`"user " + id`等） |
-| 到達不能パスのレベル不足 | switchのdefault、未対応enum値がwarn/info |
+| Item | Description |
+|------|-------------|
+| Symptomatic fix | Hiding with null checks / try-catch / conditionals |
+| Error suppression | Ignoring errors (empty catch, `_ = err`) |
+| Same pattern recurs | Issue exists elsewhere in codebase |
 
 ### Warning
 
-| チェック項目 | 説明 |
-|-------------|------|
-| ログレベル不適切 | 正常系にwarn/error、異常系にinfo、debug使用 |
-| フォールバックのInfo降格 | 稀にしか起きない事象をinfoにしている |
-| 必須フィールド欠落 | request_id/trace_id、event、duration_msが不足 |
-| NotFound判断ミス | 一覧0件にwarn、ID指定NotFoundにログなし等 |
-| 過剰ログ | ループ内やN+1になるログ出力 |
+| Item | Description |
+|------|-------------|
+| Local-only fix | Fixing 1 spot but pattern exists 3+ places |
+| Structural conflict | Fix contradicts existing design patterns |
+| Cause unexplained | Can't explain why fix works |
+
+## Logging
+
+See CLAUDE.md "logging design criteria" for details.
+
+### Critical
+
+| Item | Description |
+|------|-------------|
+| Secret in logs | password/token/Cookie/PII/full request body |
+| Missing error context | No error object / stacktrace in logs |
+| Unstructured logs | String concatenation (`"user " + id`) |
+| Unreachable path wrong level | switch default, unhandled enum as warn/info |
+
+### Warning
+
+| Item | Description |
+|------|-------------|
+| Wrong log level | warn/error for success, info for errors |
+| Rare event as info | Low-probability fallback downgraded to info |
+| Missing fields | request_id/trace_id, event, duration_ms |
+| NotFound confusion | 0 results as warn, ID lookup not found silent |
+| Over-logging | Logs in loops / N+1 queries |

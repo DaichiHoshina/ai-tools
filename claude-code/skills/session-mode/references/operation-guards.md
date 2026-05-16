@@ -1,9 +1,9 @@
-# 操作ガード詳細定義
+# Operation Guard Specification
 
-## モード依存操作ガード
+## Mode-dependent operation guard
 
 ```text
-operationGuard : Mode x Action → {Allow, AskUser, Deny}
+operationGuard : Mode × Action → {Allow, AskUser, Deny}
 
 operationGuard(m, a) =
   | Allow   if a in Safe_m
@@ -11,7 +11,7 @@ operationGuard(m, a) =
   | Deny    if a in Forbidden
 ```
 
-## 各モードの分類ルール
+## Classification rules per mode
 
 ```text
 Safe_strict     = Mor(Safe)
@@ -24,14 +24,14 @@ Safe_fast       = Mor(Safe) + SafeBoundary
 Boundary_fast   = Mor(Boundary) \ SafeBoundary
 ```
 
-## 不変条件
+## Invariants
 
 ```text
-forall m in Mode, Forbidden subset Mor(Forbidden)
-strict <= normal <= fast  # 制約の強さの順序
+forall m in Mode, Forbidden ⊆ Mor(Forbidden)
+strict ≤ normal ≤ fast  # constraint strength order
 ```
 
-## Serena Memoryスキーマ
+## Serena Memory schema
 
 ```yaml
 memory_key: "session-mode"
@@ -41,7 +41,7 @@ schema:
   previous_mode: "strict" | "normal" | "fast" | null
 ```
 
-## モード遷移図
+## Mode transition diagram
 
 ```text
          /mode strict
@@ -59,22 +59,22 @@ schema:
          +--------+
 ```
 
-## 圏論的解釈
+## Category-theoretic interpretation
 
-### モード圏の定義
+### Mode category
 
 ```text
-Mode圏:
-  対象: {strict, normal, fast}
-  遷移: transition : Mode → Mode
-  恒等遷移: id_m : m → m
+Mode category:
+  Objects: {strict, normal, fast}
+  Morphisms: transition : Mode → Mode
+  Identity: id_m : m → m
 ```
 
-### 操作ガードのモード遷移
+### Operation guard mode transitions
 
 ```text
-eta_mode : operationGuard_normal => operationGuard_mode
+eta_mode : operationGuard_normal ⇒ operationGuard_mode
 
-eta_strict : operationGuard_normal → operationGuard_strict  （制約強化）
-eta_fast   : operationGuard_normal → operationGuard_fast    （制約緩和）
+eta_strict : operationGuard_normal → operationGuard_strict  (strengthen)
+eta_fast   : operationGuard_normal → operationGuard_fast    (relax)
 ```

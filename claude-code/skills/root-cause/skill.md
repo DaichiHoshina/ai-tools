@@ -1,6 +1,6 @@
 ---
 name: root-cause
-description: 根本原因分析（5つのなぜ）。バグ原因特定・再発防止・構造的修正戦略、根本原因分析時に使用
+description: Root cause analysis (5 Why). Identify bug causes, prevent recurrence, structural fix strategy. Use when analyzing root causes.
 allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*
 model: sonnet
 requires-guidelines:
@@ -19,70 +19,70 @@ parameters:
 
 # root-cause - Root Cause Analysis
 
-バグやエラーの根本原因を体系的に分析し、構造的な修正戦略を提案する。
+Systematically analyze bug/error root causes, propose structural fix strategy.
 
-## 実行フロー
+## Execution Flow
 
-### Step 1: 症状の記録
+### Step 1: Symptom Documentation
 
-ユーザーから収集: エラーメッセージ、再現手順、影響範囲、発生頻度
+Collect from user: error message, repro steps, impact scope, frequency.
 
-### Step 2: 5つのなぜ分析
+### Step 2: 5 Why Analysis
 
-各レベルで「なぜ?」を問い、証拠を収集する。
+Question "why" at each level, gather evidence.
 
-### Step 3: 根本原因の分類
+### Step 3: Root Cause Classification
 
-| カテゴリ | 説明 | 典型的な複雑度 |
+| Category | Description | Typical Complexity |
 |---------|------|--------------|
-| **Architecture** | レイヤー違反、コンポーネント欠如 | High |
-| **Logic** | アルゴリズムバグ、条件ミス | Medium |
-| **Data** | スキーマ不一致、マイグレーション問題 | Medium-High |
-| **Integration** | API契約違反、外部依存 | Medium |
-| **Assumption** | 挙動の誤った仮定 | Low-Medium |
-| **Environment** | 設定、インフラ | Low-Medium |
+| **Architecture** | Layer violation, component missing | High |
+| **Logic** | Algorithm bug, condition error | Medium |
+| **Data** | Schema mismatch, migration issue | Medium-High |
+| **Integration** | API contract violation, external dep | Medium |
+| **Assumption** | Incorrect behavior assumption | Low-Medium |
+| **Environment** | Config, infra | Low-Medium |
 
-### Step 4: 修正戦略の提案
+### Step 4: Fix Strategy Proposal
 
-| 戦略 | 再発リスク | 推奨 |
+| Strategy | Recurrence Risk | Recommended |
 |------|-----------|------|
-| L1: 対症療法 | 高 | 緊急時のみ |
-| L2: 部分的治療 | 中 | 時間制約時 |
-| L3: 根本治療 | 低 | 推奨 |
+| L1: Symptomatic | High | Emergency only |
+| L2: Partial | Medium | Time-constrained |
+| L3: Root treatment | Low | Recommended |
 
-### Step 5: 類似問題の検出
+### Step 5: Detect Similar Issues
 
-Serena MCPで同じパターンをコードベース全体から検索。
+Use Serena MCP to search codebase for same pattern.
 
-### Step 6: レポート生成
+### Step 6: Report Generation
 
-Serena Memoryに保存: `mcp__serena__write_memory("rca-{日付}-{要約}", レポート内容)`
+Save to Serena Memory: `mcp__serena__write_memory("rca-{date}-{summary}", content)`
 
-## Serena MCP優先使用
+## Serena MCP Priority Use
 
-- `mcp__serena__find_symbol` - シンボル検索
-- `mcp__serena__find_referencing_symbols` - 使用箇所追跡
-- `mcp__serena__search_for_pattern` - パターン検出
-- `mcp__serena__get_symbols_overview` - ファイル構造把握
+- `mcp__serena__find_symbol` - Symbol search
+- `mcp__serena__find_referencing_symbols` - Trace usage
+- `mcp__serena__search_for_pattern` - Pattern detection
+- `mcp__serena__get_symbols_overview` - File structure
 
-## 出力例
+## Output Example
 
 ```text
-## Root Cause Analysis: ユーザープロフィールのnullエラー
+## Root Cause Analysis: User Profile Null Error
 
-### 5つのなぜ
-1. なぜnullエラー? → user.profileがnull
-2. なぜprofileがnull? → API fetchが失敗してもデフォルト値がない
-3. なぜデフォルト値がない? → fetchResultの型がany
-4. なぜ型がany? → 境界に型検証がない
-5. なぜ検証がない? → 入力検証層の設計が欠如（根本原因）
+### 5 Why
+1. Why null error? → user.profile is null
+2. Why profile null? → API fetch fails, no default value
+3. Why no default? → fetchResult type is any
+4. Why any type? → No type check at boundary
+5. Why no check? → Input validation layer missing (ROOT CAUSE)
 
-### 根本原因: Architecture - 入力検証層の欠如
-確信度: 92%
+### Root Cause: Architecture - Input Validation Layer Missing
+Confidence: 92%
 
-### 推奨: L3 根本治療
-Zod検証層を全APIエンドポイントに追加
-影響箇所: 23エンドポイント
+### Recommended: L3 Root Treatment
+Add Zod validation layer to all API endpoints
+Affected: 23 endpoints
 ```
 
 ARGUMENTS: $ARGUMENTS

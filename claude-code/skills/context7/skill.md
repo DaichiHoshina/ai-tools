@@ -1,9 +1,9 @@
 ---
 name: context7
-description: ライブラリ最新ドキュメントをContext7 API経由で取得。トレーニングデータ以降のAPI仕様確認時に使用
+description: Fetch latest library docs via Context7 API. Use when checking API specs after training data cutoff.
 ---
 
-# context7 - ライブラリドキュメント検索
+# context7 - Library Documentation Search
 
 ## Overview
 
@@ -84,11 +84,11 @@ curl -s "https://context7.com/api/v2/context?libraryId=/fastapi/fastapi&query=de
 - URL-encode query parameters containing spaces (use `+` or `%20`)
 - No API key is required for basic usage (rate-limited)
 
-## 失敗時の挙動
+## Failure Behavior
 
-| 状況 | 動作 |
+| Situation | Action |
 |------|------|
-| API 接続失敗 (timeout / DNS) | knowledge cutoff 時点の知識で代替、warning ログ出力 |
-| 429 Rate Limit | exponential backoff 1 回（1s → 4s）、それでも失敗なら知識代替 |
-| 検索結果ゼロ件 | 別キーワード提案（例: `react-hooks` → `react hooks`）、それでもゼロなら未検出を明示 |
-| `libraryId` 解決後にコンテキスト取得失敗 | 別 libraryId 候補（results[1], results[2]）で再試行、最大 3 候補 |
+| API connect fail (timeout / DNS) | Fallback to knowledge cutoff, warning log |
+| 429 Rate Limit | Exponential backoff 1 try (1s → 4s), else fallback to knowledge |
+| Zero search results | Suggest alternative keywords (e.g. `react-hooks` → `react hooks`), if still zero show not found |
+| Context fetch fail post-libraryId | Retry with alternate libraryId (results[1], results[2]), max 3 candidates |

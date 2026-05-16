@@ -1,67 +1,67 @@
 ---
 allowed-tools: Read, mcp__serena__read_memory, mcp__serena__write_memory
-description: Protection Mode（操作保護モード）を読み込み - 操作チェッカー・安全性分類をセッションに適用
+description: Load Protection Mode - apply operation checker and safety classification to session
 ---
 
-## /protection-mode - 操作保護モード
+## /protection-mode - Operation Protection Mode
 
-## 実行ロジック
+## Execution Logic
 
-1. **Serena memory確認**: `read_memory("protection-mode-loaded")` → 存在すればスキップ
-2. **初回のみファイル読み込み**: `skill.md` + `guardrails.md`（`full`引数時は `session-modes.md` も）
-3. **セッションモード適用**: Skill(session-mode) でstrict/normal/fastモードの操作ガードを適用
-4. **memoryに保存**: `write_memory("protection-mode-loaded", {loaded_at, summary})`（保存失敗時は警告のみ、Step 5 に進む）
-5. **適用報告**: 現在の制約を表示（下記フォーマット）
+1. **Check Serena memory**: `read_memory("protection-mode-loaded")` → skip if exists
+2. **First-time file load**: `skill.md` + `guardrails.md` (with `full` arg, also `session-modes.md`)
+3. **Apply session mode**: Skill(session-mode) applies strict/normal/fast operation guards
+4. **Save to memory**: `write_memory("protection-mode-loaded", {loaded_at, summary})` (warn if save fails, proceed to Step 5)
+5. **Report application**: display current constraints (format below)
 
-**適用報告フォーマット例**:
+**Application report format**:
 
 ```
 ✓ Protection Mode loaded (mode=normal)
-  Boundary: AskUser (重要操作のみ)
-  Forbidden: Deny (rm -rf /, secrets漏洩)
+  Boundary: AskUser (important only)
+  Forbidden: Deny (rm -rf /, secrets leak)
   Complexity gate: Simple < 5 files / 300 lines
 ```
 
-## 3層分類
+## 3-layer Classification
 
-| 層 | 処理 | 例 |
+| Layer | Action | Example |
 |---|------|---|
-| **Safe** | 即座実行 | ファイル読み取り, git status |
-| **Boundary** | 確認後実行 | git commit/push, 設定変更 |
-| **Forbidden** | 拒否 | rm -rf /, secrets漏洩 |
+| **Safe** | exec immediately | file read, git status |
+| **Boundary** | confirm then exec | git commit/push, config change |
+| **Forbidden** | reject | rm -rf /, secrets leak |
 
-## 操作ガード
+## Operation Guard
 
 `operationGuard : Mode × Action → {Allow, AskUser, Deny}`
 
 | Mode | Safe | Boundary | Forbidden |
 |------|------|----------|-----------|
-| strict | Allow | AskUser（全件） | Deny |
-| normal | Allow | AskUser（重要のみ） | Deny |
-| fast | Allow | AskUser/Allow（最重要のみ） | Deny |
+| strict | Allow | AskUser (all) | Deny |
+| normal | Allow | AskUser (important) | Deny |
+| fast | Allow | AskUser/Allow (critical only) | Deny |
 
-## 複雑度判定
+## Complexity Judgment
 
-| 条件 | 判定 | アクション |
+| Condition | Judgment | Action |
 |------|------|-----------|
-| ファイル数<5 AND 行数<300 | Simple | 直接実装 |
-| ファイル数≥5 OR 独立機能≥3 | TaskDecomposition | 5フェーズWF |
-| 複数プロジェクト横断 | AgentHierarchy | PO/Manager/Developer |
+| files<5 AND lines<300 | Simple | direct implementation |
+| files≥5 OR independent features≥3 | TaskDecomposition | 5-phase workflow |
+| cross-project | AgentHierarchy | PO/Manager/Developer |
 
-**判定優先順**: AgentHierarchy > TaskDecomposition > Simple（複数 hit 時は上位を採用）。境界値は「以上」「以下」記載どおり（`<5` は 4 まで Simple、`≥5` は 5 から TaskDecomposition）。
+**Priority**: AgentHierarchy > TaskDecomposition > Simple (take highest on tie). Boundaries exact as stated (`<5` = up to 4 is Simple, `≥5` = from 5 is TaskDecomposition).
 
-5フェーズWF詳細: `references/AI-THINKING-ESSENTIALS.md` 参照
+5-phase workflow detail: `references/AI-THINKING-ESSENTIALS.md`
 
-## 品質ガード
+## Quality Guard
 
 `GuardQuality : Implementation → {Accept, ReviewRequired, Reject}`
 
-| 判定 | 例 |
+| Judgment | Example |
 |------|-----|
-| **Reject** | 理由なきnull check、空catch、根拠なきタイムアウト増加 |
-| **ReviewRequired** | Root cause documented workaround、TODO付き暫定対応 |
-| **Accept** | 初期化保証、境界での型検証、構造的修正 |
+| **Reject** | unmotivated null check, empty catch, unfounded timeout increase |
+| **ReviewRequired** | documented workaround with root cause, provisional fix with TODO |
+| **Accept** | init guarantee, boundary type validation, structural fix |
 
-品質ガードは**検出**担当。修正戦略は `/root-cause` スキルの責務。
+Quality guard is **detection** role. Fix strategy delegated to `/root-cause` skill.
 
 ARGUMENTS: $ARGUMENTS

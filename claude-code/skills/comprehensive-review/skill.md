@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: 包括的コードレビュー（11観点：設計/品質/可読性/セキュリティ/ドキュメント/テスト/根本原因/ログ等）。/reviewから呼ばれる、--focusで絞り込み、コードレビュー時に使用
+description: Comprehensive code review (11 perspectives: design/quality/readability/security/docs/test/root-cause/logging). Called from /review, filter with --focus. Use when reviewing code.
 context: fork
 agent: reviewer-agent
 requires-guidelines:
@@ -12,77 +12,77 @@ parameters:
     type: enum
     values: [all, architecture, quality, readability, security, docs, test-coverage, root-cause, logging, writing, silent-failure, type-design]
     default: all
-    description: レビュー観点のフォーカス
+    description: Review focus perspective
 ---
 
-# comprehensive-review - 包括的コードレビュー
+# comprehensive-review - Comprehensive Code Review
 
-## 11の観点
+## 11 Perspectives
 
-| 観点 | 説明 | 詳細 |
+| Perspective | Description | Details |
 |------|------|------|
-| **architecture** | クリーンアーキテクチャ、DDD、レイヤー違反 | `review-criteria.md` |
-| **quality** | コード臭、パフォーマンス、型安全性 | `review-criteria.md` |
-| **readability** | 命名、認知的複雑度、一貫性 | `review-criteria.md` |
-| **security** | OWASP Top 10、機密情報漏洩 | `review-criteria.md` |
-| **docs** | ドキュメント品質、テスト充足度 | `review-criteria.md` |
-| **test-coverage** | テストケースの充足度、質 | `review-criteria.md` |
-| **root-cause** | 対症療法vs根本治療、再発パターン | `review-criteria.md` |
-| **logging** | ログレベル適切性、構造化ログ | `review-criteria.md` |
-| **writing** | ヒト向けドキュメント文章品質 | `writing-docs.md` |
-| **silent-failure** | エラー握りつぶし、空 catch | `silent-failure.md` |
-| **type-design** | 型による不変条件表現、enum乱用回避 | `type-design.md` |
+| **architecture** | Clean arch, DDD, layer violations | `review-criteria.md` |
+| **quality** | Code smell, performance, type safety | `review-criteria.md` |
+| **readability** | Naming, cognitive complexity, consistency | `review-criteria.md` |
+| **security** | OWASP Top 10, credential leaks | `review-criteria.md` |
+| **docs** | Doc quality, test adequacy | `review-criteria.md` |
+| **test-coverage** | Test case adequacy & quality | `review-criteria.md` |
+| **root-cause** | Band-aid vs root fix, recurrence patterns | `review-criteria.md` |
+| **logging** | Log level appropriateness, structured logs | `review-criteria.md` |
+| **writing** | Human-facing doc quality | `writing-docs.md` |
+| **silent-failure** | Error swallowing, empty catch | `silent-failure.md` |
+| **type-design** | Type-encoded invariants, avoid enum abuse | `type-design.md` |
 
-## Effort 連動モード（`${CLAUDE_EFFORT}`）
+## Effort-Linked Mode (`${CLAUDE_EFFORT}`)
 
-実行時の effort level で信頼度閾値と検査範囲が変動。
+Confidence thresholds & coverage vary by effort level.
 
-| effort | Critical 閾値 | 履歴確認 | 観点制御 |
+| Effort | Critical Threshold | History | Perspectives |
 |--------|---------------|---------|---------|
-| `low` | 90+（false positive 極小化） | スキップ | writing / type-design / docs 省略 |
-| `medium`（既定） | 80+ | 過去90日 | 全11観点 |
-| `high` | 70+（過検出寄り） | 全履歴 | + 設計トレードオフ・前提依存 |
+| `low` | 90+ (minimize false positives) | Skip | Skip writing/type-design/docs |
+| `medium` (default) | 80+ | Past 90 days | All 11 |
+| `high` | 70+ (prefer over-detection) | Full history | + design tradeoff, dependencies |
 
-`${CLAUDE_EFFORT}` が未展開の場合は `medium` 扱い。
+If `${CLAUDE_EFFORT}` not set, treat as `medium`.
 
-## 実行フロー
+## Execution Flow
 
-### Step -1: ノイズ抑制・タスク作成制御
+### Step -1: Noise Suppression & Task Control
 
-- 根拠は読んだ diff / code / docs のみ。推測は「仮説:」明記。スタイル・好み・一般論の指摘禁止
-- スコープ外の設計議論、既存採用パターンへの一般論反対は出さない
-- 指摘は修正可能な action item のみ
-- 新規 issue / ticket / task はユーザー明示依頼時のみ作成。過去事例だけを今回の必須タスクに昇格させない
-- 「念のため」「要確認」だけの項目を TODO 化しない。TODO は今回の blocker のみ
-- ユーザーが不要と明示した作業は調査項目や TODO として再追加しない
+- Basis: only read diff/code/docs. Mark guesses "hypothesis:". No style/preference/general theory nitpicks.
+- Skip design debates outside scope, don't oppose existing patterns with general theory
+- Only actionable findings
+- Create new issue/ticket/task only on explicit user request. Don't elevate past examples to required tasks.
+- Don't TODO "just in case" or "confirm" items. TODO only today's blockers.
+- Don't re-add work user explicitly marked unnecessary.
 
-### Step 0: 履歴ロード（繰り返し指摘の検出）
+### Step 0: Load History (Detect Repeats)
 
-リポジトリの `.claude/review-history.jsonl` を読み、同一 `file:line±3行` + 同一 `focus` の指摘が **過去履歴に3回以上** ある場合、`🔁 繰り返し指摘（Nth時）` と prefix（チームレベルの問題示唆）。
+Read `.claude/review-history.jsonl`. If same `file:line±3 lines` + same `focus` appears **3+ times in history**, prefix with `🔁 Repeated Finding (Nth time)` (signals team-level issue).
 
-**履歴不在時** (`.claude/review-history.jsonl` 未生成 / 空 / jq 不在): 繰り返し検出をスキップし、Step 1 から続行。出力末尾に `history: unavailable` と明記。
+**If history absent** (`.claude/review-history.jsonl` not created/empty/jq missing): Skip repeat detection, continue from Step 1. Mark output end with `history: unavailable`.
 
-### Step 1: 変更ファイル分析
+### Step 1: Changed File Analysis
 
-`git diff --name-only`で言語・ファイル種別・変更規模を判断し、自動追加観点を決定。
+Use `git diff --name-only` to determine language, file type, change scope & auto-decide extra perspectives.
 
-**コードファイルの探索は Serena 優先**（grep より精度高、参照漏れ防止）:
-- 影響範囲 → `find_referencing_symbols`
+**Serena priority for code files** (more accurate, prevent missed refs):
+- Impact scope → `find_referencing_symbols`
 - interface ↔ impl → `find_implementations`
-- 宣言位置 → `find_declaration`
-- 型診断 → `get_diagnostics_for_file` (外部 typecheck 不要、LSP 直接)
-- 構造把握 → `get_symbols_overview`、シンボル探索 → `find_symbol`
+- Declaration → `find_declaration`
+- Type check → `get_diagnostics_for_file` (no external typecheck, direct LSP)
+- Structure → `get_symbols_overview`, symbol search → `find_symbol`
 
-非コードファイル（md/yaml/json/toml/lockfile/.env）は Grep/Read 使用（Serena 対象外）。
+Non-code files (md/yaml/json/toml/lockfile/.env) → use Grep/Read (Serena N/A).
 
-| 条件 | 追加観点 |
+| Condition | Add Perspective |
 |------|---------|
-| テストファイル（`*_test.*`, `*.spec.*`） | `docs` |
-| UIファイル（`components/*`, `*.tsx`） | `uiux-review`（別スキル） |
-| ロジック変更（テストファイル以外） | `test-coverage` + `silent-failure` |
-| 型定義変更（`*.d.ts`, `types/*`, struct/interface追加） | `type-design` |
+| Test file (`*_test.*`, `*.spec.*`) | `docs` |
+| UI file (`components/*`, `*.tsx`) | `uiux-review` (separate skill) |
+| Logic change (non-test) | `test-coverage` + `silent-failure` |
+| Type def change (`*.d.ts`, `types/*`, struct/interface added) | `type-design` |
 
-### Step 2: 静的解析ツール実行
+### Step 2: Run Static Analysis Tools
 
 ```bash
 # TypeScript
@@ -92,68 +92,68 @@ npm run lint && npx tsc --noEmit
 golangci-lint run && go vet ./...
 ```
 
-**ツール不在判定**: コマンド実行結果で判定する（PATH 探索ではない）。`npx tsc` / `npm run <script>` は `node_modules/.bin/` 経由で解決されるため、グローバル PATH に存在しなくても実行可能。
+**Tool presence**: Judge by command execution result (not PATH lookup). `npx tsc` / `npm run <script>` resolve via `node_modules/.bin/`, runnable even if not in global PATH.
 
-**判定優先順位**: 下記表の上から順に評価し、最初に一致した行で確定（メッセージマッチ優先、exit code は最後）。
+**Priority order**: Evaluate top-to-bottom, confirm at first match (message match first, exit code last).
 
-| # | 判定条件 | 扱い | skipped 理由表記 |
-|---|---------|------|-----------------|
-| 1 | stderr に `command not found` / `npm ERR! Missing script` / `could not determine executable` を含む | skip | `static-analysis: skipped (<コマンド or pkg>: not installed / script missing / not in node_modules)` |
-| 2 | exit 127 (シェル「コマンド未検出」固定値) | skip | `static-analysis: skipped (<コマンド>: not found)` |
-| 3 | exit 0 / 1 かつ stdout または stderr に analyzer 自身の出力 (lint 違反 / type エラー / `error TS` 等) あり | 結果を取り込み続行 | — |
-| 4 | その他の非ゼロ exit (#1-#3 いずれにも該当せず) | Warning として出力に含めレビュー続行 | — |
+| # | Condition | Action | Skip Reason |
+|---|-----------|------|-----------------|
+| 1 | stderr contains `command not found` / `npm ERR! Missing script` / `could not determine executable` | skip | `static-analysis: skipped (<cmd or pkg>: not installed/script missing/not in node_modules)` |
+| 2 | exit 127 (shell "command not found" fixed value) | skip | `static-analysis: skipped (<cmd>: not found)` |
+| 3 | exit 0/1 AND stdout/stderr has analyzer output (lint violation / type error / `error TS` etc) | incorporate results & continue | — |
+| 4 | other non-zero exit (none of #1-#3) | include as Warning, continue review | — |
 
-レビュー自体はいかなる場合も続行する。
+Review always continues regardless.
 
-### Step 3: cleanup-enforcement確認
+### Step 3: Check cleanup-enforcement
 
-未使用import/変数/関数、後方互換残骸、進捗コメントを確認。
+Verify unused imports/vars/functions, backward compat remnants, progress comments.
 
-### Step 4: 信頼度スコアリング（ノイズ除去）
+### Step 4: Confidence Scoring (Noise Reduction)
 
-各 finding に 0-100 の信頼度スコアを付与し、低スコア指摘を降格・破棄。
+Assign 0-100 confidence score to each finding, downgrade/discard low scores.
 
-**フィルタリング規則（medium既定値）**:
+**Filter rules (medium default)**:
 
-| スコア帯 | 扱い |
+| Score Range | Action |
 |---------|------|
-| 80以上（low 90+、high 70+） | Critical のまま出力 |
-| 50-79 | Warning に降格 |
-| 25-49 | Warning のまま出力 |
-| 25未満 | 破棄（出力しない） |
+| 80+ (low 90+, high 70+) | Output as Critical |
+| 50-79 | Downgrade to Warning |
+| 25-49 | Output as Warning |
+| <25 | Discard (no output) |
 
-### Step 5-6: 結果集約・履歴記録
+### Step 5-6: Aggregate & Record History
 
-確定した Critical / Warning（信頼度25以上）を `.claude/review-history.jsonl` に追記。
+Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.jsonl`.
 
 ```json
 {"date":"2026-04-27","severity":"Critical","focus":"security","file":"src/api/user.ts","line":120,"finding":"SQLi","confidence":95,"branch":"feat/x","commit":"abc1234"}
 ```
 
-## 出力形式
+## Output Format
 
 ```markdown
-## 包括的レビュー結果
+## Comprehensive Review Results
 
-### 実行した観点
+### Perspectives Checked
 - architecture / quality / readability / security / docs / test-coverage / root-cause / logging / writing / silent-failure / type-design
 
-### Critical（修正必須・信頼度80以上）
-- [security] SQLインジェクション脆弱性（src/api/user.ts:120）信頼度95
-- 🔁 繰り返し指摘（4th時）: [architecture] Domain→Infrastructure参照（src/domain/user.ts:45）信頼度85
+### Critical (Fix Required, Confidence 80+)
+- [security] SQL injection (src/api/user.ts:120) confidence 95
+- 🔁 Repeated Finding (4th time): [architecture] Domain→Infrastructure ref (src/domain/user.ts:45) confidence 85
 
-### Warning（要改善・信頼度25-79）
-- [quality] 古いパターン: sort.Slice → slices.Sort（pkg/sort.go:15）信頼度65
+### Warning (Improve, Confidence 25-79)
+- [quality] Old pattern: sort.Slice → slices.Sort (pkg/sort.go:15) confidence 65
 
-Total: Critical N件 / Warning N件 / 破棄M件 / 🔁 繰り返しK件
+Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 ```
 
-**ゼロ件時の表記ルール**: 各セクション (Critical / Warning) は省略禁止。該当 0 件の場合も `### Critical: 0件` と明示し、「未実施」と区別可能にする。skip された観点は実行した観点リストから除外し、`### skipped: <観点名> (<理由>)` セクションを追加。
+**Zero findings rule**: Never omit sections (Critical/Warning). If 0, write `### Critical: 0`. Skip skipped perspectives from executed list, add `### skipped: <perspective> (<reason>)` section.
 
-## 注意事項
+## Notes
 
-- focus=all は全11観点を並列実行
-- 大量の差分は1ファイルずつ、Critical優先
-- 指摘だけでなく具体的な修正案を提示
-- コメント添字: `must`=Critical / `imo`,`nits`=Warning / `q`=質問
-- 過検出優先の場面でも、根拠のないタスク追加やスコープ外の運用 TODO 化は禁止
+- focus=all runs all 11 in parallel
+- Large diffs: 1 file at a time, Critical first
+- Provide concrete fixes, not just findings
+- Comment tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question
+- Even in over-detection, forbid baseless task creation or out-of-scope operational TODOs

@@ -1,6 +1,6 @@
-# Terraformモジュール設計
+# Terraform Module Design
 
-## ディレクトリ構成
+## Directory Structure
 
 ```text
 terraform/
@@ -23,11 +23,11 @@ terraform/
     └── iam/
 ```
 
-## モジュールベストプラクティス
+## Module Best Practices
 
-| 項目 | 推奨事項 |
-|-----|---------|
-| 命名 | リソースタイプを反映（vpc, eks, rds） |
-| 変数 | description必須、type明示 |
-| 出力 | 他モジュールで使う値をoutput |
-| バージョン | メジャーバージョン固定 (version = "~> 5.0") |
+| Item | Recommendation |
+|------|-----------------|
+| Naming | Reflect resource type (vpc, eks, rds) |
+| Variables | Require description, explicit type |
+| Outputs | Output values needed by other modules |
+| Versioning | Pin major version (version = "~> 5.0") |

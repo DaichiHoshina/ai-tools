@@ -1,144 +1,144 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, mcp__serena__*, mcp__claude_ai_Notion__*
-description: ナレッジ蓄積 - コード分析→Notionページ作成/更新
+description: Knowledge archival — code analysis → create/update Notion pages
 ---
 
-## /docs - ナレッジ蓄積コマンド
+## /docs - Knowledge archival
 
-完了した作業の知識を Notion に蓄積する。プロジェクト非依存。
+Archive completed work knowledge in Notion. Project-agnostic.
 
-> **責務分離**: 設計段階の Design Doc は `/design-doc`（md、チーム共有用）。`/docs` は完了後の Notion ナレッジ蓄積。ADR / アーキテクチャ判断の設計フェーズ文書も `/design-doc` を使う。
+> **Responsibility split**: Design-phase Design Doc → `/design-doc` (md, team-shared). Post-completion knowledge → `/docs` (Notion). ADR / architecture-decision design-phase docs also use `/design-doc`.
 >
-> 全体フロー: `references/design-phase-flow.md`
+> Full flow: `references/design-phase-flow.md`
 
-**必読**: Notion投稿時は以下のガイドラインに従うこと:
-- `guidelines/common/notion-writing.md` — 構成・見出し・文体・表記ルール（コア）
-- `guidelines/writing/long-form-doc.md` — ユーザー文体ガイド + 対話型チェック辞書
-- `guidelines/common/notion-design.md` — デザインパターン
-- `guidelines/common/notion-database.md` — DB設計・テンプレート
-- `guidelines/common/notion-operations.md` — AI活用・権限・外部連携
+**Must-read**: When posting to Notion, follow these guidelines:
+- `guidelines/common/notion-writing.md` — structure・headings・tone・notation rules (core)
+- `guidelines/writing/long-form-doc.md` — user tone guide + interactive check dict
+- `guidelines/common/notion-design.md` — design patterns
+- `guidelines/common/notion-database.md` — DB design・templates
+- `guidelines/common/notion-operations.md` — AI use・permissions・external integration
 
-## ドキュメントタイプと連携リソース
+## Document types & linked resources
 
-| タイプ | キーワード | 連携ガイドライン/スキル |
-|--------|-----------|----------------------|
-| API仕様 | api, endpoint | Skill(`api-design`) |
-| 障害対応 | incident, 障害 | Skill(`incident-response`), Skill(`root-cause`) |
-| レシピ | recipe, パターン, tips | `guidelines/writing/strategy.md`（❌/✅形式必須） |
-| 手順書 | runbook, 手順 | `guidelines/common/development-process.md` |
-| 変更履歴 | changelog, 変更 | git log/diffから自動抽出 |
-| 自由記述 | （上記以外） | ユーザー指示に従う |
+| Type | Keywords | Guideline/skill |
+|------|----------|-----------------|
+| API spec | api, endpoint | Skill(`api-design`) |
+| Incident | incident, outage | Skill(`incident-response`), Skill(`root-cause`) |
+| Recipe | recipe, pattern, tips | `guidelines/writing/strategy.md` (❌/✅ format required) |
+| Runbook | runbook, procedure | `guidelines/common/development-process.md` |
+| Changelog | changelog, changes | auto-extract from git log/diff |
+| Freeform | (other) | follow user instructions |
 
-> 設計判断（ADR）・アーキテクチャ設計は `/design-doc` で md 作成後、完了時にこのコマンドで Notion へ取り込む。
+> Design decisions (ADR) & architecture design: create md w/ `/design-doc`, then use this command to intake to Notion on completion.
 
-## フロー
+## Flow
 
-### Step 1: 対象特定
+### Step 1: Identify target
 
-- 引数あり → そのトピックで分析
-- 引数なし → `git log --oneline -10` と `git diff --stat` から直近の変更を提示、ユーザーに選択させる
-- `--from <md-path>` → 既存 md（`/design-doc` 出力等）を入力としてNotion化
+- Arg present → analyze that topic
+- No arg → present recent changes from `git log --oneline -10` + `git diff --stat`, user selects
+- `--from <md-path>` → input existing md (`/design-doc` output etc.) to Notion
 
-### Step 2: ガイドライン読み込み
+### Step 2: Load guidelines
 
-タイプに応じた連携ガイドライン/スキルを読み込む。
+Load type-matched coordinating guidelines/skills.
 
-- **障害対応**: incident-responseスキルのフォーマット（分類→影響範囲→原因→再発防止）に準拠
-- **レシピ**: strategy.md の❌/✅形式を**必ず**使用。コード例5行以内、テーブル優先
-- **API仕様**: api-designスキルのエンドポイント記述規約に準拠
+- **Incident**: Follow incident-response skill format (classify→impact→cause→prevent-recurrence)
+- **Recipe**: **Must use** ❌/✅ format from strategy.md. Code examples ≤5 lines, tables preferred
+- **API spec**: Follow api-design skill endpoint notation rules
 
-### Step 3: コード分析
+### Step 3: Analyze code
 
 ```
-git log / git diff → 変更内容把握
-Grep / Read → 関連コード読解
+git log / git diff → understand changes
+Grep / Read → read related code
 ```
 
-抽出する情報:
-- **What**: 何が変わったか（差分サマリー）
-- **Why**: なぜ変えたか（コミットメッセージ、PR説明）
-- **How**: どう実装したか（主要ロジック）
-- **Impact**: 影響範囲（依存先、利用箇所）
-- **Caveat**: 注意点・既知の制約
+Extract:
+- **What**: what changed (diff summary)
+- **Why**: why changed (commit msg, PR desc)
+- **How**: how implemented (main logic)
+- **Impact**: impact scope (dependents, usage)
+- **Caveat**: notes・known constraints
 
-### Step 4: Notion検索
+### Step 4: Search Notion
 
-`notion-search` で既存の関連ページを検索。
+Search existing related pages w/ `notion-search`.
 
-- 関連ページあり → 更新するか新規作成か確認
-- なし → 新規作成
+- Related page found → confirm update or new
+- None → create new
 
-### Step 4.8: writing 検査（Notion 投稿前・必須）
+### Step 4.8: writing check (pre-Notion post, required)
 
-`notion-create-pages` 実行前に、draft 本文（Step 5 で投稿する text）を AI 自身が検査する。対象は md 化された draft で、まだ Notion に送られていない段階。
+Before `notion-create-pages` runs, AI self-checks draft body text (to be posted at Step 5). Target is md-form draft, not yet sent to Notion.
 
-検査項目は `skills/comprehensive-review/skill.md` の writing 観点 NG 表と `guidelines/writing/long-form-doc.md` の NG 辞書。
+Check items: writing axis NG table from `skills/comprehensive-review/skill.md` + NG dict from `guidelines/writing/long-form-doc.md`.
 
-- Critical 1件以上、または Warning 4件以上ヒット → draft を書き直してから再検査（最大2 loop）
-- 合格後に Step 5 へ進む
+- Critical ≥1, or Warning ≥4 hits → rewrite draft → re-check (max 2 loops)
+- After pass, proceed to Step 5
 
-投稿後は編集コストが高いので、**必ず投稿前**に検査する。
+Post-edit cost high, so **always check pre-post**.
 
-### Step 5: Notionページ作成/更新
+### Step 5: Create/update Notion page
 
-`notion-create-pages` または `notion-update-page` で投稿。
+Post w/ `notion-create-pages` or `notion-update-page`.
 
-タイプ別テンプレート:
+Type-specific templates:
 
-**障害対応**:
+**Incident**:
 ```
-## 概要: 1行サマリー
-## タイムライン: 発生→検知→対応→復旧
-## 根本原因: 5 Whys分析
-## 影響範囲: ユーザー/システムへの影響
-## 再発防止: 具体的アクション
+## Summary: 1-line summary
+## Timeline: occur→detect→respond→recover
+## Root cause: 5 Whys analysis
+## Impact scope: user/system impact
+## Prevent recurrence: specific actions
 ```
 
-**レシピ**:
+**Recipe**:
 ```
-## パターン名
-| ❌ 避ける | ✅ 使う | 理由 |
+## Pattern name
+| ❌ avoid | ✅ use | reason |
 |----------|---------|------|
-| 悪い例 | 良い例 | 1行 |
-**Why**: 背景説明（1行）
+| bad example | good example | 1 line |
+**Why**: background (1 line)
 ```
 
-**共通フッター**（全タイプ）:
+**Common footer** (all types):
 ```
-## 参考
-- リポジトリ: {repo}
-- コミット: {hash}
-- PR: {url}（あれば）
-- 作成日: {date}
+## References
+- Repository: {repo}
+- Commit: {hash}
+- PR: {url} (if any)
+- Created: {date}
 ```
 
-### Step 5.5: 対話型リライト（必須）
+### Step 5.5: Interactive rewrite (required)
 
-詳細・辞書・テンプレは `guidelines/writing/long-form-doc.md` 参照。
+Detail・dict・template: see `guidelines/writing/long-form-doc.md`.
 
-- 事前読込: `~/.claude/projects/{project}/memory/user_vocabulary.md`（既知語スキップ）
-- 3層（Intent / Understanding / Expression）を順に実行、合計9件以内
-- Layer 2 のユーザー回答文は draft にそのまま織り込む（AI で言い換え禁止）
-- 回答は `user_vocabulary.md` に追記
+- Pre-load: `~/.claude/projects/{project}/memory/user_vocabulary.md` (skip known terms)
+- Execute 3 layers (Intent / Understanding / Expression) sequentially, ≤9 items total
+- Layer 2 user response text weave as-is into draft (no AI rephrasing)
+- Append responses to `user_vocabulary.md`
 
-### Step 6: URL出力
+### Step 6: Output URL
 
-作成/更新したNotionページのURLを表示。
+Display created/updated Notion page URL.
 
-## オプション
+## Options
 
-| オプション | 説明 |
+| Option | Description |
 |-----------|------|
-| `--parent <url>` | Notionの親ページURL指定 |
-| `--update <url>` | 既存 Notion ページを更新（URL指定） |
-| `--from <md-path>` | ローカル md（`/design-doc` 出力等）を入力としてNotion化 |
-| `--dry` | Notion投稿せずプレビューのみ |
+| `--parent <url>` | Notion parent page URL |
+| `--update <url>` | Update existing Notion page (URL) |
+| `--from <md-path>` | Input local md (`/design-doc` output etc.) to Notion |
+| `--dry` | Preview only, no Notion post |
 
-## 品質ガード
+## Quality guards
 
-- **秘匿情報禁止**: APIキー、パスワード、実URLはプレースホルダーに置換（`guidelines/writing/strategy.md` セキュリティ節準拠）
-- **コード例**: 5行以内（strategy.md ルール）
-- **投稿前確認**: ユーザーにプレビューを見せて承認を得る
-- **Mermaid図**: Notionのコードブロック（mermaid指定）で記述
+- **Secret-free**: API keys, passwords, real URLs → placeholders (`guidelines/writing/strategy.md` security section)
+- **Code examples**: ≤5 lines (strategy.md rule)
+- **Pre-post confirm**: show user preview, get approval
+- **Mermaid diagrams**: Notion code block (mermaid specified)
 
 ARGUMENTS: $ARGUMENTS

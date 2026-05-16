@@ -1,122 +1,122 @@
 ---
 name: microservices-monorepo
-description: マイクロサービス・モノレポ設計。サービス分割・通信パターン・モノレポ構成、設計時に使用
+description: Microservices & monorepo design. Service split, communication patterns, monorepo structure. Use when designing architecture.
 requires-guidelines:
   - common
   - clean-architecture
   - ddd
 ---
 
-# microservices-monorepo - マイクロサービス・モノレポ設計
+# microservices-monorepo - Microservices & Monorepo Design
 
-## 設計パターン
+## Design Patterns
 
-### サービス分割戦略
+### Service Split Strategy
 
-| 基準 | 説明 |
+| Criterion | Description |
 |------|------|
-| ビジネス機能 | 注文、在庫、配送、決済 |
-| DDD境界づけられたコンテキスト | ドメイン境界と一致 |
-| チーム構成 | Conwayの法則（組織構造に従う） |
-| データ所有 | 各サービスが独自DBを持つ |
+| Business function | Order, inventory, shipping, payment |
+| DDD bounded context | Align with domain boundary |
+| Team structure | Conway's law (org structure) |
+| Data ownership | Each service owns its DB |
 
-**サービスサイズ**: 1チームで管理可能、明確な責務境界
+**Service size**: 1 team manageable, clear responsibility boundary
 
-### 通信パターン
+### Communication Patterns
 
-| 種別 | パターン | 用途 |
+| Type | Pattern | Use Case |
 |------|---------|------|
-| 同期 | REST API | シンプルなCRUD |
-| 同期 | gRPC | 高パフォーマンス、型安全 |
-| 非同期 | メッセージキュー | Kafka, RabbitMQ, SQS |
-| 非同期 | イベント駆動 | 疎結合、スケーラブル |
+| Sync | REST API | Simple CRUD |
+| Sync | gRPC | High performance, type-safe |
+| Async | Message queue | Kafka, RabbitMQ, SQS |
+| Async | Event-driven | Loose coupling, scalable |
 
-### アーキテクチャパターン
+### Architecture Patterns
 
-- **API Gateway**: 単一エントリポイント、認証、ルーティング
+- **API Gateway**: Single entry point, auth, routing
 - **Service Mesh**: Istio, Linkerd
-- **Circuit Breaker**: 障害連鎖防止
-- **Saga**: 分散トランザクション
+- **Circuit Breaker**: Prevent cascade
+- **Saga**: Distributed transactions
 
-### モノレポ構成
+### Monorepo Structure
 
 ```
 monorepo/
-├── services/           # 各サービス
-├── packages/           # 共通ライブラリ、proto、types
+├── services/           # Each service
+├── packages/           # Shared libs, proto, types
 ├── infrastructure/     # k8s, terraform
 └── tools/              # scripts
 ```
 
-**ツール**: Turborepo, Nx, pnpm workspaces
+**Tools**: Turborepo, Nx, pnpm workspaces
 
 ---
 
-## アンチパターン（禁止事項）
+## Antipatterns (Forbidden)
 
-- **他サービスのDB直接参照**: サービス境界違反。スキーマ変更で破綻 → 必ず API 経由
-- **同期呼び出しチェーン**: A→B→C→D の連鎖。障害連鎖の原因 → 非同期イベント駆動を検討
-- **共有DB**: Database per Service 違反。独自DBを持たせる
+- **Direct other service DB access**: Violates boundary, breaks on schema change → always API.
+- **Sync call chain**: A→B→C→D cascade. Causes failure cascade → consider async event-driven.
+- **Shared DB**: Violates Database per Service. Give each its own.
 
-> 実装例は `guidelines/design/microservices-kubernetes.md` を参照。
+> Implementation examples: see `guidelines/design/microservices-kubernetes.md`.
 
 ---
 
-## チェックリスト
+## Checklist
 
-### サービス分割
-- [ ] サービス境界がビジネス機能と一致
-- [ ] 各サービスが独立デプロイ可能
-- [ ] 各サービスが独自DBを持つ
+### Service Split
+- [ ] Service boundary = business function
+- [ ] Each service independently deployable
+- [ ] Each service owns its DB
 
-### 通信設計
-- [ ] 同期/非同期の使い分けが適切
-- [ ] Circuit Breakerでフォールバック
-- [ ] タイムアウト/リトライ設定
+### Communication Design
+- [ ] Sync/async appropriately separated
+- [ ] Circuit Breaker for fallback
+- [ ] Timeout/retry configured
 
-### データ管理
+### Data Management
 - [ ] Database per Service
-- [ ] 分散トランザクションはSagaパターン
+- [ ] Distributed transactions = Saga pattern
 
-### 可観測性
-- [ ] 構造化ログ
-- [ ] 分散トレーシング
-- [ ] 相関IDでリクエスト追跡
-
----
-
-## 出力形式
-
-通常ケース:
-
-```
-📋 **サービス一覧**
-- [サービス名]: [責務] - [DB] - [通信方式]
-
-🔄 **サービス間通信**
-[通信フロー]
-
-🔴 **Critical**: サービス名 - 違反内容 - 修正案
-🟡 **Warning**: サービス名 - 改善推奨 - リファクタ案
-```
-
-ゼロ件・モノリス検出（マイクロサービス未適用時）:
-
-```
-📋 **サービス一覧**
-> [WARN] 単一サービス（モノリス）と判定。マイクロサービス分割提案のみ出力
-
-🔴 **Critical**: 0件
-🟡 **Warning**: 0件（適用前のため判定対象なし）
-
-### 分割提案
-- 候補1: [機能A] を独立サービス化（理由: 独立スケーリング要件）
-- 候補2: [機能B] を独立サービス化（理由: チーム所有権分離）
-```
+### Observability
+- [ ] Structured logging
+- [ ] Distributed tracing
+- [ ] Correlation ID for request tracking
 
 ---
 
-## 関連ガイドライン / Context7
+## Output Format
+
+Normal case:
+
+```
+📋 **Service List**
+- [name]: [responsibility] - [DB] - [comm]
+
+🔄 **Service-to-Service Comms**
+[flow]
+
+🔴 **Critical**: service - violation - fix
+🟡 **Warning**: service - improvement - refactor
+```
+
+Zero findings / Monolith (no microservices):
+
+```
+📋 **Service List**
+> [WARN] Single service (monolith) detected. Split proposal only.
+
+🔴 **Critical**: 0
+🟡 **Warning**: 0 (not applicable yet)
+
+### Split Proposal
+- Option1: [feature A] → independent service (reason: independent scale)
+- Option2: [feature B] → independent service (reason: team ownership)
+```
+
+---
+
+## Related Guidelines / Context7
 
 - `guidelines/design/microservices-kubernetes.md`, `design/clean-architecture.md`
 - Context7: `/vercel/turborepo`, `/nrwl/nx`, "saga pattern", "circuit breaker"
