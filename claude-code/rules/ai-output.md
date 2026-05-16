@@ -6,31 +6,31 @@ paths:
   - "**/*.tsx"
   - "**/*.py"
 ---
-# AI 出力ルール (強制)
+# AI Output Rules (Enforced)
 
-短い禁止リストのみ。詳細は `guidelines/writing/` を参照。
+Brief prohibition list only. Details: `guidelines/writing/`
 
-## PR・コミット禁止事項
+## PR / Commit Prohibitions
 
-- 「Generated with Claude Code」等の AI フッター
-- 変数名・ファイル名の羅列 (diff で読める)
-- テーブル形式のファイル一覧 (diff と重複)
-- 「この PR では以下を変更しました」型の冗長な前置き
+- AI footers like "Generated with Claude Code"
+- Variable/file name lists (readable in diff)
+- Table-format file listings (duplicates diff)
+- Boilerplate like "changes in this PR"
 
-詳細: `guidelines/writing/commit-message.md` / `pr-description.md`
+Details: `guidelines/writing/commit-message.md` / `pr-description.md`
 
-## 短文投稿 (issue/ticket/コメント)
+## Short Posts (issue/ticket/comments)
 
-PREP 3 点 (結論 / 理由 / 次アクション)、本文 400 字前後 / title 80 字前後。
+PREP 3-point structure (conclusion / reason / next action), ~400 characters / title ~80 characters.
 
-詳細: `guidelines/writing/external-post.md` / 共通原則: `guidelines/writing/PRINCIPLES.md`
+Details: `guidelines/writing/external-post.md` / common principles: `guidelines/writing/PRINCIPLES.md`
 
-長文 (Notion / DD / PRD / RCA) は `guidelines/writing/long-form-doc.md` 側。
+Long-form (Notion / Design Doc / PRD / RCA) → `guidelines/writing/long-form-doc.md`
 
-## コード内コメント
+## Code Comments
 
-AI 生成を示すコメント禁止 (`// AI-generated`、`// TODO: AI が提案` 等)。
+Prohibit AI-generation markers (`// AI-generated`, `// TODO: AI suggested` etc).
 
-## 参考: 投稿前 self-check
+## Reference: Pre-post Self-check
 
-旧版にあった「self-check 4 問」は `guidelines/writing/PRINCIPLES.md` の **「書く前の 4 問」(誰が読む / 何を決めさせる / 数字根拠 / なぜ)** + **「出力前セルフチェック 6 項目」** に統合済。投稿前は両者で確認。
+Former "self-check 4 questions" merged into `guidelines/writing/PRINCIPLES.md` **"4 questions before writing"** (who reads / what decides / data source / why) + **"6-item pre-output checklist"**. Verify both before posting.

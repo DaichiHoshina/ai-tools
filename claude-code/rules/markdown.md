@@ -2,9 +2,9 @@
 paths:
   - "**/*.md"
 ---
-# Markdown ルール
+# Markdown Rules
 
-- **構造**: H1は1ファイル1つ / 見出しレベル順序（H1→H2→H3） / 見出し前後に空行1行
-- **コードブロック**: 言語指定必須（` ```typescript ` 等） / インラインはバッククォート
-- **リンク**: 相対パス推奨 / 外部リンクは参照形式推奨
-- **日本語**: 句読点 `、。` / 半角英数字前後にスペース不要
+- **Structure**: 1 H1 per file / heading level order (H1→H2→H3) / blank line before/after headings
+- **Code blocks**: language required (` ```typescript `) / inline = backticks only
+- **Links**: relative paths preferred / external = reference format preferred
+- **Punctuation**: use `、。` (Japanese punctuation) / no spaces before/after half-width alphanumeric

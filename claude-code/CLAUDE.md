@@ -1,135 +1,135 @@
-# claude-code ディレクトリ固有設定
+# claude-code Directory Config
 
-**genshijinモード（通常）で応答すること。** 敬語不要、体言止め、助詞最小限、技術用語はそのまま維持。破壊的操作の確認時のみ通常日本語に戻す。
+**Respond in genshijin mode (normal).** No keigo, taigen-dome, minimal particles, preserve technical terms. Switch back to plain JP only for destructive-action confirmations.
 
-このディレクトリはClaude Code用の設定・スキル・フックを管理。
+This directory manages Claude Code config, skills, hooks.
 
-## 構造
+## Structure
 
 ```
 claude-code/
-├── commands/      スラッシュコマンド定義
-├── skills/        スキル定義
-├── hooks/         イベントフック
-├── guidelines/    言語・設計ガイドライン
-├── agents/        エージェント定義
-├── references/    参考資料（必要時参照）
-└── _archive/      退避置場（SYNC_ITEMS 外、~/.claude/ に同期されない）
+├── commands/      Slash command definitions
+├── skills/        Skill definitions
+├── hooks/         Event hooks
+├── guidelines/    Language / design guidelines
+├── agents/        Agent definitions
+├── references/    Reference docs (load on demand)
+└── _archive/      Quarantine (excluded from SYNC_ITEMS, not synced to ~/.claude/)
 ```
 
-健康診断:
-- `scripts/health-check.sh [--bench-skip]` — usage-stats + hook-bench 統合、markdown 出力 (月次目安で手動実行)
-- `scripts/usage-stats.sh [--days N] [--zero]` — 過去 N 日に呼ばれてない commands/skills を抽出
-- `scripts/hook-bench.sh [--hook NAME]` — hook の median/p95 計測 (副作用 hook は skip)
+Health check:
+- `scripts/health-check.sh [--bench-skip]` — usage-stats + hook-bench combined, markdown output (run monthly)
+- `scripts/usage-stats.sh [--days N] [--zero]` — extract commands/skills not called in last N days
+- `scripts/hook-bench.sh [--hook NAME]` — hook median/p95 measurement (side-effect hooks skipped)
 
-## 編集時の注意
+## Editing Notes
 
-- `install.sh`/`sync.sh` 更新後は `~/.claude/` に同期必要
-- 🔒 PROTECTED SECTION（CLAUDE.md内）は変更禁止
-- frontmatter（---で囲まれた部分）は正確なYAML形式を維持
-- **`claude-code/VERSION` は Claude Code CLI本体のバージョン追従用**。CLI リリース取り込み時のみ更新（`/claude-update-fix` 担当）
-- **`claude-code/SERENA_VERSION` は Serena MCP のバージョン追従用**。Serena リリース取り込み時のみ更新（`/serena-update-fix` 担当）
+- After `install.sh`/`sync.sh` changes → sync to `~/.claude/` required
+- 🔒 PROTECTED SECTION (in CLAUDE.md) must not be modified
+- frontmatter (between `---`) must remain valid YAML
+- **`claude-code/VERSION` tracks Claude Code CLI release**. Bump only on CLI release intake (`/claude-update-fix` owns it)
+- **`claude-code/SERENA_VERSION` tracks Serena MCP release**. Bump only on Serena release intake (`/serena-update-fix` owns it)
 
-## 定義ファイルのトークン節約原則
+## Definition File Token Saving
 
-commands/, skills/, agents/ の.mdファイルはセッション中にトークン消費される。
+commands/, skills/, agents/ `.md` files consume tokens every session.
 
-**残す**: 判定表・ワークフロー定義・操作ガード・禁止事項・入出力フォーマット（1例のみ）
-**削除**: サンプル実装コード・重複説明・詳細使用例・他ファイルと重複する内容
-**目安**: agent定義 300行以内、コマンド定義 150行以内、skill 100-130行
+**Keep**: decision tables, workflow defs, operation guards, prohibitions, I/O format (1 example only)
+**Remove**: sample impl code, duplicate explanations, detailed usage examples, content duplicated elsewhere
+**Target**: agent def ≤300 lines, command def ≤150 lines, skill 100-130 lines
 
-## 探索・調査の使い分け（濫用防止）
+## Discovery / Investigation Routing (anti-overuse)
 
-agent 起動コスト（中央値 数十秒〜数分）が最大コスト源。
+Agent startup cost (median: dozens of seconds to minutes) is the biggest cost source.
 
-| 調査規模 | ツール |
-|---------|--------------|
-| 1-2ファイル・特定シンボル | Bash grep/find または `mcp__serena__find_symbol` |
-| 3-4クエリの広域探索 | `/explore`（曖昧時 2 並列、領域 3 つ以上で全 4 並列） |
-| Claude Code CLI/SDK/API の仕様質問 | claude-code-guide agent |
-| それ以外で本当に広域分析が必要 | Explore（built-in、最終手段） |
+| Scope | Tool |
+|---|---|
+| 1-2 files / specific symbol | Bash grep/find or `mcp__serena__find_symbol` |
+| 3-4 query broad search | `/explore` (2 parallel if ambiguous, all 4 parallel for 3+ domains) |
+| Claude Code CLI/SDK/API spec questions | claude-code-guide agent |
+| Other genuinely broad analysis | Explore (built-in, last resort) |
 
-**`general-purpose` agent は原則使わない**（実測で最大コスト源）。計測: `references/performance-insights.md`
+**Avoid `general-purpose` agent** (measured highest cost source). Metrics: `references/performance-insights.md`
 
-## セッション効率化
+## Session Efficiency
 
-- 単純修正（1-2ファイル）→ `/dev --quick` または直接実行
-- 複雑実装（3ファイル以上）→ `/flow` でAgent階層使用
-- 大量ファイル処理（20+）→ `claude -p` fan-out（`references/fanout-recipes.md`）
-- **設計判断**: 軽量は `Shift+Tab` ネイティブ Plan Mode、大規模戦略は `/plan`（PO agent）。**長時間ブレスト/設計は haiku 別セッション (`claude --model haiku`) 推奨、確定後 Opus 実装へ引継ぎ**（Opus で計画はトークン浪費）
-- **長期タスク**: `/rename {type}-{scope}` で識別、`claude --resume` で再開（`references/session-management.md`）
-- **軽い調査は agent 起動しない**: 1-2クエリなら直接 grep/find/serena
-- **成功基準原則**: 手順指示より「何が達成されれば成功か」を与える
-- **検証ファースト**: 実装後は必ずテスト/lint/型チェック実行（DoD 後述）
-- **確認質問最小化**: 安全な操作は承認求めず即実行。確認必要はファイル削除・デプロイ・外部送信のみ
-- **選択肢提示は最小限**: 軽微な選択は推奨案を直接実行。重要判断（アーキテクチャ・破壊・費用・外部送信・不可逆）のみ2-3案
-- **投資対効果ゲート**: 「全件対応」指示を受けても、ultrathink で「メリット小さい」と判断した実装は **個別に明示確認**して採否を取り直す。指示の文字面で全実装に走らない（例: 効果薄い後方互換 hook 統合を「全件指示」だけで実装してトークン浪費を招いた事例あり 2026-05-07）
-- **パス決め打ち禁止 / pwd 確認**: Read/Bash 前に存在確認、`cd` 前に `pwd` 確認
-- **Task Diary**: `/memory-save` 提案は3ファイル以上変更・非自明リファクタ・インシデント対応時のみ
+- Simple fix (1-2 files) → `/dev --quick` or direct
+- Complex impl (3+ files) → `/flow` with Agent hierarchy
+- Mass file processing (20+) → `claude -p` fan-out (`references/fanout-recipes.md`)
+- **Design decisions**: lightweight → `Shift+Tab` native Plan Mode; large-scale strategy → `/plan` (PO agent). **Long brainstorm/design → recommended haiku separate session (`claude --model haiku`), then handoff to Opus for impl** (planning in Opus wastes tokens)
+- **Long tasks**: `/rename {type}-{scope}` to identify, `claude --resume` to resume (`references/session-management.md`)
+- **Light investigation: no agent startup**: 1-2 queries → grep/find/serena direct
+- **Success-criteria principle**: give "what defines success" over procedural steps
+- **Verify first**: after impl, always run test/lint/typecheck (DoD below)
+- **Minimize confirmation questions**: safe operations → execute without approval. Confirm only for file deletion, deploy, external send
+- **Minimize choice presentation**: minor choices → execute recommended directly. Important decisions (architecture, destructive, cost, external send, irreversible) → 2-3 options
+- **ROI gate**: even on "do all" instructions, if ultrathink judges "small benefit" → **individually re-confirm** adoption. Don't run all impl on literal instructions (e.g., wasted tokens on low-impact backward-compat hook integration triggered by "all" instruction, 2026-05-07)
+- **No hardcoded paths / pwd check**: existence check before Read/Bash, `pwd` check before `cd`
+- **Task Diary**: suggest `/memory-save` only on 3+ file changes, non-trivial refactor, or incident response
 
 ## Rewind / Checkpoint
 
-- **Esc**: 途中停止（コンテキスト保持）
-- **Esc + Esc** or `/rewind`: 会話・コード・両方を過去checkpointに復元
-- 詳細: `references/checkpoint-rewind.md`
+- **Esc**: pause (context retained)
+- **Esc + Esc** or `/rewind`: restore conversation/code/both to past checkpoint
+- Details: `references/checkpoint-rewind.md`
 
-## コンテキスト管理
+## Context Management
 
-- **コンテキスト50%超え → 次レスポンス冒頭で `/compact` 提案**（自動実行はしない）
-- 無関係タスク間は `/clear` でコンテキストリセット（**タスク境界=最良の節約ポイント**。長チャットは累積コンテキストを毎ターン再送するため 1 メッセージあたりコスト単調増、5 分以上 idle で prompt cache TTL 切れ → 全履歴 cache miss でさらに増幅）
-- セッション継続したい場合は「次セッション用 mega-prompt 生成して」と依頼 → 新セッションで貼付し軽量再開
-- 汚染せず質問だけしたい時は `/btw`（オーバーレイ表示、履歴非保存）
+- **Context over 50% → suggest `/compact` at next response start** (do not auto-run)
+- Reset context between unrelated tasks with `/clear` (**task boundary = best saving point**. Long chats resend cumulative context every turn → cost grows monotonically per message. 5+ min idle → prompt cache TTL expires → full history cache miss amplifies cost)
+- To continue a session: ask "generate next-session mega-prompt" → paste in new session for lightweight resume
+- For questions without context pollution: `/btw` (overlay display, not saved to history)
 
-## 自然言語トリガー（主要のみ）
+## Natural Language Triggers (major only)
 
-| 入力 | 実行 |
-|------|------|
+| Input | Action |
+|---|---|
 | "push", "pushして" | `/git-push --pr` |
 | "全自動で", "autoで", "おまかせ" | `/flow-auto` |
-| "レビュー", "レビューして" | `/review`（モード自動推定） |
-| "{strict\|fast\|normal} mode" | `/session-mode {強度}` |
+| "レビュー", "レビューして" | `/review` (mode auto-inferred) |
+| "{strict\|fast\|normal} mode" | `/session-mode {strength}` |
 | "並列実行で", "wt 分けて" | `/flow --parallel` |
 
-上記以外は自然語解釈しない（誤判定・トークン消費回避）。全リスト: `references/natural-language-triggers.md`
+No other natural-language interpretation (avoid misdetection / token waste). Full list: `references/natural-language-triggers.md`
 
-## Git マージ禁止ルール
+## Git Merge Prohibition
 
-| 操作 | ルール |
-|------|--------|
-| PRブランチのマージ（`gh pr merge`等） | **絶対禁止**。PR URL出力してブラウザ案内 |
-| git merge / リベース / ブランチ削除 | ユーザー確認必須 |
+| Operation | Rule |
+|---|---|
+| PR branch merge (`gh pr merge` etc) | **Strictly forbidden**. Output PR URL, direct to browser |
+| git merge / rebase / branch delete | User confirmation required |
 
-## 完了基準（DoD）
+## Definition of Done (DoD)
 
-「検証ファースト」の具体化。**該当する基準のみ適用、N/A は skip**。変更規模に応じてスケール（typo は項目6のみ、新機能は全項目）。
+Concrete form of "verify first". **Apply only relevant items, skip N/A**. Scale by change size (typo → only item 6, new feature → all items).
 
-1. 型: 0 エラー（型システム言語のみ）
-2. テスト: 関連範囲が全 Pass。カバレッジ ≥ 80%（プロジェクト基準優先）
-3. Lint: 0 違反
-4. セキュリティ: audit クリア
-5. ビルド: 成功
-6. **実挙動: 手動 or smoke test で1回確認**（必須）
+1. Types: 0 errors (typed languages only)
+2. Tests: all related Pass. Coverage ≥ 80% (project standard prioritized)
+3. Lint: 0 violations
+4. Security: audit clean
+5. Build: success
+6. **Actual behavior: 1 manual or smoke test confirmation** (mandatory)
 
-束ね: `/lint-test`（CI 相当）/ `/verify-once`（構造変更時）。未達なら完了報告禁止。
+Bundle: `/lint-test` (CI-equivalent) / `/verify-once` (structural changes). No completion report if not met.
 
-## 根本原因分析
+## Root Cause Analysis
 
-対症療法でなく根本治療。**再現→原因特定→設計判断→検証** の4ステップ必須。詳細: `/root-cause` skill, `/protection-mode`。
+Structural fix over symptomatic. **Reproduce → identify cause → design decision → verify** 4 steps mandatory. Details: `/root-cause` skill, `/protection-mode`.
 
-## Compounding Engineering（複利的改善）
+## Compounding Engineering
 
-Claude の誤動作・非自明な成功は設定（CLAUDE.md / skill / hook）に未反映の判断が残っているサイン。即追記で翌セッション以降は自動回避（Boris流）。1回の追記で N 件の修正手間を消すため改善が積み上がる。
+Claude misbehavior / non-obvious success = signal that judgment is not yet reflected in config (CLAUDE.md / skill / hook). Immediate documentation → auto-avoidance in next session (Boris-style). 1 documentation removes N future fix iterations → improvements compound.
 
-- **誤動作**: CLAUDE.md / skill / hook に追記して再発防止
-- **非自明な成功**: 同様にルール化して再現可能化
-- 修正指示末尾に「CLAUDE.md か該当 skill を更新して再現できるように」と付け加えれば設定追記まで実行
-- 詳細: `references/compounding-engineering-cycle.md`、`references/memory-usage.md`
+- **Misbehavior**: document in CLAUDE.md / skill / hook to prevent recurrence
+- **Non-obvious success**: rule-ify for reproducibility
+- Append "update CLAUDE.md or relevant skill for reproducibility" to fix instructions → triggers config update
+- Details: `references/compounding-engineering-cycle.md`, `references/memory-usage.md`
 
-## 詳細リファレンス
+## Detailed References
 
-高頻度: `references/model-selection.md` / `natural-language-triggers.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md`
-主要トピック索引: `references/INDEX.md` (その他は `ls references/` で探索)
+High frequency: `references/model-selection.md` / `natural-language-triggers.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md`
+Topic index: `references/INDEX.md` (others: `ls references/`)
 
-## 文章執筆ガイド (PR / commit / Slack / DesignDoc / PRD / RCA)
+## Writing Guide (PR / commit / Slack / DesignDoc / PRD / RCA)
 
-外部発信向け文章を書く・書き直す前に `guidelines/writing/README.md` を入口に参照。**責務マップ + 媒体別 quick reference** から該当ファイルを辿る (rules / guidelines/writing / references の 3 層構造)。
+Before writing or rewriting external-facing prose, consult `guidelines/writing/README.md` as entry point. **Responsibility map + per-medium quick reference** → navigate to relevant file (3-layer structure: rules / guidelines/writing / references).

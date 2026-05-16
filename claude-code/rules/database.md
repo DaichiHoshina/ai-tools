@@ -5,26 +5,26 @@ paths:
   - "**/*repository*"
   - "**/*repo*"
 ---
-# データベース操作ルール
+# Database Operation Rules
 
-## 安全原則
+## Safety Principles
 
-- **全環境（dev/test/prd）読み取り専用**がデフォルト。許可なしの書き込み禁止
-- 書き込み必要なら事前にユーザー確認
-- migration は単独 PR でリリース（他変更と混ぜない）
-- 他コンテキスト/サービスのDBテーブル直接参照しない
+- **All environments (dev/test/prd) read-only** by default. No write without approval
+- Confirm with user before writing
+- Migrations in separate PR (no mixed changes)
+- Do not directly reference DB tables from other services/contexts
 
-## 本番DB参照（Claude Code運用）
+## Production DB Access (Claude Code operations)
 
-| 項目 | ルール |
+| Item | Rule |
 |------|--------|
-| 接続先 | reader のみ（`reader.db.prod.*.internal` 等）、writer禁止 |
-| 認証 | ユーザー自身の AWS SSO + 踏み台コマンド（例: `make aws-start-session-prod`） |
-| クエリ | SELECT のみ、`LIMIT` 必須（目安100行）、全件スキャン禁止 |
-| 書き込み | UPDATE/DELETE/INSERT/DDL 絶対禁止 |
-| 秘匿情報 | メアド・電話・住所・決済情報を会話に残さない、`id, created_at` でマスク取得 |
-| ログ | Session Manager 全記録（監査対象） |
+| Connection | reader-only (`reader.db.prod.*.internal` etc), writer prohibited |
+| Auth | User's own AWS SSO + jump command (e.g. `make aws-start-session-prod`) |
+| Query | SELECT only, `LIMIT` required (~100 rows), no full scans |
+| Write | UPDATE/DELETE/INSERT/DDL strictly forbidden |
+| Secrets | No email/phone/address/payment info in chat. Mask with `id, created_at` |
+| Log | All sessions logged (audited) |
 
-**フロー**: ユーザー目的伝達 → Claude が SELECT 提案 → ユーザーが踏み台で実行 → 結果要点のみ Claude 共有（生データ全量渡さない）
+**Flow**: User states intent → Claude proposes SELECT → User executes via jump → Share result summary only (no raw dump)
 
-**非推奨**: Claude に踏み台セッション丸投げ / 個人情報含むテーブルそのまま貼付 / 探索的 `SELECT *` 繰返し
+**Anti-patterns**: User runs jump session for Claude / Paste tables with PII / Repeated exploratory `SELECT *`

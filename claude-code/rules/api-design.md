@@ -6,12 +6,14 @@ paths:
   - "**/*api*"
   - "**/*endpoint*"
 ---
-# API設計原則
+# API Design Principles
 
-## レスポンス設計
-- APIレスポンスにUI都合の集計値を埋め込まない。生データを返してフロント側で集計
-- 仕様変更が想定される箇所は変更が1箇所で済む設計を選ぶ
+## Response Design
 
-## エラーレスポンス
-- エラーコード + メッセージの構造化レスポンス
-- 内部エラー詳細をクライアントに漏らさない
+- Do not embed UI-specific aggregations in API responses. Return raw data; front-end aggregates
+- Design for single-point updates: anticipate where spec changes and isolate them
+
+## Error Response
+
+- Structured error response: code + message
+- Do not leak internal error details to client

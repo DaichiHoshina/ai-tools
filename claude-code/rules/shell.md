@@ -2,19 +2,22 @@
 paths:
   - "**/*.sh"
 ---
-# シェルスクリプトルール
+# Shell Script Rules
 
-## 必須
+## Required
+
 - set -euo pipefail
-- shellcheck準拠
-- 変数は "${var}" 形式でクォート
+- shellcheck compliant
+- Variables quoted as `"${var}"`
 
-## 禁止
-- eval使用禁止
-- rm -rf / 禁止
-- 未定義変数の参照禁止
+## Prohibited
 
-## 推奨
-- 関数化して再利用
-- エラーメッセージは >&2 へ
-- 終了コードを適切に返す
+- eval forbidden
+- rm -rf / forbidden
+- Undefined variable references forbidden
+
+## Recommended
+
+- Refactor into functions for reuse
+- Error messages to >&2
+- Return appropriate exit codes

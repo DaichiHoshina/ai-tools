@@ -2,30 +2,35 @@
 paths:
   - "**/*.{ts,tsx}"
 ---
-# TypeScript ルール
+# TypeScript Rules
 
-## 型安全
-- any型禁止
-- as型キャスト控える
-- unknown + 型ガード推奨
-- strictNullChecks前提
+## Type Safety
 
-## 命名規則
-- 変数: camelCase
-- 定数: UPPER_SNAKE_CASE
-- クラス/型: PascalCase
+- any forbidden
+- Minimize as casts
+- Prefer unknown + type guards
+- Assume strictNullChecks
 
-## インポート
-- 相対パス: 同ディレクトリのみ
-- それ以外: エイリアス使用（@/）
+## Naming
 
-## エラーハンドリング
-- Result型推奨（neverthrow等）
-- try-catchはシステム境界のみ
+- Variables: camelCase
+- Constants: UPPER_SNAKE_CASE
+- Classes/types: PascalCase
+
+## Imports
+
+- Relative: same directory only
+- Otherwise: use alias (@/)
+
+## Error Handling
+
+- Result type preferred (neverthrow etc)
+- try-catch at system boundaries only
 
 ## ESLint
-- 設定・ルール詳細: `guidelines/languages/eslint.md`
 
-## 詳細ガイドライン
+Details: `guidelines/languages/eslint.md`
 
-型システム活用・関数型パターン・非同期処理等の詳細は `guidelines/languages/typescript.md` 参照（`/load-guidelines full` で自動読込）。
+## Detailed Guidelines
+
+Type systems, functional patterns, async → `guidelines/languages/typescript.md` (auto-load via `/load-guidelines full`)
