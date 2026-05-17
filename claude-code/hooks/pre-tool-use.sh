@@ -213,6 +213,28 @@ case "$TOOL_NAME" in
   "Edit"|"Write"|"MultiEdit")
     GUARD_CLASS="Boundary"
     MESSAGE="🔶 要確認: ファイル編集"
+
+    # 直編集ガード: ~/.claude/{synced_dir}/... で repo source 存在時に redirect 推奨
+    # sync.sh to-local で上書き消失するため、必ず repo source を編集する規約
+    _EDIT_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
+    if [ -n "$_EDIT_PATH" ] && [[ "$_EDIT_PATH" == "$HOME/.claude/"* ]]; then
+      _REL_PATH="${_EDIT_PATH#"$HOME/.claude/"}"
+      _FIRST_COMP="${_REL_PATH%%/*}"
+      case "$_FIRST_COMP" in
+        commands|skills|hooks|agents|rules|guidelines|config|references|CLAUDE.md)
+          _REPO_PATH="$HOME/ai-tools/claude-code/$_REL_PATH"
+          if [ -f "$_REPO_PATH" ]; then
+            _DIRECT_EDIT_WARN="⚠ 直編集警告: ${_EDIT_PATH} は sync.sh to-local で上書き消失します。代わりに repo source ${_REPO_PATH} を編集してください。"
+            if [ -n "$ADDITIONAL_CONTEXT" ]; then
+              ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_DIRECT_EDIT_WARN}"
+            else
+              ADDITIONAL_CONTEXT="${_DIRECT_EDIT_WARN}"
+            fi
+          fi
+          ;;
+      esac
+    fi
+
     # 危険パターン検出（機密リテラル/SSRF/SQL injection）
     EDIT_CONTENT=$(jq -r '
       if .tool_input.content then .tool_input.content

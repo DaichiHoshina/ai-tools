@@ -67,6 +67,14 @@ Accumulated memories injected via `~/.claude/CLAUDE.md` at session start, so nex
 
 AskUserQuestion → select proposals → implement (new skill / edit existing / add to CLAUDE.md / save memory)
 
+### Phase 5: pending-improvements memory 自動更新
+
+採用結果と本日完了項目を `mcp__serena__write_memory(memory_name="pending-improvements", ...)` で更新。
+- 完了済リストに本日のセッション成果を追記
+- 残項目から消化分を除外、未採用提案は「残」に記録
+- 保留中項目 (技術障壁/発火条件未達) は維持
+- 知見セクションに本日学習を追加
+
 ## Output Format
 
 ```markdown

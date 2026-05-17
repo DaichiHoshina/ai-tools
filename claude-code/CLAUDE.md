@@ -27,6 +27,7 @@ Health check:
 - After `install.sh`/`sync.sh` changes → sync to `~/.claude/` required
 - 🔒 PROTECTED SECTION (in CLAUDE.md) must not be modified
 - frontmatter (between `---`) must remain valid YAML
+- **編集対象は常に repo source (`~/ai-tools/claude-code/`)、`~/.claude/` 直編集は `sync.sh to-local` で上書き消失するため禁止**。CLAUDE.md / commands / skills / hooks / agents / rules / guidelines / config / references 全部適用
 - **`claude-code/VERSION` tracks Claude Code CLI release**. Bump only on CLI release intake (`/claude-update-fix` owns it)
 - **`claude-code/SERENA_VERSION` tracks Serena MCP release**. Bump only on Serena release intake (`/serena-update-fix` owns it)
 
@@ -61,6 +62,7 @@ Agent startup cost (median: dozens of seconds to minutes) is the biggest cost so
 - **Light investigation: no agent startup**: 1-2 queries → grep/find/serena direct
 - **Success-criteria principle**: give "what defines success" over procedural steps
 - **Verify first**: after impl, always run test/lint/typecheck (DoD below)
+- **MCP tool 引数は仕様確認してから定義に書く**: `ToolSearch select:<tool>` で param 名を確認、LLM 補正に依存しない。仕様外引数は将来モデル変更で壊れる (例 2026-05-17: `memory_file_name` / `path=` で発覚)
 - **Minimize confirmation questions**: safe operations → execute without approval. Confirm only for file deletion, deploy, external send
 - **Minimize choice presentation**: minor choices → execute recommended directly. Important decisions (architecture, destructive, cost, external send, irreversible) → 2-3 options
 - **ROI gate**: even on "do all" instructions, if ultrathink judges "small benefit" → **individually re-confirm** adoption. Don't run all impl on literal instructions (e.g., wasted tokens on low-impact backward-compat hook integration triggered by "all" instruction, 2026-05-07)
