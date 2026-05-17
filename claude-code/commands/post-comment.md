@@ -28,6 +28,10 @@ if target omitted, ask user.
 
 ## Flow
 
+### Step 0: Writing memory pre-check (mandatory)
+
+draft 生成前に `mcp__serena__list_memories` または `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/MEMORY.md` 確認、`writing_failure_*` で関連ありそうなら read。target が gh-issue / gh-pr 系なら `writing_failure_link_overdose` / `writing_failure_compound_noun_stack` 必読相当。
+
 ### Step 1: draft generation (PREP 3pts)
 
 ```markdown

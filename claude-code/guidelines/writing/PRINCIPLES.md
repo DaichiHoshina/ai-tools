@@ -174,3 +174,14 @@
 - [auto-knowledge-update.md](auto-knowledge-update.md) — セッション中の学び追記
 - `references/writing-patterns.md` — 詳細パターン集 (textlint / 図表型 / 書き直し Phase / 専門用語置換)
 - `rules/ai-output.md` — 強制ルール (PR/commit/code-comment 禁止事項)
+
+## アンチパターン参照 (writing_failure_* memory)
+
+過去セッションでユーザ指摘を受けた失敗例を `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/writing_failure_*.md` に蓄積している。同じ失敗を繰り返さないよう、commit message / PR body / Issue / Slack 投稿を書く前に対応 memory を必読。
+
+| memory | 失敗パターン | 適用タイミング |
+|---|---|---|
+| `writing_failure_link_overdose` | URL 網羅で本文が侵食、リンク密度過多 | issue / PR コメントで複数 PR / dashboard リンクを並べる時 |
+| `writing_failure_compound_noun_stack` | 複合名詞 3 連以上 + 抽象→具体省略 + Why 暗示 | commit message タイトル / PR 本文 1 段落目を書く時 |
+
+`/git-push --pr` `/post-comment` `/docs` 起動時にこれらを read し、生成 draft が同じパターンに陥っていないか self-check する。新規失敗を観測したら `/retrospective` Phase 3.5 で memory 追加。

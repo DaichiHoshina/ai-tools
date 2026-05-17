@@ -40,7 +40,8 @@ Execute commit → push → PR/MR creation in single command.
 ### Common
 
 1. Check state (`git status --short` / `branch --show-current` / `diff --stat` / `log --oneline -5`)
-2. Uncommitted changes present → analyze diff → generate Conventional Commits msg → confirm w/ user → commit
+2. **Writing memory pre-check** (commit msg / PR body draft 前必須): `mcp__serena__list_memories` で `writing_failure_*` を確認、関連ありそうなら read してアンチパターン回避。ai-tools project の auto-memory にも `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/writing_failure_*` あり (link-overdose / compound-noun-stack 等)
+3. Uncommitted changes present → analyze diff → generate Conventional Commits msg → confirm w/ user → commit
 
 ### main mode
 
