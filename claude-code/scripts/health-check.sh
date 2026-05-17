@@ -7,26 +7,35 @@
 #   ./scripts/health-check.sh                    # stdout に markdown
 #   ./scripts/health-check.sh --out FILE         # ファイル出力
 #   ./scripts/health-check.sh --bench-skip       # hook-bench を省略 (高速)
+#   ./scripts/health-check.sh --bench-repeats N  # hook-bench を N 回反復、median-of-medians を出力 (default 1)
 #   ./scripts/health-check.sh --days N           # usage-stats 期間 (default 90)
 #
 # 異常ハイライト基準:
 #   - usage: 90日0利用 commands/skills
 #   - bench: median 100ms 超 hook (累積影響大の累計コスト想定)
+# snapshot 推奨: --bench-repeats 3 で system load variance を抑止
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DAYS=90
 OUT_FILE=""
 BENCH_SKIP=0
+BENCH_REPEATS=1
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --out) OUT_FILE="$2"; shift 2 ;;
     --bench-skip) BENCH_SKIP=1; shift ;;
+    --bench-repeats) BENCH_REPEATS="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
+
+if ! [[ "$BENCH_REPEATS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "--bench-repeats must be a positive integer" >&2
+  exit 2
+fi
 
 TODAY=$(date +%Y-%m-%d)
 
@@ -44,11 +53,62 @@ render() {
     echo ""
     echo "(--bench-skip 指定により省略)"
     echo ""
-  else
+  elif [[ "$BENCH_REPEATS" -eq 1 ]]; then
     echo "## Hook Bench (median 100ms 超は要点検)"
     echo ""
     echo '```'
     "$SCRIPT_DIR/hook-bench.sh"
+    echo '```'
+    echo ""
+  else
+    echo "## Hook Bench (median 100ms 超は要点検、bench-repeats=${BENCH_REPEATS} の median-of-medians)"
+    echo ""
+    echo '```'
+    local tmpdir; tmpdir=$(mktemp -d)
+    trap "rm -rf '$tmpdir'" RETURN
+    local i
+    for ((i=1; i<=BENCH_REPEATS; i++)); do
+      "$SCRIPT_DIR/hook-bench.sh" > "$tmpdir/run-$i.txt" 2>&1
+    done
+    python3 - "$BENCH_REPEATS" "$tmpdir"/run-*.txt <<'PY'
+import re, sys
+from collections import defaultdict
+repeats = int(sys.argv[1])
+files = sys.argv[2:]
+medians = defaultdict(list)
+baselines = []
+skips = {}
+hook_re = re.compile(r'^([a-z][\w\-]*\.sh)\s+median=\s*(\d+)ms')
+skip_re = re.compile(r'^([a-z][\w\-]*\.sh)\s+\[skip:.*\]\s*$')
+base_re = re.compile(r'bash spawn median\s*=\s*(\d+)ms')
+for path in files:
+    with open(path) as f:
+        for line in f:
+            m = base_re.search(line)
+            if m:
+                baselines.append(int(m.group(1)))
+                continue
+            m = skip_re.match(line)
+            if m:
+                skips[m.group(1)] = line.rstrip()
+                continue
+            m = hook_re.match(line)
+            if m:
+                medians[m.group(1)].append(int(m.group(2)))
+def med(xs):
+    s = sorted(xs)
+    return s[(len(s)-1)//2]
+if baselines:
+    print(f"  bash spawn median (median-of-{len(baselines)} runs) = {med(baselines)}ms")
+print("")
+print(f"=== Hook 計測 (warmup=5, runs=15, repeats={repeats}) ===")
+for name in sorted(set(list(medians) + list(skips))):
+    if name in skips:
+        print(skips[name])
+        continue
+    vs = medians[name]
+    print(f"{name:<30}  median={med(vs):>4d}ms  min={min(vs):>4d}ms  max={max(vs):>4d}ms  (n={len(vs)})")
+PY
     echo '```'
     echo ""
   fi
