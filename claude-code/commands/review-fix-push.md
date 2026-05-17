@@ -7,6 +7,8 @@ description: Review→fix→regression check→push in 1 command. /review + /dev
 
 Find issues via review → fix → **verify no regression via re-review** → push → create PR. Fix doesn't introduce new Critical issues.
 
+> **vs `/flow`**: `/flow` は「タスク記述からの新規実装 → PR」までを担う全工程経路、`/review-fix-push` は「既に書いたコードのレビューループ保証 → PR」専用。新規実装中は `/flow` の末尾 (`/review` + review-fix loop + `/git-push`) で `/review-fix-push` 相当を内包するため二重起動不要。既存変更を後追いで仕上げたい時のみ `/review-fix-push` を直接呼ぶ。
+
 ## Flow
 
 ### Step 1: Initial Review

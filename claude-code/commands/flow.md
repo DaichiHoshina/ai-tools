@@ -5,7 +5,7 @@ description: Workflow automation — auto-detect task type, execute optimal work
 
 ## /flow - Automated workflow execution
 
-> When to use: `/flow` (recommended) / `/dev` (impl only) / `/groove` (YAML-defined, compare `references/flow-vs-groove.md`)
+> When to use: `/flow` (recommended, 新規タスク → PR の全工程) / `/dev` (impl only) / `/review-fix-push` (既存変更のレビューループ保証 → PR 専用、`/flow` 中は不要) / `/groove` (YAML-defined, compare `references/flow-vs-groove.md`)
 
 Describe task once, auto-execute optimal workflow.
 

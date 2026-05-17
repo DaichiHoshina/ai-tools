@@ -26,6 +26,8 @@
 | "Developer 並列で" | `/flow --parallel`（同上） |
 | "worktree 分けて" | `/flow --parallel`（同上） |
 | "wt 分けて" | `/flow --parallel`（同上） |
+| "team で", "agent team で" | `/flow`（PO/Manager/Dev 階層を強制起動） |
+| "分担で", "本格的に" | `/flow`（同上、軽量タスク pre-check を回避） |
 
 ## 解釈しない例
 
