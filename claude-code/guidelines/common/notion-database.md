@@ -1,5 +1,7 @@
 # Notion データベース設計
 
+Notion プロパティタイプ (Select / Multi-select / Date / Number 等) の使い分け基準。Notion DB 新設 / プロパティ再設計時に参照。
+
 ## プロパティタイプの使い分け
 
 | データの性質 | 使うプロパティ | 使わないもの | 理由 |

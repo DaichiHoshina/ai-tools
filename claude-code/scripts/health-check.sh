@@ -52,10 +52,33 @@ render() {
     echo '```'
     echo ""
   fi
+  echo "## Staleness (guidelines/languages 90日超 mention)"
+  echo ""
+  echo '```'
+  ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+  TODAY_EPOCH=$(date +%s)
+  for f in "$ROOT/guidelines/languages"/*.md; do
+    [ -f "$f" ] || continue
+    grep -nE "20[0-9]{2}年[0-9]{1,2}月時点" "$f" 2>/dev/null | while IFS= read -r line; do
+      YM=$(echo "$line" | grep -oE "20[0-9]{2}年[0-9]{1,2}月" | head -1)
+      [ -z "$YM" ] && continue
+      Y="${YM%年*}"
+      M="${YM#*年}"
+      M="${M%月}"
+      MENT_EPOCH=$(date -j -f "%Y-%m-%d" "${Y}-$(printf '%02d' "$M")-01" +%s 2>/dev/null) || continue
+      DAYS_OLD=$(( (TODAY_EPOCH - MENT_EPOCH) / 86400 ))
+      if [ "$DAYS_OLD" -gt 90 ]; then
+        printf "%s :: %s [%d 日経過]\n" "$(basename "$f")" "$line" "$DAYS_OLD"
+      fi
+    done
+  done
+  echo '```'
+  echo ""
   echo "## 次アクション候補"
   echo ""
   echo "- 0 利用 commands/skills: 設計通り出番待ちか確認、不要なら \`_archive/\` 退避"
   echo "- median 100ms 超 hook: \`hook-bench.sh --hook NAME\` で詳細計測、内部処理を点検"
+  echo "- 90 日超 mention: 該当言語/FW の release notes 確認 → guidelines 更新 + 「YYYY年MM月時点」差替"
   echo "- 結果を残したい場合: \`--out claude-code/references/health-snapshots/${TODAY}.md\` などへ"
 }
 

@@ -1,5 +1,7 @@
 # Claude Code 実践Tips
 
+コンテキスト管理 / 圧縮対策など Claude Code 運用 Tips。session 長期化 / token 消費が気になる時に参照。
+
 ## コンテキスト管理
 
 | 項目 | 内容 |
