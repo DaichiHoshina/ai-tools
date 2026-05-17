@@ -86,7 +86,14 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 ## Execution logic
 
 1. Check git status: changes present → from `/dev`, none → from start
-2. **Pre-check lightweight task** (avoid PO launch 96s, skip on `--parallel`/`--no-po`): changes ≤2 AND no design decision AND self-evident → delegate to `/dev --quick`, else next
+2. **Pre-check lightweight task** (skip on `--parallel`/`--no-po`): all of the following → delegate to `/dev --quick`, else next
+   - 編集対象ファイル想定 ≤ 2
+   - 既存ファイル内変更のみ (新規ファイル作成なし)
+   - 単一レイヤ完結 (UI/API/DB 等を跨がない)
+   - 公開 API / 型シグネチャ変更なし
+   - 並行 / 並列性に関わる変更なし
+   - user が明示的に Team / 並列を求めていない
+   いずれか不成立 → PO Agent 起動
 3. Launch PO Agent (skip on `--no-po`)
 4. Impl branch: Team use → manager → developer×N → manager integrate / direct → `/dev`
 5. **Team review**: `Task(reviewer-agent, --codex)` fixed (comprehensive + codex parallel, common notes priority) → P0/P1 judge

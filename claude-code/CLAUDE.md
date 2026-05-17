@@ -89,6 +89,7 @@ Agent startup cost (median: dozens of seconds to minutes) is the biggest cost so
 | "レビュー", "レビューして" | `/review` (mode auto-inferred) |
 | "{strict\|fast\|normal} mode" | `/session-mode {strength}` |
 | "並列実行で", "wt 分けて" | `/flow --parallel` |
+| "team で", "agent team で", "分担で", "本格的に" | `/flow` (PO/Manager/Dev 階層 強制) |
 
 No other natural-language interpretation (avoid misdetection / token waste). Full list: `references/natural-language-triggers.md`
 

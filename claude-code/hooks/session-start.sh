@@ -151,7 +151,7 @@ if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
-_AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__activate_project\` を path=\"${_CWD}\" で呼び出す\n2. \`mcp__serena__list_memories\` でメモリ一覧を確認する\n3. 関連メモリがあれば読み込む\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否"
+_AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__activate_project\` を project=\"${_CWD}\" で呼び出す\n2. \`mcp__serena__list_memories\` でメモリ一覧を確認する\n3. 関連メモリがあれば読み込む\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否"
 _AC_PREFIX=""
 if [[ -n "${_CWD_GUARD_MSG}" ]]; then
     _AC_PREFIX+="${_CWD_GUARD_MSG}"
