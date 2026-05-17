@@ -79,7 +79,10 @@ if [[ "${_NEED_DIAG}" == "true" ]]; then
   # 3. settings.json のhook参照先チェック
   if [[ -f "${_SETTINGS_FILE}" ]]; then
     while IFS= read -r _hook_cmd; do
-      _expanded="${_hook_cmd/#\~\//${HOME}/}"
+      # command フィールドは "path arg1 arg2..." 形式があり得る（例: serena-hook.sh activate）。
+      # 存在チェックは実行ファイル部分（最初の空白までのトークン）のみ対象。
+      _hook_path="${_hook_cmd%% *}"
+      _expanded="${_hook_path/#\~\//${HOME}/}"
       if [[ ! -f "${_expanded}" ]]; then
         _HARNESS_WARNINGS+=("settings.json hook not found: ${_hook_cmd}")
       elif [[ ! -x "${_expanded}" ]]; then
