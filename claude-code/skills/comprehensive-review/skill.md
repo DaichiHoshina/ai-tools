@@ -43,8 +43,6 @@ Confidence thresholds & coverage vary by effort level.
 | `medium` (default) | 80+ | Past 90 days | All 11 |
 | `high` | 70+ (prefer over-detection) | Full history | + design tradeoff, dependencies |
 
-If `${CLAUDE_EFFORT}` not set, treat as `medium`.
-
 ## Execution Flow
 
 ### Step -1: Noise Suppression & Task Control
@@ -103,8 +101,6 @@ golangci-lint run && go vet ./...
 | 3 | exit 0/1 AND stdout/stderr has analyzer output (lint violation / type error / `error TS` etc) | incorporate results & continue | — |
 | 4 | other non-zero exit (none of #1-#3) | include as Warning, continue review | — |
 
-Review always continues regardless.
-
 ### Step 3: Check cleanup-enforcement
 
 Verify unused imports/vars/functions, backward compat remnants, progress comments.
@@ -124,11 +120,7 @@ Assign 0-100 confidence score to each finding, downgrade/discard low scores.
 
 ### Step 5-6: Aggregate & Record History
 
-Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.jsonl`.
-
-```json
-{"date":"2026-04-27","severity":"Critical","focus":"security","file":"src/api/user.ts","line":120,"finding":"SQLi","confidence":95,"branch":"feat/x","commit":"abc1234"}
-```
+Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.jsonl` (fields: date/severity/focus/file/line/finding/confidence/branch/commit).
 
 ## Output Format
 
@@ -152,8 +144,6 @@ Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 
 ## Notes
 
-- focus=all runs all 11 in parallel
-- Large diffs: 1 file at a time, Critical first
-- Provide concrete fixes, not just findings
-- Comment tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question
-- Even in over-detection, forbid baseless task creation or out-of-scope operational TODOs
+- focus=all → all 11 in parallel; large diffs → 1 file at a time, Critical first
+- Provide concrete fixes; comment tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question
+- Forbid baseless task creation or out-of-scope operational TODOs even in over-detection

@@ -1,6 +1,6 @@
 ---
 name: ui-skills
-description: UI build constraints (Tailwind/motion/react) + design system + Playwright visual checks. Animation & A11y-ready.
+description: UI build constraints (Tailwind/motion/react) + design system + Playwright visual checks. Animation & A11y-ready. Use when building UI components.
 requires-guidelines:
   - nextjs-react
   - tailwind

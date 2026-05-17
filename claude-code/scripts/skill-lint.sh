@@ -17,7 +17,7 @@ source "$LIB_DIR/print-functions.sh"
 
 DESC_MIN=30
 DESC_MAX=200
-TRIGGER_PATTERN='時|使用|対応|向け|Use this|When|時に'
+TRIGGER_PATTERN='時|使用|対応|向け|Use |When|時に'
 
 STRICT=0
 TARGET_SKILL=""
@@ -188,7 +188,7 @@ else:
         warnings.append(f"description too short ({desc_len} chars, min={desc_min})")
     elif desc_len > desc_max:
         warnings.append(f"description too long ({desc_len} chars, max={desc_max})")
-    if not re.search(trigger_pattern, desc):
+    if not re.search(trigger_pattern, desc, re.IGNORECASE):
         warnings.append("description lacks trigger phrase (e.g. '〜時に使用', '〜対応')")
 
 if "requires-guidelines" in data:

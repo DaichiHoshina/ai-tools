@@ -1,6 +1,6 @@
 ---
 name: data-analysis
-description: Data analysis (BigQuery/PostgreSQL/MySQL/SQLite/CSV). SQL-free querying for data exploration.
+description: Data analysis (BigQuery/PostgreSQL/MySQL/SQLite/CSV). SQL-free querying for data exploration. Use when analyzing data.
 requires-guidelines:
   - common
 hooks:

@@ -1,6 +1,6 @@
 ---
 name: load-guidelines
-description: Auto-load guidelines. Detect tech stack, apply only needed, save tokens.
+description: Auto-load guidelines. Detect tech stack, apply only needed, save tokens. Use when loading lang/framework guidelines.
 ---
 
 # load-guidelines - Auto-Load Guidelines
