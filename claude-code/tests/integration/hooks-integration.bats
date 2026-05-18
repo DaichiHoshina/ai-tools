@@ -226,6 +226,36 @@ teardown() {
   [ "$status" -eq 0 ]
 }
 
+@test "hooks: post-tool-use detects literal '\\n' line in .sh after Edit" {
+  local tmp; tmp=$(mktemp -d)
+  printf '#!/usr/bin/env bash\necho hi\n\\n\necho bye\n' > "${tmp}/bad.sh"
+  local input; input=$(jq -nc --arg fp "${tmp}/bad.sh" '{tool_name:"Edit",tool_input:{file_path:$fp},cwd:"/tmp"}')
+  run bash -c "echo '${input}' | ${HOOKS_DIR}/post-tool-use.sh"
+  rm -rf "${tmp}"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.systemMessage | test("Literal .\\\\n. line detected")' >/dev/null
+}
+
+@test "hooks: post-tool-use detects literal '\\n' line via serena relative_path" {
+  local tmp; tmp=$(mktemp -d)
+  printf '#!/usr/bin/env bash\necho hi\n\\n\necho bye\n' > "${tmp}/bad.sh"
+  local input; input=$(jq -nc --arg rp "bad.sh" --arg cwd "${tmp}" '{tool_name:"mcp__serena__replace_content",tool_input:{relative_path:$rp},cwd:$cwd}')
+  run bash -c "echo '${input}' | ${HOOKS_DIR}/post-tool-use.sh"
+  rm -rf "${tmp}"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.systemMessage | test("Literal .\\\\n. line detected")' >/dev/null
+}
+
+@test "hooks: post-tool-use does not warn on clean .sh file" {
+  local tmp; tmp=$(mktemp -d)
+  printf '#!/usr/bin/env bash\necho hi\necho bye\n' > "${tmp}/good.sh"
+  local input; input=$(jq -nc --arg fp "${tmp}/good.sh" '{tool_name:"Edit",tool_input:{file_path:$fp},cwd:"/tmp"}')
+  run bash -c "echo '${input}' | ${HOOKS_DIR}/post-tool-use.sh"
+  rm -rf "${tmp}"
+  [ "$status" -eq 0 ]
+  ! echo "$output" | jq -e '.systemMessage // "" | test("Literal")' >/dev/null
+}
+
 # =============================================================================
 # Task-Completed Hook Tests
 # =============================================================================

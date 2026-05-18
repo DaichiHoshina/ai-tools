@@ -14,7 +14,7 @@ INPUT=$(cat)
 
 # 全フィールドを1回のjqで取得（fork削減）
 # BASH_STDOUT は Bash 時のみ実値、それ以外は空文字（巨大 stdout のメモリ転送回避）
-eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "") BASH_STDOUT=\(if .tool_name == "Bash" then (.tool_response.stdout // "") else "" end)"' <<< "$INPUT")"
+eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") RELATIVE_PATH=\(.tool_input.relative_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "") BASH_STDOUT=\(if .tool_name == "Bash" then (.tool_response.stdout // "") else "" end)"' <<< "$INPUT")"
 SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 
 # デフォルトメッセージ
@@ -149,6 +149,25 @@ case "$TOOL_NAME" in
     fi
     ;;
 esac
+
+# --- Shell file regex residue check ---
+# serena `replace_content` (regex mode) と Edit/Write/MultiEdit 共通で、
+# 置換ミスによる literal '\n' (バックスラッシュ + n) 行混入を検出。
+# 単純 `bash -n` では通過するが実行時 `n: command not found` で死亡するため、
+# 編集直後に grep で検出して Claude へ警告する (rules/shell.md compliant)。
+TARGET_SH=""
+if [ -n "$FILE_PATH" ] && [[ "$FILE_PATH" =~ \.(sh|bash)$ ]] && [ -f "$FILE_PATH" ]; then
+  TARGET_SH="$FILE_PATH"
+elif [ -n "$RELATIVE_PATH" ] && [[ "$RELATIVE_PATH" =~ \.(sh|bash)$ ]]; then
+  _ABS_PATH="${CWD%/}/${RELATIVE_PATH}"
+  [ -f "$_ABS_PATH" ] && TARGET_SH="$_ABS_PATH"
+fi
+if [ -n "$TARGET_SH" ]; then
+  _ESCAPE_N_LINES=$(grep -nE '^\\n$' "$TARGET_SH" 2>/dev/null || true)
+  if [ -n "$_ESCAPE_N_LINES" ]; then
+    MESSAGE=$(append_message "$MESSAGE" "⚠ Literal '\\n' line detected (likely regex replace residue): ${TARGET_SH}"$'\n'"${_ESCAPE_N_LINES}")
+  fi
+fi
 
 # --- Output Sanitization (Bash 出力のシークレット検出/REDACT) ---
 # rules/enterprise-security.md §2 のコード強制実装 (Phase 1: Bash のみ)
