@@ -36,7 +36,6 @@ Claude Code 34 コマンドの使い分け。
 | `/test --tdd` | TDD（RED-GREEN-REFACTOR） |
 | `/refactor` | リファクタリング |
 | `/lint-test` | ローカルCI相当（build/lint/test/typecheck） |
-| `/ui` | UI 実装・レビュー・監査統合 |
 
 ### 調査・分析系
 

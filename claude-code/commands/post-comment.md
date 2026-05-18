@@ -117,4 +117,4 @@ c) abort
 
 - rules: `~/.claude/rules/ai-output.md` "issue/ticket/comment post rules"
 - long form: `~/.claude/guidelines/writing/long-form-doc.md`
-- built-in: `/git-push --pr`, `/test-local`, `incident-response` skill
+- built-in: `/git-push --pr`, `incident-response` skill

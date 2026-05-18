@@ -20,7 +20,7 @@ description: Debug support — error log analysis, root-cause identification, fi
 | Type error | type defs, any/as usage, type guards |
 | Runtime | null/undefined, boundary values, data validation |
 | Logic | conditionals, data flow, expected vs actual |
-| Performance | bottlenecks, N+1, memory leaks → measurement flow: `/performance-issue` |
+| Performance | bottlenecks, N+1, memory leaks |
 | Docker | apply `docker-troubleshoot` + `dockerfile-best-practices` |
 
 ## Docker error detection
