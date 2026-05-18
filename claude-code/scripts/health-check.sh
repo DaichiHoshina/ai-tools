@@ -118,7 +118,12 @@ PY
   ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
   if [ -d "$ROOT/_archive" ]; then
     # active 側の同名衝突を除外するため事前に名前一覧を作成
-    active_names=$(ls "$ROOT/commands" 2>/dev/null | sed -E 's|\.md$||')$'\n'$(ls -d "$ROOT/skills"/*/ 2>/dev/null | xargs -n1 basename)$'\n'$(ls "$ROOT/agents"/*.md 2>/dev/null | xargs -n1 basename | sed 's|\.md$||')
+    active_names=""
+    [ -d "$ROOT/commands" ] && active_names+=$(find "$ROOT/commands" -maxdepth 1 -type f -name "*.md" -exec basename {} .md \; 2>/dev/null)
+    active_names+=$'\n'
+    [ -d "$ROOT/skills" ] && active_names+=$(find "$ROOT/skills" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null)
+    active_names+=$'\n'
+    [ -d "$ROOT/agents" ] && active_names+=$(find "$ROOT/agents" -maxdepth 1 -type f -name "*.md" -exec basename {} .md \; 2>/dev/null)
     while IFS= read -r archived; do
       [ -f "$archived" ] || continue
       name=$(basename "$archived" .md)
@@ -133,7 +138,9 @@ PY
       if [ -n "$hits" ]; then
         count=$(echo "$hits" | wc -l | tr -d ' ')
         printf "[%s] %s 件 active 参照\n" "$name" "$count"
-        echo "$hits" | sed 's|^|  - |'
+        while IFS= read -r hit_line; do
+          echo "  - $hit_line"
+        done <<< "$hits"
       fi
     done < <(find "$ROOT/_archive" -type f -name "*.md")
   fi
