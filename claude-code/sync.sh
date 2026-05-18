@@ -380,7 +380,45 @@ sync_to_local() {
     sync_settings_hooks
     sync_settings_skill_overrides
 
+    # post-sync 整合性検証: 同期後に差分が残るのは異常（過去の直編集残骸 / コピー失敗の検出）
+    # gh skill 管理スキル除外のため skills ディレクトリは個別判定する。
+    verify_to_local_sync
+
     print_success "ローカルへの同期が完了しました"
+}
+
+verify_to_local_sync() {
+    local mismatched=()
+    local item src dst diff_output
+    for item in "${SYNC_ITEMS[@]}"; do
+        src="$SCRIPT_DIR/$item"
+        dst="$CLAUDE_DIR/$item"
+        [ -e "$src" ] && [ -e "$dst" ] || continue
+        if [ -d "$src" ]; then
+            diff_output=$(diff -rq "$src" "$dst" 2>/dev/null || true)
+            # skills は gh skill 管理ぶんを除外
+            if [ "$item" = "skills" ] && [ -n "$diff_output" ]; then
+                diff_output=$(echo "$diff_output" | while IFS= read -r line; do
+                    name=$(echo "$line" | sed -E 's|.*/skills/([^/]+)/.*|\1|')
+                    [ -n "$name" ] && [ -f "$CLAUDE_DIR/skills/$name/skill.md" ] && \
+                        has_gh_skill_metadata "$CLAUDE_DIR/skills/$name/skill.md" && continue
+                    [ -n "$name" ] && [ -f "$CLAUDE_DIR/skills/$name/SKILL.md" ] && \
+                        has_gh_skill_metadata "$CLAUDE_DIR/skills/$name/SKILL.md" && continue
+                    echo "$line"
+                done)
+            fi
+            [ -n "$diff_output" ] && mismatched+=("$item")
+        else
+            diff -q "$src" "$dst" > /dev/null 2>&1 || mismatched+=("$item")
+        fi
+    done
+    if [ ${#mismatched[@]} -gt 0 ]; then
+        print_warning "post-sync 整合性検証: ${#mismatched[@]} 件に差分残存"
+        for item in "${mismatched[@]}"; do
+            echo "  - $item" >&2
+        done
+        echo "  → 直編集や private 保護以外の残差。'./sync.sh diff' で詳細確認、必要なら再実行" >&2
+    fi
 }
 
 # =============================================================================

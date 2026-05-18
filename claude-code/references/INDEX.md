@@ -1,6 +1,12 @@
 # References Index
 
-主要トピックの索引 (CLAUDE.md からオンデマンドで参照)。テンプレート・トラッカー等の補助ファイル (`*-template.md`, `*-OPPORTUNITIES.md`, `*-FLOWCHART.md` 等) は未収録、`ls references/` で探索。
+主要トピックの索引 (CLAUDE.md からオンデマンドで参照)。
+
+**未収録ルール** (`ls references/` で探索):
+- `*-template.md` (例外: `performance-issue-template.md` は運用手順を兼ねるため掲載)
+- `*-OPPORTUNITIES.md` (機能 backlog トラッカー、随時更新で目次に不向き)
+- `health-snapshots/` (月次スナップショット、月別 dir 直接参照)
+- `INDEX.md` (自身)
 
 ## モデル選択 / セッション管理
 
@@ -18,9 +24,11 @@
 |---------|---------|
 | 自然言語トリガー全リスト | `natural-language-triggers.md` |
 | レビューコマンド使い分け | `review-commands.md` |
+| レビュー mode 詳細 (deep / multi 集約) | `review-modes-advanced.md` |
 | /flow vs /groove 使い分け | `flow-vs-groove.md` |
 | コマンド × リソース対応 | `command-resource-map.md` |
 | skillOverrides 設計指針 | `skill-overrides-guide.md` |
+| guideline 自動 trigger 一覧 | `guideline-triggers.md` |
 
 ## ワークフロー
 
@@ -31,6 +39,14 @@
 | チケット→PR完成までの段階制 | `ticket-to-pr-workflow.md` |
 | インシデント対応フロー | `incident-flow.md` |
 | Compounding Engineering | `compounding-engineering-cycle.md` |
+| 並列実行パターン (worktree 判定) | `PARALLEL-PATTERNS.md` |
+
+## 思考フレームワーク
+
+| トピック | ファイル |
+|---------|---------|
+| AI 思考の基本姿勢 | `AI-THINKING-ESSENTIALS.md` |
+| 設計判断の品質チェック | `decision-quality-checklist.md` |
 
 ## ドキュメント執筆
 
@@ -43,6 +59,12 @@
 | ドキュメント書き直し | `document-iteration-patterns.md` |
 | 文章執筆 共通原則 | `../guidelines/writing/PRINCIPLES.md` |
 | 文章執筆 補足パターン (書き直し Phase / textlint 等) | `writing-patterns.md` |
+
+## Serena / MCP
+
+| トピック | ファイル |
+|---------|---------|
+| Serena cc-system-prompt-override 設定 | `serena-cc-prompt-setup.md` |
 
 ## その他
 

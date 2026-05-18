@@ -67,7 +67,6 @@ Claude Code 34 コマンドの使い分け。
 | コマンド | 用途 |
 |---------|------|
 | `/reload` | 設定再読み込み（compaction後） |
-| `/aliases` | コマンドエイリアス定義 |
 | `/memory-save` | Serena memory 即時保存 |
 | `/protection-mode` | 操作保護モード適用 |
 | `/groove` | YAMLマルチエージェントオーケストレーター |

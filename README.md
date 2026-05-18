@@ -18,7 +18,7 @@
 /git-push                           → コミット→push→PR/MR作成を1コマンドで
 ```
 
-他にも `/test`, `/refactor`, `/explore`, `/docs`, `/flow` など36コマンドを収録。
+他にも `/test`, `/refactor`, `/docs`, `/flow` など34コマンドを収録。
 
 ---
 
@@ -44,16 +44,22 @@ cp .mcp.json.example .mcp.json
 ```
 ai-tools/
 ├── claude-code/
-│   ├── commands/        # 36コマンド（/dev, /review, /plan, /prd ...）
-│   ├── skills/          # 21スキル（レビュー、開発、インフラ、ユーティリティ）
+│   ├── commands/        # 34コマンド（/dev, /review, /plan, /prd ...）
+│   ├── skills/          # 22スキル（レビュー、開発、インフラ、ユーティリティ）
 │   ├── agents/          # 7エージェント（PO, Manager, Developer ...）
-│   ├── guidelines/      # 61ガイドライン（言語・設計・インフラ・運用）
-│   ├── hooks/           # 16イベントHook
+│   ├── guidelines/      # 67ガイドライン（言語・設計・インフラ・運用）
+│   ├── hooks/           # 18イベントHook
 │   ├── output-styles/   # 返信フォーマット定義
 │   ├── scripts/         # ユーティリティスクリプト
 │   ├── templates/       # テンプレート
 │   ├── install.sh       # インストール
 │   └── sync.sh          # 設定同期
+├── codex/               # Codex CLI 連携設定（plugin manifest 等）
+├── groove/              # マルチエージェントオーケストレーター（YAML workflow）
+├── dashboard/           # 利用状況ダッシュボード（analytics 可視化）
+├── docs/                # repo 全体ドキュメント（ADR、tutorial 等）
+├── scripts/             # repo 横断ユーティリティ
+└── AGENTS.md            # agent 設計の上位概要
 ```
 
 ---

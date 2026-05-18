@@ -112,6 +112,33 @@ PY
     echo '```'
     echo ""
   fi
+  echo "## Death Reference (_archive/ のファイル名で active 参照が残存)"
+  echo ""
+  echo '```'
+  ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+  if [ -d "$ROOT/_archive" ]; then
+    # active 側の同名衝突を除外するため事前に名前一覧を作成
+    active_names=$(ls "$ROOT/commands" 2>/dev/null | sed -E 's|\.md$||')$'\n'$(ls -d "$ROOT/skills"/*/ 2>/dev/null | xargs -n1 basename)$'\n'$(ls "$ROOT/agents"/*.md 2>/dev/null | xargs -n1 basename | sed 's|\.md$||')
+    while IFS= read -r archived; do
+      [ -f "$archived" ] || continue
+      name=$(basename "$archived" .md)
+      [ -z "$name" ] || [ "$name" = "README" ] && continue
+      echo "$active_names" | grep -qFx "$name" && continue
+      hits=$(grep -rlE "(\`|\")/$name\b" \
+        --include="*.md" \
+        --exclude-dir="_archive" \
+        --exclude-dir="health-snapshots" \
+        --exclude="CHANGELOG.md" \
+        "$ROOT" 2>/dev/null || true)
+      if [ -n "$hits" ]; then
+        count=$(echo "$hits" | wc -l | tr -d ' ')
+        printf "[%s] %s 件 active 参照\n" "$name" "$count"
+        echo "$hits" | sed 's|^|  - |'
+      fi
+    done < <(find "$ROOT/_archive" -type f -name "*.md")
+  fi
+  echo '```'
+  echo ""
   echo "## Staleness (guidelines/languages 90日超 mention)"
   echo ""
   echo '```'
@@ -138,6 +165,7 @@ PY
   echo ""
   echo "- 0 利用 commands/skills: 設計通り出番待ちか確認、不要なら \`_archive/\` 退避"
   echo "- median 100ms 超 hook: \`hook-bench.sh --hook NAME\` で詳細計測、内部処理を点検"
+  echo "- death ref 検出: 参照を実態 (agent 直起動表記 / 廃止注記) に揃える、または archive 復活"
   echo "- 90 日超 mention: 該当言語/FW の release notes 確認 → guidelines 更新 + 「YYYY年MM月時点」差替"
   echo "- 結果を残したい場合: \`--out claude-code/references/health-snapshots/${TODAY}.md\` などへ"
 }
