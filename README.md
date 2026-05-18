@@ -55,7 +55,6 @@ ai-tools/
 │   ├── install.sh       # インストール
 │   └── sync.sh          # 設定同期
 ├── codex/               # Codex CLI 連携設定（plugin manifest 等）
-├── groove/              # マルチエージェントオーケストレーター（YAML workflow）
 ├── dashboard/           # 利用状況ダッシュボード（analytics 可視化）
 ├── docs/                # repo 全体ドキュメント（ADR、tutorial 等）
 ├── scripts/             # repo 横断ユーティリティ

@@ -127,5 +127,4 @@ wc -l claude-code/skills/load-guidelines/skill.md
 ## 関連リファレンス
 
 - `references/design-phase-flow.md` - 設計フェーズ遷移（brainstorm→prd→design-doc→plan）
-- `references/flow-vs-groove.md` - `/flow` vs `/groove` 使い分け
 - `references/natural-language-triggers.md` - 自然言語トリガー全リスト

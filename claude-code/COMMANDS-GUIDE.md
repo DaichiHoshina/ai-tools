@@ -69,7 +69,6 @@ Claude Code 34 コマンドの使い分け。
 | `/reload` | 設定再読み込み（compaction後） |
 | `/memory-save` | Serena memory 即時保存 |
 | `/protection-mode` | 操作保護モード適用 |
-| `/groove` | YAMLマルチエージェントオーケストレーター |
 | `/claude-update-fix` | Claude Code 更新後の設定差分修正 |
 | `/serena-refresh` | Serena データ最新化 |
 

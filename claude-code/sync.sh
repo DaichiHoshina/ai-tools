@@ -355,27 +355,6 @@ sync_to_local() {
         fi
     done
 
-    # groove同期（リポジトリ groove/ → ~/.groove/）
-    local groove_src="${SCRIPT_DIR}/../groove"
-    local groove_dst="$HOME/.groove"
-    if [ -d "$groove_src" ]; then
-        for subdir in workflows agents; do
-            if [ -d "$groove_src/$subdir" ]; then
-                mkdir -p "$groove_dst/$subdir"
-                if ! cp -r "$groove_src/$subdir/"* "$groove_dst/$subdir/" 2>/dev/null; then
-                    print_warning "groove/$subdir コピー失敗（空ディレクトリの可能性）"
-                fi
-            fi
-        done
-        for f in config.yaml schema.md README.md; do
-            if [ -f "${groove_src}/${f}" ]; then
-                cp "${groove_src}/${f}" "${groove_dst}/"
-            fi
-        done
-        mkdir -p "$groove_dst/runs"
-        print_success "groove → ~/.groove/"
-    fi
-
     # settings.json hooks / skillOverrides をテンプレートからマージ
     sync_settings_hooks
     sync_settings_skill_overrides
@@ -467,25 +446,6 @@ sync_from_local() {
         print_success "statusline.js"
     fi
 
-    # groove逆同期（~/.groove/ → リポジトリ groove/）
-    local groove_src="$HOME/.groove"
-    local groove_dst="${SCRIPT_DIR}/../groove"
-    if [ -d "$groove_src" ]; then
-        for subdir in workflows agents; do
-            if [ -d "$groove_src/$subdir" ]; then
-                mkdir -p "$groove_dst/$subdir"
-                rm -f "$groove_dst/$subdir/"* 2>/dev/null || true
-                cp "$groove_src/$subdir/"* "$groove_dst/$subdir/" 2>/dev/null || true
-            fi
-        done
-        for f in config.yaml schema.md README.md; do
-            if [ -f "${groove_src}/${f}" ]; then
-                cp "${groove_src}/${f}" "${groove_dst}/"
-            fi
-        done
-        print_success "~/.groove/ → groove/"
-    fi
-
     # Templates (センシティブ情報をマスク)
     sync_settings_template
     sync_gitlab_mcp_template
@@ -544,23 +504,6 @@ show_diff() {
 
     local items=("${SYNC_ITEMS[@]}")
     local has_diff=false
-
-    # groove差分チェック
-    local groove_src="${SCRIPT_DIR}/../groove"
-    local groove_dst="$HOME/.groove"
-    if [ -d "$groove_src" ] && [ -d "$groove_dst" ]; then
-        for subdir in workflows agents; do
-            if [ -d "$groove_src/$subdir" ] && [ -d "$groove_dst/$subdir" ]; then
-                local diff_output
-                diff_output=$(diff -rq "$groove_src/$subdir" "$groove_dst/$subdir" 2>/dev/null || true)
-                if [ -n "$diff_output" ]; then
-                    echo -e "${YELLOW}groove/$subdir/:${NC}"
-                    echo "$diff_output" | head -10
-                    has_diff=true
-                fi
-            fi
-        done
-    fi
 
     for item in "${items[@]}"; do
         local src="$SCRIPT_DIR/$item"

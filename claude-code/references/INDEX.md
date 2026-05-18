@@ -25,7 +25,6 @@
 | 自然言語トリガー全リスト | `natural-language-triggers.md` |
 | レビューコマンド使い分け | `review-commands.md` |
 | レビュー mode 詳細 (deep / multi 集約) | `review-modes-advanced.md` |
-| /flow vs /groove 使い分け | `flow-vs-groove.md` |
 | コマンド × リソース対応 | `command-resource-map.md` |
 | skillOverrides 設計指針 | `skill-overrides-guide.md` |
 | guideline 自動 trigger 一覧 | `guideline-triggers.md` |

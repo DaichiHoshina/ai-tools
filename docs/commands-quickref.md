@@ -18,7 +18,6 @@ Claude Code で使用できる全スラッシュコマンドの一覧。
 | /flow | ワークフロー自動化 - タスクタイプを自動判定して最適なワークフローを実行 | ワークフロー |
 | /git-pull | Git pull --rebase の安全実行。未コミット変更を自動stash→pull→pop。 | Git操作 |
 | /git-push | Git統合コマンド - commit → push → PR/MR作成を1コマンドで。モード自動判定。 | Git操作 |
-| /groove | 軽量マルチエージェントオーケストレーター。YAMLワークフロー定義に従い、複数のAgentを協調実行する。外部依存なし。 | ワークフロー・オーケストレーション |
 | /lint-test | CI相当のチェックをローカルで一括実行（build, lint, test, typecheck等） | テスト・検証 |
 | /memory-save | Serena memoryへの簡易保存 - 現在の作業状態を即座にメモリに記録 | メモリ |
 | /performance-issue | パフォーマンス改善issueの進行管理（計測→pprof分析→段階的改善→負荷試験） | パフォーマンス・最適化 |

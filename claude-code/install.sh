@@ -92,11 +92,6 @@ setup_directories() {
     mkdir -p "$CLAUDE_DIR/lib"
     mkdir -p "$CLAUDE_DIR/references"
 
-    # Groove
-    mkdir -p "$HOME/.groove/workflows"
-    mkdir -p "$HOME/.groove/agents"
-    mkdir -p "$HOME/.groove/runs"
-
     print_success "ディレクトリ構造を作成しました"
 }
 
@@ -175,22 +170,6 @@ copy_directory_contents() {
     # References（ガイドラインから参照される詳細資料）
     if [ -d "$SCRIPT_DIR/references" ]; then
         copy_files "$SCRIPT_DIR/references" "$CLAUDE_DIR/references" "references"
-    fi
-
-    # Groove（リポジトリ groove/ → ~/.groove/）
-    local groove_src="${SCRIPT_DIR}/../groove"
-    if [ -d "$groove_src" ]; then
-        for subdir in workflows agents; do
-            if [ -d "$groove_src/$subdir" ]; then
-                cp -r "$groove_src/$subdir/"* "$HOME/.groove/$subdir/" 2>/dev/null || true
-            fi
-        done
-        for f in config.yaml schema.md README.md; do
-            if [ -f "${groove_src}/${f}" ]; then
-                cp "${groove_src}/${f}" "$HOME/.groove/"
-            fi
-        done
-        print_success "groove をコピーしました"
     fi
 
     # statusline.js

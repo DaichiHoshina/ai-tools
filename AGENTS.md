@@ -7,7 +7,7 @@
 - `claude-code/`: Main Claude Code assets (hooks, commands, skills, guidelines, lib).
 - `claude-code/hooks/`: Shell hooks that run on session/tool events (plus `test-*.sh` for hook checks).
 - `codex/`: Codex templates and installer (`config.toml.example`, `AGENTS.md.example`, `hooks/*.example`).
-- `docs/`: Documentation hub. Notable subdirs: `docs/reports/` (historical reports), `docs/adr/` (ADRs), `docs/groove/` (workflow dashboard); plus quickref/setup guides at the top level.
+- `docs/`: Documentation hub. Notable subdirs: `docs/reports/` (historical reports), `docs/adr/` (ADRs); plus quickref/setup guides at the top level.
 - Root docs: `README.md`, `AGENTS.md`, `LICENSE`, `CODEX-SETUP.md`.
 - Config templates: `.mcp.json.example`; local-only files live in `.mcp.json` and `.serena/` (gitignored).
 
