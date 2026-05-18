@@ -16,23 +16,13 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 | **explore-agent** | haiku | Explorer/analyzer | Codebase investigation, parallel search |
 | **verify-app** | haiku | Verifier | Build, test, lint integration check |
 
-## Agent startup cost (subagent-events.log actual measurement)
+## Agent startup cost (highlights)
 
-| Agent | N | Avg time | Max | Note |
-|-------|---|----------|-----|------|
-| developer-agent | 2* | 17s | 23s | Fastest, clear task |
-| manager-agent | 2* | 42s | 68s | Planning only, lightweight |
-| reviewer-agent | 27 | 82s | 161s | Opus + comprehensive-review |
-| po-agent | 9* | 96s | 365s | Strategy decision expands |
-| Explore (built-in) | 79 | 99s | 310s | Most frequent |
-| general-purpose | 21 | **115s** | **501s** | **Avoid** |
-| explore-agent | 7* | 123s | 289s | Haiku but broad task scope, long |
+- Fastest: `developer-agent` ~17s (clear task)
+- Most frequent: `Explore` (built-in) ~99s
+- **Avoid**: `general-purpose` ~115s avg / 501s max
 
-`*` = reference values for N<10 (small sample, variance with larger N). Operations prioritize high-frequency agents (N≥20) trends.
-
-**Recalculate**: Process `~/.claude/hooks/subagent-events.log` via script in `references/performance-insights.md` (last update: `git log -1 --format=%cs agents/README.md`).
-
-Operations rule (table): `claude-code/CLAUDE.md` "exploration/investigation split". Measurement method & hook vs agent cost structure: [`references/performance-insights.md`](../references/performance-insights.md).
+Full table & recalc method: [`references/performance-insights.md`](../references/performance-insights.md) (single source). Operations rule: `claude-code/CLAUDE.md` "exploration/investigation split".
 
 ---
 
@@ -44,7 +34,7 @@ Operations rule (table): `claude-code/CLAUDE.md` "exploration/investigation spli
 | `/dev` | None (direct) | No agent. Need Team? Use `/flow` |
 | `/review` | reviewer-agent | Auto review |
 | `/plan` | po-agent + manager-agent | Strategy + task split |
-| `/explore` | explore-agent (parallel) | Concurrent multi-perspective search |
+| (natural lang / Claude judgment) | explore-agent (parallel) | Concurrent multi-perspective search. Trigger: 3+ query broad search, ambiguous large investigation |
 
 ---
 
@@ -91,13 +81,13 @@ Claude Code sub-agent spec: sub-agents cannot spawn other sub-agents. **Parent (
 
 ### 2. reviewer-agent
 
-- **Trigger**: `/review`, final step of `/flow`
-- **Role**: Review in Writer/Reviewer parallel pattern
-- **Feature**: Auto-launch after impl complete
+- **Trigger**: `/flow` Team path final step (solo `/review` calls `comprehensive-review` skill directly, no agent)
+- **Role**: Review owner for Writer/Reviewer parallel pattern. Internally invokes `comprehensive-review` skill with `--focus=quality/security/docs/root-cause`
+- **Feature**: Auto-launch after impl complete; owns P0-P3 classification (single source)
 
 ### 3. explore-agent (explore1-4)
 
-- **Trigger**: `/explore`, investigation tasks
+- **Trigger**: Claude judgment on 3+ query broad search / ambiguous large investigation (no slash command — direct `Task(explore-agent)` parallel launch)
 - **Role**: Read-only parallel search
 - **Feature**: Serena MCP required, multi-perspective
 

@@ -53,7 +53,7 @@ subagent-events.log 集計（2026-04-06〜2026-04-22）。
 ## 運用ルール（濫用防止）
 
 - 1-2クエリで済む調査は **agent を起動せず直接 Bash grep/find/mcp__serena__find_symbol**
-- 3クエリ以上の広域探索のみ `/explore`（explore-agent×4 並列）
+- 3クエリ以上の広域探索のみ `Task(explore-agent)` ×4 並列起動
 - Claude Code CLI/SDK/API の仕様質問は `claude-code-guide` agent
 - `general-purpose` は原則非推奨（N=21 実測で最大コスト源）
 

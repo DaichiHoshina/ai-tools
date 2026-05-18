@@ -46,7 +46,7 @@ Agent startup cost (median: dozens of seconds to minutes) is the biggest cost so
 | Scope | Tool |
 |---|---|
 | 1-2 files / specific symbol | Bash grep/find or `mcp__serena__find_symbol` |
-| 3-4 query broad search | `/explore` (2 parallel if ambiguous, all 4 parallel for 3+ domains) |
+| 3-4 query broad search | `Task(explore-agent)` parallel (2 if ambiguous, all 4 for 3+ domains) |
 | Claude Code CLI/SDK/API spec questions | claude-code-guide agent |
 | Other genuinely broad analysis | Explore (built-in, last resort) |
 

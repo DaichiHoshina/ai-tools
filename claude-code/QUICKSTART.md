@@ -163,7 +163,7 @@ cp .mcp.json.example .mcp.json
 ### 迷ったら
 1. **レビュー系**: `/review`（自動選択）
 2. **開発系**: `/dev`（load-guidelines自動実行）
-3. **インフラ系**: `/explore` → SKILLS-MAP.md参照
+3. **インフラ系**: `Task(explore-agent)` 並列起動 → SKILLS-MAP.md参照
 
 ### スキルの組み合わせ
 - SKILLS-MAP.md「推奨組み合わせ」セクション参照

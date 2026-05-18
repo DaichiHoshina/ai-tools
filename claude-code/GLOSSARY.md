@@ -1,20 +1,20 @@
 # 用語集（GLOSSARY）
 
-Claude Code 設定で使用される主要用語の定義。
+Claude Code 設定で使用される主要用語の single source。各概念の詳細は表内のリンク先を参照。
 
 ## Agent（エージェント）
 
-特定の役割を持つタスク実行者。Task tool で起動、専門分野を担当。
+特定の役割を持つタスク実行者。`Task` tool で起動、専門分野を担当。詳細・コスト・コマンド対応: [agents/README.md](./agents/README.md)。
 
-| エージェント | 役割 | 実装 |
-|-------------|------|:----:|
-| `po-agent` | 戦略決定・Worktree 管理 | × |
-| `manager-agent` | タスク分割・配分計画 | × |
-| `developer-agent` | 実装担当（dev1-4 並列） | ✅ |
-| `explore-agent` | 探索・分析（explore1-4） | × |
-| `reviewer-agent` | レビュー担当 | × |
-| `verify-app` | ビルド・テスト検証 | × |
-| `root-cause-analyzer` | 根本原因分析 | × |
+| エージェント | 役割 |
+|-------------|------|
+| `po-agent` | 戦略決定・Worktree 管理 |
+| `manager-agent` | タスク分割・配分計画 |
+| `developer-agent` | 実装担当（dev1-4 並列） |
+| `explore-agent` | 探索・分析（explore1-4） |
+| `reviewer-agent` | レビュー担当 |
+| `verify-app` | ビルド・テスト検証 |
+| `root-cause-analyzer` | 根本原因分析 |
 
 ## MCP（Model Context Protocol）
 
@@ -28,17 +28,18 @@ Claude Code が外部ツールと連携するためのプロトコル。
 
 ## Hook（フック）
 
-特定イベント発生時に自動実行されるスクリプト。
+特定イベント発生時に自動実行されるスクリプト。全 18 件・性能実測値: [hooks/README.md](./hooks/README.md) / [references/performance-insights.md](./references/performance-insights.md)。
+
+主要 Hook（抜粋）:
 
 | Hook | トリガー | 用途 |
 |------|---------|------|
 | `session-start` | セッション開始 | Serena 接続確認 |
 | `user-prompt-submit` | プロンプト送信 | 技術スタック検出 |
-| `pre-tool-use` | ツール実行前 | 自動処理禁止チェック |
-| `post-tool-use` | ツール実行後 | 自動フォーマット |
-| `pre-compact` | コンパクション前 | バックアップ |
-| `stop` | 停止時 | 統計保存 |
-| `session-end` | セッション終了 | 完了通知 |
+| `pre-tool-use` | ツール実行前 | secret 検出・自動処理禁止チェック |
+| `post-tool-use` | ツール実行後 | 出力 sanitize・自動フォーマット |
+| `pre-compact` / `post-compact-reload` | コンパクション前後 | バックアップ・context 再注入 |
+| `stop` / `session-end` | 停止・終了時 | 統計保存・完了通知 |
 
 ## Skill（スキル）
 
@@ -50,13 +51,15 @@ Claude Code が外部ツールと連携するためのプロトコル。
 
 ## Guideline（ガイドライン）
 
-言語・フレームワーク固有のベストプラクティス集。
+言語・フレームワーク固有のベストプラクティス集（on-demand load）。
 
-- `summaries/` - 要約版（トークン節約・優先読込）
 - `languages/` - 言語固有（Go, TypeScript, React 等）
 - `common/` - 共通ルール
 - `design/` - 設計パターン
 - `infrastructure/` - インフラ関連
+- `backend/` - バックエンド設計
+- `operations/` - 運用
+- `writing/` - 人間向け文章執筆原則
 
 ## protection-mode（操作保護モード）
 

@@ -1,6 +1,6 @@
 # Claude Code Hooks
 
-Claude Code の Hooks 機能を活用した自動化スクリプト群（16スクリプト）。
+Claude Code の Hooks 機能を活用した自動化スクリプト群（18スクリプト）。
 
 ## 実装済みフック
 

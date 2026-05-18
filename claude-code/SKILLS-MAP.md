@@ -1,6 +1,6 @@
 # スキル一覧・使い分け（SKILLS-MAP）
 
-全21スキルの依存関係・使い分け・自動選択の仕組み。各 skill 詳細は `skills/<name>/SKILL.md`。
+全22スキルの依存関係・使い分け・自動選択の仕組み。各 skill 詳細は `skills/<name>/SKILL.md`。
 
 > **関連**: [QUICKSTART.md](QUICKSTART.md) | [COMMANDS-GUIDE.md](COMMANDS-GUIDE.md)
 
@@ -20,7 +20,7 @@
 
 | skill | パラメータ | requires-guidelines | often-used-with |
 |-------|-----------|---------------------|-----------------|
-| comprehensive-review | `--focus={all\|architecture\|quality\|security\|...}` (11観点) | common, clean-architecture, ddd | - |
+| comprehensive-review | `--focus={all\|architecture\|quality\|security\|...}` (11観点) | common, clean-architecture, ddd | 呼出元: `/review` cmd、`reviewer-agent` |
 | uiux-review | - | common, nextjs-react, tailwind, shadcn | ui-skills, react-best-practices |
 | ui-skills | - | nextjs-react, tailwind, shadcn | uiux-review, react-best-practices |
 

@@ -126,11 +126,11 @@ Prompt includes "you are explore1" etc. at startup.
 
 ## Background execution (v2.1.49+)
 
-Specify `run_in_background: true` for background runs. Use with `/explore` parallel startup.
+Specify `run_in_background: true` for background runs. Use with `Task(explore-agent)` parallel startup.
 
 | Scenario | Behavior |
 |----------|----------|
-| `/explore` parallel | Caller specifies `run_in_background: true` |
+| Parallel startup | Caller specifies `run_in_background: true` |
 | Immediate result | Foreground (default) |
 
 ## Diagram patterns
