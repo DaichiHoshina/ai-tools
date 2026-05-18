@@ -21,13 +21,13 @@ parameters:
 
 | Perspective | Description | Details |
 |------|------|------|
-| **architecture** | Clean arch, DDD, layer violations | `review-criteria.md` |
-| **quality** | Code smell, performance, type safety | `review-criteria.md` |
+| **architecture** | DDD boundaries, Clean Architecture dependency direction, modular monolith module boundaries, layer violations | `review-criteria.md` |
+| **quality** | Language/FW best practices, local idioms, code smell, performance, type safety | `review-criteria.md` |
 | **readability** | Naming, cognitive complexity, consistency | `review-criteria.md` |
-| **security** | OWASP Top 10, credential leaks | `review-criteria.md` |
+| **security** | Authn/authz, injection, secrets, tenant/data isolation, unsafe logging, dependency/config exposure | `review-criteria.md` |
 | **docs** | Doc quality, test adequacy | `review-criteria.md` |
 | **test-coverage** | Test case adequacy & quality | `review-criteria.md` |
-| **root-cause** | Band-aid vs root fix, recurrence patterns | `review-criteria.md` |
+| **root-cause** | Permanent fix vs workaround, root cause coverage, recurrence patterns | `review-criteria.md` |
 | **logging** | Log level appropriateness, structured logs | `review-criteria.md` |
 | **writing** | Human-facing doc quality | `writing-docs.md` |
 | **silent-failure** | Error swallowing, empty catch | `silent-failure.md` |
@@ -41,7 +41,7 @@ Confidence thresholds & coverage vary by effort level.
 |--------|---------------|---------|---------|
 | `low` | 90+ (minimize false positives) | Skip | Skip writing/type-design/docs |
 | `medium` (default) | 80+ | Past 90 days | All 11 |
-| `high` | 70+ (prefer over-detection) | Full history | + design tradeoff, dependencies |
+| `high` | 70+ (evidence-backed safety/design issues only) | Full history | + design tradeoff, dependencies |
 
 ## Execution Flow
 
@@ -49,7 +49,9 @@ Confidence thresholds & coverage vary by effort level.
 
 - Basis: only read diff/code/docs. Mark guesses "hypothesis:". No style/preference/general theory nitpicks.
 - Skip design debates outside scope, don't oppose existing patterns with general theory
-- Only actionable findings
+- Only actionable findings backed by an observed violation, regression, or concrete risk in the requested scope.
+- Don't invent a problem statement and then point out that the diff fails it. If the requirement is not in the user request, issue/design docs, tests, code contract, or actual runtime/tool evidence, don't promote it to a finding.
+- "Could be better", "might be useful", and "best to check" are notes/questions at most, not Critical/Warning.
 - Create new issue/ticket/task only on explicit user request. Don't elevate past examples to required tasks.
 - Don't TODO "just in case" or "confirm" items. TODO only today's blockers.
 - Don't re-add work user explicitly marked unnecessary.
@@ -72,6 +74,13 @@ Use `git diff --name-only` to determine language, file type, change scope & auto
 - Structure → `get_symbols_overview`, symbol search → `find_symbol`
 
 Non-code files (md/yaml/json/toml/lockfile/.env) → use Grep/Read (Serena N/A).
+
+Default code review lenses:
+
+- `quality`: verify language/FW best practices against actual language, framework, and project-local conventions.
+- `architecture`: verify DDD, Clean Architecture, and modular monolith boundaries only where the changed code crosses those boundaries.
+- `root-cause`: verify the change addresses the observed root cause, not just the visible symptom.
+- `security`: verify concrete security surfaces touched by the diff.
 
 | Condition | Add Perspective |
 |------|---------|
@@ -118,6 +127,20 @@ Assign 0-100 confidence score to each finding, downgrade/discard low scores.
 | 25-49 | Output as Warning |
 | <25 | Discard (no output) |
 
+### Step 4.5: Finding Self-Review Gate
+
+Before output, validate each remaining candidate finding:
+
+| Check | Pass condition | Fail action |
+|---|---|---|
+| Evidence | Directly anchored to observed diff/code/docs/tests/tool output | Discard |
+| Scope | Tied to user request, issue/design doc, code contract, or changed behavior | Discard or move to question |
+| Overreach | Does not invent a new problem statement or requirement | Discard |
+| Actionability | Author can fix code/docs/tests in this change | Discard or note only |
+| Severity | Critical/Warning matches real impact and confidence | Downgrade or discard |
+
+Only publish findings that pass this gate. Do not show the gate checklist in the final output unless explaining why no findings remain.
+
 ### Step 5-6: Aggregate & Record History
 
 Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.jsonl` (fields: date/severity/focus/file/line/finding/confidence/branch/commit).
@@ -146,4 +169,4 @@ Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 
 - focus=all → all 11 in parallel; large diffs → 1 file at a time, Critical first
 - Provide concrete fixes; comment tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question
-- Forbid baseless task creation or out-of-scope operational TODOs even in over-detection
+- Forbid baseless task creation, invented problem framing, or out-of-scope operational TODOs.

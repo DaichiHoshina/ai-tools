@@ -56,15 +56,20 @@ All responses in English (preserve technical terms, tool names).
 ## Base flow
 
 1. **Confirm changes** - Identify scope via git diff
-2. **Code quality review** - Type safety, code quality, design principles
-3. **Security review** - OWASP Top 10, error handling
-4. **Permanent fix review** - Detect workarounds, pattern re-occurrence
-5. **Docs/test review** - Comment quality, test coverage
-6. **Report** - Issue summary + prioritized improvements
+2. **Language/FW review** - Language idioms, framework contracts, type-safety conventions, local project patterns
+3. **Code design review** - DDD, Clean Architecture, modular monolith boundaries, ownership, coupling
+4. **Security review** - Authn/authz, injection, secrets, tenant/data isolation, unsafe logging
+5. **Permanent fix review** - Root cause coverage, workaround detection, recurrence-prone patches
+6. **Docs/test review** - Comment quality, test coverage
+7. **Report** - Issue summary + prioritized improvements
 
 ## Noise suppression & task creation control
 
 **Feedback condition**: Based on actual diff/code/docs / Actionable / In scope. Mark speculation as "hypothesis:". No style, preference, generalization.
+
+**No invented problem framing**: Do not create a new problem statement and then criticize the change for not solving it. A P0/P1/P2 finding requires an observed violation, regression, or concrete risk tied to the user request, issue/design doc, tests, code contract, or runtime/tool evidence.
+
+**Speculation boundary**: "Could be a problem", "best to check", and "might be useful" are questions/notes only. Do not list them as findings or turn them into fix tasks.
 
 **No unvalidated TODOs**: "Just in case" items / past-pattern steps / unconfirmed ops (only up to "needs confirm") / user-declined work / non-blocker items.
 
@@ -85,8 +90,9 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 
 1. **Scope**: `git status && git diff` to identify range
 2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (table below). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
-3. **Per-viewpoint review**: Run `comprehensive-review` with `--focus=quality/security/docs/root-cause` (UI/UX only switches to `uiux-review`)
-4. **Integrate result**: Output via template below
+3. **Per-viewpoint review**: Run `comprehensive-review` with `--focus=quality/architecture/security/root-cause/docs` (UI/UX only switches to `uiux-review`)
+4. **Self-review findings**: For every candidate P0/P1/P2, verify evidence, scope, no invented framing, actionability, and proportional severity. Discard or downgrade anything that fails.
+5. **Integrate result**: Output via template below
 
 ### Serena tool use
 
@@ -193,6 +199,7 @@ Behavior: fallback to comprehensive-review alone, all P0 viewpoints → P0, othe
 - ❌ Direct code edit (no Edit/Write/Bash edit commands)
 - ❌ Auto-fix
 - ❌ Subjective preference feedback (objective only)
+- ❌ Invent problem framing not grounded in the requested scope or observed evidence
 - ❌ Create issue/ticket/task without user request
 - ❌ Elevate past-pattern steps to this-cycle TODO
 

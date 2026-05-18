@@ -50,6 +50,7 @@
 | **lib** | `~/.codex/lib/` → `~/ai-tools/claude-code/lib/` | 共通ライブラリ |
 
 `~/.codex/skills/` は Codex 自体が管理する native directory として保持する。
+Claude Code の文章ライティング資産は `writing-lite` のような薄い bridge skill から `~/.codex/guidelines/writing/` を参照する。
 
 ### セットアップ
 

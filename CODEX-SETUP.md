@@ -1,6 +1,6 @@
 # Codex (gpt-5.2-codex) セットアップ
 
-このリポジトリはCodexにも対応しています。Claude Codeの共有リソース（agents, guidelines, commands, lib）をシンボリックリンクで共有し、`~/.codex/skills` は Codex native directory を維持します。
+このリポジトリはCodexにも対応しています。Claude Codeの共有リソース（agents, guidelines, commands, lib）をシンボリックリンクで共有し、`~/.codex/skills` は Codex native directory を維持します。一部の Codex native skill は Claude Code 資産への薄い bridge として `codex/skills/` からコピーします。
 
 ## Level 4: フル同期セットアップ（推奨）
 
@@ -13,6 +13,7 @@ cd ~/ai-tools
 
 # 実行内容:
 # ✅ シンボリックリンク自動作成（agents, guidelines, commands, lib）
+# ✅ Codex native skills コピー（既存 skill は上書きしない）
 # ✅ テンプレートファイル自動コピー
 # ✅ インストール検証
 
@@ -89,7 +90,7 @@ Commands と Guidelines は Claude Code と共有されます。Skills は Codex
 
 - **Commands**: `/flow`, `/dev`, `/review` 等
 - **Guidelines**: 開発原則、型安全性ガイド等
-- **Skills**: `~/.codex/skills` の Codex native skills を維持
+- **Skills**: `~/.codex/skills` の Codex native skills を維持。`writing-lite` などの bridge skill は `codex/skills/` からコピー
 
 Serena は Codex 専用 context で起動します。
 

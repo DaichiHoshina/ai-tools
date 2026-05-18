@@ -12,9 +12,32 @@ description: Comprehensive code review (comprehensive-review 11 angles + officia
 - Only evidence-based findings on real diff/code/docs. Flag hypothesis with "hypothesis:"
 - exclude style preference, opinions, general wisdom, out-of-scope design debate
 - limit findings to actionable items, modifiable items
+- don't invent a problem statement and then review against it. A finding needs an observed violation/regression/risk in the requested scope.
+- speculative "this could be an issue" belongs in questions/notes, not Critical/Warning.
 - no unsolicited issue/ticket/task/TODO auto-generation
 - don't escalate "for confirmation" or "best to check" items to action tasks
 - TODO only if blocker for current work
+
+## Default Evidence-Backed Lenses
+
+Apply these lenses to code reviews, but only promote issues that satisfy the common constraints above:
+
+- **Language/FW best practices**: language idioms, framework contracts, lifecycle rules, type-safety conventions, and local project patterns.
+- **Code design**: DDD boundaries, Clean Architecture dependency direction, modular monolith module boundaries, ownership, and coupling.
+- **Permanent/root fix**: whether the change fixes the root cause instead of adding a workaround, compatibility remnant, or recurrence-prone patch.
+- **Security**: authn/authz, injection, secret handling, tenant/data isolation, unsafe logging, and dependency/config exposure.
+
+## Finding Self-Review Gate
+
+Before outputting any Critical/Warning, self-review each candidate finding:
+
+1. **Evidence**: Is the claim anchored to observed diff/code/docs/tests/tool output?
+2. **Scope**: Is the claim inside the user request or changed behavior?
+3. **No invented framing**: Did the review create a new problem statement not present in evidence?
+4. **Actionability**: Can the author change code/docs/tests now to address it?
+5. **Severity**: Is the Critical/Warning level proportional to actual impact?
+
+If any answer is "no", discard it or move it to a short question/note. Do not include self-review notes in the final output unless they affect the verdict.
 
 ## Step 0: Auto-infer Mode (no flags)
 
@@ -111,7 +134,7 @@ Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / 
 
 ## Review Policy, Scope, Difit
 
-- **policy**: strict (miss-free > over-detect), diff-only, Critical → Warning, 11 parallel
+- **policy**: evidence-first (false positives are review debt), diff-only, Critical → Warning, 11 parallel
 - **scope**: changed files (git diff), new. exclude: auto-gen, vendor/node_modules, lock
 - **difit**: local only, background after review (require `npm i -g difit`, suppress via `--no-difit`)
 

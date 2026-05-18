@@ -107,6 +107,7 @@ Install Codex configuration into ~/.codex.
 This installer:
   - symlinks agents, guidelines, commands, and lib from claude-code/
   - preserves ~/.codex/skills as a Codex native directory
+  - copies Codex-native skills from codex/skills/ without overwriting existing skills
   - copies template files only when the target file does not already exist
 
 Existing config.toml, AGENTS.md, hooks.json, and hook scripts are not overwritten.
@@ -173,6 +174,13 @@ doctor_check_native_skills() {
         doctor_success "skills/ は Codex native directory として存在します"
     else
         doctor_warning "skills/ が見つかりません（Codex 側で自動生成される場合があります）"
+        return
+    fi
+
+    if [ -f "$target/writing-lite/SKILL.md" ]; then
+        doctor_success "writing-lite skill が存在します"
+    elif [ -d "$SCRIPT_DIR/skills/writing-lite" ]; then
+        doctor_warning "writing-lite skill が未インストールです。./codex/install.sh でコピーできます"
     fi
 }
 
@@ -410,6 +418,41 @@ copy_templates() {
     print_success "テンプレートファイルのコピー完了"
 }
 
+copy_codex_skills() {
+    print_header "Codex native skills のコピー"
+
+    local skills_source="$SCRIPT_DIR/skills"
+    local skills_target="$CODEX_DIR/skills"
+
+    if [ ! -d "$skills_source" ]; then
+        print_info "Codex native skills テンプレートはありません（スキップ）"
+        return
+    fi
+
+    mkdir -p "$skills_target"
+
+    local skill_dir
+    for skill_dir in "$skills_source"/*; do
+        if [ ! -d "$skill_dir" ]; then
+            continue
+        fi
+
+        local skill_name
+        skill_name="$(basename "$skill_dir")"
+        local target="$skills_target/$skill_name"
+
+        if [ -e "$target" ]; then
+            print_info "skills/$skill_name は既に存在します（スキップ）"
+            continue
+        fi
+
+        cp -R "$skill_dir" "$target"
+        print_success "作成: skills/$skill_name"
+    done
+
+    print_success "Codex native skills のコピー完了"
+}
+
 # =============================================================================
 # Verify Installation
 # =============================================================================
@@ -488,6 +531,7 @@ main() {
     setup_directories
     create_symlinks
     copy_templates
+    copy_codex_skills
     verify_installation
 
     echo ""
@@ -498,7 +542,7 @@ main() {
     echo ""
     print_info "利用可能な機能:"
     echo "  - agents: Claude Code と共有"
-    echo "  - skills: Codex native directory を維持"
+    echo "  - skills: Codex native directory を維持（一部 bridge skill はテンプレートからコピー）"
     echo "  - guidelines: Claude Code と共有"
     echo "  - commands: Claude Code と共有"
     echo ""
