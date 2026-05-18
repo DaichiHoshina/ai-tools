@@ -98,6 +98,223 @@ copy_template() {
     fi
 }
 
+show_help() {
+    cat <<'EOF'
+Usage: ./codex/install.sh [--doctor|--help]
+
+Install Codex configuration into ~/.codex.
+
+This installer:
+  - symlinks agents, guidelines, commands, and lib from claude-code/
+  - preserves ~/.codex/skills as a Codex native directory
+  - copies template files only when the target file does not already exist
+
+Existing config.toml, AGENTS.md, hooks.json, and hook scripts are not overwritten.
+
+Options:
+  --doctor, check  Check the current Codex setup without changing files.
+  --help, -h       Show this help.
+EOF
+}
+
+doctor_success() {
+    print_success "$1"
+}
+
+doctor_warning() {
+    print_warning "$1"
+    DOCTOR_WARNINGS=$((DOCTOR_WARNINGS + 1))
+}
+
+doctor_error() {
+    print_error "$1"
+    DOCTOR_ERRORS=$((DOCTOR_ERRORS + 1))
+}
+
+doctor_check_shared_links() {
+    print_header "共有リソースの確認"
+
+    local resource
+    for resource in agents guidelines commands lib; do
+        local source="$AI_TOOLS_DIR/claude-code/$resource"
+        local target="$CODEX_DIR/$resource"
+
+        if [ ! -d "$source" ]; then
+            doctor_error "$resource の共有元が見つかりません: $source"
+            continue
+        fi
+
+        if [ ! -L "$target" ]; then
+            if [ -e "$target" ]; then
+                doctor_error "$resource は存在しますがシンボリックリンクではありません: $target"
+            else
+                doctor_error "$resource のシンボリックリンクが見つかりません: $target"
+            fi
+            continue
+        fi
+
+        local actual
+        actual="$(readlink "$target")"
+        if [ "$actual" = "$source" ]; then
+            doctor_success "$resource は Claude Code と共有されています"
+        else
+            doctor_error "$resource のリンク先が想定と異なります: $actual"
+        fi
+    done
+}
+
+doctor_check_native_skills() {
+    print_header "Codex native skills の確認"
+
+    local target="$CODEX_DIR/skills"
+    if [ -L "$target" ]; then
+        doctor_error "skills/ はシンボリックリンクです。Codex native directory として保持してください"
+    elif [ -d "$target" ]; then
+        doctor_success "skills/ は Codex native directory として存在します"
+    else
+        doctor_warning "skills/ が見つかりません（Codex 側で自動生成される場合があります）"
+    fi
+}
+
+doctor_check_config() {
+    print_header "Codex config の確認"
+
+    local config="$CODEX_DIR/config.toml"
+    if [ ! -f "$config" ]; then
+        doctor_error "config.toml が見つかりません: $config"
+        return
+    fi
+
+    doctor_success "config.toml が存在します"
+
+    if grep -Eq '^[[:space:]]*codex_hooks[[:space:]]*=' "$config"; then
+        doctor_error "config.toml に古い feature 名 codex_hooks が残っています"
+    fi
+
+    if grep -Eq '^[[:space:]]*hooks[[:space:]]*=[[:space:]]*true' "$config"; then
+        doctor_success "features.hooks が有効です"
+    else
+        doctor_warning "features.hooks = true が見つかりません"
+    fi
+
+    if grep -Eq '^[[:space:]]*memories[[:space:]]*=[[:space:]]*true' "$config"; then
+        doctor_success "features.memories が有効です"
+    else
+        doctor_warning "features.memories = true が見つかりません"
+    fi
+}
+
+doctor_check_codex_features() {
+    print_header "Codex feature flag の確認"
+
+    if ! command -v codex >/dev/null 2>&1; then
+        doctor_error "codex コマンドが見つかりません"
+        return
+    fi
+
+    local features
+    if ! features="$(codex features list 2>/dev/null)"; then
+        doctor_warning "codex features list を実行できませんでした"
+        return
+    fi
+
+    if echo "$features" | grep -Eq '^hooks[[:space:]]+.*[[:space:]]true$'; then
+        doctor_success "Codex 上で hooks feature が有効です"
+    else
+        doctor_error "Codex 上で hooks feature が有効ではありません"
+    fi
+
+    if echo "$features" | grep -Eq '^memories[[:space:]]+.*[[:space:]]true$'; then
+        doctor_success "Codex 上で memories feature が有効です"
+    else
+        doctor_warning "Codex 上で memories feature が有効ではありません"
+    fi
+}
+
+doctor_check_hooks() {
+    print_header "Codex hooks の確認"
+
+    local hooks_json="$CODEX_DIR/hooks.json"
+    local serena_hook="$CODEX_DIR/hooks/serena-hook.sh"
+
+    if [ -f "$hooks_json" ]; then
+        doctor_success "hooks.json が存在します"
+    else
+        doctor_error "hooks.json が見つかりません: $hooks_json"
+    fi
+
+    if [ -x "$serena_hook" ]; then
+        doctor_success "serena-hook.sh は実行可能です"
+    else
+        doctor_error "serena-hook.sh が見つからないか実行可能ではありません: $serena_hook"
+        return
+    fi
+
+    if printf '{"session_id":"codex-doctor","cwd":"%s"}' "$AI_TOOLS_DIR" | "$serena_hook" activate >/dev/null 2>&1; then
+        doctor_success "Serena activate hook smoke test に成功しました"
+    else
+        doctor_error "Serena activate hook smoke test に失敗しました"
+    fi
+}
+
+doctor_check_serena_mcp() {
+    print_header "Serena MCP の確認"
+
+    if ! command -v codex >/dev/null 2>&1; then
+        doctor_error "codex コマンドが見つかりません"
+        return
+    fi
+
+    local mcp
+    if ! mcp="$(codex mcp get serena 2>/dev/null)"; then
+        doctor_error "Codex に serena MCP が登録されていません"
+        return
+    fi
+
+    doctor_success "serena MCP が登録されています"
+
+    if echo "$mcp" | grep -q -- '--project-from-cwd'; then
+        doctor_success "serena MCP は --project-from-cwd を使用します"
+    else
+        doctor_error "serena MCP に --project-from-cwd がありません"
+    fi
+
+    if echo "$mcp" | grep -q -- '--context=codex'; then
+        doctor_success "serena MCP は --context=codex を使用します"
+    else
+        doctor_error "serena MCP に --context=codex がありません"
+    fi
+
+    if echo "$mcp" | grep -q 'UV_CACHE_DIR'; then
+        doctor_success "serena MCP に UV_CACHE_DIR が設定されています"
+    else
+        doctor_warning "serena MCP に UV_CACHE_DIR が見つかりません"
+    fi
+}
+
+run_doctor() {
+    DOCTOR_ERRORS=0
+    DOCTOR_WARNINGS=0
+
+    print_header "Codex Setup Doctor"
+
+    doctor_check_shared_links
+    doctor_check_native_skills
+    doctor_check_config
+    doctor_check_codex_features
+    doctor_check_hooks
+    doctor_check_serena_mcp
+
+    echo ""
+    if [ "$DOCTOR_ERRORS" -eq 0 ]; then
+        print_success "Doctor completed: ${DOCTOR_WARNINGS} warning(s), 0 error(s)"
+        exit 0
+    fi
+
+    print_error "Doctor completed: ${DOCTOR_WARNINGS} warning(s), ${DOCTOR_ERRORS} error(s)"
+    exit 1
+}
+
 # =============================================================================
 # Check Prerequisites
 # =============================================================================
@@ -246,6 +463,16 @@ verify_installation() {
 # =============================================================================
 
 main() {
+    case "${1:-}" in
+        --doctor|doctor|check)
+            run_doctor
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+    esac
+
     print_header "Codex Configuration Installer (Level 4)"
 
     echo "このスクリプトは Claude Code の共有リソースを Codex に同期します。"
@@ -270,10 +497,10 @@ main() {
     echo "  3. Codex を起動して Serena hooks / MCP を動作確認: codex"
     echo ""
     print_info "利用可能な機能:"
-    echo "  - 8種類のエージェント (po, manager, developer, explore, ...)"
-    echo "  - 24種類のスキル (review, TDD, brainstorm, ...)"
-    echo "  - 29種類のガイドライン (Go, TypeScript, React, ...)"
-    echo "  - 19種類のコマンド (/flow, /dev, /review, /cpr, ...)"
+    echo "  - agents: Claude Code と共有"
+    echo "  - skills: Codex native directory を維持"
+    echo "  - guidelines: Claude Code と共有"
+    echo "  - commands: Claude Code と共有"
     echo ""
 }
 

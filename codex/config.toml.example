@@ -56,7 +56,7 @@ profile = "compact"
 
 [features]
 memories = true
-codex_hooks = true
+hooks = true
 
 # ═══════════════════════════════════════════════════════════
 # MCP Servers Configuration

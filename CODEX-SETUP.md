@@ -32,10 +32,13 @@ ls -la ~/.codex/
 # lib@ -> ~/ai-tools/claude-code/lib/
 
 # 利用可能なリソース
-echo "Agents: 7種類"
-echo "Skills: 22種類"
-echo "Guidelines: 48種類"
-echo "Commands: 30種類"
+ls ~/.codex/agents
+ls ~/.codex/skills
+ls ~/.codex/guidelines
+ls ~/.codex/commands
+
+# 推奨設定の一括確認
+./codex/install.sh --doctor
 ```
 
 ## 手動セットアップ（Level 3）
@@ -91,7 +94,7 @@ Commands と Guidelines は Claude Code と共有されます。Skills は Codex
 Serena は Codex 専用 context で起動します。
 
 - MCP: `serena start-mcp-server --project-from-cwd --context=codex`
-- Hooks: `codex_hooks = true` + `~/.codex/hooks.json`
+- Hooks: `hooks = true` + `~/.codex/hooks.json`
 - Hook wrapper: `~/.codex/hooks/serena-hook.sh`
 
 ## 同期・更新
@@ -102,4 +105,5 @@ Serena は Codex 専用 context で起動します。
 cd ~/ai-tools
 git pull
 ./codex/install.sh
+./codex/install.sh --doctor
 ```

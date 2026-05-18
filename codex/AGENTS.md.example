@@ -83,7 +83,7 @@ cd ~/ai-tools
 設定詳細: `config.toml` 参照
 
 Codex の Serena は `--project-from-cwd --context=codex` を基本形とする。
-`[features] codex_hooks = true` と `hooks.json` により、起動時 activate / Bash 前 remind / 終了時 cleanup を行う。
+`[features] hooks = true` と `hooks.json` により、起動時 activate / Bash 前 remind / 終了時 cleanup を行う。
 
 **Note**: Codex自体はMCPサーバーではなく、gpt-5.2-codexモデルを使用するCLIツールです。
 
