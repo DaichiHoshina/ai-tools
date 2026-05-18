@@ -226,6 +226,34 @@ teardown() {
   [ "$status" -eq 0 ]
 }
 
+@test "hooks: pre-tool-use hints Serena for cat <code_file>" {
+  local input; input=$(jq -nc '{tool_name:"Bash",tool_input:{command:"cat src/foo.ts"}}')
+  run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.additionalContext | test("Serena 振替推奨")' >/dev/null
+}
+
+@test "hooks: pre-tool-use does NOT hint for grep -r (recursive)" {
+  local input; input=$(jq -nc '{tool_name:"Bash",tool_input:{command:"grep -r foo claude-code/"}}')
+  run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
+  [ "$status" -eq 0 ]
+  ! echo "$output" | jq -e '.additionalContext // "" | test("Serena 振替推奨")' >/dev/null
+}
+
+@test "hooks: pre-tool-use does NOT hint for cat README.md" {
+  local input; input=$(jq -nc '{tool_name:"Bash",tool_input:{command:"cat README.md"}}')
+  run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
+  [ "$status" -eq 0 ]
+  ! echo "$output" | jq -e '.additionalContext // "" | test("Serena 振替推奨")' >/dev/null
+}
+
+@test "hooks: pre-tool-use hints for head -20 main.go" {
+  local input; input=$(jq -nc '{tool_name:"Bash",tool_input:{command:"head -20 src/main.go"}}')
+  run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.additionalContext | test("Serena 振替推奨")' >/dev/null
+}
+
 @test "hooks: post-tool-use detects literal '\\n' line in .sh after Edit" {
   local tmp; tmp=$(mktemp -d)
   printf '#!/usr/bin/env bash\necho hi\n\\n\necho bye\n' > "${tmp}/bad.sh"

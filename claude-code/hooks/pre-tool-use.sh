@@ -23,6 +23,26 @@ ADDITIONAL_CONTEXT=""
 # ====================================
 # Bash コマンド分類ヘルパー関数
 # ====================================
+_is_serena_replaceable() {
+  # Bash で読み出してる対象がコードファイルで、かつ Serena symbolic tools で代替可能か判定する
+  # 振替推奨: cat/head/tail/grep <code_file>
+  # 除外: grep -r/-R/--include= (ディレクトリ再帰探索は Bash 必須)、find / xargs / awk / sed の複雑系
+  local cmd="$1"
+  # 再帰オプションが付く grep は除外
+  if [[ "$cmd" =~ grep[[:space:]]+([^|]*[[:space:]])?-[A-Za-z]*[rR] ]]; then
+    return 1
+  fi
+  if [[ "$cmd" =~ grep[[:space:]]+[^|]*--include= ]]; then
+    return 1
+  fi
+  # cat/head/tail/grep でコードファイル拡張子を直接参照
+  if [[ "$cmd" =~ (^|[[:space:]\|\;\&\(])(cat|head|tail|grep)[[:space:]] ]] \
+     && [[ "$cmd" =~ \.(ts|tsx|js|jsx|go|py|rs|rb|java|kt|swift|cpp|hpp|cs|scala|php)([[:space:]]|$|[\;\&\|\>]) ]]; then
+    return 0
+  fi
+  return 1
+}
+
 classify_bash_command() {
   local cmd="$1"
   local cmd_without_msg_arg
@@ -250,6 +270,15 @@ case "$TOOL_NAME" in
   "Bash")
     COMMAND=$(jq -r '.tool_input.command // empty' <<< "$INPUT")
     classify_bash_command "$COMMAND"
+    # Serena 振替ヒント: Bash でコードファイル読み出し検出時に Claude へ通知する
+    # analytics で Bash 比率 51% と CLAUDE.md「Tool selection」原則違反兆候を構造防止
+    if [ "$GUARD_CLASS" != "Forbidden" ] && _is_serena_replaceable "$COMMAND"; then
+      if [ -n "$ADDITIONAL_CONTEXT" ]; then
+        ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}; 🔍 Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols"
+      else
+        ADDITIONAL_CONTEXT="🔍 Bash でコードファイル参照検出、Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols (CLAUDE.md「Tool selection」原則、analytics で Bash 51% 振替余地大)"
+      fi
+    fi
     ;;
 
   "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_content"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol"|"mcp__serena__write_memory"|"mcp__serena__delete_memory"|"mcp__serena__execute_shell_command"|"mcp__serena__rename_symbol")
