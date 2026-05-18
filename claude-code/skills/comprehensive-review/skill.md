@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: "Comprehensive code review (11 perspectives - design/quality/readability/security/docs/test/root-cause/logging). Called from /review, filter with --focus. Use when reviewing code."
+description: "Comprehensive code review (12 perspectives - design/quality/readability/security/docs/test/root-cause/logging/db-concurrency). Called from /review, filter with --focus. Use when reviewing code."
 context: fork
 agent: reviewer-agent
 requires-guidelines:
@@ -10,14 +10,14 @@ requires-guidelines:
 parameters:
   focus:
     type: enum
-    values: [all, architecture, quality, readability, security, docs, test-coverage, root-cause, logging, writing, silent-failure, type-design]
+    values: [all, architecture, quality, readability, security, docs, test-coverage, root-cause, logging, writing, silent-failure, type-design, db-concurrency]
     default: all
     description: Review focus perspective
 ---
 
 # comprehensive-review - Comprehensive Code Review
 
-## 11 Perspectives
+## 12 Perspectives
 
 | Perspective | Description | Details |
 |------|------|------|
@@ -32,6 +32,7 @@ parameters:
 | **writing** | Human-facing doc quality | `writing-docs.md` |
 | **silent-failure** | Error swallowing, empty catch | `silent-failure.md` |
 | **type-design** | Type-encoded invariants, avoid enum abuse | `type-design.md` |
+| **db-concurrency** | InnoDB暗黙deadlock / gap lock / FOR UPDATE+INSERT / ODKU昇格 / TX内外部I/O / retry不在 | `db-concurrency.md` |
 
 ## Effort-Linked Mode (`${CLAUDE_EFFORT}`)
 
@@ -40,7 +41,7 @@ Confidence thresholds & coverage vary by effort level.
 | Effort | Critical Threshold | History | Perspectives |
 |--------|---------------|---------|---------|
 | `low` | 90+ (minimize false positives) | Skip | Skip writing/type-design/docs |
-| `medium` (default) | 80+ | Past 90 days | All 11 |
+| `medium` (default) | 80+ | Past 90 days | All 12 |
 | `high` | 70+ (evidence-backed safety/design issues only) | Full history | + design tradeoff, dependencies |
 
 ## Execution Flow
@@ -88,6 +89,7 @@ Default code review lenses:
 | UI file (`components/*`, `*.tsx`) | `uiux-review` (separate skill) |
 | Logic change (non-test) | `test-coverage` + `silent-failure` |
 | Type def change (`*.d.ts`, `types/*`, struct/interface added) | `type-design` |
+| SQL/ORM変更 (`*.sql`、`*Repository*`、`tx.Exec`、`SELECT.*FOR UPDATE`、`ON DUPLICATE KEY`) | `db-concurrency` |
 
 ### Step 2: Run Static Analysis Tools
 
@@ -167,6 +169,6 @@ Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 
 ## Notes
 
-- focus=all → all 11 in parallel; large diffs → 1 file at a time, Critical first
+- focus=all → all 12 in parallel; large diffs → 1 file at a time, Critical first
 - Provide concrete fixes; comment tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question
 - Forbid baseless task creation, invented problem framing, or out-of-scope operational TODOs.
