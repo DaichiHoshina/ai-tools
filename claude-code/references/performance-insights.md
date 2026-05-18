@@ -1,6 +1,6 @@
 # Claude Code パフォーマンス知見
 
-実測ベース（2026-04-22）。hook/agent のコスト構造、計測時の罠、再計測コマンド。
+実測ベース（2026-04-22 初回、2026-05-18 再計測）。hook/agent のコスト構造、計測時の罠、再計測コマンド。
 
 ## hook 計測の落とし穴
 
@@ -16,6 +16,30 @@
 | subagent-stop.sh | — | 100ms |
 
 **教訓**: hook パフォーマンス調査では必ずウォームアップ + 5サンプル以上の平均で測る。初回値だけで「遅い」と判定すると誤導される。
+
+## hook 新ベースライン（2026-05-18 計測）
+
+`hook-bench.sh`（warmup=5, runs=15）。bash spawn baseline = 33ms。
+
+| hook | median | p95 | 2026-04-22 比 |
+|------|--------|-----|--------------|
+| pre-tool-use.sh | 64ms | 89ms | +34ms |
+| setup.sh | 63ms | 81ms | — |
+| permission-denied.sh | 72ms | 84ms | — |
+| teammate-idle.sh | 79ms | 106ms | — |
+| post-tool-use.sh | 84ms | 101ms | +32ms |
+| user-prompt-submit.sh | 98ms | 136ms | +48ms |
+| post-tool-use-failure.sh | 98ms | 131ms | — |
+| task-completed.sh | 106ms | 122ms | — |
+| subagent-start.sh | 112ms | 145ms | +14ms |
+| session-end.sh | 117ms | 134ms | — |
+| subagent-stop.sh | 120ms | 155ms | +20ms |
+| session-start.sh | 125ms | 157ms | +35ms |
+| post-compact-reload.sh | 127ms | 181ms | — |
+
+**4-22 比で +30〜50ms ずつ重い** が、絶対値は全 hook で p95 < 200ms。体感ラグ域（>300ms）には届かず、`真のコスト源は agent LLM 時間` の構造は不変。回帰判定の閾値は p95 > 300ms を目安とする。
+
+体感の軽量化（2026-05-18 ユーザ報告）は hook 層ではなく **skill 定義の `name-only` 化（settings.json 16件）+ MCP の deferred 化** による初期トークン削減が支配的と推定。
 
 ## コスト構造（hook vs agent）
 
