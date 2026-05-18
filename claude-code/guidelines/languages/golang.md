@@ -1,19 +1,19 @@
-# Golang ガイドライン
+# Golangガイドライン
 
-Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`。
-関連: `languages/go-performance.md`（escape/GC/pprof/PGO）/ `languages/go-concurrency.md`（scheduler/channel sizing/leak 検出）。
+Go 1.26.2対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`。
+関連: `languages/go-performance.md`（escape/GC/pprof/PGO）/ `languages/go-concurrency.md`（scheduler/channel sizing/leak検出）。
 
 ## 基本原則
 
 - Simplicity beats complexity
 - 公式ツール必須: `gofmt`, `goimports`
-- 公式 idiom 優先、独自パターン禁止
+- 公式idiom優先、独自パターン禁止
 - Accept interfaces, return structs
-- exported names にコメント必須
+- exported namesにコメント必須
 
 ## ディレクトリ構成
 
-`domain/`（エンティティ・値オブジェクト）/ `usecase/` / `interface/`（コントローラー・プレゼンター）/ `infrastructure/`（DB・外部 API）。
+`domain/`（エンティティ・値オブジェクト）/ `usecase/` / `interface/`（コントローラー・プレゼンター）/ `infrastructure/`（DB・外部API）。
 
 ## 型定義
 
@@ -24,7 +24,7 @@ Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`
 ### 構造体設計
 
 - フィールド: 小文字開始（非公開）デフォルト
-- getter/setter より振る舞いメソッド優先
+- getter/setterより振る舞いメソッド優先
 - 埋め込み: 「is-a」のみ
 - 意味的型分離: 構造が同じでも意味が異なれば型を分ける
 
@@ -36,7 +36,7 @@ Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`
 | 命名 | 共通概念名が自然 | 共通名で意味がぼやける |
 | 進化方向 | 将来もフィールド揃う保証あり | 片方だけ増減しうる |
 
-判定: 「変更/削除時に無関係な機能に影響するか？」→ Yes なら分ける。共通化時は汎用名（例: `PaginationParams`, `DateRangeFilter`）。特定機能名の型を他機能で流用しない。
+判定: 「変更/削除時に無関係な機能に影響するか？」→ Yesなら分ける。共通化時は汎用名（例: `PaginationParams`, `DateRangeFilter`）。特定機能名の型を他機能で流用しない。
 
 ## 命名規則
 
@@ -82,10 +82,10 @@ Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`
 | `go doWork()`（無制限） | `ctx` + `WaitGroup` | リソース管理・リーク防止 |
 | `panic()` で通常エラー | `return err` | 原則 |
 | 既存型を別用途に流用 | 用途ごとに型定義 | 意味的型分離 |
-| Usecase でフィールド直接書換 | model に `SetXxx()` | 変更ロジック集約 |
-| パラメータなし Input 構造体 | 引数なしに | 不要な型を増やさない |
+| Usecaseでフィールド直接書換 | modelに `SetXxx()` | 変更ロジック集約 |
+| パラメータなしInput構造体 | 引数なしに | 不要な型を増やさない |
 | `SELECT *` | 必要カラムのみ | パフォーマンス・安全性 |
-| サーバー不整合に 400 返却 | 500（400 はクライアント起因のみ） | ステータスコード意味 |
+| サーバー不整合に400返却 | 500（400はクライアント起因のみ） | ステータスコード意味 |
 
 ## 古いパターン検出
 
@@ -100,7 +100,7 @@ Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`
 | `ioutil.ReadDir` | `os.ReadDir` | 1.16 |
 | `ioutil.TempDir`/`TempFile` | `os.MkdirTemp`/`os.CreateTemp` | 1.16 |
 | `ioutil.NopCloser`/`Discard` | `io.NopCloser`/`io.Discard` | 1.16 |
-| `interface{}` | `any`（or ジェネリクス） | 1.18 |
+| `interface{}` | `any`（orジェネリクス） | 1.18 |
 
 ### 🟡 Warning（積極的に指摘）
 
@@ -120,11 +120,11 @@ Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`
 ### ℹ️ Info
 
 - `go fix ./...` で多くを自動修正、大量検出時推奨（1.26）
-- `new(T, val)` 初期値付き new（1.26）
+- `new(T, val)` 初期値付きnew（1.26）
 
 ## ベストプラクティス
 
-`defer` でリソース解放 / 早期リターンでネスト回避 / `any` より具体型 or ジェネリクス / nil チェック徹底。
+`defer` でリソース解放 / 早期リターンでネスト回避 / `any` より具体型orジェネリクス / nilチェック徹底。
 
 ## テスト詳細
 
@@ -132,18 +132,18 @@ Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`
 
 | タグ | `t.Parallel()` | DB/Fixtures | 用途 |
 |-----|--------------|------------|------|
-| `parallel` | 必須 | 禁止（mock 使用） | ユニット |
-| `serial` | 禁止 | 可 | Repository 実装 |
+| `parallel` | 必須 | 禁止（mock使用） | ユニット |
+| `serial` | 禁止 | 可 | Repository実装 |
 | `integration` | 禁止 | 可 | フルスタック |
 
 ### テーブル駆動 / フレーキー対策
 
-- slice でなく **map** を使用（サブテスト名強制、順序ランダム化で分離）
+- sliceでなく **map** を使用（サブテスト名強制、順序ランダム化で分離）
 - アサーション: `cmp.Diff(expected, actual)`
 - 名前: アンダースコア区切り（`TestXxx_returns_error`）
-- 自動生成 ID は期待値に入れない（存在確認のみ）
-- parallel テストで共有データ変更しない（deep copy してから操作）
-- parallel タグは `t.Parallel()` 必須（トップ＆サブテスト両方）
+- 自動生成IDは期待値に入れない（存在確認のみ）
+- parallelテストで共有データ変更しない（deep copyしてから操作）
+- parallelタグは `t.Parallel()` 必須（トップ＆サブテスト両方）
 
 ## データベース
 
@@ -160,11 +160,11 @@ Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`
 
 - プレースホルダ: 名前付き（`:var_name`）のみ、`?` 禁止
 - 必ず `WithContext(ctx)`
-- BETWEEN は datetime 不可（`>=` と `<` 使用）
-- INSERT/UPDATE は ORM の Insert/Update（生 SQL 禁止）
+- BETWEENはdatetime不可（`>=` と `<` 使用）
+- INSERT/UPDATEはORMのInsert/Update（生SQL禁止）
 - テーブルエイリアスの `AS` 禁止（自己結合除く）
 - `SELECT *` 禁止
-- 例外的に生 SQL bulk INSERT を書く場合、`LastInsertId() + i` 採番は単純挿入限定（NG: `INSERT...SELECT` / `ON DUPLICATE KEY UPDATE` / 混合 / 動的行数 / migration backfill）。詳細: [backend/mysql-performance.md §12](../backend/mysql-performance.md)
+- 例外的に生SQL bulk INSERTを書く場合、`LastInsertId() + i` 採番は単純挿入限定（NG: `INSERT...SELECT` / `ON DUPLICATE KEY UPDATE` / 混合 / 動的行数 / migration backfill）。詳細: [backend/mysql-performance.md §12](../backend/mysql-performance.md)
 
 ## エンティティ・Nullable
 
@@ -172,36 +172,36 @@ Go 1.26.2 対応（2026年4月時点）。共通: `~/.claude/guidelines/common/`
 |----|--------|------|
 | Entity（DB mapping）| `sql.Null[T]`（1.22+） | `sql.NullInt64` 等の型固有版、`*T` |
 | Domain/Service | カスタム `Nullable[T]` | `*T`（意味的区別のため） |
-| Handler/Adapter | `*T` | `Nullable[T]`（Swagger 等互換性） |
+| Handler/Adapter | `*T` | `Nullable[T]`（Swagger等互換性） |
 
-値アクセス: `.V` フィールド or `.Valid` チェック後。
+値アクセス: `.V` フィールドor `.Valid` チェック後。
 
-## API 設計
+## API設計
 
 - URL: スラッシュで終わらない（`/users/123` ○、`/users/123/` ✕）
-- JSON キー: lowerCamelCase、ハイフン禁止
+- JSONキー: lowerCamelCase、ハイフン禁止
 - 空配列: `[]` を返す（`null` 禁止）
 - `omitempty` タグ禁止（クライアント パース問題回避）
-- タイムゾーン: DB/API は UTC、表示時にローカルタイム変換
+- タイムゾーン: DB/APIはUTC、表示時にローカルタイム変換
 
 ## マイグレーション
 
 - 既存ファイル編集禁止（適用済環境に影響なし → 不整合の原因）
 - テーブル変更は常に新規ファイル（`ALTER TABLE`）
-- up/down 両ファイル必須
-- 番号は main の最新確認してから振る（マージ直前にも再確認）
-- down の `MODIFY COLUMN` では `DEFAULT` 句を明示
+- up/down両ファイル必須
+- 番号はmainの最新確認してから振る（マージ直前にも再確認）
+- downの `MODIFY COLUMN` では `DEFAULT` 句を明示
 
 ## セキュリティ
 
 - 乱数: `crypto/rand`（`math/rand` 禁止）
 - シークレット比較: `subtle.ConstantTimeCompare`（`==` 禁止 → タイミング攻撃対策）
-- 最低 32 バイト以上生成
-- 認証: セッション/トークン有効性を先にチェック、ユーザー ID はセッション/トークンから取得（リクエストパラメータ禁止）
+- 最低32バイト以上生成
+- 認証: セッション/トークン有効性を先にチェック、ユーザーIDはセッション/トークンから取得（リクエストパラメータ禁止）
 
 ## CQRS
 
-- Command（書込）と Query（読取）でレイヤー分離
-- Command: Work Unit パターンでトランザクション管理
-- Command usecase シグネチャ: `Do(ctx, in *Input) (*Output, *Result)`（`*Result` は操作成否、`error` の代替）
-- Mock 生成: `go generate`（手動禁止）
+- Command（書込）とQuery（読取）でレイヤー分離
+- Command: Work Unitパターンでトランザクション管理
+- Command usecaseシグネチャ: `Do(ctx, in *Input) (*Output, *Result)`（`*Result` は操作成否、`error` の代替）
+- Mock生成: `go generate`（手動禁止）

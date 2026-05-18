@@ -1,4 +1,4 @@
-# Python ガイドライン
+# Pythonガイドライン
 
 Python 3.14.4対応（2026年4月時点）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
@@ -137,4 +137,4 @@ Python 3.14.4対応（2026年4月時点）。共通ガイドラインは `~/.cla
 | フレームワーク | ポイント |
 |--------------|---------|
 | FastAPI | Pydantic BaseModel + 型ヒント、`Depends` でDI |
-| Django | `manage.py check --deploy`、QuerySet 遅延評価 |
+| Django | `manage.py check --deploy`、QuerySet遅延評価 |

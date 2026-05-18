@@ -1,6 +1,6 @@
-# AWS EC2 ガイドライン
+# AWS EC2ガイドライン
 
-**目的**: EC2 インスタンスの安全で効率的な設定管理
+**目的**: EC2インスタンスの安全で効率的な設定管理
 
 ---
 
@@ -9,7 +9,7 @@
 | 項目 | 設定値 |
 |------|--------|
 | `name` | 環境プレフィックス付き（`${var.environment}-web-server`） |
-| `ami` | 最新の Amazon Linux 2023 推奨 |
+| `ami` | 最新のAmazon Linux 2023推奨 |
 | `instance_type` | ワークロードに応じて選択 |
 | `subnet_id` | プライベートサブネット推奨 |
 
@@ -57,13 +57,13 @@
 
 | ❌ 禁止事項 | ✅ 推奨事項 |
 |------------|------------|
-| パブリック IP 直接割り当て | ALB/NLB 経由を推奨 |
-| SSH (22) を `0.0.0.0/0` に公開 | Systems Manager Session Manager 経由のアクセス |
-| IMDSv1 の使用 | IMDSv2 必須 |
-| 暗号化なしの EBS | 暗号化必須 |
+| パブリックIP直接割り当て | ALB/NLB経由を推奨 |
+| SSH (22) を `0.0.0.0/0` に公開 | Systems Manager Session Manager経由のアクセス |
+| IMDSv1の使用 | IMDSv2必須 |
+| 暗号化なしのEBS | 暗号化必須 |
 | - | プライベートサブネットへの配置 |
-| - | IAM インスタンスプロファイルの最小権限 |
-| - | CloudWatch エージェントによる監視 |
+| - | IAMインスタンスプロファイルの最小権限 |
+| - | CloudWatchエージェントによる監視 |
 
 ---
 
@@ -82,8 +82,8 @@
 | 項目 | 設定 |
 |------|------|
 | 詳細モニタリング | `monitoring = true` |
-| CloudWatch エージェント | インストール必須 |
-| ログ送信 | CloudWatch Logs へ送信 |
+| CloudWatchエージェント | インストール必須 |
+| ログ送信 | CloudWatch Logsへ送信 |
 
 ---
 

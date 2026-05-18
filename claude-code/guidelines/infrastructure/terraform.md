@@ -1,6 +1,6 @@
-# Terraform ガイドライン
+# Terraformガイドライン
 
-**目的**: Infrastructure as Code のベストプラクティスと一貫性のある設定管理
+**目的**: Infrastructure as Codeのベストプラクティスと一貫性のある設定管理
 
 ---
 
@@ -10,7 +10,7 @@
 |------|------|
 | モジュール化 | 最初からモジュール化（小規模でもモジュール構造で開始） |
 | 公式モジュール | `terraform-aws-modules` などの検証済みモジュールを優先 |
-| バージョン固定 | Terraform と Provider のバージョンを固定 |
+| バージョン固定 | TerraformとProviderのバージョンを固定 |
 
 ---
 
@@ -30,15 +30,15 @@
 
 | 項目 | 設定 |
 |------|------|
-| `required_version` | Terraform バージョン固定 |
+| `required_version` | Terraformバージョン固定 |
 | `required_providers` | プロバイダーバージョン固定 |
 | リージョン | 変数化 |
 
-### State 管理
+### State管理
 
 | 項目 | 設定 |
 |------|------|
-| バックエンド | S3 + DynamoDB でリモートステート |
+| バックエンド | S3 + DynamoDBでリモートステート |
 | 環境分離 | 環境ごとにステートファイル分離 |
 | 暗号化 | 暗号化有効化 |
 
@@ -76,21 +76,21 @@
 
 | ❌ 禁止事項 | ✅ 推奨事項 |
 |------------|------------|
-| ハードコードされたシークレット | Secrets Manager / SSM Parameter Store 連携 |
-| 過度に permissive な IAM ポリシー（`*` 乱用） | KMS による暗号化 |
-| パブリックアクセス可能な S3 | 最小権限の原則 |
-| 暗号化なしのストレージ | VPC エンドポイント活用 |
+| ハードコードされたシークレット | Secrets Manager / SSM Parameter Store連携 |
+| 過度にpermissiveなIAMポリシー（`*` 乱用） | KMSによる暗号化 |
+| パブリックアクセス可能なS3 | 最小権限の原則 |
+| 暗号化なしのストレージ | VPCエンドポイント活用 |
 
 ---
 
-## terraform-aws-modules 主要モジュール
+## terraform-aws-modules主要モジュール
 
 | モジュール | 用途 |
 |-----------|------|
 | `terraform-aws-modules/vpc/aws` | ネットワーク基盤 |
 | `terraform-aws-modules/ec2-instance/aws` | インスタンス管理 |
 | `terraform-aws-modules/ecs/aws` | コンテナオーケストレーション |
-| `terraform-aws-modules/eks/aws` | Kubernetes クラスター |
+| `terraform-aws-modules/eks/aws` | Kubernetesクラスター |
 | `terraform-aws-modules/lambda/aws` | サーバーレス関数 |
 
 **バージョン固定**: モジュールバージョンはメジャーを固定（`version = "~> 6.0"`）
@@ -108,12 +108,12 @@
 | 3. 実行計画 | `terraform plan -out=tfplan` |
 | 4. 適用 | レビュー後 `terraform apply tfplan` |
 
-### CI/CD 統合
+### CI/CD統合
 
 | タイミング | 実行内容 |
 |-----------|---------|
 | PR | `terraform plan` 自動実行 |
-| main マージ | `terraform apply` |
+| mainマージ | `terraform apply` |
 | 推奨ツール | Atlantis / Terraform Cloud |
 
 ---

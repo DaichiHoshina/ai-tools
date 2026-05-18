@@ -1,4 +1,4 @@
-# TypeScript ガイドライン
+# TypeScriptガイドライン
 
 TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コンパイラへ移行予定（プレビュー段階）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
@@ -6,7 +6,7 @@ TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コ
 
 ## 基本原則
 
-- **strict: true 必須**: 全strictオプション有効化
+- **strict: true必須**: 全strictオプション有効化
 - **型システム最大活用**: コンパイル時エラー検出
 - **ECMAScript最新**: ES2024サポート（5.7+）
 - **関数型**: 不変性、純粋関数
@@ -69,7 +69,7 @@ TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コ
 
 | 用途 | コード | 説明 |
 |------|--------|------|
-| 型安全unknown | `unknown` + 型ガード | any の代替 |
+| 型安全unknown | `unknown` + 型ガード | anyの代替 |
 | Union | `type Status = "active" \| "inactive"` | いずれか |
 | Intersection | `type A & B` | 両方の型 |
 | Branded Type | `type UserId = string & { __brand: "UserId" }` | ID型区別 |
@@ -85,10 +85,10 @@ TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コ
 | `Pick<T, K>` | 特定プロパティ抽出 |
 | `Omit<T, K>` | 特定プロパティ除外 |
 | `Record<K, V>` | キー・値のマップ |
-| `NonNullable<T>` | null/undefined 除外 |
+| `NonNullable<T>` | null/undefined除外 |
 | `ReturnType<F>` | 関数の戻り型抽出 |
 | `Parameters<F>` | 関数の引数型抽出（tuple） |
-| `Awaited<T>` | Promise 解決型抽出 |
+| `Awaited<T>` | Promise解決型抽出 |
 
 ### エラー処理
 
@@ -111,17 +111,17 @@ TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コ
 
 ## 古いパターン検出（レビュー/実装時チェック）
 
-`tsconfig.json` の `target` と `package.json` の TypeScript バージョンを確認してから指摘する。
+`tsconfig.json` の `target` と `package.json` のTypeScriptバージョンを確認してから指摘する。
 
 ### 🔴 Critical（必ず指摘）
 
 | ❌ 古い | ✅ モダン | Since |
 |---------|----------|-------|
-| `enum Foo { ... }` (数値enum) | `as const` オブジェクト or ユニオン型 | TS全般 |
+| `enum Foo { ... }` (数値enum) | `as const` オブジェクトorユニオン型 | TS全般 |
 | `namespace` | ES Modules (`import`/`export`) | TS全般 |
 | `/// <reference>` | `import` 文 | TS全般 |
 | `require()` | `import` (ESM) | ES2015+ |
-| `any` 型の使用 | `unknown` + 型ガード or ジェネリクス | strict |
+| `any` 型の使用 | `unknown` + 型ガードorジェネリクス | strict |
 
 ### 🟡 Warning（積極的に指摘）
 
@@ -149,7 +149,7 @@ TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コ
 
 ---
 
-## tsconfig.json 必須設定
+## tsconfig.json必須設定
 
 ```json
 {

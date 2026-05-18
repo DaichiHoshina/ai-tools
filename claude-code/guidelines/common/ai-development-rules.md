@@ -72,7 +72,7 @@ class UserDataProcessor {
 
 ### 実装中
 - [ ] 段階的に実装（一度に全部実装しない）
-- [ ] TaskCreate で進捗を管理
+- [ ] TaskCreateで進捗を管理
 - [ ] エラーが発生したら即座に報告
 
 ### 実装後

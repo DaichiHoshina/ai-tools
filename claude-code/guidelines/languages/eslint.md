@@ -1,4 +1,4 @@
-# ESLint ガイドライン
+# ESLintガイドライン
 
 ESLint v9+ Flat Config対応（2025年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
@@ -13,7 +13,7 @@ ESLint v9+ Flat Config対応（2025年）。共通ガイドラインは `~/.clau
 
 ---
 
-## v9.0 主要変更（2025年）
+## v9.0主要変更（2025年）
 
 ### Flat Configがデフォルト
 - 旧`.eslintrc*`は非推奨
@@ -171,7 +171,7 @@ export default [
 | `env: { browser: true, node: true }` | `languageOptions.globals` | v9 |
 | `parserOptions` トップレベル | `languageOptions.parserOptions` | v9 |
 | `plugins: ['@typescript-eslint']` (文字列) | `plugins: { '@typescript-eslint': tseslint }` (オブジェクト) | v9 |
-| `.eslintignore` ファイル | `ignores` プロパティ or `globalIgnores()` | v9 |
+| `.eslintignore` ファイル | `ignores` プロパティor `globalIgnores()` | v9 |
 | `overrides: [...]` | `files` パターンで複数設定オブジェクト | v9 |
 
 ### 🟡 Warning（積極的に指摘）
@@ -179,8 +179,8 @@ export default [
 | ❌ 古い | ✅ モダン | Since |
 |---------|----------|-------|
 | `tslint` / `tslint.json` | ESLint + typescript-eslint | 2019年非推奨 |
-| `prettier` を ESLint ルールで実行 | `eslint-config-prettier` で競合無効化 + 別途 prettier 実行 | 推奨 |
-| `eslint-plugin-react` の `prop-types` ルール | TypeScript の Props 型で代替 | TS使用時 |
+| `prettier` をESLintルールで実行 | `eslint-config-prettier` で競合無効化 + 別途prettier実行 | 推奨 |
+| `eslint-plugin-react` の `prop-types` ルール | TypeScriptのProps型で代替 | TS使用時 |
 | `@typescript-eslint/` v7以前の設定 | v8+ の `tseslint.config()` 形式 | v8 |
 
 ### ℹ️ Info（提案レベル）

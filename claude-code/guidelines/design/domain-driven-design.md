@@ -34,10 +34,10 @@
 
 | 要素 | 特徴 | 例 | 注意点 |
 |------|------|-----|--------|
-| **Entity** | ID で区別、ライフサイクルあり、ビジネスロジック内包 | `User`, `Order` | データ構造でなく振る舞いを持つ |
+| **Entity** | IDで区別、ライフサイクルあり、ビジネスロジック内包 | `User`, `Order` | データ構造でなく振る舞いを持つ |
 | **Value Object** | 不変、値で比較、副作用なし | `Money`, `Email`, `Address` | 生成後は変更不可 |
-| **Aggregate** | 一貫性境界、ルートエンティティ経由アクセス | `Order` (OrderItem を含む) | 小さく保つ（1-3 エンティティ） |
-| **Repository** | 集約の永続化抽象、IF は Domain 層 | `UserRepository` | DB 詳細は Infrastructure 層 |
+| **Aggregate** | 一貫性境界、ルートエンティティ経由アクセス | `Order` (OrderItemを含む) | 小さく保つ（1-3エンティティ） |
+| **Repository** | 集約の永続化抽象、IFはDomain層 | `UserRepository` | DB詳細はInfrastructure層 |
 | **Domain Event** | 過去形、イミュータブル、疎結合 | `UserRegistered`, `OrderPlaced` | コンテキスト間通信に活用 |
 
 ---
@@ -56,8 +56,8 @@
 | レイヤー | 責務 | 依存先 |
 |----------|------|--------|
 | **Domain** | Entity, ValueObject, Repository IF, Domain Event | なし |
-| **Application** | UseCase, DTO | Domain のみ |
-| **Infrastructure** | Repository 実装, 外部 API | 全層可 |
+| **Application** | UseCase, DTO | Domainのみ |
+| **Infrastructure** | Repository実装, 外部API | 全層可 |
 
 > 詳細は `clean-architecture.md` 参照
 
@@ -79,19 +79,19 @@
 | レイヤー | テスト種別 | 特徴 |
 |----------|-----------|------|
 | **Domain** | 単体テスト、モック不要 | ビジネスロジック検証 |
-| **Application** | Repository モック、フロー検証 | ユースケース検証 |
+| **Application** | Repositoryモック、フロー検証 | ユースケース検証 |
 
 ---
 
-## ❌ アンチパターン vs ✅ ベストプラクティス
+## ❌ アンチパターンvs ✅ ベストプラクティス
 
 | ケース | ❌ NG | ✅ OK |
 |--------|-------|-------|
-| **ドメインモデル** | getter/setter のみ（貧血ドメイン） | ビジネスロジックを内包 |
-| **集約サイズ** | 1つの集約に多数のエンティティ | 小さな集約 + ID 参照 |
-| **Domain Service** | 全てを Domain Service に | Entity / VO にロジック配置 |
-| **複数エンティティ跨ぎ** | Domain Service に実装 | UseCase 層で調整 |
-| **技術詳細** | Domain に混入 | Infrastructure に隔離 |
+| **ドメインモデル** | getter/setterのみ（貧血ドメイン） | ビジネスロジックを内包 |
+| **集約サイズ** | 1つの集約に多数のエンティティ | 小さな集約 + ID参照 |
+| **Domain Service** | 全てをDomain Serviceに | Entity / VOにロジック配置 |
+| **複数エンティティ跨ぎ** | Domain Serviceに実装 | UseCase層で調整 |
+| **技術詳細** | Domainに混入 | Infrastructureに隔離 |
 | **トランザクション境界** | 集約を超えた変更 | 集約単位で完結 |
 | **不変条件** | 無視 | 常に満たす |
 | **言語** | 技術用語中心 | ユビキタス言語をコードに反映 |
@@ -102,7 +102,7 @@
 ## Shared Kernel
 
 - クロスコンテキスト共有概念のみ配置（**最後の手段**、デフォルトではない）
-- 依存方向: 各コンテキストの Domain 層 → Shared Kernel（逆は禁止）
+- 依存方向: 各コンテキストのDomain層 → Shared Kernel（逆は禁止）
 - **禁止**: インフラ懸念（DB変換等）、コンテキスト固有ロジック
 - 追加前の評価順: コンテキストローカル → ACL → Shared Kernel
-- 既存型の rename/削除/意味変更は破壊的変更として扱う
+- 既存型のrename/削除/意味変更は破壊的変更として扱う

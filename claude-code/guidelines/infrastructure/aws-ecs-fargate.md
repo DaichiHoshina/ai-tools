@@ -1,4 +1,4 @@
-# AWS ECS / Fargate ガイドライン
+# AWS ECS / Fargateガイドライン
 
 **目的**: コンテナワークロードの効率的な運用とセキュリティ確保
 
@@ -9,7 +9,7 @@
 | 項目 | 設定 |
 |------|------|
 | `cluster_name` | 環境プレフィックス付き |
-| Execute Command | CloudWatch Logs 連携 |
+| Execute Command | CloudWatch Logs連携 |
 | キャパシティプロバイダー | FARGATE + FARGATE_SPOT |
 
 ---
@@ -49,7 +49,7 @@
 |------|------|
 | 本番 | FARGATE base=50%, FARGATE_SPOT weight=50% |
 | 開発 | FARGATE_SPOT 100% |
-| バッチ | FARGATE_SPOT 優先 |
+| バッチ | FARGATE_SPOT優先 |
 
 ---
 
@@ -58,7 +58,7 @@
 | 項目 | 内容 |
 |------|------|
 | namespace | サービスメッシュ構成 |
-| DNS 名 | サービス間通信（`web-app:80`） |
+| DNS名 | サービス間通信（`web-app:80`） |
 | Cloud Map | 自動連携 |
 
 ---
@@ -68,8 +68,8 @@
 | ❌ 禁止事項 | ✅ 必須設定 |
 |------------|------------|
 | 環境変数でシークレット直接設定 | `readonlyRootFilesystem = true` |
-| パブリックサブネットでのタスク実行 | Secrets Manager からシークレット取得 |
-| 過度に広い IAM ポリシー | タスクロールの最小権限 |
+| パブリックサブネットでのタスク実行 | Secrets Managerからシークレット取得 |
+| 過度に広いIAMポリシー | タスクロールの最小権限 |
 | - | プライベートサブネット配置 |
 
 ---
@@ -81,11 +81,11 @@
 | 項目 | 設定 |
 |------|------|
 | `logDriver` | `"awslogs"` |
-| CloudWatch Logs グループ | `/ecs/${service-name}` |
+| CloudWatch Logsグループ | `/ecs/${service-name}` |
 
-### FireLens 統合
+### FireLens統合
 
-Fluent Bit サイドカーで高度なログルーティング → Firehose / Elasticsearch 連携
+Fluent Bitサイドカーで高度なログルーティング → Firehose / Elasticsearch連携
 
 ---
 
@@ -95,7 +95,7 @@ Fluent Bit サイドカーで高度なログルーティング → Firehose / El
 
 | メトリクス | 設定 |
 |-----------|------|
-| `ECSServiceAverageCPUUtilization` | CPU 使用率 |
+| `ECSServiceAverageCPUUtilization` | CPU使用率 |
 | `ECSServiceAverageMemoryUtilization` | メモリ使用率 |
 | `target_value` | 70%推奨 |
 
@@ -119,18 +119,18 @@ Fluent Bit サイドカーで高度なログルーティング → Firehose / El
 
 ### Blue/Green
 
-- CodeDeploy 連携
-- ALB リスナールール切り替え
+- CodeDeploy連携
+- ALBリスナールール切り替え
 - 自動ロールバック
 
 ---
 
-## EBS ボリューム (Fargate)
+## EBSボリューム (Fargate)
 
 | 項目 | 設定 |
 |------|------|
 | 用途 | ステートフルワークロード向け |
-| `encrypted` | `true`（KMS 暗号化） |
+| `encrypted` | `true`（KMS暗号化） |
 | `volume_type` | `gp3` 推奨 |
 
 ---

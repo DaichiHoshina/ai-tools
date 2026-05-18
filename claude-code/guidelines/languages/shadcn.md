@@ -1,4 +1,4 @@
-# shadcn/ui ガイドライン
+# shadcn/uiガイドライン
 
 v2.5.0対応（2025年最新）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
@@ -22,7 +22,7 @@ shadcn/uiは**コンポーネントライブラリではなく、再利用可能
 
 ---
 
-## v2.5.0 新機能（2025年）
+## v2.5.0新機能（2025年）
 
 ### "Resolve Anywhere"
 - レジストリがアプリ内の任意の場所にファイル配置可能
@@ -30,16 +30,16 @@ shadcn/uiは**コンポーネントライブラリではなく、再利用可能
 - インポート解決を自動化
 
 ### フレームワーク自動検出
-- CLI がフレームワークを自動検出
-- Laravel、Vite、React Router に対応
+- CLIがフレームワークを自動検出
+- Laravel、Vite、React Routerに対応
 - ルート設定を自動調整
 
-### Tailwind v4 & React 19 プレビュー
-- Tailwind CSS v4 の初回プレビュー実装
-- React 19 サポート
+### Tailwind v4 & React 19プレビュー
+- Tailwind CSS v4の初回プレビュー実装
+- React 19サポート
 
-### Next.js 16 サポート
-- `init` コマンドで Next.js 16 対応
+### Next.js 16サポート
+- `init` コマンドでNext.js 16対応
 
 ---
 

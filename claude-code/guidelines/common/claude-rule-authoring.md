@@ -18,6 +18,6 @@ paths:
 
 ## 原則
 
-- rules/skills ファイル本文は英語で記述（ガイドラインファイル自体は日本語可）
+- rules/skillsファイル本文は英語で記述（ガイドラインファイル自体は日本語可）
 - プロジェクト固有ロジックは `paths` で対象ファイルを絞る
-- 汎用ルールは `~/.claude/guidelines/` に配置し rules/ との重複を避ける
+- 汎用ルールは `~/.claude/guidelines/` に配置しrules/ との重複を避ける

@@ -2,7 +2,7 @@
 
 本番運用で必要な認証/認可、rate limit、secret管理、OWASP対策を構築する時に参照。基礎は `rules/enterprise-security.md` 参照。
 
-## Tier 区分
+## Tier区分
 
 | Tier | 内容 |
 |------|------|
@@ -12,19 +12,19 @@
 
 ---
 
-## 1. OWASP Top 10 対策チェック表
+## 1. OWASP Top 10対策チェック表
 
 | ID | 脅威 | 対策 |
 |----|------|------|
 | A01 | Broken Access Control | RBAC/ABAC、resource owner check |
 | A02 | Cryptographic Failures | TLS 1.3、AES-256-GCM、bcrypt/argon2 |
-| A03 | Injection（SQL/NoSQL/OS/LDAP） | parameterized query、ORM 使用、input validation |
+| A03 | Injection（SQL/NoSQL/OS/LDAP） | parameterized query、ORM使用、input validation |
 | A04 | Insecure Design | threat modeling、secure-by-default |
 | A05 | Security Misconfiguration | secret in env、最小権限、CIS benchmark |
-| A06 | Vulnerable Components | SBOM、Dependabot、定期 audit |
+| A06 | Vulnerable Components | SBOM、Dependabot、定期audit |
 | A07 | Identification & Auth Failures | MFA、PW policy、session management |
-| A08 | Software & Data Integrity | SRI、署名検証、CI/CD 防御 |
-| A09 | Logging & Monitoring Failures | 構造化ログ、SIEM 連携 |
+| A08 | Software & Data Integrity | SRI、署名検証、CI/CD防御 |
+| A09 | Logging & Monitoring Failures | 構造化ログ、SIEM連携 |
 | A10 | SSRF | URL allow-list、metadata endpoint deny |
 
 ---
@@ -35,7 +35,7 @@
 |------|------|------|
 | **JWT** | stateless API | 失効困難（短TTL + refresh token） |
 | **Session（cookie）** | Web UI | CSRF対策必須、SameSite=Strict |
-| **OAuth 2.1 / OIDC** | サードパーティ | PKCE 必須、state 検証 |
+| **OAuth 2.1 / OIDC** | サードパーティ | PKCE必須、state検証 |
 | **API Key** | machine-to-machine | rotation必須、scope限定 |
 
 **PW hash**: `argon2id`（推奨）or `bcrypt cost>=12`。**SHA系・MD5禁止**。
@@ -46,29 +46,29 @@
 
 | パターン | 仕組み | 適用 |
 |---------|--------|------|
-| **RBAC** | role → permission 静的 | 組織ロール明確 |
+| **RBAC** | role → permission静的 | 組織ロール明確 |
 | **ABAC** | 属性ベース動的判定 | 細粒度（部門/案件単位） |
 | **ReBAC**（Zanzibar型） | リレーションシップグラフ | 共有/継承（Google Drive型） |
 
 **チェック原則**:
-- リソース owner 検証は必須（`resource.owner_id == ctx.user_id`）
-- middleware で auth、handler で authz（混同しない）
-- 失敗時は 403（404 で隠す手法もあり、漏洩防止）
+- リソースowner検証は必須（`resource.owner_id == ctx.user_id`）
+- middlewareでauth、handlerでauthz（混同しない）
+- 失敗時は403（404で隠す手法もあり、漏洩防止）
 
 ---
 
-## 4. Secret 管理
+## 4. Secret管理
 
 | 配置 | 適用 | 禁止 |
 |------|------|------|
-| **AWS Secrets Manager / Vault** | 本番 | コードに hardcode |
+| **AWS Secrets Manager / Vault** | 本番 | コードにhardcode |
 | **環境変数（runtime注入）** | dev/stg | git commit |
-| **K8s Secret + sealed-secrets** | クラスタ | base64 のみは平文同等 |
+| **K8s Secret + sealed-secrets** | クラスタ | base64のみは平文同等 |
 
 **rotation**:
-- DB password: 90日毎、dual-credential 期間設けてダウンタイム0
-- API key: 半年毎、key versioning で gracePeriod
-- TLS 証明書: cert-manager 自動更新
+- DB password: 90日毎、dual-credential期間設けてダウンタイム0
+- API key: 半年毎、key versioningでgracePeriod
+- TLS証明書: cert-manager自動更新
 
 ---
 
@@ -76,17 +76,17 @@
 
 | アルゴリズム | 仕組み | 適用 |
 |-------------|--------|------|
-| **Fixed Window** | 1分毎 reset | 簡素、境界 burst 弱い |
-| **Sliding Window**（推奨） | 過去 N 秒を rolling | 公平 |
-| **Token Bucket** | 一定速度で token 補充、burst 許可 | 通常 API |
+| **Fixed Window** | 1分毎reset | 簡素、境界burst弱い |
+| **Sliding Window**（推奨） | 過去N秒をrolling | 公平 |
+| **Token Bucket** | 一定速度でtoken補充、burst許可 | 通常API |
 | **Leaky Bucket** | 一定速度で消費 | 平準化 |
 
 **多層防御**:
-- IP 単位（DDoS防御）
-- user 単位（abuse 防止）
-- endpoint 単位（重い API の制限）
+- IP単位（DDoS防御）
+- user単位（abuse防止）
+- endpoint単位（重いAPIの制限）
 
-**429 応答**:
+**429応答**:
 ```text
 HTTP/1.1 429 Too Many Requests
 Retry-After: 30
@@ -101,11 +101,11 @@ X-RateLimit-Reset: 1700000000
 
 | 用途 | 適用 |
 |------|------|
-| **mTLS** | service mesh 内通信、B2B API |
+| **mTLS** | service mesh内通信、B2B API |
 | **Certificate Pinning** | mobile app（中間者攻撃対策） |
-| **public key pinning** | pin の rotation 容易 |
+| **public key pinning** | pinのrotation容易 |
 
-**注意**: pin 失効で全 client 死亡 → backup pin 必須。
+**注意**: pin失効で全client死亡 → backup pin必須。
 
 ---
 
@@ -113,12 +113,12 @@ X-RateLimit-Reset: 1700000000
 
 | 種別 | 対策 |
 |------|------|
-| **SQL Injection** | parameterized query、ORM、生 SQL 禁止 |
+| **SQL Injection** | parameterized query、ORM、生SQL禁止 |
 | **XSS** | output encode（HTML/JS context別）、CSP header |
-| **CSRF** | SameSite=Strict、CSRF token、Origin/Referer 検証 |
+| **CSRF** | SameSite=Strict、CSRF token、Origin/Referer検証 |
 | **SSRF** | URL allow-list、private IP block（10/8, 169.254/16, 127/8） |
-| **Path Traversal** | ファイル名 sanitize、`..`/`/` 拒否 |
-| **XXE** | XML parser で external entity 無効化 |
+| **Path Traversal** | ファイル名sanitize、`..`/`/` 拒否 |
+| **XXE** | XML parserでexternal entity無効化 |
 
 ---
 
@@ -126,7 +126,7 @@ X-RateLimit-Reset: 1700000000
 
 | 用途 | アルゴリズム |
 |------|-------------|
-| **転送中** | TLS 1.3（1.2 最低） |
+| **転送中** | TLS 1.3（1.2最低） |
 | **保存時 対称** | AES-256-GCM |
 | **非対称** | RSA 4096 / ECDSA P-256 / Ed25519 |
 | **乱数** | crypto-secure RNG（`/dev/urandom`、`crypto.randomBytes`） |
@@ -140,10 +140,10 @@ X-RateLimit-Reset: 1700000000
 
 | 項目 | 推奨 |
 |------|------|
-| Cookie 属性 | `Secure; HttpOnly; SameSite=Strict` |
+| Cookie属性 | `Secure; HttpOnly; SameSite=Strict` |
 | ID生成 | crypto-secure RNG、128bit以上 |
-| 有効期限 | sliding 30min、絶対 8h |
-| ログアウト | server側で revoke（blacklist） |
+| 有効期限 | sliding 30min、絶対8h |
+| ログアウト | server側でrevoke（blacklist） |
 | MFA after sensitive op | 決済/PW変更で再認証 |
 
 ---
@@ -163,9 +163,9 @@ X-RateLimit-Reset: 1700000000
 
 ## 11. 脆弱性管理
 
-- SBOM 生成（CycloneDX、SPDX）
-- Dependabot / Renovate で日次 audit
-- 重大 CVE は 24h 以内対応
+- SBOM生成（CycloneDX、SPDX）
+- Dependabot / Renovateで日次audit
+- 重大CVEは24h以内対応
 - ペネトレーションテスト 年1回以上
 
 ---
@@ -173,4 +173,4 @@ X-RateLimit-Reset: 1700000000
 ## 12. 参考
 
 - OWASP Top 10: 2021版（2026更新予定）
-- 関連: `rules/enterprise-security.md`（基礎）, `backend/observability-design.md`（監査ログ統合）, `backend/multi-tenancy.md`（tenant 分離・RLS）
+- 関連: `rules/enterprise-security.md`（基礎）, `backend/observability-design.md`（監査ログ統合）, `backend/multi-tenancy.md`（tenant分離・RLS）

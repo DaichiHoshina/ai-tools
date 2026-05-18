@@ -1,6 +1,6 @@
-# AWS EKS ガイドライン
+# AWS EKSガイドライン
 
-**目的**: Kubernetes クラスターの安全で効率的な運用
+**目的**: Kubernetesクラスターの安全で効率的な運用
 
 ---
 
@@ -16,10 +16,10 @@
 
 | アドオン | 用途 |
 |---------|------|
-| `coredns` | DNS 解決 |
-| `vpc-cni` | Pod ネットワーキング（PREFIX_DELEGATION 推奨） |
+| `coredns` | DNS解決 |
+| `vpc-cni` | Podネットワーキング（PREFIX_DELEGATION推奨） |
 | `kube-proxy` | サービスプロキシ |
-| `eks-pod-identity-agent` | IAM 認証 |
+| `eks-pod-identity-agent` | IAM認証 |
 
 ---
 
@@ -29,12 +29,12 @@
 
 | 項目 | 設定 |
 |------|------|
-| `ami_type` | `AL2023_x86_64_STANDARD`（最新 AL2023） |
+| `ami_type` | `AL2023_x86_64_STANDARD`（最新AL2023） |
 | `instance_types` | 複数指定で可用性向上 |
 | `min_size` / `max_size` / `desired_size` | スケーリング設定 |
 | EBS | `gp3`, 暗号化有効 |
 
-### Spot ノードグループ
+### Spotノードグループ
 
 | 項目 | 設定 |
 |------|------|
@@ -44,25 +44,25 @@
 
 ### Self-Managed Node Groups
 
-- カスタム AMI 使用時
+- カスタムAMI使用時
 - 高度なブートストラップ設定
 
 ---
 
-## Fargate プロファイル
+## Fargateプロファイル
 
-- namespace + labels でセレクター設定
+- namespace + labelsでセレクター設定
 - 小規模/バースト性ワークロード向け
-- kube-system の kube-dns に推奨
+- kube-systemのkube-dnsに推奨
 
 ---
 
-## Karpenter 統合
+## Karpenter統合
 
 | 項目 | 設定 |
 |------|------|
 | 機能 | 動的ノードスケーリング |
-| 認証 | Pod Identity で認証 |
+| 認証 | Pod Identityで認証 |
 | タグ | `karpenter.sh/discovery` 必須 |
 
 ---
@@ -72,7 +72,7 @@
 | ❌ 禁止 | ✅ 必須設定 |
 |---------|------------|
 | - | プライベートサブネットへのノード配置 |
-| - | IRSA / Pod Identity による IAM 認証 |
+| - | IRSA / Pod IdentityによるIAM認証 |
 | - | ネットワークポリシー |
 | - | クラスターログ有効化 |
 
@@ -87,16 +87,16 @@
 
 | アドオン | 用途 |
 |---------|------|
-| `vpc-cni` | Pod ネットワーキング |
-| `coredns` | DNS 解決 |
+| `vpc-cni` | Podネットワーキング |
+| `coredns` | DNS解決 |
 | `kube-proxy` | サービスプロキシ |
-| `eks-pod-identity-agent` | IAM 認証 |
-| `aws-ebs-csi-driver` | EBS ボリューム（IRSA 設定必須） |
-| `aws-efs-csi-driver` | EFS ボリューム |
+| `eks-pod-identity-agent` | IAM認証 |
+| `aws-ebs-csi-driver` | EBSボリューム（IRSA設定必須） |
+| `aws-efs-csi-driver` | EFSボリューム |
 
 ---
 
-## kubectl アクセス
+## kubectlアクセス
 
 ```bash
 aws eks update-kubeconfig --region ap-northeast-1 --name ${cluster_name}
@@ -108,9 +108,9 @@ aws eks update-kubeconfig --region ap-northeast-1 --name ${cluster_name}
 
 ### 必須メトリクス
 
-- ノード CPU/メモリ使用率
-- Pod 状態（Running, Pending, Failed）
-- API サーバーレイテンシ
+- ノードCPU/メモリ使用率
+- Pod状態（Running, Pending, Failed）
+- APIサーバーレイテンシ
 - コントロールプレーンログ
 
 ### Container Insights
@@ -124,7 +124,7 @@ aws eks update-kubeconfig --region ap-northeast-1 --name ${cluster_name}
 ### バージョン管理
 
 - マイナーバージョンは順次アップグレード
-- ノードグループは Blue/Green
+- ノードグループはBlue/Green
 
 ### アップグレード順序
 
@@ -140,7 +140,7 @@ aws eks update-kubeconfig --region ap-northeast-1 --name ${cluster_name}
 
 | 方式 | 用途 |
 |------|------|
-| Spot インスタンス | 耐障害性ワークロード |
+| Spotインスタンス | 耐障害性ワークロード |
 | Karpenter | 動的ノードスケーリング |
 | Fargate | 小規模/バースト性ワークロード |
 | Right-sizing | 適切なインスタンスタイプ選定 |

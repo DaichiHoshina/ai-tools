@@ -1,4 +1,4 @@
-# Rust ガイドライン
+# Rustガイドライン
 
 Rust 2024 Edition対応。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
@@ -134,7 +134,7 @@ Rust 2024 Edition対応。共通ガイドラインは `~/.claude/guidelines/comm
 | 項目 | 内容 | Since |
 |------|------|-------|
 | `cargo clippy --fix` | 多くの古いパターンを自動修正 | 常用 |
-| Edition 2024 移行 | `cargo fix --edition` で自動マイグレーション | 2024 |
+| Edition 2024移行 | `cargo fix --edition` で自動マイグレーション | 2024 |
 
 ---
 
