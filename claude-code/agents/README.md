@@ -185,7 +185,7 @@ Parent (Claude Code)
 | Tool | Purpose |
 |------|---------|
 | `initial_instructions` | Get Serena manual (required at task start) |
-| `check_onboarding_performed` / `onboarding` | Check project init |
+| `onboarding` | Run project onboarding (activate 応答に状態自動添付) |
 | `serena_info` (v1.2.0) | On-demand usage info (version/context/active project) |
 
 ### Usage principles

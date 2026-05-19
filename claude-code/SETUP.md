@@ -119,7 +119,7 @@ afplay ~/notification.mp3  # テスト
 ## 6. Serena オンボーディング
 
 - Serena MCP サーバーは `claude mcp` 登録済みなら起動時に自動接続される（`claude mcp list` で確認）
-- オンボーディング自体は手動: `mcp__serena__check_onboarding_performed` で確認、未実施なら `mcp__serena__onboarding` を呼ぶ
+- オンボーディング状態は `activate_project` のレスポンスに自動添付される（v1.5.0 で `check_onboarding_performed` ツールは廃止）。未実施なら `mcp__serena__onboarding` を呼ぶ
 - 旧 `/serena オンボーディング` は廃止（`/dev` 等で Serena MCP を既定利用）
 
 ## 7. 定期更新
@@ -193,4 +193,4 @@ API 呼び出しの詳細デバッグが必要な時のみ一時的に `"1"` を
 - [ ] レビュー強化 plugin 導入（code-review / security-guidance / pr-review-toolkit / coderabbit）
 - [ ] Hooks 動作確認（主要Hook）
 - [ ] 通知音設定（オプション）
-- [ ] Serena オンボーディング成功（`mcp__serena__check_onboarding_performed` で確認）
+- [ ] Serena オンボーディング成功（`activate_project` 応答メッセージで確認）

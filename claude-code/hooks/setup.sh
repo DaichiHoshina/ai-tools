@@ -47,7 +47,7 @@ if echo "$INPUT" | jq -e '.mcp_servers | has("serena")' > /dev/null 2>&1; then
   cat <<EOF
 {
   "systemMessage": " Setup完了 (Serena enabled)",
-  "additionalContext": "依存関係チェック完了: git, jq\n\n推奨:\n- /load-guidelines でガイドライン読込\n- Serenaメモリ確認: mcp__serena__list_memories\n- オンボーディング確認: mcp__serena__check_onboarding_performed\n\nProject directory: ${PROJECT_DIR}"
+  "additionalContext": "依存関係チェック完了: git, jq\n\n推奨:\n- /load-guidelines でガイドライン読込\n- Serenaメモリ確認: mcp__serena__list_memories\n- オンボーディング状態は activate_project 応答に自動添付\n\nProject directory: ${PROJECT_DIR}"
 }
 EOF
 else

@@ -15,6 +15,16 @@
 
 ---
 
+## v1.5.0–v1.5.1 (2026-05-19 検出)
+
+- [ ] **`search_for_pattern` `multiline=False` opt-out** (v1.5.0): 既定は `multiline=True` で `re.DOTALL|MULTILINE` 有効。1 行限定検索に切り替えれば `.*` greedy 過食を抑制可 — 検討箇所: 2026-05-18 dotall 事故と同パターンを再発させない為、1 行スコープが明確な search では明示指定。`replace_content` には未開放 (Tool API は dotall hardcode のまま)
+- [ ] **`replace_content` ambiguity ガード** (v1.5.0): `ContentReplacer.replace()` がマッチ内に同パターン再出現する場合 `ValueError("Match is ambiguous: ...")` を返すよう改善。2026-05-18 のような `.*\n` greedy が 5 ファイル横断で発火するケースの一部を構造的に阻止 — 検討箇所: 関連 memory `feedback_serena_replace_regex_dotall.md` の対処手順は維持しつつ、エラー文言出現時の対応 (literal mode or 終端 anchor 明示) を即時切替できる体制
+- [ ] **`mem:<name>` メモリ間相互参照** (v1.5.0): メモリ本文から `mem:<name>` で他メモリ参照、rename 時に自動伝播。現状 `~/.claude/projects/.../memory/MEMORY.md` の手書きリンク (`[[name]]` 記法) を Serena 公式記法へ寄せる選択肢 — 検討箇所: 既存 user 補助メモリ 20+ 件、現状 `~/.claude/` 直置きで Serena `write_memory` 経路を通っていないため伝播対象外。Serena 管理メモリへ移行する場合のみ価値あり
+- [ ] **`memory_maintenance` onboarding seed** (v1.5.0): onboarding 時に memory スタイル規約の seed メモリを配置、`global/memory_maintenance` で全プロジェクト共通化可能 — 検討箇所: 現状 `~/.claude/CLAUDE.md` + `rules/genshijin.md` で代替済み、Serena 管理メモリ移行時に統合検討
+- [ ] **`serena memories` CLI command group** (v1.5.0): `list` / `read` / `write` / `check` (整合性検査) / `auto-prefix-references` — 検討箇所: 現状 `~/.claude/projects/.../memory/` 直接操作で完結。`/memory-save` 系スクリプト整合性検査を CLI へ寄せる選択肢
+- [ ] **CUE LSP** (v1.5.1): `cue lsp` 経由で CUE 言語サポート — 検討箇所: CUE プロジェクト activate 時のみ (現状無し)
+- [ ] **GDScript LSP** (v1.5.0): Godot エディタ内蔵 LSP に TCP 接続 — 検討箇所: Godot プロジェクト activate 時のみ (現状無し)
+
 ## v1.3.0 (2026-05-12 検出)
 
 - [ ] **`additional_workspace_folders`**: クロスパッケージ参照対応（v1.3.0 時点 TypeScript のみ実装）。monorepo で兄弟パッケージのシンボル解決が可能 — 検討箇所: 将来 TypeScript monorepo を activate した時、または他言語拡張時。現在の activate プロジェクトは go/bash/dart/terraform/python で対象外
