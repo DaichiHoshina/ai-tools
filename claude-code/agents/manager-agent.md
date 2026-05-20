@@ -44,10 +44,10 @@ All responses in English (preserve technical terms, tool names).
 
 1. **Analyze PO instruction** - Apply fallback rules per table
 2. **Decompose tasks** - Analyze codebase via Serena MCP, identify dependencies
-3. **Create allocation** - Assign tasks to Dev 1-4; decide mode (parallel/staged/sequential)
-4. **Return allocation to parent** - Parent spawns `Task(developer-agent)` in 1 message
-5. **Integrate (after parent calls back)** - Detect collisions/inconsistencies. Include failed Dev ID/reason; continue integrating successes
-6. **Return result** - Integration result (files, issues, failed Dev info) via PO to parent
+3. **Create allocation** - Assign tasks to Dev 1-4; decide mode (parallel/staged/sequential). Derive IMPL_NOTES dir path (see "IMPL_NOTES merge" below) and include in each Dev's context as `impl_notes.dir`
+4. **Return allocation to parent** - Parent ensures `impl_notes.dir` exists (`mkdir -p`), then spawns `Task(developer-agent)` in 1 message
+5. **Integrate (after parent calls back)** - Detect collisions/inconsistencies + merge IMPL_NOTES (see below). Include failed Dev ID/reason; continue integrating successes
+6. **Return result** - Integration result (files, issues, failed Dev info, MERGED.md content + path, open-questions flag) via PO to parent
 7. **Re-allocate (if Reviewer P0)** - Parent calls back with Reviewer feedback; create P0-only reallocation (1 loop max). **If P0 remains after 1 loop**, stop reallocation; return P0 list as "user decision required" (prevent infinite loop)
 
 ## Parallel execution patterns
@@ -117,6 +117,10 @@ Stage 2: Dev3 (after Stage 1)
 
 ## Worktree info
 Path: [from PO]
+
+## IMPL_NOTES dir
+Path: [~/.claude/plans/impl-notes/YYYY-MM-DD_HHMMSS_<feature-slug>/]
+(parent: ensure exists via `mkdir -p` before spawning Devs)
 ```
 
 Note: 5+ tasks → **bundle ≤4 or stage split** (4 Dev limit). Formula & LPT detail: `references/PARALLEL-PATTERNS.md`.
@@ -132,6 +136,7 @@ Manager returns allocation to parent in this format. **Parent spawns `Task(devel
 3. **Target file paths** - Absolute paths
 4. **Worktree info** - Dir path & branch name (if applicable)
 5. **Dependencies** - Cross-Dev deps & execution order
+6. **impl_notes.dir** - IMPL_NOTES output dir (see Base flow step 3)
 
 ### Staged execution
 
@@ -144,6 +149,21 @@ After all Developers finish, parent calls Manager back to:
 - Integrate file change list
 - Detect collisions (avoid parallel writes to same file upfront, but verify)
 - Include remaining issues/unresolved in PO return
+
+### IMPL_NOTES merge
+
+**Dir path derivation**: `~/.claude/plans/impl-notes/YYYY-MM-DD_HHMMSS_<feature-slug>/`
+- `<feature-slug>`: derived inside Manager from PO return — primary source `worktree.branch` (PO output field); if PO ran without worktree, use current `git rev-parse --abbrev-ref HEAD`. Never `unknown` (avoids match miss in `/git-push --pr`)
+- **Sanitize rule** (shared with `/git-push --pr` consumer): lowercase → replace any char outside `[a-z0-9-]` with `-` → collapse consecutive `-` → trim leading/trailing `-` → truncate at 60 chars
+- Timestamp prevents same-day multi-run collision (second-precision; sub-second collisions are accepted as out of scope)
+
+**Merge step (integration phase)**:
+1. Read all `dev-*.md` under `impl_notes.dir` via Read tool
+2. Concatenate by section (Design decisions / Deviations / Tradeoffs / Open questions); annotate each item with originating `task-id`
+3. Emit MERGED.md content in return-to-parent (parent persists at `<impl_notes.dir>/MERGED.md`; Manager Bash is read-only so cannot write itself)
+4. **Open questions flag**: if any task's Open questions section contains non-"None" items, set `open_questions_pending: true` + cite paths in return
+
+Semantic conflict detection across Devs is out of scope (user reads MERGED.md to judge).
 
 ### Reallocation on Reviewer feedback (P0 detected)
 

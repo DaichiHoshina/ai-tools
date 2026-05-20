@@ -95,7 +95,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
    - user が明示的に Team / 並列を求めていない
    いずれか不成立 → PO Agent 起動
 3. Launch PO Agent (skip on `--no-po`)
-4. Impl branch: Team use → manager → developer×N → manager integrate / direct → `/dev`
+4. Impl branch: Team use → manager → **parent runs `mkdir -p <impl_notes.dir>`** (from Manager allocation) → developer×N → manager integrate → **parent writes returned MERGED.md content to `<impl_notes.dir>/MERGED.md`** / direct → `/dev`
 5. **Team review**: `Task(reviewer-agent, --codex)` fixed (comprehensive + codex parallel, common notes priority) → P0/P1 judge
    - P0 present: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
    - P0 remains after 1 loop or P1: report & continue (stop on `--auto`)
@@ -134,6 +134,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 | worktree isolation | `--parallel` or `--auto` independent parallel | `isolation: "worktree"` auto-create・cleanup |
 | `/simplify` | Post-impl | Bundle fast execute |
 | Post-impl verify | `--auto` complete | `/lint-test` (verify-app explicit only) |
+| `IMPL_NOTES` | Team path (Dev via Task()) | Dev writes `dev-<task-id>.md` → Manager merges → parent persists `MERGED.md` under `~/.claude/plans/impl-notes/<run-dir>/`. `/git-push --pr` consumes for PR draft (`--no-impl-notes` to skip) |
 
 worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree-apply-judgment-flow`.
 

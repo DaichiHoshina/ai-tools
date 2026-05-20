@@ -34,6 +34,7 @@ Execute commit → push → PR/MR creation in single command.
 | `--draft` | Draft PR/MR |
 | `-m "msg"` | Specify commit message |
 | `--auto-review` | Auto-launch `/code-review:code-review` + `coderabbit:code-review` parallel post-PR create (**opt-in, pr mode only**). CodeRabbit calls external API・billing impact |
+| `--no-impl-notes` | Skip IMPL_NOTES MERGED.md consumption for PR body draft (pr mode only). Default behavior: see pr mode step 4 |
 
 ## Flow
 
@@ -52,9 +53,10 @@ Execute commit → push → PR/MR creation in single command.
 ### pr mode
 
 3. `git push -u origin <branch>`
-4. `gh pr create` / `glab mr create` (auto-detect remote)
-5. Display PR/MR URL
-6. **Auto-review** (`--auto-review` specified only. Default OFF, on PR success, `gh` available, GitHub only):
+4. **IMPL_NOTES detection** (skip on `--no-impl-notes`): under `~/.claude/plans/impl-notes/`, find dir whose `<feature-slug>` matches current branch name (sanitize both to kebab-case). If multiple, pick latest by timestamp prefix. If `MERGED.md` exists, read it and surface **Design decisions** + **Open questions** as PR body draft material in the user confirm step (do not auto-insert). No match → silent skip
+5. `gh pr create` / `glab mr create` (auto-detect remote)
+6. Display PR/MR URL
+7. **Auto-review** (`--auto-review` specified only. Default OFF, on PR success, `gh` available, GitHub only):
    - Launch `/code-review:code-review <PR#>` w/ `Bash run_in_background:true` → get bash_id_A
    - Launch `coderabbit:code-review` w/ `Bash run_in_background:true` → get bash_id_B
    - Monitor completion: sequentially get bash_id_A / bash_id_B w/ `BashOutput`
@@ -65,7 +67,7 @@ Execute commit → push → PR/MR creation in single command.
 ### branch mode
 
 3. Refresh main → create branch (`git stash` → `checkout main && pull` → `checkout -b` → `stash pop`)
-4. Same as pr mode 3-5
+4. Same as pr mode 3-7
 
 ## Remote judgment
 

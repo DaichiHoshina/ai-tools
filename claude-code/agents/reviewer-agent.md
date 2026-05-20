@@ -48,8 +48,11 @@ All responses in English (preserve technical terms, tool names).
 | Change summary | Impl summary from PO/Manager | Self-estimate from `git diff --stat` (avoid stale context in uncommitted reviews; use `git log -1` as auxiliary only for committed diff reviews) |
 | PO QA criteria | Override P0/P1 threshold, emphasize viewpoint | This file's P0-P3 definition |
 | Manager integration result | Boundaries & deps for parallel impl | Estimate range from `git diff --stat` |
+| MERGED.md path | Cross-Dev Design decisions / Open questions context (Team flow only) | Skip read; no impact on review scope |
 | Review mode | default / codex / adversarial / deep | `default` |
 | Re-verify flag | First or post-fix | Treat as first |
+
+**MERGED.md handling**: Read-only reference for cross-check against P0/P1 findings (e.g., open questions correlate with security gaps). **Never write** to it (no Write/Edit tool available anyway; do not propose edits to MERGED.md as P0/P1 fix tasks either).
 
 **If diff unavailable**: Re-request from parent (only case cannot continue solo).
 

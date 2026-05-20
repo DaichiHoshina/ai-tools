@@ -169,6 +169,9 @@ PO→Manager→Developer data handoff in JSON format.
   "constraints": {
     "timeout_minutes": 30,
     "max_retries": 2
+  },
+  "impl_notes": {
+    "dir": "/Users/<user>/.claude/plans/impl-notes/2026-05-20_HHMMSS_<feature-slug>/"
   }
 }
 ```
@@ -184,6 +187,7 @@ PO→Manager→Developer data handoff in JSON format.
 | `task.files` | Files to change |
 | `task.dependencies` | Dep task IDs (wait if present) |
 | `constraints` | Timeout/retry limits |
+| `impl_notes.dir` | IMPL_NOTES output dir (Team flow only; absent = skip notes output) |
 
 ### Worktree unspecified behavior
 
@@ -202,6 +206,36 @@ Specify `isolation: "worktree"` in Agent call for auto worktree create/cleanup.
 
 Parallel limit: **N <= 4** (`parent + Dev×N <= 5`). Logic & detail: `references/PARALLEL-PATTERNS.md`.
 
+## IMPL_NOTES output (Team flow only)
+
+Triggered iff received context contains `impl_notes.dir`. Only `/flow` (Manager allocation) sets this field; `/dev`-rooted Task() invocations (e.g. `/dev --parallel`) leave it absent → notes step is skipped silently.
+
+**When to write**: Once at completion (no incremental update). Skip on partial failure / timeout abort (report-only path).
+
+**Path**: `<impl_notes.dir>/dev-<task.id>.md`
+
+**Re-fix re-spawn**: When Reviewer P0 triggers Manager reallocation and this agent is re-spawned with the same `task.id`, Read existing `dev-<task.id>.md` first and **append** a new `## Re-fix iteration <N>` block containing the same 4 sub-sections (`### Design decisions` etc.) for the re-fix scope. Never overwrite prior iterations — re-fix history is part of the audit trail.
+
+**Format** (4 fixed sections, "None" allowed):
+
+```markdown
+# IMPL_NOTES — <task.id> / <task.title>
+
+## Design decisions
+- Choices made where PO/Manager spec was ambiguous + reasoning
+
+## Deviations
+- Intentional departures from allocation + reasoning (none → "None")
+
+## Tradeoffs
+- Alternatives considered + why rejected (none → "None")
+
+## Open questions
+- Items needing user confirmation (none → "None")
+```
+
+Include the written path in completion report's `IMPL_NOTES` field for Manager to merge.
+
 ---
 
 ## Completion report format
@@ -219,6 +253,9 @@ Parallel limit: **N <= 4** (`parent + Dev×N <= 5`). Logic & detail: `references
 - [ ] Type errors: 0
 - [ ] Lint: pass
 - [ ] Tests: pass (if applicable)
+
+## IMPL_NOTES
+- Path: [absolute path to dev-<task-id>.md] (Team flow only; omit if `impl_notes.dir` absent)
 ```
 
 **Failure / partial success** (retry limit / timeout / dep unresolved):
