@@ -58,9 +58,9 @@ Launch Task(subagent_type: "po-agent")
 3. Create design document
 4. Propose implementation plan for `/dev`
 
-## Self-filter (required before finalizing)
+## Self-Filter Gate (moderate strictness, required before finalizing)
 
-Apply moderate discard criteria to both investigation findings (Phase 1) and the draft plan (Phase 4) before output.
+Apply moderate strictness discard criteria to both investigation findings (Phase 1) and the draft plan (Phase 4) before output.
 
 **Investigation filter** (discard from carry-forward):
 

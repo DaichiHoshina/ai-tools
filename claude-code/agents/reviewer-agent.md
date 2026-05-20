@@ -94,7 +94,7 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 1. **Scope**: `git status && git diff` to identify range
 2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (table below). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
 3. **Per-viewpoint review**: Run `comprehensive-review` with `--focus=quality/architecture/security/root-cause/docs` (UI/UX only switches to `uiux-review`)
-4. **Self-review findings (moderate gate)**: For every candidate P0/P1/P2, run the discard criteria below before emit:
+4. **Self-Filter Gate (moderate strictness)**: For every candidate P0/P1/P2, run the discard criteria below before emit:
    - **Evidence**: anchored to observed diff/code/docs/tests/tool output (else discard)
    - **Scope**: tied to user request / issue / design doc / code contract / changed behavior (else discard or downgrade to question)
    - **Overreach**: no invented problem statement or requirement (else discard)

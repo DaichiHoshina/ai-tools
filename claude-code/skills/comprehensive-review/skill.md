@@ -129,7 +129,7 @@ Assign 0-100 confidence score to each finding, downgrade/discard low scores.
 | 25-49 | Output as Warning |
 | <25 | Discard (no output) |
 
-### Step 4.5: Finding Self-Review Gate
+### Step 4.5: Self-Filter Gate (moderate strictness)
 
 Before output, validate each remaining candidate finding:
 
