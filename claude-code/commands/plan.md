@@ -58,6 +58,28 @@ Launch Task(subagent_type: "po-agent")
 3. Create design document
 4. Propose implementation plan for `/dev`
 
+## Self-filter (required before finalizing)
+
+Apply moderate discard criteria to both investigation findings (Phase 1) and the draft plan (Phase 4) before output.
+
+**Investigation filter** (discard from carry-forward):
+
+- Speculative "could be relevant" leads not anchored to user request or observed code
+- Hypothetical edge cases not in scope of the user's stated task
+- Findings about existing code unrelated to the requested change
+
+**Plan filter** (discard from draft):
+
+- Backwards-compat shims / migration paths the user did not ask for
+- Abstractions designed for hypothetical future use ("might need a strategy interface later")
+- Error handling for cases that cannot happen given the system boundary
+- Validation at non-boundary points (trust internal contracts)
+- Scope creep beyond the stated request (cleanup, refactors, "while we're at it")
+- Premature optimization without measured baseline
+- Half-finished phases ("Phase 3: explore other approaches")
+
+If the plan loses size after filter, that is healthy — ship the smaller version. Zero-step plans are valid when the request truly resolves to a single edit.
+
 ## Plan storage
 
 Stored in `plansDirectory` (default `~/.claude/plans`).

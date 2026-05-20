@@ -140,8 +140,19 @@ Before output, validate each remaining candidate finding:
 | Overreach | Does not invent a new problem statement or requirement | Discard |
 | Actionability | Author can fix code/docs/tests in this change | Discard or note only |
 | Severity | Critical/Warning matches real impact and confidence | Downgrade or discard |
+| Style/preference | Tied to documented guideline or contract, not aesthetic taste | Discard |
+| Overprescription | A reasonable engineer would call this a defect, not just an alternative way | Downgrade to question or discard |
 
-Only publish findings that pass this gate. Do not show the gate checklist in the final output unless explaining why no findings remain.
+**Pre-emission sanity check** (run after gate): re-read each draft finding and discard if it matches any of:
+
+- "cleaner", "more elegant", "could be simpler", "better naming" — without a specific rule/contract violation
+- "Default text is verbose" / "this could be shorter" — pure prose preference
+- "Same concept stated in multiple places" — only if it causes drift risk, otherwise tolerate
+- Restating an existing TODO/known issue as new finding
+- Listing intentional design choices as deviations
+- Findings whose fix proposal is "consider X" with no concrete defect
+
+Only publish findings that pass both gate and sanity check. If discarding leaves zero findings, that is the correct outcome — do not invent replacements. Do not show the gate checklist in the final output unless explaining why no findings remain.
 
 ### Step 5-6: Aggregate & Record History
 

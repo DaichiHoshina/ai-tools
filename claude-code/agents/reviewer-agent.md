@@ -94,7 +94,16 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 1. **Scope**: `git status && git diff` to identify range
 2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (table below). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
 3. **Per-viewpoint review**: Run `comprehensive-review` with `--focus=quality/architecture/security/root-cause/docs` (UI/UX only switches to `uiux-review`)
-4. **Self-review findings**: For every candidate P0/P1/P2, verify evidence, scope, no invented framing, actionability, and proportional severity. Discard or downgrade anything that fails.
+4. **Self-review findings (moderate gate)**: For every candidate P0/P1/P2, run the discard criteria below before emit:
+   - **Evidence**: anchored to observed diff/code/docs/tests/tool output (else discard)
+   - **Scope**: tied to user request / issue / design doc / code contract / changed behavior (else discard or downgrade to question)
+   - **Overreach**: no invented problem statement or requirement (else discard)
+   - **Actionability**: fixable in this change (else note only)
+   - **Severity**: P0/P1/P2 matches real impact (else downgrade)
+   - **Style/preference**: backed by documented guideline or contract, not aesthetic taste (else discard)
+   - **Overprescription**: a reasonable engineer would call it a defect, not "another valid alternative" (else downgrade to question or discard)
+
+   **Pre-emission sanity check**: discard findings phrased as "cleaner / more elegant / could be simpler / better naming" without a rule violation, or "verbose text / could be shorter" prose preferences, or restated known issues. Zero findings is a valid output — do not invent replacements.
 5. **Integrate result**: Output via template below
 
 ### Serena tool use
