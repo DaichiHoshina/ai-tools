@@ -47,7 +47,9 @@ Infrastructure → `infrastructure/terraform.md`, `infrastructure/aws-eks.md`.
 ```
 Launch Task(subagent_type: "po-agent")
   → requirement analysis → architecture design → worktree necessary? (confirm) → implementation approach
-  → output design document
+  → draft design document
+  → **Self-Filter Gate (L61-81)** — discard speculative findings + over-engineered plan items
+  → output filtered design document
   → propose next actions (to `/dev`)
 ```
 
@@ -55,8 +57,9 @@ Launch Task(subagent_type: "po-agent")
 
 1. Load guidelines (Step 0)
 2. Analyze codebase w/ Serena MCP
-3. Create design document
-4. Propose implementation plan for `/dev`
+3. Draft design document
+4. **Apply Self-Filter Gate (L61-81)** to investigation findings and draft plan — discard speculative/out-of-scope/over-engineered items before emitting
+5. Output filtered design document + propose implementation plan for `/dev`
 
 ## Self-Filter Gate (moderate strictness, required before finalizing)
 

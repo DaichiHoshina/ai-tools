@@ -110,6 +110,10 @@ Aggregation strategy (3+ = Critical confirmed, etc): [`references/review-modes-a
 
 Use: pre-merge PR, release-critical, security patch. Not daily.
 
+## Pre-Emit Step (required, all modes)
+
+Before producing the Output Format block below, run the **Finding Self-Review Gate** (L30-40) against every candidate Critical/Warning. Discard or downgrade any finding that fails Evidence/Scope/No-invented-framing/Actionability/Severity. Style-only or aesthetic-preference findings without a documented rule violation are discarded. Zero findings is a valid output — do not pad.
+
 ## Output Format
 
 ```markdown
