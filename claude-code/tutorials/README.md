@@ -41,7 +41,7 @@ claude --version
 ### 初心者（1日目）
 
 1. **基本理解**
-   - `QUICKSTART.md` を読む
+   - [`../README.md`](../README.md) を読む
    - `/flow` コマンドを試す
    - 簡単なバグ修正を依頼
 
@@ -55,7 +55,7 @@ claude --version
 ### 中級者（1週間目）
 
 1. **スキル活用**
-   - `SKILLS-MAP.md` でスキル一覧確認
+   - [`../README.md`](../README.md) でスキル一覧確認
    - 言語別スキルを試す
    - レビュースキルを活用
 
@@ -90,10 +90,8 @@ claude --version
 
 | ファイル | 内容 | 優先度 |
 |---------|------|--------|
-| `QUICKSTART.md` | 基本操作 | 必須 |
-| `CLAUDE.md` | 設定詳細 | 重要 |
-| `SKILLS-MAP.md` | スキル一覧 | 参照 |
-| `GLOSSARY.md` | 用語集 | 参照 |
+| `../README.md` | クイックスタート/コマンド/スキル/エージェント/用語 | 必須 |
+| `../CLAUDE.md` | 設定詳細 | 重要 |
 
 ### リファレンス
 
@@ -168,7 +166,7 @@ chmod +x ~/.claude/hooks/*.sh
 
 ## 次のステップ
 
-1. `QUICKSTART.md` を読む
+1. [`../README.md`](../README.md) を読む
 2. `/flow` でタスクを実行
 3. フィードバックを送る
 

@@ -1,6 +1,6 @@
 # スキル統合マイグレーションガイド（完了済み）
 
-> **注意**: この移行は完了済みです。新規ユーザーは [SKILLS-MAP.md](./SKILLS-MAP.md) を参照してください。
+> **注意**: この移行は完了済み。新規ユーザーは [`../README.md`](../README.md) のスキル一覧を参照。
 
 Phase2-5スキル統合（24→20スキル、実質14機能）の移行ガイド
 
@@ -253,7 +253,7 @@ source ~/.claude/lib/detect-from-keywords.sh
 declare -f _apply_skill_aliases
 ```
 
-### Q3: 新スキル名でSKILL.mdが見つからない
+### Q3: 新スキル名でskill.mdが見つからない
 
 **原因**: スキルディレクトリが作成されていない
 
@@ -293,10 +293,10 @@ rm -rf ~/.claude/cache/
 
 ## 参照
 
-- [SKILLS-MAP.md](SKILLS-MAP.md): 統合後のスキル一覧
-- [skills/comprehensive-review/SKILL.md](skills/comprehensive-review/SKILL.md): パラメータ詳細
-- [skills/backend-dev/SKILL.md](skills/backend-dev/SKILL.md): 言語別ベストプラクティス
-- [skills/container-ops/SKILL.md](skills/container-ops/SKILL.md): プラットフォーム別運用
+- [`../README.md`](../README.md): 統合後のスキル一覧
+- [skills/comprehensive-review/skill.md](skills/comprehensive-review/skill.md): パラメータ詳細
+- [skills/backend-dev/skill.md](skills/backend-dev/skill.md): 言語別ベストプラクティス
+- [skills/container-ops/skill.md](skills/container-ops/skill.md): プラットフォーム別運用
 
 ---
 
