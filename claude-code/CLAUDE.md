@@ -29,12 +29,13 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 ## Auto-Delegation (parent=Opus 指揮、subagent=Sonnet 実行)
 
-**ユーザが command 打たなくても parent が task scope 検知して自動 delegate**。判定は task 受領直後・実装着手前に実施。
+**デフォルト = `developer-agent` (Sonnet) 委譲**。「言われてできることは Sonnet に任せる」原則 (ユーザ指示 2026-05-22)。inline 実行は下記例外のみ。
+
+**Inline 例外 (委譲しない)**: 質問回答 / 既読ファイル確認 / dry-run / 1 行未満 typo / 1 コマンド実行 (`git status` 等)
 
 | 検知条件 | 自動起動 |
 |---|---|
-| 編集 1 file かつ 10 行未満 / trivial fix (typo / 1 行修正 / config 値変更) | parent inline |
-| **編集 2+ file or 10+ 行変更予想 / refactor / translation / 一括書換** | `developer-agent` 自動 (`Task` tool) |
+| **上記例外以外のすべての実装 / 編集 / commit** | `developer-agent` 自動 (`Task` tool) |
 | broad search (3+ query / 3+ domain) | `explore-agent` parallel 自動 |
 | review 依頼 / "レビュー" / PR 確認 | `reviewer-agent` 自動 (or `/review`) |
 | bug 原因不明 / "なぜ動かない" / 再発バグ | `root-cause-analyzer` 自動 |
@@ -42,9 +43,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | 多段タスク (調査→設計→実装→検証) | `/flow` 階層展開 (PO→Manager→Dev→Reviewer) |
 | 20+ file 一括処理 | `claude -p` fan-out (`references/fanout-recipes.md`) |
 
-**Inline 維持の例外**: 質問回答 / 既読ファイル確認 / dry-run 系。それ以外で迷ったら **delegate 優先** (ユーザ指示 2026-05-22「過剰でいいから Sonnet 使え」)。
-
-**判定原則**: Opus parent は orchestration / judgment / trivial fix のみ。実作業 (write / refactor / translation / verification / commit) は **過剰でも Sonnet 委譲**。inline コストより 過小委譲リスクを優先回避。
+**判定原則**: 迷ったら委譲。過小委譲リスク > 過剰委譲コスト。Opus parent は orchestration / judgment のみ、実作業 (write / refactor / verification / commit) はすべて Sonnet。
 
 ## Session Efficiency
 
