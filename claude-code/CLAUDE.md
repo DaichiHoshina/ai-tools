@@ -33,8 +33,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 | 検知条件 | 自動起動 |
 |---|---|
-| 編集 1-2 file かつ 30 行未満予想 | parent inline (delegate しない) |
-| **編集 3+ file or 30+ 行変更予想 / 新機能 / refactor** | `developer-agent` 自動 (`Task` tool) |
+| 編集 1 file かつ 10 行未満 / trivial fix (typo / 1 行修正 / config 値変更) | parent inline |
+| **編集 2+ file or 10+ 行変更予想 / refactor / translation / 一括書換** | `developer-agent` 自動 (`Task` tool) |
 | broad search (3+ query / 3+ domain) | `explore-agent` parallel 自動 |
 | review 依頼 / "レビュー" / PR 確認 | `reviewer-agent` 自動 (or `/review`) |
 | bug 原因不明 / "なぜ動かない" / 再発バグ | `root-cause-analyzer` 自動 |
@@ -42,9 +42,9 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | 多段タスク (調査→設計→実装→検証) | `/flow` 階層展開 (PO→Manager→Dev→Reviewer) |
 | 20+ file 一括処理 | `claude -p` fan-out (`references/fanout-recipes.md`) |
 
-**Inline 維持の例外**: trivial fix (typo / 1 行修正 / config 値変更) / 質問回答 / 既読ファイル確認 / dry-run 系。agent startup コスト (数十秒〜分) > 期待ベネフィットなら inline。
+**Inline 維持の例外**: 質問回答 / 既読ファイル確認 / dry-run 系。それ以外で迷ったら **delegate 優先** (ユーザ指示 2026-05-22「過剰でいいから Sonnet 使え」)。
 
-**判定迷ったら**: 「inline で 3 分以内に終わるか」を基準。超えそうなら delegate。
+**判定原則**: Opus parent は orchestration / judgment / trivial fix のみ。実作業 (write / refactor / translation / verification / commit) は **過剰でも Sonnet 委譲**。inline コストより 過小委譲リスクを優先回避。
 
 ## Session Efficiency
 
