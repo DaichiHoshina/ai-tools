@@ -62,6 +62,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | "{strict\|fast\|normal} mode" | `/session-mode {strength}` |
 | "並列実行で" / "wt 分けて" | `/flow --parallel` |
 | "team で" / "agent team で" / "分担で" / "本格的に" | `/flow` (PO/Manager/Dev 階層 強制) |
+| "Slack に投げて" / "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message` |
+| "Notion に書いて" / "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages` |
 
 No other natural-language interpretation. Full list: `references/natural-language-triggers.md`
 

@@ -28,6 +28,9 @@
 | "wt 分けて" | `/flow --parallel`（同上） |
 | "team で", "agent team で" | `/flow`（PO/Manager/Dev 階層を強制起動） |
 | "分担で", "本格的に" | `/flow`（同上、軽量タスク pre-check を回避） |
+| "Slack に投げて", "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message`（送信先 channel/DM 確認後） |
+| "Notion に書いて", "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages`（親 page 確認後） |
+| "PR コメント残して", "レビューコメント残して" | `/post-comment`（PR 番号/URL 必須） |
 
 ## 解釈しない例
 

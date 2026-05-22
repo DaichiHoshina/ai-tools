@@ -226,3 +226,73 @@ get_additional_context() {
   [[ "$output" == "{}" ]] || \
     echo "$output" | jq -e '.systemMessage or .additionalContext'
 }
+
+# =============================================================================
+# Duplicate prompt detection (5秒以内に同一promptを再送した時に警告)
+# =============================================================================
+
+@test "user-prompt-submit: dup-detect 20文字未満prompt はチェック対象外" {
+  cd "$TEST_TMPDIR"
+  local sid="dup-test-short-$$"
+  rm -f "/tmp/claude-last-prompt-${sid}"
+
+  # 短文 ("続き" 5 chars) は dup ロジック skip
+  local input='{"prompt":"続き","session_id":"'"$sid"'"}'
+  run_hook "$input" >/dev/null
+  local out=$(run_hook "$input")
+
+  local ctx=$(get_additional_context "$out")
+  [[ -z "$ctx" ]] || ! [[ "$ctx" =~ "同一入力検出" ]]
+  rm -f "/tmp/claude-last-prompt-${sid}"
+}
+
+@test "user-prompt-submit: dup-detect 同一prompt5秒以内で通知あり" {
+  cd "$TEST_TMPDIR"
+  local sid="dup-test-same-$$"
+  rm -f "/tmp/claude-last-prompt-${sid}"
+
+  local input='{"prompt":"これは20文字以上の長いテストプロンプトで重複検出","session_id":"'"$sid"'"}'
+  # 1回目: dup check skip, last-prompt 記録のみ
+  run_hook "$input" >/dev/null
+  # 2回目: 0秒経過 → 通知あり
+  local out=$(run_hook "$input")
+
+  local ctx=$(get_additional_context "$out")
+  [[ "$ctx" =~ "同一入力検出" ]]
+  rm -f "/tmp/claude-last-prompt-${sid}"
+}
+
+@test "user-prompt-submit: dup-detect 異なるpromptは通知なし" {
+  cd "$TEST_TMPDIR"
+  local sid="dup-test-diff-$$"
+  rm -f "/tmp/claude-last-prompt-${sid}"
+
+  local in1='{"prompt":"これは20文字以上の最初のテストプロンプトです","session_id":"'"$sid"'"}'
+  local in2='{"prompt":"これは20文字以上の別のテストプロンプトです","session_id":"'"$sid"'"}'
+  run_hook "$in1" >/dev/null
+  local out=$(run_hook "$in2")
+
+  local ctx=$(get_additional_context "$out")
+  [[ -z "$ctx" ]] || ! [[ "$ctx" =~ "同一入力検出" ]]
+  rm -f "/tmp/claude-last-prompt-${sid}"
+}
+
+@test "user-prompt-submit: dup-detect 5秒超過で通知なし" {
+  cd "$TEST_TMPDIR"
+  local sid="dup-test-expire-$$"
+  local dup_file="/tmp/claude-last-prompt-${sid}"
+  rm -f "$dup_file"
+
+  local prompt_text="これは20文字以上の長いテストプロンプトで時間経過検証"
+  local hash=$(printf '%s' "$prompt_text" | shasum -a 1 | cut -d' ' -f1)
+  # 10秒前のタイムスタンプで last-prompt を pre-seed
+  local old_ts=$(( $(date +%s) - 10 ))
+  printf '%s\t%s' "$old_ts" "$hash" > "$dup_file"
+
+  local input='{"prompt":"'"$prompt_text"'","session_id":"'"$sid"'"}'
+  local out=$(run_hook "$input")
+
+  local ctx=$(get_additional_context "$out")
+  [[ -z "$ctx" ]] || ! [[ "$ctx" =~ "同一入力検出" ]]
+  rm -f "$dup_file"
+}

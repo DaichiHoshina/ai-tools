@@ -49,6 +49,7 @@
 ### 長文 (Design Doc / PRD / RCA / Notionページ)
 
 - **TL;DR冒頭1-3文で結論**。「本稿では〜について述べる」系導入は削除
+- **報告型doc (負荷試験 / 計測 / 障害 / 検証 / KPI共有) は冒頭3行で「最大値 / 測定条件 / 次アクション」必須**。最大値=計測した上限/閾値の具体数値、測定条件=どの環境/負荷/期間で測ったか、次アクション=読み手が approve / scale / 修正 のどれを決めるか。数値を結論行の本体に置き、別セクションに散らさない。詳細は [[writing_failure_conclusion_missing]] memory 参照
 - 800-1500字 / ページ、2000字超なら分割
 - 1セクション = 地の文3-5割 + 箇条書き / 表5-7割
 - 箇条書きは3-5項目。7超は表or段落分割
@@ -183,5 +184,6 @@
 |---|---|---|
 | `writing_failure_link_overdose` | URL網羅で本文が侵食、リンク密度過多 | issue / PRコメントで複数PR / dashboardリンクを並べる時 |
 | `writing_failure_compound_noun_stack` | 複合名詞3連以上 + 抽象→具体省略 + Why暗示 | commit messageタイトル / PR本文1段落目を書く時 |
+| `writing_failure_conclusion_missing` | 報告型docで冒頭結論行に数値抜け、結論ラベルだけ抽象、数値を別所配置、専門用語裸並び | 負荷試験 / 計測 / 障害 / 検証結果のissue / Notion / Slack共有時 |
 
 `/git-push --pr` `/post-comment` `/docs` 起動時にこれらをreadし、生成draftが同じパターンに陥っていないかself-checkする。新規失敗を観測したら `/retrospective` Phase 3.5でmemory追加。

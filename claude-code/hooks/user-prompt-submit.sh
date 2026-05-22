@@ -59,20 +59,47 @@ if [[ -f "${_SERENA_COUNTER}" ]]; then
   fi
 fi
 
-# 通知を合成
-_COMBINED_NOTICE=""
-if [[ -n "${_COMPACT_NOTICE_MSG}" && -n "${_SERENA_NOTICE_MSG}" ]]; then
-  _COMBINED_NOTICE="${_COMPACT_NOTICE_MSG}
-${_SERENA_NOTICE_MSG}"
-elif [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
-  _COMBINED_NOTICE="${_COMPACT_NOTICE_MSG}"
-elif [[ -n "${_SERENA_NOTICE_MSG}" ]]; then
-  _COMBINED_NOTICE="${_SERENA_NOTICE_MSG}"
-fi
-_COMPACT_NOTICE_MSG="${_COMBINED_NOTICE}"
-
 # promptフィールド取得（<<< で fork 削減）
 prompt=$(jq -r '.prompt // empty' <<< "$input")
+
+# === Duplicate prompt notice: 5秒以内に同一prompt再送を検出 ===
+# 短文 ("yes" / "続き" / "TODO" 等の rate-limit 復旧 prompt) は除外して長文のみ対象
+_DUP_NOTICE_MSG=""
+if (( ${#prompt} >= 20 )); then
+  _DUP_SESSION_ID=$(jq -r '.session_id // "unknown"' <<< "$input")
+  _DUP_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_DUP_SESSION_ID}}"
+  if [[ -n "${_DUP_SESSION_ID}" && "${_DUP_SESSION_ID}" != "unknown" ]]; then
+    _DUP_FILE="/tmp/claude-last-prompt-${_DUP_SESSION_ID}"
+    _DUP_NOW=$(date +%s)
+    _DUP_HASH=$(printf '%s' "$prompt" | shasum -a 1 2>/dev/null | cut -d' ' -f1)
+    if [[ -n "${_DUP_HASH}" && -f "${_DUP_FILE}" ]]; then
+      IFS=$'\t' read -r _DUP_LAST_TS _DUP_LAST_HASH < "${_DUP_FILE}" 2>/dev/null || true
+      if [[ "${_DUP_LAST_HASH:-}" == "${_DUP_HASH}" ]]; then
+        _DUP_ELAPSED=$(( _DUP_NOW - ${_DUP_LAST_TS:-0} ))
+        if (( _DUP_ELAPSED >= 0 && _DUP_ELAPSED <= 5 )); then
+          _DUP_NOTICE_MSG="⚠️ 直前 prompt と同一入力検出 (${_DUP_ELAPSED}秒前)。応答待ちまたは rate-limit 中の重複送信の可能性、再送前に状態確認を推奨。"
+        fi
+      fi
+    fi
+    if [[ -n "${_DUP_HASH}" ]]; then
+      printf '%s\t%s' "${_DUP_NOW}" "${_DUP_HASH}" > "${_DUP_FILE}" 2>/dev/null || true
+    fi
+  fi
+fi
+
+# 通知を合成 (compact / serena / duplicate を順序固定で結合)
+_COMBINED_NOTICE=""
+for _msg in "${_COMPACT_NOTICE_MSG}" "${_SERENA_NOTICE_MSG}" "${_DUP_NOTICE_MSG}"; do
+  if [[ -n "${_msg}" ]]; then
+    if [[ -n "${_COMBINED_NOTICE}" ]]; then
+      _COMBINED_NOTICE="${_COMBINED_NOTICE}
+${_msg}"
+    else
+      _COMBINED_NOTICE="${_msg}"
+    fi
+  fi
+done
+_COMPACT_NOTICE_MSG="${_COMBINED_NOTICE}"
 if [ -z "$prompt" ]; then
   # promptが空の場合でも compact 提案メッセージがあれば返す
   if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
