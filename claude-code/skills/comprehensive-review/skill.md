@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: "12観点の包括コードレビュー(設計/品質/可読性/security/test/DB等)。/review から呼出、--focus で絞込。コードレビュー時に使用。"
+description: "Comprehensive code review across 12 perspectives (architecture/quality/readability/security/test/DB etc). Called from /review, narrow with --focus. Use when reviewing code."
 context: fork
 agent: reviewer-agent
 requires-guidelines:
@@ -19,21 +19,21 @@ parameters:
 
 ## 12 Perspectives
 
-詳細: `references/review-criteria.md` (architecture/quality/readability/security/docs/test-coverage/root-cause/logging) / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`。
+Details: `references/review-criteria.md` (architecture/quality/readability/security/docs/test-coverage/root-cause/logging) / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`.
 
 | Perspective | Description |
 |---|---|
-| **architecture** | DDD境界、Clean Arch dependency方向、modular monolith境界、layer violation |
-| **quality** | 言語/FW best practice、local idiom、code smell、performance、type safety |
-| **readability** | Naming、cognitive complexity、consistency |
-| **security** | Authn/authz、injection、secrets、tenant/data isolation、unsafe logging、dependency/config exposure |
-| **docs / test-coverage** | Doc 品質、テスト網羅性・品質 |
-| **root-cause** | Permanent fix vs workaround、再発パターン |
-| **logging** | Log level 適正、structured log |
-| **writing** | Human-facing doc 品質 |
-| **silent-failure** | Error swallowing、empty catch |
-| **type-design** | Type-encoded invariant、enum 濫用回避 |
-| **db-concurrency** | InnoDB暗黙deadlock / gap lock / FOR UPDATE+INSERT / ODKU昇格 / TX内外部I/O / retry不在 |
+| **architecture** | DDD boundaries, Clean Arch dependency direction, modular monolith boundaries, layer violations |
+| **quality** | Language/FW best practice, local idioms, code smell, performance, type safety |
+| **readability** | Naming, cognitive complexity, consistency |
+| **security** | Authn/authz, injection, secrets, tenant/data isolation, unsafe logging, dependency/config exposure |
+| **docs / test-coverage** | Doc quality, test adequacy & quality |
+| **root-cause** | Permanent fix vs workaround, recurrence patterns |
+| **logging** | Log level appropriateness, structured logs |
+| **writing** | Human-facing doc quality |
+| **silent-failure** | Error swallowing, empty catch |
+| **type-design** | Type-encoded invariants, avoid enum abuse |
+| **db-concurrency** | InnoDB implicit deadlock / gap lock / FOR UPDATE+INSERT / ODKU escalation / external I/O in TX / missing retry |
 
 ## Effort-Linked Mode (`${CLAUDE_EFFORT}`)
 
@@ -49,22 +49,22 @@ Confidence thresholds & coverage vary by effort level.
 
 ### Step -1: Noise Suppression
 
-- Read diff/code/docs only. Guess→prefix "hypothesis:". No style/preference/theory nitpicks.
-- Findings must be anchored to observed violation/regression/concrete risk in scope.
-- 「could be better」「might be useful」「best to check」は note/question 止まり、Critical/Warning 不可。
-- Issue/task 作成は明示要求時のみ。TODO は「just in case」「confirm」禁止、今日の blocker のみ。ユーザが不要と明言した作業の再追加禁止。
+- Read diff/code/docs only. Guess → prefix "hypothesis:". No style/preference/theory nitpicks.
+- Findings must be anchored to an observed violation/regression/concrete risk in scope.
+- "could be better" / "might be useful" / "best to check" → note/question only, never Critical/Warning.
+- Create issue/task only on explicit user request. No "just in case" / "confirm" TODOs — today's blockers only. Don't re-add work the user explicitly marked unnecessary.
 
 ### Step 0: Load History (Detect Repeats)
 
-`.claude/review-history.jsonl` 読み込み、同 `file:line±3` + 同 `focus` が 3+ 回出現 → prefix `🔁 Repeated Finding (Nth time)`。history 不在 (未作成/empty/jq missing) → skip、出力末尾に `history: unavailable`。
+Read `.claude/review-history.jsonl`. If same `file:line±3` + same `focus` appears 3+ times → prefix `🔁 Repeated Finding (Nth time)`. History absent (not created/empty/jq missing) → skip, mark output end with `history: unavailable`.
 
 ### Step 1: Changed File Analysis
 
-`git diff --name-only` で言語/ファイル種別/scope 判定し追加観点を自動決定。
+`git diff --name-only` to determine language/file type/scope and auto-decide extra perspectives.
 
-**Serena priority** (code files、ref 漏れ防止): impact → `find_referencing_symbols` / interface↔impl → `find_implementations` / decl → `find_declaration` / type check → `get_diagnostics_for_file` (LSP 直、外部 typecheck 不要) / structure → `get_symbols_overview` + `find_symbol`。Non-code (md/yaml/json/toml/lockfile/.env) → Grep/Read。
+**Serena priority** (code files, prevent missed refs): impact → `find_referencing_symbols` / interface↔impl → `find_implementations` / decl → `find_declaration` / type check → `get_diagnostics_for_file` (direct LSP, no external typecheck) / structure → `get_symbols_overview` + `find_symbol`. Non-code (md/yaml/json/toml/lockfile/.env) → Grep/Read.
 
-Default lenses: `quality` (言語/FW/プロジェクト local conventions) / `architecture` (DDD / Clean Arch / modular monolith boundary を diff が横断する箇所のみ) / `root-cause` (症状でなく根本原因対応) / `security` (diff が触れる security surface)。
+Default lenses: `quality` (language/FW/project-local conventions) / `architecture` (DDD / Clean Arch / modular monolith boundaries only where the diff crosses them) / `root-cause` (root cause over symptom) / `security` (security surfaces touched by diff).
 
 | Condition | Add Perspective |
 |------|---------|
@@ -72,7 +72,7 @@ Default lenses: `quality` (言語/FW/プロジェクト local conventions) / `ar
 | UI file (`components/*`, `*.tsx`) | `uiux-review` (separate skill) |
 | Logic change (non-test) | `test-coverage` + `silent-failure` |
 | Type def change (`*.d.ts`, `types/*`, struct/interface added) | `type-design` |
-| SQL/ORM変更 (`*.sql`、`*Repository*`、`tx.Exec`、`SELECT.*FOR UPDATE`、`ON DUPLICATE KEY`) | `db-concurrency` |
+| SQL/ORM change (`*.sql`, `*Repository*`, `tx.Exec`, `SELECT.*FOR UPDATE`, `ON DUPLICATE KEY`) | `db-concurrency` |
 
 ### Step 2: Run Static Analysis Tools
 
@@ -84,38 +84,38 @@ npm run lint && npx tsc --noEmit
 golangci-lint run && go vet ./...
 ```
 
-**Tool presence**: 実行結果で判定 (PATH lookup 不可)。`npx tsc` / `npm run` は `node_modules/.bin/` 経由可。
+**Tool presence**: judge by execution result (no PATH lookup). `npx tsc` / `npm run` resolve via `node_modules/.bin/`.
 
-**判定順** (top-to-bottom、最初一致で確定。message match 優先、exit code 最後):
+**Evaluation order** (top-to-bottom, first match wins; message match before exit code):
 
-| # | 条件 | Action |
+| # | Condition | Action |
 |---|---|---|
-| 1 | stderr に `command not found` / `npm ERR! Missing script` / `could not determine executable` | skip → `static-analysis: skipped (<cmd>: not installed/missing)` |
+| 1 | stderr has `command not found` / `npm ERR! Missing script` / `could not determine executable` | skip → `static-analysis: skipped (<cmd>: not installed/missing)` |
 | 2 | exit 127 | skip → `static-analysis: skipped (<cmd>: not found)` |
-| 3 | exit 0/1 + analyzer 出力あり (lint violation / type error / `error TS` 等) | 結果反映、続行 |
-| 4 | その他 non-zero | Warning として含めて続行 |
+| 3 | exit 0/1 + analyzer output present (lint violation / type error / `error TS` etc) | incorporate results, continue |
+| 4 | other non-zero | include as Warning, continue |
 
 ### Step 3: cleanup-enforcement
 
-Verify unused imports/vars/functions、backward compat 残骸、progress comments。
+Verify unused imports/vars/functions, backward compat remnants, progress comments.
 
 ### Step 4: Confidence Scoring (medium default)
 
-各 finding に 0-100 score 付与: **80+** (low 90+, high 70+) → Critical / **50-79** → Warning に downgrade / **25-49** → Warning / **<25** → Discard。
+Assign 0-100 score to each finding: **80+** (low 90+, high 70+) → Critical / **50-79** → downgrade to Warning / **25-49** → Warning / **<25** → Discard.
 
 ### Step 4.5: Self-Filter Gate (moderate strictness)
 
-各 candidate を下記で validate (Fail → discard、severity 不一致は downgrade):
+Validate each candidate (Fail → discard; severity mismatch → downgrade):
 
-- **Evidence**: diff/code/docs/tests/tool output に直接 anchor
-- **Scope**: user request / issue / design doc / code contract / changed behavior 紐付
-- **Overreach**: 新 problem statement や requirement 捏造なし
-- **Actionability**: この change で著者が fix 可能
-- **Severity**: Critical/Warning が実 impact と confidence に一致
-- **Style/preference**: documented guideline/contract 根拠あり (美的好みでない)
-- **Overprescription**: reasonable engineer が defect と呼ぶ (単なる代替案でない)
+- **Evidence**: anchored directly to diff/code/docs/tests/tool output
+- **Scope**: tied to user request / issue / design doc / code contract / changed behavior
+- **Overreach**: no invented problem statement or requirement
+- **Actionability**: author can fix in this change
+- **Severity**: Critical/Warning matches real impact and confidence
+- **Style/preference**: backed by documented guideline/contract (not aesthetic taste)
+- **Overprescription**: a reasonable engineer would call it a defect (not just an alternative)
 
-**Pre-emission sanity check**: discard findings matching「cleaner / more elegant / better naming」(rule違反なし) /「verbose / shorter」(prose preference) /「same concept in multiple places」(drift risk なし) / 既存 TODO 再掲 / 意図的設計選択を deviation 扱い /「consider X」で具体 defect なし。Gate + sanity 両方通過のみ出力、0件残存は正解 (捏造禁止)、チェックリスト本体は 0件理由説明時のみ出力。
+**Pre-emission sanity check**: discard findings matching "cleaner / more elegant / better naming" (no rule violation) / "verbose / shorter" (prose preference) / "same concept in multiple places" (no drift risk) / restating existing TODO / intentional design choice flagged as deviation / "consider X" without a concrete defect. Publish only findings passing both gate and sanity check; zero findings is the correct outcome (never invent); show the checklist itself only when explaining why no findings remain.
 
 ### Step 5-6: Aggregate & Record History
 
@@ -139,8 +139,8 @@ Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.
 Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 ```
 
-**Zero findings rule**: section 省略禁止、0件は `### Critical: 0`。skip 観点は executed list から除外し `### skipped: <perspective> (<reason>)` 追記。
+**Zero findings rule**: never omit sections; 0 cases → `### Critical: 0`. Skipped perspectives are removed from the executed list and added as `### skipped: <perspective> (<reason>)`.
 
 ## Notes
 
-focus=all → 12並列、large diff は 1ファイルずつ Critical 優先。具体 fix 提示、tag: `must`=Critical / `imo`,`nits`=Warning / `q`=question。根拠なき task 作成・problem framing 捏造・scope 外 operational TODO 禁止。
+focus=all → 12 in parallel; large diffs → 1 file at a time, Critical first. Provide concrete fixes; tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question. Forbid baseless task creation, invented problem framing, or out-of-scope operational TODOs.
