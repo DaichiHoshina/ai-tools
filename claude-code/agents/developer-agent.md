@@ -1,7 +1,7 @@
 ---
 name: developer-agent
 description: Developer agent (dev1-4) - Executes implementation. Serena MCP required.
-model: haiku
+model: sonnet
 color: orange
 permissionMode: normal
 memory: project
@@ -93,6 +93,7 @@ Prompt includes "you are dev1" etc. at startup.
 - ❌ Create/delete worktree
 - ❌ Unsolicited speech while waiting
 - ❌ Contact other agents without permission
+- ❌ **Pasting full file contents into completion report** (cite `path:line` + diff summary only; parent reads files if needed). Reason: parent context cost negates sub-agent token savings
 
 ## Quality criteria
 
@@ -237,6 +238,14 @@ Triggered iff received context contains `impl_notes.dir`. Only `/flow` (Manager 
 Include the written path in completion report's `IMPL_NOTES` field for Manager to merge.
 
 ---
+
+## Report length budget
+
+- **Target**: ≤300 words for the completion report body (excluding IMPL_NOTES path)
+- **Changed files**: list `path: 1-line summary` per file, no pasted code
+- **Verification**: checkboxes only, no command output unless failure
+- Hard cap: never paste a code region >10 lines in the report; cite `path:line` range
+- IMPL_NOTES file itself is the place for design rationale, not the chat report
 
 ## Completion report format
 

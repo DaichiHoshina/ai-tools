@@ -40,6 +40,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 - **ROI gate**: 「全部やって」指示でも ultrathink で「効果小」なら**個別再確認** (2026-05-07 低 ROI 一括実装事故)
 - **pwd check**: Read/Bash 前に存在確認、`cd` 前に `pwd`
 - **/memory-save**: 3+ file 変更 / 非自明 refactor / incident のみ
+- **Token budget (Read/Bash output)**: 大ファイル Read は `limit:` / `offset:` 指定 (default 200 行目安)、長 log は `| head -N` / `| tail -N` で truncate。**全文 dump は累積 cost 大**、symbol read (serena) で代替可ならそちら
+- **Subagent prompt context budget**: 委譲時 prompt ≤500 words 目安、必要最小限 context のみ。**会話全文の流し込み禁止** (subagent 単価安くても入力 tokens で逆転、`agents/*-agent.md` の Report length budget と対称)
 
 ## Rewind
 

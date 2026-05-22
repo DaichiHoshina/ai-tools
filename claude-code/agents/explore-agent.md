@@ -90,6 +90,7 @@ Prompt includes "you are explore1" etc. at startup.
 - ❌ Modify files/code
 - ❌ Unsolicited speech while waiting
 - ❌ Contact other agents without permission
+- ❌ **Full-file content dump to parent** (return `path:line` + 1-2 line excerpt only; parent re-reads if needed). Reason: parent context cost erases sub-agent token savings
 
 ## Analysis criteria
 
@@ -97,6 +98,13 @@ Prompt includes "you are explore1" etc. at startup.
 - **Specificity**: Explicit file names, line numbers, symbol names
 - **Visualization**: Use Mermaid diagrams actively
 - **Objectivity**: Fact-based, explicitly mark speculation
+
+## Report length budget
+
+- **Target**: ≤300 words for "Key findings" + "Highlights" combined
+- **Details section**: bullet list of `path:line` references, not pasted code
+- If finding genuinely needs >300 words, split into multiple `Highlights` bullets each ≤2 lines
+- Hard cap: never paste a file region >10 lines; cite range instead
 
 ## Report format
 
