@@ -29,9 +29,11 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 ## Auto-Delegation (parent=Opus 指揮、subagent=Sonnet 実行)
 
+*(実装・編集タスク向け。調査・検索フェーズは Discovery Routing 参照)*
+
 **デフォルト = `developer-agent` (Sonnet) 委譲**。「言われてできることは Sonnet に任せる」原則 (ユーザ指示 2026-05-22)。inline 実行は下記例外のみ。
 
-**Inline 例外 (委譲しない)**: 質問回答 / 既読ファイル確認 / dry-run / 1 行未満 typo / 1 コマンド実行 (`git status` 等)
+**Inline 例外 (委譲しない)**: 質問回答 / 既読ファイル確認 / dry-run / typo / 1 行修正 / config 値 1 箇所変更 / 1 コマンド実行 (`git status` 等)
 
 | 検知条件 | 自動起動 |
 |---|---|
