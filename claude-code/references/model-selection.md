@@ -19,9 +19,9 @@
 
 各 agent の frontmatter で指定済み。
 
-- **Opus 4.7**: reviewer-agent, root-cause-analyzer（深い分析）
-- **Sonnet 4.6**: po-agent（戦略判断）, manager-agent（タスク分割・Developer並列配分判断）
-- **Haiku 4.5**: developer-agent, explore-agent, verify-app（低コスト処理、実時間はタスク範囲依存）
+**方針**: parent (chat) を Opus 4.7 で指揮、subagent は Sonnet 4.6 統一（2026-05-22〜）。Haiku/Opus の使い分けは廃止、コスト・品質バランス重視。
+
+- **Sonnet 4.6 (全 subagent)**: po-agent, manager-agent, developer-agent, explore-agent, reviewer-agent, verify-app, root-cause-analyzer
 
 ## effortレベル
 

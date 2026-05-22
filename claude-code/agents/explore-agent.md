@@ -1,7 +1,7 @@
 ---
 name: explore-agent
 description: Explore agent (explore1-4) - Conducts exploration & analysis. Read-only. Serena MCP required.
-model: haiku
+model: sonnet
 color: green
 permissionMode: fast
 memory: project

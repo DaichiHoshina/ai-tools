@@ -27,9 +27,27 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **Avoid `general-purpose` agent** (measured highest cost source, max 501s). Metrics: `references/performance-insights.md`
 
+## Auto-Delegation (parent=Opus 指揮、subagent=Sonnet 実行)
+
+**ユーザが command 打たなくても parent が task scope 検知して自動 delegate**。判定は task 受領直後・実装着手前に実施。
+
+| 検知条件 | 自動起動 |
+|---|---|
+| 編集 1-2 file かつ 30 行未満予想 | parent inline (delegate しない) |
+| **編集 3+ file or 30+ 行変更予想 / 新機能 / refactor** | `developer-agent` 自動 (`Task` tool) |
+| broad search (3+ query / 3+ domain) | `explore-agent` parallel 自動 |
+| review 依頼 / "レビュー" / PR 確認 | `reviewer-agent` 自動 (or `/review`) |
+| bug 原因不明 / "なぜ動かない" / 再発バグ | `root-cause-analyzer` 自動 |
+| 設計判断 / 大規模計画 / 複数 phase | `po-agent` 自動 (or `/plan`) |
+| 多段タスク (調査→設計→実装→検証) | `/flow` 階層展開 (PO→Manager→Dev→Reviewer) |
+| 20+ file 一括処理 | `claude -p` fan-out (`references/fanout-recipes.md`) |
+
+**Inline 維持の例外**: trivial fix (typo / 1 行修正 / config 値変更) / 質問回答 / 既読ファイル確認 / dry-run 系。agent startup コスト (数十秒〜分) > 期待ベネフィットなら inline。
+
+**判定迷ったら**: 「inline で 3 分以内に終わるか」を基準。超えそうなら delegate。
+
 ## Session Efficiency
 
-- Simple fix (1-2 files) → `/dev --quick` or direct. Complex (3+) → `/flow` Agent hierarchy. Mass (20+) → `claude -p` fan-out (`references/fanout-recipes.md`)
 - **Design decisions**: light → `Shift+Tab` Plan Mode / large → `/plan` (PO agent). **Long brainstorm → haiku separate session (`claude --model haiku`), handoff to Opus for impl**
 - **Long tasks**: `/rename {type}-{scope}`, `claude --resume` (`references/session-management.md`)
 - **Success-criteria principle**: "what defines success" over procedural steps
