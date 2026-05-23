@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# pre-push hook - hook パフォーマンス回帰を push 前に検出
+#
+# git pre-push spec:
+#   $1 = remote name
+#   $2 = remote URL
+#   stdin = "local_ref local_sha remote_ref remote_sha" (1行/push先ブランチ)
+#
+# 処理フロー:
+#   1. push される commit 範囲内で hooks/ / lib/ / scripts/hook-bench-ci.sh が
+#      変更されているか確認
+#   2. 変更あれば hook-bench-ci.sh --check を実行
+#   3. regression (exit 1) なら push 中断
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+BENCH_CI="${REPO_ROOT}/scripts/hook-bench-ci.sh"
+
+# hook 関連ファイルのパスパターン (git diff --name-only で使用)
+HOOK_PATHS=(
+    "claude-code/hooks/"
+    "claude-code/lib/"
+    "claude-code/scripts/hook-bench-ci.sh"
+)
+
+# push される範囲の commit を解析し hook 関連変更があるか確認
+has_hook_changes() {
+    local local_sha="$1"
+    local remote_sha="$2"
+
+    # 新規ブランチの場合 remote_sha が 0000... になる
+    local zero="0000000000000000000000000000000000000000"
+    local range
+    if [[ "${remote_sha}" == "${zero}" ]]; then
+        # 新規ブランチ: HEAD から全コミットをチェック
+        range="${local_sha}"
+        local path
+        for path in "${HOOK_PATHS[@]}"; do
+            if git -C "${REPO_ROOT}" diff --name-only HEAD~1 HEAD -- "${path}" 2>/dev/null | grep -q .; then
+                return 0
+            fi
+        done
+    else
+        range="${remote_sha}..${local_sha}"
+        local path
+        for path in "${HOOK_PATHS[@]}"; do
+            if git -C "${REPO_ROOT}" diff --name-only "${range}" -- "${path}" 2>/dev/null | grep -q .; then
+                return 0
+            fi
+        done
+    fi
+    return 1
+}
+
+main() {
+    # bench スクリプトが存在しなければ skip (初回 setup 前など)
+    if [[ ! -x "${BENCH_CI}" ]]; then
+        echo "[pre-push] hook-bench-ci.sh not found, skipping bench check." >&2
+        exit 0
+    fi
+
+    local should_bench=0
+    local local_ref local_sha remote_ref remote_sha
+
+    # stdin から push 情報を読み込む
+    while IFS=' ' read -r local_ref local_sha remote_ref remote_sha; do
+        # 削除 push (local_sha = 0000...) は skip
+        local zero="0000000000000000000000000000000000000000"
+        [[ "${local_sha}" == "${zero}" ]] && continue
+
+        if has_hook_changes "${local_sha}" "${remote_sha}"; then
+            should_bench=1
+            break
+        fi
+    done
+
+    if [[ ${should_bench} -eq 0 ]]; then
+        echo "[pre-push] No hook-related changes detected, skipping bench." >&2
+        exit 0
+    fi
+
+    echo "[pre-push] Hook-related changes detected. Running performance check..." >&2
+    echo "" >&2
+
+    local exit_code=0
+    "${BENCH_CI}" --check || exit_code=$?
+
+    echo "" >&2
+
+    if [[ ${exit_code} -eq 1 ]]; then
+        echo "[pre-push] PUSH BLOCKED: performance regression detected." >&2
+        echo "  Fix the regression or run: ./claude-code/scripts/hook-bench-ci.sh --update-baseline" >&2
+        exit 1
+    elif [[ ${exit_code} -eq 2 ]]; then
+        echo "[pre-push] WARNING: bench check failed (missing baseline or error). Allowing push." >&2
+        exit 0
+    fi
+
+    # exit_code = 0 (pass or improvement)
+    exit 0
+}
+
+main "$@"

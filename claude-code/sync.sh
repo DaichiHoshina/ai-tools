@@ -380,6 +380,9 @@ sync_to_local() {
     # gh skill 管理スキル除外のため skills ディレクトリは個別判定する。
     verify_to_local_sync
 
+    # pre-push hook のシンボリックリンクを配置
+    setup_pre_push_hook
+
     print_success "ローカルへの同期が完了しました"
 }
 
@@ -576,6 +579,38 @@ check_version() {
         fi
         echo ""
     fi
+}
+
+# =============================================================================
+# Pre-push Hook Setup
+# .git/hooks/pre-push を claude-code/scripts/git-hooks/pre-push へのシンボリックリンクで配置。
+# 既存ファイル（非シンボリックリンク）は .bak にバックアップ。
+# =============================================================================
+
+setup_pre_push_hook() {
+    local repo_root
+    repo_root="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null)" || {
+        print_warning "git リポジトリが見つかりません。pre-push hook のセットアップをスキップします"
+        return 0
+    }
+
+    local pre_push_target="${repo_root}/.git/hooks/pre-push"
+    local pre_push_source="${repo_root}/claude-code/scripts/git-hooks/pre-push"
+
+    if [[ ! -f "${pre_push_source}" ]]; then
+        print_warning "pre-push hook source が見つかりません: ${pre_push_source}"
+        return 0
+    fi
+
+    # 既存ファイルがシンボリックリンクでない場合はバックアップ
+    if [[ -e "${pre_push_target}" && ! -L "${pre_push_target}" ]]; then
+        mv "${pre_push_target}" "${pre_push_target}.bak"
+        print_info "既存 pre-push hook をバックアップ: ${pre_push_target}.bak"
+    fi
+
+    # シンボリックリンク配置（既存リンクは上書き）
+    ln -sf "${pre_push_source}" "${pre_push_target}"
+    print_success "pre-push hook を配置しました: ${pre_push_target} -> ${pre_push_source}"
 }
 
 # =============================================================================

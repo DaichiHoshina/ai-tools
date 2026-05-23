@@ -61,3 +61,6 @@ temp/
 # バックアップファイル
 *.backup
 *.bak
+
+# Claude Code agent isolation worktree dir (一時)
+.claude/worktrees/
