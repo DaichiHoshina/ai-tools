@@ -42,18 +42,16 @@ has_hook_changes() {
 
     # 新規ブランチの場合 remote_sha が 0000... になる
     local zero="0000000000000000000000000000000000000000"
-    local range
     if [[ "${remote_sha}" == "${zero}" ]]; then
-        # 新規ブランチ: HEAD から全コミットをチェック
-        range="${local_sha}"
+        # 新規ブランチ: branch 全 commit の変更ファイルを列挙
         local path
         for path in "${HOOK_PATHS[@]}"; do
-            if git -C "${REPO_ROOT}" diff --name-only HEAD~1 HEAD -- "${path}" 2>/dev/null | grep -q .; then
+            if git -C "${REPO_ROOT}" log --format= --name-only "${local_sha}" -- "${path}" 2>/dev/null | grep -q .; then
                 return 0
             fi
         done
     else
-        range="${remote_sha}..${local_sha}"
+        local range="${remote_sha}..${local_sha}"
         local path
         for path in "${HOOK_PATHS[@]}"; do
             if git -C "${REPO_ROOT}" diff --name-only "${range}" -- "${path}" 2>/dev/null | grep -q .; then

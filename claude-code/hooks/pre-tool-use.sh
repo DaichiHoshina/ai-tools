@@ -270,17 +270,16 @@ detect_rename_propagation() {
   # 単語の一部のみ置換は除外（false positive）
   if [[ "$old_str" =~ [^a-zA-Z0-9_]?([a-zA-Z_][a-zA-Z0-9_]*)[^a-zA-Z0-9_]? ]] && [[ "$new_str" =~ [^a-zA-Z0-9_]?([a-zA-Z_][a-zA-Z0-9_]*)[^a-zA-Z0-9_]? ]]; then
     # 置換個数を数える（1 個のみ rename と判定）
-    local old_count
-    local new_count
-    old_count=$(echo "$old_str" | grep -o '[a-zA-Z_][a-zA-Z0-9_]*' | wc -l)
-    new_count=$(echo "$new_str" | grep -o '[a-zA-Z_][a-zA-Z0-9_]*' | wc -l)
+    local _old_idents _new_idents
+    mapfile -t _old_idents < <(grep -o '[a-zA-Z_][a-zA-Z0-9_]*' <<< "$old_str")
+    mapfile -t _new_idents < <(grep -o '[a-zA-Z_][a-zA-Z0-9_]*' <<< "$new_str")
+    local old_count=${#_old_idents[@]}
+    local new_count=${#_new_idents[@]}
 
     # identifier 1 個のみの置換と判定
     if [ "$old_count" -eq 1 ] && [ "$new_count" -eq 1 ]; then
-      local old_ident
-      local new_ident
-      old_ident=$(echo "$old_str" | grep -o '[a-zA-Z_][a-zA-Z0-9_]*')
-      new_ident=$(echo "$new_str" | grep -o '[a-zA-Z_][a-zA-Z0-9_]*')
+      local old_ident="${_old_idents[0]}"
+      local new_ident="${_new_idents[0]}"
 
       if [ "$old_ident" != "$new_ident" ]; then
         # repo root を取得: file_path のディレクトリから git root を探す

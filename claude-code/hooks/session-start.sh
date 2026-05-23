@@ -6,7 +6,12 @@
 set -euo pipefail
 
 # init_duration 計測: microsec 精度で hook 処理開始時刻を記録 (bash 5.0+ EPOCHREALTIME)
-_SS_START_US="${EPOCHREALTIME/./}"
+# bash 5+: EPOCHREALTIME 利用 / bash 3-4: fallback (timing 計測無効化)
+if (( BASH_VERSINFO[0] >= 5 )); then
+    _SS_START_US="${EPOCHREALTIME/./}"
+else
+    _SS_START_US=0
+fi
 
 exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
@@ -131,7 +136,11 @@ ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true
 # --- Analytics: セッション開始記録 ---
 # init_duration_ms は analytics_start_session 呼び出し直前で確定する
 # （その後の処理 = dir-color / 出力組み立て は analytics 対象外）
-_SS_DURATION_MS=$(( (${EPOCHREALTIME/./} - _SS_START_US) / 1000 ))
+if (( BASH_VERSINFO[0] >= 5 && _SS_START_US > 0 )); then
+    _SS_DURATION_MS=$(( (${EPOCHREALTIME/./} - _SS_START_US) / 1000 ))
+else
+    _SS_DURATION_MS=0
+fi
 
 # session-init-timing.log に append（session-end.sh がここから直近 duration を参照）
 _SS_TIMING_LOG="${HOME}/.claude/logs/session-init-timing.log"
