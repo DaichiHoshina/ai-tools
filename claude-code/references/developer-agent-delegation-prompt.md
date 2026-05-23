@@ -82,3 +82,19 @@ Skip: command output / full diffs / code >10 lines / AI footer.
 Execute parent's instruction fully. No scope creep, no reverse questions — report blockers to manager.
 Parent observes via completion report + `git diff` + push log.
 
+## 7. Markdown heading rename guard (該当時のみ)
+
+Markdown heading の rename / EN 化 / 表記変更を含む task では `~/.claude/rules/markdown-anchor-sync.md` に従い、commit 前に必ず以下を実行する。
+
+```bash
+git diff HEAD -- '*.md' | grep -E '^-#' | sed 's/^-//' | while read h; do
+  slug=$(echo "$h" | sed -E 's/^#+ //' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9 -]//g; s/ +/-/g')
+  grep -rn -F "\"$h\"" claude-code/tests/ 2>/dev/null
+  grep -rn -F "#$slug" claude-code/ 2>/dev/null
+done
+```
+
+hit があれば同一 commit で同期、0 hit なら commit message に「anchor confirmed clean」を 1 行追加する。
+
+過去事例: 2026-05-23 `c67ade1` で 3 heading rename → bats 4 test fail (review iter 2 で発覚)。
+

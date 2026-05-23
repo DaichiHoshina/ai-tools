@@ -25,6 +25,22 @@ grep -rn '#<slug>\b' claude-code/
 
 ヒットがある場合は、heading 変更と同一 commit で bats・cross-ref を更新する。
 
+### 一括 scan one-liner
+
+heading を変更する commit を作る前に、`git diff` から旧 heading を抽出して bats / cross-ref を一気に scan する。
+
+```bash
+git diff HEAD -- '*.md' | grep -E '^-#' | sed 's/^-//' | while read h; do
+  slug=$(echo "$h" | sed -E 's/^#+ //' | tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9 -]//g; s/ +/-/g')
+  echo "=== $h (slug: $slug) ==="
+  grep -rn -F "\"$h\"" claude-code/tests/ 2>/dev/null
+  grep -rn -F "'$h'" claude-code/tests/ 2>/dev/null
+  grep -rn -F "#$slug" claude-code/ 2>/dev/null
+done
+```
+
+hit があれば同一 commit で同期する。0 hit でも commit message に「heading rename / anchor confirmed clean」を 1 行追記し、次回 reviewer が検出済と判別できるようにする。
+
 ## `/review` skill 必須オプション
 
 markdown heading を変更する PR のレビューは必ず以下で実行する。
