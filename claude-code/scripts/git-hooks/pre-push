@@ -13,7 +13,15 @@
 #   3. regression (exit 1) なら push 中断
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# symlink 経由 (.git/hooks/pre-push → claude-code/scripts/git-hooks/pre-push) で
+# 実行された場合、BASH_SOURCE は symlink path のまま。target 側の絶対 path に解決する。
+_SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "${_SOURCE}" ]]; do
+    _DIR="$(cd -P "$(dirname "${_SOURCE}")" && pwd)"
+    _SOURCE="$(readlink "${_SOURCE}")"
+    [[ "${_SOURCE}" != /* ]] && _SOURCE="${_DIR}/${_SOURCE}"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "${_SOURCE}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 BENCH_CI="${REPO_ROOT}/scripts/hook-bench-ci.sh"
 
