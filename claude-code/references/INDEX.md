@@ -75,3 +75,4 @@
 | Private 設定の保管規約 | `private-config-convention.md` |
 | Plugin marketplace caveats (連鎖 uninstall) | `plugin-marketplace-caveats.md` |
 | CodeRabbit プラグイン cheat sheet | `coderabbit-plugin.md` |
+| Claude Code 公式 best practices (JA) | https://code.claude.com/docs/ja/best-practices |
