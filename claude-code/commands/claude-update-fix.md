@@ -110,3 +110,7 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 - stable channel 運用時、`latest` のみで入った feature は `Track only` (Opportunity) でも記録しない (stable 到達後に次回検出される) — Phase 2 fetch 範囲を TARGET で限定する目的
 - if CHANGELOG fetch fails: minimal analysis w/ `claude --help` + npm view
 - auto-apply must remain git-diff-reviewable (do not run sync.sh until after confirm-apply)
+- **VERSION ファイル更新は stable tag に揃える** — Phase 5 Step 1 で書き込む値は `dist-tags.stable`（`latest` は書き込まない）
+- **CHANGELOG / 機能反映の対象範囲は `(現 VERSION + 1) ~ stable tag` まで** — stable 未到達 version の feature は採用せず、Opportunity 記録もしない（stable 到達後に次回 `/claude-update-fix` 実行時に自然に検出される）
+- **latest channel への切替はユーザ明示確認後のみ** — デフォルトは stable。ユーザから "latest channel に切り替えて" 等の明示がない限り `latest` を TARGET に採用しない
+- 根拠: 2026-05-23 時点 `dist-tags.stable = 2.1.142`、`dist-tags.latest = 2.1.150`。stable 環境で latest 限定 feature（rename / 新 hook / 新 setting key 等）を取り込むと CLI 未実装ゆえ破壊的変更が入る

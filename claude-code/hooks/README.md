@@ -123,6 +123,28 @@ echo '{}' | ~/.claude/hooks/stop.sh
 
 `SessionStart`, `SessionEnd`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `StopFailure`, `SubagentStart`, `SubagentStop`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, `PermissionRequest`, `TaskCompleted`, `TeammateIdle`
 
+## pre-tool-use commit message 除外仕様 (v2.2.3 以降)
+
+`pre-tool-use.sh` 内の `classify_bash_command` は、危険語マッチを実行する前に以下のパターンをコマンド文字列から除去する。
+
+| 除外対象 | 例 |
+|---------|-----|
+| `git commit -m "..."` の double-quoted 引数 | `-m "rm -rf /"` |
+| `git commit -m '...'` の single-quoted 引数 | `-m 'sudo rm'` |
+| `git commit -F <file>` のファイルパス引数 | `-F /tmp/msg.txt` |
+| HEREDOC 本文（v2.2.3, commit `4cd84c9`） | `<<EOF ... EOF` / `<<'EOF'` / `<<"EOF"` / `<<-EOF` 全対応 |
+
+**運用ノート**: コミットメッセージに危険コマンドリテラル（`rm -rf /` / `git push --force` / `sudo rm` / fork bomb / `> /dev/X` 等）をそのまま書いてよい。HEREDOC 形式でも安全。文字を分離したり日本語に言い換えたりする回避策は不要。
+
+ただし HEREDOC 終端マーカー（`EOF`）の後に追記された危険語は除外対象外（仕様通り。本物の危険コマンドを検出するため）。
+
+### 変更履歴
+
+| 日付 | 内容 |
+|------|------|
+| 2026-04-27 | コミットメッセージ内 `rm -rf /` が誤発火 → `-m "..."` sed 除外を導入 |
+| 2026-05-01 | HEREDOC 形式が貫通 → HEREDOC 本文除去（POSIX awk）を追加（v2.2.3） |
+
 ## 参考
 
 - [Claude Code Hooks Guide](https://docs.anthropic.com/en/docs/claude-code/hooks)

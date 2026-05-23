@@ -29,6 +29,12 @@ Per-task pattern (≥1):
 Plain JP (〜する / 〜した), explicit subjects, PREP 3-point (conclusion/reason/next), HEREDOC pass.
 No: `Co-Authored-By: Claude`, `Generated with`, AI markers.
 
+**AI footer 禁止の詳細** (`~/.claude/rules/ai-output.md` 参照):
+- `Co-Authored-By: Claude` / `Co-Authored-By: Claude Opus` / `Co-Authored-By: Claude Sonnet` 等、AI を co-author に追加するフッター
+- `Generated with Claude Code` / `🤖 Generated with` 等の生成元マーカー
+- Sonnet の既定 prompt には AI footer を付加する挙動があるため、委譲 prompt に明示禁止を書かないと混入する（発生事例: 2026-05-23 commit `e5f32ed`）
+- 適用範囲: `/git-push` / `/review-fix-push` / `/flow` / 個別 `Task(developer-agent)` 委譲 全てで適用する
+
 Example:
 ```
 git commit -m "$(cat <<'EOF'

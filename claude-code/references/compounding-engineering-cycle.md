@@ -74,6 +74,25 @@ Hook が最優先な理由: ユーザー / Claude の認知負荷ゼロで commi
 4. 実装 → 単体テスト追加 → dogfood で実測 → commit
 5. 結果を auto-memory に成功事例として保存（次回同類問題への参照）
 
+## Case Studies (実例)
+
+writing 評価語指摘の hook 化 (2026-04-29) の詳細は上記 §実例（2026-04-29） のテーブルを参照する。以下は cycle 継続事例 2 件。
+
+### awk regex バグの即修正 (2026-04-30)
+
+PR #12 で context-aware 化を実装した際、awk 正規表現の括弧構造が壊れており `例:` / `詳細:` / `参考:` 単発で false negative 過剰除外が発生していた。reviewer-agent が実証ケース 3 件で検知し、1 行 regex 修正 + bats negative case 3 件追加で 5 分以内に根治した。Critical 検知から修正までのリードタイム短縮が compounding 効果として働いた。
+
+### pass-by-coincidence テストの構造修正 (2026-04-30)
+
+PR #11 の bats 6 件中 3 件が「実装関数を呼ばず手作業で mkdir/cp/ln を再現してから assert」という構造で、実装を全削除しても緑になる状態だった。17 テストを書き直して根治した。bats 設計時の標準パターンとして以下を確立した:
+
+- 実関数を `run bash -c "source <lib> && <function> <args>"` で呼ぶ
+- PATH 退避は `setup` で `ORIG_PATH="$PATH"` 保存、`teardown` で `export PATH="$ORIG_PATH"` 復元（`unset PATH` 禁止）
+- `|| true` で status を握りつぶさない
+- 二択 assert（`status -eq 0 || status -eq 1`）禁止
+
+投資（1 hook 実装 + 1 regex 修正 + 17 テスト書き直し）/ 回収（commit 前検知 + 構造的テスト品質固定）で複利関係明確。
+
 ## 関連
 
 - `claude-code/CLAUDE.md` §Compounding Engineering — 中核ルール

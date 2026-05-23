@@ -118,3 +118,32 @@ done
 ```bash
 awk '/^\[2026-04-22T01:3[4-8]/' ~/.claude/logs/subagent-events.log
 ```
+
+## Sonnet 委譲 overhead 実測（2026-05-23 RCA）
+
+`~/.claude/logs/subagent-events.log` 実測に基づく委譲コスト分析。
+
+- developer-agent 平均 duration: **60s**（sonnet n=4）
+- 参考値 17s は haiku n=2 外れ値であり実態と乖離していた。n<10 の数値は疑ってかかること
+- Serena `activate_project` + prompt load の startup overhead が >20s を占めており、LLM 処理時間以外のコストが大きい
+- Opus inline で 30s 未満で完了できるタスクを委譲すると 60〜90s に倍化する
+- 「Sonnet 化で遅くなった」仮説は否定された（haiku 時代 avg 290s → sonnet avg 60s、Sonnet 化は高速化する方向）
+- 判定基準: CLAUDE.md "Inline exceptions" の「期待 LLM 実行 <20s（1 symbol / 1 section 修正）」以下は inline で実行し、超えるなら委譲すること
+
+## session-init-timing log 計測基盤（fbce383 以降）
+
+session 起動時間を継続計測するための基盤。plugin 増減 / Serena `~/.claude/projects/` 増減の効果を 7〜14 日蓄積して baseline 比較するために使用する。
+
+**ログ・DB**:
+- log: `~/.claude/logs/session-init-timing.log`（形式: `[timestamp] session_id=X duration_ms=Y plugin_count=Z`、1000 行循環）
+- DB: `~/.claude/logs/analytics.db` の `sessions` table、`init_duration_ms INTEGER DEFAULT 0` カラム
+
+**計測 hook**:
+- `claude-code/hooks/session-start.sh` L9 で `_SS_START_EPOCH=$(date +%s%N)` を記録、L126 で経過 ms 計算後 log に append
+- `claude-code/hooks/session-end.sh` が timing log から duration を grep して `analytics_insert_session` 第 11 引数に渡す
+
+**集計コマンド例**:
+
+```bash
+sqlite3 ~/.claude/logs/analytics.db 'SELECT AVG(init_duration_ms) FROM sessions GROUP BY DATE(start_ts)'
+```
