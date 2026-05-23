@@ -28,6 +28,7 @@
 | コマンド × リソース対応 | `command-resource-map.md` |
 | skillOverrides 設計指針 | `skill-overrides-guide.md` |
 | guideline 自動 trigger 一覧 | `guideline-triggers.md` |
+| Skill tool 呼び出し pattern (forked exec) | `skill-tool-invocation.md` |
 
 ## ワークフロー
 
@@ -72,3 +73,5 @@
 | メモリ使い分け | `memory-usage.md` |
 | UIデフォルト設定 | `ui-defaults.md` |
 | Private 設定の保管規約 | `private-config-convention.md` |
+| Plugin marketplace caveats (連鎖 uninstall) | `plugin-marketplace-caveats.md` |
+| CodeRabbit プラグイン cheat sheet | `coderabbit-plugin.md` |
