@@ -76,9 +76,7 @@ Hook が最優先な理由: ユーザー / Claude の認知負荷ゼロで commi
 
 ## Case Studies (実例)
 
-### writing 評価語指摘の hook 化 (2026-04-29)
-
-`claude-code/CLAUDE.md` の writing 系指摘（「最優先」評価語の根拠不在）が `427733a` 系列で 3 commit 連続発生した。構造問題確定と判断し、commit `04503f5` で post-tool-use hook に writing self-check を組み込んだ。以後、同位置指摘 0 件を達成した。投資 4 commit シリーズ（hook 実装 + テスト + 過検出抑制）で N 件の修正手間を消すことができた。
+writing 評価語指摘の hook 化 (2026-04-29) の詳細は上記 §実例（2026-04-29） のテーブルを参照する。以下は cycle 継続事例 2 件。
 
 ### awk regex バグの即修正 (2026-04-30)
 
