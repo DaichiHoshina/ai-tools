@@ -237,15 +237,26 @@ Triggered iff received context contains `impl_notes.dir`. Only `/flow` (Manager 
 
 Include the written path in completion report's `IMPL_NOTES` field for Manager to merge.
 
+## Delegation from parent (Opus)
+
+Triggered when parent's inline scope exceeds `CLAUDE.md` L38-40 exceptions. Parent delegates via standard prompt template (`references/developer-agent-delegation-prompt.md`), which supplies:
+
+1. **Target files + edits** (absolute paths, no inference)
+2. **Verification checklist** (lint / typecheck / test / smoke test / file existence)
+3. **Commit message rule** (no AI footer, plain JP, PREP structure, HEREDOC pass)
+4. **Push / sync instruction** (direct to main or PR per scope)
+5. **Completion report format** (≤300 words, no AI footer, no pasted code >10 lines)
+6. **Scope lock** (execute delegation only, no reverse delegation to parent)
+
+Developer-agent executes scope completely. If unclear, report to Manager (not parent). No "is it OK if I also...?" reverse escalation.
+
+## Commit message rule (AI footer prohibited)
+
+**Absolute prohibition**: No `Co-Authored-By: Claude`, `Generated with Claude Code`, or any LLM marker.
+**Format**: Plain JP (genshijin OFF) + PREP structure + HEREDOC delivery (see `references/developer-agent-delegation-prompt.md`).
+Violation detected in prior session (`e5f32ed`) — ensure compliance.
+
 ---
-
-## Report length budget
-
-- **Target**: ≤300 words for the completion report body (excluding IMPL_NOTES path)
-- **Changed files**: list `path: 1-line summary` per file, no pasted code
-- **Verification**: checkboxes only, no command output unless failure
-- Hard cap: never paste a code region >10 lines in the report; cite `path:line` range
-- IMPL_NOTES file itself is the place for design rationale, not the chat report
 
 ## Completion report format
 

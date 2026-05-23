@@ -35,7 +35,15 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **Default = delegate to `developer-agent` (Sonnet)**. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Inline execution only for exceptions below.
 
-**Inline exceptions (no delegation)**: Q&A / already-read file check / dry-run / typo / **1 symbol body replace (single unit)** / **1 config value change in same file** / **expected LLM exec <20s (1 symbol / 1 section edit)** / 1 command (`git status` etc.)
+**Edit/Write declaration rule**: Before calling Edit or Write tool, declare in chat **one line**:
+- `Inline exception (reason: <1 line typo / config value 1 item / read-only cmd>) → parent inline execution` 
+- OR `Inline exception exceeded (reason: 2+ files / 10+ lines / new file / revert / etc) → delegate to developer-agent`
+
+Skipping declaration = rule violation, recorded to feedback memory.
+
+**Inline exceptions (no delegation)**: Q&A / already-read file check / dry-run / **1-line fix (typo / import 1 line / value 1 item update)** / **1 config value change in same file** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
+
+**Inline prohibited (must delegate)**: 2+ files / 10+ lines / 2+ symbols / new file / revert-series / 5+ line markdown section add / refactor / commit-bearing ops
 
 Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any of 2+ files, 10+ lines, or 2+ symbols
 
@@ -129,6 +137,6 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 
 ## References
 
-High freq: `references/model-selection.md` / `natural-language-triggers.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md`
+High freq: `references/model-selection.md` / `natural-language-triggers.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md` / `references/developer-agent-delegation-prompt.md` (delegation template)
 Index: `references/INDEX.md`, Writing entry: `guidelines/writing/README.md`
 Tools: `scripts/health-check.sh` (monthly) / `usage-stats.sh` / `hook-bench.sh`
