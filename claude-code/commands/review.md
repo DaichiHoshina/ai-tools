@@ -7,37 +7,45 @@ description: Comprehensive code review (comprehensive-review 11 angles + officia
 
 > comprehensive-review skill integrates 11 angles (architecture/quality/readability/security/docs/test-coverage/root-cause/logging/writing/silent-failure/type-design). `--deep`/`--multi` parallelizes external reviewers.
 
-## Common Review Constraints
+## Constraints & Lenses
 
-- Only evidence-based findings on real diff/code/docs. Flag hypothesis with "hypothesis:"
-- exclude style preference, opinions, general wisdom, out-of-scope design debate
-- limit findings to actionable items, modifiable items
-- don't invent a problem statement and then review against it. A finding needs an observed violation/regression/risk in the requested scope.
-- speculative "this could be an issue" belongs in questions/notes, not Critical/Warning.
-- no unsolicited issue/ticket/task/TODO auto-generation
-- don't escalate "for confirmation" or "best to check" items to action tasks
-- TODO only if blocker for current work
+Constraints (Stage A/B でも適用):
+- Hypothesis 系は "hypothesis:" prefix で notes 行きへ
+- No unsolicited issue/ticket/task/TODO auto-gen、TODO は current blocker のみ
+- "for confirmation" / "best to check" 系は action task に格上げしない
 
-## Default Evidence-Backed Lenses
+Lenses (Stage A/B 通過の前提):
+- Language/FW best practices (idioms / lifecycle / type-safety / local pattern)
+- Code design (DDD / Clean Architecture / module boundary / coupling)
+- Permanent/root fix (workaround / 互換残 / 再発パッチでないこと)
+- Security (authn/authz / injection / secret / tenant isolation / unsafe logging)
 
-Apply these lenses to code reviews, but only promote issues that satisfy the common constraints above:
+## Self-Review (必須、2 段階)
 
-- **Language/FW best practices**: language idioms, framework contracts, lifecycle rules, type-safety conventions, and local project patterns.
-- **Code design**: DDD boundaries, Clean Architecture dependency direction, modular monolith module boundaries, ownership, and coupling.
-- **Permanent/root fix**: whether the change fixes the root cause instead of adding a workaround, compatibility remnant, or recurrence-prone patch.
-- **Security**: authn/authz, injection, secret handling, tenant/data isolation, unsafe logging, and dependency/config exposure.
+`/review` 系コマンドの出力前に **必ず** 以下 2 段階のセルフレビューを実行する。skip 不可、`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial` 全モードで一律実行 (adversarial は design challenge 性質ゆえ Stage A の Evidence/Scope 判定基準は緩めつつ、Stage B の重複統合・トーン整合は通常通り適用)。
 
-## Finding Self-Review Gate
+### Stage A: Finding Self-Review Gate (per-finding)
 
-Before outputting any Critical/Warning, self-review each candidate finding:
+候補となる Critical/Warning **1 件ごと** に以下 5 問を通す:
 
-1. **Evidence**: Is the claim anchored to observed diff/code/docs/tests/tool output?
-2. **Scope**: Is the claim inside the user request or changed behavior?
-3. **No invented framing**: Did the review create a new problem statement not present in evidence?
-4. **Actionability**: Can the author change code/docs/tests now to address it?
-5. **Severity**: Is the Critical/Warning level proportional to actual impact?
+1. **Evidence**: 観測した diff/code/docs/tests/tool 出力に anchor されているか?
+2. **Scope**: user 要求 / 変更挙動の範囲内か?
+3. **No invented framing**: evidence に無い問題設定を review が作っていないか?
+4. **Actionability**: 著者が今 code/docs/tests を変更して対処可能か?
+5. **Severity**: Critical/Warning の重大度は実影響に見合っているか?
 
-If any answer is "no", discard it or move it to a short question/note. Do not include self-review notes in the final output unless they affect the verdict.
+いずれか「no」→ 破棄するか短い question/note へ降格。self-review のメモ自体は最終出力に含めない (verdict に影響する場合のみ反映)。
+
+### Stage B: Result Self-Review Pass (全体)
+
+Stage A 通過後の finding 群を **集合として** もう一度見直す。以下 4 観点:
+
+1. **重複 / 類似統合**: 同一 root cause を複数 lens が別 finding として出してないか? 統合して 1 件に。
+2. **トーン整合**: Critical / Warning 比率が偏ってないか? Critical 多発時は本当に全部 Critical か再評価 (false alarm 警戒)。
+3. **Project convention 整合**: CLAUDE.md / guidelines / 既存コード規約に照らして妥当か? 規約外の好み指摘は破棄。
+4. **Zero-finding 判定**: 結果として finding 0 件は valid 出力。出すこと自体に意義はないので、padding (無理に何か出す) は禁止。
+
+Stage B の判断ログは出力に含めない (verdict が変わったときのみ反映)。両 stage を通過した finding のみが Output Format に進む。
 
 ## Step 0: Auto-infer Mode (no flags)
 
@@ -109,10 +117,6 @@ PR required. **Fetch PR locally first**, then 4-method parallel.
 Aggregation strategy (3+ = Critical confirmed, etc): [`references/review-modes-advanced.md`](../references/review-modes-advanced.md).
 
 Use: pre-merge PR, release-critical, security patch. Not daily.
-
-## Pre-Emit Step (required, all modes)
-
-Before producing the Output Format block below, run the **Finding Self-Review Gate** (L30-40) against every candidate Critical/Warning. Discard or downgrade any finding that fails Evidence/Scope/No-invented-framing/Actionability/Severity. Style-only or aesthetic-preference findings without a documented rule violation are discarded. Zero findings is a valid output — do not pad.
 
 ## Output Format
 

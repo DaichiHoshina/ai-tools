@@ -7,17 +7,30 @@ description: Claude Code update adaptation — detect diffs, auto-apply safe cha
 
 Proactively align repo w/ CLI updates. Auto-apply low-risk fixes, track unimplemented features.
 
-## Phase 1: Diff detection
+## Phase 1: Channel detection & diff
 
 ```bash
-claude --version                                      # current
-cat claude-code/VERSION                               # last confirmed
-cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null  # unimplemented features (from prior)
+claude --version                                                 # local CLI
+npm view @anthropic-ai/claude-code dist-tags --json              # { stable, latest, next }
+cat claude-code/VERSION                                          # last confirmed
+cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null
 ```
 
-no diff + no unresolved opportunities → "already up to date" & exit.
-no diff + opportunities exist → Phase 3-B (re-evaluate) only.
-diff exists → proceed to Phase 2 (Phase 3 also re-evaluates 3-B).
+**Channel 判定** (release channel に合わせて追従):
+
+| 条件 | CHANNEL | TARGET |
+|------|---------|--------|
+| `claude --version` == `dist-tags.stable` | `stable` | `stable` tag version |
+| `claude --version` == `dist-tags.latest` | `latest` | `latest` tag version |
+| どちらとも不一致 (中間 version / 手動固定) | `stable` (保守) | `stable` tag version |
+
+判定理由: stable channel 運用時に `latest` のみで入った rename / 新 hook を採用すると、stable CLI ではコマンド未存在で破壊的になる。channel に対応する target で fetch 範囲・bump 対象を揃える。
+
+**判定**:
+- `VERSION > TARGET` (next channel 利用 / 手動先行 bump / channel switch 後 downgrade) → no-op exit、`> [WARN] VERSION (X) > TARGET (Y)、channel target 未達。fetch 範囲負方向ゆえ skip。手動で VERSION を TARGET に揃えるか確認` を表示
+- `TARGET == VERSION` + opportunities 解決済 → "already up to date" & exit
+- `TARGET == VERSION` + opportunities exist → Phase 3-B のみ
+- `TARGET > VERSION` → Phase 2 へ (CHANGELOG fetch 範囲: `VERSION+1` ~ `TARGET`)
 
 ## Phase 2: CHANGELOG structured extraction
 
@@ -72,7 +85,7 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 
 ## Phase 5: Cleanup (after Phase 4 confirm-apply)
 
-1. Update `claude-code/VERSION` to current
+1. Update `claude-code/VERSION` to **TARGET** (Phase 1 で確定した channel 対応 version、`latest` ではなく channel target を書き込む)
 2. Run `./claude-code/sync.sh to-local --yes` (at this step only)
 3. Update opportunity file (reflect Phase 3-B diffs)
 4. If major changes (3+ files or non-obvious decisions), save to Serena memory as `claude-update-YYYYMMDD`
@@ -82,15 +95,18 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 `claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md`:
 
 ```markdown
-## <version> (YYYY-MM-DD detected)
-- [ ] **<feature name>**: <summary> — review at: <file/agent>
+## <version> (YYYY-MM-DD 検出, <channel>)
+- [ ] **<feature name>**: <summary> — 検討箇所: <file/agent>
 ```
 
+- `<channel>` = `stable` or `latest` (Phase 1 で確定したもの)。channel を書き残しておくと、後の channel switch 時に過去履歴のスコープが追える
 - when adopted: check & reference in commit msg
 - when stale: strike out as `~~<feature name>~~ (obsolete YYYY-MM-DD)`
 
 ## Notes
 
 - `claude doctor` is interactive; use `claude --version` instead
+- `npm view ... dist-tags --json` fails (network 等) → 安全 fallback: 現 `VERSION` を TARGET 扱いで no-op exit、warning 表示 (`> [WARN] dist-tags fetch fail、channel 判定不可。CLI 再接続後に再実行を`)。**`latest` 自動採用は禁止** (stable channel 環境で破壊的変更を引き込むリスク、本 Phase 1 安全側設計と矛盾)
+- stable channel 運用時、`latest` のみで入った feature は `Track only` (Opportunity) でも記録しない (stable 到達後に次回検出される) — Phase 2 fetch 範囲を TARGET で限定する目的
 - if CHANGELOG fetch fails: minimal analysis w/ `claude --help` + npm view
 - auto-apply must remain git-diff-reviewable (do not run sync.sh until after confirm-apply)

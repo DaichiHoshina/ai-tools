@@ -19,6 +19,15 @@ Skill("comprehensive-review")
 
 11 angles + confidence-80 filter. Categorize by Critical/Warning. On finish, show diff in browser (`--no-difit` suppresses).
 
+### Step 1.5: Self-Review Pass (必須)
+
+Step 1 の出力をそのまま fix にかけず、**必ず** `/review` の Self-Review 2 段階を通す。詳細: [`review.md`](review.md) "Self-Review (必須、2 段階)" section。
+
+- **Stage A (per-finding gate)**: `comprehensive-review` skill 内の Self-Filter Gate (Step 4.5 + Pre-emission sanity check) が Stage A 5 観点 (Evidence / Scope / No-invented-framing / Actionability / Severity) を **すべてカバー** している。Step 1.5 では skill 結果を信頼し再評価不要。skill 未通過項目が明らかに混入していた場合のみ手動再判定
+- **Stage B (result-wide pass)**: 重複統合 / トーン整合 / project convention 整合 / zero-finding 判定を **必ず** 適用。skill 側 Pre-emission にも一部重複系チェックはあるが、集合視点での重複統合・トーン整合・convention 整合は `/review-fix-push` 固有の付加価値層
+- 結果として Critical 0 + Warning 0 になり得る。その場合 Step 2 で push へ skip
+- Self-Review 判断ログ自体は user 提示に含めない (verdict 変更のみ反映)
+
 ### Step 2: Decide
 
 | State | Behavior |
@@ -42,6 +51,7 @@ Verify fix didn't create new issues **via re-review**.
 ```text
 loop iteration = 1..max_iterations:
     Skill("comprehensive-review") on (post-fix diff)
+    apply Self-Review 2-stage gate (必須、`/review` Self-Review section 参照)
     if 0 new Critical:
         if existing Warning ≤ initial count:
             break  # converged, go Step 5
@@ -50,6 +60,8 @@ loop iteration = 1..max_iterations:
     else:
         re-execute Step 3 (fix new Critical only)
 ```
+
+各 iteration の review 結果も Step 1.5 と同じ Self-Review (Stage A + Stage B) を **必ず** 通す。false-positive な「new Critical」で fix loop を空回しさせない。
 
 **Loop exit conditions**:
 
