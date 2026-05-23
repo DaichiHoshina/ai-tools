@@ -10,16 +10,16 @@
 # オプション環境変数:
 #   COMMON_LOAD_I18N=true  # i18n.sh を読み込む（デフォルト: false）
 #
-# 必要なbashバージョン: 4.2+
-#   理由: i18n.sh で declare -gA（グローバル連想配列）を使用
+# 必要なbashバージョン: 5.0+
+#   理由: EPOCHREALTIME / EPOCHSECONDS builtin (bash 5.0+) を session-start.sh で使用
 #
 # =============================================================================
 
 set -euo pipefail
 
 # --- バージョンチェック ---
-_COMMON_MIN_BASH_MAJOR=4
-_COMMON_MIN_BASH_MINOR=2
+_COMMON_MIN_BASH_MAJOR=5
+_COMMON_MIN_BASH_MINOR=0
 
 if [[ "${BASH_VERSINFO[0]}" -lt "$_COMMON_MIN_BASH_MAJOR" ]] || \
    [[ "${BASH_VERSINFO[0]}" -eq "$_COMMON_MIN_BASH_MAJOR" && \

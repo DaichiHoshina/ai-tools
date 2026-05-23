@@ -5,8 +5,8 @@
 
 set -euo pipefail
 
-# init_duration 計測: nanosec 精度で hook 処理開始時刻を記録
-_SS_START_EPOCH=$(date +%s%N)
+# init_duration 計測: microsec 精度で hook 処理開始時刻を記録 (bash 5.0+ EPOCHREALTIME)
+_SS_START_US="${EPOCHREALTIME/./}"
 
 exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
@@ -53,7 +53,7 @@ _SETTINGS_FILE="${HOME}/.claude/settings.json"
 # キャッシュが24時間以内なら再利用
 _NEED_DIAG=true
 if [[ -f "${_DIAG_CACHE}" ]]; then
-  _CACHE_AGE=$(( $(date +%s) - $(stat -f%m "${_DIAG_CACHE}" 2>/dev/null || echo 0) ))
+  _CACHE_AGE=$(( EPOCHSECONDS - $(stat -f%m "${_DIAG_CACHE}" 2>/dev/null || echo 0) ))
   if [[ ${_CACHE_AGE} -lt 86400 ]]; then
     _DIAG_MSG=$(cat "${_DIAG_CACHE}")
     _NEED_DIAG=false
@@ -111,7 +111,15 @@ fi
 # キャッシュとは独立して毎回評価する（cwd はセッション毎に変わるため）。
 _CWD_GUARD_MSG=""
 if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
-  _NESTED_REPOS=$(find "${_CWD}" -maxdepth 3 -type d -name ".git" 2>/dev/null | head -2 | wc -l | tr -d ' ')
+  _NESTED_REPOS=0
+  shopt -s nullglob
+  for _git_dir in "${_CWD}"/*/.git "${_CWD}"/*/*/.git "${_CWD}"/*/*/*/.git; do
+    if [[ -d "${_git_dir}" ]]; then
+      _NESTED_REPOS=$(( _NESTED_REPOS + 1 ))
+      [[ ${_NESTED_REPOS} -ge 2 ]] && break
+    fi
+  done
+  shopt -u nullglob
   if [[ "${_NESTED_REPOS}" -ge 2 ]]; then
     _CWD_GUARD_MSG="${ICON_WARNING} **cwd警告**: 複数リポジトリの親ディレクトリで起動中（${_CWD}）。git/rg/Glob が全体を舐めて重くなる。個別リポに cd してから起動推奨\n"
   fi
@@ -123,13 +131,14 @@ ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true
 # --- Analytics: セッション開始記録 ---
 # init_duration_ms は analytics_start_session 呼び出し直前で確定する
 # （その後の処理 = dir-color / 出力組み立て は analytics 対象外）
-_SS_DURATION_MS=$(( ($(date +%s%N) - _SS_START_EPOCH) / 1000000 ))
+_SS_DURATION_MS=$(( (${EPOCHREALTIME/./} - _SS_START_US) / 1000 ))
 
 # session-init-timing.log に append（session-end.sh がここから直近 duration を参照）
 _SS_TIMING_LOG="${HOME}/.claude/logs/session-init-timing.log"
 mkdir -p "$(dirname "${_SS_TIMING_LOG}")"
 _SS_PLUGIN_COUNT=$(jq '.enabledPlugins | length' "${HOME}/.claude/settings.json" 2>/dev/null || echo 0)
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] session_id=${_SS_SESSION_ID} duration_ms=${_SS_DURATION_MS} plugin_count=${_SS_PLUGIN_COUNT}" >> "${_SS_TIMING_LOG}" 2>/dev/null || true
+TZ=UTC printf -v _SS_TS '%(%Y-%m-%dT%H:%M:%SZ)T' -1
+echo "[${_SS_TS}] session_id=${_SS_SESSION_ID} duration_ms=${_SS_DURATION_MS} plugin_count=${_SS_PLUGIN_COUNT}" >> "${_SS_TIMING_LOG}" 2>/dev/null || true
 # 直近 1000 行に切り詰め (session-end.sh の grep スキャン量を上限化)
 if [[ -f "${_SS_TIMING_LOG}" ]] && [[ $(wc -l < "${_SS_TIMING_LOG}" 2>/dev/null || echo 0) -gt 1000 ]]; then
     tail -n 1000 "${_SS_TIMING_LOG}" > "${_SS_TIMING_LOG}.tmp" 2>/dev/null \
