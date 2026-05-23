@@ -68,11 +68,13 @@ Default lenses: `quality` (language/FW/project-local conventions) / `architectur
 
 | Condition | Add Perspective |
 |------|---------|
+| All files extension ∈ {`.md`, `.json`, `.yaml`, `.yml`, `.txt`, `.toml`, VERSION-like} (docs-only) | Limit to `docs` / `writing` / `readability` / `root-cause`; skip `security` / `silent-failure` / `type-design` / `db-concurrency` / `test-coverage` / `logging` (note in output: "Perspectives Checked: 4/11 (docs-only mode; security/silent-failure/type-design/db-concurrency/test-coverage/logging skipped)") |
 | Test file (`*_test.*`, `*.spec.*`) | `docs` |
 | UI file (`components/*`, `*.tsx`) | `uiux-review` (separate skill) |
 | Logic change (non-test) | `test-coverage` + `silent-failure` |
 | Type def change (`*.d.ts`, `types/*`, struct/interface added) | `type-design` |
 | SQL/ORM change (`*.sql`, `*Repository*`, `tx.Exec`, `SELECT.*FOR UPDATE`, `ON DUPLICATE KEY`) | `db-concurrency` |
+| Mixed code + docs / judgment uncertain | Full 11 perspectives (defensive default) |
 
 ### Step 2: Run Static Analysis Tools
 

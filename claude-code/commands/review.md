@@ -26,15 +26,7 @@ Lenses (Stage A/B 通過の前提):
 
 ### Stage A: Finding Self-Review Gate (per-finding)
 
-候補となる Critical/Warning **1 件ごと** に以下 5 問を通す:
-
-1. **Evidence**: 観測した diff/code/docs/tests/tool 出力に anchor されているか?
-2. **Scope**: user 要求 / 変更挙動の範囲内か?
-3. **No invented framing**: evidence に無い問題設定を review が作っていないか?
-4. **Actionability**: 著者が今 code/docs/tests を変更して対処可能か?
-5. **Severity**: Critical/Warning の重大度は実影響に見合っているか?
-
-いずれか「no」→ 破棄するか短い question/note へ降格。self-review のメモ自体は最終出力に含めない (verdict に影響する場合のみ反映)。
+`comprehensive-review` skill 内の Self-Filter Gate (Step 4.5 + Pre-emission sanity check) が Evidence / Scope / No-invented-framing / Actionability / Severity の 7 観点でカバー済み。Stage A では skill 結果を信頼し、再評価不要。skill 未通過項目が明らかに混入していた場合のみ手動再判定。
 
 ### Stage B: Result Self-Review Pass (全体)
 
