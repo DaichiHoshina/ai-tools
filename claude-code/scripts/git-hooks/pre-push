@@ -22,8 +22,11 @@ while [[ -L "${_SOURCE}" ]]; do
     [[ "${_SOURCE}" != /* ]] && _SOURCE="${_DIR}/${_SOURCE}"
 done
 SCRIPT_DIR="$(cd -P "$(dirname "${_SOURCE}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-BENCH_CI="${REPO_ROOT}/scripts/hook-bench-ci.sh"
+# SCRIPT_DIR = claude-code/scripts/git-hooks/、git repo root は 3 階層上 (ai-tools/)。
+# BENCH_CI は claude-code/scripts/hook-bench-ci.sh、git diff の path は repo root 基準。
+CLAUDE_CODE_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO_ROOT="$(cd "${CLAUDE_CODE_DIR}/.." && pwd)"
+BENCH_CI="${CLAUDE_CODE_DIR}/scripts/hook-bench-ci.sh"
 
 # hook 関連ファイルのパスパターン (git diff --name-only で使用)
 HOOK_PATHS=(
