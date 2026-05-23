@@ -22,6 +22,8 @@ Lenses (Stage A/B 通過の前提):
 
 ## Self-Review (必須、2 段階)
 
+> **Default 厳しめ filter**: noise discard 方針は `rules/review-noise-discard.md` 参照。
+
 `/review` 系コマンドの出力前に **必ず** 以下 2 段階のセルフレビューを実行する。skip 不可、`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial` 全モードで一律実行 (adversarial は design challenge 性質ゆえ Stage A の Evidence/Scope 判定基準は緩めつつ、Stage B の重複統合・トーン整合は通常通り適用)。
 
 ### Stage A: Finding Self-Review Gate (per-finding)

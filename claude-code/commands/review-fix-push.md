@@ -21,6 +21,8 @@ Skill("comprehensive-review")
 
 ### Step 1.5: Self-Review Pass (必須)
 
+> **Default 厳しめ filter**: noise discard 方針は `rules/review-noise-discard.md` 参照。
+
 Step 1 の出力をそのまま fix にかけず、**必ず** `/review` の Self-Review 2 段階を通す。詳細: [`review.md`](review.md) "Self-Review (必須、2 段階)" section。
 
 - **Stage A (per-finding gate)**: `comprehensive-review` skill 内の Self-Filter Gate が一次評価 (Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点)。command 側でも **safety net として再評価**、skill 漏れの finding (特に propagation incompleteness / cross-ref desync 系) を捕捉。7 観点で discard 判定
