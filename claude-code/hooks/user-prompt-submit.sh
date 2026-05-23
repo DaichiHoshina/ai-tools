@@ -70,7 +70,7 @@ if (( ${#prompt} >= 20 )); then
   _DUP_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_DUP_SESSION_ID}}"
   if [[ -n "${_DUP_SESSION_ID}" && "${_DUP_SESSION_ID}" != "unknown" ]]; then
     _DUP_FILE="/tmp/claude-last-prompt-${_DUP_SESSION_ID}"
-    _DUP_NOW=$(date +%s)
+    _DUP_NOW="${EPOCHSECONDS}"
     _DUP_HASH=$(printf '%s' "$prompt" | shasum -a 1 2>/dev/null | cut -d' ' -f1)
     if [[ -n "${_DUP_HASH}" && -f "${_DUP_FILE}" ]]; then
       IFS=$'\t' read -r _DUP_LAST_TS _DUP_LAST_HASH < "${_DUP_FILE}" 2>/dev/null || true

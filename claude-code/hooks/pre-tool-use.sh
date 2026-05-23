@@ -244,9 +244,16 @@ detect_rename_propagation() {
 
     if [ -n "$grep_results" ]; then
       local file_count
-      file_count=$(echo "$grep_results" | wc -l)
+      # bash builtin で行数カウント (wc -l fork 削減)
+      if [[ -z "$grep_results" ]]; then
+        file_count=0
+      else
+        local _tmp_fc="${grep_results//$'\n'/}"
+        file_count=$(( ${#grep_results} - ${#_tmp_fc} + 1 ))
+      fi
       local file_list
-      file_list=$(echo "$grep_results" | tr '\n' ',' | sed 's/,$//')
+      # bash builtin で改行→カンマ変換 (tr fork 削減)
+      file_list="${grep_results//$'\n'/','}"; file_list="${file_list%,}"
 
       local rename_warn="${ICON_WARNING} Rename検知: 旧heading「${old_title}」→「${new_title}」、${file_count}ファイルに残存（${file_list}）。cross-ref同期確認推奨"
       if [ -n "$ADDITIONAL_CONTEXT" ]; then
@@ -300,9 +307,16 @@ detect_rename_propagation() {
 
         if [ -n "$grep_results" ]; then
           local file_count
-          file_count=$(echo "$grep_results" | wc -l)
+          # bash builtin で行数カウント (wc -l fork 削減)
+          if [[ -z "$grep_results" ]]; then
+            file_count=0
+          else
+            local _tmp_fc="${grep_results//$'\n'/}"
+            file_count=$(( ${#grep_results} - ${#_tmp_fc} + 1 ))
+          fi
           local file_list
-          file_list=$(echo "$grep_results" | tr '\n' ',' | sed 's/,$//')
+          # bash builtin で改行→カンマ変換 (tr fork 削減)
+          file_list="${grep_results//$'\n'/','}"; file_list="${file_list%,}"
 
           local rename_warn="${ICON_WARNING} Rename検知: 「${old_ident}」→「${new_ident}」、${file_count}ファイルに残存（${file_list}）。cross-ref同期確認推奨"
           if [ -n "$ADDITIONAL_CONTEXT" ]; then
