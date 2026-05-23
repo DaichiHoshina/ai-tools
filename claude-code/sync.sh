@@ -193,8 +193,17 @@ sync_settings_hooks() {
     local template="$SCRIPT_DIR/templates/settings.json.template"
     local live="$CLAUDE_DIR/settings.json"
 
-    if [ ! -f "$template" ] || [ ! -f "$live" ]; then
+    if [ ! -f "$template" ]; then
         return
+    fi
+    # 別 PC 初回セットアップ対応: settings.json 不在時は template から initial create
+    if [ ! -f "$live" ]; then
+        if cp "$template" "$live"; then
+            print_info "settings.json を template から初期化しました"
+        else
+            print_error "settings.json 初期化失敗: $live"
+            return
+        fi
     fi
 
     local template_hooks
@@ -242,7 +251,12 @@ sync_settings_skill_overrides() {
     local template="$SCRIPT_DIR/templates/settings.json.template"
     local live="$CLAUDE_DIR/settings.json"
 
-    if [ ! -f "$template" ] || [ ! -f "$live" ]; then
+    if [ ! -f "$template" ]; then
+        return
+    fi
+    # sync_settings_hooks が先に live を作成済み（呼び出し順 L359-360）のため
+    # live 不在時は return のまま（冪等・簡略化判断）
+    if [ ! -f "$live" ]; then
         return
     fi
 
@@ -287,6 +301,9 @@ sync_settings_skill_overrides() {
 
 sync_to_local() {
     print_header "リポジトリ → ローカル 同期"
+
+    # 別 PC 初回セットアップ対応: ~/.claude 不在時の自動作成
+    mkdir -p "$CLAUDE_DIR"
 
     # race condition 対策: push 直後の origin/main 未取り込み状態で
     # workspace が古いまま反映されると、追加されたファイルが取りこぼされる。

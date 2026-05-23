@@ -87,11 +87,36 @@ teardown() {
   [ "$status" -eq 0 ]
 }
 
+@test "sync.sh: to-local creates ~/.claude when missing" {
+  # sync.sh は内部で $HOME/.claude を参照するため HOME を差し替えてテスト用 tmpdir に誘導
+  local fake_home="${TEST_HOME}/fake-home"
+  mkdir -p "$fake_home"
+  local expected_claude="${fake_home}/.claude"
+  [ ! -d "$expected_claude" ]
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+  [ -d "$expected_claude" ]
+  [ -f "${expected_claude}/CLAUDE.md" ]
+  [ -d "${expected_claude}/references" ]
+}
+
+@test "sync.sh: to-local initializes settings.json from template when missing" {
+  # sync.sh は内部で $HOME/.claude を参照するため HOME を差し替えてテスト用 tmpdir に誘導
+  local fake_home="${TEST_HOME}/fake-home2"
+  mkdir -p "$fake_home"
+  local expected_claude="${fake_home}/.claude"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+  [ -f "${expected_claude}/settings.json" ]
+}
+
 @test "sync.sh: fails gracefully when source directory is missing" {
   # SCRIPT_DIRは常に存在するはずなので、このテストは不要
   # sync.shのSCRIPT_DIR検出が正しいことを確認
   [ -d "${PROJECT_ROOT}/claude-code" ]
-  
+
   # スクリプト自身が存在することを確認
   [ -f "${PROJECT_ROOT}/claude-code/sync.sh" ]
 }
