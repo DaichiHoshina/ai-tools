@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Claude Code 環境のヘルスチェック wrapper
-# usage-stats (commands/skills 0 利用) + hook-bench (発火コスト) を統合実行、
+# usage-stats (commands/skills 0 利用) + hook-bench (発火コスト) + plans staleness を統合実行、
 # markdown 形式で結果を出力する。
 #
 # Usage:
@@ -9,10 +9,13 @@
 #   ./scripts/health-check.sh --bench-skip       # hook-bench を省略 (高速)
 #   ./scripts/health-check.sh --bench-repeats N  # hook-bench を N 回反復、median-of-medians を出力 (default 1)
 #   ./scripts/health-check.sh --days N           # usage-stats 期間 (default 90)
+#   ./scripts/health-check.sh --plans-skip       # plans staleness check を省略
+#   ./scripts/health-check.sh --plans-stale-days N  # plans staleness threshold (default 14)
 #
 # 異常ハイライト基準:
 #   - usage: 90日0利用 commands/skills
 #   - bench: median 100ms 超 hook (累積影響大の累計コスト想定)
+#   - plans: 14日超 mtime plan file
 # snapshot 推奨: --bench-repeats 3 で system load variance を抑止
 set -euo pipefail
 
@@ -21,6 +24,8 @@ DAYS=90
 OUT_FILE=""
 BENCH_SKIP=0
 BENCH_REPEATS=1
+PLANS_SKIP=0
+PLANS_STALE_DAYS=14
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -28,6 +33,8 @@ while [[ $# -gt 0 ]]; do
     --bench-skip) BENCH_SKIP=1; shift ;;
     --bench-repeats) BENCH_REPEATS="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
+    --plans-skip) PLANS_SKIP=1; shift ;;
+    --plans-stale-days) PLANS_STALE_DAYS="$2"; shift 2 ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -38,6 +45,52 @@ if ! [[ "$BENCH_REPEATS" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 TODAY=$(date +%Y-%m-%d)
+
+render_plans_staleness() {
+  local threshold_days="$1"
+  local plans_dir="${HOME}/.claude/plans"
+
+  if [ ! -d "$plans_dir" ]; then
+    echo "✓ clean (plans directory not found)"
+    return
+  fi
+
+  local current_epoch
+  current_epoch=$(date +%s)
+
+  local stale_files=()
+  local found_any=0
+
+  while IFS= read -r plan_file; do
+    [ -f "$plan_file" ] || continue
+    local mtime_epoch
+    mtime_epoch=$(stat -f "%m" "$plan_file" 2>/dev/null) || continue
+    local age_seconds=$(( current_epoch - mtime_epoch ))
+    local age_days=$(( age_seconds / 86400 ))
+
+    if [ "$age_days" -gt "$threshold_days" ]; then
+      found_any=1
+      local size_kb
+      size_kb=$(( $(stat -f "%z" "$plan_file" 2>/dev/null || echo 0) / 1024 ))
+      local filename
+      filename=$(basename "$plan_file")
+      stale_files+=("$filename|$age_days|$size_kb")
+    fi
+  done < <(find "$plans_dir" -maxdepth 1 -type f -name "*.md")
+
+  if [ "$found_any" -eq 0 ]; then
+    echo "✓ clean"
+  else
+    echo "| file | age (days) | size (KB) |"
+    echo "|---|---|---|"
+    for entry in "${stale_files[@]}"; do
+      IFS='|' read -r filename age_days size_kb <<< "$entry"
+      printf "| \`%s\` | %d | %d |\n" "$filename" "$age_days" "$size_kb"
+    done
+    echo ""
+    printf "Proposed deletion: \`find %s -maxdepth 1 -name '*.md' -mtime +%d -delete\`\n" "$plans_dir" "$threshold_days"
+  fi
+}
 
 render() {
   echo "# Claude Code Health Check ($TODAY)"
@@ -112,6 +165,16 @@ PY
     echo '```'
     echo ""
   fi
+  echo "## Plans Staleness (${PLANS_STALE_DAYS}日超 mtime)"
+  echo ""
+  echo '```'
+  if [[ "$PLANS_SKIP" -eq 1 ]]; then
+    echo "(--plans-skip 指定により省略)"
+  else
+    render_plans_staleness "$PLANS_STALE_DAYS"
+  fi
+  echo '```'
+  echo ""
   echo "## Death Reference (_archive/ のファイル名で active 参照が残存)"
   echo ""
   echo '```'
