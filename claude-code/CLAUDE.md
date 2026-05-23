@@ -46,6 +46,8 @@ Skipping declaration = rule violation, recorded to feedback memory.
 
 **Inline exceptions (no delegation)**: Q&A / already-read file check / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
 
+**Inline exception throttle**: 3 consecutive inline exceptions in same session → next edit-class op is **mandatory** developer-agent delegation (reset counter after delegation). Investigation phase: cumulative Read/Bash calls ≥5 → switch subsequent investigation to `explore-agent`.
+
 **Inline prohibited (must delegate)**: 2+ files / 10+ lines / 2+ symbols / new file / revert-series / 5+ line markdown section add / refactor / commit-bearing ops
 
 Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any of 2+ files, 10+ lines, or 2+ symbols
@@ -82,7 +84,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 
 ## Context Management
 
-- **>50% → suggest `/compact`** (cannot auto-execute). `/clear` at task boundary is best savings point (5+ min idle = prompt cache TTL expired → full cache miss)
+- **>40% → suggest `/compact`** (cannot auto-execute; down from 50%). `/clear` at task boundary is best savings point (5+ min idle = prompt cache TTL expired → full cache miss). Session 30 min elapsed → propose `/clear` once in chat (single prompt only, no repeat).
 - Continue: request "generate next-session mega-prompt" → paste into new session
 - Uncontaminated question: `/btw` (overlay, not saved to history)
 

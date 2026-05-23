@@ -47,6 +47,8 @@ Confidence thresholds & coverage vary by effort level.
 
 ## Execution Flow
 
+> **Execution model**: This skill runs inside `reviewer-agent` (Sonnet). Steps 1-4 are Sonnet-executed. Step 4.5 (Self-Filter Gate) output is returned to parent Opus for Stage B aggregation and final filter.
+
 ### Step -1: Noise Suppression
 
 - Read diff/code/docs only. Guess → prefix "hypothesis:". No style/preference/theory nitpicks.
