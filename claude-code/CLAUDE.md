@@ -61,6 +61,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 | design decision / large plan / multi-phase | `po-agent` auto (or `/plan`) |
 | multi-stage task (investigate→design→impl→verify) | `/flow` hierarchy (PO→Manager→Dev→Reviewer) |
 | 20+ file bulk processing | `claude -p` fan-out (`references/fanout-recipes.md`) |
+| **網羅 / 全件 / 一斉 / bulk / 大量 file readonly** | `explore-agent` (read-only) or `developer-agent` (edit) Sonnet 委譲必須、parent Opus sample 縮小禁止 |
 
 ## Session Efficiency
 
@@ -72,6 +73,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **After regex replace, run `git diff --stat` immediately**: serena `replace_content` regex forces DOTALL/MULTILINE — `.*\n` greedy wipe risk. Single line: **literal + trailing `\n`**; multi-line: **non-greedy `.*?` + explicit end anchor** (2026-05-18 incident, see `[[serena-replace-regex-dotall-pitfall]]` memory)
 - **Minimize confirmation / choice**: execute safe ops without prompting; apply recommended option directly for minor choices. Confirm only for: file deletion / deploy / external send / critical decisions (architecture / cost / irreversible)
 - **ROI gate**: even for "do everything" instructions, re-confirm individually if ultrathink judges low ROI (2026-05-07 bulk low-ROI impl incident)
+- **Bulk / 網羅 keyword**: 「全 N 件 / 網羅 / 一斉 / bulk / 大量」要求は parent Opus inline で sample 縮小判断する前に Sonnet 委譲 (read-only=`explore-agent` / edit=`developer-agent`) を第一選択検討。規模・cost を理由に sample 妥協は「Default delegate to Sonnet」原則違反 (2026-05-23 incident、memory `[[sonnet-delegate-bulk-readonly]]`)
 - **pwd check**: verify existence before Read/Bash; check `pwd` before `cd`
 - **Pre-delegation git status check**: developer-agent 委譲前に `git status` + `git log --oneline -3` で並列 session 作業 (自分が触っていない untracked / modified、直近 commit が自分由来でない) を確認する。検出時は user に「並列実装あり、進めて OK?」確認必須 (2026-05-23 incident: hook-bench --check 固定閾値式を委譲中、user 並列で baseline 比較式 `hook-bench-ci.sh` 実装中で機能重複、`2cef2a5` 破棄に至った)
 - **/memory-save**: only for 3+ file changes / non-obvious refactor / incident
