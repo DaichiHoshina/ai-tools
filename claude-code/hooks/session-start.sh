@@ -128,12 +128,32 @@ _SS_DURATION_MS=$(( ($(date +%s%N) - _SS_START_EPOCH) / 1000000 ))
 # session-init-timing.log に append（session-end.sh がここから直近 duration を参照）
 _SS_TIMING_LOG="${HOME}/.claude/logs/session-init-timing.log"
 mkdir -p "$(dirname "${_SS_TIMING_LOG}")"
-_SS_PLUGIN_COUNT=$(jq '.enabledPlugins | length' "${HOME}/.claude/settings.json" 2>/dev/null || echo 0)
+
+# plugin_count: settings.json mtime ベース cache（jq fork 削減）
+_SS_PLUGIN_CACHE="${HOME}/.claude/cache/plugin-count.cache"
+_NEED_PLUGIN_RECALC=true
+if [[ -f "${_SS_PLUGIN_CACHE}" && -f "${HOME}/.claude/settings.json" ]]; then
+    if [[ "${_SS_PLUGIN_CACHE}" -nt "${HOME}/.claude/settings.json" ]]; then
+        _SS_PLUGIN_COUNT=$(cat "${_SS_PLUGIN_CACHE}")
+        _NEED_PLUGIN_RECALC=false
+    fi
+fi
+if [[ "${_NEED_PLUGIN_RECALC}" == "true" ]]; then
+    _SS_PLUGIN_COUNT=$(jq '.enabledPlugins | length' "${HOME}/.claude/settings.json" 2>/dev/null || echo 0)
+    mkdir -p "$(dirname "${_SS_PLUGIN_CACHE}")"
+    echo "${_SS_PLUGIN_COUNT}" > "${_SS_PLUGIN_CACHE}"
+fi
+
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] session_id=${_SS_SESSION_ID} duration_ms=${_SS_DURATION_MS} plugin_count=${_SS_PLUGIN_COUNT}" >> "${_SS_TIMING_LOG}" 2>/dev/null || true
+
 # 直近 1000 行に切り詰め (session-end.sh の grep スキャン量を上限化)
-if [[ -f "${_SS_TIMING_LOG}" ]] && [[ $(wc -l < "${_SS_TIMING_LOG}" 2>/dev/null || echo 0) -gt 1000 ]]; then
-    tail -n 1000 "${_SS_TIMING_LOG}" > "${_SS_TIMING_LOG}.tmp" 2>/dev/null \
-        && mv "${_SS_TIMING_LOG}.tmp" "${_SS_TIMING_LOG}" 2>/dev/null || true
+# stat でファイルサイズを先に確認し、閾値超えのみ wc -l 起動（fork 削減）
+if [[ -f "${_SS_TIMING_LOG}" ]]; then
+    _LOG_SIZE=$(stat -f%z "${_SS_TIMING_LOG}" 2>/dev/null || echo 0)
+    if [[ "${_LOG_SIZE}" -gt 150000 ]] && [[ $(wc -l < "${_SS_TIMING_LOG}" 2>/dev/null || echo 0) -gt 1000 ]]; then
+        tail -n 1000 "${_SS_TIMING_LOG}" > "${_SS_TIMING_LOG}.tmp" 2>/dev/null \
+            && mv "${_SS_TIMING_LOG}.tmp" "${_SS_TIMING_LOG}" 2>/dev/null || true
+    fi
 fi
 
 _SS_LIB_DIR="${SCRIPT_DIR}/../lib"
@@ -144,11 +164,24 @@ fi
 
 # --- Directory Color ---
 # jq 1回で default + mappings を取得して bash側でマッチング（fork大幅削減）
+# dir-colors.json mtime ベース cache で jq fork をさらに削減
 _COLOR_CONFIG="${HOME}/.claude/config/dir-colors.json"
+_DIR_COLOR_CACHE="${HOME}/.claude/cache/dir-colors.cache"
 _SESSION_COLOR="default"
 if [[ -f "${_COLOR_CONFIG}" ]]; then
+    _NEED_COLOR_RECALC=true
+    if [[ -f "${_DIR_COLOR_CACHE}" ]]; then
+        if [[ "${_DIR_COLOR_CACHE}" -nt "${_COLOR_CONFIG}" ]]; then
+            _COLOR_DATA=$(cat "${_DIR_COLOR_CACHE}")
+            _NEED_COLOR_RECALC=false
+        fi
+    fi
+    if [[ "${_NEED_COLOR_RECALC}" == "true" ]]; then
+        _COLOR_DATA=$(jq -r '.default // "default", (.mappings[]? | "\(.pattern)\t\(.color)")' "${_COLOR_CONFIG}" 2>/dev/null || echo "default")
+        mkdir -p "$(dirname "${_DIR_COLOR_CACHE}")"
+        printf '%s' "${_COLOR_DATA}" > "${_DIR_COLOR_CACHE}"
+    fi
     # 1行目=default、2行目以降="pattern\tcolor"
-    _COLOR_DATA=$(jq -r '.default // "default", (.mappings[]? | "\(.pattern)\t\(.color)")' "${_COLOR_CONFIG}" 2>/dev/null || echo "default")
     _FIRST=true
     while IFS=$'\t' read -r _PATTERN _COLOR; do
         if $_FIRST; then
