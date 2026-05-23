@@ -48,7 +48,7 @@ ms レベル vs 分レベルの桁違い。
 | 層 | 実時間 | 備考 |
 |----|-------|------|
 | hook 全種（warm） | 30-100ms | N≥15、信頼度高 |
-| developer-agent | **~60s** (n=4 avg) | ~~旧 17s は n=2 外れ値~~ |
+| developer-agent | **median 101s** (n=31, p25=58s p75=137s) | n=31、信頼度高 |
 | manager-agent | ~42s | n=2 参考値 |
 | reviewer-agent | ~82s | n=27 |
 | po-agent | ~96s | n=9 参考値 |
@@ -56,7 +56,7 @@ ms レベル vs 分レベルの桁違い。
 | **general-purpose** | **115s（最大501s）** | n=21 |
 | explore-agent | ~123s | n=7 参考値 |
 
-> **注**: developer-agent は 2026-05-23 実測 n=4 avg=60s に更新。旧 17s は n=2 外れ値で実態と乖離。**n<10 は参考値。要再計測（n≥20 到達後）。**
+> **注**: developer-agent は 2026-05-23 実測 n=31 median=101s / avg=113s に更新。旧値（n=4 avg=60s）は過去の参考値。**n<10 の数値は再計測必須。**
 
 **真のコスト源は agent LLM 時間**。hook 最適化（100ms以下を削る）は費用対効果なし。改善は agent 起動頻度削減で狙う。
 
@@ -72,8 +72,8 @@ subagent-events.log 集計（2026-04-06〜2026-04-22）+ 2026-05-23 追加計測
 | po-agent | 9* | 96s | 365s | 戦略判断 |
 | explore-agent | 7* | 123s | 289s | Haikuだがタスク範囲広い |
 | manager-agent | 2* | 42s | 68s | 計画のみ軽量 |
-| developer-agent (haiku) | 25* | ~290s | — | haiku 平均、2026-05 計測 |
-| developer-agent (sonnet) | 4* | **~60s** | — | ~~旧 ~17s (n=2)~~ → 更新済 |
+| developer-agent (haiku) | 17 | 291s | 739s | haiku 平均、2026-04 計測 |
+| developer-agent (sonnet) | **31** | **113s** | **451s** | **2026-05-23 実測、median 101s / p25 58s / p75 137s** |
 
 `*` は N<10（または n<10 相当）の参考値（サンプル少、母数拡大で値ブレうる）。運用判断は N≥20 を優先。
 
@@ -119,16 +119,16 @@ done
 awk '/^\[2026-04-22T01:3[4-8]/' ~/.claude/logs/subagent-events.log
 ```
 
-## Sonnet 委譲 overhead 実測（2026-05-23 RCA）
+## Sonnet 委譲 overhead 実測（2026-05-23 N=31 更新）
 
-`~/.claude/logs/subagent-events.log` 実測に基づく委譲コスト分析。
+`~/.claude/logs/subagent-events.log` 実測 (developer-agent sonnet 起動 N=31、2026-05-23 当日分)。
 
-- developer-agent 平均 duration: **60s**（sonnet n=4）
-- 参考値 17s は haiku n=2 外れ値であり実態と乖離していた。n<10 の数値は疑ってかかること
-- Serena `activate_project` + prompt load の startup overhead が >20s を占めており、LLM 処理時間以外のコストが大きい
-- Opus inline で 30s 未満で完了できるタスクを委譲すると 60〜90s に倍化する
-- 「Sonnet 化で遅くなった」仮説は否定された（haiku 時代 avg 290s → sonnet avg 60s、Sonnet 化は高速化する方向）
-- 判定基準: CLAUDE.md "Inline exceptions" の「期待 LLM 実行 <20s（1 symbol / 1 section 修正）」以下は inline で実行し、超えるなら委譲すること
+- duration 分布: min=22s / p25=58s / median=101s / p75=137s / max=451s / avg=113s
+- 軽量 task proxy (bottom-20%): 22, 27, 27, 39, 44, 56 秒
+- delegate 起動フロア = 22s（startup overhead: Serena `activate_project` + prompt load）。20s 未満で完了する task は inline 確実有利
+- haiku 時代 N=17 avg 291s と比較すると sonnet 化で **2.6 倍高速化**（Sonnet 化で遅くなった仮説は否定）
+- 旧値「avg 60s / max 91s」は n=2 外れ値ベース。N=31 で大幅上方修正された。**n<10 の数値は再計測必須**
+- 判定基準: CLAUDE.md "Inline exceptions" の「期待 LLM 実行 <20s（1 symbol / 1 section 修正）」閾値は delegate min (22s) より下で妥当。20-60s grey zone は「迷ったら delegate」原則維持、60s 超は delegate 確実有利
 
 ## session-init-timing log 計測基盤（fbce383 以降）
 
