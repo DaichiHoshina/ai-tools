@@ -48,11 +48,14 @@ Critical/Warning fixes は `Task(developer-agent)` へ委譲 (`CLAUDE.md` "Auto-
 
 ### Step 4: Regression Check (loop)
 
-Verify fix didn't create new issues **via re-review**.
+Verify fix didn't create new issues **via re-review**. iteration 2 以降は scope 縮小で再 review を効率化（新規 finding 検出範囲は同等、前 iteration 領域は skip）。
 
 ```text
+initial_base = git rev-parse HEAD  # Step 1 review 対象の base
+prev_iter_commit = initial_base
+
 loop iteration = 1..max_iterations:
-    Skill("comprehensive-review") on (post-fix diff)
+    Skill("comprehensive-review", args="--diff-base=<prev_iter_commit> --mode=default")
     apply Self-Review 2-stage gate (必須、`/review` Self-Review section 参照)
     if 0 new Critical:
         if existing Warning ≤ initial count:
@@ -61,6 +64,7 @@ loop iteration = 1..max_iterations:
             warn user, go Step 5 (prevent infinite fix)
     else:
         re-execute Step 3 (fix new Critical only)
+        prev_iter_commit = git rev-parse HEAD  # 次 iteration の base に
 ```
 
 各 iteration の review 結果も Step 1.5 と同じ Self-Review (Stage A + B **両方 full 適用**) を通す。skill 内 gate が漏らした finding を command 側で再評価、false-positive と skill 漏れの双方を捕捉して fix loop の質を担保。
