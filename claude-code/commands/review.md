@@ -28,6 +28,8 @@ Lenses (Stage A/B 通過の前提):
 
 `comprehensive-review` skill 内の Self-Filter Gate (Step 4.5 + Pre-emission sanity check) が Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点でカバー済み。Stage A では skill 結果を信頼し、再評価不要。skill 未通過項目が明らかに混入していた場合のみ手動再判定。
 
+ただし `/review-fix-push` の loop mode では propagation incompleteness / cross-ref desync 系を safety net として再評価する (詳細: [`review-fix-push.md`](review-fix-push.md) "Step 1.5")。
+
 ### Stage B: Result Self-Review Pass (全体)
 
 Stage A 通過後の finding 群を **集合として** もう一度見直す。以下 4 観点:
