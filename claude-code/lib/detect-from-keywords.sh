@@ -40,14 +40,18 @@ _get_cached_result() {
     return 1
   fi
 
-  local cached=$(jq -r ".\"$prompt_hash\" // empty" "$CACHE_FILE" 2>/dev/null)
-  if [ -z "$cached" ] || [ "$cached" = "null" ]; then
+  # 単一 jq invocation でキャッシュエントリ取得 + フィールド展開（fork 2→1）
+  local jq_out
+  jq_out=$(jq -r --arg h "$prompt_hash" '
+    .[$h] // empty | if . == null or . == "" then empty else "\(.langs // "")\t\(.skills // "")" end
+  ' "$CACHE_FILE" 2>/dev/null) || true
+  if [ -z "$jq_out" ]; then
     return 1
   fi
 
-  # キャッシュヒット: 結果を復元
-  local langs=$(echo "$cached" | jq -r '.langs // empty')
-  local skills=$(echo "$cached" | jq -r '.skills // empty')
+  # キャッシュヒット: タブ区切りで langs/skills を一括展開
+  local langs skills
+  IFS=$'\t' read -r langs skills <<< "$jq_out"
 
   if [ -n "$langs" ]; then
     IFS=',' read -ra lang_array <<< "$langs"
@@ -80,26 +84,19 @@ _save_to_cache() {
     --arg s "$skills" \
     '{langs: $l, skills: $s, timestamp: now}')
 
-  # キャッシュファイルを更新
-  local updated_cache=$(jq \
+  # 単一 jq invocation: エントリ追加 + LRU eviction を同時処理（fork 3→1）
+  local max="$CACHE_MAX_ENTRIES"
+  jq \
     --arg hash "$prompt_hash" \
     --argjson entry "$new_entry" \
-    '.[$hash] = $entry' \
-    "$CACHE_FILE" 2>/dev/null || echo '{}')
-
-  # エントリ数が上限を超えた場合、古いものを削除（LRU）
-  local entry_count=$(echo "$updated_cache" | jq 'length')
-  if [ "$entry_count" -gt "$CACHE_MAX_ENTRIES" ]; then
-    updated_cache=$(echo "$updated_cache" | jq '
-      to_entries |
-      sort_by(.value.timestamp) |
-      reverse |
-      .[0:'"$CACHE_MAX_ENTRIES"'] |
-      from_entries
-    ')
-  fi
-
-  echo "$updated_cache" > "$CACHE_FILE"
+    --argjson max "$max" \
+    '
+      .[$hash] = $entry |
+      if length > $max then
+        to_entries | sort_by(.value.timestamp) | reverse | .[0:$max] | from_entries
+      else . end
+    ' \
+    "$CACHE_FILE" 2>/dev/null > "${CACHE_FILE}.tmp" && mv "${CACHE_FILE}.tmp" "$CACHE_FILE" || true
 }
 
 # スキル名マッピング（旧名→新名+パラメータ）
@@ -213,7 +210,30 @@ detect_from_keywords() {
   # 執筆意図検出（ヒト向けdoc執筆時に PRINCIPLES を強制ロード）
   # 対象: Notion/Design Doc/PRD/PR description/issue本文/RCA/記事/まとめ
   # genshijin chat 応答とは別軸（doc出力前のみ発火）
-  if echo "$prompt_lower" | grep -qE '書いて|まとめて|ドラフト|draft|design.?doc|デザインドック|prd|要件定義|要件定|notion|記事|レポート|議事録|報告書|執筆|文章|pr.?description|pr本文|issue本文|rca|障害報告|振り返り|retrospective|プレスリリース|お知らせ|案内文|提案書|adr|技術選定|意思決定記録|ears|受け入れ基準|productspec|techspec|技術仕様書|プロダクト仕様'; then
+  # 最適化: 先頭60文字 case で早期判定 → カテゴリ別サブ regex で確定（300+ OR 単一 eval を回避）
+  local _writing_detected=0
+  local _ph="${prompt_lower:0:60}"
+  case "$_ph" in
+    *書*|*まとめ*|*ドラフト*|*draft*|*notion*|*記事*|*レポート*|*議事録*|*報告*|*執筆*|*文章*|*pr*|*prd*|*rca*|*adr*|*spec*|*ears*|*プレス*|*お知らせ*|*案内*|*提案*|*振り返*|*retro*)
+      # カテゴリ A: 執筆動詞
+      if echo "$prompt_lower" | grep -qE '書いて|まとめて|ドラフト|draft|執筆|文章'; then
+        _writing_detected=1
+      # カテゴリ B: ドキュメント種別
+      elif echo "$prompt_lower" | grep -qE 'design.?doc|デザインドック|prd|要件定義|要件定|notion|記事|レポート|議事録|報告書'; then
+        _writing_detected=1
+      # カテゴリ C: PR/Issue/RCA 系
+      elif echo "$prompt_lower" | grep -qE 'pr.?description|pr本文|issue本文|rca|障害報告'; then
+        _writing_detected=1
+      # カテゴリ D: 振り返り/リリース/提案
+      elif echo "$prompt_lower" | grep -qE '振り返り|retrospective|プレスリリース|お知らせ|案内文|提案書'; then
+        _writing_detected=1
+      # カテゴリ E: 技術仕様/ADR/基準
+      elif echo "$prompt_lower" | grep -qE 'adr|技術選定|意思決定記録|ears|受け入れ基準|productspec|techspec|技術仕様書|プロダクト仕様'; then
+        _writing_detected=1
+      fi
+      ;;
+  esac
+  if [ "$_writing_detected" -eq 1 ]; then
     _context="${_context}
 📝 執筆検出: 最優先は読み手の認知負荷を下げる/1回読めば理解できる/「で、つまり何？」と思わせない/賢そうでなく伝わる。
 

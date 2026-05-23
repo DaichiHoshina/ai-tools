@@ -55,9 +55,19 @@ case "$TOOL_NAME" in
 
         "ts"|"tsx"|"js"|"jsx")
           # prettier設定があるプロジェクト配下のみ実行（node起動コスト削減）
-          if has_prettier_config "$FILE_PATH" && command -v npx &> /dev/null; then
-            if npx --no-install prettier --write "$FILE_PATH" 2>/dev/null; then
-              MESSAGE=$(append_message "$MESSAGE" " Auto-formatted (Prettier): $FILE_PATH")
+          # 修正案B: prettier CLI 直接呼び出し（npx node startup 30-100ms 削減）
+          # prettier が PATH 上になければ npx fallback
+          if has_prettier_config "$FILE_PATH"; then
+            _PRETTIER_CMD=""
+            if command -v prettier &>/dev/null; then
+              _PRETTIER_CMD="prettier"
+            elif command -v npx &>/dev/null; then
+              _PRETTIER_CMD="npx --no-install prettier"
+            fi
+            if [ -n "$_PRETTIER_CMD" ]; then
+              if $_PRETTIER_CMD --write "$FILE_PATH" 2>/dev/null; then
+                MESSAGE=$(append_message "$MESSAGE" " Auto-formatted (Prettier): $FILE_PATH")
+              fi
             fi
             # prettier未インストールならmessage無し（警告抑制）
           fi

@@ -5,6 +5,9 @@
 
 set -euo pipefail
 
+# init_duration 計測: nanosec 精度で hook 処理開始時刻を記録
+_SS_START_EPOCH=$(date +%s%N)
+
 exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -118,10 +121,25 @@ fi
 ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true
 
 # --- Analytics: セッション開始記録 ---
+# init_duration_ms は analytics_start_session 呼び出し直前で確定する
+# （その後の処理 = dir-color / 出力組み立て は analytics 対象外）
+_SS_DURATION_MS=$(( ($(date +%s%N) - _SS_START_EPOCH) / 1000000 ))
+
+# session-init-timing.log に append（session-end.sh がここから直近 duration を参照）
+_SS_TIMING_LOG="${HOME}/.claude/logs/session-init-timing.log"
+mkdir -p "$(dirname "${_SS_TIMING_LOG}")"
+_SS_PLUGIN_COUNT=$(jq '.enabledPlugins | length' "${HOME}/.claude/settings.json" 2>/dev/null || echo 0)
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] session_id=${_SS_SESSION_ID} duration_ms=${_SS_DURATION_MS} plugin_count=${_SS_PLUGIN_COUNT}" >> "${_SS_TIMING_LOG}" 2>/dev/null || true
+# 直近 1000 行に切り詰め (session-end.sh の grep スキャン量を上限化)
+if [[ -f "${_SS_TIMING_LOG}" ]] && [[ $(wc -l < "${_SS_TIMING_LOG}" 2>/dev/null || echo 0) -gt 1000 ]]; then
+    tail -n 1000 "${_SS_TIMING_LOG}" > "${_SS_TIMING_LOG}.tmp" 2>/dev/null \
+        && mv "${_SS_TIMING_LOG}.tmp" "${_SS_TIMING_LOG}" 2>/dev/null || true
+fi
+
 _SS_LIB_DIR="${SCRIPT_DIR}/../lib"
 if [[ -f "${_SS_LIB_DIR}/analytics-writer.sh" ]]; then
     source "${_SS_LIB_DIR}/analytics-writer.sh"
-    analytics_start_session "${_SS_SESSION_ID}" "${_SS_PROJECT}" 2>/dev/null || true
+    analytics_start_session "${_SS_SESSION_ID}" "${_SS_PROJECT}" "${_SS_DURATION_MS}" 2>/dev/null || true
 fi
 
 # --- Directory Color ---

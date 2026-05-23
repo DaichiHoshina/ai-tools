@@ -290,3 +290,51 @@ run_detect_from_keywords() {
   local has_backend=$(echo "$output" | jq '.skills | map(select(. == "backend-dev")) | length > 0')
   [ "$has_backend" = "true" ]
 }
+
+# =============================================================================
+# 正常系テスト: 執筆意図検出（writing detection）
+# =============================================================================
+
+# 執筆検出は context に改行込みの多行テキストを設定するため
+# jq JSON parse ではなく raw 出力を直接評価する専用ヘルパーを使用
+run_detect_writing_context() {
+  local prompt="$1"
+  PROMPT_ARG="$prompt" bash -c '
+    source "$LIB_FILE"
+    declare -A langs skills
+    context=""
+    prompt_lower=$(echo "$PROMPT_ARG" | tr "[:upper:]" "[:lower:]")
+    detect_from_keywords "$prompt_lower" langs skills context
+    printf "%s" "$context"
+  '
+}
+
+@test "detect-from-keywords: writing detection - 書いて triggers context" {
+  run run_detect_writing_context '設計概要を書いて'
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "執筆検出" ]]
+}
+
+@test "detect-from-keywords: writing detection - draft triggers context" {
+  run run_detect_writing_context 'pr description draft を作成'
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "執筆検出" ]]
+}
+
+@test "detect-from-keywords: writing detection - prd triggers context" {
+  run run_detect_writing_context 'prd を作成したい'
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "執筆検出" ]]
+}
+
+@test "detect-from-keywords: writing detection - rca triggers context" {
+  run run_detect_writing_context 'rca を書いて'
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "執筆検出" ]]
+}
+
+@test "detect-from-keywords: writing detection - no match skips context" {
+  run run_detect_writing_context 'goのユニットテストを実行'
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "執筆検出" ]]
+}

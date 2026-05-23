@@ -73,7 +73,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     cache_write_tokens INTEGER DEFAULT 0,
     output_tokens INTEGER DEFAULT 0,
     total_messages INTEGER DEFAULT 0,
-    duration_sec INTEGER DEFAULT 0
+    duration_sec INTEGER DEFAULT 0,
+    init_duration_ms INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS agent_events (
@@ -154,21 +155,32 @@ analytics_insert_tool_event() {
 }
 
 # --- セッション開始記録 ---
-# Usage: analytics_start_session "$session_id" "$project"
+# Usage: analytics_start_session "$session_id" "$project" ["$init_duration_ms"]
+# init_duration_ms: session-start.sh の処理時間(ms)。省略時 0
 analytics_start_session() {
     local session_id="${1:-unknown}"
     local project="${2:-unknown}"
+    local init_duration_ms="${3:-0}"
     local now
     now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
     [[ -f "$ANALYTICS_DB" ]] || analytics_init || return 1
 
-    _analytics_exec "INSERT OR IGNORE INTO sessions (session_id, start_time, project) VALUES ('${session_id}', '${now}', '${project}');"
+    # 既存 DB に init_duration_ms カラムが無い場合は追加（後方互換マイグレーション）
+    sqlite3 "$ANALYTICS_DB" "PRAGMA busy_timeout=3000; ALTER TABLE sessions ADD COLUMN init_duration_ms INTEGER DEFAULT 0;" >/dev/null 2>/dev/null || true
+
+    # 数値以外は 0 に正規化
+    local dur_sql=0
+    [[ "${init_duration_ms}" =~ ^[0-9]+$ ]] && dur_sql="${init_duration_ms}"
+
+    _analytics_exec "INSERT OR IGNORE INTO sessions (session_id, start_time, project, init_duration_ms) VALUES ('${session_id}', '${now}', '${project}', ${dur_sql});"
 }
 
 # --- セッション終了記録 ---
 # Usage: analytics_insert_session "$session_id" "$project" "$model" "$git_branch" \
-#          "$input_tokens" "$cache_read" "$cache_write" "$output_tokens" "$total_messages" "$duration"
+#          "$input_tokens" "$cache_read" "$cache_write" "$output_tokens" "$total_messages" "$duration" \
+#          ["$init_duration_ms"]
+# init_duration_ms: session-start.sh の処理時間(ms)。省略時 0 (後方互換)
 # start_timeが既に記録されていればそれを使い、なければ現在時刻をフォールバック
 analytics_insert_session() {
     local session_id="${1:-unknown}"
@@ -181,12 +193,20 @@ analytics_insert_session() {
     local output_tokens="${8:-0}"
     local total_messages="${9:-0}"
     local duration="${10:-0}"
+    local init_duration_ms="${11:-0}"
     local now
     now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
     [[ -f "$ANALYTICS_DB" ]] || analytics_init || return 1
 
-    sqlite3 "$ANALYTICS_DB" "INSERT OR REPLACE INTO sessions (session_id, start_time, end_time, project, model, git_branch, input_tokens, cache_read_tokens, cache_write_tokens, output_tokens, total_messages, duration_sec) VALUES ('${session_id}', COALESCE((SELECT start_time FROM sessions WHERE session_id = '${session_id}'), '${now}'), '${now}', '${project}', '${model}', '${git_branch}', ${input_tokens}, ${cache_read}, ${cache_write}, ${output_tokens}, ${total_messages}, CAST((julianday('${now}') - julianday(COALESCE((SELECT start_time FROM sessions WHERE session_id = '${session_id}'), '${now}'))) * 86400 AS INTEGER));" 2>/dev/null || {
+    # 既存 DB に init_duration_ms カラムが無い場合は追加（後方互換マイグレーション）
+    sqlite3 "$ANALYTICS_DB" "PRAGMA busy_timeout=3000; ALTER TABLE sessions ADD COLUMN init_duration_ms INTEGER DEFAULT 0;" >/dev/null 2>/dev/null || true
+
+    # 数値以外は 0 に正規化
+    local dur_sql=0
+    [[ "${init_duration_ms}" =~ ^[0-9]+$ ]] && dur_sql="${init_duration_ms}"
+
+    sqlite3 "$ANALYTICS_DB" "INSERT OR REPLACE INTO sessions (session_id, start_time, end_time, project, model, git_branch, input_tokens, cache_read_tokens, cache_write_tokens, output_tokens, total_messages, duration_sec, init_duration_ms) VALUES ('${session_id}', COALESCE((SELECT start_time FROM sessions WHERE session_id = '${session_id}'), '${now}'), '${now}', '${project}', '${model}', '${git_branch}', ${input_tokens}, ${cache_read}, ${cache_write}, ${output_tokens}, ${total_messages}, CAST((julianday('${now}') - julianday(COALESCE((SELECT start_time FROM sessions WHERE session_id = '${session_id}'), '${now}'))) * 86400 AS INTEGER), COALESCE((SELECT init_duration_ms FROM sessions WHERE session_id = '${session_id}'), ${dur_sql}));" 2>/dev/null || {
         echo "WARNING: analytics session write failed" >&2
         return 1
     }
