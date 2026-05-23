@@ -41,7 +41,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 Skipping declaration = rule violation, recorded to feedback memory.
 
-**Inline exceptions (no delegation)**: Q&A / already-read file check / dry-run / **1-line fix (typo / import 1 line / value 1 item update)** / **1 config value change in same file** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
+**Inline exceptions (no delegation)**: Q&A / already-read file check / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
 
 **Inline prohibited (must delegate)**: 2+ files / 10+ lines / 2+ symbols / new file / revert-series / 5+ line markdown section add / refactor / commit-bearing ops
 
@@ -70,7 +70,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **pwd check**: verify existence before Read/Bash; check `pwd` before `cd`
 - **/memory-save**: only for 3+ file changes / non-obvious refactor / incident
 - **Token budget (Read/Bash output)**: use `limit:` / `offset:` for large files (default ~200 lines); truncate long logs with `| head -N` / `| tail -N`. **Full dump accumulates cost**; prefer serena symbol read when available
-- **Subagent prompt context budget**: keep delegation prompts ≤500 words with minimum necessary context. **Never dump full conversation** (cheap per-token subagent cost reverses at high input volume; symmetric with Report length budget in `agents/*-agent.md`)
+- **Subagent prompt context budget**: keep delegation prompts ≤500 words with minimum necessary context. **Never dump full conversation** (cheap per-token subagent cost reverses at high input volume; symmetric with "Completion report budget" in `agents/developer-agent.md`)
 
 ## Rewind
 

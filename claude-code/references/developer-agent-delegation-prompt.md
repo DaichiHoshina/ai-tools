@@ -9,7 +9,7 @@ When parent (Opus) needs to delegate a task:
 1. Copy this template
 2. Fill in all 6 required sections below (no placeholder left blank)
 3. Paste as the delegation prompt to `Task(developer-agent)`
-4. Expect completion report ≤300 words per `agents/developer-agent.md` budget
+4. Expect completion report ≤300 words per `agents/developer-agent.md` section "Completion report budget"
 
 ## Template
 
@@ -48,22 +48,20 @@ For this task:
 Commits MUST follow:
 - **No AI footer**: Do not append `Co-Authored-By: Claude`, `Generated with Claude Code`, or any LLM marker
 - **Plain JP** (genshijin OFF): Use full sentences (〜する / 〜した), explicit subjects, no demonstratives (「これ」「それ」「上記」→ concrete names)
-- **PREP structure**: Purpose / Reason / Example / Problem (or Conclusion / Context / Action)
+- **PREP 3-point structure** (Conclusion / Reason / Next action) — see `guidelines/writing/PRINCIPLES.md:39`
 - **HEREDOC pass** (`git commit -m "$(cat <<'EOF'...EOF)"`) — do not use `-m` inline strings
 
 Example:
 ```
 git commit -m "$(cat <<'EOF'
-Auto-delegation section を CLAUDE.md L30-50 に強化した。
+CLAUDE.md の Auto-Delegation section を強化し、Inline 例外判定ルールを明確化した。
 
-「Edit/Write 直前の宣言ルール」を導入し、親 (Opus) の inline 例外判定を明確化。
-Inline 例外を「1 行修正 / config 値 1 個 / read-only コマンド」に絞り、
-2+ file / 10+ 行 / 新規 file は developer-agent 委譲対象と明示。
+従来の「1 行修正のみ」から「1 symbol body 置換 / 1 section 編集 / 期待 LLM 実行 <20s」に拡張し、
+軽量 task (17-30s 予想) の Opus inline 実行を推奨。その他は developer-agent 委譲。
+これにより startup overhead 20s を避け、ROI を向上させる。
 
-委譲 prompt template (`references/developer-agent-delegation-prompt.md`)
-新設で、parent の委譲 cost を下げて頻度を上げる。
-
-developer-agent.md に「parent からの委譲条件」section を追加。
+developer-agent.md に Completion report budget section を新設し、
+report length 300 words / 無コード貼り付け / checkboxes-only の enforcement rule を記載。
 EOF
 )"
 ```
