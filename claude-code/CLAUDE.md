@@ -14,6 +14,8 @@
 
 `.md` in commands/, skills/, agents/ consume tokens every session. Keep: decision tables, workflow defs, operation guards, prohibitions, 1 example. Remove: sample impl, duplicate explanations, detailed usage. Target: agent ≤300 / command ≤150 / skill 100-130 lines.
 
+**EN 化禁止 file/section**: `rules/en-conversion-protected.md` 参照 (誤訳すると規約・bats test・JP trigger 破壊)。
+
 ## Discovery / Investigation Routing (anti-overuse)
 
 Agent startup is the biggest cost source (dozens of seconds to minutes).
