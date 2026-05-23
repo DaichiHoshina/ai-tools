@@ -31,9 +31,13 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 *(実装・編集タスク向け。調査・検索フェーズは Discovery Routing 参照)*
 
+**判定原則 (最優先)**: 迷ったら委譲。過小委譲リスク > 過剰委譲コスト。Opus parent は orchestration / judgment のみ、実作業 (write / refactor / verification / commit) はすべて Sonnet。
+
 **デフォルト = `developer-agent` (Sonnet) 委譲**。「言われてできることは Sonnet に任せる」原則 (ユーザ指示 2026-05-22)。inline 実行は下記例外のみ。
 
-**Inline 例外 (委譲しない)**: 質問回答 / 既読ファイル確認 / dry-run / typo / 1 行修正 / config 値 1 箇所変更 / 1 コマンド実行 (`git status` 等)
+**Inline 例外 (委譲しない)**: 質問回答 / 既読ファイル確認 / dry-run / typo / **1 symbol 内 body 置換 1 単位** / **同一ファイル内 config 値 1 個変更** / 1 コマンド実行 (`git status` 等)
+
+※ **実装** = ロジック追加 / 新ファイル / 複数 symbol 修正、**編集** = 2+ file or 10+ 行 or 2+ symbol のいずれか該当
 
 | 検知条件 | 自動起動 |
 |---|---|
@@ -44,8 +48,6 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | 設計判断 / 大規模計画 / 複数 phase | `po-agent` 自動 (or `/plan`) |
 | 多段タスク (調査→設計→実装→検証) | `/flow` 階層展開 (PO→Manager→Dev→Reviewer) |
 | 20+ file 一括処理 | `claude -p` fan-out (`references/fanout-recipes.md`) |
-
-**判定原則**: 迷ったら委譲。過小委譲リスク > 過剰委譲コスト。Opus parent は orchestration / judgment のみ、実作業 (write / refactor / verification / commit) はすべて Sonnet。
 
 ## Session Efficiency
 

@@ -8,18 +8,16 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 
 | Agent | Model | Role | Primary use |
 |-------|-------|------|-------------|
-| **reviewer-agent** | opus | Review owner | Code quality, security, test review |
-| **root-cause-analyzer** | opus | RCA specialist | 5Whys analysis, structural fixes |
+| **reviewer-agent** | sonnet | Review owner | Code quality, security, test review |
+| **root-cause-analyzer** | sonnet | RCA specialist | 5Whys analysis, structural fixes |
 | **po-agent** | sonnet | Strategy decider | Product strategy, worktree mgmt, decision return |
 | **manager-agent** | sonnet | Task decomposition & allocation | Large task allocation, integration verify |
-| **developer-agent** | haiku | Implementer | Code impl, fix, add |
-| **explore-agent** | haiku | Explorer/analyzer | Codebase investigation, parallel search |
-| **verify-app** | haiku | Verifier | Build, test, lint integration check |
+| **developer-agent** | sonnet | Implementer | Code impl, fix, add |
+| **explore-agent** | sonnet | Explorer/analyzer | Codebase investigation, parallel search |
+| **verify-app** | sonnet | Verifier | Build, test, lint integration check |
 
 ## Agent startup cost (highlights)
 
-- Fastest: `developer-agent` ~17s (clear task)
-- Most frequent: `Explore` (built-in) ~99s
 - **Avoid**: `general-purpose` ~115s avg / 501s max
 
 Full table & recalc method: [`references/performance-insights.md`](../references/performance-insights.md) (single source). Operations rule: `claude-code/CLAUDE.md` "exploration/investigation split".
@@ -31,7 +29,7 @@ Full table & recalc method: [`references/performance-insights.md`](../references
 | Command | Agent launched | Flow |
 |---------|----------------|------|
 | `/flow` | po-agent (skip light task, else launch) | Parent: PO → Manager → Dev×N sequential (Team default) |
-| `/dev` | None (direct) | No agent. Need Team? Use `/flow` |
+| `/dev` | developer-agent (default) / None (`--inline`) | Default delegation (Sonnet). `--inline` = direct exec |
 | `/review` | reviewer-agent | Auto review |
 | `/plan` | po-agent + manager-agent | Strategy + task split |
 | (natural lang / Claude judgment) | explore-agent (parallel) | Concurrent multi-perspective search. Trigger: 3+ query broad search, ambiguous large investigation |

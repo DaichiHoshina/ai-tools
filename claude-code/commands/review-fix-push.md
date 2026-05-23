@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Skill, AskUserQuestion, mcp__serena__*, mcp__context7__*
+allowed-tools: Read, Glob, Grep, Bash, Skill, AskUserQuestion, mcp__serena__*, mcp__context7__*
 description: Review→fix→regression check→push in 1 command. /review + /dev all fixes + re-review + /git-push --pr
 ---
 
@@ -42,7 +42,7 @@ Step 1 の出力をそのまま fix にかけず、**必ず** `/review` の Self
 | Critical | fix all (required) |
 | Warning | fix all (`--critical-only` skips) |
 
-Equivalent to `/dev` (include guideline load, static analysis).
+Critical/Warning fixes は `Task(developer-agent)` へ委譲 (`CLAUDE.md` "Auto-Delegation" セクション準拠)。parent inline 実装は禁止。
 
 ### Step 4: Regression Check (loop)
 

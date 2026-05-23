@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
-description: Direct implementation — no Agent use, runs inline. --quick for haiku speed. Use /flow if Agent Team needed.
+description: Default = developer-agent 委譲 (Sonnet)。inline は 1 symbol 修正のみ。--inline で強制 inline、--quick で短文 prompt、Team は /flow
 ---
 
 ## /dev - Implementation mode
@@ -8,12 +8,23 @@ description: Direct implementation — no Agent use, runs inline. --quick for ha
 > When to use: `/dev` = impl phase only, no Agent Team / `/flow` = auto task-type + PO→Manager→Dev×N hierarchy. When uncertain → `/flow`.
 > Agent Team **only via `/flow`**. Direct `/dev` has no Team hierarchy.
 
+## Default delegation
+
+`/dev` 起動時、デフォルトで `Task(developer-agent)` 自動委譲 (Sonnet 実行)。
+
+| Flag | 動作 |
+|---|---|
+| (none) | `developer-agent` 委譲 (default) |
+| `--inline` | parent inline 実行 (1 symbol 修正のみ許可) |
+| `--quick` | sonnet 委譲、token 節約優先 (短文 prompt) |
+| `--team` | `/flow` 推奨、本 command では非対応 |
+
 ## Options
 
 ```bash
-/dev --quick <task>      # Fast mode (haiku, 1-2 files)
-/dev --parallel <task>   # Direct execution worktree parallel (no PO/Manager)
-/dev <task>              # Normal (sonnet, direct execution)
+/dev --quick <task>      # Fast mode (token 節約、1-2 files)
+/dev --parallel <task>   # Worktree parallel (no PO/Manager, developer-agent ×N 並列)
+/dev <task>              # Normal (developer-agent 委譲、sonnet)
 # Team hierarchy + parallel needed? Use /flow --parallel
 ```
 
@@ -41,7 +52,7 @@ Changes present → return branch・parent merge・delete / no changes → auto-
 
 ## --quick (formerly /quick-fix)
 
-Use: 1-2 files typo / small bug / few-line change. **haiku use, no Agent Team, minimal confirm**.
+Use: 1-2 files typo / small bug / few-line change. **token 節約優先 (短文 prompt)、no Agent Team, minimal confirm**.
 
 Flow: identify file → fix (Serena MCP) → verify (lint/type) → propose commit.
 
@@ -91,7 +102,7 @@ After completion: `/lint-test` auto-detects lang + runs all checks (lint/typeche
 | Scenario | Action |
 |----------|--------|
 | 2 consecutive same-approach failures | suggest `/clear` & stop, request replan |
-| `--quick` can't use haiku | fallback sonnet, continue minor fixes |
+| `--quick` unexpected error | fallback sonnet, continue minor fixes |
 | Serena MCP fails | degrade to grep/Read, warn |
 
 PushNotification: notify only if task > 3min (`[dev] {task} done`).
