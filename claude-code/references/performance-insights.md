@@ -41,26 +41,28 @@
 
 体感の軽量化（2026-05-18 ユーザ報告）は hook 層ではなく **skill 定義の `name-only` 化（settings.json 16件）+ MCP の deferred 化** による初期トークン削減が支配的と推定。
 
-## コスト構造（hook vs agent）
+## コスト構造（hook vs agent）（計測 sample 少、参考値）
 
 ms レベル vs 分レベルの桁違い。
 
-| 層 | 実時間 |
-|----|-------|
-| hook 全種（warm） | 30-100ms |
-| developer-agent | 17s |
-| manager-agent | 42s |
-| reviewer-agent | 82s |
-| po-agent | 96s |
-| Explore (built-in) | 99s |
-| **general-purpose** | **115s（最大501s）** |
-| explore-agent | 123s |
+| 層 | 実時間 | 備考 |
+|----|-------|------|
+| hook 全種（warm） | 30-100ms | N≥15、信頼度高 |
+| developer-agent | **~60s** (n=4 avg) | ~~旧 17s は n=2 外れ値~~ |
+| manager-agent | ~42s | n=2 参考値 |
+| reviewer-agent | ~82s | n=27 |
+| po-agent | ~96s | n=9 参考値 |
+| Explore (built-in) | ~99s | n=79 |
+| **general-purpose** | **115s（最大501s）** | n=21 |
+| explore-agent | ~123s | n=7 参考値 |
+
+> **注**: developer-agent は 2026-05-23 実測 n=4 avg=60s に更新。旧 17s は n=2 外れ値で実態と乖離。**n<10 は参考値。要再計測（n≥20 到達後）。**
 
 **真のコスト源は agent LLM 時間**。hook 最適化（100ms以下を削る）は費用対効果なし。改善は agent 起動頻度削減で狙う。
 
-## agent 実測値とサンプル信頼度
+## agent 実測値とサンプル信頼度（計測 sample 少、参考値）
 
-subagent-events.log 集計（2026-04-06〜2026-04-22）。
+subagent-events.log 集計（2026-04-06〜2026-04-22）+ 2026-05-23 追加計測。
 
 | agent | N | 平均 | 最大 | 備考 |
 |-------|---|------|------|------|
@@ -70,9 +72,10 @@ subagent-events.log 集計（2026-04-06〜2026-04-22）。
 | po-agent | 9* | 96s | 365s | 戦略判断 |
 | explore-agent | 7* | 123s | 289s | Haikuだがタスク範囲広い |
 | manager-agent | 2* | 42s | 68s | 計画のみ軽量 |
-| developer-agent | 2* | 17s | 23s | 最速、タスク明確時 |
+| developer-agent (haiku) | 25* | ~290s | — | haiku 平均、2026-05 計測 |
+| developer-agent (sonnet) | 4* | **~60s** | — | ~~旧 ~17s (n=2)~~ → 更新済 |
 
-`*` は N<10 の参考値（サンプル少、母数拡大で値ブレうる）。運用判断は N≥20 を優先。
+`*` は N<10（または n<10 相当）の参考値（サンプル少、母数拡大で値ブレうる）。運用判断は N≥20 を優先。
 
 ## 運用ルール（濫用防止）
 

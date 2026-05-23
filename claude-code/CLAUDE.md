@@ -35,7 +35,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **デフォルト = `developer-agent` (Sonnet) 委譲**。「言われてできることは Sonnet に任せる」原則 (ユーザ指示 2026-05-22)。inline 実行は下記例外のみ。
 
-**Inline 例外 (委譲しない)**: 質問回答 / 既読ファイル確認 / dry-run / typo / **1 symbol 内 body 置換 1 単位** / **同一ファイル内 config 値 1 個変更** / 1 コマンド実行 (`git status` 等)
+**Inline 例外 (委譲しない)**: 質問回答 / 既読ファイル確認 / dry-run / typo / **1 symbol 内 body 置換 1 単位** / **同一ファイル内 config 値 1 個変更** / **期待 LLM 実行 <20s (1 symbol / 1 section 修正)** / 1 コマンド実行 (`git status` 等)
 
 ※ **実装** = ロジック追加 / 新ファイル / 複数 symbol 修正、**編集** = 2+ file or 10+ 行 or 2+ symbol のいずれか該当
 
