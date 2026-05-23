@@ -23,7 +23,7 @@ Skill("comprehensive-review")
 
 Step 1 の出力をそのまま fix にかけず、**必ず** `/review` の Self-Review 2 段階を通す。詳細: [`review.md`](review.md) "Self-Review (必須、2 段階)" section。
 
-- **Stage A (per-finding gate)**: `comprehensive-review` skill 内の Self-Filter Gate が Evidence / Scope / No-invented-framing / Actionability / Severity / Style / Overprescription の 7 観点でカバー済み。skill 結果を信頼し再評価不要
+- **Stage A (per-finding gate)**: `comprehensive-review` skill 内の Self-Filter Gate が Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点でカバー済み。skill 結果を信頼し再評価不要
 - **Stage B (result-wide pass)**: 重複統合 / トーン整合 / project convention 整合 / zero-finding 判定を **必ず** 適用。skill 側 Pre-emission にも一部重複系チェックはあるが、集合視点での重複統合・トーン整合・convention 整合は `/review-fix-push` 固有の付加価値層
 - 結果として Critical 0 + Warning 0 になり得る。その場合 Step 2 で push へ skip
 - Self-Review 判断ログ自体は user 提示に含めない (verdict 変更のみ反映)
