@@ -5,19 +5,14 @@ description: Workflow automation — auto-detect task type, execute optimal work
 
 ## /flow - Automated workflow execution
 
-> When to use: `/flow` (recommended, 新規タスク → PR の全工程) / `/dev` (impl only) / `/review-fix-push` (既存変更のレビューループ保証 → PR 専用、`/flow` 中は不要)
-
-Describe task once, auto-execute optimal workflow.
+> When to use: `/flow` (recommended, new task → full PR pipeline) / `/dev` (impl only) / `/review-fix-push` (review-loop guarantee for existing changes → PR only, not needed inside `/flow`)
 
 ## Task type detection
 
-Match keywords top-down, **adopt priority of first hit**. If mixed, ask user.
+Match keywords top-down, **first hit wins**. If mixed, ask user. `*impl*` = expanded by PO decision.
 
-Legend: `*impl*` = expanded by PO decision. Team path `/review` → `Task(reviewer-agent)` replacement.
-
-- **Team use**: parent spawns `Task(po-agent)` → `Task(manager-agent)` → `Task(developer-agent)×N` parallel → manager aggregate → `Task(reviewer-agent)` → if P0 found, re-fix 1 loop
-- **Direct exec**: `/dev` (review = `/review` = comprehensive-review skill)
-- sub-agents cannot spawn, parent launches each tier sequentially
+- **Team**: `Task(po-agent)` → `Task(manager-agent)` → `Task(developer-agent)×N` → aggregate → `Task(reviewer-agent)` → P0 re-fix 1 loop
+- **Direct**: `/dev` (review = `/review` = comprehensive-review skill). Sub-agents cannot spawn; parent launches each tier.
 
 | # | Keywords | Task | Workflow |
 |---|-----------|--------|------------|
@@ -62,11 +57,11 @@ Team path forces worktree parallel eval. Formula detail: `references/PARALLEL-PA
 
 ### worktree cleanup
 
-Changes present → return branch・parent merge・worktree delete / no changes → auto-delete / collision → sequential downgrade・worktree left in place.
+Changes present → return branch / parent merge / worktree delete. no changes → auto-delete. Collision → sequential downgrade, worktree left in place.
 
-### `worktree.baseRef` setting (advanced use case)
+### `worktree.baseRef` (advanced)
 
-Default `fresh` (`origin/<default>` base) adopted = worktree create on clean main. Specify `"head"` per task in `~/.claude/settings.local.json` to bring unpushed commits to new worktree (only when need to branch from in-progress). Not recommended for regular use (main pollution risk).
+Default `fresh` = base on `origin/<default>`. Set `"head"` per task in `~/.claude/settings.local.json` to carry unpushed commits to new worktree. Not recommended for regular use (main pollution risk).
 
 ## --auto fully autonomous mode
 
@@ -76,8 +71,8 @@ Default `fresh` (`origin/<default>` base) adopted = worktree create on clean mai
 | Agent launch | `mode: "bypassPermissions"` |
 | Push target | Always PR (no main direct push) |
 | PO Agent | Skip (`--no-po` equivalent) |
-| Design decision | Recommend・priority simple |
-| lint-test fail | Auto-fix 1×, 2nd fail stop・report |
+| Design decision | Recommend, priority simple |
+| lint-test fail | Auto-fix 1×, 2nd fail stop + report |
 
 Flow: receive → judge → execute → lint-test → review-fix → secret check → /git-push → Serena memory → PushNotification.
 
@@ -87,14 +82,14 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 
 1. Check git status: changes present → from `/dev`, none → from start
 2. **Pre-check lightweight task** (skip on `--parallel`/`--no-po`): all of the following → delegate to `/dev --quick`, else next
-   - 編集対象ファイル想定 ≤ 2
-   - 既存ファイル内変更のみ (新規ファイル作成なし)
-   - 単一レイヤ完結 (UI/API/DB 等を跨がない)
-   - 公開 API / 型シグネチャ変更なし
-   - 並行 / 並列性に関わる変更なし
-   - user が明示的に Team / 並列を求めていない
-   いずれか不成立 → PO Agent 起動
-3. Launch PO Agent (skip on `--no-po`)
+   - target files ≤ 2
+   - changes within existing files only (no new file creation)
+   - single-layer scope (no cross-layer: UI/API/DB etc.)
+   - no public API / type signature changes
+   - no concurrency-related changes
+   - user has not explicitly requested Team / parallel
+   any condition unmet → launch PO Agent
+3. Launch PO Agent (skip with `--no-po`)
 4. Impl branch: Team use → manager → **parent runs `mkdir -p <impl_notes.dir>`** (from Manager allocation) → developer×N → manager integrate → **parent writes returned MERGED.md content to `<impl_notes.dir>/MERGED.md`** / direct → `/dev`
 5. **Team review**: `Task(reviewer-agent, --codex)` fixed (comprehensive + codex parallel, common notes priority) → P0/P1 judge
    - P0 present: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
@@ -131,11 +126,11 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 
 | Feature | Condition | Action |
 |------|------|------|
-| worktree isolation | `--parallel` or `--auto` independent parallel | `isolation: "worktree"` auto-create・cleanup |
+| worktree isolation | `--parallel` or `--auto` independent parallel | `isolation: "worktree"` auto-create / cleanup |
 | `/simplify` | Post-impl | Bundle fast execute |
 | Post-impl verify | `--auto` complete | `/lint-test` (verify-app explicit only) |
 | `IMPL_NOTES` | Team path (Dev via Task()) | Dev writes `dev-<task-id>.md` → Manager merges → parent persists `MERGED.md` under `~/.claude/plans/impl-notes/<run-dir>/`. `/git-push --pr` consumes for PR draft (`--no-impl-notes` to skip) |
 
-worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree-apply-judgment-flow`.
+worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`.
 
 ARGUMENTS: $ARGUMENTS

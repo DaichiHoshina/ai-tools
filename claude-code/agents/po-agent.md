@@ -88,7 +88,7 @@ Team use
 | **Don't create** | Bug fix (use existing) / minor improvement / doc update | **Continue current branch** (feature/bugfix keeps that branch, main starts from main). Confirm with `git rev-parse --abbrev-ref HEAD` |
 | **Unclear** | Neither above, boundary case | **User confirm before parent return** (no auto default; use AskUserQuestion to ask worktree necessity) |
 
-`--auto` skip conditions (all 4) & formula detail: `references/PARALLEL-PATTERNS.md#worktree 適用判定フロー`.
+`--auto` skip conditions (all 4) & formula detail: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`.
 
 ## Available tools
 

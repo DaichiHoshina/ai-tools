@@ -84,8 +84,8 @@ get_frontmatter() {
 
 @test "four_developer_limit_anchor: PARALLEL-PATTERNS.md に 4 Developer 上限根拠が存在" {
   local file="${PROJECT_ROOT}/references/PARALLEL-PATTERNS.md"
-  if ! grep -qxF "### 4 Developer 上限の根拠" "$file"; then
-    echo "anchor missing: ### 4 Developer 上限の根拠 (in $file)" >&2
+  if ! grep -qxF "### Why the 4-Developer limit" "$file"; then
+    echo "anchor missing: ### Why the 4-Developer limit (in $file)" >&2
     return 1
   fi
 }

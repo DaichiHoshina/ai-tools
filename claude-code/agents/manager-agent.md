@@ -54,7 +54,7 @@ All responses in English (preserve technical terms, tool names).
 
 Full detail: `references/PARALLEL-PATTERNS.md`
 
-Worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree 適用判定フロー`
+Worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`
 
 Summary: Based on critical-path-first formula (`LPT_makespan + overhead < sum × 0.7`), use parallel if: 2+ independent tasks + no shared file edits + integration owner defined. `N = min(independent count, 4)`; retry with smaller N if formula fails; N=1 = sequential.
 

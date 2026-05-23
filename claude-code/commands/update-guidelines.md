@@ -3,8 +3,6 @@ allowed-tools: Read, Glob, Grep, Edit, Write, Bash, mcp__context7__*, WebSearch,
 description: Guideline staleness/redundancy/AI-readability check & auto-fix via 3-axis
 ---
 
-# /update-guidelines - Guideline Review & Auto-fix
-
 Inspect `guidelines/` via **3 axes**, auto-apply safe fixes.
 
 | Axis | Target |
@@ -70,7 +68,7 @@ Inspect `guidelines/` via **3 axes**, auto-apply safe fixes.
 | wordy connector | "so" / "because" / honorific repeat | 🟢 Info | ✅ convert to telegraphic |
 | code surplus | 5+ lines per principle | 🟢 Info | propose ≤5, ask |
 | emoji excess | 10+ per file | 🟢 Info | trim non-essential (keep ✅❌⚠️) propose, ask |
-| ASCII-around-space | Japanese + en-digit spacing variance | 🟢 Info | ✅ align to `~/.claude/rules/markdown.md` (strip all/half both) |
+| ASCII-around-space | JP + en-digit spacing variance | 🟢 Info | ✅ align to `~/.claude/rules/markdown.md` (strip all/half both) |
 
 ## Fix Safety
 
@@ -111,11 +109,6 @@ Warning: N / Info: N
 - rules/references/skills scan (guidelines only)
 - code body (`/dev` job)
 
-## Post-execution
-
-```
-./claude-code/sync.sh to-local
-/git-push
-```
+Post-execution: `./claude-code/sync.sh to-local` → `/git-push`
 
 ARGUMENTS: $ARGUMENTS

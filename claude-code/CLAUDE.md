@@ -27,27 +27,27 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **Avoid `general-purpose` agent** (measured highest cost source, max 501s). Metrics: `references/performance-insights.md`
 
-## Auto-Delegation (parent=Opus 指揮、subagent=Sonnet 実行)
+## Auto-Delegation (parent=Opus orchestrates, subagent=Sonnet executes)
 
-*(実装・編集タスク向け。調査・検索フェーズは Discovery Routing 参照)*
+*(For impl/edit tasks. Investigation phase → Discovery Routing)*
 
-**判定原則 (最優先)**: 迷ったら委譲。過小委譲リスク > 過剰委譲コスト。Opus parent は orchestration / judgment のみ、実作業 (write / refactor / verification / commit) はすべて Sonnet。
+**Decision principle (top priority)**: Delegate on uncertainty. Under-delegation risk > over-delegation cost. Opus parent handles orchestration / judgment only; all actual work (write / refactor / verification / commit) goes to Sonnet.
 
-**デフォルト = `developer-agent` (Sonnet) 委譲**。「言われてできることは Sonnet に任せる」原則 (ユーザ指示 2026-05-22)。inline 実行は下記例外のみ。
+**Default = delegate to `developer-agent` (Sonnet)**. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Inline execution only for exceptions below.
 
-**Inline 例外 (委譲しない)**: 質問回答 / 既読ファイル確認 / dry-run / typo / **1 symbol 内 body 置換 1 単位** / **同一ファイル内 config 値 1 個変更** / **期待 LLM 実行 <20s (1 symbol / 1 section 修正)** / 1 コマンド実行 (`git status` 等)
+**Inline exceptions (no delegation)**: Q&A / already-read file check / dry-run / typo / **1 symbol body replace (single unit)** / **1 config value change in same file** / **expected LLM exec <20s (1 symbol / 1 section edit)** / 1 command (`git status` etc.)
 
-※ **実装** = ロジック追加 / 新ファイル / 複数 symbol 修正、**編集** = 2+ file or 10+ 行 or 2+ symbol のいずれか該当
+Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any of 2+ files, 10+ lines, or 2+ symbols
 
-| 検知条件 | 自動起動 |
+| Trigger | Auto-launch |
 |---|---|
-| **上記例外以外のすべての実装 / 編集 / commit** | `developer-agent` 自動 (`Task` tool) |
-| broad search (3+ query / 3+ domain) | `explore-agent` parallel 自動 |
-| review 依頼 / "レビュー" / PR 確認 | `reviewer-agent` 自動 (or `/review`) |
-| bug 原因不明 / "なぜ動かない" / 再発バグ | `root-cause-analyzer` 自動 |
-| 設計判断 / 大規模計画 / 複数 phase | `po-agent` 自動 (or `/plan`) |
-| 多段タスク (調査→設計→実装→検証) | `/flow` 階層展開 (PO→Manager→Dev→Reviewer) |
-| 20+ file 一括処理 | `claude -p` fan-out (`references/fanout-recipes.md`) |
+| **All impl / edit / commit outside exceptions above** | `developer-agent` auto (`Task` tool) |
+| broad search (3+ query / 3+ domain) | `explore-agent` parallel auto |
+| review request / PR check | `reviewer-agent` auto (or `/review`) |
+| unknown bug cause / recurring bug | `root-cause-analyzer` auto |
+| design decision / large plan / multi-phase | `po-agent` auto (or `/plan`) |
+| multi-stage task (investigate→design→impl→verify) | `/flow` hierarchy (PO→Manager→Dev→Reviewer) |
+| 20+ file bulk processing | `claude -p` fan-out (`references/fanout-recipes.md`) |
 
 ## Session Efficiency
 
@@ -55,25 +55,25 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 - **Long tasks**: `/rename {type}-{scope}`, `claude --resume` (`references/session-management.md`)
 - **Success-criteria principle**: "what defines success" over procedural steps
 - **Verify first**: post-impl run test/lint/typecheck (DoD below)
-- **MCP tool args は仕様確認してから定義に書く**: `ToolSearch select:<tool>` で param 名確認、LLM 補正に依存しない (2026-05-17: `memory_file_name` / `path=` で発覚)
-- **regex 置換後は `git diff --stat` で削除規模即確認**: serena `replace_content` regex は DOTALL/MULTILINE 強制で `.*\n` greedy 食い→全消去事故。1 行は **literal + 行末 `\n`**、複数行は **非貪欲 `.*?` + 明示終端 anchor** (2026-05-18 事故、詳細 `[[serena-replace-regex-dotall-pitfall]]` memory)
-- **Minimize confirmation / choice**: safe ops は無確認実行、minor choice は推奨を直接実行。確認は file deletion / deploy / external send / 重要決定 (architecture / cost / 不可逆) のみ
-- **ROI gate**: 「全部やって」指示でも ultrathink で「効果小」なら**個別再確認** (2026-05-07 低 ROI 一括実装事故)
-- **pwd check**: Read/Bash 前に存在確認、`cd` 前に `pwd`
-- **/memory-save**: 3+ file 変更 / 非自明 refactor / incident のみ
-- **Token budget (Read/Bash output)**: 大ファイル Read は `limit:` / `offset:` 指定 (default 200 行目安)、長 log は `| head -N` / `| tail -N` で truncate。**全文 dump は累積 cost 大**、symbol read (serena) で代替可ならそちら
-- **Subagent prompt context budget**: 委譲時 prompt ≤500 words 目安、必要最小限 context のみ。**会話全文の流し込み禁止** (subagent 単価安くても入力 tokens で逆転、`agents/*-agent.md` の Report length budget と対称)
+- **MCP tool args: verify spec before writing**: use `ToolSearch select:<tool>` to confirm param names; do not rely on LLM autocorrect (2026-05-17: `memory_file_name` / `path=` incident)
+- **After regex replace, run `git diff --stat` immediately**: serena `replace_content` regex forces DOTALL/MULTILINE — `.*\n` greedy wipe risk. Single line: **literal + trailing `\n`**; multi-line: **non-greedy `.*?` + explicit end anchor** (2026-05-18 incident, see `[[serena-replace-regex-dotall-pitfall]]` memory)
+- **Minimize confirmation / choice**: execute safe ops without prompting; apply recommended option directly for minor choices. Confirm only for: file deletion / deploy / external send / critical decisions (architecture / cost / irreversible)
+- **ROI gate**: even for "do everything" instructions, re-confirm individually if ultrathink judges low ROI (2026-05-07 bulk low-ROI impl incident)
+- **pwd check**: verify existence before Read/Bash; check `pwd` before `cd`
+- **/memory-save**: only for 3+ file changes / non-obvious refactor / incident
+- **Token budget (Read/Bash output)**: use `limit:` / `offset:` for large files (default ~200 lines); truncate long logs with `| head -N` / `| tail -N`. **Full dump accumulates cost**; prefer serena symbol read when available
+- **Subagent prompt context budget**: keep delegation prompts ≤500 words with minimum necessary context. **Never dump full conversation** (cheap per-token subagent cost reverses at high input volume; symmetric with Report length budget in `agents/*-agent.md`)
 
 ## Rewind
 
-- **Esc**: pause (context 保持) / **Esc x2** or `/rewind`: 会話・コード・両方を過去 checkpoint へ復元
+- **Esc**: pause (context preserved) / **Esc x2** or `/rewind`: restore conversation, code, or both to a past checkpoint
 - Details: `references/checkpoint-rewind.md`
 
 ## Context Management
 
-- **>50% → `/compact` 提案** (auto 実行不可)。task boundary で `/clear` が最良節約点 (5+ min idle = prompt cache TTL 切れ→full cache miss)
-- 継続: 「next-session mega-prompt 生成」依頼→新 session に paste
-- 汚染なし質問: `/btw` (overlay、history 未保存)
+- **>50% → suggest `/compact`** (cannot auto-execute). `/clear` at task boundary is best savings point (5+ min idle = prompt cache TTL expired → full cache miss)
+- Continue: request "generate next-session mega-prompt" → paste into new session
+- Uncontaminated question: `/btw` (overlay, not saved to history)
 
 ## Natural Language Triggers (major only)
 
@@ -84,7 +84,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | "レビュー" / "レビューして" | `/review` |
 | "{strict\|fast\|normal} mode" | `/session-mode {strength}` |
 | "並列実行で" / "wt 分けて" | `/flow --parallel` |
-| "team で" / "agent team で" / "分担で" / "本格的に" | `/flow` (PO/Manager/Dev 階層 強制) |
+| "team で" / "agent team で" / "分担で" / "本格的に" | `/flow` (PO/Manager/Dev hierarchy, forced) |
 | "Slack に投げて" / "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message` |
 | "Notion に書いて" / "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages` |
 
@@ -94,33 +94,33 @@ No other natural-language interpretation. Full list: `references/natural-languag
 
 | Operation | Rule |
 |---|---|
-| PR branch merge (`gh pr merge` 等) | **Strictly forbidden**. Output PR URL, direct browser |
+| PR branch merge (`gh pr merge` etc.) | **Strictly forbidden**. Output PR URL, direct to browser |
 | git merge / rebase / branch delete | User confirmation required |
 
 ## Definition of Done (DoD)
 
-Apply only relevant items, skip N/A. Scale by change size (typo→#6 のみ / 新機能→全部)。
+Apply only relevant items, skip N/A. Scale by change size (typo → #6 only / new feature → all).
 
 1. Types: 0 errors (typed only)
-2. Tests: 関連 Pass、coverage ≥80% (project standard 優先)
+2. Tests: relevant pass, coverage ≥80% (project standard takes priority)
 3. Lint: 0 violations
 4. Security: audit clean
 5. Build: success
-6. **Actual behavior: 1 manual or smoke test** (必須)
+6. **Actual behavior: 1 manual or smoke test** (required)
 
-Bundle: `/lint-test` (CI 同等) / `/verify-once` (structural)。未達なら完了報告不可。
+Bundle: `/lint-test` (CI equivalent) / `/verify-once` (structural). Cannot report completion until all applicable items pass.
 
 ## Root Cause Analysis
 
-Structural fix over symptomatic。**Reproduce → identify → design → verify** 4 steps 必須。Details: `/root-cause` skill / `/protection-mode`.
+Structural fix over symptomatic. **Reproduce → identify → design → verify** 4 steps required. Details: `/root-cause` skill / `/protection-mode`.
 
 ## Compounding Engineering
 
-Claude misbehavior / non-obvious success = config 未反映シグナル。即文書化→次 session 自動回避 (Boris 流)。
+Claude misbehavior / non-obvious success = signal that config is not reflecting reality. Document immediately → auto-avoid next session (Boris style).
 
-- Misbehavior → CLAUDE.md / skill / hook へ記録
-- Non-obvious success → ルール化
-- fix 指示に「CLAUDE.md or 関連 skill 更新で再現性確保」追記 → config 更新トリガ
+- Misbehavior → record in CLAUDE.md / skill / hook
+- Non-obvious success → codify as a rule
+- Append "update CLAUDE.md or related skill to ensure reproducibility" to fix instructions → triggers config update
 - Details: `references/compounding-engineering-cycle.md` / `memory-usage.md`
 
 ## Genshijin Boundary
@@ -130,5 +130,5 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 ## References
 
 High freq: `references/model-selection.md` / `natural-language-triggers.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md`
-Index: `references/INDEX.md`、Writing entry: `guidelines/writing/README.md`
+Index: `references/INDEX.md`, Writing entry: `guidelines/writing/README.md`
 Tools: `scripts/health-check.sh` (monthly) / `usage-stats.sh` / `hook-bench.sh`

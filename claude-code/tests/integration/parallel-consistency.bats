@@ -19,8 +19,8 @@ setup() {
   export TRIGGERS_FILE="${PROJECT_ROOT}/references/natural-language-triggers.md"
 }
 
-# セクション抽出: 指定見出しから次の同レベル以下の見出しまでを出力
-# args: $1=ファイル, $2=見出し（例: "## critical path 短縮判定式"）
+# Extract section: from given heading up to next same-or-higher level heading
+# args: $1=file, $2=heading (e.g. "## Critical-path reduction formula")
 extract_section() {
   local file="$1"
   local heading="$2"
@@ -47,15 +47,15 @@ require_anchor() {
 # =============================================================================
 
 @test "anchor_exists: PARALLEL-PATTERNS.md に必須 anchor が存在" {
-  require_anchor "$PATTERNS_FILE" "## critical path 短縮判定式"
-  require_anchor "$PATTERNS_FILE" "## 禁止語句定義（bats 検証対象）"
-  require_anchor "$PATTERNS_FILE" "### 4 Developer 上限の根拠"
+  require_anchor "$PATTERNS_FILE" "## Critical-path reduction formula"
+  require_anchor "$PATTERNS_FILE" "## Forbidden phrase definitions (bats validation targets)"
+  require_anchor "$PATTERNS_FILE" "### Why the 4-Developer limit"
 }
 
 @test "judgment_formula_exists: 判定式に必須要素が含まれる" {
   local section
-  section=$(extract_section "$PATTERNS_FILE" "## critical path 短縮判定式")
-  [[ -n "$section" ]] || { echo "section empty: ## critical path 短縮判定式"; false; }
+  section=$(extract_section "$PATTERNS_FILE" "## Critical-path reduction formula")
+  [[ -n "$section" ]] || { echo "section empty: ## Critical-path reduction formula"; false; }
   [[ "$section" == *"expected_parallel"* ]] || { echo "missing: expected_parallel"; false; }
   [[ "$section" == *"expected_serial"* ]] || { echo "missing: expected_serial"; false; }
   [[ "$section" == *"× 0.7"* ]] || { echo "missing: × 0.7"; false; }

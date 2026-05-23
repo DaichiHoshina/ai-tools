@@ -23,13 +23,6 @@ description: Debug support — error log analysis, root-cause identification, fi
 | Performance | bottlenecks, N+1, memory leaks |
 | Docker | apply `docker-troubleshoot` + `dockerfile-best-practices` |
 
-## Docker error detection
-
-For Docker-related errors, apply:
-
-1. **docker-troubleshoot** — lima/Docker Desktop connection, daemon status diagnosis & recovery
-2. **dockerfile-best-practices** — Dockerfile improvements (multi-stage, cache optimization, security hardening)
-
 ## Output format
 
 Normal case:
@@ -60,14 +53,7 @@ Root cause unidentified (insufficient info):
 | Serena fails | degrade to grep/Read, warn on dependency tracking |
 | multiple fix candidates, unclear priority | sort by risk low→high, ask user to choose |
 
-## Long-form report writing (for Notion/md)
-
-Apply `guidelines/writing/long-form-doc.md` principles:
-
-- open w/ 1-3 sentence conclusion ("X is the cause. Fixed by Y / proposed solution Z")
-- "required"/"recommended"/"critical" → add 1-line rationale
-- replace vague terms ("significantly improved", "optimized") w/ numbers ("5xx: 120/day → 8/day")
-- close w/ explicit next action for reviewer/on-call
+Long-form report (Notion/md): apply `guidelines/writing/long-form-doc.md`.
 
 ## Next actions
 

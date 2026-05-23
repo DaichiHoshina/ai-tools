@@ -1,93 +1,92 @@
-# 設計フェーズ遷移と各コマンドの役割
+# Design Phase Transitions and Command Roles
 
-要件整理から実装・蓄積までの 6 コマンドの位置付けと遷移を整理する。
+Position and transitions of 6 commands from requirements clarification through implementation and knowledge retention.
 
-## 遷移図
+## Transition diagram
 
 ```
-[アイデア]
+[Idea]
    │
-   ├─(1) 設計が不明確 ──→ /brainstorm（Superpowers、対話的精緻化）
+   ├─(1) Design unclear ──→ /brainstorm (Superpowers, interactive refinement)
    │                          │
    ▼                          ▼
-[要件が見える] ←──────────────┘
+[Requirements visible] ←──────┘
    │
-   └─(2) 要件整理 ──→ /prd（11ペルソナレビュー、Q1-Q5 意思決定）
+   └─(2) Requirements clarification ──→ /prd (11-persona review, Q1-Q5 decisions)
                          │
                          ▼
-                  [PRD 確定（chat or md）]
+                  [PRD confirmed (chat or md)]
                          │
    ┌─────────────────────┤
    │                     ▼
-   │  (3) 設計書化 ──→ /design-doc（チーム共有用 12セクション md）
+   │  (3) Design doc ──→ /design-doc (12-section md for team sharing)
    │                     │
    │                     ▼
-   │              [Design Doc（docs/design/*.md）]
+   │              [Design Doc (docs/design/*.md)]
    │                     │
    ▼                     │
-(4) 実装計画 ──→ /plan（PO Agent、Phase 分割、~/.claude/plans/）
+(4) Impl plan ──→ /plan (PO Agent, phase split, ~/.claude/plans/)
                          │
                          ▼
-                  (5) 実装 ──→ /dev または /flow
+                  (5) Implementation ──→ /dev or /flow
                                     │
                                     ▼
-                            [動作確認・PR]
+                            [Validation / PR]
                                     │
                                     ▼
-                  (6) ナレッジ蓄積 ──→ /docs（Notion 投稿）
+                  (6) Knowledge retention ──→ /docs (Notion post)
 ```
 
-## 各コマンドの責務
+## Command responsibilities
 
-| # | コマンド | 入力 | 出力 | フェーズ |
+| # | Command | Input | Output | Phase |
 |---|---------|------|------|---------|
-| 1 | `/brainstorm` | 漠然とした課題 | chat（精緻化された要件） | 発散・対話 |
-| 2 | `/prd` | 要件 | chat or `--out` で md | 要件定義 |
-| 3 | `/design-doc` | PRD（`--prd`）or 自然言語 | `docs/design/<slug>.md` | 設計 |
-| 4 | `/plan` | Design Doc or 設計済前提 | chat or `~/.claude/plans/*.md` | 実装計画 |
-| 5 | `/dev` `/flow` | Plan or タスク | コード変更 | 実装 |
-| 6 | `/docs` | git diff or `--from <md>` | Notion ページ | 完了後蓄積 |
+| 1 | `/brainstorm` | Vague problem | chat (refined requirements) | Diverge / dialogue |
+| 2 | `/prd` | Requirements | chat or `--out` md | Requirements definition |
+| 3 | `/design-doc` | PRD (`--prd`) or natural language | `docs/design/<slug>.md` | Design |
+| 4 | `/plan` | Design Doc or pre-designed premise | chat or `~/.claude/plans/*.md` | Impl planning |
+| 5 | `/dev` `/flow` | Plan or task | Code changes | Implementation |
+| 6 | `/docs` | git diff or `--from <md>` | Notion page | Post-completion retention |
 
-## 使い分けの判断軸
+## Decision axis for command selection
 
-| 状況 | 推奨スタート地点 |
+| Situation | Recommended starting point |
 |------|---------------|
-| 要件・設計とも不明確 | `/brainstorm` |
-| 要件はあるが整理されていない | `/prd` |
-| PRD 済、設計を起こす | `/design-doc --prd <path>` |
-| 設計済、実装の Phase 分けが要る | `/plan` |
-| 設計・計画済、即実装 | `/dev` または `/flow` |
-| 実装完了、ナレッジを残す | `/docs` |
+| Requirements and design both unclear | `/brainstorm` |
+| Requirements exist but not organized | `/prd` |
+| PRD done, need to create design | `/design-doc --prd <path>` |
+| Design done, need phase breakdown | `/plan` |
+| Design and plan done, implement now | `/dev` or `/flow` |
+| Implementation done, retain knowledge | `/docs` |
 
-## スキップ判断
+## Skip judgment
 
-- **PRD 不要**: 1ファイル/数十行の修正、バグ修正は `/prd` をスキップして `/dev`
-- **Design Doc 不要**: 単一サービス内の機能追加は `/plan` 直行
-- **Plan 不要**: 設計が単純で `/dev` 一発で書ける場合
+- **PRD not needed**: 1-file / dozens-of-lines edits, bug fixes → skip `/prd`, go to `/dev`
+- **Design Doc not needed**: Feature addition within a single service → go directly to `/plan`
+- **Plan not needed**: Design is simple enough to implement with `/dev` in one pass
 
-## Q1-Q5 継承
+## Q1-Q5 inheritance
 
-`/prd` で確定した「1.5 意思決定根拠（Q1-Q5）」は `/design-doc --prd <path>` で **転記し再評価せず**、設計起因で前提が変わる Q のみ追記する。
+"1.5 decision rationale (Q1-Q5)" confirmed in `/prd` is **transcribed without re-evaluation** in `/design-doc --prd <path>`. Append only Qs whose premise changes due to design.
 
-## /plan と /design-doc の境界
+## /plan vs /design-doc boundary
 
-| 観点 | `/design-doc` | `/plan` |
+| Aspect | `/design-doc` | `/plan` |
 |------|--------------|---------|
-| 主目的 | チームに **設計判断** を伝える | 実装の **Phase 分け** を決める |
-| 出力 | 12 セクション md（Why/比較/失敗ケース/移行戦略） | Phase 1/2/... と Worktree 要否 |
-| 入力 | PRD or 自然言語 | Design Doc or 設計済前提 |
-| 対象読者 | レビュワー・PM・将来の自分 | 実装者（自分 or developer-agent） |
-| 連携 Agent | なし（直接 Edit） | PO Agent（複雑時） |
+| Primary purpose | Communicate **design decisions** to the team | Determine **phase breakdown** for implementation |
+| Output | 12-section md (Why / comparison / failure cases / migration strategy) | Phase 1/2/... and worktree requirement |
+| Input | PRD or natural language | Design Doc or pre-designed premise |
+| Audience | Reviewers / PM / future self | Implementers (self or developer-agent) |
+| Related agent | None (direct Edit) | PO Agent (for complex cases) |
 
-両方必要なケース: 大型機能。`/design-doc` で「設計を伝える」→ `/plan` で「実装手順に落とす」。
-小型修正は `/plan` のみで十分なことが多い。
+Both needed for large features. Small changes: `/plan` alone is usually sufficient.
 
-## 関連
+## Related
 
-- `../guidelines/writing/design-doc-protocol.md` — DesignDoc 4 Step + 10 パターン + アンチパターン + テンプレ選択 + セルフチェック 18
-- `design-doc-template.md` — 12 セクションのフルテンプレート
-- `document-iteration-patterns.md` — 書き直しのフェーズ進行と修正パターン（動的補完）
-- `prd-review-checkpoints.md` — PRD レビューで人間が集中すべき観点
-- `decision-quality-checklist.md` — 意思決定品質の 5 問チェック
-- `performance-issue-template.md` — パフォーマンス改善 issue の計測→分析→段階改善→負荷試験
-- `review-patterns-universal.md` — 設計判断・SQL 方言で頻出するレビュー指摘
+- `../guidelines/writing/design-doc-protocol.md` — DesignDoc 4 steps + 10 patterns + anti-patterns + template selection + self-check 18
+- `design-doc-template.md` — Full 12-section template
+- `document-iteration-patterns.md` — Phase progression and revision patterns for rewrites (dynamic supplement)
+- `prd-review-checkpoints.md` — Review checkpoints for human focus in PRD review
+- `decision-quality-checklist.md` — 5-question decision quality check
+- `performance-issue-template.md` — Performance improvement issue: measure → analyze → staged improvement → load test
+- `review-patterns-universal.md` — Common review findings for design decisions and SQL dialects
