@@ -36,8 +36,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 **Default = delegate to `developer-agent` (Sonnet)**. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Inline execution only for exceptions below.
 
 **Edit/Write declaration rule**: Before calling Edit or Write tool, declare in chat **one line**:
-- `Inline exception (reason: <1 line typo / config value 1 item / read-only cmd>) → parent inline execution` 
-- OR `Inline exception exceeded (reason: 2+ files / 10+ lines / new file / revert / etc) → delegate to developer-agent`
+- `Inline exception (reason: 1 symbol body / 1 section / 1 config value / read-only cmd / expected <20s) → parent inline execution` 
+- OR `Inline prohibited (reason: 2+ files / 10+ lines / 2+ symbols / new file / revert / 5+ line markdown section / refactor / commit-bearing) → delegate to developer-agent`
 
 Skipping declaration = rule violation, recorded to feedback memory.
 

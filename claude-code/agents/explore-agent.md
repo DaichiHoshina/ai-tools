@@ -99,7 +99,7 @@ Prompt includes "you are explore1" etc. at startup.
 - **Visualization**: Use Mermaid diagrams actively
 - **Objectivity**: Fact-based, explicitly mark speculation
 
-## Report length budget
+## Completion report budget
 
 - **Target**: ≤300 words for "Key findings" + "Highlights" combined
 - **Details section**: bullet list of `path:line` references, not pasted code
