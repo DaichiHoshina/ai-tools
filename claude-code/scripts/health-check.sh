@@ -44,6 +44,11 @@ if ! [[ "$BENCH_REPEATS" =~ ^[1-9][0-9]*$ ]]; then
   exit 2
 fi
 
+if ! [[ "$PLANS_STALE_DAYS" =~ ^(0|[1-9][0-9]*)$ ]]; then
+  echo "--plans-stale-days must be a non-negative integer" >&2
+  exit 2
+fi
+
 TODAY=$(date +%Y-%m-%d)
 
 render_plans_staleness() {
@@ -58,10 +63,12 @@ render_plans_staleness() {
   local current_epoch
   current_epoch=$(date +%s)
 
-  local stale_files=()
+  local stale_names=()
+  local stale_ages=()
+  local stale_sizes=()
   local found_any=0
 
-  while IFS= read -r plan_file; do
+  while IFS= read -r -d '' plan_file; do
     [ -f "$plan_file" ] || continue
     local mtime_epoch
     mtime_epoch=$(stat -f "%m" "$plan_file" 2>/dev/null) || continue
@@ -74,18 +81,19 @@ render_plans_staleness() {
       size_kb=$(( $(stat -f "%z" "$plan_file" 2>/dev/null || echo 0) / 1024 ))
       local filename
       filename=$(basename "$plan_file")
-      stale_files+=("$filename|$age_days|$size_kb")
+      stale_names+=("$filename")
+      stale_ages+=("$age_days")
+      stale_sizes+=("$size_kb")
     fi
-  done < <(find "$plans_dir" -maxdepth 1 -type f -name "*.md")
+  done < <(find "$plans_dir" -maxdepth 1 -type f -name "*.md" -print0)
 
   if [ "$found_any" -eq 0 ]; then
     echo "✓ clean"
   else
     echo "| file | age (days) | size (KB) |"
     echo "|---|---|---|"
-    for entry in "${stale_files[@]}"; do
-      IFS='|' read -r filename age_days size_kb <<< "$entry"
-      printf "| \`%s\` | %d | %d |\n" "$filename" "$age_days" "$size_kb"
+    for i in "${!stale_names[@]}"; do
+      printf "| \`%s\` | %d | %d |\n" "${stale_names[$i]}" "${stale_ages[$i]}" "${stale_sizes[$i]}"
     done
     echo ""
     printf "Proposed deletion: \`find %s -maxdepth 1 -name '*.md' -mtime +%d -delete\`\n" "$plans_dir" "$threshold_days"
