@@ -105,6 +105,8 @@ render() {
   echo ""
   echo "## Usage (過去 ${DAYS} 日 0 利用)"
   echo ""
+  echo "> 注: この metric は **user 直接 invocation のみ** カウント。\`/flow\` Skill() auto-launch / \`detect-from-keywords.sh\` keyword 検知 / \`settings.json skillOverrides\` active / agents / hooks / bats test からの間接参照は乗らない。prune 判断には必ず \`grep -rn '<name>' ~/ai-tools/claude-code/\` で cross-ref 確認すること (2026-05-24 知見)。"
+  echo ""
   echo '```'
   "$SCRIPT_DIR/usage-stats.sh" --days "$DAYS" --zero
   echo '```'
@@ -241,7 +243,7 @@ PY
   echo ""
   echo "## 次アクション候補"
   echo ""
-  echo "- 0 利用 commands/skills: 設計通り出番待ちか確認、不要なら \`_archive/\` 退避"
+  echo "- 0 利用 commands/skills: **cross-ref grep 必須** (workflow / keyword 検知 / agents / hooks / bats 参照確認)。参照 0 のみ \`_archive/\` 退避、参照あれば設計通り出番待ち"
   echo "- median 100ms 超 hook: \`hook-bench.sh --hook NAME\` で詳細計測、内部処理を点検"
   echo "- death ref 検出: 参照を実態 (agent 直起動表記 / 廃止注記) に揃える、または archive 復活"
   echo "- 90 日超 mention: 該当言語/FW の release notes 確認 → guidelines 更新 + 「YYYY年MM月時点」差替"
