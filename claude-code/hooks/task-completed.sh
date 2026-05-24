@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 
 # Nerd Fonts icon
-# ICON_* \u306f hook-utils.sh \u3067\u5b9a\u7fa9\u6e08\u307f
+# ICON_* は hook-utils.sh で定義済み
 
 # jq前提条件チェック
 require_jq
@@ -16,12 +16,15 @@ require_jq
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# タスク情報を抽出（公式スキーマ準拠）
-TASK_ID=$(echo "$INPUT" | jq -r '.task_id // "unknown"')
-TASK_SUBJECT=$(echo "$INPUT" | jq -r '.task_subject // "unknown"')
-TEAMMATE_NAME=$(echo "$INPUT" | jq -r '.teammate_name // "unknown"')
-TEAM_NAME=$(echo "$INPUT" | jq -r '.team_name // "unknown"')
-CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
+# タスク情報を抽出（jq 1回で全フィールド取得）
+IFS=$'\t' read -r TASK_ID TASK_SUBJECT TEAMMATE_NAME TEAM_NAME CWD < <(
+  extract_json_fields "$INPUT" \
+    '.task_id // "unknown"' \
+    '.task_subject // "unknown"' \
+    '.teammate_name // "unknown"' \
+    '.team_name // "unknown"' \
+    '.cwd // ""'
+)
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # cwd フォールバック（JSONになければ環境から取得）

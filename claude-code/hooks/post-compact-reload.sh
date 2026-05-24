@@ -31,12 +31,20 @@ if [ -f "${STATE_FILE}" ]; then
   rm -f "${STATE_FILE}"
 fi
 
-# --- 静的コンテキスト収集（MCP不要） ---
-GIT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-GIT_STATUS=$(git status --short 2>/dev/null | head -20 || echo "")
-GIT_LOG=$(git log --oneline -5 2>/dev/null || echo "")
+# --- 静的コンテキスト収集（MCP不要）---
+# git 4 コマンドを tmpfile 経由で並列実行し fork 直列 wait を削減
+_TMP_DIR=$(mktemp -d)
 PROJECT_DIR=$(pwd)
-RECENT_FILES=$(git diff --name-only HEAD~3..HEAD 2>/dev/null | head -15 || echo "")
+git branch --show-current      >"${_TMP_DIR}/branch"    2>/dev/null &
+git status --short             >"${_TMP_DIR}/status"    2>/dev/null &
+git log --oneline -5           >"${_TMP_DIR}/log"       2>/dev/null &
+git diff --name-only HEAD~3..HEAD >"${_TMP_DIR}/recent" 2>/dev/null &
+wait
+GIT_BRANCH=$(cat "${_TMP_DIR}/branch"  2>/dev/null || echo "unknown")
+GIT_STATUS=$(head -20 "${_TMP_DIR}/status" 2>/dev/null || echo "")
+GIT_LOG=$(cat "${_TMP_DIR}/log"    2>/dev/null || echo "")
+RECENT_FILES=$(head -15 "${_TMP_DIR}/recent" 2>/dev/null || echo "")
+rm -rf "${_TMP_DIR}"
 
 case "${SERENA_STATE}" in
   connected)

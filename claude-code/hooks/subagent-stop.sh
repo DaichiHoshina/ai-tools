@@ -28,32 +28,54 @@ mkdir -p "$LOG_DIR"
 
 # ログファイルに記録（1000行超でローテーション）
 LOG_FILE="${LOG_DIR}/subagent-events.log"
-if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE" | tr -d ' ') -gt 1000 ]]; then
+if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE") -gt 1000 ]]; then
   tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
 fi
 echo "[${TIMESTAMP}] STOP  | agent_id=${AGENT_ID} | type=${AGENT_TYPE} | cwd=${CWD}" >> "$LOG_FILE"
 
-# --- Analytics記録 ---
-_HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_LIB_DIR="${_HOOK_DIR}/../lib"
-if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
+# --- Analytics記録をバックグラウンドへ ---
+(
+  _LIB_DIR="${SCRIPT_DIR}/../lib"
+  if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
     source "${_LIB_DIR}/analytics-writer.sh"
     analytics_update_agent_stop "$AGENT_ID" 2>/dev/null || true
-fi
+  fi
+) 2>/dev/null &
 
-# 実行時間計算（同じagent_idのSTARTとSTOPの差分）
+# 実行時間計算 + 24h STOP カウントを awk 1 fork で同時取得
 DURATION="N/A"
-if [ -f "$LOG_FILE" ] && [ "$AGENT_ID" != "unknown" ]; then
-  # awk 1 fork で「START 行で agent_id 一致の最終行のタイムスタンプ」抽出
-  # /START/ で START 行に絞り、index() で固定文字列マッチ（AGENT_ID にメタ文字含むケースで誤マッチ防止）
-  # Field 2: -F'[][]' で各角括弧を区切りとし、`[2026-... ]` の中身を取得
-  START_TIME=$(awk -F'[][]' -v aid="agent_id=${AGENT_ID}" '/START/ && index($0, aid) {ts=$2} END{print ts}' "$LOG_FILE" || echo "")
-  if [ -n "$START_TIME" ]; then
-    # 簡易的な秒数計算（dateコマンドで変換）
-    START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$START_TIME" +"%s" 2>/dev/null || echo "0")
-    STOP_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$TIMESTAMP" +"%s" 2>/dev/null || date +"%s")
+RECENT_COUNT=0
+if [ -f "$LOG_FILE" ]; then
+  # bash 5.0+ の EPOCHSECONDS builtin で date fork を回避
+  _NOW_STOP_EPOCH="${EPOCHSECONDS:-$(date +"%s")}"
+  # cutoff epoch を bash 算術で計算し、awk 内で ISO8601 prefix 比較
+  # ISO8601 は辞書順 = 時刻順なので先頭 13 文字 (YYYY-MM-DDTHH) 比較で 1h 精度近似
+  # 24h 前の時刻を printf で生成（date fork 不要）
+  _CUTOFF_EPOCH=$((_NOW_STOP_EPOCH - 86400))
+  # epoch → ISO8601 は bash 単体では困難なため date fork 1 本だけ維持
+  _CUTOFF_DATE=$(date -u -r "${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
+    || date -u -d "@${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
+    || echo "")
+  # awk 1 fork: START epoch 変換 + STOP カウントを同時実行（date -j fork を排除）
+  # mktime() は gawk 拡張。macOS の awk は mawk 相当で mktime 非対応のため
+  # ISO8601 を文字列分解して epoch 秒を手計算するのは複雑すぎるため
+  # start_ts は文字列のまま返し、後続の date -j fork 1 本のみ維持
+  read -r _START_TIME RECENT_COUNT < <(
+    awk -F'[][]' \
+      -v aid="agent_id=${AGENT_ID}" \
+      -v cutoff="${_CUTOFF_DATE}" \
+      '
+      /START/ && index($0, aid) { start_ts = $2 }
+      /STOP/  {
+        if (cutoff == "" || $2 >= cutoff) cnt++
+      }
+      END { print (start_ts ? start_ts : ""), cnt+0 }
+      ' "$LOG_FILE" || echo " 0"
+  )
+  if [ -n "$_START_TIME" ] && [ "$AGENT_ID" != "unknown" ]; then
+    START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$_START_TIME" +"%s" 2>/dev/null || echo "0")
     if [ "$START_EPOCH" -gt 0 ]; then
-      DURATION_SEC=$((STOP_EPOCH - START_EPOCH))
+      DURATION_SEC=$((_NOW_STOP_EPOCH - START_EPOCH))
       if [ $DURATION_SEC -ge 60 ]; then
         DURATION="${DURATION_SEC}s ($((DURATION_SEC / 60))m $((DURATION_SEC % 60))s)"
       else
@@ -61,18 +83,6 @@ if [ -f "$LOG_FILE" ] && [ "$AGENT_ID" != "unknown" ]; then
       fi
     fi
   fi
-fi
-
-# 統計情報計算（過去24時間の完了したサブエージェント数）
-if [ -f "$LOG_FILE" ]; then
-  CUTOFF=$(date -u -v-24H +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d '24 hours ago' +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "")
-  if [ -n "$CUTOFF" ]; then
-    RECENT_COUNT=$(grep "STOP" "$LOG_FILE" | awk -v cutoff="$CUTOFF" -F'[][]' '{if ($2 >= cutoff) count++} END {print count+0}')
-  else
-    RECENT_COUNT=$(grep -c "STOP" "$LOG_FILE" || echo "0")
-  fi
-else
-  RECENT_COUNT=0
 fi
 
 # 結果を返す（jqで安全にJSON生成）

@@ -38,34 +38,35 @@ LOG_DIR="$HOME/.claude/session-logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/$(date +%Y%m%d).log"
 
-# ローテーション（7日超削除）
-find "$LOG_DIR" -type f -mtime +7 -delete 2>/dev/null || true
+# ローテーション（7日超削除）をバックグラウンドへ
+find "$LOG_DIR" -type f -mtime +7 -delete 2>/dev/null &
 
 # ログ追記
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] $SESSION_ID | $PROJECT_NAME | msg:$TOTAL_MESSAGES | tok:$TOTAL_TOKENS | ${DURATION}s" >> "$LOG_FILE"
 
-# --- Analytics記録 ---
-_LIB_DIR="${SCRIPT_DIR}/../lib"
-if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
+# --- Analytics記録をバックグラウンドへ ---
+(
+  _LIB_DIR="${SCRIPT_DIR}/../lib"
+  if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
     source "${_LIB_DIR}/analytics-writer.sh"
 
     # session-init-timing.log から当セッションの init_duration_ms を取得
     _TIMING_LOG="${HOME}/.claude/logs/session-init-timing.log"
     _INIT_DURATION_MS=0
     if [[ -f "${_TIMING_LOG}" ]]; then
-        _TIMING_LINE=$(grep "session_id=${SESSION_ID} " "${_TIMING_LOG}" 2>/dev/null | tail -n 1 || true)
-        if [[ -n "${_TIMING_LINE}" ]]; then
-            _EXTRACTED=$(echo "${_TIMING_LINE}" | grep -o 'duration_ms=[0-9]*' | cut -d= -f2 || true)
-            [[ "${_EXTRACTED}" =~ ^[0-9]+$ ]] && _INIT_DURATION_MS="${_EXTRACTED}"
-        fi
+      _TIMING_LINE=$(grep "session_id=${SESSION_ID} " "${_TIMING_LOG}" 2>/dev/null | tail -n 1 || true)
+      if [[ -n "${_TIMING_LINE}" ]]; then
+        _EXTRACTED=$(echo "${_TIMING_LINE}" | grep -o 'duration_ms=[0-9]*' | cut -d= -f2 || true)
+        [[ "${_EXTRACTED}" =~ ^[0-9]+$ ]] && _INIT_DURATION_MS="${_EXTRACTED}"
+      fi
     fi
 
     analytics_insert_session "$SESSION_ID" "$PROJECT_NAME" "$_MODEL" "$_GIT_BRANCH" \
         "$_INPUT_TOKENS" "$_CACHE_READ" "$_CACHE_WRITE" "$_OUTPUT_TOKENS" "$TOTAL_MESSAGES" "$DURATION" \
         "$_INIT_DURATION_MS" 2>/dev/null || true
-    # stderr は exec 2>> で hook-errors.log に既にリダイレクト済（6行目）。明示捨てない
     analytics_cleanup_old_records 90 || true
-fi
+  fi
+) 2>/dev/null &
 
 # JSON出力（stdout閉鎖時のbroken pipeを無視）
 echo '{"systemMessage":"Session logged"}' 2>/dev/null || true

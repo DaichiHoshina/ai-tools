@@ -28,18 +28,31 @@ mkdir -p "$LOG_DIR"
 
 # ログファイルに記録（1000行超でローテーション）
 LOG_FILE="${LOG_DIR}/subagent-events.log"
-if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE" | tr -d ' ') -gt 1000 ]]; then
+if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE") -gt 1000 ]]; then
   tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
 fi
+
 # 重複起動検知: 直近60秒以内に同一 agent_type が起動済みなら警告
 _DUP_WARN=""
+_NOW_EPOCH=$(date +%s)
 if [[ -f "$LOG_FILE" ]]; then
-  # awk 1 fork で「最終マッチ行のタイムスタンプ」抽出（grep|tail|awk の3 fork → 1 fork）
+  # awk 1 fork で「最終マッチ行のタイムスタンプ + 24h START カウント」を同時取得
   # index() は固定文字列検索（AGENT_TYPE に正規表現メタ文字が含まれても誤マッチしない）
   # Field 2: -F'[][]' で各角括弧を区切りとし、`[2026-... ]` の中身を取得
-  _LAST_SAME=$(awk -F'[][]' -v t="type=${AGENT_TYPE} " 'index($0, t) {ts=$2} END{print ts}' "$LOG_FILE" || true)
+  _CUTOFF_DATE=$(date -u -v-24H +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "")
+  read -r _LAST_SAME RECENT_COUNT < <(
+    awk -F'[][]' \
+      -v t="type=${AGENT_TYPE} " \
+      -v cutoff="${_CUTOFF_DATE}" \
+      '
+      /START/ {
+        if (index($0, t)) last_ts = $2
+        if (cutoff == "" || $2 >= cutoff) cnt++
+      }
+      END { print (last_ts ? last_ts : ""), cnt+0 }
+      ' "$LOG_FILE" || echo " 0"
+  )
   if [[ -n "$_LAST_SAME" ]]; then
-    _NOW_EPOCH=$(date +%s)
     _LAST_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$_LAST_SAME" +%s 2>/dev/null || echo 0)
     if [[ "$_LAST_EPOCH" -gt 0 ]]; then
       _DIFF=$((_NOW_EPOCH - _LAST_EPOCH))
@@ -48,30 +61,21 @@ if [[ -f "$LOG_FILE" ]]; then
       fi
     fi
   fi
+else
+  RECENT_COUNT=0
 fi
 
 echo "[${TIMESTAMP}] START | agent_id=${AGENT_ID} | type=${AGENT_TYPE} | cwd=${CWD}" >> "$LOG_FILE"
 
-# --- Analytics記録 ---
-_HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_LIB_DIR="${_HOOK_DIR}/../lib"
-if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
+# --- Analytics記録をバックグラウンドへ ---
+(
+  _LIB_DIR="${SCRIPT_DIR}/../lib"
+  if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
     source "${_LIB_DIR}/analytics-writer.sh"
     _PROJECT=$(basename "$CWD")
     analytics_insert_agent_start "$AGENT_ID" "$AGENT_TYPE" "$_PROJECT" 2>/dev/null || true
-fi
-
-# 統計情報計算（過去24時間のサブエージェント起動数）
-if [ -f "$LOG_FILE" ]; then
-  CUTOFF=$(date -u -v-24H +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d '24 hours ago' +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "")
-  if [ -n "$CUTOFF" ]; then
-    RECENT_COUNT=$(grep "START" "$LOG_FILE" | awk -v cutoff="$CUTOFF" -F'[][]' '{if ($2 >= cutoff) count++} END {print count+0}')
-  else
-    RECENT_COUNT=$(grep -c "START" "$LOG_FILE" || echo "0")
   fi
-else
-  RECENT_COUNT=0
-fi
+) 2>/dev/null &
 
 # 結果を返す（jqで安全にJSON生成）
 AC_MSG="**Agent ID**: ${AGENT_ID}
