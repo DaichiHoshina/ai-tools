@@ -16,6 +16,8 @@ const C = {
   green: "\x1b[38;5;114m",
   yellow: "\x1b[38;5;221m",
   red: "\x1b[38;5;203m",
+  brightRed: "\x1b[38;5;196m",
+  reverse: "\x1b[7m",
   gray: "\x1b[38;5;243m",
   darkGray: "\x1b[38;5;238m",
   branchColor: "\x1b[38;5;75m",
@@ -125,10 +127,13 @@ function displayStatusLine(data) {
     (data.thinking && data.thinking.enabled === true) ||
     data.thinking_enabled === true;
   const badges = [];
-  if (effortLevel === "high")
-    badges.push(`${C.bold}${C.red}\u26a1high${C.R}`);
-  else if (effortLevel === "medium") badges.push(`${C.dim}med${C.R}`);
-  else if (effortLevel === "low") badges.push(`${C.dim}low${C.R}`);
+  if (effortLevel === "max")
+    badges.push(`${C.bold}${C.reverse}${C.red}Mx${C.R}`);
+  else if (effortLevel === "xhigh")
+    badges.push(`${C.bold}${C.brightRed}xH${C.R}`);
+  else if (effortLevel === "high") badges.push(`${C.bold}${C.red}H${C.R}`);
+  else if (effortLevel === "medium") badges.push(`${C.yellow}M${C.R}`);
+  else if (effortLevel === "low") badges.push(`${C.dim}L${C.R}`);
   if (thinkingOn) badges.push(`${C.magenta}\u{1F4AD}${C.R}`);
   const badgeStr = badges.length ? ` ${badges.join(" ")}` : "";
 
