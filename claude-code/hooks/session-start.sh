@@ -145,13 +145,30 @@ fi
 # session-init-timing.log に append（session-end.sh がここから直近 duration を参照）
 _SS_TIMING_LOG="${HOME}/.claude/logs/session-init-timing.log"
 mkdir -p "$(dirname "${_SS_TIMING_LOG}")"
-_SS_PLUGIN_COUNT=$(jq '.enabledPlugins | length' "${HOME}/.claude/settings.json" 2>/dev/null || echo 0)
+# plugin count: 24h cache で jq fork 削減
+_SS_PLUGIN_CACHE="${HOME}/.claude/cache/plugin-count.cache"
+_SS_PLUGIN_COUNT=0
+_SS_PLUGIN_CACHE_HIT=false
+if [[ -f "${_SS_PLUGIN_CACHE}" ]]; then
+  _SS_PLUGIN_CACHE_AGE=$(( EPOCHSECONDS - $(stat -f%m "${_SS_PLUGIN_CACHE}" 2>/dev/null || echo 0) ))
+  if [[ ${_SS_PLUGIN_CACHE_AGE} -lt 86400 ]]; then
+    _SS_PLUGIN_COUNT=$(cat "${_SS_PLUGIN_CACHE}" 2>/dev/null || echo 0)
+    _SS_PLUGIN_CACHE_HIT=true
+  fi
+fi
+if [[ "${_SS_PLUGIN_CACHE_HIT}" == "false" ]]; then
+  _SS_PLUGIN_COUNT=$(jq '.enabledPlugins | length' "${HOME}/.claude/settings.json" 2>/dev/null || echo 0)
+  mkdir -p "$(dirname "${_SS_PLUGIN_CACHE}")"
+  printf '%s' "${_SS_PLUGIN_COUNT}" > "${_SS_PLUGIN_CACHE}"
+fi
 TZ=UTC printf -v _SS_TS '%(%Y-%m-%dT%H:%M:%SZ)T' -1
 echo "[${_SS_TS}] session_id=${_SS_SESSION_ID} duration_ms=${_SS_DURATION_MS} plugin_count=${_SS_PLUGIN_COUNT}" >> "${_SS_TIMING_LOG}" 2>/dev/null || true
-# 直近 1000 行に切り詰め (session-end.sh の grep スキャン量を上限化)
-if [[ -f "${_SS_TIMING_LOG}" ]] && [[ $(wc -l < "${_SS_TIMING_LOG}" 2>/dev/null || echo 0) -gt 1000 ]]; then
+# 直近 1000 行に切り詰め: 1% 確率で実行 (毎回の wc fork 削減)
+if (( RANDOM % 100 == 0 )); then
+  if [[ -f "${_SS_TIMING_LOG}" ]] && [[ $(wc -l < "${_SS_TIMING_LOG}" 2>/dev/null || echo 0) -gt 1000 ]]; then
     tail -n 1000 "${_SS_TIMING_LOG}" > "${_SS_TIMING_LOG}.tmp" 2>/dev/null \
         && mv "${_SS_TIMING_LOG}.tmp" "${_SS_TIMING_LOG}" 2>/dev/null || true
+  fi
 fi
 
 _SS_LIB_DIR="${SCRIPT_DIR}/../lib"
@@ -162,11 +179,25 @@ fi
 
 # --- Directory Color ---
 # jq 1回で default + mappings を取得して bash側でマッチング（fork大幅削減）
+# mtime cache: dir-colors.json が変わった時のみ jq 再実行
 _COLOR_CONFIG="${HOME}/.claude/config/dir-colors.json"
+_COLOR_PARSED_CACHE="${HOME}/.claude/cache/dir-colors-parsed.cache"
 _SESSION_COLOR="default"
 if [[ -f "${_COLOR_CONFIG}" ]]; then
-    # 1行目=default、2行目以降="pattern\tcolor"
-    _COLOR_DATA=$(jq -r '.default // "default", (.mappings[]? | "\(.pattern)\t\(.color)")' "${_COLOR_CONFIG}" 2>/dev/null || echo "default")
+    _COLOR_DATA=""
+    _COLOR_CONFIG_MTIME=$(stat -f%m "${_COLOR_CONFIG}" 2>/dev/null || echo 0)
+    if [[ -f "${_COLOR_PARSED_CACHE}" ]]; then
+        _COLOR_CACHE_MTIME=$(stat -f%m "${_COLOR_PARSED_CACHE}" 2>/dev/null || echo 0)
+        if [[ ${_COLOR_CACHE_MTIME} -ge ${_COLOR_CONFIG_MTIME} ]]; then
+            _COLOR_DATA=$(cat "${_COLOR_PARSED_CACHE}" 2>/dev/null || echo "")
+        fi
+    fi
+    if [[ -z "${_COLOR_DATA}" ]]; then
+        # 1行目=default、2行目以降="pattern\tcolor"
+        _COLOR_DATA=$(jq -r '.default // "default", (.mappings[]? | "\(.pattern)\t\(.color)")' "${_COLOR_CONFIG}" 2>/dev/null || echo "default")
+        mkdir -p "$(dirname "${_COLOR_PARSED_CACHE}")"
+        printf '%s' "${_COLOR_DATA}" > "${_COLOR_PARSED_CACHE}"
+    fi
     _FIRST=true
     while IFS=$'\t' read -r _PATTERN _COLOR; do
         if $_FIRST; then
