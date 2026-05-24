@@ -19,16 +19,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 
 # Nerd Fonts icons
-# ICON_* \u306f hook-utils.sh \u3067\u5b9a\u7fa9\u6e08\u307f
+# ICON_* は hook-utils.sh で定義済み
 
 # jq前提条件チェック
 require_jq
 
-# JSON入力を読み込む
-_SS_INPUT=$(cat)
-
-# jq 1回で全フィールド取得（v2.2.1 fork削減）
-eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "unknown") _CWD=\(.cwd // "")"' <<< "${_SS_INPUT}")"
+# JSON入力を読み込み、jq 1回で全フィールド取得（v2.2.1 fork削減 / _SS_INPUT 変数廃止）
+eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "unknown") _CWD=\(.cwd // "")"')"
 _SS_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SS_SESSION_ID}}"
 _SS_PROJECT=$(basename "${_CWD:-.}")
 
@@ -60,7 +57,7 @@ _NEED_DIAG=true
 if [[ -f "${_DIAG_CACHE}" ]]; then
   _CACHE_AGE=$(( EPOCHSECONDS - $(stat -f%m "${_DIAG_CACHE}" 2>/dev/null || echo 0) ))
   if [[ ${_CACHE_AGE} -lt 86400 ]]; then
-    _DIAG_MSG=$(cat "${_DIAG_CACHE}")
+    _DIAG_MSG=$(<"${_DIAG_CACHE}")
     _NEED_DIAG=false
   fi
 fi
@@ -110,28 +107,43 @@ if [[ "${_NEED_DIAG}" == "true" ]]; then
   printf '%s' "${_DIAG_MSG}" > "${_DIAG_CACHE}"
 fi
 
-# --- 多リポ配下起動ガード ---
+# --- 多リポ配下起動ガード（cwd単位 1時間キャッシュ）---
 # cwd がリポジトリルートでない（.git 無し）かつ子孫に複数の git リポがある場合、
 # git/rg/Glob が全体を舐めに行き体感が極端に遅くなる。個別リポ cd を促す警告。
-# キャッシュとは独立して毎回評価する（cwd はセッション毎に変わるため）。
+# glob 走査は重いため cwd ハッシュ単位で 1h キャッシュ化。
 _CWD_GUARD_MSG=""
 if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
-  _NESTED_REPOS=0
-  shopt -s nullglob
-  for _git_dir in "${_CWD}"/*/.git "${_CWD}"/*/*/.git "${_CWD}"/*/*/*/.git; do
-    if [[ -d "${_git_dir}" ]]; then
-      _NESTED_REPOS=$(( _NESTED_REPOS + 1 ))
-      [[ ${_NESTED_REPOS} -ge 2 ]] && break
+  _CWD_SAFE="${_CWD//\//_}"
+  _CWD_CACHE="${HOME}/.claude/cache/cwd-multi-repo-${_CWD_SAFE}.cache"
+  _CWD_CACHE_HIT=false
+  if [[ -f "${_CWD_CACHE}" ]]; then
+    _CWD_CACHE_AGE=$(( EPOCHSECONDS - $(stat -f%m "${_CWD_CACHE}" 2>/dev/null || echo 0) ))
+    if [[ ${_CWD_CACHE_AGE} -lt 3600 ]]; then
+      _CWD_GUARD_MSG=$(<"${_CWD_CACHE}")
+      _CWD_CACHE_HIT=true
     fi
-  done
-  shopt -u nullglob
-  if [[ "${_NESTED_REPOS}" -ge 2 ]]; then
-    _CWD_GUARD_MSG="${ICON_WARNING} **cwd警告**: 複数リポジトリの親ディレクトリで起動中（${_CWD}）。git/rg/Glob が全体を舐めて重くなる。個別リポに cd してから起動推奨\n"
+  fi
+  if [[ "${_CWD_CACHE_HIT}" == "false" ]]; then
+    _NESTED_REPOS=0
+    shopt -s nullglob
+    for _git_dir in "${_CWD}"/*/.git "${_CWD}"/*/*/.git "${_CWD}"/*/*/*/.git; do
+      if [[ -d "${_git_dir}" ]]; then
+        _NESTED_REPOS=$(( _NESTED_REPOS + 1 ))
+        [[ ${_NESTED_REPOS} -ge 2 ]] && break
+      fi
+    done
+    shopt -u nullglob
+    if [[ "${_NESTED_REPOS}" -ge 2 ]]; then
+      _CWD_GUARD_MSG="${ICON_WARNING} **cwd警告**: 複数リポジトリの親ディレクトリで起動中（${_CWD}）。git/rg/Glob が全体を舐めて重くなる。個別リポに cd してから起動推奨\n"
+    fi
+    mkdir -p "$(dirname "${_CWD_CACHE}")"
+    printf '%s' "${_CWD_GUARD_MSG}" > "${_CWD_CACHE}"
   fi
 fi
 
-# --- Worktree Memory Symlink ---
-ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true
+# --- Worktree Memory Symlink（バックグラウンド実行）---
+# symlink 操作のみで出力に依存しないため非同期化
+( ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true ) &
 
 # --- Analytics: セッション開始記録 ---
 # init_duration_ms は analytics_start_session 呼び出し直前で確定する
@@ -152,7 +164,7 @@ _SS_PLUGIN_CACHE_HIT=false
 if [[ -f "${_SS_PLUGIN_CACHE}" ]]; then
   _SS_PLUGIN_CACHE_AGE=$(( EPOCHSECONDS - $(stat -f%m "${_SS_PLUGIN_CACHE}" 2>/dev/null || echo 0) ))
   if [[ ${_SS_PLUGIN_CACHE_AGE} -lt 86400 ]]; then
-    _SS_PLUGIN_COUNT=$(cat "${_SS_PLUGIN_CACHE}" 2>/dev/null || echo 0)
+    _SS_PLUGIN_COUNT=$(<"${_SS_PLUGIN_CACHE}")
     _SS_PLUGIN_CACHE_HIT=true
   fi
 fi
@@ -171,10 +183,13 @@ if (( RANDOM % 100 == 0 )); then
   fi
 fi
 
+# analytics_start_session はバックグラウンド実行（SQLite append のみ、出力不要）
 _SS_LIB_DIR="${SCRIPT_DIR}/../lib"
 if [[ -f "${_SS_LIB_DIR}/analytics-writer.sh" ]]; then
-    source "${_SS_LIB_DIR}/analytics-writer.sh"
-    analytics_start_session "${_SS_SESSION_ID}" "${_SS_PROJECT}" "${_SS_DURATION_MS}" 2>/dev/null || true
+    (
+      source "${_SS_LIB_DIR}/analytics-writer.sh"
+      analytics_start_session "${_SS_SESSION_ID}" "${_SS_PROJECT}" "${_SS_DURATION_MS}" 2>/dev/null || true
+    ) &
 fi
 
 # --- Directory Color ---
@@ -189,7 +204,7 @@ if [[ -f "${_COLOR_CONFIG}" ]]; then
     if [[ -f "${_COLOR_PARSED_CACHE}" ]]; then
         _COLOR_CACHE_MTIME=$(stat -f%m "${_COLOR_PARSED_CACHE}" 2>/dev/null || echo 0)
         if [[ ${_COLOR_CACHE_MTIME} -ge ${_COLOR_CONFIG_MTIME} ]]; then
-            _COLOR_DATA=$(cat "${_COLOR_PARSED_CACHE}" 2>/dev/null || echo "")
+            _COLOR_DATA=$(<"${_COLOR_PARSED_CACHE}")
         fi
     fi
     if [[ -z "${_COLOR_DATA}" ]]; then
