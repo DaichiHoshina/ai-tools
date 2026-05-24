@@ -127,9 +127,11 @@ Note: 5+ tasks → **bundle ≤4 or stage split** (4 Dev limit). Formula & LPT d
 
 ## Developer allocation format (parent uses at startup)
 
-Manager returns allocation to parent in this format. **Parent spawns `Task(developer-agent)` in 1 message**.
+Manager returns allocation to parent in this format. **Parent spawns `Task(developer-agent)` in 1 message** using the JSON context below.
 
 ### Developer context JSON field description
+
+Manager output → parent passes as-is → Developer input (single flow).
 
 | Field | Description |
 |-------|-------------|
@@ -142,14 +144,7 @@ Manager returns allocation to parent in this format. **Parent spawns `Task(devel
 | `constraints` | Timeout/retry limits |
 | `impl_notes.dir` | IMPL_NOTES output dir (Team flow only; absent = skip notes output) |
 
-### Per Developer task prompt content
-
-1. **ID explicit** - "you are dev1" etc.
-2. **Task detail** - Specific impl content & changes
-3. **Target file paths** - Absolute paths
-4. **Worktree info** - Dir path & branch name (if applicable)
-5. **Dependencies** - Cross-Dev deps & execution order
-6. **impl_notes.dir** - IMPL_NOTES output dir (see Base flow step 3)
+JSON schema example → `agents/developer-agent.md` "Received context" 参照。
 
 ### Staged execution
 
