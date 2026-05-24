@@ -373,6 +373,7 @@ sync_settings_root_keys() {
         "spinnerVerbs"
         "effortLevel"
         "showThinkingSummaries"
+        "alwaysThinkingEnabled"
         "showTurnDuration"
         "skipAutoPermissionPrompt"
         "skipDangerousModePermissionPrompt"
