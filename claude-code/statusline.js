@@ -127,6 +127,7 @@ function displayStatusLine(data) {
   const badges = [];
   if (effortLevel === "high")
     badges.push(`${C.bold}${C.red}\u26a1high${C.R}`);
+  else if (effortLevel === "medium") badges.push(`${C.dim}med${C.R}`);
   else if (effortLevel === "low") badges.push(`${C.dim}low${C.R}`);
   if (thinkingOn) badges.push(`${C.magenta}\u{1F4AD}${C.R}`);
   const badgeStr = badges.length ? ` ${badges.join(" ")}` : "";
