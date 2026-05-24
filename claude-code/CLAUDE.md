@@ -45,9 +45,9 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 Skipping declaration = rule violation, recorded to feedback memory.
 
-**Inline exceptions (no delegation)**: Q&A / already-read file check / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
+**Inline exceptions (no delegation)**: Q&A / already-read file check (同一 session で既に Read 完了した file への Q&A、追加 Read なし; 追加 Read 必要なら throttle count 算入) / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
 
-**Inline exception throttle**: 3 consecutive inline exceptions in same session → next edit-class op is **mandatory** developer-agent delegation (reset counter after delegation). Investigation phase: cumulative Read/Bash calls ≥5 → switch subsequent investigation to `explore-agent`.
+**Inline exception throttle**: 3 consecutive inline exceptions in same session → next edit-class op is **mandatory** developer-agent delegation (reset counter after delegation). Investigation phase (Q&A / dry-run を除く調査専用 Read/Bash): 累積 ≥5 → switch subsequent investigation to `explore-agent`.
 
 **Inline prohibited (must delegate)**: 2+ files / 10+ lines / 2+ symbols / new file / revert-series / 5+ line markdown section add / refactor / commit-bearing ops
 
