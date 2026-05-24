@@ -209,10 +209,21 @@ sync_settings_hooks() {
     local template_hooks
     template_hooks=$(jq '.hooks // {}' "$template" 2>/dev/null)
 
-    # テンプレートのhooksをマージ（テンプレート優先、ユーザー追加分は保持）
+    # テンプレートのhooksをevent単位でdeep merge（template entries先頭 + live独自entries末尾、live独自eventはそのまま保持）
     local tmpfile
     tmpfile=$(mktemp)
-    if jq --argjson th "$template_hooks" '.hooks = ((.hooks // {}) + $th)' "$live" > "$tmpfile"; then
+    if jq --argjson th "$template_hooks" '
+      .hooks = (
+        (.hooks // {}) as $live_hooks
+        | reduce ($th | to_entries[]) as $ev (
+            $live_hooks;
+            .[$ev.key] = (
+              $ev.value
+              + [($live_hooks[$ev.key] // [])[] | select(. as $e | $ev.value | any(. == $e) | not)]
+            )
+          )
+      )
+    ' "$live" > "$tmpfile"; then
         mv "$tmpfile" "$live"
         print_success "settings.json hooks を同期しました"
     else

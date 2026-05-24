@@ -437,3 +437,76 @@ teardown() {
   claude_after=$(find "$CLAUDE_DIR" -type f 2>/dev/null | sort | xargs cat 2>/dev/null | md5sum)
   [ "$claude_checksum" = "$claude_after" ]
 }
+
+# =============================================================================
+# sync_settings_hooks: deep merge ロジック検証
+# =============================================================================
+
+@test "sync_settings_hooks: live に独自 hook entry を追加しても to-local 後に保持される" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-hooks1"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live: template ベースに PreToolUse へ独自 entry を追加
+  jq '.hooks.PreToolUse += [{"matcher": "my-custom-matcher", "hooks": [{"type": "command", "command": "my-custom-hook.sh"}]}]' \
+    "$template" > "$live"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # 独自 entry が残存していることを assert
+  local custom_count
+  custom_count=$(jq '[.hooks.PreToolUse[] | select(.matcher == "my-custom-matcher")] | length' "$live")
+  [ "$custom_count" -eq 1 ]
+}
+
+@test "sync_settings_hooks: template に新規 event が追加されると live に伝播する" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-hooks2"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live: template から PostToolUse event を除去してスタート
+  jq 'del(.hooks.PostToolUse)' "$template" > "$live"
+  # template に PostToolUse が存在することを前提確認
+  local tpl_has_post
+  tpl_has_post=$(jq 'if .hooks.PostToolUse then 1 else 0 end' "$template")
+  [ "$tpl_has_post" -eq 1 ] || skip "template に PostToolUse が存在しない"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # PostToolUse が live に追加されていることを assert
+  local post_count
+  post_count=$(jq '.hooks.PostToolUse | length' "$live")
+  [ "$post_count" -gt 0 ]
+}
+
+@test "sync_settings_hooks: template entry を変更すると live に反映され重複しない" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-hooks3"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live: template そのままでスタート
+  cp "$template" "$live"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # PreToolUse の entry 数が template と一致（重複なし）することを assert
+  local tpl_count live_count
+  tpl_count=$(jq '.hooks.PreToolUse | length' "$template")
+  live_count=$(jq '.hooks.PreToolUse | length' "$live")
+  [ "$live_count" -eq "$tpl_count" ]
+}
