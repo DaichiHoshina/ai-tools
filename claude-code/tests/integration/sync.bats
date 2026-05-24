@@ -112,6 +112,77 @@ teardown() {
   [ -f "${expected_claude}/settings.json" ]
 }
 
+# =============================================================================
+# sync_settings_permissions: security-critical sections の同期
+# =============================================================================
+
+@test "sync_settings_permissions: permissions.deny が縮退した live を template で復元する" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-perm1"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live の permissions.deny を ["NotebookEdit"] のみに縮退させる
+  jq '.permissions.deny = ["NotebookEdit"]' "$template" > "$live"
+
+  # to-local 実行
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # template の permissions.deny と同じ内容に復元されていることを assert
+  local template_deny live_deny
+  template_deny=$(jq -c '.permissions.deny | sort' "$template")
+  live_deny=$(jq -c '.permissions.deny | sort' "$live")
+  [ "$template_deny" = "$live_deny" ]
+}
+
+@test "sync_settings_permissions: sandbox section が live から消えていても復元する" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-perm2"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live の sandbox section を削除
+  jq 'del(.sandbox)' "$template" > "$live"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # sandbox section が復元されていることを assert
+  local template_sandbox live_sandbox
+  template_sandbox=$(jq -c '.sandbox // {}' "$template")
+  live_sandbox=$(jq -c '.sandbox // {}' "$live")
+  [ "$template_sandbox" = "$live_sandbox" ]
+}
+
+@test "sync_settings_permissions: live に独自追加した permissions.allow は to-local 後に template 値で上書きされる" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-perm3"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live の permissions.allow に独自 rule を追加
+  jq '.permissions.allow += ["Bash(my-custom-tool *)"]' "$template" > "$live"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # permissions.allow が template 値で上書きされ、独自追加が消えることを assert（仕様確認 test）
+  local template_allow live_allow
+  template_allow=$(jq -c '.permissions.allow | sort' "$template")
+  live_allow=$(jq -c '.permissions.allow | sort' "$live")
+  [ "$template_allow" = "$live_allow" ]
+}
+
 @test "sync.sh: fails gracefully when source directory is missing" {
   # SCRIPT_DIRは常に存在するはずなので、このテストは不要
   # sync.shのSCRIPT_DIR検出が正しいことを確認

@@ -295,6 +295,46 @@ sync_settings_skill_overrides() {
     fi
 }
 
+sync_settings_permissions() {
+    if ! check_jq; then
+        print_warning "jq が見つかりません。security-critical sections の同期をスキップします"
+        return 0
+    fi
+
+    local template="$SCRIPT_DIR/templates/settings.json.template"
+    local live="$CLAUDE_DIR/settings.json"
+
+    if [ ! -f "$template" ]; then
+        return 0
+    fi
+    # sync_settings_hooks が先に live を作成済み（呼び出し順）のため
+    # live 不在時は return（冪等・簡略化判断）
+    if [ ! -f "$live" ]; then
+        return 0
+    fi
+
+    local sections=("permissions" "sandbox" "worktree" "enabledPlugins" "extraKnownMarketplaces")
+    local sections_json
+    sections_json=$(printf '%s\n' "${sections[@]}" | jq -R . | jq -s .)
+
+    local tmpfile
+    tmpfile=$(mktemp)
+    if jq \
+        --slurpfile tmpl "$template" \
+        --argjson sections "$sections_json" \
+        '. as $live | $tmpl[0] as $template |
+         reduce ($sections[] | select($template[.] != null)) as $k
+           ($live; .[$k] = $template[$k])' \
+        "$live" > "$tmpfile"; then
+        mv "$tmpfile" "$live"
+        print_success "settings.json security-critical sections を同期しました"
+    else
+        rm -f "$tmpfile"
+        print_error "settings.json security-critical sections の同期に失敗しました"
+        return 1
+    fi
+}
+
 # =============================================================================
 # Sync: to-local (リポジトリ → ローカル)
 # =============================================================================
@@ -372,9 +412,10 @@ sync_to_local() {
         fi
     done
 
-    # settings.json hooks / skillOverrides をテンプレートからマージ
+    # settings.json hooks / skillOverrides / security-critical sections をテンプレートからマージ
     sync_settings_hooks
     sync_settings_skill_overrides
+    sync_settings_permissions
 
     # post-sync 整合性検証: 同期後に差分が残るのは異常（過去の直編集残骸 / コピー失敗の検出）
     # gh skill 管理スキル除外のため skills ディレクトリは個別判定する。
