@@ -335,6 +335,71 @@ sync_settings_permissions() {
     fi
 }
 
+sync_settings_root_keys() {
+    if ! check_jq; then
+        print_warning "jq が見つかりません。root keys の同期をスキップします"
+        return 0
+    fi
+
+    local template="$SCRIPT_DIR/templates/settings.json.template"
+    local live="$CLAUDE_DIR/settings.json"
+
+    if [ ! -f "$template" ]; then
+        return 0
+    fi
+    # sync_settings_hooks が先に live を作成済み（呼び出し順）のため
+    # live 不在時は return（冪等・簡略化判断）
+    if [ ! -f "$live" ]; then
+        return 0
+    fi
+
+    # allowlist: 既存 dedicated 関数 (hooks / skillOverrides / permissions /
+    # sandbox / worktree / enabledPlugins / extraKnownMarketplaces) が担う key を除く
+    # template canonical で上書きする root key。
+    # 将来 key を追加する場合はここに明示的に追加すること（暴走防止の allowlist 方式）。
+    local root_keys=(
+        "env"
+        "model"
+        "statusLine"
+        "autoUpdatesChannel"
+        "preferredNotifChannel"
+        "defaultMode"
+        "verbose"
+        "autocompact"
+        "includeCoAuthoredBy"
+        "refreshInterval"
+        "outputStyle"
+        "language"
+        "spinnerVerbs"
+        "effortLevel"
+        "showThinkingSummaries"
+        "showTurnDuration"
+        "skipAutoPermissionPrompt"
+        "skipDangerousModePermissionPrompt"
+        "instructions"
+        "awaySummaryEnabled"
+    )
+    local keys_json
+    keys_json=$(printf '%s\n' "${root_keys[@]}" | jq -R . | jq -s .)
+
+    local tmpfile
+    tmpfile=$(mktemp)
+    if jq \
+        --slurpfile tmpl "$template" \
+        --argjson keys "$keys_json" \
+        '. as $live | $tmpl[0] as $template |
+         reduce ($keys[] | select($template[.] != null)) as $k
+           ($live; .[$k] = $template[$k])' \
+        "$live" > "$tmpfile"; then
+        mv "$tmpfile" "$live"
+        print_success "settings.json root keys (env / model / statusLine / autoUpdatesChannel ほか) を同期しました"
+    else
+        rm -f "$tmpfile"
+        print_error "settings.json root keys の同期に失敗しました"
+        return 1
+    fi
+}
+
 # =============================================================================
 # Sync: to-local (リポジトリ → ローカル)
 # =============================================================================
@@ -412,10 +477,11 @@ sync_to_local() {
         fi
     done
 
-    # settings.json hooks / skillOverrides / security-critical sections をテンプレートからマージ
+    # settings.json hooks / skillOverrides / security-critical sections / root keys をテンプレートからマージ
     sync_settings_hooks
     sync_settings_skill_overrides
     sync_settings_permissions
+    sync_settings_root_keys
 
     # post-sync 整合性検証: 同期後に差分が残るのは異常（過去の直編集残骸 / コピー失敗の検出）
     # gh skill 管理スキル除外のため skills ディレクトリは個別判定する。

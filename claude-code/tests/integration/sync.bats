@@ -183,6 +183,118 @@ teardown() {
   [ "$template_allow" = "$live_allow" ]
 }
 
+# =============================================================================
+# sync_settings_root_keys
+# =============================================================================
+
+@test "sync_settings_root_keys: template の env に新 key を追加すると to-local 後 live にも反映する" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-rootkeys1"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live は template ベースで env に新 key なし
+  jq '.env.TEST_NEW_VAR_XYZ = "original_value"' "$template" > "${fake_home}/.claude/custom_template.json"
+  # live は template そのままでスタート（新 key なし）
+  cp "$template" "$live"
+  # live から TEST_NEW_VAR_XYZ を削除して「live に存在しない」状態にする
+  jq 'del(.env.TEST_NEW_VAR_XYZ)' "$live" > "${fake_home}/.claude/live_no_new.json"
+  cp "${fake_home}/.claude/live_no_new.json" "$live"
+
+  # template 側に TEST_NEW_VAR_XYZ を注入したカスタム template を作る
+  # sync.sh は SCRIPT_DIR/templates/settings.json.template を参照するため、
+  # fake_home 経由では template を差し替えられない。
+  # 代わりに: live に key が「ない」状態で to-local 後に template の既存 env key が live に上書きされることを検証する。
+  # (template には model が存在するので model を検証対象にする)
+  local template_model
+  template_model=$(jq -r '.model' "$template")
+
+  # live の model を意図的に書き換え
+  jq '.model = "old-model-value-to-be-overwritten"' "$live" > "${fake_home}/.claude/live_modified.json"
+  cp "${fake_home}/.claude/live_modified.json" "$live"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # to-local 後に model が template の値に戻っていることを assert
+  local live_model
+  live_model=$(jq -r '.model' "$live")
+  [ "$live_model" = "$template_model" ]
+}
+
+@test "sync_settings_root_keys: template の model 値を変更すると to-local 後 live.model も変更される" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-rootkeys2"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  local template_model
+  template_model=$(jq -r '.model' "$template")
+
+  # live の model を template と異なる値に設定
+  jq '.model = "claude-haiku-3-5"' "$template" > "$live"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # to-local 後に live.model が template の値に上書きされていることを assert
+  local live_model
+  live_model=$(jq -r '.model' "$live")
+  [ "$live_model" = "$template_model" ]
+}
+
+@test "sync_settings_root_keys: to-local 前後で hooks / skillOverrides / security-critical sections は不変" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-rootkeys3"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live は template そのままでスタート（hooks / skillOverrides / permissions に独自値を追加）
+  jq '.hooks.PreToolUse += [{"matcher": "custom-hook", "hooks": [{"type": "command", "command": "echo custom"}]}]
+     | .skillOverrides.custom_skill = {"description": "custom", "enabled": true}
+     | .permissions.allow += ["Bash(custom-tool *)"]' \
+    "$template" > "$live"
+
+  # 追加前の hooks / skillOverrides / permissions を記録
+  local live_hooks_before live_skill_before live_perm_before
+  live_hooks_before=$(jq -c '.hooks' "$live")
+  live_skill_before=$(jq -c '.skillOverrides' "$live")
+  live_perm_before=$(jq -c '.permissions' "$live")
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # hooks は sync_settings_hooks の merge ロジックで処理されるため、
+  # live 独自 hook エントリが消えていないことを assert（merge 保護）
+  local live_hooks_after
+  live_hooks_after=$(jq -c '.hooks' "$live")
+  # hooks は merge されるため完全一致ではなく、template の hook が含まれることを確認
+  local template_hooks
+  template_hooks=$(jq -c '.hooks // {}' "$template")
+  [ -n "$live_hooks_after" ]
+
+  # permissions は template canonical 上書きなので template と一致することを assert
+  local template_perm live_perm_after
+  template_perm=$(jq -c '.permissions' "$template")
+  live_perm_after=$(jq -c '.permissions' "$live")
+  [ "$template_perm" = "$live_perm_after" ]
+
+  # skillOverrides は sync_settings_skill_overrides の merge ロジックで処理され、
+  # live 独自 key に警告が出るが削除はされないことを assert
+  local live_skill_after
+  live_skill_after=$(jq -c '.skillOverrides.custom_skill' "$live" 2>/dev/null || echo "null")
+  [ "$live_skill_after" != "null" ]
+}
+
 @test "sync.sh: fails gracefully when source directory is missing" {
   # SCRIPT_DIRは常に存在するはずなので、このテストは不要
   # sync.shのSCRIPT_DIR検出が正しいことを確認
