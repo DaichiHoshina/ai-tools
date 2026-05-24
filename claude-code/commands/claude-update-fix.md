@@ -61,7 +61,7 @@ For each tag, run grep/read at **decisive detection points**. Generate fix sugge
 |-----|------------------|------------------|
 | 3-1 RENAME | `claude-code/agents/*.md`, `commands/*.md`, `skills/*/skill.md`, `CLAUDE.md`, `hooks/*.sh`, `templates/settings.json.template` | grep old name, replace w/ new name |
 | 3-2 HOOK | `claude-code/hooks/*.sh`, `hooks` section in `templates/settings.json.template` | new event: suggest template if unregistered. I/O change: grep existing hook schema |
-| 3-3 SETTING | `claude-code/templates/settings.json.template`, `.claude/settings.json` | new key: suggest add to template. deprecated: suggest remove |
+| 3-3 SETTING | `claude-code/templates/settings.json.template` | new key: suggest add to template (live `.claude/settings.json` は `sync.sh to-local` で template canonical 上書きされるため編集対象外、CLAUDE.md "root keys are template canonical" rule 準拠). deprecated: suggest remove |
 | 3-4 MODEL | `claude-code/CLAUDE.md`, `agents/*.md` frontmatter, `skills/*/skill.md`, `scripts/**/*.{sh,py}` | grep old model ID, replace all |
 | 3-5 TOOL | `allowed-tools:` and tool lists in `claude-code/agents/*.md` | tool rename: replace. new tool: suggest if useful for agent |
 | 3-6 SKILL | `claude-code/skills/*/skill.md` frontmatter | validate new rules (e.g. description length) |
