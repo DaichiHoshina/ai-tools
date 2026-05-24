@@ -179,16 +179,7 @@ PO→Manager→Developer data handoff in JSON format.
 
 ### Field description
 
-| Field | Description |
-|-------|-------------|
-| `developer_id` | Assigned ID (dev1-4) |
-| `worktree.path` | Work directory absolute path |
-| `worktree.branch` | Work branch name |
-| `task.id` | Task identifier (logging) |
-| `task.files` | Files to change |
-| `task.dependencies` | Dep task IDs (wait if present) |
-| `constraints` | Timeout/retry limits |
-| `impl_notes.dir` | IMPL_NOTES output dir (Team flow only; absent = skip notes output) |
+Field 定義 → `agents/manager-agent.md` "Developer context JSON field description" 参照。
 
 ### Worktree unspecified behavior
 
@@ -248,13 +239,7 @@ Parent context cost negates subagent savings if reports bloat.
 
 ## Delegation from parent (Opus)
 
-Parent delegates via template (`references/developer-agent-delegation-prompt.md`) when inline exceptions exceeded. Developer executes scope (target files / verification / commit / push) completely per template.
-
-**Team flow** (`/flow` via Manager): Failure / blocker → report to Manager. Manager re-allocates or escalates.
-
-**Direct delegation from parent** (Opus inline delegation): Record in completion report `## Status: Failure`. No mid-task escalation; parent reviews + decides.
-
-**Both paths**: Developer owns execution within scope. Parent observes via completion report + `git diff` + push result.
+Parent delegation protocol → `references/developer-agent-delegation-prompt.md`.
 
 ## Commit message rule (AI footer prohibited)
 

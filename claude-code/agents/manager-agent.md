@@ -129,6 +129,19 @@ Note: 5+ tasks → **bundle ≤4 or stage split** (4 Dev limit). Formula & LPT d
 
 Manager returns allocation to parent in this format. **Parent spawns `Task(developer-agent)` in 1 message**.
 
+### Developer context JSON field description
+
+| Field | Description |
+|-------|-------------|
+| `developer_id` | Assigned ID (dev1-4) |
+| `worktree.path` | Work directory absolute path |
+| `worktree.branch` | Work branch name |
+| `task.id` | Task identifier (logging) |
+| `task.files` | Files to change |
+| `task.dependencies` | Dep task IDs (wait if present) |
+| `constraints` | Timeout/retry limits |
+| `impl_notes.dir` | IMPL_NOTES output dir (Team flow only; absent = skip notes output) |
+
 ### Per Developer task prompt content
 
 1. **ID explicit** - "you are dev1" etc.
