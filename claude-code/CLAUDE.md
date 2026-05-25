@@ -83,6 +83,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **Multi-clause requests: echo intent first**: requests ≥2 sentences or multi-item — echo `understood=X / missing=Y` line + ask 1 clarifying question before acting. Kills `再度〜` churn (56 hits / 3 days, 2026-05-22〜25, top time sink)
 - **`/memory-save` rapid-fire guard**: same session, save within last 5 min → prefer diff-append over new memory (94 hits w/ multiple 5x bursts, low-ROI redundancy)
 - **`/review-fix-push` pre-launch diff echo**: `git diff --stat | tail -1` one-liner before invoke; surfaces 500+ diffs that triggered sub-flow runaway (2026-05-23 incident)
+- **Large-repo session split (snkrdunk-com / loadtest / docs etc)**: cache_read 96.8% of token cost, 1B+ token sessions (4 days, 26K msg) eat 23% monthly token alone. Hard reset (`/clear` or new session) at task boundary; never carry session past 1 task / 3h elapsed / 1000 msg / 40% context (whichever first). 1 task = 1 session principle in large repos. Measured 2026-05-25
 
 ## Rewind
 
@@ -91,7 +92,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 
 ## Context Management
 
-- **>40% → suggest `/compact`** (cannot auto-execute; down from 50%). `/clear` at task boundary is best savings point (5+ min idle = prompt cache TTL expired → full cache miss). Session 30 min elapsed → propose `/clear` once in chat (single prompt only, no repeat).
+- **>25% → suggest `/compact`** (cannot auto-execute; down from 40%, tightened 2026-05-25 after snkrdunk cache_read 96.8% finding). `/clear` at task boundary is best savings point (5+ min idle = prompt cache TTL expired → full cache miss). Session 30 min elapsed → propose `/clear` once in chat (single prompt only, no repeat).
 - Continue: request "generate next-session mega-prompt" → paste into new session
 - Uncontaminated question: `/btw` (overlay, not saved to history)
 
