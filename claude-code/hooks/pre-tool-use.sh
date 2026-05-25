@@ -397,7 +397,7 @@ case "$TOOL_NAME" in
       detect_dangerous_patterns "$EDIT_CONTENT"
     fi
 
-    # Rename propagation 検知（Edit tool のみ old_string/new_string を持つ）
+    # Rename propagation detection (Edit tool only has old_string/new_string)
     _OLD_STRING=$(jq -r '.tool_input.old_string // empty' <<< "$INPUT")
     _NEW_STRING=$(jq -r '.tool_input.new_string // empty' <<< "$INPUT")
     _FILE_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
@@ -405,8 +405,8 @@ case "$TOOL_NAME" in
       detect_rename_propagation "$_OLD_STRING" "$_NEW_STRING" "$_FILE_PATH"
     fi
 
-    # Sonnet 委譲宣言 grep（CLAUDE.md Auto-Delegation "Edit/Write declaration rule"）
-    # transcript_path から直近 assistant message の末尾 30 行を取り "Inline exception" / "Inline prohibited" を検査
+    # Sonnet delegation declaration grep (CLAUDE.md Auto-Delegation "Edit/Write declaration rule")
+    # fetch last 30 lines of latest assistant message from transcript_path; check for "Inline exception" / "Inline prohibited"
     _TRANSCRIPT=$(jq -r '.transcript_path // empty' <<< "$INPUT")
     if [ -n "$_TRANSCRIPT" ] && [ -f "$_TRANSCRIPT" ]; then
       _DECL_FOUND=$(python3 - "$_TRANSCRIPT" <<'PYEOF'
@@ -418,7 +418,7 @@ try:
         lines = f.readlines()
 except Exception:
     sys.exit(0)
-# 末尾から assistant type のエントリを探し最新の text を取得
+# scan from the end to find the latest assistant entry and extract its text
 for raw in reversed(lines):
     raw = raw.strip()
     if not raw:
@@ -457,8 +457,8 @@ PYEOF
   "Bash")
     COMMAND=$(jq -r '.tool_input.command // empty' <<< "$INPUT")
     classify_bash_command "$COMMAND"
-    # Serena 振替ヒント: Bash でコードファイル読み出し検出時に Claude へ通知する
-    # analytics で Bash 比率 51% と CLAUDE.md「Tool selection」原則違反兆候を構造防止
+    # Serena substitution hint: notify Claude when Bash code-file read is detected
+    # structurally prevents Bash ratio 51% (analytics) violating CLAUDE.md "Tool selection" principle
     if [ "$GUARD_CLASS" != "Forbidden" ] && _is_serena_replaceable "$COMMAND"; then
       if [ -n "$ADDITIONAL_CONTEXT" ]; then
         ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}; 🔍 Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols"

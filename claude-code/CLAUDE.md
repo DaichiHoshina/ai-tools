@@ -80,9 +80,9 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **/memory-save**: only for 3+ file changes / non-obvious refactor / incident
 - **Token budget (Read/Bash output)**: use `limit:` / `offset:` for large files (default ~200 lines); truncate long logs with `| head -N` / `| tail -N`. **Full dump accumulates cost**; prefer serena symbol read when available
 - **Subagent prompt context budget**: keep delegation prompts ≤500 words with minimum necessary context. **Never dump full conversation** (cheap per-token subagent cost reverses at high input volume; symmetric with "Completion report budget" in `agents/developer-agent.md`)
-- **2 文以上の要求は着手前要件 echo**: user 要求が 2 文以上または複数項目を含む場合、着手前に 1 行で「理解 = X / 不足 = Y」を echo、不足あれば 1 質問してから着手。`再度〜` churn (2026-05-22〜25 で 56 件、最大の time sink) の根治 (2026-05-25 retrospective)
-- **`/memory-save` 連続叩き抑止**: 同一 session で直近 5 分以内に save 済の場合、新 memory 作成より既存への diff 追記を優先。retrospective で 94 件中 5 連発複数検出、ROI 低い重複保存を回避
-- **`/review-fix-push` 直前差分確認**: 起動前に `git diff --stat | tail -1` を 1 行 echo して規模を user に共有。差分 500+ で sub-flow 暴発した 2026-05-23 incident の再発防止
+- **Multi-clause requests: echo intent first**: requests ≥2 sentences or multi-item — echo `understood=X / missing=Y` line + ask 1 clarifying question before acting. Kills `再度〜` churn (56 hits / 3 days, 2026-05-22〜25, top time sink)
+- **`/memory-save` rapid-fire guard**: same session, save within last 5 min → prefer diff-append over new memory (94 hits w/ multiple 5x bursts, low-ROI redundancy)
+- **`/review-fix-push` pre-launch diff echo**: `git diff --stat | tail -1` one-liner before invoke; surfaces 500+ diffs that triggered sub-flow runaway (2026-05-23 incident)
 
 ## Rewind
 
