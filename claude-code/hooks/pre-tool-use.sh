@@ -404,6 +404,54 @@ case "$TOOL_NAME" in
     if [ -n "$_OLD_STRING" ] && [ -n "$_NEW_STRING" ]; then
       detect_rename_propagation "$_OLD_STRING" "$_NEW_STRING" "$_FILE_PATH"
     fi
+
+    # Sonnet 委譲宣言 grep（CLAUDE.md Auto-Delegation "Edit/Write declaration rule"）
+    # transcript_path から直近 assistant message の末尾 30 行を取り "Inline exception" / "Inline prohibited" を検査
+    _TRANSCRIPT=$(jq -r '.transcript_path // empty' <<< "$INPUT")
+    if [ -n "$_TRANSCRIPT" ] && [ -f "$_TRANSCRIPT" ]; then
+      _DECL_FOUND=$(python3 - "$_TRANSCRIPT" <<'PYEOF'
+import sys, json
+path = sys.argv[1]
+lines = []
+try:
+    with open(path, encoding='utf-8') as f:
+        lines = f.readlines()
+except Exception:
+    sys.exit(0)
+# 末尾から assistant type のエントリを探し最新の text を取得
+for raw in reversed(lines):
+    raw = raw.strip()
+    if not raw:
+        continue
+    try:
+        d = json.loads(raw)
+    except Exception:
+        continue
+    if d.get('type') != 'assistant':
+        continue
+    content = d.get('message', {}).get('content', [])
+    text = ''
+    for c in content:
+        if isinstance(c, dict) and c.get('type') == 'text':
+            text = c.get('text', '')
+            break
+    if not text:
+        continue
+    tail = '\n'.join(text.splitlines()[-30:])
+    if 'Inline exception' in tail or 'Inline prohibited' in tail:
+        print('found')
+    sys.exit(0)
+PYEOF
+      )
+      if [ "$_DECL_FOUND" != "found" ]; then
+        _DECL_WARN="⚠ Sonnet 委譲宣言抜け: CLAUDE.md Auto-Delegation rule 違反。Edit/Write 前に 1 行宣言してください: 'Inline exception (reason: ...) → parent inline execution' または 'Inline prohibited (reason: ...) → delegate to developer-agent'"
+        if [ -n "$ADDITIONAL_CONTEXT" ]; then
+          ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_DECL_WARN}"
+        else
+          ADDITIONAL_CONTEXT="${_DECL_WARN}"
+        fi
+      fi
+    fi
     ;;
 
   "Bash")
