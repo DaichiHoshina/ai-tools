@@ -92,7 +92,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 
 ## Context Management
 
-- **>25% → suggest `/compact`** (cannot auto-execute; down from 40%, tightened 2026-05-25 after snkrdunk cache_read 96.8% finding). `/clear` at task boundary is best savings point (5+ min idle = prompt cache TTL expired → full cache miss). Session 30 min elapsed → propose `/clear` once in chat (single prompt only, no repeat).
+- **>40% → suggest `/compact`** (cannot auto-execute; restored from 25% on 2026-05-25 — median session = 1.4M tokens, 25% triggered too often. snkrdunk "heavy" 現象は top 3 session が 30 日 token の 44% 占有する偏り起因、全 session 圧縮でなく long-running session 分割が正しい対策). `/clear` at task boundary is best savings point (5+ min idle = prompt cache TTL expired → full cache miss). Session 30 min elapsed → propose `/clear` once in chat (single prompt only, no repeat).
 - Continue: request "generate next-session mega-prompt" → paste into new session
 - Uncontaminated question: `/btw` (overlay, not saved to history)
 
