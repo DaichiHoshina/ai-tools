@@ -152,3 +152,4 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 High freq: `references/model-selection.md` / `natural-language-triggers.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md` / `references/developer-agent-delegation-prompt.md` (delegation template)
 Index: `references/INDEX.md`, Writing entry: `guidelines/writing/README.md`
 Tools: `scripts/health-check.sh` (monthly) / `usage-stats.sh` / `hook-bench.sh`
+- `references/anthropics-skills-catalog.md` (anthropics 公式 skill の on-demand 参照索引、永続取り込みなし)
