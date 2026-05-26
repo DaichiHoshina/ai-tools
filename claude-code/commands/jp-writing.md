@@ -1,9 +1,9 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Edit, Write, mcp__serena__*
-description: Human-facing prose quality mode (readability/visibility/clarity focus)
+description: Human-facing prose quality mode (JP 規範統合)
 ---
 
-## /text - Writing Quality Command
+## /jp-writing - Writing Quality Command
 
 Improve human-facing prose (PR body, Design Doc body, Notion, blog, Slack, email) **readability, visibility, clarity**.
 
@@ -12,7 +12,44 @@ Code body, code comments, docstrings out of scope.
 > **Responsibility split**:
 > - `/docs` = format/structure/template compliance (Notion post/API docs/README)
 > - `/design-doc` = assemble design decision document
-> - `/text` = **prose quality itself** (vocab, sentence length, paragraph, signal)
+> - `/jp-writing` = **prose quality itself** (vocab, sentence length, paragraph, signal)
+
+## JP 執筆規範 (write/rewrite 時に必須適用)
+
+### 文体
+
+- 常体統一 (〜する / 〜した)、文として完結させる
+- 主語を明示する (「担当者は〜」「ユーザーは〜」)
+- 指示語禁止: 「これ」「それ」「上記」「前述」→ 具体名に置換する
+
+### 冒頭 3 行テンプレ (報告型 doc 限定: 計測 / 障害 / RCA / 負荷試験)
+
+```
+1行目: 結論 (最大値 or 主要な変化量を含む)
+2行目: 測定条件 (環境 / 負荷 / 期間)
+3行目: 現場示唆 (approve / scale / 修正 のどれを読み手に決めさせるか)
+```
+
+### failure pattern 予防 checklist
+
+- link 過多 → 本文で必須のリンクのみ残す、補足リンクは `<details>` か削除する
+- 複合名詞 stack → タイトルの複合名詞は 2 個まで、抽象語の直後に具体例を 1 文添える
+- 冒頭結論行に数値欠落 → 冒頭 3 行で最大値 / 測定条件 / 現場示唆を必ず書く
+
+### NG 辞書 top (頻出)
+
+| NG | OK |
+|----|-----|
+| 効果的に / 効率的に / シームレスに | 具体的な動作を書く (例: 「手動コピペを廃止する」) |
+| 大幅改善 / 向上 / 強化 | p99 1.2s → 320ms (-73%) のように数値で書く |
+| 〜を実現します / 〜を提供します | 主語 + 動詞の直接文にする |
+| 本稿では〜について述べる | 削除して結論から書き始める |
+| 適切な / 最適な / 重要な | 直後に根拠を 1 文で書く (なぜ・数値・事例) |
+| 〜である / 〜となる / 当該 / 以下に示す | 常体の平易な表現に置換する |
+| 状況に応じて / 適宜 | IF-THEN 形式で条件を明文化する |
+| これ / それ / 上記 / 前述 | 具体名に置換する |
+
+詳細規範: `guidelines/writing/README.md` / AI 出力禁止: `rules/ai-output.md`
 
 ## Subcommand
 
