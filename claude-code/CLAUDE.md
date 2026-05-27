@@ -85,6 +85,18 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **`/review-fix-push` pre-launch diff echo**: `git diff --stat | tail -1` one-liner before invoke; surfaces 500+ diffs that triggered sub-flow runaway (2026-05-23 incident)
 - **Large-repo session split (snkrdunk-com / loadtest / docs etc)**: cache_read 96.8% of token cost, 1B+ token sessions (4 days, 26K msg) eat 23% monthly token alone. Hard reset (`/clear` or new session) at task boundary; never carry session past 1 task / 3h elapsed / 1000 msg / 40% context (whichever first). 1 task = 1 session principle in large repos. Measured 2026-05-25
 
+## 派生値禁止 (no derived literals)
+
+**全 project 共通 rule** (ai-tools / snkrdunk / 他 ghq repo 全適用)。canonical source (一次データ) から導出可能な派生値 (count / sum / list 長さ / 集計値) を別 file に literal で書かない、参照のみ。
+
+- **書くな**: 「N 語」「N 件」「合計 N」「source の M 個」等の数字を canonical 外 file に literal で
+- **書け**: 「source: <path>:<line>」参照のみ。list 全体埋めるなら canonical を **そこに移す** (片方削除)
+- **例外**: 不変 magic number (HTTP 200 等) / test fixture 内 expected count (test 自体が canonical)
+- **self-check**: 数字書く時「これ別の場所で count 可能?」→ Yes なら literal 禁止
+- **review 検出**: `grep -nE '[0-9]+ ?(語|件|個|個所|箇所)' <changed_files>` で派生値疑い
+
+2026-05-27 incident: commit `9b2247a` で AI 定型語辞書数 (27/10/37) を hook + 2 commands に重複 literal 化、将来 PRINCIPLES.md 更新で desync 必至 (`[[feedback-no-derived-literals]]` memory)
+
 ## Rewind
 
 - **Esc**: pause (context preserved) / **Esc x2** or `/rewind`: restore conversation, code, or both to a past checkpoint
