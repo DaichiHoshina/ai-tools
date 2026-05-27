@@ -226,7 +226,7 @@ PY
   TODAY_EPOCH=$(date +%s)
   for f in "$ROOT/guidelines/languages"/*.md; do
     [ -f "$f" ] || continue
-    grep -nE "20[0-9]{2}年[0-9]{1,2}月時点" "$f" 2>/dev/null | while IFS= read -r line; do
+    { grep -nE "20[0-9]{2}年[0-9]{1,2}月時点" "$f" 2>/dev/null || true; } | while IFS= read -r line; do
       YM=$(echo "$line" | grep -oE "20[0-9]{2}年[0-9]{1,2}月" | head -1)
       [ -z "$YM" ] && continue
       Y="${YM%年*}"
@@ -248,6 +248,19 @@ PY
   echo "- death ref 検出: 参照を実態 (agent 直起動表記 / 廃止注記) に揃える、または archive 復活"
   echo "- 90 日超 mention: 該当言語/FW の release notes 確認 → guidelines 更新 + 「YYYY年MM月時点」差替"
   echo "- 結果を残したい場合: \`--out claude-code/references/health-snapshots/${TODAY}.md\` などへ"
+
+  # === Memory audit (monthly equivalent) ===
+  echo ""
+  echo "## Memory Audit"
+  echo ""
+  echo '```'
+  if [[ -x "${SCRIPT_DIR}/memory-audit.sh" ]]; then
+    "${SCRIPT_DIR}/memory-audit.sh" 2>&1 | tail -10
+  else
+    echo "  memory-audit.sh not found, skipped"
+  fi
+  echo '```'
+  echo ""
 }
 
 if [[ -n "$OUT_FILE" ]]; then
