@@ -483,7 +483,9 @@ PYEOF
     # 実投稿系 MCP 使用前に PRINCIPLES 再注入（analytics で上位使用、確定送信のみ対象）
     # 除外: slack_send_message_draft / slack_create_canvas / slack_update_canvas
     #   理由: draft / canvas 編集は実投稿前段階、書き直し前提のためノイズ防止
-    ADDITIONAL_CONTEXT="📝 投稿前自問5点: ①「で、つまり何？」と思わせないか ②初見が途中で止まらないか ③各段落の役割（背景/理由/具体例/結論/注意点）明確か ④抽象名詞の羅列で段落が終わってないか ⑤bullet 5連続+地の文0の金太郎飴か。詳細: claude-code/guidelines/writing/PRINCIPLES.md"
+    ADDITIONAL_CONTEXT="📝 投稿前自問5点: ①「で、つまり何？」と思わせないか ②初見が途中で止まらないか ③各段落の役割（背景/理由/具体例/結論/注意点）明確か ④抽象名詞の羅列で段落が終わってないか ⑤bullet 5連続+地の文0の金太郎飴か。詳細: claude-code/guidelines/writing/PRINCIPLES.md
+🚫 AI定型語 NG (削除/置換): 効果的に / 効率的に / シームレスに / 直感的に / 革新的な / 素晴らしい / 強力な / より良い / 包括的な / 堅牢な / 柔軟な / スケーラブルな / 最適化 / 〜を実現します / 〜を提供します / 〜を可能にします / 〜することができます / ご紹介します / ご覧ください / 〜いただけます / まず〜しましょう / 重要なポイント / 注目すべき点 / 本機能は / 本ドキュメントは / 本記事では / 本稿では〜について述べる (27語、source: PRINCIPLES.md:111)
+📌 要根拠語 (削除でなく直後に根拠1文): 適切な / 最適な / 改善 / 重要 / 必須 / 推奨 / 一般的に / 強化 / 向上 / 活用 (10語、source: PRINCIPLES.md:94)"
     ;;
 
   "Task")
