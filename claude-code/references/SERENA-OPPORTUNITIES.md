@@ -15,6 +15,15 @@
 
 ---
 
+## v1.5.2–v1.5.3 (2026-05-28 検出)
+
+新規 Opportunity なし。v1.5.3 はタグのみ (本体変更 v1.5.2 完結)。
+
+- `serena-agent` CLI entrypoint (`uvx serena-agent`) [v1.5.2]: 当方は `serena start-mcp-server` 維持、alternative entrypoint で rename ではない、切替不要
+- Fortls / pyright on-the-fly install [v1.5.2]: LSP 内部実装、project.yml 影響なし。Fortran 未使用、Python は claude-plugins-official `pyright-lsp` 経路で別管理
+- Not-existing path returns `False` on ignored checks [v1.5.2]: bug fix、対応不要
+- Hooks code-file 拡張子 list 拡張 [v1.5.2]: reminder hook counter 内部のみ、設定影響なし
+
 ## v1.5.0–v1.5.1 (2026-05-19 検出)
 
 - [ ] **`search_for_pattern` `multiline=False` opt-out** (v1.5.0): 既定は `multiline=True` で `re.DOTALL|MULTILINE` 有効。1 行限定検索に切り替えれば `.*` greedy 過食を抑制可 — 検討箇所: 2026-05-18 dotall 事故と同パターンを再発させない為、1 行スコープが明確な search では明示指定。`replace_content` には未開放 (Tool API は dotall hardcode のまま)

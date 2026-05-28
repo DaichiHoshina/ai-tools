@@ -17,6 +17,19 @@
 
 ---
 
+## 2.1.145 (2026-05-28 検出, stable)
+
+新規 Opportunity なし。2.1.143〜2.1.145 範囲、リポジトリ影響 grep 確認済み。
+
+- `/extra-usage` → `/usage-credits` rename: 当方未使用、旧名動作継続のため skip
+- `worktree.bgIsolation: "none"` setting: 当方 bg session 未使用、skip
+- `CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY` / `CLAUDE_CODE_USE_POWERSHELL_TOOL`: Windows のみ、skip
+- `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`: stop hook block ループ救済 env、当方 stop hook は block しない設計、skip
+- Stop/SubagentStop hook input に `background_tasks` / `session_crons` 追加 [2.1.145]: 当方 stop/subagent-stop hook は notification 専用で field 未参照、活用余地なし。bg session/cron 利用開始時に再評価
+- `claude agents --json` [2.1.145]: scripting/statusline 用途、`statusline.js` は session JSON 直接受領のため不要
+- OTEL `agent_id` / `parent_agent_id` spans [2.1.145]: OTEL 未使用、skip
+- Read tool PARTIAL view notice [2.1.145]: harness 自動挙動、設定不要
+
 ## 2.1.142 (2026-05-15 検出, stable)
 
 新規 Opportunity なし。全エントリ bugfix/Info（Fast mode default Opus 4.7 化 + `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE` pin env、`claude agents` 起動フラグ拡張 `--add-dir`/`--settings`/`--mcp-config`/`--plugin-dir`/`--permission-mode`/`--model`/`--effort`/`--dangerously-skip-permissions`、plugin root-level `SKILL.md` 単独サポート、`MCP_TOOL_TIMEOUT` 60s cap fix、background sessions worktree/sleep-wake/upgrade 周り fix、reactive compaction 改善、SessionStart/Setup/SubagentStart に prompt/agent type hook 指定時のエラーメッセージ改善 等）。リポジトリ影響 grep 確認済み（`/fast` 不使用 / 旧 sonnet ID 不在 / 既存 hook 全 type=command / `MCP_TOOL_TIMEOUT` 不使用）。
