@@ -84,6 +84,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **`/memory-save` rapid-fire guard**: same session, save within last 5 min → prefer diff-append over new memory (94 hits w/ multiple 5x bursts, low-ROI redundancy)
 - **`/review-fix-push` pre-launch diff echo**: `git diff --stat | tail -1` one-liner before invoke; surfaces 500+ diffs that triggered sub-flow runaway (2026-05-23 incident)
 - **Large-repo session split (snkrdunk-com / loadtest / docs etc)**: cache_read 96.8% of token cost, 1B+ token sessions (4 days, 26K msg) eat 23% monthly token alone. Hard reset (`/clear` or new session) at task boundary; never carry session past 1 task / 3h elapsed / 1000 msg / 40% context (whichever first). 1 task = 1 session principle in large repos. Measured 2026-05-25
+- **長文回答 = 冒頭結論 1 行強制**: chat 応答で 5 行超 + 列挙 (A/B/C 案 / Phase 1/2/3 / 表) 出す時は **1 行目に結論明示**。読み手が後段読まずに次の指示出せる状態にする。違反すると `つまり？` / `どういうこと？` 再質問発生 (2026-05-22〜28 計 9 件/週、retro 第 3 churn 源)。`guidelines/writing/PRINCIPLES.md` chat 行「結論先出し」を chat 応答に明示適用
 
 ## 派生値禁止 (no derived literals)
 
