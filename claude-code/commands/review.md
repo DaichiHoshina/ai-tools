@@ -28,11 +28,14 @@ Lenses (Stage A/B 通過の前提):
 
 `/review` 系コマンドの出力前に **必ず** 以下 2 段階のセルフレビューを実行する。skip 不可、`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial` 全モードで一律実行 (adversarial は design challenge 性質ゆえ Stage A の Evidence/Scope 判定基準は緩めつつ、Stage B の重複統合・トーン整合は通常通り適用)。
 
-### Stage A: Finding Self-Review Gate (per-finding)
+### Stage A: Finding Self-Review Gate (per-finding、必須・safety net)
 
-`comprehensive-review` skill 内の Self-Filter Gate (Step 4.5 + Pre-emission sanity check) が Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点でカバー済み (Sonnet 実行)。Stage A では skill 結果を信頼し、parent 再評価不要。skill 未通過項目が明らかに混入していた場合のみ手動再判定。
+`comprehensive-review` skill 内の Self-Filter Gate (Step 4.5 + Pre-emission sanity check) が Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点で一次評価済 (Sonnet 実行)。ただし **skill 結果を無批判に流さず、parent Opus が同 7 観点で safety net 再評価を必ず実行する**。skip 不可。
 
-ただし `/review-fix-push` の loop mode では propagation incompleteness / cross-ref desync 系を safety net として再評価する (詳細: [`review-fix-push.md`](review-fix-push.md) "Step 1.5")。
+- Evidence 不十分 / Scope 外 / Overreach / Actionable でない / Severity 不整合 / Style nitpick / Over-prescription のいずれかに該当 → discard
+- 特に propagation incompleteness / cross-ref desync 系は skill が漏らしやすいため重点確認
+- 再評価判断ログは出力に含めない (verdict 変更のみ反映)
+- `--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial` 全モードで一律適用、`/review-fix-push` の loop mode も同様 (詳細: [`review-fix-push.md`](review-fix-push.md) "Step 1.5")
 
 ### Stage B: Result Self-Review Pass (全体)
 
