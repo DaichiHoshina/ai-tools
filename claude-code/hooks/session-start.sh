@@ -246,15 +246,17 @@ fi
 # trigger A: MEMORY.md 50 行超 / trigger B: 同 prefix 3 file 以上
 # 詳細: references/memory-promotion-flow.md §6
 _PROMOTE_STATE_DIR="${HOME}/.claude/state"
-_PROMOTE_STATE_FILE="${_PROMOTE_STATE_DIR}/promote-prompted-$(date +%Y%m%d)"
 # project dir 名は Claude harness が生成する slug 形式 (cwd の "/" "." を "-" に置換した形)
 # _CWD を slug 化して直接 path 解決
 _MEMORY_INDEX=""
+_CWD_SLUG=""
 if [[ -n "${_CWD:-}" ]]; then
     _CWD_SLUG=$(printf '%s' "${_CWD}" | sed 's|[/.]|-|g')
     _MEMORY_INDEX="${HOME}/.claude/projects/${_CWD_SLUG}/memory/MEMORY.md"
     [[ -f "${_MEMORY_INDEX}" ]] || _MEMORY_INDEX=""
 fi
+# state file は project 別 (memory も project 別、reminder も project 単位で 1 日 1 回)
+_PROMOTE_STATE_FILE="${_PROMOTE_STATE_DIR}/promote-prompted-${_CWD_SLUG:-default}-$(date +%Y%m%d)"
 if [[ -f "${_MEMORY_INDEX}" ]] && [[ ! -f "${_PROMOTE_STATE_FILE}" ]]; then
     _MEMORY_DIR=$(dirname "${_MEMORY_INDEX}")
     _MEMORY_LINES=$(wc -l < "${_MEMORY_INDEX}" 2>/dev/null || echo 0)
