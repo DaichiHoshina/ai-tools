@@ -241,6 +241,46 @@ fi
 if [[ -n "${_DIAG_MSG}" ]]; then
     _AC_PREFIX+="${_DIAG_MSG}"
 fi
+
+# --- memory promote trigger 提示 (1 日 1 回上限) ---
+# trigger A: MEMORY.md 50 行超 / trigger B: 同 prefix 3 file 以上
+# 詳細: references/memory-promotion-flow.md §6
+_PROMOTE_STATE_DIR="${HOME}/.claude/state"
+_PROMOTE_STATE_FILE="${_PROMOTE_STATE_DIR}/promote-prompted-$(date +%Y%m%d)"
+# project dir 名は Claude harness が生成する slug 形式 (cwd の "/" "." を "-" に置換した形)
+# _CWD を slug 化して直接 path 解決
+_MEMORY_INDEX=""
+if [[ -n "${_CWD:-}" ]]; then
+    _CWD_SLUG=$(printf '%s' "${_CWD}" | sed 's|[/.]|-|g')
+    _MEMORY_INDEX="${HOME}/.claude/projects/${_CWD_SLUG}/memory/MEMORY.md"
+    [[ -f "${_MEMORY_INDEX}" ]] || _MEMORY_INDEX=""
+fi
+if [[ -f "${_MEMORY_INDEX}" ]] && [[ ! -f "${_PROMOTE_STATE_FILE}" ]]; then
+    _MEMORY_DIR=$(dirname "${_MEMORY_INDEX}")
+    _MEMORY_LINES=$(wc -l < "${_MEMORY_INDEX}" 2>/dev/null || echo 0)
+    _PROMOTE_HITS=()
+    # trigger A
+    if (( _MEMORY_LINES > 50 )); then
+        _PROMOTE_HITS+=("MEMORY.md ${_MEMORY_LINES} 行 (>50, trigger A)")
+    fi
+    # trigger B: 同 prefix 3 file 以上 (feedback_xxx_*, reference_xxx_*, project_xxx_*, work-context-xxx_*)
+    # prefix = 先頭 2 token (例: feedback_design_doc → feedback_design)
+    _TOPIC_COUNTS=$(ls "${_MEMORY_DIR}"/*.md 2>/dev/null \
+        | xargs -n1 basename 2>/dev/null \
+        | grep -v "^MEMORY.md$" \
+        | sed -E 's/^([a-z]+([_-][a-z0-9]+)?).*\.md$/\1/' \
+        | sort | uniq -c | awk '$1 >= 3 {print $2"("$1")"}' | tr '\n' ' ')
+    if [[ -n "${_TOPIC_COUNTS}" ]]; then
+        _PROMOTE_HITS+=("同 topic 3 file 以上: ${_TOPIC_COUNTS} (trigger B)")
+    fi
+    if (( ${#_PROMOTE_HITS[@]} > 0 )); then
+        _PROMOTE_MSG="${ICON_WARNING} memory 昇格候補あり: $(printf '%s; ' "${_PROMOTE_HITS[@]}")\n  → \`/promote\` で SoT 集約検討 (詳細: references/memory-promotion-flow.md)\n\n"
+        _AC_PREFIX+="${_PROMOTE_MSG}"
+        # state file 作成 (本日 1 回限り)
+        mkdir -p "${_PROMOTE_STATE_DIR}"
+        touch "${_PROMOTE_STATE_FILE}"
+    fi
+fi
 if [[ -n "${_AC_PREFIX}" ]]; then
     _AC_FULL="${_AC_PREFIX}\n${_AC_BASE}"
 else

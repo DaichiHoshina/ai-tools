@@ -71,6 +71,7 @@
 | トピック | ファイル |
 |---------|---------|
 | メモリ使い分け | `memory-usage.md` |
+| memory → CLAUDE.md / ai-tools 昇格 flow と振り分け基準 | `memory-promotion-flow.md` |
 | UIデフォルト設定 | `ui-defaults.md` |
 | Private 設定の保管規約 | `private-config-convention.md` |
 | Plugin marketplace caveats (連鎖 uninstall) | `plugin-marketplace-caveats.md` |
