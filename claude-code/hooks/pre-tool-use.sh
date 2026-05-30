@@ -90,7 +90,7 @@ _assert_required_keys() {
   _assert_required_keys_done=1
   # PRINCIPLES.md 不在時は別経路で既に silent pass → この検査はスキップ
   [[ -f "$_principles_file" ]] || return 0
-  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)")
+  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)" "難読漢語 (block)" "非日常英語 (block)")
   local key
   for key in "${required_keys[@]}"; do
     local result
@@ -157,6 +157,26 @@ _block_if_ai_jargon() {
     word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
     MESSAGE="${ICON_CRITICAL} カタカナ造語 block: [${word_list}] (${context_label})"
     ADDITIONAL_CONTEXT="カタカナ造語を削除または説明的表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+    _append_jp_quality_log "$context_label" "$word_list" "block"
+    return
+  fi
+  # 難読漢語 (block)
+  if ! hit_words=$(_check_term_list "$text" "難読漢語 (block)"); then
+    GUARD_CLASS="Forbidden"
+    local word_list
+    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
+    MESSAGE="${ICON_CRITICAL} 難読漢語 block: [${word_list}] (${context_label})"
+    ADDITIONAL_CONTEXT="難読漢語を平易な語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+    _append_jp_quality_log "$context_label" "$word_list" "block"
+    return
+  fi
+  # 非日常英語 (block)
+  if ! hit_words=$(_check_term_list "$text" "非日常英語 (block)"); then
+    GUARD_CLASS="Forbidden"
+    local word_list
+    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
+    MESSAGE="${ICON_CRITICAL} 非日常英語 block: [${word_list}] (${context_label})"
+    ADDITIONAL_CONTEXT="日常で使う英語または日本語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
     _append_jp_quality_log "$context_label" "$word_list" "block"
     return
   fi

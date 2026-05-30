@@ -651,3 +651,75 @@ _run_hook_blocking() {
   [ "$status" -eq 2 ]
   [[ "$output" =~ "AWS Access Key" ]]
 }
+
+# =============================================================================
+# 難読漢語 block テスト
+# =============================================================================
+
+_run_bash_jargon() {
+  local cmd="$1"
+  local input
+  input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+}
+
+@test "pre-tool-use: 難読漢語 commit message は block (exit 2)" {
+  _run_bash_jargon 'git commit -m "鑑みると修正する"'
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "難読漢語 block" ]]
+  [[ "$output" =~ "鑑みる" ]]
+}
+
+@test "pre-tool-use: 難読漢語 喫緊 commit message は block" {
+  _run_bash_jargon 'git commit -m "喫緊の課題を修正"'
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "難読漢語 block" ]]
+}
+
+@test "pre-tool-use: 難読漢語 踏襲 commit message は block" {
+  _run_bash_jargon 'git commit -m "既存方針を踏襲する"'
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "難読漢語 block" ]]
+}
+
+# =============================================================================
+# 非日常英語 block テスト
+# =============================================================================
+
+@test "pre-tool-use: 非日常英語 leverage commit message は block (exit 2)" {
+  _run_bash_jargon 'git commit -m "leverage existing infra"'
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]]
+  [[ "$output" =~ "leverage" ]]
+}
+
+@test "pre-tool-use: 非日常英語 utilize commit message は block" {
+  _run_bash_jargon 'git commit -m "utilize the cache layer"'
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]]
+}
+
+@test "pre-tool-use: 非日常英語 mitigate commit message は block" {
+  _run_bash_jargon 'git commit -m "mitigate performance degradation"'
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]]
+}
+
+# =============================================================================
+# 中間漢語 regression テスト (block されないこと)
+# =============================================================================
+
+@test "pre-tool-use: 中間漢語 網羅 commit message は block されない" {
+  result=$(run_hook "Bash" '{"command": "git commit -m \"網羅的に整合性を担保\""}')
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "難読漢語" ]]
+  [[ ! "$msg" =~ "非日常英語" ]]
+}
+
+@test "pre-tool-use: 中間漢語 整合 担保 是正 commit message は block されない" {
+  result=$(run_hook "Bash" '{"command": "git commit -m \"整合性担保と是正\""}')
+  msg=$(get_system_message "$result")
+  [[ "$msg" =~ "要確認" ]]
+  [[ ! "$msg" =~ "難読漢語" ]]
+}

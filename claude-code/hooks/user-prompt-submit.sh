@@ -147,6 +147,21 @@ if [[ "$prompt" == /* ]]; then
     exit 0
 fi
 
+# === 共有/報告系 trigger → outward-mode inject ===
+# user 入力に共有/報告系 phrase が含まれる場合、chat 応答にも外向き規範を適用するよう inject
+_inject_outward_mode_if_trigger() {
+  local prompt="$1"
+  local triggers=("共有用" "報告用" "共有して" "報告して" "共有文" "報告文" "共有テキスト" "報告書" "共有する文" "報告する内容")
+  local t
+  for t in "${triggers[@]}"; do
+    if [[ "$prompt" == *"$t"* ]]; then
+      printf '%s\n' "[jp-quality-outward-mode] user 入力に共有/報告系 phrase 検出。chat 応答も外向き文書扱いとし、AI 定型語 / カタカナ造語 / 難読漢語 / 非日常英語の 4 block list を自己検査して回避すること。source: guidelines/writing/PRINCIPLES.md"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # === JP品質 inject (AI定型語 + カタカナ造語 + jargon + 略語) ===
 # PRINCIPLES.md の canonical list を動的抽出して chat 応答 / 外向き文書に注入する
 # 派生値禁止 rule 準拠: hook 内に語 list literal を持たない
@@ -217,6 +232,17 @@ ${_SOFTBLOCK_CTX}"
       fi
     fi
 
+    # 共有/報告系 trigger 検出 → outward-mode inject
+    _OUTWARD_MODE_CTX=""
+    if _OUTWARD_MODE_CTX=$(_inject_outward_mode_if_trigger "$prompt" 2>/dev/null); then
+      if [[ -n "${_AI_TERMS_CTX}" ]]; then
+        _AI_TERMS_CTX="${_AI_TERMS_CTX}
+${_OUTWARD_MODE_CTX}"
+      else
+        _AI_TERMS_CTX="${_OUTWARD_MODE_CTX}"
+      fi
+    fi
+
     # token 増分 monitor: 1500 byte 超のみ log ファイルに記録 (stderr は Claude に届かないため log に切替)
     _INJECT_SIZE=${#_AI_TERMS_CTX}
     if [[ "${_INJECT_SIZE}" -gt 1500 ]]; then
@@ -260,8 +286,20 @@ set -u
 
 # 検出されたスキル・言語・テクニック・additional_context すべて無い場合
 if [ "$lang_count" -eq 0 ] && [ "$skill_count" -eq 0 ] && [ -z "$technique_recommendation" ] && [ -z "$additional_context" ]; then
-  if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
-    jq -n --arg msg "${_COMPACT_NOTICE_MSG}" '{"systemMessage": $msg}'
+  # _AI_TERMS_CTX (outward-mode inject 含む) があれば additionalContext として出力
+  _early_ctx=""
+  for _prepend_msg in "${_COMPACT_NOTICE_MSG}" "${_AI_TERMS_CTX}"; do
+    if [[ -n "${_prepend_msg}" ]]; then
+      if [[ -n "${_early_ctx}" ]]; then
+        _early_ctx="${_prepend_msg}
+${_early_ctx}"
+      else
+        _early_ctx="${_prepend_msg}"
+      fi
+    fi
+  done
+  if [[ -n "${_early_ctx}" ]]; then
+    jq -n --arg ctx "${_early_ctx}" '{"additionalContext": $ctx}'
   else
     echo '{}'
   fi

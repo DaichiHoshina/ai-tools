@@ -296,3 +296,39 @@ get_additional_context() {
   [[ -z "$ctx" ]] || ! [[ "$ctx" =~ "同一入力検出" ]]
   rm -f "$dup_file"
 }
+
+# =============================================================================
+# outward-mode inject テスト (_inject_outward_mode_if_trigger)
+# =============================================================================
+
+@test "user-prompt-submit: 共有用 trigger で [jp-quality-outward-mode] inject される" {
+  cd "$TEST_TMPDIR"
+  local input='{"prompt":"これを共有用にまとめて"}'
+  local out=$(run_hook "$input")
+  local ctx=$(get_additional_context "$out")
+  [[ "$ctx" =~ "[jp-quality-outward-mode]" ]]
+}
+
+@test "user-prompt-submit: 報告して trigger で [jp-quality-outward-mode] inject される" {
+  cd "$TEST_TMPDIR"
+  local input='{"prompt":"今週の結果を報告して"}'
+  local out=$(run_hook "$input")
+  local ctx=$(get_additional_context "$out")
+  [[ "$ctx" =~ "[jp-quality-outward-mode]" ]]
+}
+
+@test "user-prompt-submit: 報告書 trigger で [jp-quality-outward-mode] inject される" {
+  cd "$TEST_TMPDIR"
+  local input='{"prompt":"報告書のドラフトを作成して"}'
+  local out=$(run_hook "$input")
+  local ctx=$(get_additional_context "$out")
+  [[ "$ctx" =~ "[jp-quality-outward-mode]" ]]
+}
+
+@test "user-prompt-submit: trigger なし prompt では [jp-quality-outward-mode] inject されない" {
+  cd "$TEST_TMPDIR"
+  local input='{"prompt":"コードをリファクタリングして"}'
+  local out=$(run_hook "$input")
+  local ctx=$(get_additional_context "$out")
+  [[ ! "$ctx" =~ "[jp-quality-outward-mode]" ]]
+}
