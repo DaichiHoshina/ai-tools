@@ -108,16 +108,9 @@
 ### 例 (commit まとめ)
 
 ```text
-## abc1234 `/review` を 2 段階 self-check に変更
-
-**結論**: review の品質判定を 2 段階に変えた。
-
+**結論**: `/review` を 2 段階 self-check に変えた。
 **理由**: 1 段階だと subagent 任せで見落としや過剰指摘が残る。
-
-**例**: 以前は subagent の self-filter 結果をそのまま採用していた。今後は
-parent Opus が 7 観点 (Evidence / Scope / Overreach / Actionability /
-Severity / Style / Overprescription) で再 check する。全 mode 適用。
-
+**例**: parent Opus が 7 観点で再 check。全 mode 適用。file: `skills/review.md`
 **結論再確認**: subagent 単独判定の取りこぼしを parent が拾える状態。
 ```
 
@@ -139,21 +132,16 @@ Severity / Style / Overprescription) で再 check する。全 mode 適用。
 ## 構造原則 (docs 観点)
 
 - **散文より bullet ファースト**: 説明は bullet で書く、地の文は接続・背景・結論のみ
-- 各セクション直下に **目的 1 行** を添える (なぜこの section があるか)
-- 強調太字は GO/NO-GO 基準等の **限定箇所のみ**。濫用すると太字が目立たなくなる
+- 各セクション直下に **目的 1 行** を添える
+- 強調太字は GO/NO-GO 基準等の **限定箇所のみ** (濫用で埋没)
 - forward reference は **anchor link 化** (「○○参照」より `[○○](#xxx)`)
-- 用語は **他参照で再定義しない** (用語ポインタ表に統一、複数箇所で定義しない)
+- 用語は **他参照で再定義しない** (用語ポインタ表に統一)
 - 環境・テストデータ等は **別 SoT 参照**、本書では再記しない
-- **敬称統一**: チームメンバー個人名には「さん」付与、1 人だけ敬称なし / 全員敬称なしは避ける (全員一貫)
 
 ## 箇条書き階層化
 
-- 因果連鎖・所属関係・補足説明は **親子で表現** (平坦に並列禁止)
-- 2 スペースインデント統一
+- 因果連鎖・所属関係・補足説明は **親子で表現** (平坦に並列禁止)、2 スペースインデント統一
 - 同一階層に並列するのは **対等な並列のみ**
-
-**Bad**: 「writer / reader / reader 再起動 / Performance Insight」を 4 行並列
-**Good**: writer / reader の下に「再起動」「Performance Insight」を子 bullet
 
 ## ミクロ規則
 
@@ -166,7 +154,7 @@ Severity / Style / Overprescription) で再 check する。全 mode 適用。
 
 ## Web 可読性 (scan 前提)
 
-外向き prose は web (GitHub / GitLab / Notion / Slack / Confluence) で読まれる。読者は読まずに **scan する** (79% scan / 16% line-by-line、NNG 計測)。chat 応答や紙前提とは別の構造が要る。
+外向き prose は web (GitHub / GitLab / Notion / Slack / Confluence) で読まれる。読者は読まずに **scan する** (NNG: 79% scan / 16% line-by-line)。chat 応答と別の構造が要る。
 
 ### scan pattern 対応
 
@@ -176,43 +164,18 @@ Severity / Style / Overprescription) で再 check する。全 mode 適用。
 | layer-cake | 見出しだけ拾って必要箇所だけ本文へ | 見出しを「主張」化、descriptive に |
 | spotted | 太字 / link / 数値だけ拾う | keyword を太字、評価語に数値併記 |
 
-`/git-push --pr` `/post-comment` `/docs` 生成時、これら 3 pattern の **どれで読まれても主旨が伝わるか** を self-check する。layer-cake は「## 守る指針」主張型 heading 原則の web 文脈版。
+外向き文書生成時 (`/git-push --pr` / `/post-comment` / `/docs`) は 3 pattern の **どれで読まれても主旨が伝わるか** を self-check する。
 
-### Web 用 ミクロ規則 (既出を web では更に絞る)
+### Web 用 ミクロ規則
 
-- **1 文 60 字以内** (最大 80 字)、読点 3 個まで、超えたら句点で分割 — 既出「## ミクロ規則」120 字を web 文脈では上書き
-- **1 段落 3-4 行 / 250 字以内** — wall of text 回避、段落間に空行
-- **漢字比率 3 割目安** — 漢字過多は離脱要因。「行う / 出来る / 事 / 物 / 為」等は平易化候補 (「やる / できる / こと / もの / ため」)、コード / 識別子は対象外
-- **見出しは layer-cake 用に主張化** — 「アーキテクチャ」 NG / 「読み書き分離で負荷分散」 OK。冒頭に最重要語
-- **inverted pyramid + 半分の word count** — 既出「結論先出し」を **本文量も半減** まで拡張。NNG 計測で usability 124% 改善は concise + scannable + objective の合算
-
-### 日本語特有 — 改行 / 段落の見た目
-
-- **見出し / キャッチで意味単位の改行** — 「ユーザー認証フローの脆弱性」を狭幅で「ユーザー認証フ\n ローの脆弱性」と切られる事故が web 表示で起きる。Notion / Slack draft は実 viewer で 1 回 preview
-- **コードブロック / list の前後に空行** — markdown renderer 差で潰れる
+- **1 文 60 字以内** (最大 80 字)、読点 3 個まで — 「## ミクロ規則」120 字を web 文脈では上書き
+- **1 段落 3-4 行 / 250 字以内** — 段落間に空行必須
+- **漢字比率 3 割目安** — 「行う / 出来る / 事 / 物 / 為」→「やる / できる / こと / もの / ため」
+- **見出しは主張化** — 「アーキテクチャ」 NG / 「読み書き分離で負荷分散」 OK
+- **結論先出し + 本文量半減** (inverted pyramid)
 - **数値 / file path は太字 or `code`** — spotted pattern で拾われる確率上昇
-
-### NG / OK 例
-
-**NG (1 文 180 字、読点 5 個、見出しラベル型)**
-
-```text
-## 改善
-
-本リリースではユーザー認証周りの処理を見直し、従来 localStorage に保存していた token を httpOnly cookie に移行し、合わせて XSS 経由のリスクを軽減する措置を講じ、また session 期限を 24h から 1h に短縮することで、token 漏洩時の影響範囲を最小化する設計に変更した。
-```
-
-**OK (60 字以内、読点 2 個、主張型見出し、scan 対応)**
-
-```text
-## token 保管を localStorage → httpOnly cookie に移行 (XSS 防止)
-
-**Why**: localStorage は XSS で読み取り可。token 漏洩で全 account 乗っ取り可能。
-
-**変更点**:
-- 保管先: localStorage → httpOnly cookie
-- session 期限: 24h → 1h (漏洩時の影響窓を 1/24)
-```
+- **見出し / キャッチは意味単位で改行** — Notion / Slack は実 viewer で preview
+- **コードブロック / list の前後に空行** — renderer 差で潰れる対策
 
 ### 出力前 web 用 追加 check (既存 6 項目に追加)
 
@@ -317,20 +280,6 @@ Severity / Style / Overprescription) で再 check する。全 mode 適用。
 **略語初出展開必須**: DoD (Definition of Done) / RCA (Root Cause Analysis) / PRD (Product Requirements Document) / DD (Design Doc) / SPOF (Single Point of Failure) / ROI (Return on Investment) / MVP (Minimum Viable Product) / WTP (Willingness to Pay) / MECE (Mutually Exclusive, Collectively Exhaustive)
 
 **硬い文語 (柔らかく)**: 〜である / 〜であった / 〜されている / 〜となる / 〜に基づき / 〜に関して / 当該 / 以下に示す
-
-## 段落レベルBefore/After
-
-### ❌ AI調 (抽象ポエム + 用語羅列)
-
-> 可観測性向上を目的として疎結合なイベント駆動アーキテクチャを導入し、スケーラビリティを担保する。これにより、システム全体の柔軟性と保守性が大幅に改善される。
-
-問題: 抽象名詞の羅列で絵が浮かばない / 何が起きていて何を変えるか不明 / 「大幅に改善」の根拠ゼロ。
-
-### ⭕ 自然な実務文 (具体状況 → 具体解決)
-
-> 注文処理が重くなったときに、一部の処理だけ遅延できるようにしたい。そのため、メール送信や通知処理を別の非同期処理に分離する。本処理 (在庫引当・決済) の応答時間をp95 500ms以内に保つことが目的。
-
-抽象→具体への変換は機械的にできる: 抽象名詞を「いま起きている具体的な事象」「これから取る具体的な行動」に分解する。
 
 ## 避けるパターン (段落・文章全体の構造)
 
