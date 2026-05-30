@@ -81,6 +81,27 @@ _extract_ai_jargon() {
   _extract_term_list "$file" "AI定型語"
 }
 
+# 必須 key sanity check: hook が exact match 参照する key が抽出 0 件なら fail-loud
+# PRINCIPLES.md key rename / 記法破壊を早期検出して silent pass を防ぐ
+# session 内 cache: _assert_required_keys_done=1 でスキップ (重複検査防止)
+_assert_required_keys_done=${_assert_required_keys_done:-0}
+_assert_required_keys() {
+  [[ "$_assert_required_keys_done" -eq 1 ]] && return 0
+  _assert_required_keys_done=1
+  # PRINCIPLES.md 不在時は別経路で既に silent pass → この検査はスキップ
+  [[ -f "$_principles_file" ]] || return 0
+  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)")
+  local key
+  for key in "${required_keys[@]}"; do
+    local result
+    result=$(_extract_term_list "$_principles_file" "$key")
+    if [[ -z "$result" ]]; then
+      printf '[hook-error] PRINCIPLES.md key '"'"'%s'"'"' 抽出 0 件 — rename or 記法破壊の可能性。silent pass 防止のため exit 2 で fail-loud。\n' "$key" >&2
+      exit 2
+    fi
+  done
+}
+
 # 外向き text に対して指定 key の list を grep し、hit 語を stdout に出力
 # 返り値: hit あり=1, なし=0
 _check_term_list() {
@@ -116,6 +137,8 @@ _check_ai_jargon() {
 _block_if_ai_jargon() {
   local text="$1"
   local context_label="$2"  # "commit message" / "PR body" 等
+  # 必須 key sanity check (session 内 cache 済なら即 return)
+  _assert_required_keys
   local hit_words
   # AI定型語 チェック (block)
   if ! hit_words=$(_check_term_list "$text" "AI定型語"); then
