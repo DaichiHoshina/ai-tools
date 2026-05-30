@@ -102,6 +102,29 @@ _assert_required_keys() {
   done
 }
 
+# inject byte size log 出力関数
+# 引数: tool_name, bytes, status(ok|over)
+_append_jp_quality_inject_log() {
+  local tool_name="$1"
+  local bytes="$2"
+  local status_str="$3"
+  local log_dir="$HOME/.claude/logs"
+  local log_file="${log_dir}/jp-quality-inject.log"
+  mkdir -p "$log_dir" 2>/dev/null || true
+  # ファイルサイズ rotation: 1MB 超えたら mv してから新規
+  if [[ -f "$log_file" ]]; then
+    local fsize
+    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
+    if [[ "${fsize}" -gt 1048576 ]]; then
+      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+    fi
+  fi
+  local ts
+  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf '%s | tool=%s | bytes=%s | threshold=1500 | status=%s\n' \
+    "$ts" "$tool_name" "$bytes" "$status_str" >> "$log_file" 2>/dev/null || true
+}
+
 # 外向き text に対して指定 key の list を grep し、hit 語を stdout に出力
 # 返り値: hit あり=1, なし=0
 _check_term_list() {
@@ -139,6 +162,21 @@ _block_if_ai_jargon() {
   local context_label="$2"  # "commit message" / "PR body" 等
   # 必須 key sanity check (session 内 cache 済なら即 return)
   _assert_required_keys
+
+  # inject byte size 計測: 4 list の合計抽出 byte 数を計算してログ出力
+  # _extract_term_list 結果を再利用（grep/extract を cache して latency 最小化）
+  local _inject_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)")
+  local _inject_total=0
+  local _inject_key
+  for _inject_key in "${_inject_keys[@]}"; do
+    local _inject_terms
+    _inject_terms=$(_extract_term_list "$_principles_file" "$_inject_key" 2>/dev/null || true)
+    _inject_total=$(( _inject_total + ${#_inject_terms} ))
+  done
+  local _inject_status="ok"
+  [[ "$_inject_total" -gt 1500 ]] && _inject_status="over"
+  _append_jp_quality_inject_log "$context_label" "$_inject_total" "$_inject_status"
+
   local hit_words
   # AI定型語 チェック (block)
   if ! hit_words=$(_check_term_list "$text" "AI定型語"); then
