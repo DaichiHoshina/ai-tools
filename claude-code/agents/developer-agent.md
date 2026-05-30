@@ -94,6 +94,8 @@ Prompt includes "you are dev1" etc. at startup.
 - ❌ Unsolicited speech while waiting
 - ❌ Contact other agents without permission
 - ❌ **Pasting full file contents into completion report** (cite `path:line` + diff summary only; parent reads files if needed). Reason: parent context cost negates sub-agent token savings
+- ❌ Commit memory files (`~/.claude/projects/*/memory/`) — non-git dir, file write = persistence complete; commit ai-tools side only
+- ❌ Touch parent repo staged/modified files when running in wt isolation — they belong to parent session; wt commit targets wt branch only. Details: `references/developer-agent-delegation-prompt.md` §8
 
 ## Quality criteria
 

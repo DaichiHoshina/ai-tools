@@ -80,3 +80,16 @@ Parent observes via completion report + `git diff` + push log.
 
 Markdown heading の rename / EN 化 / 表記変更を含む場合 → `~/.claude/rules/markdown-anchor-sync.md` の手順に従う。
 
+## 8. Implicit constraints (task-independent fixed rules)
+
+### memory dir は非 git
+
+`~/.claude/projects/<project>/memory/` 配下は git 管理外。memory file 作成・更新で永続化完了 (commit 不要)。
+memory file を作る task では「commit する」指示を受けても **memory file には commit 不要**、ai-tools 側 commit のみ対象。
+
+### wt 内 task: 親 repo の staged 変更に触れない
+
+wt isolation 下で動く時、親 repo 側 (`~/ai-tools/`) に既存 staged / modified file がある可能性あり。
+これらは親 session の作業中物なので **wt agent は触らない / 言及しない / commit 対象に含めない**。
+wt 内 commit は wt branch のみに対する commit、親 repo の状態は無視。
+
