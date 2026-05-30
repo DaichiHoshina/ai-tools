@@ -63,8 +63,8 @@ Detailed logs, stack traces → `<details>` folding.
 
 draft 生成後、`guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md) に対して grep 突き合わせ。
 
-- Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (上限なし)
-- 0 hit になるまで rewrite を繰り返す (user 確認なし)
+- Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (max 3 loop)
+- 3 loop 後も hit 残存 → 残存語を提示して user に続行確認
 - **注**: hook (pre-tool-use.sh) が Bash/MCP 投稿時に AI定型語を exit 2 でブロックするため、このステップは事前 self-check として機能する
 - channel (Slack / Notion / Issue / PR comment) によらず同一 NG 強度を適用
 
