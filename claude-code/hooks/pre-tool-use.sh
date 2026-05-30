@@ -135,6 +135,13 @@ _block_if_ai_jargon() {
     MESSAGE="${ICON_CRITICAL} カタカナ造語 block: [${word_list}] (${context_label})"
     ADDITIONAL_CONTEXT="カタカナ造語を削除または説明的表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
     _append_jp_quality_log "$context_label" "$word_list" "block"
+    return
+  fi
+  # 断定語 (warn-only) チェック: commit message 文脈では正当な用法のため block しない
+  if ! hit_words=$(_check_term_list "$text" "断定語 (warn-only)"); then
+    local word_list
+    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
+    _append_jp_quality_log "$context_label" "$word_list" "warn"
   fi
 }
 

@@ -204,10 +204,33 @@ ${_DOC_CTX}"
       fi
     fi
 
-    # token 増分 monitor: 500 byte 超なら stderr に warn (block しない)
+    # 断定語 (warn-only) hint: commit message では正当用法、chat 応答での AI 確定表現に注意喚起のみ
+    _SOFTBLOCK_LINE=$(grep -m1 '^\*\*断定語 (warn-only)\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
+    if [[ -n "${_SOFTBLOCK_LINE}" ]]; then
+      _SOFTBLOCK_TERMS=$(printf '%s' "${_SOFTBLOCK_LINE}" | sed 's/^\*\*断定語 (warn-only)\*\*: //')
+      _SOFTBLOCK_CTX="[断定語注意 (warn-only)] 以下は外向き prose では慎重に使用 (commit subject では許可): ${_SOFTBLOCK_TERMS}"
+      if [[ -n "${_AI_TERMS_CTX}" ]]; then
+        _AI_TERMS_CTX="${_AI_TERMS_CTX}
+${_SOFTBLOCK_CTX}"
+      else
+        _AI_TERMS_CTX="${_SOFTBLOCK_CTX}"
+      fi
+    fi
+
+    # token 増分 monitor: 1500 byte 超のみ log ファイルに記録 (stderr は Claude に届かないため log に切替)
     _INJECT_SIZE=${#_AI_TERMS_CTX}
-    if [[ "${_INJECT_SIZE}" -gt 500 ]]; then
-      printf '[jp-quality-inject] warn: inject size %d bytes (>500)\n' "${_INJECT_SIZE}" >&2
+    if [[ "${_INJECT_SIZE}" -gt 1500 ]]; then
+      _LOG_DIR="${HOME}/.claude/logs"
+      _SIZE_LOG="${_LOG_DIR}/jp-quality-inject-size.log"
+      mkdir -p "${_LOG_DIR}" 2>/dev/null || true
+      if [[ -f "${_SIZE_LOG}" ]]; then
+        _fsize=$(stat -f%z "${_SIZE_LOG}" 2>/dev/null || stat -c%s "${_SIZE_LOG}" 2>/dev/null || echo 0)
+        if [[ "${_fsize}" -gt 1048576 ]]; then
+          mv "${_SIZE_LOG}" "${_SIZE_LOG}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+        fi
+      fi
+      _ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+      printf '%s | %d bytes | pid=%d\n' "${_ts}" "${_INJECT_SIZE}" "$$" >> "${_SIZE_LOG}" 2>/dev/null || true
     fi
   fi
 fi
