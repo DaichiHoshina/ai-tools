@@ -32,6 +32,8 @@
 
 **合格ライン**: Critical 1件以上or Warning 4件以上で書き直し (最大2 loop)。3 loop残存はユーザー報告。
 
+**Web 出力 (Notion / GitHub / Confluence) 時は追加チェック 4 項目**: 1 文 60 字 / 主張型 heading / 段落 3-4 行上限 / 太字 scan 化 — 詳細 `PRINCIPLES.md` `## Web 可読性`。
+
 ## 分量目安
 
 - 1セクション: 地の文3-5割、箇条書き / 表5-7割

@@ -61,7 +61,7 @@ Detailed logs, stack traces → `<details>` folding.
 
 ### Step 2.5: writing check (NG 語チェック)
 
-draft 生成後、`guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md) に対して grep 突き合わせ。
+draft 生成後、`guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md) に対して grep 突き合わせ。Web 出力 (PR / Slack / Notion) 時は **`## Web 可読性` 追加 check 4 項目** (1 文 60 字 / 主張型 heading / 段落 3-4 行 / 太字 scan 化) も確認。
 
 - Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (max 3 loop)
 - 3 loop 後も hit 残存 → 残存語を提示して user に続行確認

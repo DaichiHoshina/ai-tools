@@ -104,7 +104,7 @@ Conventional Commits format: `<type>(<scope>): <subject>`
 <areas to check / decisions needed from reviewer>
 ```
 
-**Short PR description (< 3 H3s or < 400 words)**: pass `ai-output.md` PREP 3 + PRINCIPLES.md "4 questions before writing" + "6-item pre-output checklist". Long PR description (Design Doc scale): long-form-doc.md 4 questions + 5 principles. Decision criteria: H3 count / word count / fits 1 screen scroll.
+**Short PR description (< 3 H3s or < 400 words)**: pass `ai-output.md` PREP 3 + PRINCIPLES.md "4 questions before writing" + "6-item pre-output checklist" + **Web 可読性 +4 項目** (1 文 60 字 / 主張型 heading / 段落 3-4 行 / 太字 scan 化、`PRINCIPLES.md` `## Web 可読性` 参照). Long PR description (Design Doc scale): long-form-doc.md 4 questions + 5 principles. Decision criteria: H3 count / word count / fits 1 screen scroll.
 
 **Testing section style**:
 

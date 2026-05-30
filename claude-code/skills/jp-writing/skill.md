@@ -82,6 +82,7 @@ context: fork
 
 - NG辞書 (`**AI定型語**:`) は PRINCIPLES.md canonical。本 skill では重複 literal 不持ち
 - 詳細書き換えルール (7原則 / 3変換 / 媒体別構造) は `guidelines/writing/PRINCIPLES.md` 参照
+- **Web 出力 (PR / Slack / Notion / GitHub) 時は `## Web 可読性` 適用**: 1 文 60 字 / 主張型 heading / scan 対応 / 出力前追加 check 4 項目 (`PRINCIPLES.md` `## Web 可読性` 参照)
 - **PREP 法 + 5W1H** (長文 / 共有報告 / commit まとめ / PR body 等で必須): P (結論) → R (理由) → E (具体例 + how/数値/path) → P (再確認) の太字 label 構造。why/how 必須、抽象語禁止。詳細: `guidelines/writing/PRINCIPLES.md` "PREP 法 + 5W1H" section
 - hook block: `pre-tool-use.sh` が外向き tool で自動検出 (block 発火は `~/.claude/logs/jp-quality-block.log` に記録)
 
