@@ -99,6 +99,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 2026-05-27 incident: commit `9b2247a` で AI 定型語辞書数 (27/10/37) を hook + 2 commands に重複 literal 化、将来 PRINCIPLES.md 更新で desync 必至 (`[[feedback-no-derived-literals]]` memory)
 
 **Hook block 対象は AI 定型語のみ** (PRINCIPLES.md `**AI定型語**:` 行から動的抽出)。英日混在語 (lock / commit / deploy / TX 等) は誤検出多発リスクのため hook block 対象外、PRINCIPLES.md (d) 表 + writing review で manual 検出する。
+**PRINCIPLES.md list scope 記法**: `**<name> (block|warn-only)**: <terms>` 形式で scope を明示する。新規 list 追加時は適用 target (chat / 外向き prose / commit message 全許可 or 一部制限) を考慮して block か warn-only を選ぶ。
 
 ## Rewind
 
