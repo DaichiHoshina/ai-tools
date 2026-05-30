@@ -49,7 +49,7 @@ require_anchor() {
 @test "anchor_exists: PARALLEL-PATTERNS.md に必須 anchor が存在" {
   require_anchor "$PATTERNS_FILE" "## Critical-path reduction formula"
   require_anchor "$PATTERNS_FILE" "## Forbidden phrase definitions (bats validation targets)"
-  require_anchor "$PATTERNS_FILE" "### Why the 4-Developer limit"
+  require_anchor "$PATTERNS_FILE" "### Why the 8-Developer limit"
 }
 
 @test "judgment_formula_exists: 判定式に必須要素が含まれる" {
@@ -58,11 +58,10 @@ require_anchor() {
   [[ -n "$section" ]] || { echo "section empty: ## Critical-path reduction formula"; false; }
   [[ "$section" == *"expected_parallel"* ]] || { echo "missing: expected_parallel"; false; }
   [[ "$section" == *"expected_serial"* ]] || { echo "missing: expected_serial"; false; }
-  [[ "$section" == *"× 0.7"* ]] || { echo "missing: × 0.7"; false; }
+  [[ "$section" == *"× 0.95"* ]] || { echo "missing: × 0.95"; false; }
   [[ "$section" == *"LPT_makespan"* ]] || { echo "missing: LPT_makespan"; false; }
   [[ "$section" == *"sum(T_i)"* ]] || { echo "missing: sum(T_i)"; false; }
   [[ "$section" == *"spawn_cost(N)"* ]] || { echo "missing: spawn_cost(N)"; false; }
-  [[ "$section" == *"worktree_setup_cost(N)"* ]] || { echo "missing: worktree_setup_cost(N)"; false; }
 }
 
 @test "manager_agent_pattern_removed: manager-agent.md にパターン詳細が残らない" {

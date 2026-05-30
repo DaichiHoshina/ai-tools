@@ -25,7 +25,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | Scope | Tool |
 |---|---|
 | 1-2 files / specific symbol | Bash grep/find or `mcp__serena__find_symbol` |
-| 3+ query / broad search | `Task(explore-agent)` 並列発火 default (domain 数 = 並列数、max 4)、ambiguous 判定不要 |
+| 3+ query / broad search | `Task(explore-agent)` 並列発火 default (domain 数 = 並列数、max 8)、ambiguous 判定不要 |
 | Claude Code CLI/SDK/API spec | `claude-code-guide` agent |
 | Other genuinely broad analysis | Explore (built-in, last resort) |
 
@@ -37,9 +37,11 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **Decision principle (top priority)**: Delegate on uncertainty. Under-delegation risk > over-delegation cost. Opus parent handles orchestration / judgment only; all actual work (write / refactor / verification / commit) goes to Sonnet.
 
-**Parallel-first (top priority)**: 独立 task は **同一 message 内に複数 Agent tool call を並べて並列発火** が default。逐次は依存ある場合 (前 task 結果が次 task 入力) のみ。investigate / design / impl skeleton 等の独立軸は迷わず同時並走する。並列禁止 case: 同一 file edit / 結果依存。詳細: `references/parallel-execution-patterns.md`
+**Time-first (top priority)**: 最速 makespan を選ぶことが全 routing の上位原則。並列禁止 case (物理制約: 同一 file edit / 結果依存) 以外は常に並列発火、cap default 8 (parent + Dev×8 = 9 concurrent)。迷ったら並列+委譲 (under-parallel risk > over-parallel cost)。詳細: `references/PARALLEL-PATTERNS.md`
 
 **Default = delegate to `developer-agent` (Sonnet)**. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Inline execution only for exceptions below.
+
+**Time-first 系**: 並列化で makespan 5% 以上短縮見込みなら採用 (旧 30% から緩和、cap 8)。
 
 **Delegate threshold (declaration 不要)**: 2+ files / 10+ lines / 2+ symbols / new file / commit-bearing いずれか → `developer-agent` 委譲。それ以下は inline 可。違反 (delegate 怠り) は feedback memory 記録。
 
@@ -57,7 +59,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 | unknown bug cause / recurring bug | `root-cause-analyzer` auto |
 | design decision / large plan / multi-phase | `po-agent` auto (or `/plan`) |
 | multi-stage task (investigate→design→impl→verify) | `/flow` hierarchy (PO→Manager→Dev→Reviewer) |
-| 20+ file bulk processing | `claude -p` fan-out (`references/fanout-recipes.md`) |
+| 10+ file bulk processing | `claude -p` fan-out (`references/fanout-recipes.md`) |
 | **網羅 / 全件 / 一斉 / bulk / 大量 file readonly** | `explore-agent` (read-only) or `developer-agent` (edit) Sonnet 委譲必須、parent Opus sample 縮小禁止 |
 
 ## Session Efficiency
