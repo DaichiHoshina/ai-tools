@@ -21,6 +21,59 @@ MESSAGE=""
 ADDITIONAL_CONTEXT=""
 
 # ====================================
+# AI定型語 block 関数
+# PRINCIPLES.md から動的抽出 → 外向き text に grep → hit で exit 2
+# ====================================
+_principles_file="$HOME/ai-tools/claude-code/guidelines/writing/PRINCIPLES.md"
+
+# AI定型語を PRINCIPLES.md から抽出 (「**AI定型語**: 語1 / 語2 / ...」行)
+_extract_ai_jargon() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  local line
+  line=$(grep '^\*\*AI定型語\*\*:' "$file" 2>/dev/null || true)
+  [[ -z "$line" ]] && return 0
+  # "**AI定型語**: " の後ろを / で分割して1語ずつ出力
+  local body="${line#*: }"
+  printf '%s' "$body" | tr '/' '\n' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//' | grep -v '^$' || true
+}
+
+# 外向き text に対して AI定型語を grep し、hit 語を stdout に出力
+# 返り値: hit あり=1, なし=0
+_check_ai_jargon() {
+  local text="$1"
+  [[ -z "$text" ]] && return 0
+  [[ -f "$_principles_file" ]] || return 0
+  local found=()
+  while IFS= read -r word; do
+    [[ -z "$word" ]] && continue
+    if printf '%s' "$text" | grep -qF "$word"; then
+      found+=("$word")
+    fi
+  done < <(_extract_ai_jargon "$_principles_file")
+  if [[ ${#found[@]} -gt 0 ]]; then
+    printf '%s\n' "${found[@]}"
+    return 1
+  fi
+  return 0
+}
+
+# 外向き text を AI語チェックし、hit 時に Forbidden block をセットする
+# 呼び出し元: tool ごとの case 節
+_block_if_ai_jargon() {
+  local text="$1"
+  local context_label="$2"  # "commit message" / "PR body" 等
+  local hit_words
+  if ! hit_words=$(_check_ai_jargon "$text"); then
+    GUARD_CLASS="Forbidden"
+    local word_list
+    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
+    MESSAGE="${ICON_CRITICAL} AI定型語 block: [${word_list}] (${context_label})"
+    ADDITIONAL_CONTEXT="AI定型語を削除または具体表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+  fi
+}
+
+# ====================================
 # Bash コマンド分類ヘルパー関数
 # ====================================
 _is_serena_replaceable() {
@@ -457,6 +510,62 @@ PYEOF
   "Bash")
     COMMAND=$(jq -r '.tool_input.command // empty' <<< "$INPUT")
     classify_bash_command "$COMMAND"
+
+    # AI定型語チェック: git commit / gh / glab の外向き text を抽出して block
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ -n "$COMMAND" ]]; then
+      # --- git commit: -m オプション値を抽出 ---
+      if [[ "$COMMAND" =~ git[[:space:]]+commit ]]; then
+        _commit_msg=""
+        # -m "..." 形式
+        if [[ "$COMMAND" =~ -m[[:space:]]+'([^'\'']*)' ]]; then
+          _commit_msg="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ -m[[:space:]]\"([^\"]*)\" ]]; then
+          _commit_msg="${BASH_REMATCH[1]}"
+        fi
+        [[ -n "$_commit_msg" ]] && _block_if_ai_jargon "$_commit_msg" "commit message"
+      fi
+
+      # --- gh pr create / gh pr edit / gh issue create / gh issue comment / gh pr comment ---
+      if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment) ]]; then
+        _gh_text=""
+        # --body "..." or --body '...'
+        if [[ "$COMMAND" =~ --body[[:space:]]+'([^'\'']*)' ]]; then
+          _gh_text="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --body[[:space:]]\"([^\"]*)\" ]]; then
+          _gh_text="${BASH_REMATCH[1]}"
+        fi
+        # --title "..." or --title '...' (append to check text)
+        if [[ "$COMMAND" =~ --title[[:space:]]+'([^'\'']*)' ]]; then
+          _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
+          _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
+        fi
+        if [[ -n "$_gh_text" ]]; then
+          _gh_subcmd=$(printf '%s' "$COMMAND" | grep -oE 'gh (pr|issue) (create|edit|comment)' | head -1)
+          _block_if_ai_jargon "$_gh_text" "${_gh_subcmd:-gh}"
+        fi
+      fi
+
+      # --- glab mr create / glab issue create / glab mr note ---
+      if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]]; then
+        _glab_text=""
+        if [[ "$COMMAND" =~ --description[[:space:]]+'([^'\'']*)' ]]; then
+          _glab_text="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --description[[:space:]]\"([^\"]*)\" ]]; then
+          _glab_text="${BASH_REMATCH[1]}"
+        fi
+        if [[ "$COMMAND" =~ --title[[:space:]]+'([^'\'']*)' ]]; then
+          _glab_text="${_glab_text} ${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
+          _glab_text="${_glab_text} ${BASH_REMATCH[1]}"
+        fi
+        if [[ -n "$_glab_text" ]]; then
+          _glab_subcmd=$(printf '%s' "$COMMAND" | grep -oE 'glab (mr|issue) (create|note)' | head -1)
+          _block_if_ai_jargon "$_glab_text" "${_glab_subcmd:-glab}"
+        fi
+      fi
+    fi
+
     # Serena substitution hint: notify Claude when Bash code-file read is detected
     # structurally prevents Bash ratio 51% (analytics) violating CLAUDE.md "Tool selection" principle
     if [ "$GUARD_CLASS" != "Forbidden" ] && _is_serena_replaceable "$COMMAND"; then
@@ -483,9 +592,13 @@ PYEOF
     # 実投稿系 MCP 使用前に PRINCIPLES 再注入（analytics で上位使用、確定送信のみ対象）
     # 除外: slack_send_message_draft / slack_create_canvas / slack_update_canvas
     #   理由: draft / canvas 編集は実投稿前段階、書き直し前提のためノイズ防止
-    ADDITIONAL_CONTEXT="📝 投稿前自問5点: ①「で、つまり何？」と思わせないか ②初見が途中で止まらないか ③各段落の役割（背景/理由/具体例/結論/注意点）明確か ④抽象名詞の羅列で段落が終わってないか ⑤bullet 5連続+地の文0の金太郎飴か。詳細: claude-code/guidelines/writing/PRINCIPLES.md
-🚫 AI定型語 NG (削除/置換): 効果的に / 効率的に / シームレスに / 直感的に / 革新的な / 素晴らしい / 強力な / より良い / 包括的な / 堅牢な / 柔軟な / スケーラブルな / 最適化 / 〜を実現します / 〜を提供します / 〜を可能にします / 〜することができます / ご紹介します / ご覧ください / 〜いただけます / まず〜しましょう / 重要なポイント / 注目すべき点 / 本機能は / 本ドキュメントは / 本記事では / 本稿では〜について述べる (27語、source: PRINCIPLES.md:111)
-📌 要根拠語 (削除でなく直後に根拠1文): 適切な / 最適な / 改善 / 重要 / 必須 / 推奨 / 一般的に / 強化 / 向上 / 活用 (10語、source: PRINCIPLES.md:94)"
+    ADDITIONAL_CONTEXT="📝 投稿前自問5点: ①「で、つまり何？」と思わせないか ②初見が途中で止まらないか ③各段落の役割（背景/理由/具体例/結論/注意点）明確か ④抽象名詞の羅列で段落が終わってないか ⑤bullet 5連続+地の文0の金太郎飴か。詳細: claude-code/guidelines/writing/PRINCIPLES.md"
+
+    # AI定型語チェック: text / content param を抽出して block
+    _mcp_text=$(jq -r '.tool_input.text // .tool_input.content // empty' <<< "$INPUT")
+    if [[ -n "$_mcp_text" ]]; then
+      _block_if_ai_jargon "$_mcp_text" "$TOOL_NAME"
+    fi
     ;;
 
   "Task")

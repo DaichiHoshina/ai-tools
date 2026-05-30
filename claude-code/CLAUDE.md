@@ -161,6 +161,8 @@ Claude misbehavior / non-obvious success = signal that config is not reflecting 
 
 genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き prose (PR / commit / Issue / Slack / Notion / DD / PRD / RCA / comments) と `/plan` `/design-doc` `/prd` `/post-comment` `/git-push --pr` `/docs` ドラフトは plain JP (〜する / 〜した、主語明示、指示語禁止: 「これ」「それ」「上記」→具体名)。Details: `rules/genshijin.md` + `guidelines/writing/PRINCIPLES.md`
 
+**AI定型語 hook block**: git commit / gh/glab PR・Issue / Slack MCP / Notion MCP の外向き text に AI定型語 (source: PRINCIPLES.md) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換してから再実行。
+
 ## References
 
 High freq: `references/model-selection.md` / `natural-language-triggers.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md` / `references/developer-agent-delegation-prompt.md` (delegation template)

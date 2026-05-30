@@ -61,12 +61,12 @@ Detailed logs, stack traces → `<details>` folding.
 
 ### Step 2.5: writing check (NG 語チェック)
 
-draft 生成後、`guidelines/writing/PRINCIPLES.md:111` AI定型語 27語 + `:94` 要根拠語 10語 に対して grep 突き合わせ。
+draft 生成後、`guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md) に対して grep 突き合わせ。
 
-- Hit ≥1 → AI定型語 (L111) は削除または具体表現に置換、要根拠語 (L94) は直後に根拠1文追記して rewrite、再チェック (max 2 loop)
-- 3 回目突入時 (2 loop 後も Hit ≥1) → user に「AI語残存: <語リスト>、投稿続行?」確認
-- 1 loop で 0 hit → 通過
-- channel (Slack / Notion / Issue / PR comment) によらず同一 37 語 NG 強度を適用
+- Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (上限なし)
+- 0 hit になるまで rewrite を繰り返す (user 確認なし)
+- **注**: hook (pre-tool-use.sh) が Bash/MCP 投稿時に AI定型語を exit 2 でブロックするため、このステップは事前 self-check として機能する
+- channel (Slack / Notion / Issue / PR comment) によらず同一 NG 強度を適用
 
 ### Step 3: Display as post candidate
 
