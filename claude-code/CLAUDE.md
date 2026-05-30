@@ -25,7 +25,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | Scope | Tool |
 |---|---|
 | 1-2 files / specific symbol | Bash grep/find or `mcp__serena__find_symbol` |
-| 3-4 query broad search | `Task(explore-agent)` parallel (2 if ambiguous, all 4 for 3+ domains) |
+| 3+ query / broad search | `Task(explore-agent)` 並列発火 default (domain 数 = 並列数、max 4)、ambiguous 判定不要 |
 | Claude Code CLI/SDK/API spec | `claude-code-guide` agent |
 | Other genuinely broad analysis | Explore (built-in, last resort) |
 
@@ -37,19 +37,15 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **Decision principle (top priority)**: Delegate on uncertainty. Under-delegation risk > over-delegation cost. Opus parent handles orchestration / judgment only; all actual work (write / refactor / verification / commit) goes to Sonnet.
 
+**Parallel-first (top priority)**: 独立 task は **同一 message 内に複数 Agent tool call を並べて並列発火** が default。逐次は依存ある場合 (前 task 結果が次 task 入力) のみ。investigate / design / impl skeleton 等の独立軸は迷わず同時並走する。並列禁止 case: 同一 file edit / 結果依存。詳細: `references/parallel-execution-patterns.md`
+
 **Default = delegate to `developer-agent` (Sonnet)**. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Inline execution only for exceptions below.
 
-**Edit/Write declaration rule**: Before calling Edit or Write tool, declare in chat **one line**:
-- `Inline exception (reason: 1 symbol body / 1 section / 1 config value / read-only cmd / expected <20s) → parent inline execution` 
-- OR `Inline prohibited (reason: 2+ files / 10+ lines / 2+ symbols / new file / revert / 5+ line markdown section / refactor / commit-bearing) → delegate to developer-agent`
-
-Skipping declaration = rule violation, recorded to feedback memory.
+**Delegate threshold (declaration 不要)**: 2+ files / 10+ lines / 2+ symbols / new file / commit-bearing いずれか → `developer-agent` 委譲。それ以下は inline 可。違反 (delegate 怠り) は feedback memory 記録。
 
 **Inline exceptions (no delegation)**: Q&A / already-read file check (同一 session で既に Read 完了した file への Q&A、追加 Read なし; 追加 Read 必要なら throttle count 算入) / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
 
-**Inline exception throttle**: 3 consecutive inline exceptions in same session → next edit-class op is **mandatory** developer-agent delegation (reset counter after delegation). Investigation phase (Q&A / dry-run を除く調査専用 Read/Bash): 累積 ≥5 → switch subsequent investigation to `explore-agent`.
-
-**Inline prohibited (must delegate)**: 2+ files / 10+ lines / 2+ symbols / new file / revert-series / 5+ line markdown section add / refactor / commit-bearing ops
+**Inline exception throttle**: 2 consecutive inline exceptions in same session → next edit-class op is **mandatory** developer-agent delegation (reset counter after delegation). Investigation phase (Q&A / dry-run を除く調査専用 Read/Bash): 累積 ≥5 → switch subsequent investigation to `explore-agent`.
 
 Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any of 2+ files, 10+ lines, or 2+ symbols
 
