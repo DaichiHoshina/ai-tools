@@ -21,36 +21,83 @@ MESSAGE=""
 ADDITIONAL_CONTEXT=""
 
 # ====================================
-# AI定型語 block 関数
+# AI定型語 / カタカナ造語 block 関数
 # PRINCIPLES.md から動的抽出 → 外向き text に grep → hit で exit 2
 # ====================================
-_principles_file="$HOME/ai-tools/claude-code/guidelines/writing/PRINCIPLES.md"
+_principles_file="$HOME/.claude/guidelines/writing/PRINCIPLES.md"
 
-# AI定型語を PRINCIPLES.md から抽出 (「**AI定型語**: 語1 / 語2 / ...」行)
-_extract_ai_jargon() {
+# block ログ出力関数
+# 引数: tool_name, hit_term, block|warn
+_append_jp_quality_log() {
+  local tool_name="$1"
+  local hit_term="$2"
+  local action="$3"
+  local log_dir="$HOME/.claude/logs"
+  local log_file="${log_dir}/jp-quality-block.log"
+  # mkdir は -p で安全に
+  mkdir -p "$log_dir" 2>/dev/null || true
+  # ファイルサイズ rotation: 1MB 超えたら mv してから新規
+  if [[ -f "$log_file" ]]; then
+    local fsize
+    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
+    if [[ "${fsize}" -gt 1048576 ]]; then
+      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+    fi
+  fi
+  local ts
+  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$action" >> "$log_file" 2>/dev/null || true
+}
+
+# code block (``` ... ``` および ` ... `) を除去したテキストを返す
+_strip_code_blocks() {
+  local text="$1"
+  # fenced code block (``` ... ```) を除去 (POSIX awk 互換)
+  local stripped
+  stripped=$(printf '%s' "$text" | awk '
+    /^```/ { in_block = !in_block; next }
+    !in_block { print }
+  ')
+  # inline code (` ... `) を除去
+  stripped=$(printf '%s' "$stripped" | sed "s/\`[^\`]*\`/ /g")
+  printf '%s' "$stripped"
+}
+
+# 指定 key の list を PRINCIPLES.md から抽出 (「**<key>**: 語1 / 語2 / ...」行)
+_extract_term_list() {
   local file="$1"
+  local key="$2"
   [[ -f "$file" ]] || return 0
   local line
-  line=$(grep '^\*\*AI定型語\*\*:' "$file" 2>/dev/null || true)
+  line=$(grep -m1 "^\*\*${key}\*\*:" "$file" 2>/dev/null || true)
   [[ -z "$line" ]] && return 0
-  # "**AI定型語**: " の後ろを / で分割して1語ずつ出力
   local body="${line#*: }"
   printf '%s' "$body" | tr '/' '\n' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//' | grep -v '^$' || true
 }
 
-# 外向き text に対して AI定型語を grep し、hit 語を stdout に出力
+# AI定型語を PRINCIPLES.md から抽出 (後方互換 wrapper)
+_extract_ai_jargon() {
+  local file="$1"
+  _extract_term_list "$file" "AI定型語"
+}
+
+# 外向き text に対して指定 key の list を grep し、hit 語を stdout に出力
 # 返り値: hit あり=1, なし=0
-_check_ai_jargon() {
+_check_term_list() {
   local text="$1"
+  local key="$2"
   [[ -z "$text" ]] && return 0
   [[ -f "$_principles_file" ]] || return 0
+  # code block を除去してからチェック
+  local clean_text
+  clean_text=$(_strip_code_blocks "$text")
   local found=()
   while IFS= read -r word; do
     [[ -z "$word" ]] && continue
-    if printf '%s' "$text" | grep -qF "$word"; then
+    if printf '%s' "$clean_text" | grep -qF "$word"; then
       found+=("$word")
     fi
-  done < <(_extract_ai_jargon "$_principles_file")
+  done < <(_extract_term_list "$_principles_file" "$key")
   if [[ ${#found[@]} -gt 0 ]]; then
     printf '%s\n' "${found[@]}"
     return 1
@@ -58,18 +105,36 @@ _check_ai_jargon() {
   return 0
 }
 
-# 外向き text を AI語チェックし、hit 時に Forbidden block をセットする
+# 後方互換: AI定型語チェック
+_check_ai_jargon() {
+  local text="$1"
+  _check_term_list "$text" "AI定型語"
+}
+
+# 外向き text を AI語 + カタカナ造語チェックし、hit 時に Forbidden block をセットする
 # 呼び出し元: tool ごとの case 節
 _block_if_ai_jargon() {
   local text="$1"
   local context_label="$2"  # "commit message" / "PR body" 等
   local hit_words
-  if ! hit_words=$(_check_ai_jargon "$text"); then
+  # AI定型語 チェック (block)
+  if ! hit_words=$(_check_term_list "$text" "AI定型語"); then
     GUARD_CLASS="Forbidden"
     local word_list
     word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
     MESSAGE="${ICON_CRITICAL} AI定型語 block: [${word_list}] (${context_label})"
     ADDITIONAL_CONTEXT="AI定型語を削除または具体表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+    _append_jp_quality_log "$context_label" "$word_list" "block"
+    return
+  fi
+  # カタカナ造語 チェック (block)
+  if ! hit_words=$(_check_term_list "$text" "カタカナ造語禁止"); then
+    GUARD_CLASS="Forbidden"
+    local word_list
+    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
+    MESSAGE="${ICON_CRITICAL} カタカナ造語 block: [${word_list}] (${context_label})"
+    ADDITIONAL_CONTEXT="カタカナ造語を削除または説明的表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+    _append_jp_quality_log "$context_label" "$word_list" "block"
   fi
 }
 

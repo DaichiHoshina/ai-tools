@@ -147,16 +147,68 @@ if [[ "$prompt" == /* ]]; then
     exit 0
 fi
 
-# === AI定型語禁止 inject ===
-# PRINCIPLES.md の canonical list を動的抽出して chat 応答に注入する
+# === JP品質 inject (AI定型語 + カタカナ造語 + jargon + 略語) ===
+# PRINCIPLES.md の canonical list を動的抽出して chat 応答 / 外向き文書に注入する
 # 派生値禁止 rule 準拠: hook 内に語 list literal を持たない
+# JP_QUALITY_INJECT_OFF=1 で全 inject skip (debug 用)
 _AI_TERMS_CTX=""
-_PRINCIPLES_PATH="${HOME}/.claude/guidelines/writing/PRINCIPLES.md"
-if [[ -f "${_PRINCIPLES_PATH}" ]]; then
-  _AI_TERMS_LINE=$(grep -m1 '^\*\*AI定型語\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
-  if [[ -n "${_AI_TERMS_LINE}" ]]; then
-    _AI_TERMS=$(printf '%s' "${_AI_TERMS_LINE}" | sed 's/^\*\*AI定型語\*\*: //')
-    _AI_TERMS_CTX="[chat応答genshijin強化] 以下のAI定型語をchat応答で使用禁止: ${_AI_TERMS}。代替表現で記述すること。"
+if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
+  _PRINCIPLES_PATH="${HOME}/.claude/guidelines/writing/PRINCIPLES.md"
+  if [[ -f "${_PRINCIPLES_PATH}" ]]; then
+    # AI定型語 (chat応答禁止)
+    _AI_TERMS_LINE=$(grep -m1 '^\*\*AI定型語\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
+    # カタカナ造語 (chat応答禁止)
+    _KATAKANA_LINE=$(grep -m1 '^\*\*カタカナ造語禁止\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
+    # 内部jargon (外向き初出和訳必須)
+    _JARGON_LINE=$(grep -m1 '^\*\*内部jargon初出和訳必須\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
+    # 略語 (外向き初出展開必須)
+    _ABBREV_LINE=$(grep -m1 '^\*\*略語初出展開必須\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
+
+    # chat応答向け: AI定型語のみ全列挙 + カタカナ造語は参照形式 (token 節約)
+    _CHAT_PARTS=""
+    if [[ -n "${_AI_TERMS_LINE}" ]]; then
+      _AI_TERMS=$(printf '%s' "${_AI_TERMS_LINE}" | sed 's/^\*\*AI定型語\*\*: //')
+      _CHAT_PARTS="AI定型語: ${_AI_TERMS}"
+    fi
+    _KATAKANA_HINT=""
+    if [[ -n "${_KATAKANA_LINE}" ]]; then
+      _KATAKANA_HINT=" / カタカナ造語禁止 (source: PRINCIPLES.md **カタカナ造語禁止**: 行参照)"
+    fi
+    if [[ -n "${_CHAT_PARTS}" ]]; then
+      _AI_TERMS_CTX="[chat応答genshijin強化] 以下をchat応答で使用禁止: ${_CHAT_PARTS}${_KATAKANA_HINT}。代替は説明的記述で対応 (例: シームレス → 中断なく)。"
+    elif [[ -n "${_KATAKANA_HINT}" ]]; then
+      _AI_TERMS_CTX="[chat応答genshijin強化] カタカナ造語禁止${_KATAKANA_HINT}。代替は説明的記述で対応。"
+    fi
+
+    # 外向き文書向け: jargon + 略語
+    _DOC_PARTS=""
+    if [[ -n "${_JARGON_LINE}" ]]; then
+      _JARGON=$(printf '%s' "${_JARGON_LINE}" | sed 's/^\*\*内部jargon初出和訳必須\*\*: //')
+      _DOC_PARTS="jargon: ${_JARGON}"
+    fi
+    if [[ -n "${_ABBREV_LINE}" ]]; then
+      _ABBREV=$(printf '%s' "${_ABBREV_LINE}" | sed 's/^\*\*略語初出展開必須\*\*: //')
+      if [[ -n "${_DOC_PARTS}" ]]; then
+        _DOC_PARTS="${_DOC_PARTS} / 略語: ${_ABBREV}"
+      else
+        _DOC_PARTS="略語: ${_ABBREV}"
+      fi
+    fi
+    if [[ -n "${_DOC_PARTS}" ]]; then
+      _DOC_CTX="[外向き文書品質] 永続化文書 (PR/commit/Issue/Slack/Notion/DD/PRD/RCA) では初出時に和訳/展開必須: ${_DOC_PARTS}"
+      if [[ -n "${_AI_TERMS_CTX}" ]]; then
+        _AI_TERMS_CTX="${_AI_TERMS_CTX}
+${_DOC_CTX}"
+      else
+        _AI_TERMS_CTX="${_DOC_CTX}"
+      fi
+    fi
+
+    # token 増分 monitor: 500 byte 超なら stderr に warn (block しない)
+    _INJECT_SIZE=${#_AI_TERMS_CTX}
+    if [[ "${_INJECT_SIZE}" -gt 500 ]]; then
+      printf '[jp-quality-inject] warn: inject size %d bytes (>500)\n' "${_INJECT_SIZE}" >&2
+    fi
   fi
 fi
 
