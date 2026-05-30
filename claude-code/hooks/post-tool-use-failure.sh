@@ -42,7 +42,7 @@ fi
 # Serena MCP 失敗のセッション内カウンタ
 # user-prompt-submit.sh が次プロンプト時に検知し /serena-refresh を提案
 if [[ "${TOOL_NAME}" == mcp__serena__* ]]; then
-  _SERENA_COUNTER="/tmp/claude-serena-fail-count"
+  _SERENA_COUNTER="${CLAUDE_SERENA_FAIL_COUNT:-/tmp/claude-serena-fail-count-${SESSION_ID}}"
   _CURRENT=0
   [[ -f "${_SERENA_COUNTER}" ]] && _CURRENT=$(cat "${_SERENA_COUNTER}" 2>/dev/null || echo 0)
   echo $((_CURRENT + 1)) > "${_SERENA_COUNTER}"

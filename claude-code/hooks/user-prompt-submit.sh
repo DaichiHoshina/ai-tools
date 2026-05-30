@@ -37,8 +37,15 @@ if ! validate_json "$input"; then
   exit 1
 fi
 
+# === session_id / 日付早期取得: _CTX_FILE / _SERENA_COUNTER / _DUP_FILE の default path に suffix 付与 ===
+# env CLAUDE_CODE_SESSION_ID 優先、無ければ stdin JSON から抽出、それも無ければ unknown
+_SESSION_ID=$(jq -r '.session_id // "unknown"' <<< "$input")
+_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SESSION_ID}}"
+# 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
+_DATE_TODAY=$(date +%Y%m%d)
+
 # === Context usage notice: コンテキスト50%超で /compact 提案を通知 ===
-_CTX_FILE="${CLAUDE_CTX_FILE:-/tmp/claude-ctx-pct}"
+_CTX_FILE="${CLAUDE_CTX_FILE:-/tmp/claude-ctx-pct-${_SESSION_ID}}"
 _COMPACT_NOTICE_MSG=""
 if [[ -f "${_CTX_FILE}" ]]; then
   # bash builtin read で fork 不要にする（毎プロンプトで cat fork していた箇所）
@@ -49,7 +56,7 @@ if [[ -f "${_CTX_FILE}" ]]; then
 fi
 
 # === Serena MCP health notice: 失敗が累積したら /serena-refresh 提案 ===
-_SERENA_COUNTER="${CLAUDE_SERENA_FAIL_COUNT:-/tmp/claude-serena-fail-count}"
+_SERENA_COUNTER="${CLAUDE_SERENA_FAIL_COUNT:-/tmp/claude-serena-fail-count-${_SESSION_ID}}"
 _SERENA_NOTICE_MSG=""
 if [[ -f "${_SERENA_COUNTER}" ]]; then
   read -r _SERENA_FAILS < "${_SERENA_COUNTER}" 2>/dev/null || _SERENA_FAILS="0"
@@ -66,10 +73,9 @@ prompt=$(jq -r '.prompt // empty' <<< "$input")
 # 短文 ("yes" / "続き" / "TODO" 等の rate-limit 復旧 prompt) は除外して長文のみ対象
 _DUP_NOTICE_MSG=""
 if (( ${#prompt} >= 20 )); then
-  _DUP_SESSION_ID=$(jq -r '.session_id // "unknown"' <<< "$input")
-  _DUP_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_DUP_SESSION_ID}}"
+  _DUP_SESSION_ID="${_SESSION_ID}"
   if [[ -n "${_DUP_SESSION_ID}" && "${_DUP_SESSION_ID}" != "unknown" ]]; then
-    _DUP_FILE="/tmp/claude-last-prompt-${_DUP_SESSION_ID}"
+    _DUP_FILE="/tmp/claude-last-prompt-${_DUP_SESSION_ID}-${_DATE_TODAY}"
     _DUP_NOW="${EPOCHSECONDS}"
     _DUP_HASH=$(printf '%s' "$prompt" | shasum -a 1 2>/dev/null | cut -d' ' -f1)
     if [[ -n "${_DUP_HASH}" && -f "${_DUP_FILE}" ]]; then
@@ -256,7 +262,7 @@ ${_OUTWARD_MODE_CTX}"
         fi
       fi
       _ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
-      printf '%s | %d bytes | pid=%d\n' "${_ts}" "${_INJECT_SIZE}" "$$" >> "${_SIZE_LOG}" 2>/dev/null || true
+      printf '%s | %d bytes | session=%s\n' "${_ts}" "${_INJECT_SIZE}" "${_SESSION_ID:-unknown}" >> "${_SIZE_LOG}" 2>/dev/null || true
     fi
   fi
 fi

@@ -28,11 +28,13 @@ require_jq
 eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "unknown") _CWD=\(.cwd // "")"')"
 _SS_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SS_SESSION_ID}}"
 _SS_PROJECT=$(basename "${_CWD:-.}")
+# 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
+_SS_DATE_TODAY=$(date +%Y%m%d)
 
 # ====================================
 # statusline マーカー初期化
 # ====================================
-# /tmp/claude-wt-${SESSION_ID} は post-tool-use.sh が cd 検出時に書き込み、
+# /tmp/claude-wt-${SESSION_ID}-YYYYMMDD は post-tool-use.sh が cd 検出時に書き込み、
 # statusline.js が cwd 解決の優先元として読む。session 開始時に最新の cwd で
 # 初期化することで、過去 session で書かれた古いマーカーが残るのを防ぐ
 # （例: 同セッションで一時的 cd した後、cd 含まない Bash が続いてマーカーが
@@ -40,7 +42,7 @@ _SS_PROJECT=$(basename "${_CWD:-.}")
 if [[ -n "${_SS_SESSION_ID}" && "${_SS_SESSION_ID}" != "unknown" && -n "${_CWD:-}" && -d "${_CWD:-}" ]]; then
   if git -C "${_CWD}" rev-parse --git-dir >/dev/null 2>&1; then
     _SS_ABS=$(cd "${_CWD}" && pwd)
-    echo "${_SS_ABS}" > "/tmp/claude-wt-${_SS_SESSION_ID}"
+    echo "${_SS_ABS}" > "/tmp/claude-wt-${_SS_SESSION_ID}-${_SS_DATE_TODAY}"
   fi
 fi
 

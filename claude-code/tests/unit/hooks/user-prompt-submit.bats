@@ -234,7 +234,7 @@ get_additional_context() {
 @test "user-prompt-submit: dup-detect 20文字未満prompt はチェック対象外" {
   cd "$TEST_TMPDIR"
   local sid="dup-test-short-$$"
-  rm -f "/tmp/claude-last-prompt-${sid}"
+  rm -f "/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
 
   # 短文 ("続き" 5 chars) は dup ロジック skip
   local input='{"prompt":"続き","session_id":"'"$sid"'"}'
@@ -243,13 +243,13 @@ get_additional_context() {
 
   local ctx=$(get_additional_context "$out")
   [[ -z "$ctx" ]] || ! [[ "$ctx" =~ "同一入力検出" ]]
-  rm -f "/tmp/claude-last-prompt-${sid}"
+  rm -f "/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
 }
 
 @test "user-prompt-submit: dup-detect 同一prompt5秒以内で通知あり" {
   cd "$TEST_TMPDIR"
   local sid="dup-test-same-$$"
-  rm -f "/tmp/claude-last-prompt-${sid}"
+  rm -f "/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
 
   local input='{"prompt":"これは20文字以上の長いテストプロンプトで重複検出","session_id":"'"$sid"'"}'
   # 1回目: dup check skip, last-prompt 記録のみ
@@ -259,13 +259,13 @@ get_additional_context() {
 
   local ctx=$(get_additional_context "$out")
   [[ "$ctx" =~ "同一入力検出" ]]
-  rm -f "/tmp/claude-last-prompt-${sid}"
+  rm -f "/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
 }
 
 @test "user-prompt-submit: dup-detect 異なるpromptは通知なし" {
   cd "$TEST_TMPDIR"
   local sid="dup-test-diff-$$"
-  rm -f "/tmp/claude-last-prompt-${sid}"
+  rm -f "/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
 
   local in1='{"prompt":"これは20文字以上の最初のテストプロンプトです","session_id":"'"$sid"'"}'
   local in2='{"prompt":"これは20文字以上の別のテストプロンプトです","session_id":"'"$sid"'"}'
@@ -274,13 +274,13 @@ get_additional_context() {
 
   local ctx=$(get_additional_context "$out")
   [[ -z "$ctx" ]] || ! [[ "$ctx" =~ "同一入力検出" ]]
-  rm -f "/tmp/claude-last-prompt-${sid}"
+  rm -f "/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
 }
 
 @test "user-prompt-submit: dup-detect 5秒超過で通知なし" {
   cd "$TEST_TMPDIR"
   local sid="dup-test-expire-$$"
-  local dup_file="/tmp/claude-last-prompt-${sid}"
+  local dup_file="/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
   rm -f "$dup_file"
 
   local prompt_text="これは20文字以上の長いテストプロンプトで時間経過検証"
@@ -331,4 +331,85 @@ get_additional_context() {
   local out=$(run_hook "$input")
   local ctx=$(get_additional_context "$out")
   [[ ! "$ctx" =~ "[jp-quality-outward-mode]" ]]
+}
+
+# =============================================================================
+# N1: _DUP_FILE に YYYYMMDD が付与されること
+# =============================================================================
+
+@test "user-prompt-submit: dup-file path に YYYYMMDD が付与される" {
+  cd "$TEST_TMPDIR"
+  local sid="dup-date-test-$$"
+  local today=$(date +%Y%m%d)
+  local expected_file="/tmp/claude-last-prompt-${sid}-${today}"
+  rm -f "$expected_file"
+
+  local input='{"prompt":"これは20文字以上の長いプロンプトでファイル名検証","session_id":"'"$sid"'"}'
+  # CLAUDE_CODE_SESSION_ID を unset して stdin の session_id が使われるようにする
+  CLAUDE_CODE_SESSION_ID="" bash "$HOOK_FILE" <<< "$input" >/dev/null
+
+  # hook 実行後、YYYYMMDD 付きファイルが存在すること
+  [ -f "$expected_file" ]
+  rm -f "$expected_file"
+}
+
+@test "user-prompt-submit: dup-file path に pid 形式 (ハイフン+数字のみ) が含まれない" {
+  cd "$TEST_TMPDIR"
+  local sid="dup-nopid-test-$$"
+  local today=$(date +%Y%m%d)
+  local expected_file="/tmp/claude-last-prompt-${sid}-${today}"
+  rm -f "$expected_file"
+
+  local input='{"prompt":"これは20文字以上の長いプロンプトでpidなし確認","session_id":"'"$sid"'"}'
+  CLAUDE_CODE_SESSION_ID="" bash "$HOOK_FILE" <<< "$input" >/dev/null
+
+  # YYYYMMDD 付きのファイルのみ存在し、日付なしファイルは存在しない
+  [ -f "$expected_file" ]
+  [ ! -f "/tmp/claude-last-prompt-${sid}" ]
+  rm -f "$expected_file"
+}
+
+# =============================================================================
+# N3: env 未指定時 _CTX_FILE / _SERENA_COUNTER に session_id suffix が付与される
+# =============================================================================
+
+@test "user-prompt-submit: CLAUDE_CTX_FILE 未指定時 session_id suffix 付き path を読む" {
+  cd "$TEST_TMPDIR"
+  local sid="ctx-sid-test-$$"
+  local ctx_file="/tmp/claude-ctx-pct-${sid}"
+  # env override を外して session_id suffix 付きの ctx file を作成
+  echo "75" > "$ctx_file"
+
+  local input='{"prompt":"コードを見直して","session_id":"'"$sid"'"}'
+  local out
+  # CLAUDE_CODE_SESSION_ID と CLAUDE_CTX_FILE を両方空にして stdin session_id を使わせる
+  out=$(CLAUDE_CODE_SESSION_ID="" CLAUDE_CTX_FILE="" bash "$HOOK_FILE" <<< "$input")
+
+  # additionalContext にコンテキスト使用率通知が含まれること (75% >= 50%)
+  local ctx
+  ctx=$(echo "$out" | jq -r '.additionalContext // empty')
+  [[ "$ctx" =~ "コンテキスト使用率75" ]]
+  rm -f "$ctx_file"
+}
+
+# =============================================================================
+# N4: jp-quality-inject-size.log に session= 形式が含まれ pid= が含まれない
+# =============================================================================
+
+@test "user-prompt-submit: inject size log に session= 形式で記録される" {
+  cd "$TEST_TMPDIR"
+  local sid="log-session-test-$$"
+  local log_dir="${TEST_TMPDIR}/logs"
+  local log_file="${log_dir}/jp-quality-inject-size.log"
+  mkdir -p "$log_dir"
+
+  # HOME を上書きして log path を制御
+  local input='{"prompt":"テスト","session_id":"'"$sid"'"}'
+  HOME="$TEST_TMPDIR" run_hook "$input" >/dev/null || true
+
+  # log が存在する場合 (inject size > 1500 bytes 時のみ書かれる)、session= 形式を確認
+  if [ -f "$log_file" ]; then
+    grep -q "session=" "$log_file"
+    ! grep -q "pid=" "$log_file"
+  fi
 }

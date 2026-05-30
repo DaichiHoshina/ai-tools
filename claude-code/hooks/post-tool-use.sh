@@ -16,6 +16,8 @@ INPUT=$(cat)
 # BASH_STDOUT は Bash 時のみ実値、それ以外は空文字（巨大 stdout のメモリ転送回避）
 eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") RELATIVE_PATH=\(.tool_input.relative_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "") BASH_STDOUT=\(if .tool_name == "Bash" then (.tool_response.stdout // "") else "" end)"' <<< "$INPUT")"
 SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
+# 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
+DATE_TODAY=$(date +%Y%m%d)
 
 # デフォルトメッセージ
 MESSAGE=""
@@ -131,7 +133,7 @@ case "$TOOL_NAME" in
     # ただし既存マーカーが worktree (/private/tmp/wt-*) を指す場合は保護
     # （/snkr-issue 等の長期worktree作業で cd 含まない Bash 続行ケース）
     if [ -n "$SESSION_ID" ]; then
-      MARKER_PATH="/tmp/claude-wt-${SESSION_ID}"
+      MARKER_PATH="/tmp/claude-wt-${SESSION_ID}-${DATE_TODAY}"
       CD_TARGET=""
       if [ -n "$COMMAND" ] && [[ "$COMMAND" =~ cd[[:space:]]+([^[:space:]\&\|\;]+) ]]; then
         CD_TARGET="${BASH_REMATCH[1]}"
