@@ -11,18 +11,24 @@ Absolute paths + exact changes (no inference):
 
 Complex edits (>5 changes): list separately for sequential execution.
 
-## 2. Verification
+## 2. Verification (parent 分担 default)
 
-Must run after impl and confirm all pass:
+**verify 主体**: 委譲 task 完了報告後に **parent 側 inline** で実行 (`bats` / `lint` / `grep` smoke 等)。subagent 内 verify は以下 case のみ:
+- build / typecheck 必須 language project (TypeScript / Go 等で compile error 自己訂正が必要)
+- commit-bearing で push 前確認必須 (subagent 側 commit 時)
+
+理由: subagent 内 verify は CI 相当時間 (数十秒〜分) を単発 makespan に積算する。parent が完了報告後 inline で verify すれば、次 subagent 起動と verify を重ねられる (subagent A 自身の verify は A 完了後でないと不可、ただし A の verify と subagent B 起動は並列可)。
+
+利用可能 verify command:
 - **Lint**: `npm run lint` / `eslint` / `skill-lint`
-- **Typecheck**: `tsc --noEmit` (TypeScript only)
+- **Typecheck**: `tsc --noEmit`
 - **Test**: `npm test` / `pytest` / `bats tests/`
 - **Smoke**: `grep "section-name" file` or `wc -l file ≥N`
-- **Structure**: `ls -la path/` confirm files exist
+- **Structure**: `ls -la path/`
 
-Per-task pattern (≥1):
-- [ ] Lint: `npm run lint` (Markdown: N/A)
-- [ ] Smoke: `grep "keyword" file` at L<X>
+Per-task pattern (subagent 内 verify が必要な時のみ):
+- [ ] subagent verify: `<command>` (理由: <build 必須 / commit 前確認>)
+- [ ] parent verify: `<command>` (default、subagent 完了報告後 parent inline)
 
 ## 3. Commit rule (no AI footer)
 

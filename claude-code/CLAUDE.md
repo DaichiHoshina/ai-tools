@@ -35,7 +35,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 *(For impl/edit tasks. Investigation phase → Discovery Routing)*
 
-**Decision principle (top priority)**: Delegate on uncertainty. Under-delegation risk > over-delegation cost. Opus parent handles orchestration / judgment only; all actual work (write / refactor / verification / commit) goes to Sonnet.
+**Decision principle (top priority)**: Delegate on uncertainty. Under-delegation risk > over-delegation cost. Opus parent handles orchestration / judgment only; all actual work (write / refactor / commit) goes to Sonnet. Verification: parent inline default (build / typecheck 必須 language project は subagent 側、詳細 `references/developer-agent-delegation-prompt.md`)。
 
 **Time-first (top priority)**: 最速 makespan を選ぶことが全 routing の上位原則。並列禁止 case (物理制約: 同一 file edit / 結果依存) 以外は常に並列発火、cap default 8 (parent + Dev×8 = 9 concurrent)。迷ったら並列+委譲 (under-parallel risk > over-parallel cost)。詳細: `references/PARALLEL-PATTERNS.md`
 
@@ -44,6 +44,10 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 **Time-first 系**: 並列化で makespan 5% 以上短縮見込みなら採用 (旧 30% から緩和、cap 8)。
 
 **Delegate threshold (declaration 不要)**: 2+ files / 10+ lines / 2+ symbols / new file / commit-bearing いずれか → `developer-agent` 委譲。それ以下は inline 可。違反 (delegate 怠り) は feedback memory 記録。
+
+**委譲分割義務 (束ね禁止)**: 1 prompt に 2+ domain (異 file group / 異 root cause / 異 verify 系) を束ねず、domain 別に 単一 message 内 複数 Agent tool_use で並列発火する。束ねは subagent 内逐次処理で makespan 累積 (2026-05-30 incident: N1-N5 5 件束ねで 7 分超、3 並列なら ~150s 想定)。
+
+**parent 事前準備義務**: 委譲前 parent が (a) target `file:line` 特定 (`find_symbol` / `grep`) (b) verify コマンド確定 (c) DoD 1 行化 を完了する。subagent に探索を投げない (探索 phase が makespan 支配要因)。target 不明示の prompt は full repo scan を誘発する。
 
 **Inline exceptions (no delegation)**: Q&A / already-read file check (同一 session で既に Read 完了した file への Q&A、追加 Read なし; 追加 Read 必要なら throttle count 算入) / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
 
