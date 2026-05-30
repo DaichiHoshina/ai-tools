@@ -15,6 +15,11 @@ INPUT=$(cat)
 # ツール名を取得
 TOOL_NAME=$(jq -r '.tool_name // empty' <<< "$INPUT")
 
+# セッションID取得: stdin JSON の .session_id を優先 (他 hook と同様の方式)
+# CLAUDE_CODE_SESSION_ID env は Claude Code v2.1.90+ で export される場合があるため fallback で参照
+SESSION_ID=$(jq -r '.session_id // empty' <<< "$INPUT")
+SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
+
 # protection-mode判定変数
 GUARD_CLASS=""  # Safe, Boundary, Forbidden
 MESSAGE=""
@@ -539,29 +544,72 @@ detect_rename_propagation() {
 # 今日の commit inject
 # 書く系 tool (Write/Edit/Bash commit・gh・glab・Slack/Notion MCP) の直前に
 # 今日の commit log を additionalContext に append して、最新規範の反映を促す
-# session 重複抑制: /tmp/claude-today-commits-<SESSION_KEY> に記録済フラグ
+# session 重複抑制: /tmp/claude-today-commits-<SESSION_KEY>-<YYYYMMDD> に記録済フラグ
 # ====================================
 _inject_today_commits() {
-  # session 重複抑制
-  local _session_key="${CLAUDE_SESSION_ID:-$$}"
-  local _flag_file="/tmp/claude-today-commits-${_session_key}"
+  local _inject_log_dir="$HOME/.claude/logs"
+  local _inject_log_file="${_inject_log_dir}/today-commit-inject.log"
+
+  # session 重複抑制: stdin .session_id ベース (CLAUDE_CODE_SESSION_ID env 優先)
+  # session_id が取得できた場合はそれを使用 (session 単位で確実に重複抑制)
+  # 取得できない場合は $$ fallback (毎 hook 起動別PIDで重複抑制は機能しないが inject 自体は行う)
+  local _session_key="${SESSION_ID:-$$}"
+  local _today=$(date +%Y%m%d)
+  local _flag_file="/tmp/claude-today-commits-${_session_key}-${_today}"
   if [[ -f "$_flag_file" ]]; then
     return 0
   fi
 
   # git log: CLAUDE_PROJECT_DIR 優先、なければ HOME
   local _project_dir="${CLAUDE_PROJECT_DIR:-$HOME}"
-  local _today_commits
-  _today_commits=$(git -C "$_project_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges 2>/dev/null || true)
 
-  # 0 件 → silent skip
-  [[ -z "$_today_commits" ]] && return 0
+  # Source 1: 作業中 repo の今日の commit
+  local _proj_commits=""
+  _proj_commits=$(git -C "$_project_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges 2>/dev/null || true)
+  if [[ -z "$_proj_commits" ]] && ! git -C "$_project_dir" rev-parse --git-dir >/dev/null 2>&1; then
+    mkdir -p "$_inject_log_dir" 2>/dev/null || true
+    printf '[%s] today-commit inject: git log failed at %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_project_dir" >> "$_inject_log_file" 2>/dev/null || true
+  fi
+
+  # Source 2: ai-tools writing 規約関連 commit (guidelines/ と CLAUDE.md 限定)
+  # _project_dir が ~/ai-tools の時は重複しないよう skip
+  local _aitools_dir="$HOME/ai-tools"
+  local _writing_commits=""
+  local _aitools_real
+  _aitools_real=$(cd "$_aitools_dir" 2>/dev/null && pwd -P 2>/dev/null || echo "")
+  local _project_real
+  _project_real=$(cd "$_project_dir" 2>/dev/null && pwd -P 2>/dev/null || echo "")
+  if [[ -n "$_aitools_real" && "$_aitools_real" != "$_project_real" ]]; then
+    _writing_commits=$(git -C "$_aitools_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges \
+      -- "claude-code/guidelines/" "claude-code/CLAUDE.md" 2>/dev/null || true)
+    if [[ -z "$_writing_commits" ]] && ! git -C "$_aitools_dir" rev-parse --git-dir >/dev/null 2>&1; then
+      mkdir -p "$_inject_log_dir" 2>/dev/null || true
+      printf '[%s] today-commit inject: git log failed at %s (writing path)\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_aitools_dir" >> "$_inject_log_file" 2>/dev/null || true
+    fi
+  fi
+
+  # 両方 0 件 → silent skip (フラグも書かない)
+  if [[ -z "$_proj_commits" && -z "$_writing_commits" ]]; then
+    return 0
+  fi
 
   # フラグ書き込み (以降は重複 inject しない)
   touch "$_flag_file" 2>/dev/null || true
 
-  local _msg
-  _msg="今日の commit: ${_today_commits}"$'\n'"writing 規約 / guidelines / CLAUDE.md 更新が含まれる場合、出力前に当該 file を read して最新規範を反映すること。"
+  local _msg=""
+
+  if [[ -n "$_proj_commits" ]]; then
+    _msg="今日の commit: ${_proj_commits}"$'\n'"writing 規約 / guidelines / CLAUDE.md 更新が含まれる場合、出力前に当該 file を read して最新規範を反映すること。"
+  fi
+
+  if [[ -n "$_writing_commits" ]]; then
+    local _writing_msg="writing 規約 (~/ai-tools) の今日更新: ${_writing_commits}"$'\n'"これらを read してから書く。"
+    if [[ -n "$_msg" ]]; then
+      _msg="${_msg}"$'\n'"${_writing_msg}"
+    else
+      _msg="${_writing_msg}"
+    fi
+  fi
 
   if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
     ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_msg}"
@@ -704,8 +752,8 @@ PYEOF
 
     # AI定型語チェック: git commit / gh / glab の外向き text を抽出して block
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ -n "$COMMAND" ]]; then
-      # --- git commit: -m オプション値を抽出 ---
-      if [[ "$COMMAND" =~ git[[:space:]]+commit ]]; then
+      # --- git commit: -m オプション値を抽出 (commit-tree / commit-graph は除外) ---
+      if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]]; then
         _commit_msg=""
         # -m "..." 形式
         if [[ "$COMMAND" =~ -m[[:space:]]+'([^'\'']*)' ]]; then
@@ -716,8 +764,11 @@ PYEOF
         [[ -n "$_commit_msg" ]] && _block_if_ai_jargon "$_commit_msg" "commit message"
       fi
 
-      # --- gh pr create / gh pr edit / gh issue create / gh issue comment / gh pr comment ---
-      if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment) ]]; then
+      # --- gh pr create / gh pr edit / gh pr review / gh pr merge / gh issue create / gh issue comment ---
+      # --- gh release create ---
+      if [[ "$GUARD_CLASS" != "Forbidden" ]] && { \
+          [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment|review|merge) ]] || \
+          [[ "$COMMAND" =~ gh[[:space:]]+release[[:space:]]+create ]]; }; then
         _gh_text=""
         # --body "..." or --body '...'
         if [[ "$COMMAND" =~ --body[[:space:]]+'([^'\'']*)' ]]; then
@@ -731,8 +782,14 @@ PYEOF
         elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
           _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
         fi
+        # --notes "..." or --notes '...' (gh release create)
+        if [[ "$COMMAND" =~ --notes[[:space:]]+'([^'\'']*)' ]]; then
+          _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --notes[[:space:]]\"([^\"]*)\" ]]; then
+          _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
+        fi
         if [[ -n "$_gh_text" ]]; then
-          _gh_subcmd=$(printf '%s' "$COMMAND" | grep -oE 'gh (pr|issue) (create|edit|comment)' | head -1)
+          _gh_subcmd=$(printf '%s' "$COMMAND" | grep -oE 'gh (pr|issue) (create|edit|comment|review|merge)|gh release create' | head -1)
           _block_if_ai_jargon "$_gh_text" "${_gh_subcmd:-gh}"
         fi
       fi
@@ -768,11 +825,13 @@ PYEOF
     fi
 
     # 書く系 Bash コマンド: 今日の commit inject
-    # 対象: git commit / gh pr|issue / glab mr|issue
+    # 対象: git commit / gh pr|issue|release / glab mr|issue|release
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ -n "$COMMAND" ]]; then
-      if [[ "$COMMAND" =~ git[[:space:]]+commit ]] \
-         || [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment) ]] \
-         || [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]]; then
+      if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]] \
+         || [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment|review|merge) ]] \
+         || [[ "$COMMAND" =~ gh[[:space:]]+release[[:space:]]+create ]] \
+         || [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]] \
+         || [[ "$COMMAND" =~ glab[[:space:]]+release[[:space:]]+create ]]; then
         _inject_today_commits
       fi
     fi
@@ -788,11 +847,13 @@ PYEOF
     MESSAGE="🔶 要確認: Jira/Confluence変更"
     ;;
 
-  "mcp__claude_ai_Notion__notion-create-pages"|"mcp__claude_ai_Notion__notion-update-page"|"mcp__claude_ai_Notion__notion-create-comment"|"mcp__claude_ai_Slack__slack_send_message")
+  "mcp__claude_ai_Notion__notion-create-pages"|"mcp__claude_ai_Notion__notion-update-page"|"mcp__claude_ai_Notion__notion-create-comment"|"mcp__claude_ai_Notion__notion-create-database" \
+  |"mcp__claude_ai_Slack__slack_send_message"|"mcp__claude_ai_Slack__slack_schedule_message"|"mcp__claude_ai_Slack__slack_create_canvas"|"mcp__claude_ai_Slack__slack_update_canvas")
+    # 対象: 文章を外向きに送信・投稿・作成する MCP
+    # 除外 (構造操作で文章を書かない):
+    #   notion-duplicate-page / notion-move-pages / notion-update-view / notion-update-data-source
+    #   slack_add_reaction
     GUARD_CLASS="Safe"
-    # 実投稿系 MCP 使用前に PRINCIPLES 再注入（analytics で上位使用、確定送信のみ対象）
-    # 除外: slack_send_message_draft / slack_create_canvas / slack_update_canvas
-    #   理由: draft / canvas 編集は実投稿前段階、書き直し前提のためノイズ防止
     ADDITIONAL_CONTEXT="📝 投稿前自問5点: ①「で、つまり何？」と思わせないか ②初見が途中で止まらないか ③各段落の役割（背景/理由/具体例/結論/注意点）明確か ④抽象名詞の羅列で段落が終わってないか ⑤bullet 5連続+地の文0の金太郎飴か。詳細: claude-code/guidelines/writing/PRINCIPLES.md"
 
     # AI定型語チェック: text / content param を抽出して block
