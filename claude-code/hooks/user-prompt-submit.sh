@@ -147,6 +147,19 @@ if [[ "$prompt" == /* ]]; then
     exit 0
 fi
 
+# === AI定型語禁止 inject ===
+# PRINCIPLES.md の canonical list を動的抽出して chat 応答に注入する
+# 派生値禁止 rule 準拠: hook 内に語 list literal を持たない
+_AI_TERMS_CTX=""
+_PRINCIPLES_PATH="${HOME}/.claude/guidelines/writing/PRINCIPLES.md"
+if [[ -f "${_PRINCIPLES_PATH}" ]]; then
+  _AI_TERMS_LINE=$(grep -m1 '^\*\*AI定型語\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
+  if [[ -n "${_AI_TERMS_LINE}" ]]; then
+    _AI_TERMS=$(printf '%s' "${_AI_TERMS_LINE}" | sed 's/^\*\*AI定型語\*\*: //')
+    _AI_TERMS_CTX="[chat応答genshijin強化] 以下のAI定型語をchat応答で使用禁止: ${_AI_TERMS}。代替表現で記述すること。"
+  fi
+fi
+
 # === 検出結果格納 ===
 declare -A detected_langs
 declare -A detected_skills
@@ -223,16 +236,18 @@ if [ -n "$technique_recommendation" ]; then
   fi
 fi
 
-# JSON出力: compact通知と既存additional_contextを結合してjq 1回にまとめる
+# JSON出力: compact通知・AI定型語禁止・既存additional_contextを結合してjq 1回にまとめる
 final_ctx="$additional_context"
-if [[ -n "${_COMPACT_NOTICE_MSG}" ]]; then
-  if [[ -n "$final_ctx" ]]; then
-    final_ctx="${_COMPACT_NOTICE_MSG}
+for _prepend_msg in "${_COMPACT_NOTICE_MSG}" "${_AI_TERMS_CTX}"; do
+  if [[ -n "${_prepend_msg}" ]]; then
+    if [[ -n "$final_ctx" ]]; then
+      final_ctx="${_prepend_msg}
 ${final_ctx}"
-  else
-    final_ctx="${_COMPACT_NOTICE_MSG}"
+    else
+      final_ctx="${_prepend_msg}"
+    fi
   fi
-fi
+done
 
 if [ -n "$system_message" ] && [ -n "$final_ctx" ]; then
   jq -n --arg msg "$system_message" --arg ctx "$final_ctx" '{systemMessage: $msg, additionalContext: $ctx}'
