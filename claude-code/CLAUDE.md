@@ -160,7 +160,7 @@ Claude misbehavior / non-obvious success = signal that config is not reflecting 
 
 ## 書く前の自己確認 (chat 除く)
 
-外向き文章 (PR / commit / Issue / Slack / Notion / DD / PRD / RCA 等) は **今日の commit を read してから書く** (`git log --since=midnight --pretty=format:'%h %s'`)。hook が tool 直前に自動 inject するが漏れ時は主体的に確認。
+外向き文章 (PR / commit / Issue / Slack / Notion / DD / PRD / RCA / コードコメント等) は **今日の commit を read してから書く** (`git log --since=midnight --pretty=format:'%h %s'`)。hook が書く系 tool (Write / Edit / Bash commit·gh·glab / Slack MCP / Notion MCP) 直前に自動 inject する。inject は 2 source: (1) 作業中 repo の今日 commit + (2) `~/ai-tools` の `guidelines/` `CLAUDE.md` 限定の今日 commit (別 repo 作業時も writing 規約更新が届く設計)。漏れ時は主体的に確認。
 
 ## Genshijin Boundary
 
