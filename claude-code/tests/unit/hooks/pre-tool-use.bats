@@ -723,3 +723,111 @@ _run_bash_jargon() {
   [[ "$msg" =~ "要確認" ]]
   [[ ! "$msg" =~ "難読漢語" ]]
 }
+
+# =============================================================================
+# 今日の commit inject テスト
+# _inject_today_commits: 書く系 tool で additionalContext に今日の commit を inject する
+# =============================================================================
+
+# テスト用 git stub: 固定 commit log を出力してパス優先で差し替える
+_setup_git_stub() {
+  local stub_dir="$TEST_TMPDIR/bin"
+  mkdir -p "$stub_dir"
+  cat > "$stub_dir/git" <<'STUB'
+#!/usr/bin/env bash
+# パターン: git -C <dir> log --since=... の場合のみ stub 出力
+if [[ "$*" =~ "log" ]] && [[ "$*" =~ "since" ]]; then
+  printf 'abc1234 feat: writing 規約更新\ndef5678 fix: hook 修正'
+  exit 0
+fi
+# それ以外は本物の git を呼ぶ
+exec /usr/bin/git "$@"
+STUB
+  chmod +x "$stub_dir/git"
+  export _ORIG_PATH="$PATH"
+  export PATH="$stub_dir:$PATH"
+}
+
+_teardown_git_stub() {
+  export PATH="${_ORIG_PATH:-$PATH}"
+}
+
+@test "today-commit-inject: git commit Bash で additionalContext に今日の commit が出る" {
+  _setup_git_stub
+  # session 重複フラグをクリア（$$が変わるので通常不要だが念のため）
+  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+
+  result=$(run_hook "Bash" '{"command": "git commit -m \"test fix\""}')
+  _teardown_git_stub
+
+  ctx=$(get_additional_context "$result")
+  [[ "$ctx" =~ "今日の commit" ]]
+  [[ "$ctx" =~ "writing 規約" ]]
+}
+
+@test "today-commit-inject: Read tool では inject されない" {
+  _setup_git_stub
+  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+
+  result=$(run_hook "Read")
+  _teardown_git_stub
+
+  ctx=$(get_additional_context "$result")
+  [[ ! "$ctx" =~ "今日の commit" ]]
+}
+
+@test "today-commit-inject: Slack tool で inject される" {
+  _setup_git_stub
+  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+
+  result=$(run_hook "mcp__claude_ai_Slack__slack_send_message")
+  _teardown_git_stub
+
+  ctx=$(get_additional_context "$result")
+  [[ "$ctx" =~ "今日の commit" ]]
+}
+
+@test "today-commit-inject: Write tool で inject される" {
+  _setup_git_stub
+  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+
+  result=$(run_hook "Write" '{"file_path": "/tmp/test.md", "content": "hello"}')
+  _teardown_git_stub
+
+  ctx=$(get_additional_context "$result")
+  [[ "$ctx" =~ "今日の commit" ]]
+}
+
+@test "today-commit-inject: git log 0件の時は inject されない" {
+  # stub: 常に空を返す git
+  local stub_dir="$TEST_TMPDIR/bin_empty"
+  mkdir -p "$stub_dir"
+  cat > "$stub_dir/git" <<'STUB'
+#!/usr/bin/env bash
+if [[ "$*" =~ "log" ]] && [[ "$*" =~ "since" ]]; then
+  exit 0
+fi
+exec /usr/bin/git "$@"
+STUB
+  chmod +x "$stub_dir/git"
+  local _orig="$PATH"
+  export PATH="$stub_dir:$PATH"
+  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+
+  result=$(run_hook "Bash" '{"command": "git commit -m \"empty day\""}')
+  export PATH="$_orig"
+
+  ctx=$(get_additional_context "$result")
+  [[ ! "$ctx" =~ "今日の commit" ]]
+}
+
+@test "today-commit-inject: gh pr create Bash で inject される" {
+  _setup_git_stub
+  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+
+  result=$(run_hook "Bash" '{"command": "gh pr create --title \"feat\" --body \"desc\""}')
+  _teardown_git_stub
+
+  ctx=$(get_additional_context "$result")
+  [[ "$ctx" =~ "今日の commit" ]]
+}

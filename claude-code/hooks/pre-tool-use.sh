@@ -498,6 +498,41 @@ detect_rename_propagation() {
 }
 
 # ====================================
+# 今日の commit inject
+# 書く系 tool (Write/Edit/Bash commit・gh・glab・Slack/Notion MCP) の直前に
+# 今日の commit log を additionalContext に append して、最新規範の反映を促す
+# session 重複抑制: /tmp/claude-today-commits-<SESSION_KEY> に記録済フラグ
+# ====================================
+_inject_today_commits() {
+  # session 重複抑制
+  local _session_key="${CLAUDE_SESSION_ID:-$$}"
+  local _flag_file="/tmp/claude-today-commits-${_session_key}"
+  if [[ -f "$_flag_file" ]]; then
+    return 0
+  fi
+
+  # git log: CLAUDE_PROJECT_DIR 優先、なければ HOME
+  local _project_dir="${CLAUDE_PROJECT_DIR:-$HOME}"
+  local _today_commits
+  _today_commits=$(git -C "$_project_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges 2>/dev/null || true)
+
+  # 0 件 → silent skip
+  [[ -z "$_today_commits" ]] && return 0
+
+  # フラグ書き込み (以降は重複 inject しない)
+  touch "$_flag_file" 2>/dev/null || true
+
+  local _msg
+  _msg="今日の commit: ${_today_commits}"$'\n'"writing 規約 / guidelines / CLAUDE.md 更新が含まれる場合、出力前に当該 file を read して最新規範を反映すること。"
+
+  if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_msg}"
+  else
+    ADDITIONAL_CONTEXT="${_msg}"
+  fi
+}
+
+# ====================================
 # protection-mode 3層分類判定
 # ====================================
 
@@ -620,6 +655,9 @@ PYEOF
         fi
       fi
     fi
+
+    # 書く系 tool: 今日の commit inject（writing 規約更新を最新規範で反映させる）
+    _inject_today_commits
     ;;
 
   "Bash")
@@ -690,6 +728,16 @@ PYEOF
         ADDITIONAL_CONTEXT="🔍 Bash でコードファイル参照検出、Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols (CLAUDE.md「Tool selection」原則、analytics で Bash 51% 振替余地大)"
       fi
     fi
+
+    # 書く系 Bash コマンド: 今日の commit inject
+    # 対象: git commit / gh pr|issue / glab mr|issue
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ -n "$COMMAND" ]]; then
+      if [[ "$COMMAND" =~ git[[:space:]]+commit ]] \
+         || [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment) ]] \
+         || [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]]; then
+        _inject_today_commits
+      fi
+    fi
     ;;
 
   "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_content"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol"|"mcp__serena__write_memory"|"mcp__serena__delete_memory"|"mcp__serena__execute_shell_command"|"mcp__serena__rename_symbol")
@@ -714,6 +762,9 @@ PYEOF
     if [[ -n "$_mcp_text" ]]; then
       _block_if_ai_jargon "$_mcp_text" "$TOOL_NAME"
     fi
+
+    # 書く系 MCP: 今日の commit inject
+    _inject_today_commits
     ;;
 
   "Task")

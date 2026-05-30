@@ -157,6 +157,15 @@ Claude misbehavior / non-obvious success = signal that config is not reflecting 
 - Append "update CLAUDE.md or related skill to ensure reproducibility" to fix instructions → triggers config update
 - Details: `references/compounding-engineering-cycle.md` / `memory-usage.md`
 
+## 書く前の自己確認 (chat 除く)
+
+chat 応答以外の文章出力 (PR / commit msg / Issue / Slack / Notion / Design Doc / PRD / RCA / コードコメント / 長文 docs / 報告) は **今日の commit を read してから書く**。writing 規約 (`PRINCIPLES.md` / `guidelines/writing/`) 更新時は最新規範優先。
+
+- 確認 command: `git log --since=midnight --pretty=format:'%h %s'`
+- hook (`pre-tool-use.sh`) が Write/Edit/Bash(commit|gh|glab)/Slack/Notion tool 直前に自動 inject (`feedback_writing_today_commit_inject` 参照)
+- inject がなくても主体的に確認 (hook 漏れ補完)
+- 対象外: chat 応答のみ (genshijin mode の対話、報告は除外)
+
 ## Genshijin Boundary
 
 genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き prose (PR / commit / Issue / Slack / Notion / DD / PRD / RCA / comments) と `/plan` `/design-doc` `/prd` `/post-comment` `/git-push --pr` `/docs` ドラフトは plain JP (〜する / 〜した、主語明示、指示語禁止: 「これ」「それ」「上記」→具体名)。Details: `rules/genshijin.md` + `guidelines/writing/PRINCIPLES.md`
