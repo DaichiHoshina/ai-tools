@@ -101,7 +101,7 @@ golangci-lint run && go vet ./...
 
 ### Step 3: cleanup-enforcement
 
-Verify unused imports/vars/functions, backward compat remnants, progress comments.
+Verify unused imports/vars/functions, backward compat remnants, progress comments. For bash/shell: detect dead code patterns — `cmd || true` followed by `$? -ne 0` check (always 0), duplicate `[[ -z "$x" ]]` after `x="default"` assignment, and `&&` chains under `set -e` where failure-path is unreachable.
 
 ### Step 4: Confidence Scoring (medium default)
 
