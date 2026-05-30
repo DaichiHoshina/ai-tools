@@ -127,7 +127,6 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 | Feature | Condition | Action |
 |------|------|------|
 | worktree isolation | `--parallel` or `--auto` independent parallel | `isolation: "worktree"` auto-create / cleanup |
-| `/simplify` | Post-impl | Bundle fast execute |
 | Post-impl verify | `--auto` complete | `/lint-test` (verify-app explicit only) |
 | `IMPL_NOTES` | Team path (Dev via Task()) | Dev writes `dev-<task-id>.md` → Manager merges → parent persists `MERGED.md` under `~/.claude/plans/impl-notes/<run-dir>/`. `/git-push --pr` consumes for PR draft (`--no-impl-notes` to skip) |
 

@@ -35,7 +35,6 @@ Skill(skill="comprehensive-review", args="--diff-base=e5f32ed~1")
 ## 適用対象 Skill
 
 - `comprehensive-review`
-- `simplify`
 - `security-review`
 - その他 review / analysis 系 skill 全般
 

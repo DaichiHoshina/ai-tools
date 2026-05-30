@@ -21,7 +21,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 | Resource | Details |
 |---------|-----------|
 | **guideline** | **Required core**: `common/code-quality-design.md` / Conditional: `languages/typescript.md` (TypeScript detected), `languages/nextjs-react.md` (Next.js detected), `languages/golang.md` (Go detected) |
-| **skill** | UI dev: `ui-skills`, Backend dev: `backend-dev`, Common: `simplify`, `cleanup-enforcement` |
+| **skill** | UI dev: `ui-skills`, Backend dev: `backend-dev`, Common: `cleanup-enforcement` |
 | **agent** | None (direct execution, no Agent Team) |
 | **hook** | Common across all commands (see Legend) |
 | **rule** | genshijin mode, markdown rules, enterprise security, AI output rules (auto-applied) |

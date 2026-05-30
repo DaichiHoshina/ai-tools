@@ -17,6 +17,15 @@
 
 ---
 
+## 2.1.148 (2026-05-30 検出, stable)
+
+新規 Opportunity なし。2.1.146〜2.1.148 範囲、リポジトリ影響 grep 確認済み。
+
+- `/simplify` → `/code-review` rename [2.1.147]: 用途変質 (post-impl bundle fast execute → diff correctness review @ effort level) のため単純 rename 不採用、`commands/flow.md` Auto-apply 表 / `references/skill-tool-invocation.md` / `references/command-resource-map.md` の `simplify` 参照を全削除 (post-impl は `/lint-test` で代替済)
+- 2.1.146 Opus 4.8 thinking block fix: bugfix のみ、設定影響なし
+- 2.1.148 Bash exit code 127 regression fix: bugfix のみ、設定影響なし
+- 2.1.147 その他: 多数 bugfix (auto-updater retry / prompt history dedup / PowerShell 系 / Windows terminal 系 / `/help` / `/effort` / `/theme` / `/background` / MCP pagination / hook `if` PowerShell マッチ / `CLAUDE_CODE_SUBAGENT_MODEL` teammate fix 等) — 当方未使用 or 既設挙動 OK、設定変更不要
+
 ## 2.1.145 (2026-05-28 検出, stable)
 
 新規 Opportunity なし。2.1.143〜2.1.145 範囲、リポジトリ影響 grep 確認済み。
