@@ -80,8 +80,8 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **`/memory-save` rapid-fire guard**: same session, save within last 5 min → prefer diff-append over new memory (94 hits w/ multiple 5x bursts, low-ROI redundancy)
 - **`/review-fix-push` pre-launch diff echo**: `git diff --stat | tail -1` one-liner before invoke; surfaces 500+ diffs that triggered sub-flow runaway (2026-05-23 incident)
 - **Large-repo session split (snkrdunk-com / loadtest / docs etc)**: cache_read 96.8% of token cost, 1B+ token sessions (4 days, 26K msg) eat 23% monthly token alone. Hard reset (`/clear` or new session) at task boundary; never carry session past 1 task / 3h elapsed / 1000 msg / 40% context (whichever first). 1 task = 1 session principle in large repos. Measured 2026-05-25
-- **長文回答 = 冒頭結論 1 行強制**: chat 応答で 5 行超 + 列挙 (A/B/C 案 / Phase 1/2/3 / 表) 出す時は **1 行目に結論明示**。読み手が後段読まずに次の指示出せる状態にする。違反すると `つまり？` / `どういうこと？` 再質問発生 (2026-05-22〜28 計 9 件/週、retro 第 3 churn 源)。`guidelines/writing/PRINCIPLES.md` chat 行「結論先出し」を chat 応答に明示適用
-- **長文出力 = PREP 法 + 5W1H 構造**: chat / 外向き文書とも、commit まとめ / 共有報告 / PR body / DD / RCA / 5 行超 + 複数項目 出力時は **P**oint (結論) → **R**eason (理由) → **E**xample (具体例 + how/数値/file path) → **P**oint (再確認) の太字 label で構造化する。各項目で why / how が空欄なら **書く前に source 読み直す**。抽象語 (軸 / 層 / 経路 / 土台 / 狙い) は具体動作に置換する。2026-05-30 incident: 共有用 commit まとめが「全てにおいて読みづらい」feedback、3 回書き直し。詳細: `guidelines/writing/PRINCIPLES.md` PREP 構造 section
+- **長文回答 = 冒頭結論 1 行強制**: chat 応答で 5 行超 + 列挙出す時は **1 行目に結論明示**。違反すると `つまり？` 再質問発生。
+- **長文出力 = PREP 法**: 5 行超 + 複数項目は **P**oint→**R**eason→**E**xample→**P**oint 構造。抽象語禁止 (軸/層/土台→具体動作)。詳細: `guidelines/writing/PRINCIPLES.md` PREP section
 
 ## 派生値禁止 (no derived literals)
 
@@ -93,7 +93,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **self-check**: 数字書く時「これ別の場所で count 可能?」→ Yes なら literal 禁止
 - **review 検出**: `grep -nE '[0-9]+ ?(語|件|個|個所|箇所)' <changed_files>` で派生値疑い
 
-2026-05-27 incident: commit `9b2247a` で AI 定型語辞書数 (27/10/37) を hook + 2 commands に重複 literal 化、将来 PRINCIPLES.md 更新で desync 必至 (`[[feedback-no-derived-literals]]` memory)
+Incident `9b2247a`: 辞書数 literal を複数 file に重複書き→desync (`[[feedback-no-derived-literals]]` memory)
 
 **Hook block 対象**: AI 定型語 / カタカナ造語禁止 / 難読漢語 / 非日常英語 (PRINCIPLES.md の各 list から動的抽出)。英日混在語 (lock / commit / deploy / TX 等) は誤検出多発リスクのため hook block 対象外、PRINCIPLES.md (d) 表 + writing review で manual 検出する。
 **PRINCIPLES.md list scope 記法**: `**<name> (block|warn-only)**: <terms>` 形式で scope を明示する。新規 list 追加時は適用 target (chat / 外向き prose / commit message 全許可 or 一部制限) を考慮して block か warn-only を選ぶ。**既存 key (`AI定型語` / `カタカナ造語禁止` / `断定語 (warn-only)`) の name 変更禁止** — hook (`hooks/pre-tool-use.sh:_extract_term_list`) が exact match で参照、rename で silent pass する。
@@ -154,17 +154,11 @@ Claude misbehavior / non-obvious success = signal that config is not reflecting 
 
 - Misbehavior → record in CLAUDE.md / skill / hook
 - Non-obvious success → codify as a rule
-- Append "update CLAUDE.md or related skill to ensure reproducibility" to fix instructions → triggers config update
-- Details: `references/compounding-engineering-cycle.md` / `memory-usage.md`
+- Fix 指示に "update CLAUDE.md or related skill" 追記 → config update trigger。Details: `references/compounding-engineering-cycle.md` / `memory-usage.md`
 
 ## 書く前の自己確認 (chat 除く)
 
-chat 応答以外の文章出力 (PR / commit msg / Issue / Slack / Notion / Design Doc / PRD / RCA / コードコメント / 長文 docs / 報告) は **今日の commit を read してから書く**。writing 規約 (`PRINCIPLES.md` / `guidelines/writing/`) 更新時は最新規範優先。
-
-- 確認 command: `git log --since=midnight --pretty=format:'%h %s'`
-- hook (`pre-tool-use.sh`) が Write/Edit/Bash(commit|gh|glab)/Slack/Notion tool 直前に自動 inject (`feedback_writing_today_commit_inject` 参照)
-- inject がなくても主体的に確認 (hook 漏れ補完)
-- 対象外: chat 応答のみ (genshijin mode の対話、報告は除外)
+外向き文章 (PR / commit / Issue / Slack / Notion / DD / PRD / RCA 等) は **今日の commit を read してから書く** (`git log --since=midnight --pretty=format:'%h %s'`)。hook が tool 直前に自動 inject するが漏れ時は主体的に確認。
 
 ## Genshijin Boundary
 
