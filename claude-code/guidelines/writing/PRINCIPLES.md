@@ -162,6 +162,64 @@ Severity / Style / Overprescription) で再 check する。全 mode 適用。
 - 絶対表現 (「必ず」「絶対に」「完全に」) は GO/NO-GO 基準時のみ、説明文では緩和
 - セクション記号 `§` は使わない (日本語では「Phase 2」直書きで足りる)
 - 「埋める」より「記録する」「測定値を記入する」 (docs 寄り)
+- web 出力時は `## Web 可読性` の 60 字上書き適用
+
+## Web 可読性 (scan 前提)
+
+外向き prose は web (GitHub / GitLab / Notion / Slack / Confluence) で読まれる。読者は読まずに **scan する** (79% scan / 16% line-by-line、NNG 計測)。chat 応答や紙前提とは別の構造が要る。
+
+### scan pattern 対応
+
+| pattern | 読者行動 | 書き手の対応 |
+|---|---|---|
+| F-pattern | 上から左寄り、段落先頭数語のみ拾う | 段落先頭に keyword、左端に情報 |
+| layer-cake | 見出しだけ拾って必要箇所だけ本文へ | 見出しを「主張」化、descriptive に |
+| spotted | 太字 / link / 数値だけ拾う | keyword を太字、評価語に数値併記 |
+
+`/git-push --pr` `/post-comment` `/docs` 生成時、これら 3 pattern の **どれで読まれても主旨が伝わるか** を self-check する。layer-cake は「## 守る指針」主張型 heading 原則の web 文脈版。
+
+### Web 用 ミクロ規則 (既出を web では更に絞る)
+
+- **1 文 60 字以内** (最大 80 字)、読点 3 個まで、超えたら句点で分割 — 既出「## ミクロ規則」120 字を web 文脈では上書き
+- **1 段落 3-4 行 / 250 字以内** — wall of text 回避、段落間に空行
+- **漢字比率 3 割目安** — 漢字過多は離脱要因。「行う / 出来る / 事 / 物 / 為」等は平易化候補 (「やる / できる / こと / もの / ため」)、コード / 識別子は対象外
+- **見出しは layer-cake 用に主張化** — 「アーキテクチャ」 NG / 「読み書き分離で負荷分散」 OK。冒頭に最重要語
+- **inverted pyramid + 半分の word count** — 既出「結論先出し」を **本文量も半減** まで拡張。NNG 計測で usability 124% 改善は concise + scannable + objective の合算
+
+### 日本語特有 — 改行 / 段落の見た目
+
+- **見出し / キャッチで意味単位の改行** — 「ユーザー認証フローの脆弱性」を狭幅で「ユーザー認証フ\n ローの脆弱性」と切られる事故が web 表示で起きる。Notion / Slack draft は実 viewer で 1 回 preview
+- **コードブロック / list の前後に空行** — markdown renderer 差で潰れる
+- **数値 / file path は太字 or `code`** — spotted pattern で拾われる確率上昇
+
+### NG / OK 例
+
+**NG (1 文 180 字、読点 5 個、見出しラベル型)**
+
+```text
+## 改善
+
+本リリースではユーザー認証周りの処理を見直し、従来 localStorage に保存していた token を httpOnly cookie に移行し、合わせて XSS 経由のリスクを軽減する措置を講じ、また session 期限を 24h から 1h に短縮することで、token 漏洩時の影響範囲を最小化する設計に変更した。
+```
+
+**OK (60 字以内、読点 2 個、主張型見出し、scan 対応)**
+
+```text
+## token 保管を localStorage → httpOnly cookie に移行 (XSS 防止)
+
+**Why**: localStorage は XSS で読み取り可。token 漏洩で全 account 乗っ取り可能。
+
+**変更点**:
+- 保管先: localStorage → httpOnly cookie
+- session 期限: 24h → 1h (漏洩時の影響窓を 1/24)
+```
+
+### 出力前 web 用 追加 check (既存 6 項目に追加)
+
+- [ ] 1 文 60 字以内 / 読点 3 個以内
+- [ ] 見出しが主張型 (ラベル型でない)
+- [ ] 段落 3-4 行以内、空行で区切り
+- [ ] keyword / 数値 / file path が太字 or `code` で scan 可能
 
 ## 逆に考えるミニマル化
 
@@ -298,6 +356,7 @@ Severity / Style / Overprescription) で再 check する。全 mode 適用。
 ```
 
 未達は修正してから出力。投稿 / commit / push前にAI自身が確認。
+web 出力時は `## Web 可読性` の追加 check 4 項目も適用。
 
 ## 全体マップ — 各ルールがどう認知負荷を下げるか
 
