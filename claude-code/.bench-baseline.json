@@ -1,53 +1,53 @@
 {
-  "commit": "28e83b512cae7dcf97a7c7ec7628df0e83510e41",
-  "updated_at": "2026-05-30T10:23:10Z",
+  "commit": "4265e10918868caa48918a73382d597cbfa40da8",
+  "updated_at": "2026-05-30T10:44:03Z",
   "hooks": {
     "session-start.sh": {
-      "median_ms": 116,
-      "range_ms": 18,
+      "median_ms": 120,
+      "range_ms": 21,
       "runs": [
-        113,
-        116,
-        112,
         130,
-        130,
-        120
+        109,
+        124,
+        120,
+        114,
+        124
       ]
     },
     "user-prompt-submit.sh": {
-      "median_ms": 161,
-      "range_ms": 12,
+      "median_ms": 159,
+      "range_ms": 29,
       "runs": [
+        160,
+        136,
+        149,
         165,
-        158,
-        153,
-        161,
-        164,
-        161
+        160,
+        159
       ]
     },
     "pre-tool-use.sh": {
-      "median_ms": 75,
-      "range_ms": 12,
+      "median_ms": 73,
+      "range_ms": 10,
       "runs": [
-        80,
-        75,
+        70,
         74,
-        68,
-        78,
-        76
+        80,
+        72,
+        73,
+        77
       ]
     },
     "post-tool-use.sh": {
-      "median_ms": 103,
-      "range_ms": 20,
+      "median_ms": 97,
+      "range_ms": 21,
       "runs": [
-        102,
-        106,
-        86,
-        106,
-        106,
-        103
+        103,
+        100,
+        84,
+        101,
+        97,
+        82
       ]
     }
   }
