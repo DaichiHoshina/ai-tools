@@ -20,7 +20,9 @@ set -euo pipefail
 # - 例: SCRIPT_DIR → _PRINT_LIB_DIR
 # =============================================================================
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+CLAUDE_CODE_DIR="${SCRIPT_DIR}"           # claude-code/ 自身
+AI_TOOLS_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"  # ai-tools/ root
 CLAUDE_DIR="$HOME/.claude"
 
 # 同期対象（apply_changes / show_diff の共通定義）
@@ -150,7 +152,7 @@ restore_private() {
 # =============================================================================
 
 check_repo_freshness() {
-    local repo_root="${SCRIPT_DIR}/.."
+    local repo_root="${AI_TOOLS_ROOT}"
 
     if ! command -v git &>/dev/null; then
         return 0
