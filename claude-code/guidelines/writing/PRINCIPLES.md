@@ -75,6 +75,52 @@
 
 12セクションor軽量5節。詳細は [design-doc-protocol.md](design-doc-protocol.md) 参照。
 
+## PREP 法 + 5W1H (長文構造の規範)
+
+長文出力 (commit まとめ / 共有用文章 / 報告書 / PR body / DD / PRD / RCA / 5 行超 + 複数項目の chat 回答) は **PREP 法** で構成する。各論点で **5W1H** を埋め、特に **why / how が欠けると読み手判断不能** のため必須とする。
+
+### 構造
+
+- **P**oint (結論): 一行で何が起きたか / 何を変えたか
+- **R**eason (理由): なぜそれが必要だったか (incident / 不便 / 目標)
+- **E**xample (具体例): how の詳細、数値、動作、file path
+- **P**oint (再確認): 締めの一行、効果や次の手
+
+各 P/R/E/P は **太字 label** で明示する。暗黙構造は読み手に伝わらない、隠さない。
+
+### 5W1H チェック
+
+| 観点 | 充足例 | 欠落時の症状 |
+|---|---|---|
+| What | 「`/review` を 2 段階に変更」 | 「強化した」だけで何かわからない |
+| **Why** (必須) | 「subagent 任せで取りこぼし発生」 | 「読み手が判断不能」「で?」と返される |
+| **How** (必須) | 「parent が 7 観点で再 check、全 mode 適用」 | 抽象論で再現性なし |
+| When/Where | commit hash / 日付 / file path | 通常 hash で足りる |
+| Who | (省略可、necessary 時のみ) | 通常 commit author で足りる |
+
+### 禁止 / 推奨
+
+- **抽象語禁止**: 軸 / 層 / 経路 / 土台 / 狙い / 方針 → 具体動作 / 数値 / file path に置換
+- **1 段落 ≤ 4 行**: 超える場合は箇条書きに分解
+- **接続文削減**: 「背景は〜」「〜の延長線上にある」など本題と関係ない補足は削る
+- **文末統一**: 体言止め混在を避け、外向き文書は「〜する / 〜した」で統一
+
+### 例 (commit まとめ)
+
+```text
+## abc1234 `/review` を 2 段階 self-check に変更
+
+**結論**: review の品質判定を 2 段階に変えた。
+
+**理由**: 1 段階だと subagent 任せで見落としや過剰指摘が残る。
+
+**例**: 以前は subagent の self-filter 結果をそのまま採用していた。今後は
+parent Opus が 7 観点 (Evidence / Scope / Overreach / Actionability /
+Severity / Style / Overprescription) で再 check する。全 mode 適用。
+
+**結論再確認**: subagent 単独判定の取りこぼしを parent が拾える状態。
+```
+
 ## chatとdocumentで文体を分ける
 
 | 場面 | 方針 |

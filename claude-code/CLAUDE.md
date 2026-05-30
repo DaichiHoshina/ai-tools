@@ -81,6 +81,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **`/review-fix-push` pre-launch diff echo**: `git diff --stat | tail -1` one-liner before invoke; surfaces 500+ diffs that triggered sub-flow runaway (2026-05-23 incident)
 - **Large-repo session split (snkrdunk-com / loadtest / docs etc)**: cache_read 96.8% of token cost, 1B+ token sessions (4 days, 26K msg) eat 23% monthly token alone. Hard reset (`/clear` or new session) at task boundary; never carry session past 1 task / 3h elapsed / 1000 msg / 40% context (whichever first). 1 task = 1 session principle in large repos. Measured 2026-05-25
 - **長文回答 = 冒頭結論 1 行強制**: chat 応答で 5 行超 + 列挙 (A/B/C 案 / Phase 1/2/3 / 表) 出す時は **1 行目に結論明示**。読み手が後段読まずに次の指示出せる状態にする。違反すると `つまり？` / `どういうこと？` 再質問発生 (2026-05-22〜28 計 9 件/週、retro 第 3 churn 源)。`guidelines/writing/PRINCIPLES.md` chat 行「結論先出し」を chat 応答に明示適用
+- **長文出力 = PREP 法 + 5W1H 構造**: chat / 外向き文書とも、commit まとめ / 共有報告 / PR body / DD / RCA / 5 行超 + 複数項目 出力時は **P**oint (結論) → **R**eason (理由) → **E**xample (具体例 + how/数値/file path) → **P**oint (再確認) の太字 label で構造化する。各項目で why / how が空欄なら **書く前に source 読み直す**。抽象語 (軸 / 層 / 経路 / 土台 / 狙い) は具体動作に置換する。2026-05-30 incident: 共有用 commit まとめが「全てにおいて読みづらい」feedback、3 回書き直し。詳細: `guidelines/writing/PRINCIPLES.md` PREP 構造 section
 
 ## 派生値禁止 (no derived literals)
 
