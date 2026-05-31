@@ -374,7 +374,7 @@ teardown() {
   local input='{"tool_name": "Task", "tool_input": {}}'
   run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
   [ "$status" -eq 0 ]
-  echo "$output" | jq -e '.additionalContext | contains("並列判定 self-review")' >/dev/null
+  echo "$output" | jq -e '.additionalContext | contains("並列 self-review")' >/dev/null
 }
 
 @test "integration: pre-tool-use classifies Boundary tools correctly" {

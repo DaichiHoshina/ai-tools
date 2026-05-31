@@ -959,7 +959,7 @@ PYEOF
     # ただし general-purpose は CLAUDE.md「原則使わない」最大コスト源 → Boundary 警告
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
     # 並列判定 self-review (全 Task 発火時に inject)
-    PARALLEL_REVIEW="【並列判定 self-review】Agent 発火前に確認 (詳細: references/PARALLEL-PATTERNS.md): (1) 独立 task ≥2 か (2+なら並列候補) (2) 同一 file edit / 結果依存なしか (なければ並列) (3) 1 message に N 個 Agent を並べたか (peak=1 回避) (4) formula PASS したか (expected_parallel < serial × 0.95)"
+    PARALLEL_REVIEW="【並列 self-review】独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1。判定詳細: references/PARALLEL-PATTERNS.md)"
     if [ "${SUBAGENT_TYPE}" = "general-purpose" ]; then
       GUARD_CLASS="Boundary"
       MESSAGE="${ICON_WARNING} general-purpose agent（CLAUDE.md「原則使わない」、最大コスト源）"

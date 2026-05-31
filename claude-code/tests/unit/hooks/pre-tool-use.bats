@@ -81,7 +81,7 @@ _run_bash_forbidden() {
 @test "pre-tool-use: Task はSafe (並列 self-review inject あり)" {
   result=$(run_hook "Task")
   # GUARD_CLASS=Safe だが並列 self-review を additionalContext に inject する
-  echo "$result" | grep -q "並列判定 self-review"
+  echo "$result" | grep -q "並列 self-review"
 }
 
 @test "pre-tool-use: Skill はSafe" {
