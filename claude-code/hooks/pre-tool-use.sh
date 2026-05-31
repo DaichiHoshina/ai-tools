@@ -958,10 +958,15 @@ PYEOF
     # エージェント起動はSafe（実際の操作は各エージェント内で判定）
     # ただし general-purpose は CLAUDE.md「原則使わない」最大コスト源 → Boundary 警告
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
+    # 並列判定 self-review (全 Task 発火時に inject)
+    PARALLEL_REVIEW="【並列判定 self-review】Agent 発火前に確認 (詳細: references/PARALLEL-PATTERNS.md): (1) 独立 task ≥2 か (2+なら並列候補) (2) 同一 file edit / 結果依存なしか (なければ並列) (3) 1 message に N 個 Agent を並べたか (peak=1 回避) (4) formula PASS したか (expected_parallel < serial × 0.95)"
     if [ "${SUBAGENT_TYPE}" = "general-purpose" ]; then
       GUARD_CLASS="Boundary"
       MESSAGE="${ICON_WARNING} general-purpose agent（CLAUDE.md「原則使わない」、最大コスト源）"
-      ADDITIONAL_CONTEXT="代替: claude-code-guide / Explore / 直接 grep+find / serena MCP（references/performance-insights.md 参照）"
+      ADDITIONAL_CONTEXT="代替: claude-code-guide / Explore / 直接 grep+find / serena MCP（references/performance-insights.md 参照）
+${PARALLEL_REVIEW}"
+    else
+      ADDITIONAL_CONTEXT="${PARALLEL_REVIEW}"
     fi
     ;;
 
@@ -987,8 +992,13 @@ esac
 # ====================================
 
 if [ -n "$ADDITIONAL_CONTEXT" ]; then
-  jq -n --arg msg "$MESSAGE" --arg ctx "$ADDITIONAL_CONTEXT" \
-    '{"systemMessage": $msg, "additionalContext": $ctx}'
+  if [ -n "$MESSAGE" ]; then
+    jq -n --arg msg "$MESSAGE" --arg ctx "$ADDITIONAL_CONTEXT" \
+      '{"systemMessage": $msg, "additionalContext": $ctx}'
+  else
+    jq -n --arg ctx "$ADDITIONAL_CONTEXT" \
+      '{"additionalContext": $ctx}'
+  fi
 elif [ -n "$MESSAGE" ]; then
   jq -n --arg msg "$MESSAGE" \
     '{"systemMessage": $msg}'

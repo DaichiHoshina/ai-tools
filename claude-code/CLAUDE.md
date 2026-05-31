@@ -49,6 +49,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **parent 事前準備義務**: 委譲前 parent が (a) target `file:line` 特定 (`find_symbol` / `grep`) (b) verify コマンド確定 (c) DoD 1 行化 を完了する。subagent に探索を投げない (探索 phase が makespan 支配要因)。target 不明示の prompt は full repo scan を誘発する。
 
+**Agent 発火直前 self-review 必須**: Task tool 発火の直前に並列化判定を自己確認する。判定 checklist は `references/PARALLEL-PATTERNS.md` を canonical 参照とする (CLAUDE.md に重複コピーしない)。hook が Task 発火時に self-review reminder を additionalContext として自動 inject する。
+
 **Inline exceptions (no delegation)**: Q&A / already-read file check (同一 session で既に Read 完了した file への Q&A、追加 Read なし; 追加 Read 必要なら throttle count 算入) / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
 
 **Inline exception throttle**: 2 consecutive inline exceptions in same session → next edit-class op is **mandatory** developer-agent delegation (reset counter after delegation). Investigation phase (Q&A / dry-run を除く調査専用 Read/Bash): 累積 ≥5 → switch subsequent investigation to `explore-agent`.
