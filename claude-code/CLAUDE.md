@@ -114,6 +114,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 ## Context Management
 
 - **>40% → suggest `/compact`** (cannot auto-execute). `/clear` at task boundary is best savings point (5+ min idle = prompt cache TTL expired → full cache miss). Session 30 min elapsed → propose `/clear` once in chat (single prompt only, no repeat).
+- **同一問題の修正が2回連続失敗 → 容量に関わらず `/clear` + prompt 書き直しを提案** (公式 best practice: 失敗アプローチの context 蓄積が主要 failure mode、容量起因の `/clear` とは別軸)。
 - Continue: request "generate next-session mega-prompt" → paste into new session
 - Uncontaminated question: `/btw` (overlay, not saved to history)
 
