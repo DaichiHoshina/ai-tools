@@ -15,106 +15,58 @@ ESLint v9+ Flat Config対応（2025年）。共通ガイドラインは `~/.clau
 
 ## v9.0主要変更（2025年）
 
-### Flat Configがデフォルト
-- 旧`.eslintrc*`は非推奨
-- `eslint.config.js`（またはmjs/cjs）を使用
-- よりシンプルで柔軟な設定
+| 変更点 | 旧 | 新 |
+|--------|----|----|
+| Config形式 | `.eslintrc*` | `eslint.config.js` (Flat Config) |
+| 型安全設定 | - | `defineConfig()` ヘルパー |
+| extends | 削除→ | ユーザー要望で復活 (新形式) |
+| グローバル除外 | `.eslintignore` | `globalIgnores()` / `ignores` プロパティ |
 
-### defineConfig()ヘルパー
-型安全な設定記述:
+**Flat Config例 (型安全+extends+globalIgnores)**:
 ```js
-import { defineConfig } from 'eslint'
-
-export default defineConfig([
-  // 設定オブジェクトの配列
-])
-```
-
-### extends機能復活
-ユーザーからの要望で復活:
-```js
-import { defineConfig } from 'eslint'
+import { defineConfig, globalIgnores } from 'eslint'
 import recommended from '@eslint/js/recommended'
 
-export default defineConfig({
-  extends: [recommended]
-})
-```
-
-### globalIgnores()ヘルパー
-グローバル除外設定を明確化:
-```js
-import { globalIgnores } from '@eslint/config-helpers'
-
-export default [
-  globalIgnores(['dist/**', 'build/**'])
-]
+export default defineConfig([
+  globalIgnores(['dist/**']),
+  { extends: [recommended] }
+])
 ```
 
 ---
 
 ## Flat Config基本構造
 
-### ファイル名
-- `eslint.config.js` (CommonJS)
-- `eslint.config.mjs` (ES Module)
-- `eslint.config.cjs` (CommonJS明示)
+ファイル名: `eslint.config.js` / `.mjs` / `.cjs`
 
-### 基本形式
 ```js
 export default [
   {
     files: ['**/*.js'],
-    languageOptions: {
-      ecmaVersion: 2024,
-      sourceType: 'module'
-    },
-    rules: {
-      'no-console': 'warn',
-      'prefer-const': 'error'
-    }
+    languageOptions: { ecmaVersion: 2024, sourceType: 'module' },
+    rules: { 'no-console': 'warn', 'prefer-const': 'error' }
   }
 ]
 ```
 
----
-
 ## TypeScript統合
 
-### typescript-eslint v8+
 ```js
 import tseslint from 'typescript-eslint'
-
-export default tseslint.config(
-  ...tseslint.configs.recommended,
-  {
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': 'error'
-    }
-  }
-)
+export default tseslint.config(...tseslint.configs.recommended, {
+  rules: { '@typescript-eslint/no-explicit-any': 'error' }
+})
 ```
-
----
 
 ## Next.js統合
 
-### next/core-web-vitals
 ```js
 import { defineConfig } from 'eslint'
 import next from '@next/eslint-plugin-next'
-
-export default defineConfig([
-  {
-    plugins: {
-      '@next/next': next
-    },
-    rules: {
-      '@next/next/no-html-link-for-pages': 'error'
-    }
-  }
-])
+export default defineConfig([{
+  plugins: { '@next/next': next },
+  rules: { '@next/next/no-html-link-for-pages': 'error' }
+}])
 ```
 
 ---

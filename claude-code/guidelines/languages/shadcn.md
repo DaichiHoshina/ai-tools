@@ -78,42 +78,16 @@ src/
 
 ## 主要コンポーネント
 
-### Form（推奨）
-React Hook Form + Zod統合:
+**Form** (React Hook Form + Zod統合):
 ```tsx
-const formSchema = z.object({
-  username: z.string().min(2).max(50),
-})
-
+const formSchema = z.object({ username: z.string().min(2).max(50) })
 function ProfileForm() {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-  })
-
+  const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema) })
   return <Form {...form}>...</Form>
 }
 ```
 
-### Button
-```tsx
-<Button variant="default">Default</Button>
-<Button variant="destructive">Delete</Button>
-<Button variant="outline">Outline</Button>
-<Button variant="ghost">Ghost</Button>
-```
-
-### Dialog
-```tsx
-<Dialog>
-  <DialogTrigger>Open</DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Title</DialogTitle>
-      <DialogDescription>Description</DialogDescription>
-    </DialogHeader>
-  </DialogContent>
-</Dialog>
-```
+**Button** / **Dialog** — variant指定で外観切替。Button: `default / destructive / outline / ghost`。Dialog: `DialogTrigger → DialogContent → DialogHeader` 構造。
 
 ---
 

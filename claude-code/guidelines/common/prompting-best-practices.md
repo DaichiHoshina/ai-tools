@@ -57,36 +57,19 @@ Before/Afterで改善内容を明示してください。
 **強いプロンプト例（バリデーション）:**
 ```
 メールアドレスのバリデーションを実装してください。
-
-**仕様**:
-- RFC 5322準拠 / 最大長: 254文字
-- 許可文字: a-z, A-Z, 0-9, .-_+
-
-**エッジケース**:
-- "user+tag@example.com" → 許可
-- "user@localhost" → 拒否（TLD必須）
-- 連続ドット ".." → 拒否
-
-**エラーメッセージ**:
-- 形式不正: "メールアドレスの形式が正しくありません"
-
-テストケース5件以上含めてください。
+**仕様**: RFC 5322準拠 / 最大254文字 / 許可文字: a-z, A-Z, 0-9, .-_+
+**エッジケース**: user+tag@example.com→許可 / user@localhost→拒否(TLD必須) / ".."→拒否
+**エラーメッセージ**: "メールアドレスの形式が正しくありません"
+テストケース5件以上含める。
 ```
 
 **強いプロンプト例（状態遷移）:**
 ```
-注文のステータス管理を実装してください。
-
-**状態**: DRAFT → PENDING → PAID → SHIPPED / CANCELLED
-
-**遷移ルール**:
-- DRAFT → PENDING: items.length > 0 が条件
-- PENDING → PAID: 決済成功時のみ
-- PAID以降はCANCELLED不可（返金フロー別途）
-
-**不正遷移時**: InvalidStateTransitionError + WARNログ
-
-状態遷移図（Mermaid）も作成してください。
+注文ステータス管理を実装してください。
+**状態**: DRAFT→PENDING→PAID→SHIPPED/CANCELLED
+**遷移ルール**: DRAFT→PENDING: items.length>0 / PENDING→PAID: 決済成功時のみ / PAID以降CANCELLED不可
+**不正遷移時**: InvalidStateTransitionError + WARN
+状態遷移図(Mermaid)も作成。
 ```
 
 ---

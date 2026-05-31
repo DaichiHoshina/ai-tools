@@ -84,26 +84,16 @@ Tailwind CSS v4.0対応（2025年）。共通ガイドラインは `~/.claude/gu
 
 ## Next.js統合
 
-### インストール
 ```bash
 npm install tailwindcss@next @tailwindcss/vite@next
 ```
 
-### 設定（v4）
-`app/globals.css`:
-```css
-@import "tailwindcss";
-```
+`app/globals.css`: `@import "tailwindcss";`
 
 `next.config.js`:
 ```js
 import tailwindcss from '@tailwindcss/vite'
-
-export default {
-  experimental: {
-    vitePlugins: [tailwindcss()]
-  }
-}
+export default { experimental: { vitePlugins: [tailwindcss()] } }
 ```
 
 ---

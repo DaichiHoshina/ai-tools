@@ -1,6 +1,6 @@
 # TypeScriptガイドライン
 
-TypeScript 6.0対応（2026年4月時点、安定版6.0.3）。TS 7.0はGo製コンパイラへ移行予定（プレビュー段階）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+TypeScript 6.0 (安定版6.0.3) 対応。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 

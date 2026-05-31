@@ -180,43 +180,12 @@ trx id 12345 lock_mode X locks gap before rec insert intention waiting
 
 ### 7.2 よくあるデッドロックパターン
 
-#### パターンA: row順序違い
-
-```sql
--- TX1
-UPDATE users SET balance = balance - 10 WHERE id = 1;
-UPDATE users SET balance = balance + 10 WHERE id = 2;
--- TX2 (逆順)
-UPDATE users SET balance = balance - 5 WHERE id = 2;
-UPDATE users SET balance = balance + 5 WHERE id = 1;
-```
-
-対処: id昇順でUPDATE。app層でID sortしてから発行。
-
-#### パターンB: gap lock + INSERT
-
-```sql
--- TX1 (RR)
-SELECT * FROM orders WHERE user_id = 10 FOR UPDATE;  -- idx_user_id に gap lock
--- TX2
-INSERT INTO orders (user_id, ...) VALUES (10, ...);  -- II 要求 → 待機
--- TX1 (続き)
-INSERT INTO orders (user_id, ...) VALUES (10, ...);  -- 同 gap で別 II → 循環待機
-```
-
-対処: RCへ降格 / `FOR UPDATE` をunique等価条件に / TX短縮。
-
-#### パターンC: INSERT ... ON DUPLICATE KEY UPDATE競合
-
-unique検査時S lock → UPDATE経路でX昇格。複数TXが同keyを同時upsert → 昇格デッドロック。
-
-対処: `INSERT IGNORE` + 別 `UPDATE`、または事前 `SELECT FOR UPDATE` でX取得。
-
-#### パターンD: FKチェック
-
-子テーブルINSERT/UPDATE → 親rowにS lock。別TXが親rowをX取得待ち → デッドロック。
-
-対処: FK削除 (整合性はapp担保) / 親更新と子操作の順序統一。
+| パターン | 原因 | 対処 |
+|---------|------|------|
+| **A: row順序違い** | TX1がid=1→2、TX2がid=2→1でUPDATE → 環状待機 | id昇順でUPDATE統一 |
+| **B: gap lock + INSERT** | `FOR UPDATE` (RR) でgap lock取得後、別TXがINSERT待機 → 循環 | RCへ降格 / unique等価条件に変更 |
+| **C: ON DUPLICATE KEY UPDATE** | unique検査S lock → X昇格を複数TXが同時実行 | `INSERT IGNORE` + 別UPDATE / 事前 `SELECT FOR UPDATE` |
+| **D: FKチェック** | 子INSERT/UPDATE → 親rowにS lock / 別TXが親XをUPDATE待機 | FK削除 / 親更新と子操作の順序統一 |
 
 ### 7.3 監視
 
@@ -464,37 +433,18 @@ ALTER TABLE orders ADD COLUMN note TEXT, ALGORITHM=INSTANT, LOCK=NONE;
 ### コード例
 
 ```go
-// === NG 1: INSERT ... SELECT（同テーブル）===
+// ❌ NG1: INSERT...SELECT → bulk扱いで連番崩れ
 tx.Exec(`INSERT INTO entities (col_a, col_b) SELECT col_a, col_b FROM legacy WHERE migrated = 0`)
 
-// === NG 2: ON DUPLICATE KEY UPDATE 付き bulk ===
-query := `INSERT INTO entities (...) VALUES (?,...), (?,...) ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at)`
-res, _ := tx.Exec(query, args...)
-firstID, _ := res.LastInsertId()
-for i := range entities { entities[i].ID = int(firstID) + i }  // UPDATE 行は ID 消費せず連番崩れる
+// ❌ NG2: ON DUPLICATE KEY UPDATE → UPDATE行はID消費せず連番崩れ
+// ❌ NG4: id一部明示の混合モード → LastInsertId不定
+// ❌ NG5: ループで行数動的決定 → len(entities)と挿入行数ズレ
 
-// === NG 3: migration backfill ===
-// migrations/700_backfill_entities.up.sql
-// INSERT INTO entities (col_a, col_b) SELECT ... FROM old_table;  ← maintenance 外実行で破壊
-
-// === NG 4: 混合モード（id 一部明示）===
-query := `INSERT INTO entities (id, col_a) VALUES (?, ?), (NULL, ?)`  // LastInsertId 不定
-
-// === NG 5: 動的行数ループ ===
-var values []any
-for { row, err := source.Next(); if err != nil { break }; values = append(values, row.A, row.B) }  // 行数不定
-res, _ := tx.Exec(buildQuery(len(values)/2), values...)
-firstID, _ := res.LastInsertId()
-for i := range entities { entities[i].ID = int(firstID) + i }  // len(entities) と挿入行数のズレでズレる
-
-// === ✅ 安全 1: 単純挿入 multi-row VALUES（行数事前確定、id 全行自動採番）===
+// ✅ 安全: 行数事前確定・id全行自動採番のmulti-row VALUES
 query := `INSERT INTO entities (col_a, col_b) VALUES (?,?), (?,?), (?,?)`
 res, _ := tx.Exec(query, values...)
 firstID, _ := res.LastInsertId()
-for i := range entities { entities[i].ID = int(firstID) + i }  // innodb_autoinc_lock_mode=2 でも連番保証
-
-// === ✅ 安全 2: ORM の 1 行ずつ Insert（lock mode 完全非依存）===
-for i := range entities { tx.Insert(&entities[i]) }
+for i := range entities { entities[i].ID = int(firstID) + i } // mode=2でも連番保証
 ```
 
 ### 警告コメント雛形

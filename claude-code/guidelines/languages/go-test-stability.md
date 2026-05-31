@@ -5,36 +5,20 @@ Flakyテスト防止のためのパターン集。
 ## 動的データの検証
 
 ```go
-// Bad -- auto-generated IDを期待値に含める
-expected := entity.Order{Id: 1, BuyerId: 101}
-assert.Equal(t, expected, actual)
-
-// Good -- 動的フィールドは個別検証
-assert.Greater(t, actual.Id, 0)
-assert.Equal(t, 101, actual.BuyerId)
+// ❌ Bad: auto-generated IDを期待値に含める
+assert.Equal(t, entity.Order{Id: 1, BuyerId: 101}, actual)
+// ✅ Good: 動的フィールドは個別検証
+assert.Greater(t, actual.Id, 0); assert.Equal(t, 101, actual.BuyerId)
 ```
 
 ## 共有データの並列安全性
 
 ```go
-// Bad -- 並列テストで共有データを変更
-expectedOrders := []map[string]any{...}
-for name, tt := range tests {
-    t.Run(name, func(t *testing.T) {
-        t.Parallel()
-        sort.Slice(expectedOrders, ...) // Race condition
-    })
-}
-
-// Good -- deep copyで安全に
-for name, tt := range tests {
-    t.Run(name, func(t *testing.T) {
-        t.Parallel()
-        cp := make([]map[string]any, len(tt.expected))
-        copy(cp, tt.expected)
-        sort.Slice(cp, ...) // Safe
-    })
-}
+// ❌ Bad: 並列テストで共有スライスをsort → race condition
+// ✅ Good: deep copyしてから操作
+cp := make([]map[string]any, len(tt.expected))
+copy(cp, tt.expected)
+sort.Slice(cp, ...) // Safe
 ```
 
 ## テスト種別とビルドタグ

@@ -1,6 +1,6 @@
 # 文章執筆の共通原則
 
-ヒト向けドキュメント全般 (PR / Issue / Slack / Notion / DesignDoc / PRD / RCA / コメント) を書くときの共通原則。各ファイル ([commit-message](commit-message.md) / [pr-description](pr-description.md) / [external-post](external-post.md) / [long-form-doc](long-form-doc.md) / [design-doc-protocol](design-doc-protocol.md)) は本ファイルを起点に「適用先別の追加ルール」を扱う。
+ヒト向けドキュメント共通原則。個別ルールは各 file ([commit-message](commit-message.md) / [pr-description](pr-description.md) / [external-post](external-post.md) / [long-form-doc](long-form-doc.md) / [design-doc-protocol](design-doc-protocol.md)) 参照。
 
 ## 最優先 — 読み手の認知負荷を下げる
 
@@ -77,7 +77,7 @@
 
 ## PREP 法 + 5W1H (長文構造の規範)
 
-長文出力 (commit まとめ / 共有用文章 / 報告書 / PR body / DD / PRD / RCA / 5 行超 + 複数項目の chat 回答) は **PREP 法** で構成する。各論点で **5W1H** を埋め、特に **why / how が欠けると読み手判断不能** のため必須とする。
+長文出力は **PREP 法** で構成し、**why / how** を必須とする。
 
 ### 構造
 
@@ -335,7 +335,7 @@ web 出力時は `## Web 可読性` の追加 check 4 項目も適用。
 
 ## アンチパターン参照 (writing_failure_* memory)
 
-過去セッションでユーザ指摘を受けた失敗例を `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/writing_failure_*.md` に蓄積している。同じ失敗を繰り返さないよう、commit message / PR body / Issue / Slack投稿を書く前に対応memoryを必読。
+過去の失敗例は `~/.claude/projects/*/memory/writing_failure_*.md` に蓄積。commit / PR / Issue / Slack 前に該当 memory を確認する。
 
 | memory | 失敗パターン | 適用タイミング |
 |---|---|---|

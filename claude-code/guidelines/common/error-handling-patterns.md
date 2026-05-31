@@ -13,7 +13,7 @@
 
 ## クイックリファレンス
 
-### TypeScript
+### TypeScript - パターン
 
 | パターン | コード | 用途 |
 |---------|--------|------|
@@ -21,12 +21,9 @@
 | カスタムエラー | `class ValidationError extends Error {}` | エラー種類の区別 |
 | try-catch | 境界層（API/DB）のみ | 外部I/O操作 |
 
-**エラークラス例**:
-- `ValidationError` - バリデーションエラー
-- `NotFoundError` - リソース未発見
-- `NetworkError` - ネットワークエラー
+エラークラス例: `ValidationError` / `NotFoundError` / `NetworkError`
 
-### Go
+### Go - パターン
 
 | パターン | コード | 用途 |
 |---------|--------|------|
@@ -35,14 +32,11 @@
 | 判定 | `errors.Is(err, ErrNotFound)` | 種類判定 |
 | 型変換 | `errors.As(err, &target)` | 型アサーション |
 
-**センチネルエラー**:
-```go
-var ErrNotFound = errors.New("not found")
-```
+センチネルエラー: `var ErrNotFound = errors.New("not found")`
 
 ## よくあるミス
 
-### TypeScript
+### TypeScript - アンチパターン
 
 | ❌ 避ける | ✅ 使う | 理由 |
 |----------|---------|------|
@@ -50,7 +44,7 @@ var ErrNotFound = errors.New("not found")
 | `throw new Error()` をビジネスロジックで多用 | Result型で返す | 例外は境界層のみ |
 | エラーメッセージにDB詳細含む | `"Internal server error"` | セキュリティ |
 
-### Go
+### Go - アンチパターン
 
 | ❌ 避ける | ✅ 使う | 理由 |
 |----------|---------|------|

@@ -14,22 +14,9 @@
 ### 見積フォーマット例
 
 ```markdown
-## テーブルスキーマの追加・変更
-
-- items テーブル追加
-  - id int auto_increment
-  - name varchar(255), not null
-
-## API
-
-- GET /items/:id
-  - 工数: 1人日
-- POST /items
-  - 工数: 1人日
-
-## 画面
-
-- /items/:id 詳細ページ - 工数: 1人日
+## テーブルスキーマ — items追加 (id/name カラム等)
+## API — GET /items/:id 1人日 / POST /items 1人日
+## 画面 — /items/:id 詳細 1人日
 ```
 
 ### 注意

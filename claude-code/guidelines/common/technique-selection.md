@@ -40,65 +40,28 @@
 
 ## 自動選択ロジック
 
-**Step 1: 必須テクニック追加**
-- Result/Either型、CQSは常に選択
+**Step 1**: Result/Either型・CQSは常時必須
 
-**Step 2: complexity基準**
-```
-≥ 9 → 形式手法
-≥ 7 → 圏論、DDD戦術的パターン
-≥ 6 → プロパティベーステスト、状態機械
-≥ 5 → イミュータビリティ
-```
+**Step 2-5 基準**:
 
-**Step 3: difficulty基準**
-```
-≥ 8 → 形式手法
-≥ 6 → 圏論、契約プログラミング
-≥ 5 → プロパティベーステスト
-≥ 4 → 純粋関数
-```
+| 軸 | 閾値 | 追加テクニック |
+|----|------|--------------|
+| complexity | ≥9 / ≥7 / ≥6 / ≥5 | 形式手法 / 圏論+DDD / PBT+状態機械 / イミュータビリティ |
+| difficulty | ≥8 / ≥6 / ≥5 / ≥4 | 形式手法 / 圏論+契約 / PBT / 純粋関数 |
+| purpose | Concurrency / Security / Logic | 形式手法+イミュータビリティ / 契約 / PBT+純粋関数+状態機械+DDD |
+| volume | Large | DDD戦術的パターン |
 
-**Step 4: purpose基準**
-```
-Concurrency → 形式手法、イミュータビリティ
-Security    → 契約プログラミング
-Logic       → プロパティベーステスト、純粋関数、状態機械、DDD
-```
-
-**Step 5: volume基準**
-```
-Large → DDD戦術的パターン
-```
-
-**Step 6: 重複削除、トークン予算(10K)確認**
-- 超過時は効果/コスト比で優先度順に削減
+**Step 6**: 重複削除、トークン予算(10K)超過時は効果/コスト比で削減
 
 ---
 
 ## 選択例
 
-### シンプルなCRUD API
-```
-purpose: CRUD / complexity: 3 / difficulty: 2 / volume: Small
-選択: Result/Either型 + CQS
-コスト: 700
-```
-
-### 決済処理システム
-```
-purpose: Logic, Security / complexity: 8 / difficulty: 7 / volume: Medium
-選択: Result/Either型 + CQS + 圏論 + DDD + プロパティベーステスト
-     + 状態機械 + 契約プログラミング + イミュータビリティ + 純粋関数
-コスト: 6.6K
-```
-
-### 分散トランザクション
-```
-purpose: Concurrency, Logic / complexity: 10 / difficulty: 9 / volume: Large
-選択: 全テクニック
-コスト: 8.5K(予算内)
-```
+| シナリオ | purpose/complexity/difficulty/volume | 選択テクニック | コスト |
+|---------|--------------------------------------|--------------|--------|
+| シンプルCRUD API | CRUD/3/2/Small | Result/Either + CQS | 700 |
+| 決済処理システム | Logic,Security/8/7/Medium | 上記 + 圏論+DDD+PBT+状態機械+契約+イミュータビリティ+純粋関数 | 6.6K |
+| 分散トランザクション | Concurrency,Logic/10/9/Large | 全テクニック | 8.5K |
 
 ---
 

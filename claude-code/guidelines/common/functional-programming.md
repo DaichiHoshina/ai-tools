@@ -19,72 +19,35 @@
 
 ### 1. イミュータビリティ
 
-`∀data ∈ SharedData, mutate(data) ∉ Allowed`
-
 ```typescript
-// Good: スプレッド演算子で新しいオブジェクト生成
-const newUsers = [...users, user3]
-const updatedUser = { ...user, name: 'New Name' }
-
-// Bad: 直接変更
-users.push(user3)
-user.name = 'New Name'
+// ✅ スプレッドで新オブジェクト: const newUsers = [...users, user3]
+// ❌ 直接変更: users.push(user3)
 ```
-
----
 
 ### 2. 純粋関数
 
-`∀f ∈ Functions, hasSideEffect(f) = false` — 同じ入力 → 同じ出力、副作用なし
-
+同じ入力→同じ出力、副作用なし。
 ```typescript
-// Good: 純粋関数
-function calculateTotal(items: Item[]): number {
-  return items.reduce((sum, item) => sum + item.price, 0)
-}
-
-// Bad: グローバル変数を変更
-let total = 0
-function addToTotal(item: Item): void { total += item.price }
+// ✅ const total = items.reduce((s, i) => s + i.price, 0)
+// ❌ let total = 0; function add(i) { total += i.price }
 ```
-
----
 
 ### 3. Result/Either型
 
 ```typescript
-type Result<T, E> = Ok<T> | Err<E>
-// Ok<T>: { ok: true, value: T }
-// Err<E>: { ok: false, error: E }
-
-// Good: Result型
+type Result<T, E> = { ok: true; value: T } | { ok: false; error: E }
 function divide(a: number, b: number): Result<number, string> {
-  if (b === 0) return Err('Division by zero')
-  return Ok(a / b)
+  return b === 0 ? { ok: false, error: 'div/0' } : { ok: true, value: a / b }
 }
-
-// Bad: 例外throw
+// map: 値変換 / flatMap: ネスト平坦化
 ```
-
-**合成メソッド:**
-- `map`: `Result<T>` → `Result<U>`（値を変換）
-- `flatMap`: `Result<T>` → `Result<U>`（ネストを平坦化）
-
----
 
 ### 4. コマンドクエリ分離(CQS)
 
-`∀method: returns(method) XOR mutates(method)`
-
+`returns(method) XOR mutates(method)`
 ```typescript
-// Query: 状態変更なし・値を返す
-function getUser(id: string): User { ... }
-
-// Command: 状態変更・戻り値なし
-function addUser(user: User): void { ... }
-
-// Bad: 両方やる（副作用ありで値を返す）
-function getUserAndIncrement(id: string): User { counter++; return user }
+function getUser(id: string): User { ... }  // Query: 値返す・変更なし
+function addUser(user: User): void { ... }  // Command: 変更する・値返さない
 ```
 
 ---

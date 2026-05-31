@@ -1,6 +1,6 @@
 # Runbook 執筆原則
 
-リリース / 切り戻し / インシデント対応 / 定型作業手順書 (Notion / docs / .md) を書くときの執筆原則。少人数チーム (dev 2 名 + PM 1 名等) の本番運用で「上から順に読んで愚直に実行できる」形を最優先する。
+本番運用手順書 (リリース / 切り戻し / インシデント対応) を「上から順に実行できる」形で書くための原則。
 
 monitoring 専用 runbook は [monitoring-runbook.md](monitoring-runbook.md)、本 file は執筆規約。
 

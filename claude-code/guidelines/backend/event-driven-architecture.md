@@ -1,6 +1,6 @@
 # Event-Driven Architectureガイドライン
 
-Kafka/RabbitMQ/SQS/PubSub等の非同期メッセージングでシステム間疎結合を実現する時に参照。Task queue中心の単純なバッチは `design/async-job-patterns.md`、トランザクション整合は `backend/distributed-transactions.md` 参照。
+Kafka/RabbitMQ/SQS/PubSub等の非同期メッセージング設計時に参照。単純バッチは `design/async-job-patterns.md`、TX整合は `backend/distributed-transactions.md` 参照。
 
 ## Tier区分
 
