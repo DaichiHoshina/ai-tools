@@ -14,7 +14,7 @@ Analyze past session history and work records, auto-generate improvement proposa
 **history.jsonl** — timestamp filter (last 7 days), then grep churn signals:
 
 ```bash
-jq 'select(.timestamp > (now - 604800))' ~/.claude/history.jsonl \
+jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
   | grep -E '再度|もう一度|やり直|違う|stop|cancel|wrong'
 ```
 
