@@ -126,13 +126,13 @@ _check_session_bloat() {
 _BLOAT_NOTICE_MSG=""
 _check_session_bloat "${_SESSION_ID}" "${_INIT_CWD}" "${_DATE_TODAY}" "_BLOAT_NOTICE_MSG"
 
-# === Context usage notice: コンテキスト50%超で /compact 提案を通知 ===
+# === Context usage notice: コンテキスト40%超で /compact 提案を通知 (CLAUDE.md "Context Management" rule と整合) ===
 _CTX_FILE="${CLAUDE_CTX_FILE:-/tmp/claude-ctx-pct-${_SESSION_ID}}"
 _COMPACT_NOTICE_MSG=""
 if [[ -f "${_CTX_FILE}" ]]; then
   # bash builtin read で fork 不要にする（毎プロンプトで cat fork していた箇所）
   read -r _CTX_PCT < "${_CTX_FILE}" 2>/dev/null || _CTX_PCT="0"
-  if [[ "${_CTX_PCT}" =~ ^[0-9]+$ ]] && [[ "${_CTX_PCT}" -ge 50 ]]; then
+  if [[ "${_CTX_PCT}" =~ ^[0-9]+$ ]] && [[ "${_CTX_PCT}" -ge 40 ]]; then
     _COMPACT_NOTICE_MSG="⚠️ コンテキスト使用率${_CTX_PCT}%。次レスポンス冒頭で /compact 実行をユーザーに提案すること（自動実行禁止、承認後に実行）。"
   fi
 fi
