@@ -62,7 +62,9 @@ COMPLETED_TODAY=$(grep -c "${TODAY}.*COMPLETED" "$LOG_FILE" 2>/dev/null || echo 
 
 # 1 task = 1 session 原則: セッション内累計タスク数をカウント
 # /tmp flag: session_id + YYYYMMDD で stale / 混線回避
+# SESSION_ID 空時は flag 名が二重 _ になり全 session 共有 → カウント混線するため unknown へ正規化
 _TODAY_YYYYMMDD=$(date -u +"%Y%m%d")
+[[ -z "${SESSION_ID}" ]] && SESSION_ID="unknown"
 _SESSION_TASK_FLAG="/tmp/claude_task_count_${SESSION_ID}_${_TODAY_YYYYMMDD}.flag"
 # 現在カウント読込（ファイル未存在時は 0）
 if [[ -f "${_SESSION_TASK_FLAG}" ]]; then
