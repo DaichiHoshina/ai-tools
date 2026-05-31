@@ -11,26 +11,45 @@ Analyze past session history and work records, auto-generate improvement proposa
 
 ### Phase 1: Data Collection
 
-- Session history: `~/.claude/history.jsonl` (recent 100)
-- past TODOs: `~/.claude/todos/`
-- Serena memory: `mcp__serena__list_memories` → load each
+**history.jsonl** — timestamp filter (last 7 days), then grep churn signals:
 
-### Phase 2: Pattern Analysis
+```bash
+jq 'select(.timestamp > (now - 604800))' ~/.claude/history.jsonl \
+  | grep -E '再度|もう一度|やり直|違う|stop|cancel|wrong'
+```
+
+**Serena memory** — `mcp__serena__list_memories` (name + description only); full body loaded on-demand in Phase 2.
+
+**Additional sources** (skip with 1-line note if missing):
+
+| Source | Command |
+|--------|---------|
+| usage stats | `ccusage daily --since 7` |
+| JP quality blocks | `tail -n 50 ~/.claude/logs/jp-quality-block.log` |
+| hook bench logs | `tail -n 20 ~/.claude/logs/bench-*.log` (glob) |
+
+### Phase 2: Signal Extraction (≤500 token output, parent inline only)
 
 | Analysis Target | Extract |
-|---------|---------|
+|----------------|---------|
 | failure patterns | high-error tasks, retry spikes, dropped tasks |
-| inefficiency patterns | repeated questions, each-session config explain, manual iteration churn |
+| inefficiency patterns | churn keywords hit, each-session config explain |
 | success patterns | efficient workflows, what-worked approaches |
 
-### Phase 3: Generate Improvements
+For each Serena memory name that matches a detected signal: `mcp__serena__read_memory(name)` on-demand only.
 
-| Category | Content |
-|---------|------|
-| new skill proposal | common patterns → skill-ify |
-| existing skill improvement | related Qs common → add feature |
+### Phase 3: Generate Improvements (parallel delegation)
+
+Group signals by domain. For each domain with ≥2 signals → `developer-agent` parallel delegation. Domains with <2 signals → skip.
+
+| Domain | Content |
+|--------|---------|
+| new skill | common patterns → skill-ify |
+| existing skill | related Qs common → add feature |
 | CLAUDE.md addition | recurring confirms → define once |
 | hook automation | manual repetition → auto-run |
+
+Delegation rule: 1 domain = 1 agent call. Never bundle multiple domains into 1 prompt.
 
 ### Phase 3.5: Accumulate Writing Failure Examples (Compounding Engineering)
 
@@ -61,7 +80,7 @@ metadata:
 {how to avoid next time. cite relevant axis from PRINCIPLES.md}
 ```
 
-Accumulated memories injected via `~/.claude/CLAUDE.md` at session start, so next session avoids same failure.
+Memories injected via `~/.claude/CLAUDE.md` at session start → next session avoids same failure.
 
 ### Phase 4: Adopt & Apply
 
@@ -99,8 +118,10 @@ Report for Notion/md for others. Apply `guidelines/writing/long-form-doc.md` pri
 
 | Situation | Behavior |
 |-----------|----------|
-| `~/.claude/history.jsonl` missing | continue with Serena memory alone, warn |
-| Serena memory connect fail | continue with history.jsonl alone, note precision loss |
+| `~/.claude/history.jsonl` missing | skip, continue with Serena memory alone, warn |
+| `ccusage` not installed | skip, append "ccusage unavailable" to report |
+| log path missing | skip, append "log path missing: {path}" to report |
+| Serena memory connect fail | skip, continue with history.jsonl alone, note precision loss |
 | recent sessions < 10 | insufficient data, report "accumulating" → done |
 | all data fetch fail | cannot generate proposals, guide user to manual review |
 
