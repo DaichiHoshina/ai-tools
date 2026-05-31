@@ -1,56 +1,35 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Skill, Agent, AskUserQuestion, mcp__serena__*
-description: Comprehensive code review (comprehensive-review 11 angles + official plugin/codex/coderabbit/pr-review-toolkit integration)
+description: Comprehensive code review (comprehensive-review skill + optional external reviewers)
 ---
 
-## /review - Comprehensive Code Review
+# /review - Comprehensive Code Review
 
-> comprehensive-review skill integrates 11 angles (architecture/quality/readability/security/docs/test-coverage/root-cause/logging/writing/silent-failure/type-design). `--deep`/`--multi` parallelizes external reviewers.
-
-## Constraints & Lenses
-
-Constraints (Stage A/B でも適用):
-- Hypothesis 系は "hypothesis:" prefix で notes 行きへ
-- No unsolicited issue/ticket/task/TODO auto-gen、TODO は current blocker のみ
-- "for confirmation" / "best to check" 系は action task に格上げしない
-
-Lenses (Stage A/B 通過の前提):
-- Language/FW best practices (idioms / lifecycle / type-safety / local pattern)
-- Code design (DDD / Clean Architecture / module boundary / coupling)
-- Permanent/root fix (workaround / 互換残 / 再発パッチでないこと)
-- Security (authn/authz / injection / secret / tenant isolation / unsafe logging)
+> `comprehensive-review` skill で 12 観点レビュー実行。`--deep`/`--multi` で外部レビュアー並列化。
+> Noise filter 方針: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/SKILL.md` Step -1
 
 ## Delegation & Self-Review (必須、2 段階)
 
-> **Default 厳しめ filter**: noise discard 方針は `rules/review-noise-discard.md` 参照。
+**Delegation**: `comprehensive-review` skill を `reviewer-agent` (Sonnet) に Task 委譲。委譲 prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus は Stage B filter のみ担当。
 
-**Delegation**: default モードでは `comprehensive-review` skill (Steps 1-4) を `reviewer-agent` (Sonnet) に Task 委譲して実行する。委譲 prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus は Stage B filter のみ担当。
+`/review` 系コマンド出力前に **必ず** 以下 2 段階のセルフレビューを実行する。`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial` 全モードで一律適用、skip 不可。
 
-`/review` 系コマンドの出力前に **必ず** 以下 2 段階のセルフレビューを実行する。skip 不可、`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial` 全モードで一律実行 (adversarial は design challenge 性質ゆえ Stage A の Evidence/Scope 判定基準は緩めつつ、Stage B の重複統合・トーン整合は通常通り適用)。
+### Stage A: Finding Self-Review Gate (per-finding)
 
-### Stage A: Finding Self-Review Gate (per-finding、必須・safety net)
+skill の Step 4.5 が Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点で一次評価済。**parent Opus が同 7 観点で safety net 再評価を必ず実行**。propagation incompleteness / cross-ref desync 系は重点確認。判断ログは出力に含めない。
 
-`comprehensive-review` skill 内の Self-Filter Gate (Step 4.5 + Pre-emission sanity check) が Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点で一次評価済 (Sonnet 実行)。ただし **skill 結果を無批判に流さず、parent Opus が同 7 観点で safety net 再評価を必ず実行する**。skip 不可。
-
-- Evidence 不十分 / Scope 外 / Overreach / Actionable でない / Severity 不整合 / Style nitpick / Over-prescription のいずれかに該当 → discard
-- 特に propagation incompleteness / cross-ref desync 系は skill が漏らしやすいため重点確認
-- 再評価判断ログは出力に含めない (verdict 変更のみ反映)
-- `--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial` 全モードで一律適用、`/review-fix-push` の loop mode も同様 (詳細: [`review-fix-push.md`](review-fix-push.md) "Step 1.5")
+adversarial モード: Evidence/Scope 判定基準は緩め (design challenge 性質)、Stage B の重複統合は通常通り。
 
 ### Stage B: Result Self-Review Pass (全体)
 
-Stage A 通過後の finding 群を **集合として** もう一度見直す。以下 4 観点:
-
-1. **重複 / 類似統合**: 同一 root cause を複数 lens が別 finding として出してないか? 統合して 1 件に。
-2. **トーン整合**: Critical / Warning 比率が偏ってないか? Critical 多発時は本当に全部 Critical か再評価 (false alarm 警戒)。
-3. **Project convention 整合**: CLAUDE.md / guidelines / 既存コード規約に照らして妥当か? 規約外の好み指摘は破棄。
-4. **Zero-finding 判定**: 結果として finding 0 件は valid 出力。出すこと自体に意義はないので、padding (無理に何か出す) は禁止。
-
-Stage B の判断ログは出力に含めない (verdict が変わったときのみ反映)。両 stage を通過した finding のみが Output Format に進む。
+1. **重複統合**: 同一 root cause を複数 lens が別 finding にしていないか → 1 件に統合
+2. **トーン整合**: Critical 多発時は false alarm 警戒、再評価
+3. **Project convention**: CLAUDE.md / guidelines に照らして妥当か、規約外の好み指摘は破棄
+4. **Zero-finding**: 0 件は valid、padding 禁止
 
 ## Step 0: Auto-infer Mode (no flags)
 
-When started without `--xxx`, auto-infer recommended mode **after user confirms** (no heavy mode without consent).
+起動時 flags なし → 推奨モードを提示しユーザ確認後実行 (heavy モードは同意なし自動実行禁止)。
 
 | Situation | Recommend |
 |-----------|-----------|
@@ -67,7 +46,7 @@ material: `git diff --shortstat` / `gh pr diff <PR>` / `gh pr view <PR> --json b
 |----------|----------|
 | none | review local diff |
 | URL/number | `gh pr diff` / `glab mr diff` |
-| `--focus=<angle>` | narrow 11 angles |
+| `--focus=<angle>` | narrow 12 angles (see SKILL.md) |
 | `--no-difit` | suppress difit (local only) |
 
 | Mode | Delegate | PR | Cost |
@@ -76,75 +55,57 @@ material: `git diff --shortstat` / `gh pr diff <PR>` / `gh pr view <PR> --json b
 | `--codex` | comprehensive + codex plugin parallel, common findings = Critical | any | mid |
 | `--adversarial` | codex plugin `adversarial-review` (plugin required) | any | mid |
 | `--deep` | pr-review-toolkit 6 agents parallel (5-10min) | any | large |
-| `--multi` | comprehensive + codex + code-review + coderabbit parallel → auto-post to PR | **required** | max |
+| `--multi` | comprehensive + codex + code-review + coderabbit parallel → auto-post to PR | required | max |
 
-cloud large: see `/ultrareview` (separate).
+cloud large: see `/ultrareview`.
 
 ### CI Integration
 
-Non-interactive `claude ultrareview <PR_or_path> --json` for machine-readable output, gated via exit code. Split slash (interactive) vs subcommand (CI).
+Non-interactive: `claude ultrareview <PR_or_path> --json` for machine-readable output, gated via exit code.
 
 ## Codex Invocation (--codex / --adversarial)
 
-Via plugin runtime: `node "${CODEX_PLUGIN_ROOT}/scripts/codex-companion.mjs" <review|adversarial-review> --wait`. `${CODEX_PLUGIN_ROOT}` = `ls -1d ~/.claude/plugins/cache/openai-codex/codex/* | tail -1`. Fallback if plugin missing: `--codex` only uses `codex review` direct (adversarial-review plugin-only).
+Via plugin: `node "${CODEX_PLUGIN_ROOT}/scripts/codex-companion.mjs" <review|adversarial-review> --wait`. `${CODEX_PLUGIN_ROOT}` = `ls -1d ~/.claude/plugins/cache/openai-codex/codex/* | tail -1`. Fallback if missing: `--codex` uses `codex review` direct; adversarial is plugin-only.
 
 ## Adversarial Flow
 
-**Challenge design correctness, assumptions, real-world failure points**. `$ARGUMENTS` can add `--base <ref>`, `--scope auto|working-tree|branch`, focus text. Long-running? use `--background` → `/codex:status`/`/codex:result <id>`.
-
-Use: design review, surface tradeoffs, pre-PR self-challenge. Complement to `/review` (implementation defects).
+Design correctness / assumptions / real-world failure points を challenge。`--base <ref>` / `--scope auto|working-tree|branch` / `--background` → `/codex:status`/`/codex:result <id>`. 用途: design review / pre-PR self-challenge。実装欠陥は `/review` default。
 
 ## Deep Flow
 
-Spin 6 agents from `pr-review-toolkit` in parallel. Detail & aggregation: [`references/review-modes-advanced.md`](../references/review-modes-advanced.md). **Cost warning**: tens of seconds ~ minutes × 6 parallel. Daily = default.
+`pr-review-toolkit` 6 agents を並列実行。詳細: [`references/review-modes-advanced.md`](../references/review-modes-advanced.md)。**Cost warning**: tens of seconds ~ minutes × 6 parallel。Daily = default。
 
 ## Multi Flow
 
-PR required. **Fetch PR locally first**, then 4-method parallel.
+PR required。4 メソッド並列実行:
 
-```text
-0. PR fetch:
-   - gh pr diff <PR> > /tmp/review-multi-<PR>.diff
-   - PR_BASE=$(gh pr view <PR> --json baseRefName --jq .baseRefName)
-1. Parallel:
-   a. Skill("comprehensive-review") with --diff-source=/tmp/review-multi-<PR>.diff
-   b. codex plugin runtime --base "${PR_BASE}" (or codex review --pr <PR> if missing)
-   c. /code-review:code-review <PR>
-   d. coderabbit:code-review skill
-2. merge 4 outputs, deduplicate
-3. gh pr comment <PR> --body-file - auto-post
-```
+1. PR diff を `/tmp/review-multi-<PR>.diff` に取得
+2. 並列: (a) `comprehensive-review` skill / (b) codex plugin / (c) `/code-review:code-review` / (d) `coderabbit:code-review`
+3. 4 出力をマージ・重複排除
+4. `gh pr comment <PR> --body-file -` で auto-post
 
-Aggregation strategy (3+ = Critical confirmed, etc): [`references/review-modes-advanced.md`](../references/review-modes-advanced.md).
-
-Use: pre-merge PR, release-critical, security patch. Not daily.
+Aggregation (3+一致 = Critical confirmed 等): [`references/review-modes-advanced.md`](../references/review-modes-advanced.md)。用途: pre-merge / release-critical / security patch。Daily 不推奨。
 
 ## Output Format
 
+SKILL.md と同一フォーマット。追加ラベル:
+
 ```markdown
-## Comprehensive Review Results
-### Angles Executed
-✅ architecture / quality / readability / security / docs / test-coverage / root-cause / logging / writing / silent-failure / type-design
-
 ### 🔴 Critical (fix required, confidence ≥80)
-- [security] SQLi (src/api/user.ts:120) confidence 95
-
 ### 🟡 Warning (improve, confidence 25-79)
-- [quality] legacy pattern (pkg/sort.go:15) confidence 65
-
 Total: Critical N / Warning N
 ```
 
-Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / Multi/Deep partial fail → warn at end + `### Degrade factors`.
+Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / Multi/Deep partial fail → `### Degrade factors`。
 
 ## Critical/Warning ↔ P0/P1
 
-`/review` solo = `Critical→P0` / `Warning→P1` / else `P2/P3` (Team path = report only). Detail: [`reviewer-agent.md`](../agents/reviewer-agent.md).
+`/review` solo = `Critical→P0` / `Warning→P1` / else `P2/P3`。Team path = report only。詳細: [`reviewer-agent.md`](../agents/reviewer-agent.md)。
 
-## Review Policy, Scope, Difit
+## Review Policy & Scope
 
-- **policy**: evidence-first (false positives are review debt), diff-only, Critical → Warning, 11 parallel
-- **scope**: changed files (git diff), new. exclude: auto-gen, vendor/node_modules, lock
-- **difit**: local only, background after review (require `npm i -g difit`, suppress via `--no-difit`)
+- **policy**: evidence-first (false positives are review debt), diff-only, Critical → Warning, 12 parallel
+- **scope**: changed files (git diff). exclude: auto-gen / vendor / node_modules / lock
+- **difit**: local only, background after review (require `npm i -g difit`, suppress: `--no-difit`)
 
-detail map: [`references/command-resource-map.md`](../references/command-resource-map.md) / [`references/review-modes-advanced.md`](../references/review-modes-advanced.md)
+detail: [`references/command-resource-map.md`](../references/command-resource-map.md) / [`references/review-modes-advanced.md`](../references/review-modes-advanced.md)
