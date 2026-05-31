@@ -50,7 +50,7 @@ Team path forces worktree parallel eval. Formula detail: `references/PARALLEL-PA
 
 ### `--parallel --auto` 4 skip conditions
 
-1. Team formula PASS (`LPT_makespan + 180 + 21N < sum × 0.7`, first candidate `N=4 + T_task>147s`)
+1. Team formula PASS (式は `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula` 参照、first choice `N=8`)
 2. clean worktree (git status / stash both none)
 3. branch/worktree name no collision
 4. Creation fail → sequential downgrade + notify

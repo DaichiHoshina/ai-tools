@@ -40,7 +40,7 @@ Launch Developer×N worktree parallel w/o PO/Manager. Formula detail: `reference
 
 ### `--parallel --auto` 3 skip conditions
 
-1. Direct-exec formula PASS (`LPT_makespan + 21N + 20 < sum × 0.7`, first candidate `N=4 + T_task>58s` + independent 2 + fully isolated)
+1. Direct-exec formula PASS (式は `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula` 参照、first choice `N=8`) + independent 2 + fully isolated
 2. clean worktree
 3. branch/worktree name no collision
 
