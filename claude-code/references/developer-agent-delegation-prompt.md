@@ -30,6 +30,18 @@ Per-task pattern (subagent 内 verify が必要な時のみ):
 - [ ] subagent verify: `<command>` (理由: <build 必須 / commit 前確認>)
 - [ ] parent verify: `<command>` (default、subagent 完了報告後 parent inline)
 
+## Code comment policy (委譲時必須明示)
+
+subagent はコメントを default で書かない。WHAT (コードを読めば分かる動作) の説明コメントを禁止する。
+
+コメントを書くのは WHY が非自明な時のみ (隠れた制約 / 回避策 / 直感に反する不変条件)。
+
+コメントを追加・変更する場合、コメント内容が実コードと一致するか検証する。実装変更時に古いコメントを残さない。
+
+現タスク・PR・呼び出し元への言及をコメントに書かない (「X 用」「issue #N 対応」等は PR 説明に書く)。
+
+委譲 prompt 作成時、parent はこのポリシーを prompt に 1 行で再掲する (例: 「コメントは WHY 非自明時のみ、実コードと一致を検証」)。
+
 ## 3. Commit rule (no AI footer)
 
 Plain JP (〜する / 〜した), explicit subjects, PREP 3-point (conclusion/reason/next), HEREDOC pass.
