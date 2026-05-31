@@ -17,7 +17,7 @@ Find issues via review → fix → **verify no regression via re-review** → pu
 Skill("comprehensive-review")
 ```
 
-11 angles + confidence-80 filter. Categorize by Critical/Warning. On finish, show diff in browser (`--no-difit` suppresses).
+12 angles + confidence-80 filter. Categorize by Critical/Warning. On finish, show diff in browser (`--no-difit` suppresses).
 
 ### Step 1.5: Self-Review Pass (必須)
 

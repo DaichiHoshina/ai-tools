@@ -71,7 +71,7 @@ Default lenses: `quality` / `architecture` / `root-cause` / `security`.
 | Logic change (non-test) | `test-coverage` + `silent-failure` |
 | Type def change (`*.d.ts`, `types/*`, struct/interface added) | `type-design` |
 | SQL/ORM change | `db-concurrency` |
-| Mixed / uncertain | Full 11 perspectives |
+| Mixed / uncertain | Full 12 perspectives |
 
 ### Step 2: Run Static Analysis Tools
 
