@@ -28,6 +28,7 @@ run_check() {
   local script_dir="$1"
   run bash -c "
     SCRIPT_DIR='${script_dir}'
+    AI_TOOLS_ROOT='${script_dir}/..'
     source '${PROJECT_ROOT}/claude-code/lib/print-functions.sh'
     ${CHECK_FUNC}
     check_repo_freshness

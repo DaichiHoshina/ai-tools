@@ -3,6 +3,8 @@
 # Integration Tests for Hooks System
 # =============================================================================
 
+bats_require_minimum_version 1.5.0
+
 setup() {
   # PROJECT_ROOT を設定
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
@@ -290,7 +292,7 @@ teardown() {
 
 @test "hooks: task-completed accepts valid JSON input" {
   local input='{"agent_id": "test-456", "agent_type": "developer-agent"}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/task-completed.sh"
+  run --separate-stderr bash -c "echo '$input' | ${HOOKS_DIR}/task-completed.sh"
   [ "$status" -eq 0 ]
   echo "$output" | jq . >/dev/null
 }

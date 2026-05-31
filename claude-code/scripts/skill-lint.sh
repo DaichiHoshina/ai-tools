@@ -232,7 +232,7 @@ main() {
     else
         while IFS= read -r -d '' d; do
             targets+=("$d")
-        done < <(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 | sort -z)
+        done < <(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name '.*' ! -name '_*' -print0 | sort -z)
     fi
 
     for d in "${targets[@]}"; do
