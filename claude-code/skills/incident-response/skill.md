@@ -57,32 +57,31 @@ Receive error → Execute Step 1-5 in order
 
 ### Step 3: Root Cause Identification
 
-1. Extract stack trace, error code from logs
-2. Cross-check logs across related services (k8s pods/logs)
-3. Verify recent deploy, config changes (git log/ArgoCD)
-4. Identify root cause (no band-aids → see `/root-cause`)
+1. Extract stack trace / error code from logs; cross-check related services (k8s pods/logs)
+2. Verify recent deploy / config changes (`git log` / ArgoCD); identify root cause (no band-aids → `/root-cause`)
 
-If investigation drags, re-output every 3 steps: "confirmed / unconfirmed / next action / decision needed" (prevents user "so what?", "remaining?").
+If investigation drags, re-output every 3 steps: "confirmed / unconfirmed / next action / decision needed".
 
 ### Step 4: Create Ticket
 
-Use Jira MCP (`mcp__jira__jira_post`). Required: summary (`[Impact Level] summary`, <80 chars), description (PREP 3: conclusion=action / reason=symptom+scope+cause / next=owner+deadline), priority (matches impact), labels (`["incident"]`).
+Use Jira MCP (`mcp__jira__jira_post`). Required fields:
 
-**Must pass self-check** before post (`~/.claude/guidelines/writing/PRINCIPLES.md` "4 questions"). Detailed logs in `<details>` fold. If fail, fix draft & re-check.
+| Field | Rule |
+|-------|------|
+| summary | `[Impact Level] summary`, <80 chars |
+| description | PREP 3: conclusion=action / reason=symptom+scope+cause / next=owner+deadline |
+| priority | Matches impact level |
+| labels | `["incident"]` |
 
-**MCP failure fallback**:
+**Must pass self-check** before post (`~/.claude/guidelines/writing/PRINCIPLES.md` "4 questions"). Detailed logs in `<details>` fold.
 
-| Failure | Action |
-|------|------|
-| `mcp__jira__jira_post` unreachable | Include ticket body as draft in output, guide user to manual post |
-| Auth error | Show auth URL & stop (keep draft) |
-| Priority value rejected | Retry with `Medium`, warning log |
+MCP failure → include ticket body as draft in output, guide user to manual post.
 
 ### Step 5: Document
 
 Create incident record with Confluence MCP (`mcp__confluence__conf_post`), notify Slack if needed.
 
-**MCP failure fallback**: Save locally as `incidents/{YYYY-MM-DD}-{topic}.md`, guide manual upload later. Slack notification failure = warning only (prioritize record).
+MCP failure → save locally as `incidents/{YYYY-MM-DD}-{topic}.md`, guide manual upload later.
 
 ## Output Format
 
@@ -109,42 +108,6 @@ Normal case:
 - [ ] Ticket URL
 ```
 
-Cause unconfirmed (Step 3 fail):
+Cause unconfirmed → add `> [WARN] Root cause not identified. Temporary action only.` and list confirmed / unconfirmed / temporary action sections.
 
-```markdown
-## Incident Report (Under Investigation)
-> [WARN] Root cause not identified. Temporary action only, ongoing investigation needed.
-
-| Item | Content |
-|------|------|
-| Classification | Unknown |
-| Impact Level | Critical/High/Medium/Low |
-
-### Confirmed
-- Symptom: ...
-- Impact scope: ...
-
-### Unconfirmed
-- Cause: Candidates A/B/C, not isolated yet
-- Repro: ...
-
-### Temporary Action
-- [ ] rollback / feature flag off etc
-- [ ] Ongoing investigation task (owner / deadline)
-```
-
-Ticket creation failed:
-
-```markdown
-## Incident Report (Manual Post Required)
-> [WARN] Jira MCP failed. Manually post draft below to Jira UI.
-
-### Jira Draft
-- summary: [Impact Level] summary
-- description: ...
-- priority: ...
-- labels: ["incident"]
-
-### Post URL
-{jira-base-url}/secure/CreateIssue.jspa
-```
+Ticket creation failed → add `> [WARN] Jira MCP failed.` and include Jira draft (summary / description / priority / labels) inline.
