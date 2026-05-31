@@ -65,6 +65,7 @@ Execute commit → push → PR/MR creation in single command.
    - Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (max 3 loop)
    - 3 loop 後も hit 残存 → 残存語を提示して user に続行確認
    - **注**: hook (pre-tool-use.sh) が `gh pr create` 実行時に AI定型語を exit 2 でブロックするため、このステップは事前 self-check として機能する
+   - PR body に関連 issue/PR URL を含む場合、貼る前に `gh issue view` / `gh pr view` で番号実在を検証する (`rules/ai-output.md` `## URL / Issue・PR 番号検証` 参照)
 6. Display PR/MR URL
 7. **Auto-review** (`--auto-review` specified only. Default OFF, on PR success, `gh` available, GitHub only):
    - Launch `/code-review:code-review <PR#>` w/ `Bash run_in_background:true` → get bash_id_A

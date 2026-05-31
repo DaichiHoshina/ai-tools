@@ -67,6 +67,7 @@ draft 生成後、`guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 
 - 3 loop 後も hit 残存 → 残存語を提示して user に続行確認
 - **注**: hook (pre-tool-use.sh) が Bash/MCP 投稿時に AI定型語を exit 2 でブロックするため、このステップは事前 self-check として機能する
 - channel (Slack / Notion / Issue / PR comment) によらず同一 NG 強度を適用
+- target に issue/PR URL を含む場合、貼る前に `gh issue view` / `gh pr view` で番号実在と title 一致を検証する (`rules/ai-output.md` `## URL / Issue・PR 番号検証` 参照)
 
 ### Step 3: Display as post candidate
 
