@@ -71,6 +71,15 @@ N = 1 → sequential execution
 
 > **Measurement correction**: Initial placeholder `worktree_setup_cost = 20N` corrected to negligible after Phase 1 measurement (5-sample average 90ms). Excluded from formula.
 
+> **2026-05-31 30d 実測校正 (n=18 invocations)**:
+> - `180s` (orchestration+integration): performance-insights.md 実測値から導出、今回 data から直接分離不可 → **literal 維持**
+> - `20N` (spawn_cost): developer-agent launch 17s 実測 → round 20s → **literal 維持**
+> - `0.95` (parallel threshold): N=1 (sequential) 対比 case 4 件のみ、統計的有意差なし → **実測 data 不足 (N=1 case 少)、暫定維持**
+> - `avg_task_sec` p50=129s, p90=212s (n=18): T_i estimation の目安として `Logic addition=60s / Complex=300s` の中間値と整合
+> - `total_wall_sec` median=1086s, p90=8448s (p90 は N=11/14/15 の大規模 run が牽引)
+> - n_dev_agents 分布: 1〜15、median≒5 (large N run が median を押し上げ)
+> - raw data: `~/.claude/logs/flow-baseline-20260531.tsv`
+
 ### Team path (`/flow --parallel`, with worktree)
 
 ```text
