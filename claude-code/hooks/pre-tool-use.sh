@@ -541,6 +541,53 @@ detect_rename_propagation() {
 }
 
 # ====================================
+# worktree session 内 main repo 直接 Edit guard
+# worktree session (CWD が **/.claude/worktrees/* 配下) で file_path が
+# worktree 外を指す Edit/Write/NotebookEdit を exit 2 でブロックする
+# ====================================
+_check_worktree_cwd_guard() {
+  local file_path="$1"
+  [[ -z "$file_path" ]] && return 0
+
+  # CWD 取得: CLAUDE_PROJECT_DIR 優先、なければ pwd
+  local cwd="${CLAUDE_PROJECT_DIR:-}"
+  if [[ -z "$cwd" ]]; then
+    cwd=$(pwd 2>/dev/null || true)
+  fi
+  [[ -z "$cwd" ]] && return 0
+
+  # worktree session 判定: CWD が /.claude/worktrees/ 配下か
+  # パターン: */.claude/worktrees/<name> or */.claude/worktrees/<name>/<subdir>
+  if [[ "$cwd" != */.claude/worktrees/* ]]; then
+    # worktree 外 session → guard 不要
+    return 0
+  fi
+
+  # worktree root を抽出: /.claude/worktrees/<name> までのパス
+  # bash パターン展開で最短 prefix match
+  local wt_root="${cwd%%/.claude/worktrees/*}/.claude/worktrees/"
+  # worktrees/<name> の name 部分を取得
+  local after_wt="${cwd#*/.claude/worktrees/}"
+  local wt_name="${after_wt%%/*}"
+  wt_root="${wt_root}${wt_name}"
+
+  # file_path が worktree root 配下かチェック
+  # 正規化: 末尾スラッシュ除去して前方一致
+  local norm_wt="${wt_root%/}"
+  local norm_fp="${file_path%/}"
+
+  if [[ "$norm_fp" == "$norm_wt" || "$norm_fp" == "$norm_wt/"* ]]; then
+    # worktree 内 path → OK
+    return 0
+  fi
+
+  # worktree 外 path → block
+  GUARD_CLASS="Forbidden"
+  MESSAGE="${ICON_CRITICAL} [cwd-guard] worktree session 中の main repo 直接 Edit を block"
+  ADDITIONAL_CONTEXT="worktree 内 path を指定するか、ExitWorktree してから再実行する。worktree root: ${wt_root} / 指定 path: ${file_path}"
+}
+
+# ====================================
 # 今日の commit inject
 # 書く系 tool (Write/Edit/Bash commit・gh・glab・Slack/Notion MCP) の直前に
 # 今日の commit log を additionalContext に append して、最新規範の反映を促す
@@ -650,9 +697,19 @@ case "$TOOL_NAME" in
     ;;
 
   # === 要確認操作（要確認・警告） ===
-  "Edit"|"Write"|"MultiEdit")
+  "Edit"|"Write"|"MultiEdit"|"NotebookEdit")
     GUARD_CLASS="Boundary"
     MESSAGE="🔶 要確認: ファイル編集"
+
+    # worktree session 内 main repo 直接 Edit guard
+    _CWD_GUARD_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
+    if [[ -n "$_CWD_GUARD_PATH" ]]; then
+      _check_worktree_cwd_guard "$_CWD_GUARD_PATH"
+    fi
+    # Forbidden が立った場合は以降の処理をスキップ
+    if [[ "$GUARD_CLASS" == "Forbidden" ]]; then
+      :
+    else
 
     # 直編集ガード: ~/.claude/{synced_dir}/... で repo source 存在時に redirect 推奨
     # sync.sh to-local で上書き消失するため、必ず repo source を編集する規約
@@ -744,6 +801,7 @@ PYEOF
 
     # 書く系 tool: 今日の commit inject（writing 規約更新を最新規範で反映させる）
     _inject_today_commits
+    fi  # end: cwd-guard Forbidden skip
     ;;
 
   "Bash")
