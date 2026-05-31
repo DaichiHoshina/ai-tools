@@ -359,7 +359,8 @@ teardown() {
 # =============================================================================
 
 @test "integration: pre-tool-use classifies Safe tools correctly" {
-  local tools=("Read" "Glob" "Grep" "WebSearch" "Task" "TaskCreate" "AskUserQuestion")
+  # Task は並列判定 self-review reminder を additionalContext で返すため別 test で検証
+  local tools=("Read" "Glob" "Grep" "WebSearch" "TaskCreate" "AskUserQuestion")
   for tool in "${tools[@]}"; do
     local input="{\"tool_name\": \"${tool}\", \"tool_input\": {}}"
     run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
@@ -367,6 +368,13 @@ teardown() {
     # Safe操作はメッセージなし（空JSON）
     [[ "$output" == "{}" ]]
   done
+}
+
+@test "integration: pre-tool-use injects parallel self-review reminder for Task" {
+  local input='{"tool_name": "Task", "tool_input": {}}'
+  run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.additionalContext | contains("並列判定 self-review")' >/dev/null
 }
 
 @test "integration: pre-tool-use classifies Boundary tools correctly" {
