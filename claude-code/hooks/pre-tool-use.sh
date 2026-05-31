@@ -443,10 +443,10 @@ detect_rename_propagation() {
       search_root=$(git rev-parse --show-toplevel 2>/dev/null) || search_root="."
     fi
 
-    # 旧名の残存検索（.md, .sh, .ts/.tsx, .js, .py, .json, .yaml, .toml）
+    # 旧名の残存検索（.md, .sh, .ts/.tsx, .js, .py, .json, .yaml, .toml, .bats）
     local grep_results
     grep_results=$(find "$search_root" \
-      -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" \) \
+      -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
       -not -path "*/.git/*" \
       -not -path "*/node_modules/*" \
       -not -path "*/dist/*" \
@@ -473,6 +473,33 @@ detect_rename_propagation() {
         ADDITIONAL_CONTEXT="${rename_warn}"
       fi
     fi
+
+    # slug 形式 anchor の残存検索 (#old-slug)
+    # slug 化: 小文字化 / 英数・スペース・ハイフン以外除去 / 空白→ハイフン
+    local old_slug
+    old_slug=$(printf '%s' "$old_title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9 -]//g; s/ +/-/g')
+    if [ -n "$old_slug" ] && [ ${#old_slug} -gt 3 ]; then
+      local slug_pattern="#${old_slug}"
+      local slug_results
+      slug_results=$(find "$search_root" \
+        -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
+        -not -path "*/.git/*" \
+        -not -path "*/node_modules/*" \
+        -not -path "*/dist/*" \
+        -not -path "*/build/*" \
+        -exec grep -lF "$slug_pattern" {} \; 2>/dev/null | head -20)
+      if [ -n "$slug_results" ]; then
+        local slug_list
+        slug_list="${slug_results//$'\n'/','}"; slug_list="${slug_list%,}"
+        local slug_warn="${ICON_WARNING} anchor slug 残存: 「${slug_pattern}」が残存（${slug_list}）。bats anchor・cross-ref 同期確認推奨"
+        if [ -n "$ADDITIONAL_CONTEXT" ]; then
+          ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${slug_warn}"
+        else
+          ADDITIONAL_CONTEXT="${slug_warn}"
+        fi
+      fi
+    fi
+
     return
   fi
 

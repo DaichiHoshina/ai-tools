@@ -1086,3 +1086,33 @@ _teardown_git_stub_dual() {
   [[ "$last_line" =~ "threshold=1500" ]]
   [[ "$last_line" =~ "status=" ]]
 }
+
+# =============================================================================
+# PRINCIPLES.md required_keys coverage テスト
+# hook の _assert_required_keys が exact-match 参照する 5 key が
+# PRINCIPLES.md に **<key>**: 形式で存在することを検証する。
+# key を改名すると hook が silent pass するため、この test で早期検出する。
+# =============================================================================
+
+@test "principles-keys: PRINCIPLES.md に hook required_keys が全件存在する" {
+  local principles_file="${PROJECT_ROOT}/guidelines/writing/PRINCIPLES.md"
+  [[ -f "$principles_file" ]] || skip "PRINCIPLES.md not found at $principles_file"
+
+  # pre-tool-use.sh:98 の required_keys と同一 (test fixture 例外 — 整合検証が目的)
+  local required_keys=(
+    "AI定型語"
+    "カタカナ造語禁止"
+    "断定語 (warn-only)"
+    "難読漢語 (block)"
+    "非日常英語 (block)"
+  )
+
+  local key
+  for key in "${required_keys[@]}"; do
+    run grep -qF "**${key}**:" "$principles_file"
+    [[ "$status" -eq 0 ]] || {
+      echo "FAIL: key '${key}' not found in PRINCIPLES.md" >&2
+      return 1
+    }
+  done
+}
