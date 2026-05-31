@@ -702,10 +702,12 @@ case "$TOOL_NAME" in
     MESSAGE="🔶 要確認: ファイル編集"
 
     # worktree session 内 main repo 直接 Edit guard
-    _CWD_GUARD_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
-    if [[ -n "$_CWD_GUARD_PATH" ]]; then
+    # MultiEdit は top-level file_path に加え edits[].file_path も持つため両方検査する
+    while IFS= read -r _CWD_GUARD_PATH; do
+      [[ -z "$_CWD_GUARD_PATH" ]] && continue
       _check_worktree_cwd_guard "$_CWD_GUARD_PATH"
-    fi
+      [[ "$GUARD_CLASS" == "Forbidden" ]] && break
+    done < <(jq -r '[.tool_input.file_path, (.tool_input.edits[]?.file_path)] | .[] | select(. != null and . != "")' <<< "$INPUT")
     # Forbidden が立った場合は以降の処理をスキップ
     if [[ "$GUARD_CLASS" == "Forbidden" ]]; then
       :
