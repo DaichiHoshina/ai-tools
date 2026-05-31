@@ -1,6 +1,6 @@
 # Next.js / Reactガイドライン
 
-Next.js 16.2 + React 19.2対応（2026年4月）。共通: `~/.claude/guidelines/common/`。
+Next.js 16.2 + React 19.2対応（2026年5月）。共通: `~/.claude/guidelines/common/`。
 
 16.2新機能: React Compiler安定化（自動メモ化）、Turbopack Server Fast Refresh、Web Worker Origin for WASM、Subresource Integrity。
 
