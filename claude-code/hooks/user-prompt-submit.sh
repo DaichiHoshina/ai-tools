@@ -37,12 +37,94 @@ if ! validate_json "$input"; then
   exit 1
 fi
 
-# === session_id / 日付早期取得: _CTX_FILE / _SERENA_COUNTER / _DUP_FILE の default path に suffix 付与 ===
+# === session_id / cwd / 日付早期取得: _CTX_FILE / _SERENA_COUNTER / _DUP_FILE の default path に suffix 付与 ===
 # env CLAUDE_CODE_SESSION_ID 優先、無ければ stdin JSON から抽出、それも無ければ unknown
-_SESSION_ID=$(jq -r '.session_id // "unknown"' <<< "$input")
+# session_id + cwd を jq 1 回で取得 (fork 削減、eval 禁止のため @tsv + read で代替)
+IFS=$'\t' read -r _SESSION_ID _INIT_CWD < <(jq -r '[.session_id // "unknown", .cwd // ""] | @tsv' <<< "$input")
 _SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SESSION_ID}}"
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
 _DATE_TODAY=$(date +%Y%m%d)
+
+# === Session bloat check: 3h超 or msg 1000超で /clear 推奨通知 ===
+# throttle: 同 session 内 15min に1回のみ通知 (/tmp/claude_session_bloat_<id>_<date>)
+_check_session_bloat() {
+  local session_id="$1"
+  local cwd="$2"
+  local date_today="$3"
+  local result_var="$4"
+
+  # session_id 不明の場合はスキップ
+  if [[ -z "${session_id}" || "${session_id}" == "unknown" ]]; then
+    return 0
+  fi
+
+  # throttle check: 15分 (900秒) 以内なら skip
+  local _BLOAT_FLAG="/tmp/claude_session_bloat_${session_id}_${date_today}"
+  # EPOCHSECONDS は subshell/env 引き継ぎ依存で空になるケースがある
+  # printf -v は bash 4.2+ builtin (fork ゼロ)
+  local _NOW
+  printf -v _NOW '%(%s)T' -1
+  if [[ -f "${_BLOAT_FLAG}" ]]; then
+    local _LAST_NOTIFIED
+    read -r _LAST_NOTIFIED < "${_BLOAT_FLAG}" 2>/dev/null || _LAST_NOTIFIED="0"
+    local _SINCE=$(( _NOW - ${_LAST_NOTIFIED:-0} ))
+    if (( _SINCE >= 0 && _SINCE < 900 )); then
+      return 0
+    fi
+  fi
+
+  # session jsonl path 構築
+  # cwd: /Users/daichi/... → slug: -Users-daichi-...  (/ → -、. → -)
+  local _slug="${cwd//\//-}"
+  _slug="${_slug//\./-}"
+  local _JSONL="${HOME}/.claude/projects/${_slug}/${session_id}.jsonl"
+  if [[ ! -f "${_JSONL}" ]]; then
+    return 0
+  fi
+
+  # session start timestamp (先頭20行から最初のtimestampフィールドを抽出)
+  local _TS_RAW
+  _TS_RAW=$(head -20 "${_JSONL}" 2>/dev/null | grep -m1 '"timestamp":"' | grep -o '"timestamp":"[^"]*"' | cut -d'"' -f4) || true
+  if [[ -z "${_TS_RAW}" ]]; then
+    return 0
+  fi
+  # ISO8601 → epoch (macOS date -j -f)
+  # 形式: 2026-05-23T03:59:12.225Z → strip milliseconds + Z
+  local _TS_TRIM="${_TS_RAW%%.*}"  # .225Z を除去
+  _TS_TRIM="${_TS_TRIM%Z}"         # 末尾Z除去 (fractional がない場合)
+  local _START_EPOCH
+  _START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${_TS_TRIM}" "+%s" 2>/dev/null) || return 0
+  local _ELAPSED=$(( _NOW - _START_EPOCH ))
+
+  # msg count: user + assistant type 行数
+  local _MSG_COUNT
+  _MSG_COUNT=$(grep -c '"type":"user"\|"type":"assistant"' "${_JSONL}" 2>/dev/null) || _MSG_COUNT=0
+
+  # 閾値判定
+  local _WARN_REASON=""
+  if (( _ELAPSED > 10800 )); then
+    local _HOURS=$(( _ELAPSED / 3600 ))
+    _WARN_REASON="elapsed=${_HOURS}h"
+  fi
+  if (( _MSG_COUNT > 1000 )); then
+    if [[ -n "${_WARN_REASON}" ]]; then
+      _WARN_REASON="${_WARN_REASON} msg=${_MSG_COUNT}"
+    else
+      _WARN_REASON="msg=${_MSG_COUNT}"
+    fi
+  fi
+
+  if [[ -n "${_WARN_REASON}" ]]; then
+    # throttle flag 更新 (末尾 \n 必須: read が EOF exit 1 で || fallback しないよう)
+    printf '%s\n' "${_NOW}" > "${_BLOAT_FLAG}" 2>/dev/null || true
+    printf '%s' "[session-bloat] ${_WARN_REASON}、/clear で session split 推奨" > /dev/stderr 2>/dev/null || true
+    # result_var に warn メッセージをセット (nameref 相当: eval で代入)
+    eval "${result_var}='⚠️ [session-bloat] ${_WARN_REASON}、/clear で session split 推奨 (token 節約のため task 境界でリセット)。'"
+  fi
+}
+
+_BLOAT_NOTICE_MSG=""
+_check_session_bloat "${_SESSION_ID}" "${_INIT_CWD}" "${_DATE_TODAY}" "_BLOAT_NOTICE_MSG"
 
 # === Context usage notice: コンテキスト50%超で /compact 提案を通知 ===
 _CTX_FILE="${CLAUDE_CTX_FILE:-/tmp/claude-ctx-pct-${_SESSION_ID}}"
@@ -93,9 +175,9 @@ if (( ${#prompt} >= 20 )); then
   fi
 fi
 
-# 通知を合成 (compact / serena / duplicate を順序固定で結合)
+# 通知を合成 (bloat / compact / serena / duplicate を順序固定で結合)
 _COMBINED_NOTICE=""
-for _msg in "${_COMPACT_NOTICE_MSG}" "${_SERENA_NOTICE_MSG}" "${_DUP_NOTICE_MSG}"; do
+for _msg in "${_BLOAT_NOTICE_MSG}" "${_COMPACT_NOTICE_MSG}" "${_SERENA_NOTICE_MSG}" "${_DUP_NOTICE_MSG}"; do
   if [[ -n "${_msg}" ]]; then
     if [[ -n "${_COMBINED_NOTICE}" ]]; then
       _COMBINED_NOTICE="${_COMBINED_NOTICE}
