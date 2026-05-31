@@ -82,6 +82,7 @@ Detected: npm (web/), Go (api/) | Skipped: python (pip-audit not installed)
 - Parallel timeout: 60s per tool
 - Secret/PII detected → mask w/ `[REDACTED]` (console + `--report` output)
 - `--offline`: skip network-required tools (govulncheck etc)
+- **Post-run verification**: after `--apply` run `/lint-test` (build/test pass 確認)、after `--pr` cross-check CI security scan results
 
 ## Related commands
 

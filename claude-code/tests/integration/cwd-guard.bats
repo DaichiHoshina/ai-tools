@@ -68,6 +68,24 @@ teardown() {
 }
 
 # ------------------------------------------------------------------
+# case 2b: MultiEdit (edits[].file_path のみ) でも main repo path を block する
+#   top-level file_path を持たない MultiEdit input で guard が不発になる回帰を防ぐ
+# ------------------------------------------------------------------
+@test "cwd-guard: worktree session で MultiEdit の edits path も exit 2 でブロックする" {
+  local file_path="${FAKE_MAIN}/claude-code/templates/settings.json.template"
+  mkdir -p "$(dirname "$file_path")"
+  local input
+  input=$(jq -n \
+    --arg tool "MultiEdit" \
+    --arg fp "$file_path" \
+    '{tool_name: $tool, tool_input: {edits: [{file_path: $fp, old_string: "a", new_string: "b"}]}}')
+
+  run bash -c "export CLAUDE_PROJECT_DIR='${FAKE_WORKTREE}'; echo '${input}' | bash '${HOOK}'"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "cwd-guard" ]]
+}
+
+# ------------------------------------------------------------------
 # case 3: worktree 外 session (main repo CWD) → pass
 # ------------------------------------------------------------------
 @test "cwd-guard: worktree 外 session では guard が発動しない" {
