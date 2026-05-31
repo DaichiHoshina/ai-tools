@@ -43,6 +43,11 @@ Execute commit → push → PR/MR creation in single command.
 1. Check state (`git status --short` / `branch --show-current` / `diff --stat` / `log --oneline -5`)
 2. **Writing memory pre-check** (commit msg / PR body draft 前必須): `mcp__serena__list_memories` で `writing_failure_*` を確認、関連ありそうなら read してアンチパターン回避。ai-tools project の auto-memory にも `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/writing_failure_*` あり (link-overdose / compound-noun-stack 等)
 3. Uncommitted changes present → analyze diff → generate Conventional Commits msg → confirm w/ user → commit
+3.5. **writing check (commit message)**: commit msg draft を **生成時点で** NG 語チェックする (confirm 前)。
+   - `guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md) に対して grep 突き合わせ
+   - Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (max 3 loop)
+   - 3 loop 後も hit 残存 → 残存語を提示して user に続行確認
+   - **注**: hook (pre-tool-use.sh) が `git commit` 実行時に AI定型語を exit 2 でブロックする。reactive な block→rewrite loop を避けるため、生成時点で proactive に回避する事前 self-check として機能する
 
 ### main mode
 
