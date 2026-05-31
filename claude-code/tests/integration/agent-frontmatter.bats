@@ -79,7 +79,7 @@ get_frontmatter() {
 }
 
 # =============================================================================
-# 4 Developer 上限: 並列実行の N <= 4 の根拠が PARALLEL-PATTERNS.md に明示
+# 8 Developer 上限: 並列実行の N <= 8 の根拠が PARALLEL-PATTERNS.md に明示
 # =============================================================================
 
 @test "eight_developer_limit_anchor: PARALLEL-PATTERNS.md に 8 Developer 上限根拠が存在" {

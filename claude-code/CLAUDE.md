@@ -47,6 +47,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **委譲分割義務 (束ね禁止)**: 1 prompt に 2+ domain (異 file group / 異 root cause / 異 verify 系) を束ねず、domain 別に 単一 message 内 複数 Agent tool_use で並列発火する。束ねは subagent 内逐次処理で makespan 累積 (2026-05-30 incident: N1-N5 5 件束ねで 7 分超、3 並列なら ~150s 想定)。
 
+**並列発火 = 単一 message に Agent tool_use を N 個並べる (書式強制)**: 独立 task を N 個流す時は **1 つの assistant message 内に N 個の `Agent` tool_use を同時に置く**。1 message 1 Agent を N message 繰り返すと前 agent の STOP 待ち逐次化し、peak concurrency=1 に落ちる (formula PASS / cap 8 を満たしても同時並列は発生しない)。実測 2026-05-31: n_dev=14 でも peak=1、全 25 発火が 1 message 1 Agent で完全逐次、wall 5.6h。**「並列で流す」と判断した瞬間、tool_use を 1 message に束ねること自体が並列化の実体**であり、cap / formula は発火数の上限を決めるだけで同時性は保証しない。検証: `scripts/flow-baseline.sh --summary` の `peak_concurrency distribution` が 1 偏重なら逐次化の兆候。
+
 **parent 事前準備義務**: 委譲前 parent が (a) target `file:line` 特定 (`find_symbol` / `grep`) (b) verify コマンド確定 (c) DoD 1 行化 を完了する。subagent に探索を投げない (探索 phase が makespan 支配要因)。target 不明示の prompt は full repo scan を誘発する。
 
 **Inline exceptions (no delegation)**: Q&A / already-read file check (同一 session で既に Read 完了した file への Q&A、追加 Read なし; 追加 Read 必要なら throttle count 算入) / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)

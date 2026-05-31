@@ -198,7 +198,7 @@ Specify `isolation: "worktree"` in Agent call for auto worktree create/cleanup.
 | Direct parallel (`/dev --parallel`) | Parent applies isolation to Dev×N (no PO) |
 | Standalone (`/dev` etc.) | Auto-manage with `isolation: "worktree"` |
 
-Parallel limit: **N <= 4** (`parent + Dev×N <= 5`). Logic & detail: `references/PARALLEL-PATTERNS.md`.
+Parallel limit & N selection: `references/PARALLEL-PATTERNS.md` (canonical).
 
 ## IMPL_NOTES output (Team flow only)
 

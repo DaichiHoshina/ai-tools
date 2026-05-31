@@ -29,7 +29,7 @@ OPTIONS:
 
 OUTPUT:
   ~/.claude/logs/flow-baseline-YYYYMMDD.tsv
-  columns: date  session_id  topic  n_dev_agents  total_wall_sec  avg_task_sec  note
+  columns: date  session_id  topic  n_dev_agents  peak_concurrency  total_wall_sec  avg_task_sec  note
 
 NOTES:
   - /flow および /flow-auto 両方を対象とする
@@ -73,7 +73,7 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
 
 # TSV ヘッダー出力
 {
-  echo -e "date\tsession_id\ttopic\tn_dev_agents\ttotal_wall_sec\tavg_task_sec\tnote"
+  echo -e "date\tsession_id\ttopic\tn_dev_agents\tpeak_concurrency\ttotal_wall_sec\tavg_task_sec\tnote"
 
   # 各 jsonl を jq で処理
   # 戦略:
@@ -180,6 +180,26 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
       ($my_agents | length) as $n_dev |
 
       if $n_dev == 0 then empty else
+        # peak_concurrency: 区間スイープ法で同時実行 developer-agent の最大数を算出
+        (
+          if ($task_durations | length) > 0 then
+            (
+              [
+                $task_durations[] |
+                { ts: (.start | gsub("\\.[0-9]+Z$"; "Z") | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime), delta: 1 },
+                { ts: (.end   | gsub("\\.[0-9]+Z$"; "Z") | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime), delta: -1 }
+              ] |
+              sort_by(.ts, -.delta) |
+              reduce .[] as $ev (
+                { cur: 0, max: 0 };
+                .cur += $ev.delta |
+                if .cur > .max then .max = .cur else . end
+              ) |
+              .max
+            )
+          else 0 end
+        ) as $peak |
+
         # total_wall: /flow timestamp から最後の tool_result まで
         (
           if ($task_durations | length) > 0 then
@@ -203,6 +223,7 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
           $session_id,
           ($inv.topic | gsub("\t"; " ")),
           $n_dev,
+          $peak,
           $total_wall,
           $avg_task,
           $inv.note
@@ -219,16 +240,17 @@ if [[ "$SHOW_SUMMARY" -eq 1 ]]; then
   echo "" >&2
   echo "=== Summary (n=${LINE_COUNT}) ===" >&2
   if [[ "$LINE_COUNT" -gt 0 ]]; then
-    # awk で total_wall_sec (col5) と avg_task_sec (col6) の stats を計算
+    # awk で total_wall_sec (col6) と avg_task_sec (col7) の stats を計算
+    # columns: date(1) session_id(2) topic(3) n_dev_agents(4) peak_concurrency(5) total_wall_sec(6) avg_task_sec(7) note(8)
     awk -F'\t' '
       NR==1 { next }  # ヘッダースキップ
-      $5 > 0 {
-        wall[++wn] = $5
-        wall_sum += $5
-      }
       $6 > 0 {
-        task[++tn] = $6
-        task_sum += $6
+        wall[++wn] = $6
+        wall_sum += $6
+      }
+      $7 > 0 {
+        task[++tn] = $7
+        task_sum += $7
       }
       END {
         # ソート関数 (bubble sort で十分な規模)
@@ -258,6 +280,10 @@ if [[ "$SHOW_SUMMARY" -eq 1 ]]; then
     echo "--- n_dev_agents distribution ---" >&2
     awk -F'\t' 'NR>1 && $4>0 { print $4 }' "$OUT_FILE" | sort -n | uniq -c | \
       awk '{ printf "  n_dev=%-3s  count=%s\n", $2, $1 }' >&2
+    echo "" >&2
+    echo "--- peak_concurrency distribution ---" >&2
+    awk -F'\t' 'NR>1 && $5>0 { print $5 }' "$OUT_FILE" | sort -n | uniq -c | \
+      awk '{ printf "  peak=%-3s  count=%s\n", $2, $1 }' >&2
   else
     echo "  no data" >&2
   fi
