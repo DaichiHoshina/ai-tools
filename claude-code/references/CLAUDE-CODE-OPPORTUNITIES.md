@@ -17,6 +17,10 @@
 
 ---
 
+## 2.1.150 (2026-06-01 検出, stable)
+
+新規 Opportunity なし。2.1.149〜2.1.150 範囲、CHANGELOG は internal infrastructure improvements のみ (user-facing changes なし)。設定変更不要。
+
 ## 2.1.148 (2026-05-30 検出, stable)
 
 新規 Opportunity なし。2.1.146〜2.1.148 範囲、リポジトリ影響 grep 確認済み。
