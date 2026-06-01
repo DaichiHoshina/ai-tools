@@ -189,7 +189,11 @@ _block_if_ai_jargon() {
     local word_list
     word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
     MESSAGE="${ICON_CRITICAL} AI定型語 block: [${word_list}] (${context_label})"
-    ADDITIONAL_CONTEXT="AI定型語を削除または具体表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+    local _full_list
+    _full_list=$(_extract_term_list "$_principles_file" "AI定型語" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
+    ADDITIONAL_CONTEXT="AI定型語を削除または具体表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+
+block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
     return
   fi
@@ -199,7 +203,11 @@ _block_if_ai_jargon() {
     local word_list
     word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
     MESSAGE="${ICON_CRITICAL} カタカナ造語 block: [${word_list}] (${context_label})"
-    ADDITIONAL_CONTEXT="カタカナ造語を削除または説明的表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+    local _full_list
+    _full_list=$(_extract_term_list "$_principles_file" "カタカナ造語禁止" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
+    ADDITIONAL_CONTEXT="カタカナ造語を削除または説明的表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+
+block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
     return
   fi
@@ -209,7 +217,11 @@ _block_if_ai_jargon() {
     local word_list
     word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
     MESSAGE="${ICON_CRITICAL} 難読漢語 block: [${word_list}] (${context_label})"
-    ADDITIONAL_CONTEXT="難読漢語を平易な語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+    local _full_list
+    _full_list=$(_extract_term_list "$_principles_file" "難読漢語 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
+    ADDITIONAL_CONTEXT="難読漢語を平易な語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+
+block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
     return
   fi
@@ -219,7 +231,11 @@ _block_if_ai_jargon() {
     local word_list
     word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
     MESSAGE="${ICON_CRITICAL} 非日常英語 block: [${word_list}] (${context_label})"
-    ADDITIONAL_CONTEXT="日常で使う英語または日本語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md"
+    local _full_list
+    _full_list=$(_extract_term_list "$_principles_file" "非日常英語 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
+    ADDITIONAL_CONTEXT="日常で使う英語または日本語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+
+block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
     return
   fi
