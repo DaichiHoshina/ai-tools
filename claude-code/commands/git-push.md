@@ -48,6 +48,7 @@ Execute commit → push → PR/MR creation in single command.
    - Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (max 3 loop)
    - 3 loop 後も hit 残存 → 残存語を提示して user に続行確認
    - **注**: hook (pre-tool-use.sh) が `git commit` 実行時に AI定型語を exit 2 でブロックする。reactive な block→rewrite loop を避けるため、生成時点で proactive に回避する事前 self-check として機能する
+   - **生成前想起**: PRINCIPLES.md の `**難読漢語 (block)**` / `**非日常英語 (block)**` list を出力前に想起し、和語・平易語に置換してから書く。例: 鑑みる→踏まえる、喫緊→急ぎ、leverage→使う
 
 ### main mode
 
