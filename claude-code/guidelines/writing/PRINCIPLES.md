@@ -128,7 +128,7 @@
 情報: 両 widget とも attribute 不在で 0 件確定
 ```
 
-**Why**: 真 `どういうこと?` 3 件 (2026-05-28 / 05-30) の root cause は「冒頭結論が `調査結果` を語り、user が返すべき内容 (decision の枠) が末尾質問に隠れていた」。長文冒頭結論 rule は trigger 満たしても「結論=調査結果」を許す書き方で素通り。短文ケース (3 行) は長文 rule の trigger 外で素通り。詳細: `docs/reports/analysis-doukouiukoto-pair-20260603.html`
+**Why**: 真 `どういうこと?` 3 件 (2026-05-28 / 05-30) の root cause は「冒頭結論が `調査結果` を語り、user が返すべき内容 (decision の枠) が末尾質問に隠れていた」。長文冒頭結論 rule は trigger 満たしても「結論=調査結果」を許す書き方で素通り。短文ケース (3 行) は長文 rule の trigger 外で素通り。詳細: `~/.claude/references-private/analysis-doukouiukoto-pair-20260603.html` (private 保管、social hit 含有のため public repo 外置き)
 
 ## chatとdocumentで文体を分ける
 
