@@ -28,7 +28,9 @@ source "${LIB_DIR}/common.sh" 2>/dev/null || {
 
 BASELINE_JSON="${REPO_ROOT}/.bench-baseline.json"
 BENCH_SCRIPT="${SCRIPT_DIR}/hook-bench.sh"
-RUNS=6
+RUNS=3
+BENCH_WARMUP=2
+BENCH_RUNS=7
 
 # 主要 4 hook
 DEFAULT_HOOKS=(
@@ -99,7 +101,7 @@ bench_hook() {
     for ((i = 1; i <= RUNS; i++)); do
         # hook-bench.sh の stdout から median 値を parse
         # 出力例: "session-start.sh                    median=  76ms  p95=  78ms  last=ok"
-        output=$("${BENCH_SCRIPT}" --hook "${hook_name}" 2>/dev/null || true)
+        output=$("${BENCH_SCRIPT}" --hook "${hook_name}" --warmup "${BENCH_WARMUP}" --runs "${BENCH_RUNS}" 2>/dev/null || true)
         median_val=$(echo "${output}" | grep -oE 'median=[[:space:]]*[0-9]+ms' | grep -oE '[0-9]+' | head -1)
         if [[ -n "${median_val}" ]]; then
             medians+=("${median_val}")
@@ -107,7 +109,7 @@ bench_hook() {
             # parse 失敗時は wallclock 計測にフォールバック
             local t0 t1
             t0=$(now_ms)
-            "${BENCH_SCRIPT}" --hook "${hook_name}" >/dev/null 2>&1 || true
+            "${BENCH_SCRIPT}" --hook "${hook_name}" --warmup "${BENCH_WARMUP}" --runs "${BENCH_RUNS}" >/dev/null 2>&1 || true
             t1=$(now_ms)
             medians+=($((t1 - t0)))
         fi

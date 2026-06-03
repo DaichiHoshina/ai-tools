@@ -22,6 +22,7 @@ while [[ $# -gt 0 ]]; do
     --include-risky) INCLUDE_RISKY=1; shift ;;
     --hook) ONLY_HOOK="$2"; shift 2 ;;
     --runs) RUNS="$2"; shift 2 ;;
+    --warmup) WARMUP="$2"; shift 2 ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
