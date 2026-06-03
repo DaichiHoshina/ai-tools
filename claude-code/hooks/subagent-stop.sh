@@ -90,6 +90,5 @@ fi
 AC_MSG="${AGENT_TYPE} | ${DURATION} | 24h:${RECENT_COUNT} | logs: ~/.claude/logs/subagent-events.log"
 
 jq -n \
-  --arg sm "✅ Subagent completed: ${AGENT_TYPE}" \
   --arg ac "$AC_MSG" \
-  '{systemMessage: $sm, additionalContext: $ac}'
+  '{additionalContext: $ac}'

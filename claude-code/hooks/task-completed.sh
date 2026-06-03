@@ -85,6 +85,4 @@ fi
 
 # 結果を返す
 # systemMessage のみ。additionalContext の boilerplate は CLAUDE.md の /memory-save ガイドと重複のため削除
-jq -n \
-  --arg sm "${ICON_SUCCESS} Task completed: ${TASK_SUBJECT} (${TASK_ID}) by ${TEAMMATE_NAME} | Today: ${COMPLETED_TODAY}" \
-  '{systemMessage: $sm}'
+jq -n '{}'

@@ -144,12 +144,17 @@ send_stop_notification() {
   fi
 
   if command -v terminal-notifier &>/dev/null; then
-    terminal-notifier \
-      -title "$title" \
-      -message "${notify_msg}" \
-      -contentImage "$HOME/.claude/claude-icon.png" \
-      -sound "$sound" \
-      -execute "osascript -e 'tell application \"iTerm\" to activate'" &
+    local -a notifier_args=(
+      -title "$title"
+      -message "${notify_msg}"
+      -contentImage "$HOME/.claude/claude-icon.png"
+      -execute "osascript -e 'tell application \"iTerm\" to activate'"
+    )
+    # 空文字なら -sound 自体を省略 (terminal-notifier の default 音再生を回避)
+    if [ -n "$sound" ]; then
+      notifier_args+=(-sound "$sound")
+    fi
+    terminal-notifier "${notifier_args[@]}" &
   fi
 
   local ntfy_topic="${CLAUDE_NTFY_TOPIC:-}"
