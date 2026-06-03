@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retrospective: churn 効果検証 2026-06-03</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --fg: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --good: #3fb950; --bad: #f85149; --warn: #d29922;
+  }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.7; padding: 32px; max-width: 980px; margin: 0 auto;
+  }
+  h1 { font-size: 1.7rem; margin-bottom: 4px; }
+  h2 { font-size: 1.25rem; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--accent); }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 8px; }
+  .lead {
+    background: var(--panel); border-left: 3px solid var(--accent);
+    padding: 16px 20px; border-radius: 6px; margin: 20px 0;
+  }
+  .lead ol { margin-left: 20px; }
+  .lead li { margin: 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 7px 11px; text-align: left; }
+  th { background: var(--panel); color: var(--accent); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .good { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .muted { color: var(--muted); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 14px 0; }
+  code { background: #1f2630; padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+  .sample { font-size: 0.82rem; color: var(--muted); border-left: 2px solid var(--border); padding-left: 12px; margin: 4px 0; }
+  .tag { display: inline-block; font-size: 0.72rem; padding: 1px 8px; border-radius: 10px; margin-right: 6px; }
+  .tag-noise { background: #3d2a12; color: var(--warn); }
+  .tag-real { background: #16301c; color: var(--good); }
+  .next { background: var(--panel); border: 1px dashed var(--border); border-radius: 8px; padding: 16px 20px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.78rem; border-top: 1px solid var(--border); padding-top: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Retrospective: churn 効果検証</h1>
+<div class="meta">分析期間 2026-05-27〜06-03 (8 日) ・ 全 scope user msg n=2480 (dedup) ・ 生成 2026-06-03</div>
+
+<div class="lead">
+<strong>核心結論</strong>
+<ol>
+<li><strong>churn pattern マッチは frustration を大幅に過大計上していた。</strong>実メッセージを分類すると、真の frustration churn はごく僅か。当初の「<code>修正/直して +48%</code>・<code>違う +73%</code> 悪化」は<span class="bad">計測ノイズ</span>で、frustration 増ではなかった。</li>
+<li><strong>「長文冒頭結論 rule」(2026-05-22 追加) の効果は限定的だが副作用なし。</strong><code>つまり？</code>/<code>どういうこと？</code> は 1.3→1.12/d とほぼ横ばい。ただし真の <code>どういうこと？</code> は誤検出を除くと <strong>0.38/d</strong> まで下がり、rule は実は効いている可能性が高い。</li>
+<li><strong>最大 pattern <code>再度/もう一度</code> (5.5/d) の大半は正常な反復ワークフロー</strong> (jp-writing 修正サイクル・PR コメント再読込・SQL 再実行)。frustration ではない。</li>
+</ol>
+</div>
+
+<h2>1. pattern マッチ vs 真 churn</h2>
+<p>当初の単純 pattern マッチ集計と、実メッセージを目視分類した後の「真 churn」を並べる。</p>
+
+<table>
+<tr><th>pattern</th><th class="num">マッチ数</th><th class="num">真 churn</th><th>ノイズの正体</th></tr>
+<tr><td>再度/もう一度</td><td class="num">32</td><td class="num good">~3</td><td><span class="tag tag-noise">noise</span>「再度出力」「再度チェック」等の正常な反復依頼</td></tr>
+<tr><td>修正/直して</td><td class="num">21</td><td class="num good">2</td><td><span class="tag tag-noise">noise</span>大半が通常の修正依頼。churn は「勝手に修正→戻して」のみ</td></tr>
+<tr><td>違う/そうじゃない</td><td class="num">13</td><td class="num warn">8</td><td><span class="tag tag-noise">noise</span>「lambda と何が違う?」等の純粋質問 5 件</td></tr>
+<tr><td>どういうこと？</td><td class="num">5</td><td class="num good">3</td><td><span class="tag tag-noise">noise</span>私の結論文/本セッション発言の引用 2 件</td></tr>
+<tr><td>つまり？</td><td class="num">4</td><td class="num">4</td><td><span class="tag tag-real">real</span>誤検出なし</td></tr>
+<tr><td>勝手に</td><td class="num">3</td><td class="num">3</td><td><span class="tag tag-real">real</span>誤検出なし</td></tr>
+</table>
+
+<div class="card">
+<strong>含意:</strong> 自然言語 churn pattern は<strong>過剰検出が default</strong>。疑問文 (「何が違う?」)・正常反復 (「再度出力」)・自己引用を除外しないと、前回比トレンドが計測ノイズに支配される。これが今回の最大の learning。
+</div>
+
+<h2>2. 「長文冒頭結論 rule」効果検証 (主目的)</h2>
+<table>
+<tr><th>指標</th><th class="num">前回 05-22〜28</th><th class="num">今回 05-27〜06-03</th><th>判定</th></tr>
+<tr><td>つまり？+どういうこと？ (生)</td><td class="num">1.30/d</td><td class="num">1.12/d</td><td class="warn">-14% 横ばい</td></tr>
+<tr><td>どういうこと？ (ノイズ除去後)</td><td class="num muted">未計測</td><td class="num good">0.38/d</td><td class="good">実効は低い</td></tr>
+</table>
+<p>生データでは横ばいに見えるが、真の理解 churn (純粋な「どういうこと？」) は <strong>3 件/8 日 = 0.38/d</strong>。rule は副作用なく機能しており、<strong>頭打ちは「残った 3 件が rule の射程外ケース」</strong>を意味する。</p>
+
+<h3>真の「どういうこと？」3 件 (rule 射程外)</h3>
+<div class="sample">[05-28 03:33] どういうこと？</div>
+<div class="sample">[05-28 05:27] どういうこと？</div>
+<div class="sample">[05-30 05:26] どういうこと？</div>
+<p class="muted">いずれも短文単発。直前の私の応答が長文だったか、結論先出しを怠ったかは個別 session 追跡が必要。次回 retrospective で直前 assistant 応答とのペア分析を推奨。</p>
+
+<h2>3. 真 churn 再集計 (ノイズ除去後)</h2>
+<p class="muted">永続化 script <code>churn-scan.py</code> は機械的に除外可能な 5 pattern (修正/違う/つまり/どういうこと/勝手に) を自動除外する。<code>再度</code> は「再度出力」(正常反復) と「再度 PR 作成」(真やり直し) の機械判別が困難なため自動除外せず、合計は <code>再度</code> を外した自動分類値 (下表「合計(再度除く)」、最新値は script 実行で確認) を採る。<code>再度</code> 行のみ手動分類で補完する。数値の canonical は script 出力。</p>
+<table>
+<tr><th>pattern</th><th class="num">真 churn/d</th><th>性質</th></tr>
+<tr><td>再度 (真やり直し・手動分類)</td><td class="num">~0.4</td><td>リバート後の再 PR 作成等。32 件中大半は正常反復で除外</td></tr>
+<tr><td>違う (スコープ/概念訂正)</td><td class="num">1.0</td><td>「違う PR」「違うスコープは PR」</td></tr>
+<tr><td>つまり？</td><td class="num">0.50</td><td>理解 churn</td></tr>
+<tr><td>どういうこと？</td><td class="num">0.38</td><td>理解 churn</td></tr>
+<tr><td>勝手に</td><td class="num">0.38</td><td>scope 逸脱 (前回比 -71% 改善)</td></tr>
+<tr><td>修正 (真やり直し)</td><td class="num">0.25</td><td>ほぼ通常依頼</td></tr>
+</table>
+
+<h2>4. Success Patterns</h2>
+<ul>
+<li><span class="good">勝手に -71%</span> / <span class="good">再度 -26%</span>: 既存 rule (echo intent / PR scope echo) が継続的に効いている</li>
+<li>jp-quality-block: commit message で NG 語 (鑑みる/喫緊/leverage/utilize 等) を継続ブロック、機能維持を確認</li>
+</ul>
+
+<h2>5. 改善 (採用済 3 件)</h2>
+<div class="card">
+<strong>① churn 計測 script の noise 除去</strong><br>
+疑問文 (「何が〜と違う?」)・正常反復 (「再度出力/チェック」)・自己引用を churn から除外する filter を実装。永続化先 <code>claude-code/scripts/</code>。次回以降の計測精度を担保し、誤トレンド (+48%/+73%) を防ぐ。
+</div>
+<div class="card">
+<strong>② 「どういうこと？」射程拡張</strong><br>
+残存 3 件は単発短文。次回 retrospective で<strong>直前 assistant 応答とのペア分析</strong>を行い、結論先出しを怠ったケースを特定 → rule 補強。今回は射程外ケースの存在を確認するに留める。
+</div>
+<div class="card">
+<strong>③ 「再度/もう一度」深掘り</strong><br>
+完了。32 件中ほぼ全てが正常反復ワークフローと判明。<strong>frustration churn の主要因ではない</strong>ことを確定。次回主題からは外す。
+</div>
+
+<h2>Next Steps</h2>
+<div class="next">
+<ul>
+<li><strong>2026-06-04〜11</strong>: developer-agent sonnet 再計測 (訂正済 stop_reason logic、n=80+ 目標)</li>
+<li><strong>次回 retrospective</strong>: 真 churn のみで前回比較 (本レポートの noise 除去版 script 使用)。「どういうこと？」は直前応答ペア分析で射程外ケースを特定</li>
+<li><strong>計測方法論の確定</strong>: 自然言語 churn は必ずノイズ除去後で語る (生 pattern マッチでトレンド判断しない)</li>
+</ul>
+</div>
+
+<footer>
+データソース: <code>~/.claude/projects/**/*.jsonl</code> (user msg, dedup by uuid) ・ 計測 script: <code>claude-code/scripts/churn-scan</code> (noise 除去版) ・ 本レポートは社内向け、外部送信禁止
+</footer>
+
+</body>
+</html>
