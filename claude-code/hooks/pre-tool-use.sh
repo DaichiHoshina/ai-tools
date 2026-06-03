@@ -661,6 +661,33 @@ _check_social_hit() {
 }
 
 # ====================================
+# parent 事前準備 missing 検出 (warn-only)
+# Task tool 発火 prompt が ≥500 word かつ file:line pattern / label 付き keyword
+# (verify cmd: / DoD: / target file:) のいずれも未出現の場合に warn を返す (block はしない)
+# 引数: prompt (string)
+# 戻り値: 0 = missing 検出 / 1 = 事前準備済 or 短 prompt
+# ====================================
+_check_parent_prep_missing() {
+  local prompt="$1"
+  # 短 prompt は対象外 (≤500 word の subagent context budget と一致)
+  local word_count
+  word_count=$(printf '%s' "$prompt" | wc -w | tr -d ' ')
+  [ "$word_count" -lt 500 ] && return 1
+
+  # file:line pattern (例: src/foo.ts:42) のみ「事前準備済」とみなす
+  # 自然言語中の target / verify 単語では trigger しない (too-broad false-negative 防止)
+  # (^|[[:space:]]) 境界を要求: URL 内の host:port (例: example.com:8080) は ://直後で空白前置なし → 除外
+  if printf '%s' "$prompt" | grep -qE "(^|[[:space:]])[a-zA-Z0-9_./-]+\.[a-zA-Z]+:[0-9]+"; then
+    return 1
+  fi
+  # label 付き keyword のみ trigger: "verify cmd:" / "DoD:" / "target file:" 等
+  if printf '%s' "$prompt" | grep -qiE "(verify cmd|DoD|target file)[ \t]*[:=]"; then
+    return 1
+  fi
+  return 0  # 事前準備 missing 検出
+}
+
+# ====================================
 # worktree session 内 main repo 直接 Edit guard
 # worktree session (CWD が **/.claude/worktrees/* 配下) で file_path が
 # worktree 外を指す Edit/Write/NotebookEdit を exit 2 でブロックする
@@ -1061,13 +1088,22 @@ PYEOF
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
     # 並列判定 self-review (全 Task 発火時に inject)
     PARALLEL_REVIEW="【並列 self-review】独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1。判定詳細: references/PARALLEL-PATTERNS.md)"
+
+    # parent 事前準備 missing 検出 (warn-only、block しない)
+    TASK_PROMPT=$(jq -r '.tool_input.prompt // empty' <<< "$INPUT")
+    PREP_WARN=""
+    if _check_parent_prep_missing "$TASK_PROMPT"; then
+      PREP_WARN="
+【parent 事前準備 missing 疑い】≥500 word の prompt に target / file:line / verify / DoD いずれも未出現。委譲前 checklist を充足してから発火 (references/developer-agent-delegation-prompt.md §0)"
+    fi
+
     if [ "${SUBAGENT_TYPE}" = "general-purpose" ]; then
       GUARD_CLASS="Boundary"
       MESSAGE="${ICON_WARNING} general-purpose agent（CLAUDE.md「原則使わない」、最大コスト源）"
       ADDITIONAL_CONTEXT="代替: claude-code-guide / Explore / 直接 grep+find / serena MCP（references/performance-insights.md 参照）
-${PARALLEL_REVIEW}"
+${PARALLEL_REVIEW}${PREP_WARN}"
     else
-      ADDITIONAL_CONTEXT="${PARALLEL_REVIEW}"
+      ADDITIONAL_CONTEXT="${PARALLEL_REVIEW}${PREP_WARN}"
     fi
     ;;
 

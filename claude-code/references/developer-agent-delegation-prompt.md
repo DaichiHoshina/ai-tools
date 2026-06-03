@@ -2,6 +2,16 @@
 
 Copy this template, fill all 6 sections (no placeholder left blank), paste to `Task(developer-agent)`.
 
+
+## 0. Parent pre-delegation checklist (parent 用、委譲前必須)
+
+- [ ] target file:line 特定済 (`find_symbol` または `grep`)
+- [ ] verify cmd 確定済 (build / typecheck / test / bats 等の単発 cmd)
+- [ ] DoD 1 行化済
+- [ ] 単 domain (異 file group / 異 root cause 混入なし)
+
+4 項目全て ✓ で発火する。未充足は parent が完了させてから委譲する (探索 phase の subagent 押し付け禁止)。
+
 ## 1. Target files & edits
 
 Absolute paths + exact changes (no inference):

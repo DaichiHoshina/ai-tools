@@ -195,3 +195,4 @@ references/PARALLEL-PATTERNS\.md(#[a-zA-Z0-9_-]+)?
 - `claude-code/commands/dev.md` - `/dev --parallel` spec
 - `claude-code/references/performance-insights.md` - Agent real-time measurements
 - `claude-code/references/session-management.md` - 9 concurrent session limit
+- `claude-code/references/orchestrate-mode.md` - `/flow --orchestrate` 運用規約 (parent pre-delegation steps + firing protocol)
