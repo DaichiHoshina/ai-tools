@@ -584,6 +584,83 @@ detect_rename_propagation() {
 }
 
 # ====================================
+# social-hit block
+# ~/ai-tools/ public repo への社内 product 名 / 社内識別子の書き込みを hard block
+# term list は ~/.claude/rules/public-repo-private-data-block.md の
+# "social-hit (block)" key から動的抽出 (PRINCIPLES.md と同じ記法)
+# ====================================
+_social_hit_rule_file="$HOME/.claude/rules/public-repo-private-data-block.md"
+
+# social-hit block ログ出力関数
+_append_social_hit_log() {
+  local tool_name="$1"
+  local hit_term="$2"
+  local file_path="$3"
+  local log_dir="$HOME/.claude/logs"
+  local log_file="${log_dir}/social-hit-block.log"
+  mkdir -p "$log_dir" 2>/dev/null || true
+  if [[ -f "$log_file" ]]; then
+    local fsize
+    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
+    if [[ "${fsize}" -gt 1048576 ]]; then
+      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+    fi
+  fi
+  local ts
+  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$file_path" >> "$log_file" 2>/dev/null || true
+}
+
+# ai-tools public repo への social-hit term 書き込みを block する
+# 引数: file_path, content
+_check_social_hit() {
+  local file_path="$1"
+  local content="$2"
+  [[ -z "$file_path" ]] && return 0
+  [[ -z "$content" ]] && return 0
+
+  # rule file 不在時は silent pass (未 sync 環境への配慮)
+  [[ -f "$_social_hit_rule_file" ]] || return 0
+
+  # ai-tools/ 配下の path のみ判定対象
+  local ai_tools_prefix="$HOME/ai-tools/"
+  # HOME を展開した絶対パスで前方一致
+  if [[ "$file_path" != "${ai_tools_prefix}"* ]]; then
+    return 0
+  fi
+
+  # 自己除外 (allowlist): rule 説明文として term を保持する file は判定対象外
+  local rel_path="${file_path#"${ai_tools_prefix}"}"
+  case "$rel_path" in
+    claude-code/rules/public-repo-private-data-block.md|\
+    claude-code/CLAUDE.md|\
+    claude-code/hooks/pre-tool-use.sh)
+      return 0
+      ;;
+  esac
+
+  # social-hit term 抽出 + grep
+  local found=()
+  while IFS= read -r word; do
+    [[ -z "$word" ]] && continue
+    if printf '%s' "$content" | grep -qF "$word"; then
+      found+=("$word")
+    fi
+  done < <(_extract_term_list "$_social_hit_rule_file" "social-hit (block)")
+
+  if [[ ${#found[@]} -gt 0 ]]; then
+    local word_list
+    word_list=$(printf '%s' "${found[*]}" | tr ' ' ',')
+    GUARD_CLASS="Forbidden"
+    MESSAGE="${ICON_CRITICAL} social-hit block: [${word_list}] file=${file_path}"
+    ADDITIONAL_CONTEXT="ai-tools repo は public。社内 product 名 / 識別子を public repo に書き込めません。
+対処: file_path を ~/.claude/references-private/ に切り替えるか、term を削除 / 匿名化して再実行してください。
+ログ: ~/.claude/logs/social-hit-block.log"
+    _append_social_hit_log "$TOOL_NAME" "$word_list" "$file_path"
+  fi
+}
+
+# ====================================
 # worktree session 内 main repo 直接 Edit guard
 # worktree session (CWD が **/.claude/worktrees/* 配下) で file_path が
 # worktree 外を指す Edit/Write/NotebookEdit を exit 2 でブロックする
@@ -786,6 +863,14 @@ case "$TOOL_NAME" in
     ' <<< "$INPUT")
     if [ -n "$EDIT_CONTENT" ]; then
       detect_dangerous_patterns "$EDIT_CONTENT"
+    fi
+
+    # social-hit block: ai-tools public repo への社内 product 名書き込み防止
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+      _SOCIAL_HIT_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
+      if [ -n "$_SOCIAL_HIT_PATH" ]; then
+        _check_social_hit "$_SOCIAL_HIT_PATH" "$EDIT_CONTENT"
+      fi
     fi
 
     # Rename propagation detection (Edit tool only has old_string/new_string)
