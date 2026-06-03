@@ -459,7 +459,7 @@
   "autoUpdatesChannel": "stable",
   "showThinkingSummaries": false,
   "verbose": true,
-  "preferredNotifChannel": "kitty",
+  "preferredNotifChannel": "none",
   "showTurnDuration": true,
   "skipAutoPermissionPrompt": true,
   "autocompact": true,
