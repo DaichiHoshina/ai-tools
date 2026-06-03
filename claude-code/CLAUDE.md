@@ -91,6 +91,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **Large-repo session split (snkrdunk-com / loadtest / docs etc)**: Hard reset (`/clear` or new session) at task boundary; never carry session past 1 task / 3h elapsed / 1000 msg / 40% context (whichever first). 1 task = 1 session principle in large repos
 - **長文回答 = 冒頭結論 1 行強制**: chat 応答で 5 行超 + 列挙出す時は **1 行目に結論明示**。違反すると `つまり？` 再質問発生。
 - **長文出力 = PREP 法**: 5 行超 + 複数項目は **P**oint→**R**eason→**E**xample→**P**oint 構造。抽象語禁止 (軸/層/土台→具体動作)。詳細: `guidelines/writing/PRINCIPLES.md` PREP section
+- **decision 要求応答 = 冒頭に決定の枠を提示**: user に decision 要求する応答 (末尾 `?` + 選択肢 A/B・案 1/2・Yes/No・どちらにする等を含む) は冒頭 1 行に `要決定: <選択肢の枠> / <候補数>` を置く。長さ閾値なし (3 行でも適用)。違反すると `どういうこと?` 再質問発生 (root cause: 冒頭結論が `調査結果` で要決定が末尾に隠れる)。詳細: `guidelines/writing/PRINCIPLES.md` decision-frame-first section
 
 ## 派生値禁止 (no derived literals)
 

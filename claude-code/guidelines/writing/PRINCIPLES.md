@@ -114,6 +114,22 @@
 **結論再確認**: subagent 単独判定の取りこぼしを parent が拾える状態。
 ```
 
+### decision 要求時の Point 変種 (decision-frame-first)
+
+応答が user に decision を求める場合、Point は調査結果でなく **決定の枠** を提示する。trigger は (1) 末尾が `?` で締める質問 (2) 本文に選択肢 (A/B、案 1/2、Yes/No、どちらにする、どう進める 等) を含む — 両方満たす応答全て、長さ閾値なし (短文 3 行でも適用)。
+
+冒頭 1 行に `要決定: <選択肢の枠> / <候補数>` を置く。
+
+```text
+要決定: 子 project memory が parent を継承するか (Yes/No → 子削除可否)
+情報: W2 完了 (16 file 削除)、統合方針は 1 通り、最終確認 1 点
+
+要決定: 2 widget × 各 2 案 = 4 通り (A/B 独立、A は 1 つ選ぶ / B は 1 つ選ぶ)
+情報: 両 widget とも attribute 不在で 0 件確定
+```
+
+**Why**: 真 `どういうこと?` 3 件 (2026-05-28 / 05-30) の root cause は「冒頭結論が `調査結果` を語り、user が返すべき内容 (decision の枠) が末尾質問に隠れていた」。長文冒頭結論 rule は trigger 満たしても「結論=調査結果」を許す書き方で素通り。短文ケース (3 行) は長文 rule の trigger 外で素通り。詳細: `docs/reports/analysis-doukouiukoto-pair-20260603.html`
+
 ## chatとdocumentで文体を分ける
 
 | 場面 | 方針 |

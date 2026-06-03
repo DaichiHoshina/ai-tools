@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>真 どういうこと? 3 件の応答ペア分析 2026-06-03</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --fg: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --good: #3fb950; --bad: #f85149; --warn: #d29922;
+  }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.7; padding: 32px; max-width: 980px; margin: 0 auto;
+  }
+  h1 { font-size: 1.7rem; margin-bottom: 4px; }
+  h2 { font-size: 1.25rem; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--accent); }
+  h4 { font-size: 0.95rem; margin: 14px 0 6px; color: var(--fg); }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 8px; }
+  .lead {
+    background: var(--panel); border-left: 3px solid var(--accent);
+    padding: 16px 20px; border-radius: 6px; margin: 20px 0;
+  }
+  .lead ol { margin-left: 20px; }
+  .lead li { margin: 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 7px 11px; text-align: left; vertical-align: top; }
+  th { background: var(--panel); color: var(--accent); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .good { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .muted { color: var(--muted); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 14px 0; }
+  code { background: #1f2630; padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+  pre {
+    background: #1f2630; border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px; font-size: 0.82rem; line-height: 1.55; overflow-x: auto;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .next { background: var(--panel); border: 1px dashed var(--border); border-radius: 8px; padding: 16px 20px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.78rem; border-top: 1px solid var(--border); padding-top: 12px; }
+  .case { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .case-meta { color: var(--muted); font-size: 0.82rem; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>真 どういうこと? 3 件の応答ペア分析</h1>
+<div class="meta">対象: <code>retrospective-churn-20260603.html</code> で特定した rule 射程外 3 件 ・ 生成 2026-06-03</div>
+
+<div class="lead">
+<strong>核心結論</strong>
+<ol>
+<li><strong>3 件共通の root cause = 冒頭結論行が「調査結果」を語り、「user に何を返してほしいか (decision の枠)」を語っていない。</strong>既存の「長文冒頭結論 rule」(2026-05-22) は「結論=調査結果」を許す書き方なので、選択肢を末尾に置く応答で user が「結局何を選べばいいの?」となる。</li>
+<li><strong>提案 rule: decision を user に要求する応答は、冒頭 1 行に <code>要決定: &lt;枠&gt; / &lt;候補数&gt;</code> を置く。</strong>trigger は「末尾 <code>?</code> + 選択肢 (A/B、案 1/2、Yes/No、どちらにする 等) を含む」応答。</li>
+<li><strong>適用先: <code>guidelines/writing/PRINCIPLES.md</code> PREP section</strong> (Point に「決定の枠」を許容する変種を明文化) + <code>CLAUDE.md</code> Session Efficiency に 1 行 entry。</li>
+</ol>
+</div>
+
+<h2>1. 抽出方法</h2>
+<p><code>retrospective-churn-20260603.html</code> L85-87 で特定した 3 timestamp (UTC 表記、<code>churn_samples.py</code> 由来) の直前 assistant 応答を <code>/tmp/dou_pair.py</code> で抽出。session jsonl の最終 user msg <code>どういうこと？</code> から時系列を遡り、直近の assistant 行を pair として並べた。</p>
+
+<h2>2. 3 件の analysis</h2>
+
+<!-- Case 1 -->
+<div class="case">
+<h3>① 2026-05-30 05:26 UTC — MEMORY.md 統合 W3 (ai-tools)</h3>
+<div class="case-meta">session: <code>5bf03750-e48e-4acf-8371-345aabace4ff.jsonl</code> ・ 直前応答 29 行 / 1044 chars ・ 応答→ <code>どういうこと？</code> まで 1 分 18 秒</div>
+
+<h4>応答の構造</h4>
+<pre>W2 完了 (16 file 削除、MEMORY.md 16→1 行)。
+
+最終 W3 (divergences 統合) 進める。先ほど読んだ内容で判断材料揃ってる:
+
+## 統合方針
+file 1: feedback_local_docs_no_share.md (3 版)
+- snkrdunk-com / docs / snkrdunk-loadtest 全て本質同内容
+- 推奨: snkrdunk parent 版を canonical 化、子 3 dir 削除
+- loadtest 版の k6 1 行追記は親 canonical に merge
+
+**懸念**: snkrdunk 子 project で session 開いた時、parent dir の memory も自動継承される設計か?
+もし継承されない (project 別 isolated) なら子側削除すると参照失う。
+
+設計確認したい:
+子 project memory dir は parent dir の memory を継承する? それとも完全分離?
+- 継承する → 親 1 本化 + 子削除で OK
+- 分離 → 子各 dir に同 memory copy 維持必須 (現状維持)
+
+確認方法: 過去の挙動 ... あるいは Claude Code 仕様。
+
+どう進める?</pre>
+
+<h4>失敗 pattern</h4>
+<ul>
+<li><strong>冒頭結論行が「W2 完了 + W3 進める」(進行報告)。</strong>「長文冒頭結論 rule」は満たすが、結論扱いされたのは <em>状態</em> であり、user が返すべき内容ではない。</li>
+<li><strong>本文中で「方針判断 + 設計確認 + 選択肢提示」を 1 応答に詰めた。</strong>user は「方針確認すればいい? 設計仕様答えればいい? それとも進め方を決めればいい?」と混乱。</li>
+<li><strong>末尾 <code>どう進める?</code> が抽象的。</strong>選択肢 (継承する/分離) と「どう進める?」の関係が不明 (継承する/分離は claude が user に答えてほしい仕様確認、「どう進める?」は別の意思決定)。</li>
+</ul>
+
+<h4>あるべき冒頭</h4>
+<pre>要決定: snkrdunk 子 project memory が parent を継承するか (Yes/No → 子削除 or 現状維持)
+情報: W2 完了 (16 file 削除)、統合方針は 1 通り、最終確認 1 点</pre>
+</div>
+
+<!-- Case 2 -->
+<div class="case">
+<h3>② 2026-05-28 03:33 UTC — rendered.html 削除確認 (snkrdunk-com)</h3>
+<div class="case-meta">直前応答 3 行 / 188 chars ・ 応答→ <code>どういうこと？</code> まで 9 分 51 秒 (user 離席含む可能性)</div>
+
+<h4>応答の構造</h4>
+<pre>pm-consultation-draft.rendered.html も memo に無いが draft 連動ファイル。
+draft 本体削除なら rendered も削除候補だが、念のため確認:
+
+recovery-runbook.html (Notion 移管済) と pm-consultation-draft.md (+ rendered) を削除でいい?</pre>
+
+<h4>失敗 pattern</h4>
+<ul>
+<li><strong>論理が飛んでいる: <code>pm-consultation-draft.rendered.html</code> の話と <code>recovery-runbook.html</code> の話を 1 文に束ねた。</strong>関連性 (なぜ 2 つを同時に確認するか) が user 側で復元不能。</li>
+<li><strong>短文 (3 行) ゆえ「冒頭結論 rule」の trigger 外で素通り。</strong>長文 rule は 5 行超 + 列挙が条件。</li>
+<li><strong>削除確認なのに件数 (2 件) と各々の根拠が冒頭に出ない。</strong>「rendered = draft 連動」「recovery-runbook = Notion 移管済」は別根拠だが横並び不明。</li>
+</ul>
+
+<h4>あるべき冒頭</h4>
+<pre>要決定: 2 file 削除可否 (Yes/No, 1 件ずつ可)
+- recovery-runbook.html: Notion 移管済
+- pm-consultation-draft.md (+ .rendered.html): memo に無いが draft 連動</pre>
+</div>
+
+<!-- Case 3 -->
+<div class="case">
+<h3>③ 2026-05-28 05:27 UTC — Datadog dashboard widget 監査 (snkrdunk-com)</h3>
+<div class="case-meta">直前応答 31 行 / 1810 chars ・ 応答→ <code>どういうこと？</code> まで 36 分 52 秒 (user 離席含む可能性)</div>
+
+<h4>応答の構造</h4>
+<pre>判明事項:
+1. @batch_name attribute は emit されていない。
+2. @level attribute も emit されていない。
+
+つまり dashboard widget の query @batch_name:... @level:error は 0 件確定。
+
+## 全 widget の依存確認結果
+[表: 4 widget]
+
+## 修正案
+A. 再 Draw 上限超過件数 widget
+  - 選択肢 1: feature_tag に書き換え or widget 削除
+  - 選択肢 2: 代替 widget で oripa_draw_rows_affected_mismatch 追加
+B. 整合性監査エラー件数 widget
+  - query を実態に合わせる
+  - batch 側で @batch_name を emit するように修正 (PR 追加)
+
+どちらにする?</pre>
+
+<h4>失敗 pattern</h4>
+<ul>
+<li><strong>冒頭結論 rule は機能 (<code>0 件確定</code>) — ただし確定したのは <em>事実</em>、user は <em>決定</em> を求められている。</strong>結論行と要求行が分離していない。</li>
+<li><strong>選択肢が A/B の中に各 1/2 ネスト。</strong>user は「A の 1 を選んだら B はどうなる? 連動? 独立?」を冒頭で把握できず、末尾 <code>どちらにする?</code> は AB 軸 / 案軸 / 全 4 案軸 のどれを指すか曖昧。</li>
+<li><strong>「修正案」section が応答の半分を占めるが、A/B が独立 widget なので両方決める必要があるという前提が冒頭に出ない。</strong></li>
+</ul>
+
+<h4>あるべき冒頭</h4>
+<pre>要決定: 2 widget × 各 2 案 = 4 通り (A/B 独立、A は 1 つ選ぶ / B は 1 つ選ぶ)
+情報: 両 widget とも attribute 不在で 0 件確定</pre>
+</div>
+
+<h2>3. 共通 root cause</h2>
+<table>
+<thead><tr><th>pattern</th><th>① 統合 W3</th><th>② 削除確認</th><th>③ widget 監査</th></tr></thead>
+<tbody>
+<tr><td>冒頭が「進行報告/調査結果」で <em>decision 要求</em> が末尾に隠れる</td><td>○</td><td>—</td><td>○</td></tr>
+<tr><td>選択肢の単位 (A/B + 1/2 ネスト / 件数) が user 側で復元不能</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><td>短文でも複数項目を 1 文に束ね、関連性が共有されない</td><td>—</td><td>○</td><td>—</td></tr>
+<tr><td>長文冒頭結論 rule の trigger を素通り (5 行未満)</td><td>—</td><td>○</td><td>—</td></tr>
+</tbody>
+</table>
+
+<h2>4. 既存 rule との gap</h2>
+<table>
+<thead><tr><th>rule</th><th>射程</th><th>3 件に効くか</th></tr></thead>
+<tbody>
+<tr><td>「長文冒頭結論 rule」(CLAUDE.md Session Efficiency)</td><td>5 行超 + 列挙</td><td>① ③ は trigger 内だが「結論=調査結果」を許す書き方で素通り。② は trigger 外</td></tr>
+<tr><td>「multi-clause requests: echo intent first」(CLAUDE.md)</td><td>user → claude 方向</td><td>逆方向 (claude → user) には適用外</td></tr>
+<tr><td>PREP 法 (PRINCIPLES.md)</td><td>5 行超 + 複数項目</td><td>Point に「決定の枠」を置く規定なし</td></tr>
+</tbody>
+</table>
+
+<h2>5. 提案 rule</h2>
+<div class="card">
+<strong>decision-frame-first rule</strong>
+<p style="margin-top:8px;">user に decision 要求する応答 (= 末尾 <code>?</code> で締める質問 + 選択肢を含む) は、冒頭 1 行に <code>要決定: &lt;選択肢の枠&gt; / &lt;候補数&gt;</code> を置く。</p>
+
+<h4>適用例</h4>
+<pre>(case 1)
+要決定: 子 project memory が parent を継承するか (Yes/No → 子削除可否)
+
+(case 2)
+要決定: 2 file 削除可否 (Yes/No, 1 件ずつ可)
+
+(case 3)
+要決定: 2 widget × 各 2 案 = 4 通り (A/B 独立)</pre>
+
+<h4>trigger</h4>
+<ul>
+<li>末尾が <code>?</code> で締める質問形式</li>
+<li>本文中に選択肢パターン (A/B、案 1/2、Yes/No、どちらにする、どう進める 等) を含む</li>
+<li>長さ閾値なし (短文 3 行でも適用)</li>
+</ul>
+
+<h4>適用先</h4>
+<ul>
+<li><strong>canonical</strong>: <code>guidelines/writing/PRINCIPLES.md</code> PREP section に「decision 要求時の Point は決定の枠を提示する」変種として追記</li>
+<li><strong>1 行 entry</strong>: <code>CLAUDE.md</code> Session Efficiency に項目追加 (詳細は PRINCIPLES.md 参照)</li>
+</ul>
+</div>
+
+<h2>6. 次アクション</h2>
+<div class="next">
+<ol>
+<li><strong>2026-06-03</strong>: 本レポート + PRINCIPLES.md 追記 + CLAUDE.md 1 行 entry を同 commit で push、<code>sync.sh to-local</code> で反映</li>
+<li><strong>2026-06-10 頃</strong>: 次回 retrospective で真 <code>どういうこと?</code> 件数の前後比較 (0.38/d → ?)</li>
+<li><strong>fallback</strong>: 件数が下がらない場合、trigger を「選択肢含む応答」全般に拡張し warn-only hook 化を検討</li>
+</ol>
+</div>
+
+<footer>
+canonical script: <code>/tmp/dou_pair.py</code> (発掘専用、永続化なし) ・ 抽出元: <code>retrospective-churn-20260603.html</code> L85-87 ・ 関連 memory: <code>pending-improvements</code>
+</footer>
+
+</body>
+</html>
