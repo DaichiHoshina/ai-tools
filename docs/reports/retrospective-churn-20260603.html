@@ -59,6 +59,7 @@
 <h2>1. pattern マッチ vs 真 churn</h2>
 <p>当初の単純 pattern マッチ集計と、実メッセージを目視分類した後の「真 churn」を並べる。</p>
 
+<!-- snapshot: churn-scan.py 出力 2026-06-03 時点の point-in-time 値。再計算で更新する場合は churn-scan.py を再実行して全 table を置き換える。manual 編集禁止。 -->
 <table>
 <tr><th>pattern</th><th class="num">マッチ数</th><th class="num">真 churn</th><th>ノイズの正体</th></tr>
 <tr><td>再度/もう一度</td><td class="num">32</td><td class="num good">~3</td><td><span class="tag tag-noise">noise</span>「再度出力」「再度チェック」等の正常な反復依頼</td></tr>

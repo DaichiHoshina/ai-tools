@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """churn pattern + noise 除去後「真 churn」集計 (2026-06-03)"""
-import sys, json, glob, os, re
+import sys, json, glob, os, re, getpass
 from collections import Counter
 from datetime import datetime, timezone
 
 PROJ = os.path.expanduser("~/.claude/projects")
+# literal username を避け、実行 user から slug を導出する
+_USER = getpass.getuser()
+# ドット区切りをハイフンに変換 (例: first.last → first-last)
+_USER_SLUG = _USER.replace(".", "-")
+_HOME_SLUG = f"-Users-{_USER_SLUG}"
 FROM = sys.argv[1] if len(sys.argv) > 1 else "2026-05-27"
 TO = sys.argv[2] if len(sys.argv) > 2 else "2026-06-04"  # exclusive
 SCOPE = sys.argv[3] if len(sys.argv) > 3 else "ai-tools"
@@ -13,8 +18,11 @@ dt_from = datetime.fromisoformat(FROM).replace(tzinfo=timezone.utc)
 dt_to = datetime.fromisoformat(TO).replace(tzinfo=timezone.utc)
 
 if SCOPE == "ai-tools":
-    files = glob.glob(f"{PROJ}/-Users-daichi-hoshina-ai-tools*/**/*.jsonl", recursive=True)
-    files += glob.glob(f"{PROJ}/-Users-daichi-hoshina-ai-tools*/*.jsonl")
+    # CHURN_PROJ_DIR_AI_TOOLS env で個別 override 可 (CI 等で任意パス指定)
+    # 注意: env 値に glob wildcard を含めない (default 値の末尾 `*` と二重展開 `*/**/*.jsonl` になり意図せぬ match を起こす)
+    _dir = os.environ.get("CHURN_PROJ_DIR_AI_TOOLS", f"{PROJ}/{_HOME_SLUG}-ai-tools*")
+    files = glob.glob(f"{_dir}/**/*.jsonl", recursive=True)
+    files += glob.glob(f"{_dir}/*.jsonl")
 else:
     files = glob.glob(f"{PROJ}/**/*.jsonl", recursive=True)
 files = sorted(set(files))
@@ -83,7 +91,7 @@ for fp in files:
             for line in f:
                 try:
                     d = json.loads(line)
-                except Exception:
+                except json.JSONDecodeError:
                     continue
                 if d.get("type") != "user":
                     continue
@@ -97,7 +105,7 @@ for fp in files:
                     continue
                 try:
                     t = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                except Exception:
+                except ValueError:
                     continue
                 if not (dt_from <= t < dt_to):
                     continue
@@ -132,7 +140,9 @@ for fp in files:
 
                 if len(txt) <= 20 and not is_cmd:
                     short_counter[txt] += 1
-    except Exception:
+    except (OSError, UnicodeDecodeError) as e:
+        # file open / read 失敗は silent skip でなく stderr に WARN を出す
+        print(f"[WARN] skip {fp}: {type(e).__name__}: {e}", file=sys.stderr)
         continue
 
 days = (dt_to - dt_from).days
