@@ -44,6 +44,8 @@ Long-form (Notion / Design Doc / PRD / RCA) → `guidelines/writing/long-form-do
 
 Prohibit AI-generation markers (`// AI-generated`, `// TODO: AI suggested` etc).
 
+詳細: `guidelines/writing/code-comment.md` (WHY / 重要 memo / 削除 7 カテゴリ / fail-safe テンプレ)
+
 ## Reference: Pre-post Self-check
 
 Former "self-check 4 questions" merged into `guidelines/writing/PRINCIPLES.md` **"4 questions before writing"** (who reads / what decides / data source / why) + **"6-item pre-output checklist"**. Verify both before posting.
