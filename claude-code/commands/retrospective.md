@@ -55,6 +55,9 @@ Delegation rule: 1 domain = 1 agent call. Never bundle multiple domains into 1 p
 
 If writing failures detected (user feedback "hard to read" / "AI-smelling" / "so what?"), accumulate examples to memory for next session's hook reference.
 
+**保存先判断 (report / HTML 含む全保存 step 共通)**:
+分析対象セッションに社内 product 名 / 識別子 (social-hit term: `rules/public-repo-private-data-block.md` 参照) が含まれる可能性がある場合は `~/.claude/references-private/` に保存する。含まないと確実な場合のみ `docs/reports/` (public) に保存可。判断に迷う場合は AskUserQuestion で `docs/reports/ (public)` vs `~/.claude/references-private/ (private)` を提示してから保存する。
+
 Save to: `~/.claude/projects/{project}/memory/writing_failure_{topic}.md`
 
 Format:

@@ -684,6 +684,7 @@ _check_social_hit() {
     ADDITIONAL_CONTEXT="ai-tools repo は public。社内 product 名 / 識別子を public repo に書き込めません。
 対処: file_path を ~/.claude/references-private/ に切り替えるか、term を削除 / 匿名化して再実行してください。
 ログ: ~/.claude/logs/social-hit-block.log"
+    printf '%s\n' "${MESSAGE}" >&2
     _append_social_hit_log "$TOOL_NAME" "$word_list" "$file_path"
   fi
 }
