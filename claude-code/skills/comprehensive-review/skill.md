@@ -126,3 +126,16 @@ Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 ```
 
 Zero findings → `### Critical: 0`. Skipped → `### skipped: <perspective> (<reason>)`. Tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question.
+
+## writing 規約 enforcement (writing / docs / comment / prompt diff 検出時のみ適用)
+
+writing 系 diff が含まれる場合、Step 4.5 の自己確認で以下を追加 check する。
+
+| 対象 | canonical | 主要観点 |
+|---|---|---|
+| 通常文章 (PR / DD / docs) | `guidelines/writing/PRINCIPLES.md` | NG 辞書 (AI 定型語 / 難読漢語 / カタカナ造語) / 文単位品質 (弱い表現 / 冗長表現) / chat → 外向き翻訳 8 観点 |
+| コードコメント | `guidelines/writing/code-comment.md` | WHY / 重要 memo 2 値分類 / 削除 7 カテゴリ / 識別子保護 |
+| AI / LLM 向け prompt | `guidelines/writing/prompt-engineering.md` | XML タグ分離 / few-shot 3-5 / CoT 推論先行 / positive 指示 |
+| 長文文書構造 | `guidelines/writing/long-form-doc.md` | PREP / SCQA / SDS / Minto / KPT / YWT / 報告書 3 層 |
+
+検出時は confidence-80 filter を遵守し、Critical / Warning に分類する。
