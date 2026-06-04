@@ -111,6 +111,19 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
             .cmd // "/flow"
           )
         }
+      ] |
+      sort_by(.flow_ts) as $sorted_invs |
+      # next_flow_ts を付与: i 番目は (i+1) 番目の flow_ts、最後は遠未来
+      [
+        range($sorted_invs | length) as $i |
+        $sorted_invs[$i] +
+        {
+          next_flow_ts: (
+            if ($i + 1) < ($sorted_invs | length)
+            then $sorted_invs[$i + 1].flow_ts
+            else "9999-12-31T23:59:59Z" end
+          )
+        }
       ] as $flow_invocations |
 
       # developer-agent の tool_use を収集 (tool_id → 起動 timestamp)
@@ -153,10 +166,10 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
       $flow_invocations[] |
       . as $inv |
 
-      # この invocation より後の developer-agent を抽出 (同 session)
+      # この invocation の時間区間内の developer-agent を抽出 (同 session、次 flow 直前まで)
       [
         $dev_agents[] |
-        select(.start_ts >= $inv.flow_ts)
+        select(.start_ts >= $inv.flow_ts and .start_ts < $inv.next_flow_ts)
       ] as $my_agents |
 
       # 各 agent の T_task (start → result)
