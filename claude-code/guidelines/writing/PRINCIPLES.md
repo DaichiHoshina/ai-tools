@@ -418,6 +418,8 @@ PR / DD / RCA / Notion / commit message の本文 / 見出し / 箇条書きで 
 
 **弱い表現 (block)**: かもしれない / と思います / と思われる / 可能性がある
 
+**冗長表現 (block)**: することができる / することが可能 / を行う / ということになる / であると言えます
+
 **非日常英語 (block)**: leverage / utilize / facilitate / mitigate / comprehensive / robust / seamless / holistic / granular / rationale / paradigm
 
 > 中間漢語 (網羅 / 整合 / 妥当 / 逐次 / 担保 / 起因 / 是正 等) は block 対象外。「中学生が辞書なしで読める」基準で都度判断、難読 list 拡大は incident ベースのみ。
