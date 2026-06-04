@@ -12,6 +12,31 @@ Copy this template, fill all 6 sections (no placeholder left blank), paste to `T
 
 4 項目全て ✓ で発火する。未充足は parent が完了させてから委譲する (探索 phase の subagent 押し付け禁止)。
 
+## 0.5 Prompt quality rules (verify cmd literal + parent fact-check)
+
+委譲 prompt の品質と完了報告の信頼性を担保する 2 rule。
+
+### A. verify cmd literal 必須
+
+委譲 prompt の verify cmd は **bash literal で実行可能な形** で渡す。「〜で確認」の動作説明は禁止。
+
+- ❌ 「diff で何が違うか確認」「lint 通るか確認」
+- ✅ 「`diff -u $A $B` 実行、exit code 1 なら差分の冒頭 5 行を報告」「`npm run lint 2>&1 | tail -20` 実行、exit 0 か stderr 内容を報告」
+
+**Why**: agent が verify 解釈で揺れると同 prompt でも結果がバラつき、parent 監督が困難になる。
+
+### B. Parent fact-check on agent return
+
+agent 完了報告は **即採用せず parent 側で 1 つ以上の cross-check** を行う。
+
+- 数値主張 → 数式 / 単位整合確認 (例: 「真の peak は X」報告に対し `n_dev × avg vs wall` で再計算)
+- 実測主張 → 1 sample で parent inline 再現
+- file 変更主張 → `git diff --stat` で行数 / 変更 file 数確認
+
+**fact-check 不要 case**: verify cmd を agent 側で実行させ結果を報告に含めるよう指示済、かつ verify cmd が deterministic (lint / typecheck / bats など、再実行で同結果) な場合。
+
+**Why**: 2026-06-04 session の peak_concurrency 検証で agent が「真の wall=56s」と誤判定、parent が即採用し後続判断を一度誤った。`[[parallel-fire-format-peak-concurrency]]` と同種「parent 自発判断依存からの脱却」。
+
 ## 1. Target files & edits
 
 Absolute paths + exact changes (no inference):

@@ -688,6 +688,35 @@ _check_parent_prep_missing() {
 }
 
 # ====================================
+# 口語起動 marker 検出 (warn-only)
+# Task tool 発火 prompt に口語起動 marker (お任せ / 全部 等) が含まれ、
+# かつ file:line 明示がない場合に warn を返す (block はしない)
+# 引数: prompt (string)
+# 戻り値: 0 = marker 検出 (warn 対象) / 1 = marker なし or file:line 明示済
+# ====================================
+_check_colloquial_trigger_missing_delegation() {
+  local prompt="$1"
+
+  # marker list: 口語起動を示す JP/EN フレーズ (case-insensitive POSIX ERE)
+  # お任せ / おまかせ / 全部 / 全消化 / できるもの全部 / 修正して欲しい / 改善して / 全自動で / auto で
+  if ! printf '%s' "$prompt" | grep -qiE \
+    'お任せ|おまかせ|全部|全消化|できるもの全部|修正して欲しい|改善して|全自動で|auto[[:space:]]*で'; then
+    return 1  # marker なし → warn 不要
+  fi
+
+  # file:line が明示されていれば事前準備済とみなし warn しない
+  # _check_parent_prep_missing と同一判定 (空白境界 + URL host:port 除外)
+  if printf '%s' "$prompt" | grep -qE "(^|[[:space:]])[a-zA-Z0-9_./-]+\.[a-zA-Z]+:[0-9]+"; then
+    return 1  # file:line あり → 委譲準備済
+  fi
+  if printf '%s' "$prompt" | grep -qiE "(verify cmd|DoD|target file)[ \t]*[:=]"; then
+    return 1  # label 付き keyword あり → 委譲準備済
+  fi
+
+  return 0  # marker 検出 + file:line なし → warn 対象
+}
+
+# ====================================
 # worktree session 内 main repo 直接 Edit guard
 # worktree session (CWD が **/.claude/worktrees/* 配下) で file_path が
 # worktree 外を指す Edit/Write/NotebookEdit を exit 2 でブロックする
@@ -1095,6 +1124,10 @@ PYEOF
     if _check_parent_prep_missing "$TASK_PROMPT"; then
       PREP_WARN="
 【parent 事前準備 missing 疑い】≥500 word の prompt に target / file:line / verify / DoD いずれも未出現。委譲前 checklist を充足してから発火 (references/developer-agent-delegation-prompt.md §0)"
+    fi
+    if _check_colloquial_trigger_missing_delegation "$TASK_PROMPT"; then
+      PREP_WARN="${PREP_WARN}
+【colloquial 起動検出】口語トリガー (お任せ/全部/改善して 等) + file:line 未明示。inline throttle に注意、複数 task 列挙なら 1 message 内 N tool_use 並列発火を確認"
     fi
 
     if [ "${SUBAGENT_TYPE}" = "general-purpose" ]; then

@@ -630,3 +630,29 @@ _make_long_prompt_no_prep() {
 #    (example.com:8080 が file:line として誤判定 → exit 1 になる)
 # 5. 修正版に戻す → 全件 PASS
 # pass-by-coincidence 排除確認済
+
+# =============================================================================
+# _check_colloquial_trigger_missing_delegation Tests
+# =============================================================================
+
+@test "_check_colloquial_trigger: detects お任せ without file:line" {
+  local HOOK_FILE="${HOOKS_DIR}/pre-tool-use.sh"
+  # 口語起動 marker (お任せ) + file:line なし → warn 対象 (exit 0)
+  local prompt="お任せで全部やっておいて。あとはうまくやってほしい。作業はそちらに委ねる。"
+  run bash -c "source '${HOOK_FILE}' && _check_colloquial_trigger_missing_delegation \"\$1\"" _ "${prompt}"
+  [ "$status" -eq 0 ]
+}
+
+@test "_check_colloquial_trigger: does not warn when file:line is explicit" {
+  local HOOK_FILE="${HOOKS_DIR}/pre-tool-use.sh"
+  # 「全部」を含むが file:line 明示あり → warn しない (exit 1)
+  local prompt="全部修正して欲しい。対象: src/hooks/pre-tool-use.sh:670 の関数を更新する。verify cmd: shellcheck を実行する。"
+  run bash -c "source '${HOOK_FILE}' && _check_colloquial_trigger_missing_delegation \"\$1\"" _ "${prompt}"
+  [ "$status" -eq 1 ]
+}
+
+# self-verify red 化手順 (_check_colloquial_trigger 用):
+# 1. 関数本体を `return 1` のみに置換 → "detects お任せ" (positive) が FAIL
+# 2. 関数本体を `return 0` のみに置換 → "does not warn when file:line is explicit" (false-positive) が FAIL
+# 3. 元の実装に戻す → 全件 PASS
+# pass-by-coincidence 排除確認済
