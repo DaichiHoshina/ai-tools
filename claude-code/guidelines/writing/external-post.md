@@ -1,6 +1,6 @@
 # 外部発信文章 (PRコメント / Slack / Issue / Notion共通)
 
-共通文章原則は [PRINCIPLES.md](PRINCIPLES.md) 参照、本ファイルは **短文向けの適用ルール**を扱う。
+共通文章原則は [PRINCIPLES.md](PRINCIPLES.md) 参照。
 
 [pr-description.md](pr-description.md) の原則を「PRコメント / レビュー依頼 / Slack返信 / Issueコメント / Notion投稿」にも適用する。
 

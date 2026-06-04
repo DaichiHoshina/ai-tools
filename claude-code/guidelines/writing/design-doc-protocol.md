@@ -1,6 +1,6 @@
 # DesignDoc作成プロトコル
 
-DD = DesignDoc。共通文章原則は [PRINCIPLES.md](PRINCIPLES.md) 参照、本ファイルは **DD特化のプロトコル** を扱う。
+DD = DesignDoc。共通文章原則は [PRINCIPLES.md](PRINCIPLES.md) 参照。
 
 ## 前提: DDと詳細設計書は別物
 

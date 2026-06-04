@@ -2,7 +2,7 @@
 
 ドキュメント種別の役割分担・関係性・保存先・体系原則。`/docs` / `/design-doc` / `/prd` 等の保存先判断時に参照。
 
-> 本ファイルは「**どこに何を書くか**」の判断ガイド。**どう書くか** (執筆原則) は [PRINCIPLES.md](PRINCIPLES.md) / [long-form-doc.md](long-form-doc.md) / [design-doc-protocol.md](design-doc-protocol.md) 参照。
+> **どう書くか** (執筆原則) は [PRINCIPLES.md](PRINCIPLES.md) / [long-form-doc.md](long-form-doc.md) / [design-doc-protocol.md](design-doc-protocol.md) 参照。
 
 ## 6種別の役割分担
 
