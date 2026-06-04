@@ -17,6 +17,15 @@
 
 ---
 
+## 2.1.153 (2026-06-05 検出, stable)
+
+新規 Opportunity なし。2.1.153 単一バージョン範囲、リポジトリ影響 grep 確認済み（`modelPicker:setAsDefault` keybinding 不在 / `--strict-mcp-config` 利用なし / `skipLfs` は marketplace LFS opt-in で現 source 影響なし）。
+
+- `modelPicker:setAsDefault` → `modelPicker:thisSessionOnly` rename [2.1.153]: custom keybindings.json 不在のため影響なし、skip
+- `/model` 既定保存挙動 (selection を新 session default 化、`s` で session-only) [2.1.153]: harness 既定挙動変更、設定不要
+- `skipLfs` plugin marketplace option [2.1.153]: LFS 未使用 marketplace source のため採用余地なし、skip
+- 残りは bugfix（MCP reconnect-loop / API gateway credential / subagent MCP `--strict-mcp-config` 尊重 / Windows installer / background session 多数 / VSCode shutdown 等）— 設定変更不要
+
 ## 2.1.152 (2026-06-04 検出, stable)
 
 - [ ] **`MessageDisplay` hook event**: assistant message text の display 直前に hook が transform / hide できる新 event。jp-quality / AI 定型語 を出力側でも block / mask する用途に直結 (現状 pre-tool-use の入力側 block のみ、chat 応答内の AI 定型語は素通り) — 検討箇所: `hooks/pre-tool-use.sh` (term 抽出 logic 流用) / `templates/settings.json.template` hooks section / 新規 `hooks/message-display.sh`
