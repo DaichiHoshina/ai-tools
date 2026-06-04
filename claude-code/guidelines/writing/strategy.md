@@ -155,3 +155,4 @@ docs/
 - [design-doc-protocol.md](design-doc-protocol.md) — DDプロトコル
 - `guidelines/common/notion-writing.md` — Notion固有フォーマット
 - `references/writing-patterns.md` — 詳細パターン (書き直しPhase / textlint)
+- [prompt-engineering.md](prompt-engineering.md) — AI 向け prompt / instruction (ヒト向け文書とは別軸)
