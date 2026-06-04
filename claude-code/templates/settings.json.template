@@ -442,7 +442,9 @@
     "test": "name-only",
     "ui-skills": "name-only",
     "uiux-review": "name-only",
-    "verify-once": "name-only"
+    "verify-once": "name-only",
+    "_archive:config-update": "off",
+    "_archive:pr-comments": "off"
   },
   "outputStyle": "ai-tools-format",
   "language": "japanese",
