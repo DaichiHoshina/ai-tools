@@ -95,7 +95,7 @@ _assert_required_keys() {
   _assert_required_keys_done=1
   # PRINCIPLES.md 不在時は別経路で既に silent pass → この検査はスキップ
   [[ -f "$_principles_file" ]] || return 0
-  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)" "難読漢語 (block)" "非日常英語 (block)")
+  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)")
   local key
   for key in "${required_keys[@]}"; do
     local result
@@ -170,7 +170,7 @@ _block_if_ai_jargon() {
 
   # inject byte size 計測: 4 list の合計抽出 byte 数を計算してログ出力
   # _extract_term_list 結果を再利用（grep/extract を cache して latency 最小化）
-  local _inject_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)")
+  local _inject_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)")
   local _inject_total=0
   local _inject_key
   for _inject_key in "${_inject_keys[@]}"; do
@@ -234,6 +234,20 @@ block list (この session で全て回避): ${_full_list}"
     local _full_list
     _full_list=$(_extract_term_list "$_principles_file" "非日常英語 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
     ADDITIONAL_CONTEXT="日常で使う英語または日本語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+
+block list (この session で全て回避): ${_full_list}"
+    _append_jp_quality_log "$context_label" "$word_list" "block"
+    return
+  fi
+  # 弱い表現 (block)
+  if ! hit_words=$(_check_term_list "$text" "弱い表現 (block)"); then
+    GUARD_CLASS="Forbidden"
+    local word_list
+    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
+    MESSAGE="${ICON_CRITICAL} 弱い表現 block: [${word_list}] (${context_label})"
+    local _full_list
+    _full_list=$(_extract_term_list "$_principles_file" "弱い表現 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
+    ADDITIONAL_CONTEXT="弱い表現を断定または「検証が必要」に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
 
 block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
