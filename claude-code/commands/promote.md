@@ -8,7 +8,7 @@ effort: medium
 
 memory file を CLAUDE.md / ai-tools / project rules へ統合し、memory 側を削除する半自動 flow。
 
-詳細振り分け基準・固有名詞辞書: [`references/memory-promotion-flow.md`](../references/memory-promotion-flow.md)
+詳細振り分け基準・固有名詞辞書: `~/.claude/references-private/memory-promotion-flow.md`
 
 ## Input
 
@@ -32,7 +32,7 @@ ls ~/.claude/projects/<project>/memory/
 
 ### Step 2: 固有名詞 grep (project / ai-tools 振り分け)
 
-`references/memory-promotion-flow.md` §7 辞書を都度 Read (literal heredoc 化禁止、辞書更新で desync 回避)。
+`~/.claude/references-private/memory-promotion-flow.md` §7 辞書を都度 Read (literal heredoc 化禁止、辞書更新で desync 回避)。
 
 ```bash
 # 辞書 hit check
@@ -87,7 +87,7 @@ cd ~/ai-tools/claude-code && ./sync.sh to-local --yes
 ## When to use
 
 - `/scan` で session 開始時の trigger 提示
-- 同 topic 3 file 以上検知時 (`memory-promotion-flow.md` §6 trigger B)
+- 同 topic 3 file 以上検知時 (`~/.claude/references-private/memory-promotion-flow.md` §6 trigger B)
 - MEMORY.md 50 行超 (trigger A)
 - file 単体 5KB / 150 行超 (trigger D)
 - user 明示判断時
@@ -103,7 +103,7 @@ cd ~/ai-tools/claude-code && ./sync.sh to-local --yes
 
 ## 関連
 
-- `references/memory-promotion-flow.md` — 振り分け基準 SoT
+- `~/.claude/references-private/memory-promotion-flow.md` — 振り分け基準 SoT
 - `references/memory-usage.md` — memory 使い分け基礎
 - `commands/memory-save.md` — memory 書き込み side
 - `~/.claude/CLAUDE.md` "## auto memory" — type 定義

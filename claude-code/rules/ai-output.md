@@ -35,7 +35,7 @@ Long-form (Notion / Design Doc / PRD / RCA) → `guidelines/writing/long-form-do
 外向き text (PR body / commit / Issue / comment / Slack / Notion) に issue/PR/discussion の URL を貼る前に、`gh issue view <N>` または `gh pr view <N>` (または `gh api`) で番号の実在と title の一致を検証する。
 
 - 番号を推測や記憶から組み立てない。直前の会話で確定した URL のみ literal で再利用し、新規番号を出力する場合は必ず gh で確認する。
-- repo 跨ぎ (snkrdunk.com / docs / snkrdunk 等) では URL の repo 部分も取り違えやすいため、`owner/repo#N` の repo 名も検証対象に含める。
+- repo 跨ぎ (work-repo / docs 等) では URL の repo 部分も取り違えやすいため、`owner/repo#N` の repo 名も検証対象に含める。
 - 検証できない環境 (gh 不在 / 権限なし) では URL を断定せず、user に番号確認を促す。
 
 **Why**: 番号取り違えは diff に出ず review でも見逃され、user が毎回手で訂正する churn 源 (retrospective 2026-05-31 検出)。

@@ -60,7 +60,7 @@ is_excluded_dir() {
   case "${base}" in
     tmp-wt-*|private-tmp-wt-*|_memory_archive_*) return 0 ;;
   esac
-  # 数字 suffix worktree (例: snkrdunk.com-12345)
+  # 数字 suffix worktree (例: <repo>-12345)
   if echo "${base}" | grep -qE '\-[0-9]+$'; then
     return 0
   fi

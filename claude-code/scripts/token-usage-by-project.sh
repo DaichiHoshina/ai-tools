@@ -2,7 +2,7 @@
 # Usage:
 #   ./scripts/token-usage-by-project.sh                         # 過去 30 日、全 project、top 20
 #   ./scripts/token-usage-by-project.sh --days 7 --top 5
-#   ./scripts/token-usage-by-project.sh --project snkrdunk      # 部分一致 filter
+#   ./scripts/token-usage-by-project.sh --project <name>         # 部分一致 filter
 #
 # Diagnostic hint: cache_read% > 90% = long-session accumulation. Fix = session split (1 task = 1 session, /clear at boundary), not config size.
 set -euo pipefail

@@ -37,6 +37,6 @@ Single source of truth: `claude-code/lib/writing-self-check.sh` arrays `_WRITING
 ## Example
 
 ```
-🔴 Critical: [writing] Unsupported "required" (docs/design/oripa.md:45)
+🔴 Critical: [writing] Unsupported "required" (docs/design/<feature>.md:45)
 Fix: "SET LOCAL required" → "SET LOCAL required; session-scoped SET on pool leaks tenant to next request"
 ```

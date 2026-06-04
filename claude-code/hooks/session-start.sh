@@ -246,7 +246,7 @@ fi
 
 # --- memory promote trigger 提示 (1 日 1 回上限) ---
 # trigger A: MEMORY.md 50 行超 / trigger B: 同 prefix 3 file 以上
-# 詳細: references/memory-promotion-flow.md §6
+# 詳細: ~/.claude/references-private/memory-promotion-flow.md §6
 _PROMOTE_STATE_DIR="${HOME}/.claude/state"
 # project dir 名は Claude harness が生成する slug 形式 (cwd の "/" "." を "-" に置換した形)
 # _CWD を slug 化して直接 path 解決
@@ -278,7 +278,7 @@ if [[ -f "${_MEMORY_INDEX}" ]] && [[ ! -f "${_PROMOTE_STATE_FILE}" ]]; then
         _PROMOTE_HITS+=("同 topic 3 file 以上: ${_TOPIC_COUNTS} (trigger B)")
     fi
     if (( ${#_PROMOTE_HITS[@]} > 0 )); then
-        _PROMOTE_MSG="${ICON_WARNING} memory 昇格候補あり: $(printf '%s; ' "${_PROMOTE_HITS[@]}")\n  → \`/promote\` で SoT 集約検討 (詳細: references/memory-promotion-flow.md)\n\n"
+        _PROMOTE_MSG="${ICON_WARNING} memory 昇格候補あり: $(printf '%s; ' "${_PROMOTE_HITS[@]}")\n  → \`/promote\` で SoT 集約検討 (詳細: ~/.claude/references-private/memory-promotion-flow.md)\n\n"
         _AC_PREFIX+="${_PROMOTE_MSG}"
         # state file 作成 (本日 1 回限り)
         mkdir -p "${_PROMOTE_STATE_DIR}"
