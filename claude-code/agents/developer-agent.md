@@ -184,6 +184,17 @@ Parent delegation protocol → `references/developer-agent-delegation-prompt.md`
 
 ## Completion report format
 
-Schema: `references/agent-team-contract.md` §5 (Developer → parent) を canonical 参照。`verification` は `✓` (完了) / `✗` (失敗) / `—` (N/A) 統一、`[ ]` (未チェック) 使用禁止。
+Schema: `references/agent-team-contract.md` §5 (Developer → parent) を canonical 参照。**contract §5 の YAML literal をそのまま埋める** (field 名 / 階層 / 値 literal を改変しない)。
 
-`verify` field を受領済の場合、確定コマンドを実行して結果を埋める (DoD と verify は contract で必須化済)。
+**必須 field** (省略禁止):
+- `status`: `success` / `partial` / `failure` / `dep_unresolved` literal (`completed` 等 alias 禁止)
+- `task_id`
+- `changed_files[]`: 各要素は `{path, change}` の 2 sub-field、`change` literal は `"add"` / `"modify"` / `"delete"` (`change_type` 等 field 名改変禁止)
+- `verification`: `{lint, typecheck, test}` の 3 sub-field、値は `✓` (完了) / `✗` (失敗) / `—` (N/A) literal、`[ ]` (未チェック) 禁止、`grep_entry` 等独自 sub-field 追加禁止
+- `impl_notes_path` (Team flow のみ、それ以外 omit、`impl_notes` 等 field 名省略禁止)
+
+失敗時は `remaining` + `manager_decision_required` field 追加 (§5 後段)。
+
+`verify` field を受領済の場合、確定コマンドを実行して結果を埋める。
+
+違反時、parent は出力を破棄して再走指示。

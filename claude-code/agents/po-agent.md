@@ -45,8 +45,9 @@ Schema は `references/agent-team-contract.md` §1 (PO → parent) を canonical
 **必須 field** (省略禁止): `execution_mode` / `decision_reason` / `worktree` / `reviewer_qa_criteria` / `manager_instruction`
 
 **禁止事項**:
-- contract §1 にない field を独自追加 (`strategy` / `worktree.create` 等) **禁止**
+- contract §1 にない field を独自追加 (`strategy` / `worktree.create` / `worktree.rationale` 等) **禁止** — 補足は `decision_reason` に集約
 - `manager_instruction` を Markdown 文字列で返す **禁止** — contract §1 通り `goal` / `constraints` / `priority` の YAML 構造で返す
+- `manager_instruction.priority` を scalar (`p1` / `high` 等) で返す **禁止** — 配列 `["<top task>", "<next>"]` literal
 - `reviewer_qa_criteria` 省略 **禁止** — 軽量 task でも default 値 (`p0: [type-safety, security, data-integrity]` / `p1: []` / `refix_loop_limit: 1`) を literal で返す
 - `worktree` を `worktree.path: null` 等の null 化 **禁止** — main 継続なら `path: <main 作業 dir>` / `branch: main` / `base_branch: main` を埋める
 
