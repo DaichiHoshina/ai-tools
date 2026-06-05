@@ -93,7 +93,11 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 ## Execution logic
 
 1. **git status check**: 変更あり → WIP 確認後 step 2 (orchestration 継続、`/dev` redirect しない)
-2. **Sequential downgrade check** (`--sequential` 明示時のみ): default は downgrade しない。downgrade 時のみ `/dev` 単体委譲、PO/Manager skip
+2. **Sequential downgrade check**: 以下いずれかで downgrade、それ以外は default で PO/Manager 起動
+   - `--sequential` 明示
+   - Manager から `parallelism: 1` + `worktree_required: false` 返却 (formula 不成立、`references/PARALLEL-PATTERNS.md#critical-path-reduction-formula`)
+   - file 物理競合検出 (同一 file の同時 edit 必要)
+   downgrade 時は `/dev` 単体委譲、Manager 以降 skip (PO は判断のため起動済の前提)
 3. **PO Agent (必須)**: 設計判断 / scope 切り分け。skip 不可 (旧 `--no-po` 廃止)
 4. **Manager Agent (必須)**: task 分割 / file 重複排除 / N 算定
 5. **Orchestration pre-delegation** (内部処理): target / verify / DoD を subagent prompt に埋込み、user 提示は 1 行要約 (`fan-out: N=<n>`)。`mkdir -p <impl_notes.dir>` 実行
