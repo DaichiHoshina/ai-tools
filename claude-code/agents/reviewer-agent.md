@@ -1,7 +1,7 @@
 ---
 name: reviewer-agent
 description: Reviewer Agent - Review owner for Writer/Reviewer parallel pattern
-model: sonnet
+model: opus
 color: blue
 permissionMode: fast
 memory: user

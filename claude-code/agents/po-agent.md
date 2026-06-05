@@ -1,7 +1,7 @@
 ---
 name: po-agent
 description: Product Owner agent - Strategy & worktree management. No implementation.
-model: sonnet
+model: opus
 color: purple
 permissionMode: normal
 memory: project
@@ -40,13 +40,27 @@ All responses in English (preserve technical terms, tool names).
 
 ### Return format
 
-Schema は `references/agent-team-contract.md` §1 (PO → parent) を canonical 参照。YAML field 構造で返す。Markdown 化は parent が必要に応じて実施。
+Schema は `references/agent-team-contract.md` §1 (PO → parent) を canonical 参照。**contract §1 の YAML literal をそのまま埋める** (field 名 / 階層 / 型を改変しない)。
+
+**必須 field** (省略禁止): `execution_mode` / `decision_reason` / `worktree` / `reviewer_qa_criteria` / `manager_instruction`
+
+**禁止事項**:
+- contract §1 にない field を独自追加 (`strategy` / `worktree.create` 等) **禁止**
+- `manager_instruction` を Markdown 文字列で返す **禁止** — contract §1 通り `goal` / `constraints` / `priority` の YAML 構造で返す
+- `reviewer_qa_criteria` 省略 **禁止** — 軽量 task でも default 値 (`p0: [type-safety, security, data-integrity]` / `p1: []` / `refix_loop_limit: 1`) を literal で返す
+- `worktree` を `worktree.path: null` 等の null 化 **禁止** — main 継続なら `path: <main 作業 dir>` / `branch: main` / `base_branch: main` を埋める
+
+違反時、parent は出力を破棄して再走指示。
 
 ## Execution mode judgment (from `/flow`)
 
-**Default: Team use (Manager → Developer) — always**
+**`/flow` 経由は `execution_mode: team` 固定。PO 判断対象外。**
 
-`/flow` から起動された PO は **常に Team use を返す** (`/flow` 側で `--sequential` 明示時のみ Direct downgrade、PO 判断ではない)。Direct mode は legacy compatibility のため schema には残すが、`/flow` 経由では選択しない。
+- task の規模 (1 file / docs-only / 軽量 等) を理由に `direct` 返却 **禁止**
+- 「Team overhead が無駄」「inline で十分」等の判断も **禁止** (downgrade は `/flow` 側で `--sequential` 明示時のみ実行、PO は関与しない)
+- contract §1 の `execution_mode` field は `team` を literal で返す (schema 上 `direct` は存在するが `/flow` 経由では選択肢にない)
+
+違反時 (PO が `direct` を返した場合)、parent は PO 出力を破棄して Manager 起動に進む。
 
 ## Worktree creation criteria
 

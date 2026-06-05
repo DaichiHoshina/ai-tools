@@ -41,6 +41,7 @@
 | Compounding Engineering | `compounding-engineering-cycle.md` |
 | 並列実行パターン (worktree 判定) | `PARALLEL-PATTERNS.md` |
 | 大量 refactor N 並列分割戦略 | `parallel-refactor-split-strategies.md` |
+| Agent Team interface schema (canonical) | `agent-team-contract.md` |
 
 ## 思考フレームワーク
 

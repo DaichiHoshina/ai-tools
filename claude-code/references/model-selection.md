@@ -8,7 +8,7 @@
 |--------|-----------|---------|------|
 | バッチ処理、型変換、フォーマット整形、大量ファイル処理 | Haiku 4.5 | `claude-haiku-4-5-20251001` | `/model` → haiku |
 | 単純修正、調査、コード読解、通常開発 | **Sonnet 4.6**（デフォルト） | `claude-sonnet-4-6` | そのまま |
-| 根本原因分析、設計判断、複雑バグ解析、セキュリティ監査 | Opus 4.8 | `claude-opus-4-8` | `/model` → opus |
+| 根本原因分析、設計判断、複雑バグ解析、セキュリティ監査 | Opus 4.7 | `claude-opus-4-7` | `/model` → opus |
 | タスク難易度が不明、動的な使い分け | Auto（Max subscribers限定） | - | `/model` → auto |
 
 **モデル切替は明示 `/model` を推奨**（自然語トリガーは誤判定リスクのため不使用）。
@@ -19,9 +19,10 @@
 
 各 agent の frontmatter で指定済み。
 
-**方針**: parent (chat) を Opus 4.8 で指揮、subagent は Sonnet 4.6 統一（2026-05-22〜、Opus 4.8 release 2026-05-28 で `claude-opus-4-7` → `claude-opus-4-8` swap）。Haiku/Opus の使い分けは廃止、コスト・品質バランス重視。
+**方針**: parent (chat) を Opus 4.7 で指揮、subagent は判断系=Opus 4.7 / 実行系=Sonnet 4.6 に分離 (2026-06-05〜、判断品質向上のため subagent 統一方針から分離方針に変更)。
 
-- **Sonnet 4.6 (全 subagent)**: po-agent, manager-agent, developer-agent, explore-agent, reviewer-agent, verify-app, root-cause-analyzer
+- **Opus 4.7 (判断系 subagent)**: po-agent (戦略 / 設計判断), manager-agent (task decomp / 並列度算定), reviewer-agent (12 観点 review / 品質判定), root-cause-analyzer (複雑バグ解析 / 5 Why)
+- **Sonnet 4.6 (実行系 subagent)**: developer-agent (impl / refactor), explore-agent (read-only 探索), verify-app (build / test 実行)
 
 ## effortレベル
 
@@ -35,7 +36,7 @@
 | `xhigh` | 高難度タスク・設計判断・深い分析（Opus 系で利用可能） | `claude --effort xhigh` |
 | `max` | 最難デバッグ・大規模RCA。常用非推奨（overthinking で逆効果になる報告あり） | `claude --effort max` |
 
-> `xhigh` は Opus 系限定（v2.1.111〜、`claude --help` の `--effort` choices で確認可）。Opus 4.8 では `effort` default が `high`。他モデルでは `high` にフォールバック。
+> `xhigh` は Opus 系限定（v2.1.111〜、`claude --help` の `--effort` choices で確認可）。Opus 4.7 では `effort` default が `high`。他モデルでは `high` にフォールバック。
 > 運用方針の出典: Opus 4.7 リリース後の運用ガイド（[Qiita @ot12 2026-04-16](https://qiita.com/ot12/items/06420caf41a34a910c53)、二次情報）。Anthropic 公式 docs での明文化は未確認、コミュニティ知見として参照する。
 
 スクリプトで`--print`使用時は`--fallback-model sonnet`で過負荷時の自動フォールバックも指定可能。

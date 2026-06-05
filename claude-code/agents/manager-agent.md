@@ -1,7 +1,7 @@
 ---
 name: manager-agent
 description: Manager agent - Task decomposition & allocation. Parent runs Developer parallel. No implementation.
-model: sonnet
+model: opus
 color: blue
 permissionMode: normal
 memory: project
@@ -91,11 +91,25 @@ Summary: Based on critical-path-first formula (`LPT_makespan + overhead < sum ×
 
 ## Allocation plan format
 
-Schema: `references/agent-team-contract.md` §3 (Manager → parent) を canonical 参照。YAML field 構造で返す。
+Schema: `references/agent-team-contract.md` §3 (Manager → parent) を canonical 参照。**contract §3 の YAML literal をそのまま埋める** (field 名 / 階層 / 型を改変しない)。
 
-**必須 field** (contract で旧 format から追加されたもの):
-- `verify`: lint / typecheck / test の確定コマンド (parent が pre-delegation で埋め込む対象)
-- `dod`: 1 行 success criteria (Developer の完了判断基準)
+**必須 field** (省略禁止):
+- `execution_mode` (parallel | staged | sequential)
+- `parallelism` (integer)
+- `worktree_required` (boolean)
+- `impl_notes.dir` (absolute path)
+- `tasks[]` 各要素に以下 5 field 全て:
+  - `developer_id`: `dev1` / `dev2` / `dev3` / `dev4` (literal、`dev-1` 等 hyphen 付与禁止)
+  - `task`: `{id, title, description, files, dependencies}` の 5 sub-field object (自由文字列 `task: \|` 禁止)
+  - `verify`: `{lint, typecheck, test}` の 3 sub-field object (該当なしは空文字列 `""`、単一 string 禁止)
+  - `dod`: 1 行 success criteria
+
+**禁止事項**:
+- contract §3 にない field 独自追加禁止
+- `task` / `verify` を自由文字列で返却禁止 (必ず sub-field object)
+- `developer_id` の hyphen 表記禁止 (`dev1` 固定)
+
+違反時、parent は出力を破棄して再走指示。
 
 Note: 5+ tasks → **bundle ≤4 or stage split** (4 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。
 

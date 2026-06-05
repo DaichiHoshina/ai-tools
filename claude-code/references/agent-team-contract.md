@@ -15,7 +15,7 @@
 PO は parent に decision を返す。Markdown でなく **field 構造化** で返す。
 
 ```yaml
-execution_mode: team  # team | direct (direct は --sequential 明示時のみ、default team)
+execution_mode: team  # /flow 経由は team 固定、PO 判断対象外。direct は legacy schema のみ (未使用)
 decision_reason: "<1 行>"
 worktree:
   path: <absolute path>

@@ -1,7 +1,7 @@
 ---
 name: root-cause-analyzer
 description: Root Cause Analyzer specialist - Deep analysis & structural fixes
-model: sonnet
+model: opus
 color: red
 permissionMode: readonly
 memory: project

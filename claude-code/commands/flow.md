@@ -93,21 +93,18 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 ## Execution logic
 
 1. **git status check**: 変更あり → WIP 確認後 step 2 (orchestration 継続、`/dev` redirect しない)
-2. **Sequential downgrade check**: 以下いずれかで downgrade、それ以外は default で PO/Manager 起動
-   - `--sequential` 明示
-   - Manager から `parallelism: 1` + `worktree_required: false` 返却 (formula 不成立、`references/PARALLEL-PATTERNS.md#critical-path-reduction-formula`)
-   - file 物理競合検出 (同一 file の同時 edit 必要)
-   downgrade 時は `/dev` 単体委譲、Manager 以降 skip (PO は判断のため起動済の前提)
+2. **Pre-Manager downgrade check** (静的判定): `--sequential` 明示時のみ即時 downgrade、`/dev` 単体委譲 + PO/Manager skip。それ以外は step 3 へ
 3. **PO Agent (必須)**: 設計判断 / scope 切り分け。skip 不可 (旧 `--no-po` 廃止)
 4. **Manager Agent (必須)**: task 分割 / file 重複排除 / N 算定
-5. **Orchestration pre-delegation** (内部処理): target / verify / DoD を subagent prompt に埋込み、user 提示は 1 行要約 (`fan-out: N=<n>`)。`mkdir -p <impl_notes.dir>` 実行
-6. **Parallel fan-out**: 1 message 内 `Task(developer-agent)×N` 並列発火 (worktree 分離)
-7. **Manager integrate**: 各 dev 完了報告を集約 → MERGED.md を `<impl_notes.dir>/MERGED.md` に persist
-8. **Team review**: `Task(reviewer-agent, --codex)` (comprehensive + codex parallel) → P0/P1 judge
+5. **Post-Manager downgrade check** (動的判定): Manager allocation が `parallelism: 1` *かつ* `worktree_required: false` *または* file 物理競合 (同一 file 同時 edit) → Dev×1 sequential 進行 (worktree 分離 skip = `Auto-apply features` の downgrade 該当、Manager integrate は dev 1 件なら集約 skip、Team review は実施)
+6. **Orchestration pre-delegation** (内部処理): target / verify / DoD を subagent prompt に埋込み、user 提示は 1 行要約 (`fan-out: N=<n>`)。`mkdir -p <impl_notes.dir>` 実行
+7. **Parallel fan-out**: 1 message 内 `Task(developer-agent)×N` 並列発火 (worktree 分離。N=1 sequential 分岐は step 5 で確定済)
+8. **Manager integrate**: 各 dev 完了報告を集約 → MERGED.md を `<impl_notes.dir>/MERGED.md` に persist
+9. **Team review**: `Task(reviewer-agent, --codex)` (comprehensive + codex parallel) → P0/P1 judge
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
    - P0 残 / P1: report & continue (`--auto` 時 stop)
    - codex 未配備: comprehensive single fallback
-9. Post-*impl* sequential steps from Task table (review は step 8 で完了済、skip)
+10. Post-*impl* sequential steps from Task table (review は step 9 で完了済、skip)
 
 ## Bug fix complexity
 
