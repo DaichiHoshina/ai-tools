@@ -40,45 +40,13 @@ All responses in English (preserve technical terms, tool names).
 
 ### Return format
 
-**Team use** (full):
-
-```
-## Execution mode
-Team use
-
-## Decision reason
-[Brief]
-
-## Worktree info
-- Path: [worktree path or "work on main branch"]
-- Branch: [branch name]
-
-## Reviewer QA criteria
-- P0 (re-fix target): [e.g.] type-safety / security / data-integrity
-- P1 (report only): [e.g.] performance / test-coverage
-- Re-fix loop limit: 1×
-
-## Manager instruction
-[See format below]
-```
-
-**Direct execution recommended** (short): Omit Reviewer criteria / Manager instruction sections. Keep 3 sections (exec mode / reason / worktree) mandatory.
+Schema は `references/agent-team-contract.md` §1 (PO → parent) を canonical 参照。YAML field 構造で返す。Markdown 化は parent が必要に応じて実施。
 
 ## Execution mode judgment (from `/flow`)
 
-**Default: Team use (Manager → Developer)**
+**Default: Team use (Manager → Developer) — always**
 
-| Judgment | Condition | Example |
-|----------|-----------|---------|
-| **Direct recommended** | **All** conditions met | typo, config change |
-| **Team use** | Any condition not met (default) | new feature, refactor, multi-file, bug fix |
-
-**Direct recommended conditions (all must pass)**:
-- 1-2 files changed max (code/config/docs)
-- No design decision needed
-- Change is self-evident (typo, config, import)
-
-**Important**: When uncertain, always choose Team use. Direct only for clearly simple changes.
+`/flow` から起動された PO は **常に Team use を返す** (`/flow` 側で `--sequential` 明示時のみ Direct downgrade、PO 判断ではない)。Direct mode は legacy compatibility のため schema には残すが、`/flow` 経由では選択しない。
 
 ## Worktree creation criteria
 
@@ -117,18 +85,4 @@ Team use
 
 ## Manager instruction format
 
-```
-## Goal
-[What to achieve]
-
-## Constraints/QA criteria
-[Requirements]
-
-## Worktree info
-- Path: [worktree path or "work on main branch"]
-- Branch: [branch name]
-
-## Priority
-1. [Top task]
-2. [Next task]
-```
+`references/agent-team-contract.md` §1 の `manager_instruction` field + `worktree` field を参照。parent が PO YAML から抽出し、Manager prompt に埋め込み。

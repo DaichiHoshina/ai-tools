@@ -154,34 +154,7 @@ PO→Manager→Developer data handoff in JSON format.
 
 ### Received context (in prompt)
 
-```json
-{
-  "developer_id": "dev1",
-  "worktree": {
-    "path": "/path/to/wt-feat-xxx",
-    "branch": "feature/xxx",
-    "base_branch": "main"
-  },
-  "task": {
-    "id": "task-001",
-    "title": "LoginButton impl",
-    "description": "Create LoginButton component",
-    "files": ["src/components/LoginButton.tsx"],
-    "dependencies": []
-  },
-  "constraints": {
-    "timeout_minutes": 30,
-    "max_retries": 2
-  },
-  "impl_notes": {
-    "dir": "/Users/<user>/.claude/plans/impl-notes/2026-05-20_HHMMSS_<feature-slug>/"
-  }
-}
-```
-
-### Field description
-
-Field 定義 → `agents/manager-agent.md` "Developer context JSON field description" 参照。
+Schema: `references/agent-team-contract.md` §4 (parent → Developer) を canonical 参照。`verify` / `dod` field を新規に含む (旧 schema との差分)。
 
 ### Worktree unspecified behavior
 
@@ -252,36 +225,6 @@ Parent delegation protocol → `references/developer-agent-delegation-prompt.md`
 
 ## Completion report format
 
-**Success**:
+Schema: `references/agent-team-contract.md` §5 (Developer → parent) を canonical 参照。`verification` は `✓` (完了) / `✗` (失敗) / `—` (N/A) 統一、`[ ]` (未チェック) 使用禁止。
 
-```
-## Task completed
-[Work done]
-
-## Changed files
-- [path]: [change]
-
-## Verification
-- [ ] Type errors: 0
-- [ ] Lint: pass
-- [ ] Tests: pass (if applicable)
-
-## IMPL_NOTES
-- Path: [absolute path to dev-<task-id>.md] (Team flow only; omit if `impl_notes.dir` absent)
-```
-
-**Failure / partial success** (retry limit / timeout / dep unresolved):
-
-```
-## Status
-[Fail / Partial / Dep unresolved]
-
-## Completed
-- [path]: [change] (partial only)
-
-## Remaining
-- [task]: [fail reason + retry history N×]
-
-## Manager decision required
-[Realloc / Spec confirm / Handoff to other Dev etc.]
-```
+`verify` field を受領済の場合、確定コマンドを実行して結果を埋める (DoD と verify は contract で必須化済)。

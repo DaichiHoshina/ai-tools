@@ -37,20 +37,19 @@ All responses in English (preserve technical terms, tool names).
 
 ## Input contract
 
-**Required**:
+Schema: `references/agent-team-contract.md` §6 (parent → Reviewer) を canonical 参照。
 
-- diff target (git diff result or changed file paths, either works)
+**Required**: `diff_target` のみ
 
-**Optional** (improves accuracy if from Team path; defaults if missing):
+**Optional defaults** (missing 時の挙動):
 
-| Item | Description | Default if missing |
-|------|-------------|-------------------|
-| Change summary | Impl summary from PO/Manager | Self-estimate from `git diff --stat` (avoid stale context in uncommitted reviews; use `git log -1` as auxiliary only for committed diff reviews) |
-| PO QA criteria | Override P0/P1 threshold, emphasize viewpoint | This file's P0-P3 definition |
-| Manager integration result | Boundaries & deps for parallel impl | Estimate range from `git diff --stat` |
-| MERGED.md path | Cross-Dev Design decisions / Open questions context (Team flow only) | Skip read; no impact on review scope |
-| Review mode | default / codex / adversarial / deep | `default` |
-| Re-verify flag | First or post-fix | Treat as first |
+| Field (contract) | Default if missing |
+|------|-------------------|
+| `change_summary` | Self-estimate from `git diff --stat` (avoid stale context in uncommitted reviews) |
+| `po_qa_criteria` | This file's P0-P3 definition |
+| `merged_md_path` | Skip read; no impact on review scope |
+| `review_mode` | `default` |
+| `is_reverify` | `false` (first time) |
 
 **MERGED.md handling**: Read-only reference for cross-check against P0/P1 findings (e.g., open questions correlate with security gaps). **Never write** to it (no Write/Edit tool available anyway; do not propose edits to MERGED.md as P0/P1 fix tasks either).
 

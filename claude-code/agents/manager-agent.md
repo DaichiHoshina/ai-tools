@@ -33,12 +33,14 @@ All responses in English (preserve technical terms, tool names).
 
 ## PO instruction required items & fallback
 
-| Item | Fallback |
+Schema: `references/agent-team-contract.md` §1 (PO output) を canonical 参照。
+
+| Field (contract) | Fallback |
 |------|----------|
-| Goal | Re-request from parent (stop) |
-| Constraints/QA criteria | Default to reviewer-agent § P0-P3; log warning |
-| Worktree info | Continue on current branch (no main assumption). Per PO contract "no info = continue current" |
-| Reviewer criteria | Default P0: type-safety / security / data-integrity |
+| `manager_instruction.goal` | Re-request from parent (stop) |
+| `manager_instruction.constraints` | Default to reviewer-agent § P0-P3; log warning |
+| `worktree` | Continue on current branch (no main assumption) |
+| `reviewer_qa_criteria` | Default `p0: [type-safety, security, data-integrity]` |
 
 ## Base flow
 
@@ -89,62 +91,17 @@ Summary: Based on critical-path-first formula (`LPT_makespan + overhead < sum ×
 
 ## Allocation plan format
 
-```
-## Execution mode
-[Parallel / Staged / Sequential]
+Schema: `references/agent-team-contract.md` §3 (Manager → parent) を canonical 参照。YAML field 構造で返す。
 
-## Degree of parallelism
-[N=4 (independent, formula PASS) / Stage1: 3 + Stage2: 2 etc.]
+**必須 field** (contract で旧 format から追加されたもの):
+- `verify`: lint / typecheck / test の確定コマンド (parent が pre-delegation で埋め込む対象)
+- `dod`: 1 行 success criteria (Developer の完了判断基準)
 
-## Worktree required?
-[Yes (2+ independent + formula PASS) / No (single)]
+Note: 5+ tasks → **bundle ≤4 or stage split** (4 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。
 
-## Task allocation
+## Developer allocation handoff
 
-### Developer 1 (Frontend)
-- Task: [content]
-- Target: [file paths]
-- Dep: none
-
-### Developer 2 (Backend)
-- Task: [content]
-- Target: [file paths]
-- Dep: none
-
-## Staged execution
-Stage 1: Dev1, Dev2 parallel
-Stage 2: Dev3 (after Stage 1)
-
-## Worktree info
-Path: [from PO]
-
-## IMPL_NOTES dir
-Path: [~/.claude/plans/impl-notes/YYYY-MM-DD_HHMMSS_<feature-slug>/]
-(parent: ensure exists via `mkdir -p` before spawning Devs)
-```
-
-Note: 5+ tasks → **bundle ≤4 or stage split** (4 Dev limit). Formula & LPT detail: `references/PARALLEL-PATTERNS.md`.
-
-## Developer allocation format (parent uses at startup)
-
-Manager returns allocation to parent in this format. **Parent spawns `Task(developer-agent)` in 1 message** using the JSON context below.
-
-### Developer context JSON field description
-
-Manager output → parent passes as-is → Developer input (single flow).
-
-| Field | Description |
-|-------|-------------|
-| `developer_id` | Assigned ID (dev1-4) |
-| `worktree.path` | Work directory absolute path |
-| `worktree.branch` | Work branch name |
-| `task.id` | Task identifier (logging) |
-| `task.files` | Files to change |
-| `task.dependencies` | Dep task IDs (wait if present) |
-| `constraints` | Timeout/retry limits |
-| `impl_notes.dir` | IMPL_NOTES output dir (Team flow only; absent = skip notes output) |
-
-JSON schema example → `agents/developer-agent.md` "Received context" 参照。
+Manager YAML allocation を parent が受け取り、各 task を §4 (parent → Developer) JSON context に変換、**1 message 内 N tool_use** で `Task(developer-agent)` 並列発火。
 
 ### Staged execution
 

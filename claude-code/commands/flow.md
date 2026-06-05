@@ -37,20 +37,15 @@ Boundary: "fix from error log"=1.5 / "bug root cause"=2 / "feature improvement"=
 ## Options
 
 ```text
---skip-prd / --skip-test / --skip-review / --no-po / --auto
---sequential  (opt-out: 物理的に並列化不能と parent 判断時のみ)
+--skip-prd / --skip-test / --skip-review / --auto
+--sequential  (opt-out: 物理的に並列化不能と parent 判断時のみ、PO/Manager は常時必須)
 ```
 
 **Default = orchestrate + parallel 強制 ON**。素の `/flow` 起動で parent 事前準備 (N 算定 / target echo / verify echo / DoD echo) + worktree 並列発火が同時発動する。`--auto` 追加で fully autonomous mode (確認スキップ + 自動 push)。`--sequential` は file 競合等で並列化が物理不可能な場合のみ使う緊急 fallback。
 
 ## Orchestration (forced)
 
-Parent 指揮 mode を常時強制する。発火前に parent が以下を完了する。
-
-1. **N 算定**: task 分割数を `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula` で確定 (first choice `N=8`)
-2. **target echo**: 各 sub-task の `file:line` を `find_symbol` / `grep` で特定し、prompt に literal で渡す
-3. **verify echo**: lint / typecheck / test の確定コマンドを sub-task ごとに記載
-4. **DoD echo**: 1 行 success criteria を sub-task ごとに記載
+Parent 指揮 mode を常時強制する。pre-delegation 4 step (N 算定 / target / verify / DoD) は **内部処理**で、user 提示は 1 行要約のみ (`fan-out: N=<n>, targets=<file count>`)。詳細 echo は subagent prompt に literal 埋込、chat 出力禁止。
 
 完了後、**1 message 内 N tool_use 並列発火** (1 message 1 Agent N message 繰返しは逐次化するため禁止)。仕様詳細: `references/orchestrate-mode.md` / `references/PARALLEL-PATTERNS.md`。
 
@@ -88,7 +83,6 @@ Default `fresh` = base on `origin/<default>`. Set `"head"` per task in `~/.claud
 | AskUserQuestion | Don't call, auto-adopt recommendation |
 | Agent launch | `mode: "bypassPermissions"` |
 | Push target | Always PR (no main direct push) |
-| PO Agent | Skip (`--no-po` equivalent) |
 | Design decision | Recommend, priority simple |
 | lint-test fail | Auto-fix 1×, 2nd fail stop + report |
 
@@ -98,22 +92,18 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 
 ## Execution logic
 
-1. **git status check**: 変更あり → `/dev` 系単体 (orchestration 不要のため `/flow` 対象外、user に redirect 提案)、変更なし → step 2
-2. **Sequential downgrade check** (`--sequential` 指定 or 以下全てで自動 downgrade):
-   - target files ≤ 1 *かつ* 1 symbol edit
-   - 並列化で makespan 短縮 <5% (formula 不成立)
-   downgrade 時は `/dev` 単体に委譲、orchestration step skip
-3. **PO Agent**: 設計判断 / scope 切り分け (skip with `--no-po`)
-4. **Orchestration pre-delegation** (必須):
-   - parent が N 算定 / target echo / verify echo / DoD echo を完了
-   - `mkdir -p <impl_notes.dir>` (Manager allocation 由来)
-5. **Parallel fan-out**: 1 message 内 `Task(developer-agent)×N` 並列発火 (worktree 分離)
-6. **Manager integrate**: 各 dev 完了報告を集約 → MERGED.md を `<impl_notes.dir>/MERGED.md` に persist
-7. **Team review**: `Task(reviewer-agent, --codex)` (comprehensive + codex parallel) → P0/P1 judge
+1. **git status check**: 変更あり → WIP 確認後 step 2 (orchestration 継続、`/dev` redirect しない)
+2. **Sequential downgrade check** (`--sequential` 明示時のみ): default は downgrade しない。downgrade 時のみ `/dev` 単体委譲、PO/Manager skip
+3. **PO Agent (必須)**: 設計判断 / scope 切り分け。skip 不可 (旧 `--no-po` 廃止)
+4. **Manager Agent (必須)**: task 分割 / file 重複排除 / N 算定
+5. **Orchestration pre-delegation** (内部処理): target / verify / DoD を subagent prompt に埋込み、user 提示は 1 行要約 (`fan-out: N=<n>`)。`mkdir -p <impl_notes.dir>` 実行
+6. **Parallel fan-out**: 1 message 内 `Task(developer-agent)×N` 並列発火 (worktree 分離)
+7. **Manager integrate**: 各 dev 完了報告を集約 → MERGED.md を `<impl_notes.dir>/MERGED.md` に persist
+8. **Team review**: `Task(reviewer-agent, --codex)` (comprehensive + codex parallel) → P0/P1 judge
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
    - P0 残 / P1: report & continue (`--auto` 時 stop)
    - codex 未配備: comprehensive single fallback
-8. Post-*impl* sequential steps from Task table (review は step 7 で完了済、skip)
+9. Post-*impl* sequential steps from Task table (review は step 8 で完了済、skip)
 
 ## Bug fix complexity
 
