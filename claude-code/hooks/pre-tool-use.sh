@@ -830,12 +830,17 @@ _inject_today_commits() {
     return 0
   fi
 
+  # cap: 行数上限 (env override 可)
+  local _line_cap="${CLAUDE_HOOK_INJECT_CAP:-30}"
+  # cap: commit 数上限 (env override 可)
+  local _commit_cap="${CLAUDE_HOOK_INJECT_COMMIT_CAP:-5}"
+
   # git log: CLAUDE_PROJECT_DIR 優先、なければ HOME
   local _project_dir="${CLAUDE_PROJECT_DIR:-$HOME}"
 
   # Source 1: 作業中 repo の今日の commit
   local _proj_commits=""
-  _proj_commits=$(git -C "$_project_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges 2>/dev/null || true)
+  _proj_commits=$(git -C "$_project_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges 2>/dev/null | head -n "${_commit_cap}" || true)
   if [[ -z "$_proj_commits" ]] && ! git -C "$_project_dir" rev-parse --git-dir >/dev/null 2>&1; then
     mkdir -p "$_inject_log_dir" 2>/dev/null || true
     printf '[%s] today-commit inject: git log failed at %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_project_dir" >> "$_inject_log_file" 2>/dev/null || true
@@ -851,7 +856,7 @@ _inject_today_commits() {
   _project_real=$(cd "$_project_dir" 2>/dev/null && pwd -P 2>/dev/null || echo "")
   if [[ -n "$_aitools_real" && "$_aitools_real" != "$_project_real" ]]; then
     _writing_commits=$(git -C "$_aitools_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges \
-      -- "claude-code/guidelines/" "claude-code/CLAUDE.md" 2>/dev/null || true)
+      -- "claude-code/guidelines/" "claude-code/CLAUDE.md" 2>/dev/null | head -n "${_commit_cap}" || true)
     if [[ -z "$_writing_commits" ]] && ! git -C "$_aitools_dir" rev-parse --git-dir >/dev/null 2>&1; then
       mkdir -p "$_inject_log_dir" 2>/dev/null || true
       printf '[%s] today-commit inject: git log failed at %s (writing path)\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_aitools_dir" >> "$_inject_log_file" 2>/dev/null || true
@@ -879,6 +884,15 @@ _inject_today_commits() {
     else
       _msg="${_writing_msg}"
     fi
+  fi
+
+  # 行数 cap 適用: _line_cap を超える場合は truncate して末尾に通知行を追加
+  local _total_lines
+  _total_lines=$(printf '%s\n' "${_msg}" | wc -l | tr -d ' ')
+  if [[ "${_total_lines}" -gt "${_line_cap}" ]]; then
+    local _truncated_lines=$(( _total_lines - _line_cap ))
+    _msg=$(printf '%s\n' "${_msg}" | head -n "${_line_cap}")
+    _msg="${_msg}"$'\n'"... (${_truncated_lines} more lines truncated)"
   fi
 
   if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
