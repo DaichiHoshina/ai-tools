@@ -62,12 +62,7 @@ Execute commit → push → PR/MR creation in single command.
 3. `git push -u origin <branch>`
 4. **IMPL_NOTES detection** (skip on `--no-impl-notes`): under `~/.claude/plans/impl-notes/`, find dir whose `<feature-slug>` matches current branch name (sanitize both to kebab-case). If multiple, pick latest by timestamp prefix. If `MERGED.md` exists, read it and surface **Design decisions** + **Open questions** as PR body draft material in the user confirm step (do not auto-insert). No match → silent skip
 5. `gh pr create` / `glab mr create` (auto-detect remote)
-5.5. **writing check (PR body)**: PR body draft を対象に NG 語チェックを実行。
-   - `guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md) に対して grep 突き合わせ
-   - Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (max 3 loop)
-   - 3 loop 後も hit 残存 → 残存語を提示して user に続行確認
-   - **注**: hook (pre-tool-use.sh) が `gh pr create` 実行時に AI定型語を exit 2 でブロックするため、このステップは事前 self-check として機能する
-   - PR body に関連 issue/PR URL を含む場合、貼る前に `gh issue view` / `gh pr view` で番号実在を検証する (`rules/ai-output.md` `## URL / Issue・PR 番号検証` 参照)
+5.5. **writing check (PR body)**: PR body draft に step 3.5 と同じ NG 語チェック (max 3 loop) を適用。hook が `gh pr create` 時に block するため事前 self-check として機能。PR body に関連 issue/PR URL を含む場合、貼る前に `gh issue view` / `gh pr view` で番号実在を検証する (`rules/ai-output.md` `## URL / Issue・PR 番号検証` 参照)
 6. Display PR/MR URL
 7. **Auto-review** (`--auto-review` specified only. Default OFF, on PR success, `gh` available, GitHub only):
    - Launch `/code-review:code-review <PR#>` w/ `Bash run_in_background:true` → get bash_id_A

@@ -93,32 +93,6 @@ requires-guidelines:
 <body>
 ```
 
-## Description Trigger Words (required)
-
-`scripts/skill-lint.sh` checks for these in `description:`:
-
-| Word | Example |
-|------|---------|
-| when used / when | "Use when refactoring …" |
-| corresponding | "Docker/Kubernetes support" |
-| for | "guide for backend" |
-| Use this / When | "Use this when refactoring …" |
-
-Missing → lint warning, fails on `--strict`. Add one to pass.
-
-## Validate
-
-```bash
-# single skill
-./claude-code/scripts/skill-lint.sh --skill <name>
-
-# all (recommended, keep warn=0)
-./claude-code/scripts/skill-lint.sh --strict
-
-# fire rate later (few days after)
-./claude-code/scripts/skill-eval.sh --skill <name> --days 7
-```
-
 ## Lint Failures
 
 | Error | Fix |

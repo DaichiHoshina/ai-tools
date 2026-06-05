@@ -58,30 +58,7 @@ If writing failures detected (user feedback "hard to read" / "AI-smelling" / "so
 **保存先判断 (report / HTML 含む全保存 step 共通)**:
 分析対象セッションに社内 product 名 / 識別子 (social-hit term: `rules/public-repo-private-data-block.md` 参照) が含まれる可能性がある場合は `~/.claude/references-private/` に保存する。含まないと確実な場合のみ `docs/reports/` (public) に保存可。判断に迷う場合は AskUserQuestion で `docs/reports/ (public)` vs `~/.claude/references-private/ (private)` を提示してから保存する。
 
-Save to: `~/.claude/projects/{project}/memory/writing_failure_{topic}.md`
-
-Format:
-```markdown
----
-name: writing-failure-{topic}
-description: {1-line failure pattern summary}
-metadata:
-  type: writing-failure
-  date: YYYY-MM-DD
----
-
-## What Happened
-{user's specific feedback}
-
-## Relevant Location
-{file:line or excerpt}
-
-## Root Cause
-{AI side root cause. e.g., stacked abstract nouns / implicit knowledge / ambiguous paragraph role}
-
-## Prevention
-{how to avoid next time. cite relevant axis from PRINCIPLES.md}
-```
+Save to: `~/.claude/projects/{project}/memory/writing_failure_{topic}.md` (frontmatter: `name` / `description` / `metadata.type: writing-failure` / `metadata.date`). Sections: What Happened / Relevant Location / Root Cause / Prevention (cite PRINCIPLES.md axis).
 
 Memories injected via `~/.claude/CLAUDE.md` at session start → next session avoids same failure.
 

@@ -87,8 +87,8 @@ docs/
 **Why**: 書く人によって構造がバラつくと、レビュワーが毎回読み方を学習し直す必要がある。テンプレ固定でレビュー観点が揃い、読み込みコストが下がる。
 
 **テンプレ必須セクション**:
-- **PRD**: 背景 / ゴール / スコープ / 成功指標 / 非スコープ / オープン質問 — [long-form-doc.md PRD MoSCoWテンプレ](long-form-doc.md#prd-moscow-テンプレ-mustshouldcouldwont) 参照
-- **ADR**: Context / Decision / Consequences / Alternatives — [long-form-doc.md ADRテンプレ](long-form-doc.md#adr-テンプレ-1-テーマ-1-decision) 参照
+- **PRD**: 背景 / ゴール / スコープ / 成功指標 / 非スコープ / オープン質問 — [long-form-doc.md PRD MoSCoWテンプレ](long-form-doc.md#prd-moscowテンプレ-mustshouldcouldwont) 参照
+- **ADR**: Context / Decision / Consequences / Alternatives — [long-form-doc.md ADRテンプレ](long-form-doc.md#adrテンプレ-1テーマ1-decision) 参照
 - **Design Doc**: 12セクションor軽量5節 — [design-doc-protocol.mdテンプレ選択](design-doc-protocol.md#テンプレ選択) 参照
 
 ## レビュープロセス

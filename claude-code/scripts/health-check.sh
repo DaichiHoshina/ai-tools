@@ -128,7 +128,7 @@ render() {
     echo ""
     echo '```'
     local tmpdir; tmpdir=$(mktemp -d)
-    trap "rm -rf '$tmpdir'" RETURN
+    trap 'rm -rf "$tmpdir"' RETURN
     local i
     for ((i=1; i<=BENCH_REPEATS; i++)); do
       "$SCRIPT_DIR/hook-bench.sh" > "$tmpdir/run-$i.txt" 2>&1
