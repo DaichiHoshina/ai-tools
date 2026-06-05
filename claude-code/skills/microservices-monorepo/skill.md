@@ -1,6 +1,6 @@
 ---
 name: microservices-monorepo
-description: Microservices & monorepo design. Service split, communication patterns, monorepo structure. Use when designing architecture.
+description: Microservices & monorepo: service split, comms, structure. Use for arch design.
 requires-guidelines:
   - common
   - clean-architecture

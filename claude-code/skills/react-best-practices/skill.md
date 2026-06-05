@@ -1,6 +1,6 @@
 ---
 name: react-best-practices
-description: React/Next.js performance optimization (Vercel). 45 rules, 8 categories. Eliminate waterfalls, optimize bundles. Use when implementing React/Next.js.
+description: React/Next.js optimization: 45 rules, 8 categories. Use for React/Next.js impl.
 requires-guidelines:
   - nextjs-react
 hooks:

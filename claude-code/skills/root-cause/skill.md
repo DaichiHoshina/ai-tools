@@ -1,6 +1,6 @@
 ---
 name: root-cause
-description: Root cause analysis (5 Why). Identify bug causes, prevent recurrence, structural fix strategy. Use when analyzing root causes.
+description: Root cause analysis (5 Why): bugs to recurrence prevention. Use for RCA.
 allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*
 model: sonnet
 requires-guidelines:

@@ -1,6 +1,6 @@
 ---
 name: cleanup-enforcement
-description: Code cleanup enforcement. Delete backward compat remnants, unused code, progress comments. Use when enforcing cleanup.
+description: Cleanup enforcement: remove compat remnants, unused code. Use for cleanup.
 requires-guidelines:
   - common
   - typescript  # if lang=typescript

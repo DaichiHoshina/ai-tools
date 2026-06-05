@@ -1,6 +1,6 @@
 ---
 name: context7
-description: Fetch latest library docs via Context7 API. Use when checking API specs after training data cutoff.
+description: Fetch latest docs via Context7 API. Use when checking API specs.
 ---
 
 # context7 - Library Documentation Search

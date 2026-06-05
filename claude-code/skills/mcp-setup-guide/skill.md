@@ -1,6 +1,6 @@
 ---
 name: mcp-setup-guide
-description: MCP setup guide. Configure MCP servers for Claude Code, troubleshoot connection issues. Use when setting up MCP servers.
+description: MCP server setup/troubleshoot for Claude Code. Use when setting up MCP.
 ---
 
 # mcp-setup-guide - MCP Setup Guide

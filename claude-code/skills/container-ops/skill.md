@@ -1,6 +1,6 @@
 ---
 name: container-ops
-description: Container operations (Docker/Kubernetes/Podman). Auto-detect platform. Use when operating containers.
+description: Docker/Kubernetes/Podman ops. Auto-detect platform. Use when operating.
 requires-guidelines:
   - kubernetes  # if platform=kubernetes
   - common

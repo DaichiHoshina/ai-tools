@@ -1,6 +1,6 @@
 ---
 name: clean-architecture-ddd
-description: Clean architecture & DDD design. Layer separation, domain modeling, dependency management. Use when making design decisions.
+description: Clean arch & DDD: layer sep, domain model, deps. Use for design decisions.
 requires-guidelines:
   - common
   - clean-architecture

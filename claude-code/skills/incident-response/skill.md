@@ -1,6 +1,6 @@
 ---
 name: incident-response
-description: Incident response. Classify error → assess impact → identify cause → create ticket → document. Use when responding to incidents.
+description: Incident response: error→impact→cause→ticket→doc. Use when responding.
 requires-guidelines:
   - operations
 ---

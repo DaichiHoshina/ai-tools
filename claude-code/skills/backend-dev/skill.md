@@ -1,6 +1,6 @@
 ---
 name: backend-dev
-description: Backend development (Go/TypeScript/Python/Rust). Auto-detect language and apply conventions. Use during backend implementation.
+description: Backend dev (Go/TS/Python/Rust). Auto-detect lang. Use for backend impl.
 requires-guidelines:
   - common
   - clean-architecture

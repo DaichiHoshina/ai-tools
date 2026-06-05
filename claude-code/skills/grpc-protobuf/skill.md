@@ -1,6 +1,6 @@
 ---
 name: grpc-protobuf
-description: gRPC/Protobuf development. Proto definition, code generation, backend implementation. Use when implementing gRPC services.
+description: gRPC/Protobuf: proto design, codegen, backend impl. Use for gRPC services.
 requires-guidelines:
   - golang
   - common

@@ -1,6 +1,6 @@
 ---
 name: jp-writing
-description: "日本語出力品質チェック。4 list (AI定型語/カタカナ造語/jargon/略語) を PRINCIPLES.md から読み込み、外向き文書の self-check と置換例を提供する。/jp-writing 呼出し時に使用。"
+description: "日本語出力品質チェック。4 list を PRINCIPLES.md から読み込む。/jp-writing 呼出し時に使用。"
 context: fork
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: session-mode
-description: Switch session modes (strict/normal/fast). Vary operation guard strength for prod/normal dev/prototyping. Use when switching modes.
+description: Switch modes (strict/normal/fast): guard strength for prod/dev/proto.
 ---
 
 # session-mode - Session Mode Switching

@@ -1,6 +1,6 @@
 ---
 name: terraform
-description: Terraform IaC design. Module design, state management, security BP. Use when reviewing plan/apply & IaC.
+description: Terraform IaC: module design, state, security BP. Use for plan/apply & IaC.
 requires-guidelines:
   - terraform
   - common

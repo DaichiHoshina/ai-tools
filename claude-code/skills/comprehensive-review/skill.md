@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: "Comprehensive code review across 12 perspectives (architecture/quality/readability/security/test/DB etc). Called from /review, narrow with --focus. Use when reviewing code."
+description: "12-perspective code review (arch/quality/security/test). Called from /review."
 context: fork
 agent: reviewer-agent
 requires-guidelines:
@@ -45,14 +45,11 @@ Details: `references/review-criteria.md` / `writing-docs.md` / `silent-failure.m
 
 ## Execution Flow
 
-> **Execution model**: Steps 1-4 run in `reviewer-agent` (Sonnet). Step 4.5 output returns to parent Opus for Stage B aggregation.
+> Steps 1-4: `reviewer-agent` (Sonnet). Step 4.5 output → parent Opus for Stage B aggregation.
 
 ### Step -1: Noise Suppression
 
-- Read diff/code/docs only. Unverified → prefix "hypothesis:". No style/preference nitpicks.
-- Findings must be anchored to observed violation/regression/concrete risk in scope.
-- "could be better" / "might be useful" → note/question only, never Critical/Warning.
-- No unsolicited issue/task/TODO creation — today's blockers only.
+Read diff/code/docs only. Unverified → "hypothesis:". No nitpicks. "could be better" / "might be useful" → note/question only. No unsolicited TODO/issue creation.
 
 ### Step 0: Load History (Detect Repeats)
 
@@ -95,17 +92,16 @@ Score 0-100 per finding: **80+** (low 90+, high 70+) → Critical / **50-79** �
 
 ### Step 4.5: Self-Filter Gate (moderate strictness)
 
-Validate each candidate (fail → discard; severity mismatch → downgrade):
+Validate each candidate — fail → discard; severity mismatch → downgrade:
 
-- **Evidence**: anchored to diff/code/docs/tests/tool output
-- **Scope**: tied to user request / code contract / changed behavior
-- **Overreach**: no invented problem statement
-- **Actionability**: author can fix in this change
-- **Severity**: matches real impact and confidence
-- **Style/preference**: backed by documented guideline (not aesthetic taste)
-- **Overprescription**: a reasonable engineer would call it a defect
+| Check | Pass condition |
+|---|---|
+| Evidence | Anchored to diff/code/docs/tests/tool output |
+| Scope | Tied to user request / code contract / changed behavior |
+| Actionability | Author can fix in this change |
+| Severity | Matches real impact and confidence; style backed by documented guideline |
 
-Discard: "cleaner / more elegant" / "verbose / shorter" / restating existing TODO / intentional design choice flagged as deviation / "consider X" without concrete defect. Zero findings is valid — never invent.
+Discard: "cleaner / more elegant" / "verbose / shorter" / restating existing TODO / "consider X" without concrete defect. Zero findings is valid — never invent.
 
 ### Step 5-6: Aggregate & Record History
 
@@ -113,13 +109,12 @@ Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.
 
 ## Output Format
 
-```markdown
+```
 ## Comprehensive Review Results
-### Perspectives Checked
-- architecture / quality / ...
+### Perspectives Checked: architecture / quality / ...
 ### Critical (Confidence 80+)
 - [security] SQL injection (src/api/user.ts:120) confidence 95
-- 🔁 Repeated Finding (4th time): [architecture] Domain→Infra ref (src/domain/user.ts:45) confidence 85
+- 🔁 Repeated Finding (4th): [architecture] Domain→Infra ref (src/domain/user.ts:45) confidence 85
 ### Warning (Confidence 25-79)
 - [quality] sort.Slice → slices.Sort (pkg/sort.go:15) confidence 65
 Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
@@ -127,15 +122,7 @@ Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 
 Zero findings → `### Critical: 0`. Skipped → `### skipped: <perspective> (<reason>)`. Tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question.
 
-## writing 規約 enforcement (writing / docs / comment / prompt diff 検出時のみ適用)
+## writing 規約 enforcement (writing / docs / comment / prompt diff 検出時のみ)
 
-writing 系 diff が含まれる場合、Step 4.5 の自己確認で以下を追加 check する。
-
-| 対象 | canonical | 主要観点 |
-|---|---|---|
-| 通常文章 (PR / DD / docs) | `guidelines/writing/PRINCIPLES.md` | NG 辞書 (AI 定型語 / 難読漢語 / カタカナ造語) / 文単位品質 (弱い表現 / 冗長表現) / chat → 外向き翻訳 8 観点 |
-| コードコメント | `guidelines/writing/code-comment.md` | WHY / 重要 memo 2 値分類 / 削除 7 カテゴリ / 識別子保護 |
-| AI / LLM 向け prompt | `guidelines/writing/prompt-engineering.md` | XML タグ分離 / few-shot 3-5 / CoT 推論先行 / positive 指示 |
-| 長文文書構造 | `guidelines/writing/long-form-doc.md` | PREP / SCQA / SDS / Minto / KPT / YWT / 報告書 3 層 |
-
-検出時は confidence-80 filter を遵守し、Critical / Warning に分類する。
+writing 系 diff が含まれる場合、Step 4.5 の自己確認で追加 check する。
+Canonicals: `guidelines/writing/PRINCIPLES.md` (通常文章) / `code-comment.md` / `prompt-engineering.md` / `long-form-doc.md`。confidence-80 filter 遵守。

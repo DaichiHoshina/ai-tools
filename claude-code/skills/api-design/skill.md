@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: API design (REST/GraphQL). Design principles, versioning, error handling, documentation. Use when designing/reviewing APIs.
+description: API design (REST/GraphQL): versioning, errors, docs. Use when designing APIs.
 requires-guidelines:
   - common
   - clean-architecture

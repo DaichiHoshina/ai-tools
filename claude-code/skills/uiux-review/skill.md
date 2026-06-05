@@ -1,6 +1,6 @@
 ---
 name: uiux-review
-description: UI/UX review. Material Design 3 + WCAG 2.2 AA + Nielsen 10 heuristics. Use during screen implementation.
+description: UI/UX review (MD3/WCAG2.2/Nielsen). Use during screen implementation.
 requires-guidelines:
   - common
   - nextjs-react
