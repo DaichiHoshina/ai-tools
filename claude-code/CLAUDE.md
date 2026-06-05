@@ -22,6 +22,8 @@
 
 Agent startup is the biggest cost source (dozens of seconds to minutes).
 
+> ⛔ **`general-purpose` agent は absolute ban** — `Task` tool 呼出時 `subagent_type` 必須明示、無指定 fallback も禁止。違反検出時は即 abort + `explore-agent` (search) / `claude-code-guide` (CLI/SDK) / `developer-agent` (impl) のいずれかに切替。
+
 | Scope | Tool |
 |---|---|
 | 1-2 files / specific symbol | Bash grep/find or `mcp__serena__find_symbol` |
