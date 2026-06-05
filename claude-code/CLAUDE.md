@@ -28,8 +28,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | 3+ query / broad search | `Task(explore-agent)` 並列発火 default (domain 数 = 並列数、max 8)、ambiguous 判定不要 |
 | Claude Code CLI/SDK/API spec | `claude-code-guide` agent |
 | Other genuinely broad analysis | Explore (built-in, last resort) |
-
-**Avoid `general-purpose` agent** (measured highest cost source, max 501s). Metrics: `references/performance-insights.md`
+| **`general-purpose` agent** | **禁止** — 最高コスト源 (実測 max 501s)。`explore-agent` / `claude-code-guide` / `developer-agent` のいずれかで必ず代替する |
 
 ## Auto-Delegation (parent=Opus orchestrates, subagent=Sonnet executes)
 
@@ -119,8 +118,8 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 
 詳細: `rules/public-repo-private-data-block.md`
 
-**Hook block 対象**: AI 定型語 / カタカナ造語禁止 / 難読漢語 / 非日常英語 (PRINCIPLES.md の各 list から動的抽出)。英日混在語 (lock / commit / deploy / TX 等) は誤検出多発リスクのため hook block 対象外、PRINCIPLES.md (d) 表 + writing review で manual 検出する。
-**PRINCIPLES.md list scope 記法**: `**<name> (block|warn-only)**: <terms>` 形式で scope を明示する。新規 list 追加時は適用 target (chat / 外向き prose / commit message 全許可 or 一部制限) を考慮して block か warn-only を選ぶ。**既存 key (`AI定型語` / `カタカナ造語禁止` / `断定語 (warn-only)`) の name 変更禁止** — hook (`hooks/pre-tool-use.sh:_extract_term_list`) が exact match で参照、rename で silent pass する。
+**Hook block 対象**: AI 定型語 / カタカナ造語禁止 / 難読漢語 / 非日常英語 (NG-DICTIONARY.md の各 list から動的抽出)。英日混在語 (lock / commit / deploy / TX 等) は誤検出多発リスクのため hook block 対象外、PRINCIPLES.md (d) 表 + writing review で manual 検出する。
+**NG-DICTIONARY.md list scope 記法**: `**<name> (block|warn-only)**: <terms>` 形式で scope を明示する。新規 list 追加時は適用 target (chat / 外向き prose / commit message 全許可 or 一部制限) を考慮して block か warn-only を選ぶ。**既存 key (`AI定型語` / `カタカナ造語禁止` / `断定語 (warn-only)`) の name 変更禁止** — hook (`hooks/pre-tool-use.sh:_extract_term_list`) が exact match で参照、rename で silent pass する。
 
 ## Rewind
 
@@ -190,8 +189,8 @@ Claude misbehavior / non-obvious success = signal that config is not reflecting 
 
 genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き prose (PR / commit / Issue / Slack / Notion / DD / PRD / RCA / comments) と `/plan` `/design-doc` `/prd` `/post-comment` `/git-push --pr` `/docs` ドラフトは plain JP (〜する / 〜した、主語明示、指示語禁止: 「これ」「それ」「上記」→具体名)。Details: `rules/genshijin.md` + `guidelines/writing/PRINCIPLES.md`
 
-**AI定型語 hook block**: git commit / gh/glab PR・Issue / Slack MCP / Notion MCP の外向き text に AI定型語 (source: PRINCIPLES.md) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換してから再実行。
-- 4 list (AI定型語/カタカナ造語/jargon/略語) は PRINCIPLES.md canonical、hook で自動 inject + 外向き block (`~/.claude/logs/jp-quality-block.log` に記録)
+**AI定型語 hook block**: git commit / gh/glab PR・Issue / Slack MCP / Notion MCP の外向き text に AI定型語 (source: NG-DICTIONARY.md) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換してから再実行。
+- 7 key (AI定型語/カタカナ造語禁止/難読漢語/非日常英語/弱い表現/冗長表現/断定語) は NG-DICTIONARY.md canonical、hook で自動 inject + 外向き block (`~/.claude/logs/jp-quality-block.log` に記録)
 
 ## References
 

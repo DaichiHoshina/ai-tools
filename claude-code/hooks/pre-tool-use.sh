@@ -29,7 +29,7 @@ ADDITIONAL_CONTEXT=""
 # AI定型語 / カタカナ造語 block 関数
 # PRINCIPLES.md から動的抽出 → 外向き text に grep → hit で exit 2
 # ====================================
-_principles_file="$HOME/.claude/guidelines/writing/PRINCIPLES.md"
+_principles_file="$HOME/.claude/guidelines/writing/NG-DICTIONARY.md"
 
 # _extract_term_list の per-process cache (同一プロセス内で同 key の grep を1回に削減)
 declare -A _term_list_cache=()
@@ -209,7 +209,7 @@ _block_if_ai_jargon() {
     MESSAGE="${ICON_CRITICAL} AI定型語 block: [${word_list}] (${context_label})"
     local _full_list
     _full_list=$(_extract_term_list "$_principles_file" "AI定型語" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="AI定型語を削除または具体表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+    ADDITIONAL_CONTEXT="AI定型語を削除または具体表現に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
 
 block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
@@ -223,7 +223,7 @@ block list (この session で全て回避): ${_full_list}"
     MESSAGE="${ICON_CRITICAL} カタカナ造語 block: [${word_list}] (${context_label})"
     local _full_list
     _full_list=$(_extract_term_list "$_principles_file" "カタカナ造語禁止" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="カタカナ造語を削除または説明的表現に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+    ADDITIONAL_CONTEXT="カタカナ造語を削除または説明的表現に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
 
 block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
@@ -237,7 +237,7 @@ block list (この session で全て回避): ${_full_list}"
     MESSAGE="${ICON_CRITICAL} 難読漢語 block: [${word_list}] (${context_label})"
     local _full_list
     _full_list=$(_extract_term_list "$_principles_file" "難読漢語 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="難読漢語を平易な語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+    ADDITIONAL_CONTEXT="難読漢語を平易な語に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
 
 block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
@@ -251,7 +251,7 @@ block list (この session で全て回避): ${_full_list}"
     MESSAGE="${ICON_CRITICAL} 非日常英語 block: [${word_list}] (${context_label})"
     local _full_list
     _full_list=$(_extract_term_list "$_principles_file" "非日常英語 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="日常で使う英語または日本語に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+    ADDITIONAL_CONTEXT="日常で使う英語または日本語に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
 
 block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
@@ -265,7 +265,7 @@ block list (この session で全て回避): ${_full_list}"
     MESSAGE="${ICON_CRITICAL} 弱い表現 block: [${word_list}] (${context_label})"
     local _full_list
     _full_list=$(_extract_term_list "$_principles_file" "弱い表現 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="弱い表現を断定または「検証が必要」に置換して再実行してください。source: guidelines/writing/PRINCIPLES.md
+    ADDITIONAL_CONTEXT="弱い表現を断定または「検証が必要」に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
 
 block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
@@ -279,7 +279,7 @@ block list (この session で全て回避): ${_full_list}"
     MESSAGE="${ICON_CRITICAL} 冗長表現 block: [${word_list}] (${context_label})"
     local _full_list
     _full_list=$(_extract_term_list "$_principles_file" "冗長表現 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="冗長表現を短縮形に置換して再実行してください (例: することができる → できる、を行う → する)。source: guidelines/writing/PRINCIPLES.md
+    ADDITIONAL_CONTEXT="冗長表現を短縮形に置換して再実行してください (例: することができる → できる、を行う → する)。source: guidelines/writing/NG-DICTIONARY.md
 
 block list (この session で全て回避): ${_full_list}"
     _append_jp_quality_log "$context_label" "$word_list" "block"
@@ -702,7 +702,7 @@ _check_social_hit() {
     ADDITIONAL_CONTEXT="ai-tools repo は public。社内 product 名 / 識別子を public repo に書き込めません。
 対処: file_path を ~/.claude/references-private/ に切り替えるか、term を削除 / 匿名化して再実行してください。
 ログ: ~/.claude/logs/social-hit-block.log"
-    printf '%s\n' "${MESSAGE}" >&2
+    printf '[social-hit-block] term=%s file=%s\n' "$word_list" "$file_path" >&2
     _append_social_hit_log "$TOOL_NAME" "$word_list" "$file_path"
   fi
 }

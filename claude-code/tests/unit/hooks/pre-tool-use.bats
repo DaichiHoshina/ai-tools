@@ -1096,8 +1096,8 @@ _teardown_git_stub_dual() {
 # =============================================================================
 
 @test "principles-keys: PRINCIPLES.md に hook required_keys が全件存在する" {
-  local principles_file="${PROJECT_ROOT}/guidelines/writing/PRINCIPLES.md"
-  [[ -f "$principles_file" ]] || skip "PRINCIPLES.md not found at $principles_file"
+  local principles_file="${PROJECT_ROOT}/guidelines/writing/NG-DICTIONARY.md"
+  [[ -f "$principles_file" ]] || skip "NG-DICTIONARY.md not found at $principles_file"
 
   # pre-tool-use.sh:98 の required_keys と同一 (test fixture 例外 — 整合検証が目的)
   local required_keys=(
