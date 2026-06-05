@@ -193,6 +193,11 @@ Schema: `references/agent-team-contract.md` §5 (Developer → parent) を canon
 - `verification`: `{lint, typecheck, test}` の 3 sub-field、値は `✓` (完了) / `✗` (失敗) / `—` (N/A) literal、`[ ]` (未チェック) 禁止、`grep_entry` 等独自 sub-field 追加禁止
 - `impl_notes_path` (Team flow のみ、それ以外 omit、`impl_notes` 等 field 名省略禁止)
 
+**追加禁止事項** (再発 pattern):
+- **`summary` 等の独自 field 追加禁止** — task 結果の要約や統計は IMPL_NOTES (`<impl_notes.dir>/<指定名>.md`) に記載、完了報告 YAML には含めない
+- **YAML 外に literal で table / 本文を出力禁止** — `verification` の値や結果集計表を YAML ブロック後に追記しない、必要なら IMPL_NOTES に分離
+- **IMPL_NOTES file 名は Manager 指定に厳密従う** — Manager が `dev1.md` / `dev3.md` / `dev-fix1.md` 等 literal を指定したら **そのまま使う**、`dev-<task.id>.md` 自動命名規則を勝手に適用しない (`impl_notes_path` の絶対 path で確認)
+
 失敗時は `remaining` + `manager_decision_required` field 追加 (§5 後段)。
 
 `verify` field を受領済の場合、確定コマンドを実行して結果を埋める。
