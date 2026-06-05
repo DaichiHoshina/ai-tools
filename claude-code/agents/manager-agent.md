@@ -1,7 +1,7 @@
 ---
 name: manager-agent
 description: Manager agent - Task decomposition & allocation. Parent runs Developer parallel. No implementation.
-model: opus
+model: claude-opus-4-7[1m]
 color: blue
 permissionMode: normal
 memory: project
