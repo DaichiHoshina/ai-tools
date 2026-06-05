@@ -55,7 +55,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 ## Session Efficiency
 
-詳細: `references/session-efficiency-detailed.md`。Key: **推奨自走 mode ON** (確認は破壊操作 / external 送信 / 大規模設計分岐 / flow stage で次 stage 前提変える場合のみ、詳細 ref 参照) / **長文 = 冒頭結論 + PREP 法** / **decision 要求 = 冒頭 `要決定:` 枠**
+詳細: `references/session-efficiency-detailed.md`。Key: **推奨自走 mode ON** (確認は破壊操作 / external 送信 / 大規模設計分岐 / flow stage で次 stage 前提変える場合のみ、詳細 ref 参照) / **長文 = 冒頭結論 + PREP 法** / **decision 要求 = 冒頭 `要決定:` 枠** / **Token budget**: Read は `limit`/`offset` (>200 行 file)、Bash 長出力は `| head -N` / `| tail -N`、code は Serena symbolic 優先 (`find_symbol` > 全 Read)、雑談は `/btw` で history 非汚染
 
 ## 派生値禁止 (no derived literals)
 
