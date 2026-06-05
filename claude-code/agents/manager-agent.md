@@ -58,7 +58,7 @@ Full detail: `references/PARALLEL-PATTERNS.md`
 
 Worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`
 
-Summary: Based on critical-path-first formula (`LPT_makespan + overhead < sum × 0.7`), use parallel if: 2+ independent tasks + no shared file edits + integration owner defined. `N = min(independent count, 4)`; retry with smaller N if formula fails; N=1 = sequential.
+Summary: Based on critical-path-first formula (`LPT_makespan + overhead < sum × 0.95`), use parallel if: 2+ independent tasks + no shared file edits + integration owner defined. `N = min(independent count, 8)`; retry with smaller N if formula fails; N=1 = sequential.
 
 ## Available tools (Serena MCP required)
 
@@ -111,7 +111,7 @@ Schema: `references/agent-team-contract.md` §3 (Manager → parent) を canonic
 
 違反時、parent は出力を破棄して再走指示。
 
-Note: 5+ tasks → **bundle ≤4 or stage split** (4 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。
+Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。
 
 ## Developer allocation handoff
 

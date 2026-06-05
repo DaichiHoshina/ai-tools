@@ -77,6 +77,12 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 - **MCP tool args: verify spec before writing**: use `ToolSearch select:<tool>` to confirm param names; do not rely on LLM autocorrect `[[hook-principles-path-bug-incident]]`
 - **After regex replace, run `git diff --stat` immediately**: serena `replace_content` regex forces DOTALL/MULTILINE — `.*\n` greedy wipe risk. Single line: **literal + trailing `\n`**; multi-line: **non-greedy `.*?` + explicit end anchor** (`[[serena-replace-regex-dotall-pitfall]]`)
 - **Minimize confirmation / choice**: execute safe ops without prompting; apply recommended option directly for minor choices. Confirm only for: file deletion / deploy / external send / critical decisions (architecture / cost / irreversible)
+- **推奨自走 mode (default ON)**: parent の推奨判断は user 確認なしで実行する。「要決定: A/B/C」echo + 案提示 + user 確認は **以下のみに限定**:
+  - 破壊操作 (file/branch 削除 / force push / DB drop / rm -rf 等)
+  - external 送信 (PR 作成 / Slack / Notion / Issue / push)
+  - 設計分岐で trade-off が大きい (architecture 変更 / cost 影響 / 後戻り不可) **かつ** ユーザが知らないと回らない情報がある場合
+  - flow 系の途中 stage で結果が次 stage の前提を変える場合
+  上記以外は推奨案を inline で echo + そのまま実行 (例: 「推奨 B で進める」と 1 行宣言 → 即実行)。`A/B/C 案 + どれにする?` 形式は user 体感を損なうため不要な分岐では使わない。違反 (不要な確認発火) は feedback memory 記録対象。
 - **ROI gate**: even for "do everything" instructions, re-confirm individually if ultrathink judges low ROI
 - **Bulk / 網羅 keyword**: 「全 N 件 / 網羅 / 一斉 / bulk / 大量」要求は parent Opus inline で sample 縮小判断する前に Sonnet 委譲 (read-only=`explore-agent` / edit=`developer-agent`) を第一選択検討。規模・cost を理由に sample 妥協は「Default delegate to Sonnet」原則違反 (`[[sonnet-delegate-bulk-readonly]]`)
 - **pwd check**: verify existence before Read/Bash; check `pwd` before `cd`
