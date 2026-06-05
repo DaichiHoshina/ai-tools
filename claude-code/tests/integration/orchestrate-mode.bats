@@ -32,20 +32,18 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
-@test "flow.md: --orchestrate option と section が存在、行数 ≤150" {
+@test "flow.md: Orchestration forced section が存在、行数 ≤170" {
   local file="$PROJECT_ROOT/commands/flow.md"
   [ -f "$file" ]
-  run grep -F -- "--orchestrate" "$file"
-  [ "$status" -eq 0 ]
-  run grep -c "^## --orchestrate" "$file"
+  run grep -c "^## Orchestration (forced)" "$file"
   [ "$status" -eq 0 ]
   [ "$output" -eq 1 ]
   run grep -F "references/orchestrate-mode.md" "$file"
   [ "$status" -eq 0 ]
-  # 行数制約 (token saving 規約)
+  # 行数制約 (orchestration 専用化で +20 緩和、新仕様 1bfb29e)
   local line_count
   line_count=$(wc -l < "$file" | tr -d ' ')
-  [ "$line_count" -le 150 ]
+  [ "$line_count" -le 170 ]
 }
 
 @test "delegation-prompt.md: §0 Parent pre-delegation checklist が存在する" {

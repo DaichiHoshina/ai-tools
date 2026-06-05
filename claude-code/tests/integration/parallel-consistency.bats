@@ -83,9 +83,9 @@ require_anchor() {
     || { echo "missing PARALLEL-PATTERNS.md ref in dev.md"; false; }
 }
 
-@test "flow_parallel_three_axis: flow.md / dev.md 各々に --parallel 3 軸記述" {
+@test "flow_parallel_three_axis: flow.md / dev.md 各々に Parallel section 3 軸記述" {
   for file in "$FLOW_FILE" "$DEV_FILE"; do
-    grep -qE "^## --parallel" "$file" || { echo "missing ## --parallel section in $file"; false; }
+    grep -qE "^## (--parallel|Parallel)" "$file" || { echo "missing Parallel section in $file"; false; }
     grep -qF "worktree proposal" "$file" || { echo "missing worktree proposal in $file"; false; }
     grep -qF "worktree creation" "$file" || { echo "missing worktree creation in $file"; false; }
   done
