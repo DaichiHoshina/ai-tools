@@ -45,9 +45,22 @@ Boundary: "fix from error log"=1.5 / "bug root cause"=2 / "feature improvement"=
 
 ## Orchestration (forced)
 
-Parent 指揮 mode を常時強制する。pre-delegation 4 step (N 算定 / target / verify / DoD) は **内部処理**で、user 提示は 1 行要約のみ (`fan-out: N=<n>, targets=<file count>`)。詳細 echo は subagent prompt に literal 埋込、chat 出力禁止。
+Parent 指揮 mode を常時強制する。pre-delegation 4 step (N 算定 / target / verify / DoD) は **内部処理**で、user 提示は 2 行 (formula trace + fan-out 宣言、step 6 参照)。詳細 echo は subagent prompt に literal 埋込、chat 出力禁止。
 
 完了後、**1 message 内 N tool_use 並列発火** (1 message 1 Agent N message 繰返しは逐次化するため禁止)。仕様詳細: `references/orchestrate-mode.md` / `references/PARALLEL-PATTERNS.md`。
+
+### Formula trace echo (mandatory)
+
+Manager 返却の `formula_trace` を parent が必ず chat に echo する (user に判定根拠を可視化)。echo format:
+
+```text
+formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / <PASS|FAIL> (basis=<T_i_basis>)
+fan-out: N=<n>, targets=<file count>
+```
+
+`formula_trace` field 欠落 / `formula_result=FAIL` で `N>=2` のまま → parent fan-out 中止、Manager 再走 (allocation 破棄)。`N_chosen=1` → sequential downgrade 進行 (Manager 経由 / step 5 と整合)。
+
+Schema 詳細: `agents/manager-agent.md` Allocation plan format `formula_trace` field 定義参照。
 
 ## Parallel (forced)
 
@@ -95,9 +108,12 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 1. **git status check**: 変更あり → WIP 確認後 step 2 (orchestration 継続、`/dev` redirect しない)
 2. **Pre-Manager downgrade check** (静的判定): `--sequential` 明示時のみ即時 downgrade、`/dev` 単体委譲 + PO/Manager skip。それ以外は step 3 へ
 3. **PO Agent (必須)**: 設計判断 / scope 切り分け。skip 不可 (旧 `--no-po` 廃止)
-4. **Manager Agent (必須)**: task 分割 / file 重複排除 / N 算定
+4. **Manager Agent (必須)**: task 分割 / file 重複排除 / N 算定 + formula_trace 計算
 5. **Post-Manager downgrade check** (動的判定): Manager allocation が `parallelism: 1` *かつ* `worktree_required: false` *または* file 物理競合 (同一 file 同時 edit) → Dev×1 sequential 進行 (worktree 分離 skip = `Auto-apply features` の downgrade 該当、Manager integrate は dev 1 件なら集約 skip、Team review は実施)
-6. **Orchestration pre-delegation** (内部処理): target / verify / DoD を subagent prompt に埋込み、user 提示は 1 行要約 (`fan-out: N=<n>`)。`mkdir -p <impl_notes.dir>` 実行
+6. **Orchestration pre-delegation** (内部処理 + judgment trace echo): target / verify / DoD を subagent prompt に埋込み、user 提示は **2 行**:
+   - 行 1 (formula trace): `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / PASS|FAIL (basis=<T_i_basis>)`
+   - 行 2 (fan-out 宣言): `fan-out: N=<n>, targets=<file count>`
+   Manager の `formula_trace` field 全 12 sub-field のうち上記 echo 必須項目が欠落していたら fan-out 中止し Manager に再要求 (allocation 破棄)。worktree 適用 / skip 判断 (downgrade_reason 有無) も echo 行 1 に含める。`mkdir -p <impl_notes.dir>` 実行
 7. **Parallel fan-out**: 1 message 内 `Task(developer-agent)×N` 並列発火 (worktree 分離。N=1 sequential 分岐は step 5 で確定済)
 8. **Manager integrate**: 各 dev 完了報告を集約 → MERGED.md を `<impl_notes.dir>/MERGED.md` に persist
 9. **Team review**: `Task(reviewer-agent, --codex)` (comprehensive + codex parallel) → P0/P1 judge

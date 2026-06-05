@@ -46,7 +46,7 @@ Schema: `references/agent-team-contract.md` §1 (PO output) を canonical 参照
 
 1. **Analyze PO instruction** - Apply fallback rules per table
 2. **Decompose tasks** - Analyze codebase via Serena MCP, identify dependencies
-3. **Create allocation** - Assign tasks to Dev 1-4; decide mode (parallel/staged/sequential). Derive IMPL_NOTES dir path (see "IMPL_NOTES merge" below) and include in each Dev's context as `impl_notes.dir`
+3. **Create allocation** - Assign tasks to Dev 1-4; **compute formula_trace per PARALLEL-PATTERNS.md formula and include in output**; decide mode (parallel/staged/sequential). Derive IMPL_NOTES dir path (see "IMPL_NOTES merge" below) and include in each Dev's context as `impl_notes.dir`
 4. **Return allocation to parent** - Parent ensures `impl_notes.dir` exists (`mkdir -p`), then spawns `Task(developer-agent)` in 1 message
 5. **Integrate (after parent calls back)** - Detect collisions/inconsistencies + merge IMPL_NOTES (see below). Include failed Dev ID/reason; continue integrating successes
 6. **Return result** - Integration result (files, issues, failed Dev info, MERGED.md content + path, open-questions flag) via PO to parent
@@ -58,7 +58,9 @@ Full detail: `references/PARALLEL-PATTERNS.md`
 
 Worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`
 
-Summary: Based on critical-path-first formula (`LPT_makespan + overhead < sum × 0.95`), use parallel if: 2+ independent tasks + no shared file edits + integration owner defined. `N = min(independent count, 8)`; retry with smaller N if formula fails; N=1 = sequential.
+Summary: Apply critical-path formula (`LPT_makespan + overhead < sum × 0.95`) from `references/PARALLEL-PATTERNS.md`. Parallel adoption requires: 2+ independent tasks + no shared file edits + integration owner defined. `N_initial = min(independent count, 8)`; if formula FAIL → reduce N by 1, re-evaluate (>=2), else N=1 sequential.
+
+**Output requirement**: Manager MUST emit `formula_trace` object with all sub-fields above. Parent echoes this trace to user verbatim before fan-out (judgment transparency). Skipping `formula_trace` → parent rejects allocation and re-requests.
 
 ## Available tools (Serena MCP required)
 
@@ -104,6 +106,20 @@ Schema: `references/agent-team-contract.md` §3 (Manager → parent) を canonic
   - `verify`: `{lint, typecheck, test}` の 3 sub-field object (該当なしは空文字列 `""`、単一 string 禁止)
   - `dod`: 1 行 success criteria
 
+**新規必須 field**: `formula_trace`
+- `independent_task_count`: integer
+- `N_chosen`: integer (= min(count, 8) after formula evaluation)
+- `T_i_estimates`: array of seconds (one per task, ordered by tasks[].developer_id)
+- `T_i_basis`: `historical | manager-breakdown | simple-rules | unknown` (per PARALLEL-PATTERNS.md §T_i estimation priority)
+- `sum_T_i`: integer seconds
+- `LPT_makespan`: integer seconds
+- `overhead`: integer seconds (`orchestration+integration+spawn` per `references/PARALLEL-PATTERNS.md#cost-breakdown`)
+- `expected_parallel`: integer (= LPT_makespan + overhead)
+- `expected_serial`: integer (= sum_T_i)
+- `formula_result`: `PASS` | `FAIL`
+- `formula_threshold`: literal `expected_parallel < expected_serial * 0.95`
+- `downgrade_reason`: string or null (filled if N was reduced from initial min(count,8))
+
 **禁止事項**:
 - contract §3 にない field 独自追加禁止
 - `task` / `verify` を自由文字列で返却禁止 (必ず sub-field object)
@@ -111,7 +127,7 @@ Schema: `references/agent-team-contract.md` §3 (Manager → parent) を canonic
 
 違反時、parent は出力を破棄して再走指示。
 
-Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。
+Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。Manager MUST include computed formula_trace in every allocation (mandatory, not optional)。
 
 ## Developer allocation handoff
 

@@ -31,6 +31,10 @@ ADDITIONAL_CONTEXT=""
 # ====================================
 _principles_file="$HOME/.claude/guidelines/writing/PRINCIPLES.md"
 
+# _extract_term_list の per-process cache (同一プロセス内で同 key の grep を1回に削減)
+declare -A _term_list_cache=()
+_term_list_cache_loaded=0
+
 # block ログ出力関数
 # 引数: tool_name, hit_term, block|warn
 _append_jp_quality_log() {
@@ -69,15 +73,29 @@ _strip_code_blocks() {
 }
 
 # 指定 key の list を PRINCIPLES.md から抽出 (「**<key>**: 語1 / 語2 / ...」行)
+# per-process cache: 同 file+key の grep を1回に削減
 _extract_term_list() {
   local file="$1"
   local key="$2"
   [[ -f "$file" ]] || return 0
+  local cache_key="${file}::${key}"
+  if [[ -v "_term_list_cache[${cache_key}]" ]]; then
+    local cached="${_term_list_cache[${cache_key}]}"
+    [[ -n "$cached" ]] && printf '%s\n' "${cached}"
+    return 0
+  fi
   local line
   line=$(grep -m1 "^\*\*${key}\*\*:" "$file" 2>/dev/null || true)
-  [[ -z "$line" ]] && return 0
+  if [[ -z "$line" ]]; then
+    _term_list_cache["${cache_key}"]=""
+    return 0
+  fi
   local body="${line#*: }"
-  printf '%s' "$body" | tr '/' '\n' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//' | grep -v '^$' || true
+  local result
+  result=$(printf '%s' "$body" | tr '/' '\n' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//' | grep -v '^$' || true)
+  _term_list_cache["${cache_key}"]="${result}"
+  [[ -n "$result" ]] && printf '%s\n' "${result}"
+  return 0
 }
 
 # AI定型語を PRINCIPLES.md から抽出 (後方互換 wrapper)
@@ -1145,7 +1163,7 @@ PYEOF
     # ただし general-purpose は CLAUDE.md「原則使わない」最大コスト源 → Boundary 警告
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
     # 並列判定 self-review (全 Task 発火時に inject)
-    PARALLEL_REVIEW="【並列 self-review】独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1。判定詳細: references/PARALLEL-PATTERNS.md)"
+    PARALLEL_REVIEW=$'【並列 self-review (強制 echo)】\n1. Manager 経由なら allocation 中の formula_trace を user に 2 行 echo:\n   formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / <PASS|FAIL> (basis=<T_i_basis>)\n   fan-out: N=<n>, targets=<file count>\n2. Manager 未経由の直接 Task 発火 (例: explore-agent / developer-agent 単発) は 1 行 echo:\n   judgment: N=<n> / independent_tasks=<count> / parallel=<reason or \'single-task\'>\n3. 独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1)\n4. echo 抜けは under-parallel risk (canonical: references/PARALLEL-PATTERNS.md)'
 
     # parent 事前準備 missing 検出 (warn-only、block しない)
     TASK_PROMPT=$(jq -r '.tool_input.prompt // empty' <<< "$INPUT")
