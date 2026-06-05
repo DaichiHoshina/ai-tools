@@ -157,7 +157,7 @@ Task(subagent_type: "reviewer-agent", prompt: "Review post-impl")
 
 - **Read-only**: No code edits
 - **Flag issues & propose only**: Fixes → Developer Agent
-- **Verify via `/lint-test`**: Recommended (verify-app launches explicit request or `/flow --auto` background only; see `verify-app.md` launch condition)
+- **Verify via `/lint-test`**: Recommended (verify-app launches explicit request or `/flow --auto` background only; see `agents/verify-app.md` launch condition)
 
 ## `/flow` Team chain operation
 
