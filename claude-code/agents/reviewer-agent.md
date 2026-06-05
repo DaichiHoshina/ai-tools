@@ -165,7 +165,7 @@ Rules when parent launches via Team path. **Parallel: comprehensive-review + cod
 
 ### Input (parent prompt)
 
-Manager integration result / PO QA criteria / re-verify or first-time flag
+Manager integration result / PO QA criteria / `is_reverify: true/false` flag
 
 ### Integration rule (codex available)
 
