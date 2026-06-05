@@ -9,6 +9,21 @@ Analyze past session history and work records, auto-generate improvement proposa
 
 ## Execution Flow
 
+### Phase 0: 保存先選択 (調査開始前)
+
+AskUserQuestion で保存先を選択する。
+
+- question: "retrospective 保存先を選んでください"
+- options:
+  1. `private` (default): `~/.claude/references-private/retrospective/YYYY-MM-DD_<slug>.md`
+  2. `public`: `docs/reports/retrospective/YYYY-MM-DD_<slug>.md`
+
+**default = private**。社内情報混入を防ぐため、明示的に `public` を選んだ場合のみ public path に保存する。
+
+**public 選択時の追加必須手順**:
+- 本文先頭 1 行に `rules/public-repo-private-data-block.md` 参照を echo する
+- 分析対象セッションに社内語 (social-hit term) が含まれないことを確認してから保存する
+
 ### Phase 1: Data Collection
 
 **history.jsonl** — timestamp filter (last 7 days), then grep churn signals:
@@ -55,8 +70,7 @@ Delegation rule: 1 domain = 1 agent call. Never bundle multiple domains into 1 p
 
 If writing failures detected (user feedback "hard to read" / "AI-smelling" / "so what?"), accumulate examples to memory for next session's hook reference.
 
-**保存先判断 (report / HTML 含む全保存 step 共通)**:
-分析対象セッションに社内 product 名 / 識別子 (social-hit term: `rules/public-repo-private-data-block.md` 参照) が含まれる可能性がある場合は `~/.claude/references-private/` に保存する。含まないと確実な場合のみ `docs/reports/` (public) に保存可。判断に迷う場合は AskUserQuestion で `docs/reports/ (public)` vs `~/.claude/references-private/ (private)` を提示してから保存する。
+**保存先は Phase 0 選択結果に従う** (private / public)。
 
 Save to: `~/.claude/projects/{project}/memory/writing_failure_{topic}.md` (frontmatter: `name` / `description` / `metadata.type: writing-failure` / `metadata.date`). Sections: What Happened / Relevant Location / Root Cause / Prevention (cite PRINCIPLES.md axis).
 
