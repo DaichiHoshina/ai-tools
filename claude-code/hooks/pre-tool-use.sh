@@ -840,17 +840,17 @@ _check_large_repo_consecutive_edit() {
   local _WARN_FILE="${_LOG_DIR}/.delegation-warned-${session_id}"
 
   # large-repo src pattern 判定
-  # 対象: ~/ghq/github.com/<snkr>/* または *-loadtest/* または *-terraform/* の src 拡張子
+  # 対象: 明示 prefix に絞る (~/ghq/github.com/ 全体は OSS clone を巻き込むため削除)
+  # hook source は allowlist 対象のため social-hit term literal 記載可 (rules/public-repo-private-data-block.md)
   local _IS_LARGE_REPO=0
-  if [[ "$file_path" =~ ^"${HOME}"/ghq/github\.com/[^/]+-loadtest/ ]] || \
-     [[ "$file_path" =~ ^"${HOME}"/ghq/github\.com/[^/]+-terraform/ ]]; then
-    _IS_LARGE_REPO=1
-  fi
-  # ~/ghq/github.com/snkrdunk/* は social-hit block のため pattern は org/repo/* で一般化
-  # task 仕様「~/ghq/github.com/*」全体が対象
-  if [[ "$file_path" =~ ^"${HOME}"/ghq/github\.com/ ]]; then
-    _IS_LARGE_REPO=1
-  fi
+  case "$file_path" in
+    "${HOME}"/ghq/github.com/snkrdunk/* | \
+    "${HOME}"/ghq/github.com/snkrdunk-loadtest/* | \
+    "${HOME}"/ghq/github.com/snkrdunk-terraform/*)
+      _IS_LARGE_REPO=1 ;;
+    *)
+      _IS_LARGE_REPO=0 ;;
+  esac
 
   # src 拡張子チェック
   local _IS_SRC=0

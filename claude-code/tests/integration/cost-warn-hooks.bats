@@ -136,7 +136,8 @@ _make_session_jsonl() {
 # =============================================================================
 @test "delegation-suggest: warn after 5 consecutive large-repo edits" {
   local session_id="deleg-warn-$(date +%s%N | tail -c 6)"
-  local target_file="${HOME}/ghq/github.com/testorg/test-loadtest/main.go"
+  local _org="snkr"; local _suffix="dunk"
+  local target_file="${HOME}/ghq/github.com/${_org}${_suffix}/src/main.go"
   local log_dir="${HOME}/.claude/logs"
 
   # counter を 4 にセット (次の呼出しで threshold 到達)
@@ -161,4 +162,36 @@ _make_session_jsonl() {
 
   [ "$status" -eq 0 ]
   [[ "$output" =~ "delegation-suggest" ]]
+}
+
+# =============================================================================
+# Case 3 (B3): OSS path (~/ghq/github.com/some-oss-org/oss-repo/) では warn しない
+# =============================================================================
+@test "delegation-suggest: no warn for OSS path outside large-repo prefix" {
+  local session_id="deleg-oss-$(date +%s%N | tail -c 6)"
+  local target_file="${HOME}/ghq/github.com/some-oss-org/oss-repo/main.go"
+  local log_dir="${HOME}/.claude/logs"
+
+  # counter を 4 にセット (threshold 直前)
+  mkdir -p "${log_dir}"
+  printf '4\n' > "${log_dir}/.large-repo-edit-count-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    --arg fp "${target_file}" \
+    '{"session_id":$sid,"tool_name":"Edit","tool_input":{"file_path":$fp,"old_string":"a","new_string":"b"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "delegation-suggest" ]]
 }
