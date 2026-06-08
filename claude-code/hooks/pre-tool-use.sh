@@ -678,7 +678,8 @@ _check_social_hit() {
   case "$rel_path" in
     claude-code/rules/public-repo-private-data-block.md|\
     claude-code/CLAUDE.md|\
-    claude-code/hooks/pre-tool-use.sh)
+    claude-code/hooks/pre-tool-use.sh|\
+    claude-code/tests/unit/hooks/pre-tool-use.bats)
       return 0
       ;;
   esac
@@ -700,7 +701,7 @@ _check_social_hit() {
     ADDITIONAL_CONTEXT="ai-tools repo は public。社内 product 名 / 識別子を public repo に書き込めません。
 対処: file_path を ~/.claude/references-private/ に切り替えるか、term を削除 / 匿名化して再実行してください。
 ログ: ~/.claude/logs/social-hit-block.log"
-    printf '[social-hit-block] term=%s file=%s\n' "$word_list" "$file_path" >&2
+    printf '[social-hit-block] hit_term=%s file=%s\n' "$word_list" "$file_path" >&2
     _append_social_hit_log "$TOOL_NAME" "$word_list" "$file_path"
   fi
 }

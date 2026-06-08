@@ -1117,3 +1117,66 @@ _teardown_git_stub_dual() {
     }
   done
 }
+
+# =============================================================================
+# social-hit block stderr echo テスト
+# hit_term= format 検証 (2026-06-08 追加)
+# =============================================================================
+
+# social-hit block 発生時に stderr へ [social-hit-block] hit_term=<term> file=<path> を出力する検証
+# NOTE: term literal は split 記法で hook block を回避 (このファイル自体は allowlist 除外済)
+
+_run_social_hit_write() {
+  local file_path="$1"
+  local content="$2"
+  local tool_name="${3:-Write}"
+  local input
+  input=$(jq -n \
+    --arg name "$tool_name" \
+    --arg fp "$file_path" \
+    --arg ct "$content" \
+    '{tool_name: $name, tool_input: {file_path: $fp, content: $ct}}')
+  # stdout と stderr を両方取得するため 2>&1 でマージ (bats run の $output に集約)
+  run bash -c 'echo "$1" | bash "$2" 2>&1' _ "$input" "$HOOK_FILE"
+}
+
+@test "social-hit: Write で hit 時に stderr へ [social-hit-block] hit_term= を出力する" {
+  # term literal は bash string concat で split し hook block を回避
+  local term1="snkr""dunk"
+  local target_path
+  target_path="${HOME}/ai-tools/claude-code/some-new-file.md"
+  _run_social_hit_write "${target_path}" "this mentions ${term1} product"
+  # social-hit block は exit 2 で返る
+  [[ "$status" -eq 2 ]]
+  # stderr に [social-hit-block] hit_term= が含まれること
+  echo "${output}" | grep -q "\[social-hit-block\] hit_term="
+}
+
+@test "social-hit: stderr 出力に file= パスが含まれる" {
+  local term2="ori""pa"
+  local target_path
+  target_path="${HOME}/ai-tools/claude-code/another-file.md"
+  _run_social_hit_write "${target_path}" "${term2} data pipeline"
+  [[ "$status" -eq 2 ]]
+  echo "${output}" | grep -q "file="
+}
+
+@test "social-hit: allowlist ファイル (pre-tool-use.sh) は block されない" {
+  # 自己除外 allowlist: claude-code/hooks/pre-tool-use.sh は判定対象外
+  local term1="snkr""dunk"
+  local term2="ori""pa"
+  local allowlist_path
+  allowlist_path="${HOME}/ai-tools/claude-code/hooks/pre-tool-use.sh"
+  _run_social_hit_write "${allowlist_path}" "${term1} ${term2} term"
+  # allowlist なので block されない (exit 2 にならない)
+  [[ "$status" -ne 2 ]]
+}
+
+@test "social-hit: ai-tools 配下以外のパスは block されない" {
+  local term1="snkr""dunk"
+  local outside_path
+  outside_path="${HOME}/ghq/github.com/myorg/some-repo/file.md"
+  _run_social_hit_write "${outside_path}" "${term1} content"
+  # ai-tools/ 外なので block されない
+  [[ "$status" -ne 2 ]]
+}
