@@ -179,6 +179,7 @@ _check_ai_jargon() {
 }
 
 # 外向き text を AI語 + カタカナ造語チェックし、hit 時に Forbidden block をセットする
+# 全 block category を一括収集して exit 2 + まとめて提示する (逐次 block 廃止)
 # 呼び出し元: tool ごとの case 節
 _block_if_ai_jargon() {
   local text="$1"
@@ -186,8 +187,7 @@ _block_if_ai_jargon() {
   # 必須 key sanity check (session 内 cache 済なら即 return)
   _assert_required_keys
 
-  # inject byte size 計測: 4 list の合計抽出 byte 数を計算してログ出力
-  # _extract_term_list 結果を再利用（grep/extract を cache して latency 最小化）
+  # inject byte size 計測: 全 block list の合計抽出 byte 数を計算してログ出力
   local _inject_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)" "冗長表現 (block)")
   local _inject_total=0
   local _inject_key
@@ -200,96 +200,94 @@ _block_if_ai_jargon() {
   [[ "$_inject_total" -gt 1500 ]] && _inject_status="over"
   _append_jp_quality_inject_log "$context_label" "$_inject_total" "$_inject_status"
 
-  local hit_words
-  # AI定型語 チェック (block)
-  if ! hit_words=$(_check_term_list "$text" "AI定型語"); then
-    GUARD_CLASS="Forbidden"
-    local word_list
-    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
-    MESSAGE="${ICON_CRITICAL} AI定型語 block: [${word_list}] (${context_label})"
-    local _full_list
-    _full_list=$(_extract_term_list "$_principles_file" "AI定型語" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="AI定型語を削除または具体表現に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
+  # --- block category 定義 ---
+  # 各要素: "key|label|guidance"
+  # label: bats テスト互換の表示名 (例: "難読漢語 block")
+  local _block_categories=(
+    "AI定型語|AI定型語 block|AI定型語を削除または具体表現に置換してください"
+    "カタカナ造語禁止|カタカナ造語 block|カタカナ造語を削除または説明的表現に置換してください"
+    "難読漢語 (block)|難読漢語 block|難読漢語を平易な語に置換してください"
+    "非日常英語 (block)|非日常英語 block|日常で使う英語または日本語に置換してください"
+    "弱い表現 (block)|弱い表現 block|弱い表現を断定または「検証が必要」に置換してください"
+    "冗長表現 (block)|冗長表現 block|冗長表現を短縮形に置換してください (例: することができる → できる、を行う → する)"
+  )
 
-block list (この session で全て回避): ${_full_list}"
-    _append_jp_quality_log "$context_label" "$word_list" "block"
+  # block hit: key → hit_words の連想配列
+  declare -A _hit_by_key=()
+  local _hit_words
+  local _cat_entry _cat_key _cat_label _cat_guidance
+  local _has_block=0
+
+  for _cat_entry in "${_block_categories[@]}"; do
+    _cat_key="${_cat_entry%%|*}"
+    if ! _hit_words=$(_check_term_list "$text" "$_cat_key"); then
+      _hit_by_key["${_cat_key}"]="${_hit_words}"
+      _has_block=1
+    fi
+  done
+
+  # warn-only チェック (block 有無に関係なく実行)
+  local _warn_words=""
+  if ! _warn_words=$(_check_term_list "$text" "断定語 (warn-only)"); then
+    local _warn_list
+    _warn_list=$(printf '%s' "$_warn_words" | tr '\n' ',' | sed 's/,$//')
+    _append_jp_quality_log "$context_label" "$_warn_list" "warn"
+  fi
+
+  # block なし → return
+  if [[ "$_has_block" -eq 0 ]]; then
     return
   fi
-  # カタカナ造語 チェック (block)
-  if ! hit_words=$(_check_term_list "$text" "カタカナ造語禁止"); then
-    GUARD_CLASS="Forbidden"
-    local word_list
-    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
-    MESSAGE="${ICON_CRITICAL} カタカナ造語 block: [${word_list}] (${context_label})"
-    local _full_list
-    _full_list=$(_extract_term_list "$_principles_file" "カタカナ造語禁止" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="カタカナ造語を削除または説明的表現に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
 
-block list (この session で全て回避): ${_full_list}"
-    _append_jp_quality_log "$context_label" "$word_list" "block"
-    return
-  fi
-  # 難読漢語 (block)
-  if ! hit_words=$(_check_term_list "$text" "難読漢語 (block)"); then
-    GUARD_CLASS="Forbidden"
-    local word_list
-    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
-    MESSAGE="${ICON_CRITICAL} 難読漢語 block: [${word_list}] (${context_label})"
-    local _full_list
-    _full_list=$(_extract_term_list "$_principles_file" "難読漢語 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="難読漢語を平易な語に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
+  # --- 全 hit を一括集計してメッセージ構築 ---
+  GUARD_CLASS="Forbidden"
 
-block list (この session で全て回避): ${_full_list}"
-    _append_jp_quality_log "$context_label" "$word_list" "block"
-    return
-  fi
-  # 非日常英語 (block)
-  if ! hit_words=$(_check_term_list "$text" "非日常英語 (block)"); then
-    GUARD_CLASS="Forbidden"
-    local word_list
-    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
-    MESSAGE="${ICON_CRITICAL} 非日常英語 block: [${word_list}] (${context_label})"
-    local _full_list
-    _full_list=$(_extract_term_list "$_principles_file" "非日常英語 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="日常で使う英語または日本語に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
+  # 全 hit 用語をカンマ区切りで結合 (log 用)
+  local _all_terms_list=""
+  local _detail_lines=""
+  for _cat_entry in "${_block_categories[@]}"; do
+    _cat_key="${_cat_entry%%|*}"
+    # label: 2番目フィールド (key|label|guidance から抽出)
+    local _rest="${_cat_entry#*|}"
+    _cat_label="${_rest%%|*}"
+    _cat_guidance="${_rest#*|}"
+    if [[ -v "_hit_by_key[${_cat_key}]" ]]; then
+      local _wl
+      _wl=$(printf '%s' "${_hit_by_key[${_cat_key}]}" | tr '\n' ',' | sed 's/,$//')
+      if [[ -n "$_all_terms_list" ]]; then
+        _all_terms_list="${_all_terms_list},${_wl}"
+      else
+        _all_terms_list="${_wl}"
+      fi
+      # _detail_lines に label を使う (bats テスト "難読漢語 block" 等と互換)
+      _detail_lines="${_detail_lines}  ${_cat_label}: [${_wl}] → ${_cat_guidance}"$'\n'
+    fi
+  done
 
-block list (この session で全て回避): ${_full_list}"
-    _append_jp_quality_log "$context_label" "$word_list" "block"
-    return
-  fi
-  # 弱い表現 (block)
-  if ! hit_words=$(_check_term_list "$text" "弱い表現 (block)"); then
-    GUARD_CLASS="Forbidden"
-    local word_list
-    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
-    MESSAGE="${ICON_CRITICAL} 弱い表現 block: [${word_list}] (${context_label})"
-    local _full_list
-    _full_list=$(_extract_term_list "$_principles_file" "弱い表現 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="弱い表現を断定または「検証が必要」に置換して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
+  # log は全 hit 用語をカンマ区切りで1行
+  _append_jp_quality_log "$context_label" "$_all_terms_list" "block"
 
-block list (この session で全て回避): ${_full_list}"
-    _append_jp_quality_log "$context_label" "$word_list" "block"
-    return
-  fi
-  # 冗長表現 (block)
-  if ! hit_words=$(_check_term_list "$text" "冗長表現 (block)"); then
-    GUARD_CLASS="Forbidden"
-    local word_list
-    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
-    MESSAGE="${ICON_CRITICAL} 冗長表現 block: [${word_list}] (${context_label})"
-    local _full_list
-    _full_list=$(_extract_term_list "$_principles_file" "冗長表現 (block)" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
-    ADDITIONAL_CONTEXT="冗長表現を短縮形に置換して再実行してください (例: することができる → できる、を行う → する)。source: guidelines/writing/NG-DICTIONARY.md
+  # systemMessage: 検出用語一覧
+  MESSAGE="${ICON_CRITICAL} NG用語 block (${context_label}): [${_all_terms_list}]"
 
-block list (この session で全て回避): ${_full_list}"
-    _append_jp_quality_log "$context_label" "$word_list" "block"
-    return
-  fi
-  # 断定語 (warn-only) チェック: commit message 文脈では正当な用法のため block しない
-  if ! hit_words=$(_check_term_list "$text" "断定語 (warn-only)"); then
-    local word_list
-    word_list=$(printf '%s' "$hit_words" | tr '\n' ',' | sed 's/,$//')
-    _append_jp_quality_log "$context_label" "$word_list" "warn"
+  # additionalContext: category 別詳細 + source
+  ADDITIONAL_CONTEXT="以下のNG用語を修正して再実行してください。source: guidelines/writing/NG-DICTIONARY.md
+${_detail_lines}"
+
+  # 各 block category の block list も表示 (回避参考)
+  local _ref_lines=""
+  for _cat_entry in "${_block_categories[@]}"; do
+    _cat_key="${_cat_entry%%|*}"
+    if [[ -v "_hit_by_key[${_cat_key}]" ]]; then
+      local _full_list
+      _full_list=$(_extract_term_list "$_principles_file" "$_cat_key" 2>/dev/null | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g' || true)
+      _ref_lines="${_ref_lines}  ${_cat_key} block list: ${_full_list}"$'\n'
+    fi
+  done
+  if [[ -n "$_ref_lines" ]]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}
+block list (この session で全て回避):
+${_ref_lines}"
   fi
 }
 
@@ -764,6 +762,126 @@ _check_colloquial_trigger_missing_delegation() {
 }
 
 # ====================================
+# session split warn (warn-only, pre-tool-use)
+# session age >= 3h or jsonl msg 数 >= 1000 で /clear 推奨を additionalContext に注入
+# 1 session につき 1 回のみ発火 (state file: ~/.claude/logs/.session-split-warned-<id>)
+# ====================================
+_check_session_split() {
+  local session_id="$1"
+  local cwd="$2"
+  [[ -z "$session_id" || "$session_id" == "null" ]] && return 0
+
+  local _WARN_FILE="${HOME}/.claude/logs/.session-split-warned-${session_id}"
+  [[ -f "$_WARN_FILE" ]] && return 0  # 既に通知済 → skip
+
+  # jsonl path 構築 (user-prompt-submit.sh と同一 slug 変換)
+  local _slug="${cwd//\//-}"
+  _slug="${_slug//\./-}"
+  local _JSONL="${HOME}/.claude/projects/${_slug}/${session_id}.jsonl"
+  [[ ! -f "$_JSONL" ]] && return 0
+
+  # session start epoch
+  local _NOW
+  printf -v _NOW '%(%s)T' -1
+  local _TS_RAW
+  _TS_RAW=$(head -20 "$_JSONL" 2>/dev/null | grep -m1 '"timestamp":"' | grep -o '"timestamp":"[^"]*"' | cut -d'"' -f4) || true
+  [[ -z "$_TS_RAW" ]] && return 0
+  local _TS_TRIM="${_TS_RAW%%.*}"
+  _TS_TRIM="${_TS_TRIM%Z}"
+  local _START_EPOCH
+  _START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$_TS_TRIM" "+%s" 2>/dev/null) || return 0
+  local _ELAPSED=$(( _NOW - _START_EPOCH ))
+
+  # msg count
+  local _MSG_COUNT
+  _MSG_COUNT=$(grep -c '"type":"user"\|"type":"assistant"' "$_JSONL" 2>/dev/null) || _MSG_COUNT=0
+
+  local _AGE_H=$(( _ELAPSED / 3600 ))
+  local _REASON=""
+  (( _ELAPSED >= 10800 )) && _REASON="age=${_AGE_H}h"
+  if (( _MSG_COUNT >= 1000 )); then
+    [[ -n "$_REASON" ]] && _REASON="${_REASON} / "
+    _REASON="${_REASON}messages=${_MSG_COUNT}"
+  fi
+  [[ -z "$_REASON" ]] && return 0
+
+  # 発火: state file 書き込み + log 追記 + additionalContext 追加
+  mkdir -p "${HOME}/.claude/logs" 2>/dev/null || true
+  touch "$_WARN_FILE" 2>/dev/null || true
+  local _TS_LABEL
+  _TS_LABEL=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf '%s | %s | %s | msg=%s\n' "$_TS_LABEL" "$session_id" "age=${_AGE_H}h" "$_MSG_COUNT" \
+    >> "${HOME}/.claude/logs/session-split-warn.log" 2>/dev/null || true
+
+  local _WARN_MSG="[session-split-warn] ${_REASON} exceeds threshold (3h / 1000 msg). Suggest /clear or /compact to refresh cache TTL"
+  if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_WARN_MSG}"
+  else
+    ADDITIONAL_CONTEXT="${_WARN_MSG}"
+  fi
+}
+
+# ====================================
+# large-repo 連続 Edit 強制委譲 signal (warn-only, pre-tool-use)
+# 同 session 内で直近 5 回連続 Write/Edit/MultiEdit が large-repo src に hit した場合に
+# developer-agent 委譲を促す additionalContext を注入する
+# counter: ~/.claude/logs/.large-repo-edit-count-<session_id>
+# 重複抑制: ~/.claude/logs/.delegation-warned-<session_id> (1 threshold につき 1 回)
+# ====================================
+_check_large_repo_consecutive_edit() {
+  local session_id="$1"
+  local file_path="$2"
+  [[ -z "$session_id" || "$session_id" == "null" ]] && return 0
+  [[ -z "$file_path" ]] && return 0
+
+  local _LOG_DIR="${HOME}/.claude/logs"
+  mkdir -p "$_LOG_DIR" 2>/dev/null || true
+  local _COUNT_FILE="${_LOG_DIR}/.large-repo-edit-count-${session_id}"
+  local _WARN_FILE="${_LOG_DIR}/.delegation-warned-${session_id}"
+
+  # large-repo src pattern 判定
+  # 対象: ~/ghq/github.com/<snkr>/* または *-loadtest/* または *-terraform/* の src 拡張子
+  local _IS_LARGE_REPO=0
+  if [[ "$file_path" =~ ^"${HOME}"/ghq/github\.com/[^/]+-loadtest/ ]] || \
+     [[ "$file_path" =~ ^"${HOME}"/ghq/github\.com/[^/]+-terraform/ ]]; then
+    _IS_LARGE_REPO=1
+  fi
+  # ~/ghq/github.com/snkrdunk/* は social-hit block のため pattern は org/repo/* で一般化
+  # task 仕様「~/ghq/github.com/*」全体が対象
+  if [[ "$file_path" =~ ^"${HOME}"/ghq/github\.com/ ]]; then
+    _IS_LARGE_REPO=1
+  fi
+
+  # src 拡張子チェック
+  local _IS_SRC=0
+  case "$file_path" in
+    *.go|*.ts|*.tsx|*.py|*.dart|*.tf) _IS_SRC=1 ;;
+  esac
+
+  if [[ "$_IS_LARGE_REPO" -eq 1 && "$_IS_SRC" -eq 1 ]]; then
+    # hit: counter をインクリメント
+    local _CUR=0
+    [[ -f "$_COUNT_FILE" ]] && read -r _CUR < "$_COUNT_FILE" 2>/dev/null || _CUR=0
+    _CUR=$(( _CUR + 1 ))
+    printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
+
+    # threshold 判定 (>= 5)
+    if (( _CUR >= 5 )) && [[ ! -f "$_WARN_FILE" ]]; then
+      touch "$_WARN_FILE" 2>/dev/null || true
+      local _SUGGEST="[delegation-suggest] last ${_CUR} edits on large-repo source. Next edit-class op → consider developer-agent delegation"
+      if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+        ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
+      else
+        ADDITIONAL_CONTEXT="${_SUGGEST}"
+      fi
+    fi
+  else
+    # non-large-repo hit: counter をリセット
+    printf '0\n' > "$_COUNT_FILE" 2>/dev/null || true
+  fi
+}
+
+# ====================================
 # worktree session 内 main repo 直接 Edit guard
 # worktree session (CWD が **/.claude/worktrees/* 配下) で file_path が
 # worktree 外を指す Edit/Write/NotebookEdit を exit 2 でブロックする
@@ -906,6 +1024,10 @@ _inject_today_commits() {
 # protection-mode 3層分類判定
 # ====================================
 
+# session split warn: 任意 tool 呼出し前に 1 session 1 回だけ注入 (warn-only)
+_CWD_FOR_SPLIT=$(jq -r '.cwd // empty' <<< "$INPUT")
+_check_session_split "$SESSION_ID" "$_CWD_FOR_SPLIT"
+
 case "$TOOL_NAME" in
   # === 安全操作（即実行可能） ===
   "Read")
@@ -949,6 +1071,10 @@ case "$TOOL_NAME" in
     if [[ "$GUARD_CLASS" == "Forbidden" ]]; then
       :
     else
+
+    # large-repo 連続 Edit 委譲 signal (warn-only)
+    _EDIT_PATH_FOR_LARGE=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
+    _check_large_repo_consecutive_edit "$SESSION_ID" "$_EDIT_PATH_FOR_LARGE"
 
     # 直編集ガード: ~/.claude/{synced_dir}/... で repo source 存在時に redirect 推奨
     # sync.sh to-local で上書き消失するため、必ず repo source を編集する規約
