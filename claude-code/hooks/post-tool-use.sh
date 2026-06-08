@@ -127,6 +127,22 @@ case "$TOOL_NAME" in
     ;;
 
   "Bash")
+    # --- Bash command breakdown: 先頭 token を tsv に記録 ---
+    # analytics でコマンド内訳を判定可能にする (Serena 化余地評価用)
+    if [ -n "$COMMAND" ]; then
+      _BASH_LOG_DIR="${HOME}/.claude/logs"
+      _BASH_BREAKDOWN_TSV="${_BASH_LOG_DIR}/bash-breakdown.tsv"
+      mkdir -p "${_BASH_LOG_DIR}"
+      # 先頭 token: 先頭 whitespace を除去した後の最初の単語
+      _TRIMMED="${COMMAND#"${COMMAND%%[! ]*}"}"
+      _TOKEN="${_TRIMMED%%[[:space:]]*}"
+      # full_command: tab/newline を space に置換し先頭 60 chars
+      _FULL60="${COMMAND//$'\t'/ }"
+      _FULL60="${_FULL60//$'\n'/ }"
+      _FULL60="${_FULL60:0:60}"
+      _TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+      printf '%s\t%s\t%s\n' "${_TS}" "${_TOKEN}" "${_FULL60}" >> "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || true
+    fi
     # statusline マーカー更新ロジック
     # 1. cd 検出時: cd 先で書く（worktree/repo 移動の明示的追跡）
     # 2. cd 無し時: data.cwd で書く（session 認識する cwd へ巻き戻し）
