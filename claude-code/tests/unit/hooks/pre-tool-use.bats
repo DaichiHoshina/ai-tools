@@ -1180,3 +1180,28 @@ _run_social_hit_write() {
   # ai-tools/ 外なので block されない
   [[ "$status" -ne 2 ]]
 }
+
+# =============================================================================
+# social-hit block: ghq 実 path (~/ai-tools/ symlink なし環境) テスト
+# (2026-06-08 追加: symlink 非存在時の block 漏れ修正の回帰テスト)
+# =============================================================================
+
+@test "social-hit: ghq 実 path でも hit 時に block される" {
+  local term1="snkr""dunk"
+  local ghq_path
+  # DaichiHoshina を個人名として直接 path に含めるが、path literal なので block 対象外
+  ghq_path="${HOME}/ghq/github.com/DaichiHoshina/ai-tools/claude-code/some-new-file.md"
+  _run_social_hit_write "${ghq_path}" "this mentions ${term1} product"
+  # ghq 実 path でも exit 2 で block される
+  [[ "$status" -eq 2 ]]
+  echo "${output}" | grep -q "\[social-hit-block\] hit_term="
+}
+
+@test "social-hit: ghq 実 path でも file= パスが stderr 出力に含まれる" {
+  local term2="ori""pa"
+  local ghq_path
+  ghq_path="${HOME}/ghq/github.com/DaichiHoshina/ai-tools/claude-code/docs/report.md"
+  _run_social_hit_write "${ghq_path}" "${term2} pipeline data"
+  [[ "$status" -eq 2 ]]
+  echo "${output}" | grep -q "file="
+}

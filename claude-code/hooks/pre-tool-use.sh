@@ -5,6 +5,19 @@
 
 set -euo pipefail
 
+# lib/hook-utils.sh を source する (ai-tools path helper 等)
+_HOOK_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" 2>/dev/null && pwd)"
+# shellcheck source=../lib/hook-utils.sh
+if [[ -f "${_HOOK_LIB_DIR}/hook-utils.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "${_HOOK_LIB_DIR}/hook-utils.sh"
+else
+  # fallback: ~/.claude/lib/ 経由 (sync.sh to-local 済み環境)
+  _FALLBACK_LIB="$HOME/.claude/lib/hook-utils.sh"
+  # shellcheck disable=SC1090
+  [[ -f "$_FALLBACK_LIB" ]] && source "$_FALLBACK_LIB" || true
+fi
+
 # Nerd Fonts icons
 ICON_CRITICAL=$'\u25c9'   # exclamation-circle (critical/forbidden)
 ICON_WARNING=$'\u25b2'    # exclamation-triangle (boundary)
@@ -666,15 +679,14 @@ _check_social_hit() {
   # rule file 不在時は silent pass (未 sync 環境への配慮)
   [[ -f "$_social_hit_rule_file" ]] || return 0
 
-  # ai-tools/ 配下の path のみ判定対象
-  local ai_tools_prefix="$HOME/ai-tools/"
-  # HOME を展開した絶対パスで前方一致
-  if [[ "$file_path" != "${ai_tools_prefix}"* ]]; then
+  # ai-tools/ 配下の path のみ判定対象 (symlink と ghq 実 path の両方を OR 判定)
+  if ! _is_aitools_path "$file_path"; then
     return 0
   fi
 
   # 自己除外 (allowlist): rule 説明文として term を保持する file は判定対象外
-  local rel_path="${file_path#"${ai_tools_prefix}"}"
+  local rel_path
+  rel_path=$(_aitools_relpath "$file_path")
   case "$rel_path" in
     claude-code/rules/public-repo-private-data-block.md|\
     claude-code/CLAUDE.md|\
@@ -1251,7 +1263,12 @@ case "$TOOL_NAME" in
       _FIRST_COMP="${_REL_PATH%%/*}"
       case "$_FIRST_COMP" in
         commands|skills|hooks|agents|rules|guidelines|config|references|CLAUDE.md)
-          _REPO_PATH="$HOME/ai-tools/claude-code/$_REL_PATH"
+          # ghq 実 path を canonical として使用 (~/ai-tools/ symlink は存在しない場合がある)
+          _REPO_PATH="$HOME/ghq/github.com/DaichiHoshina/ai-tools/claude-code/$_REL_PATH"
+          # symlink が存在する場合は symlink path を優先
+          if [[ -e "$HOME/ai-tools/claude-code/$_REL_PATH" ]]; then
+            _REPO_PATH="$HOME/ai-tools/claude-code/$_REL_PATH"
+          fi
           if [ -f "$_REPO_PATH" ]; then
             _DIRECT_EDIT_WARN="⚠ 直編集警告: ${_EDIT_PATH} は sync.sh to-local で上書き消失します。代わりに repo source ${_REPO_PATH} を編集してください。"
             if [ -n "$ADDITIONAL_CONTEXT" ]; then
@@ -1286,10 +1303,9 @@ case "$TOOL_NAME" in
     # private-name block: private-name-list.txt の term を ai-tools 配下 file 書込に適用
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
       _PN_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
-      _PN_AI_TOOLS_PREFIX="$HOME/ai-tools/"
-      if [[ "$_PN_PATH" == "${_PN_AI_TOOLS_PREFIX}"* ]]; then
+      if _is_aitools_path "$_PN_PATH"; then
         # 自己除外: rule 説明文として term を保持する file は判定対象外
-        _PN_REL="${_PN_PATH#"${_PN_AI_TOOLS_PREFIX}"}"
+        _PN_REL=$(_aitools_relpath "$_PN_PATH")
         case "$_PN_REL" in
           claude-code/rules/public-repo-private-data-block.md|\
           claude-code/CLAUDE.md|\

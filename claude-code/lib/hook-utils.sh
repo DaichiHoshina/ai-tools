@@ -237,3 +237,44 @@ ensure_worktree_memory_link() {
 
   ln -s "${main_mem}" "${wt_mem}"
 }
+
+# =============================================================================
+# ai-tools repo path helper
+# symlink (~/ai-tools/) と ghq 実 path の両方を OR 判定するユーティリティ。
+# symlink が存在しない環境でも block が正常動作するよう両 prefix を列挙する。
+# =============================================================================
+
+# ai-tools repo の path prefix list を改行区切りで出力する。
+# symlink と ghq 実 path の両方を返す。
+_aitools_prefixes() {
+  printf '%s\n' \
+    "$HOME/ai-tools/" \
+    "$HOME/ghq/github.com/DaichiHoshina/ai-tools/"
+}
+
+# 与えられた path が ai-tools 配下かどうかを判定する。
+# 戻り値: 0=ai-tools 配下 / 1=配下でない
+# usage: _is_aitools_path "$path"
+_is_aitools_path() {
+  local p="$1"
+  local prefix
+  while IFS= read -r prefix; do
+    [[ "$p" == "${prefix}"* ]] && return 0
+  done < <(_aitools_prefixes)
+  return 1
+}
+
+# ai-tools repo 相対 path を取得する (prefix 除去後)。
+# どの prefix にも match しない場合は空文字を出力して 1 を返す。
+# usage: rel=$(_aitools_relpath "$path")
+_aitools_relpath() {
+  local p="$1"
+  local prefix
+  while IFS= read -r prefix; do
+    if [[ "$p" == "${prefix}"* ]]; then
+      printf '%s' "${p#"${prefix}"}"
+      return 0
+    fi
+  done < <(_aitools_prefixes)
+  return 1
+}
