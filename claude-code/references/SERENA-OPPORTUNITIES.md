@@ -15,6 +15,15 @@
 
 ---
 
+## main pre-release (2026-06-08 検出、次 tag で確定)
+
+- [ ] **`typescript_vts` `initialization_options`**: `ls_specific_settings.typescript_vts` 配下に initializationOptions dict を渡せる。Yarn PnP + `typescript.tsdk` 指定の TS project で必須 — 検討箇所: 将来 Yarn PnP TS project を activate した時のみ (現状無し)
+- [ ] **`jetbrains_launch_command`**: project activate 時に IDE 自動起動 — 検討箇所: JetBrains IDE 未使用、scope 外
+- [ ] **Dashboard `trusted_hosts` configurable**: v1.5.2 で導入された host validation を緩和、remote 接続許可 — 検討箇所: dashboard を remote 接続する場合のみ (現状 local default 運用)
+- `find_project_root` worktree fix [pre-release]: worktree が parent project の `.serena/project.yml` に hijack される bug 修正、bugfix 対応不要 (CLI agent を worktree 内起動する運用で恩恵あり、設定変更なし)
+- CLI flag 永続化 bug fix [pre-release]: `start-mcp-server` の transient flag が config 保存される bug、bugfix 対応不要
+- `SvelteLanguageServer` TS/JS routing fix [pre-release]: Svelte project の bugfix、Svelte 未使用 scope 外
+
 ## v1.5.2–v1.5.3 (2026-05-28 検出)
 
 新規 Opportunity なし。v1.5.3 はタグのみ (本体変更 v1.5.2 完結)。
@@ -26,11 +35,11 @@
 
 ## v1.5.0–v1.5.1 (2026-05-19 検出)
 
-- [ ] **`search_for_pattern` `multiline=False` opt-out** (v1.5.0): 既定は `multiline=True` で `re.DOTALL|MULTILINE` 有効。1 行限定検索に切り替えれば `.*` greedy 過食を抑制可 — 検討箇所: 2026-05-18 dotall 事故と同パターンを再発させない為、1 行スコープが明確な search では明示指定。`replace_content` には未開放 (Tool API は dotall hardcode のまま)
-- [ ] **`replace_content` ambiguity ガード** (v1.5.0): `ContentReplacer.replace()` がマッチ内に同パターン再出現する場合 `ValueError("Match is ambiguous: ...")` を返すよう改善。2026-05-18 のような `.*\n` greedy が 5 ファイル横断で発火するケースの一部を構造的に阻止 — 検討箇所: 関連 memory `feedback_serena_replace_regex_dotall.md` の対処手順は維持しつつ、エラー文言出現時の対応 (literal mode or 終端 anchor 明示) を即時切替できる体制
+- [x] **`search_for_pattern` `multiline=False` opt-out** (v1.5.0): 既定は `multiline=True` で `re.DOTALL|MULTILINE` 有効。1 行限定検索に切り替えれば `.*` greedy 過食を抑制可 — 検討箇所: 2026-05-18 dotall 事故と同パターンを再発させない為、1 行スコープが明確な search では明示指定。`replace_content` には未開放 (Tool API は dotall hardcode のまま) (採用 2026-06-08: references/serena-usage-guidelines.md)
+- [x] **`replace_content` ambiguity ガード** (v1.5.0): `ContentReplacer.replace()` がマッチ内に同パターン再出現する場合 `ValueError("Match is ambiguous: ...")` を返すよう改善。2026-05-18 のような `.*\n` greedy が 5 ファイル横断で発火するケースの一部を構造的に阻止 — 検討箇所: 関連 memory `feedback_serena_replace_regex_dotall.md` の対処手順は維持しつつ、エラー文言出現時の対応 (literal mode or 終端 anchor 明示) を即時切替できる体制 (採用 2026-06-08: references/serena-usage-guidelines.md)
 - [ ] **`mem:<name>` メモリ間相互参照** (v1.5.0): メモリ本文から `mem:<name>` で他メモリ参照、rename 時に自動伝播。現状 `~/.claude/projects/.../memory/MEMORY.md` の手書きリンク (`[[name]]` 記法) を Serena 公式記法へ寄せる選択肢 — 検討箇所: 既存 user 補助メモリ 20+ 件、現状 `~/.claude/` 直置きで Serena `write_memory` 経路を通っていないため伝播対象外。Serena 管理メモリへ移行する場合のみ価値あり
 - [ ] **`memory_maintenance` onboarding seed** (v1.5.0): onboarding 時に memory スタイル規約の seed メモリを配置、`global/memory_maintenance` で全プロジェクト共通化可能 — 検討箇所: 現状 `~/.claude/CLAUDE.md` + `rules/genshijin.md` で代替済み、Serena 管理メモリ移行時に統合検討
-- [ ] **`serena memories` CLI command group** (v1.5.0): `list` / `read` / `write` / `check` (整合性検査) / `auto-prefix-references` — 検討箇所: 現状 `~/.claude/projects/.../memory/` 直接操作で完結。`/memory-save` 系スクリプト整合性検査を CLI へ寄せる選択肢
+- ~~**`serena memories` CLI command group** (v1.5.0)~~ (obsolete 2026-06-08): CLI scope は `.serena/memories/` のみ対象、当方の `~/.claude/projects/.../memory/` は Serena 管理外で `serena memories list` の対象外。`/memory-save` 整合性検査の CLI 寄せ替えは scope mismatch で不可
 - [ ] **CUE LSP** (v1.5.1): `cue lsp` 経由で CUE 言語サポート — 検討箇所: CUE プロジェクト activate 時のみ (現状無し)
 - [ ] **GDScript LSP** (v1.5.0): Godot エディタ内蔵 LSP に TCP 接続 — 検討箇所: Godot プロジェクト activate 時のみ (現状無し)
 
