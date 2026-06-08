@@ -707,6 +707,91 @@ _check_social_hit() {
 }
 
 # ====================================
+# private-name block
+# ~/.claude/references-private/private-name-list.txt を動的読込し、
+# social-hit static list と merged して ai-tools 配下 file・Bash 外向き text を block
+# allowlist: daichi / DaichiHoshina / Daichi Hoshina / Anthropic / Claude
+# ====================================
+_private_name_list_file="$HOME/.claude/references-private/private-name-list.txt"
+_private_name_allowlist=("daichi" "DaichiHoshina" "Daichi Hoshina" "Anthropic" "Claude")
+
+# private-name block ログ出力関数
+_append_private_name_log() {
+  local tool_name="$1"
+  local hit_term="$2"
+  local target="$3"
+  local log_dir="$HOME/.claude/logs"
+  local log_file="${log_dir}/private-name-block.log"
+  mkdir -p "$log_dir" 2>/dev/null || true
+  if [[ -f "$log_file" ]]; then
+    local fsize
+    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
+    if [[ "${fsize}" -gt 1048576 ]]; then
+      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+    fi
+  fi
+  local ts
+  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$target" >> "$log_file" 2>/dev/null || true
+}
+
+# private-name-list.txt から term list を読込 (# 行・空行 skip、file 不在時は空)
+_load_private_name_terms() {
+  [[ -f "$_private_name_list_file" ]] || return 0
+  grep -v '^[[:space:]]*#' "$_private_name_list_file" | grep -v '^[[:space:]]*$' || true
+}
+
+# allowlist に含まれるか判定 (含まれる場合 return 0)
+_is_private_name_allowlisted() {
+  local term="$1"
+  local item
+  for item in "${_private_name_allowlist[@]}"; do
+    [[ "$term" == "$item" ]] && return 0
+  done
+  return 1
+}
+
+# private-name block 判定: file_path / label, content を受け取り hit 時に GUARD_CLASS を Forbidden にする
+# 引数: target_label (file_path or "commit message" 等), content
+_check_private_name() {
+  local target_label="$1"
+  local content="$2"
+  [[ -z "$content" ]] && return 0
+
+  # term list 読込
+  local terms=()
+  while IFS= read -r term; do
+    [[ -z "$term" ]] && continue
+    _is_private_name_allowlisted "$term" && continue
+    terms+=("$term")
+  done < <(_load_private_name_terms)
+
+  # term が 0 件なら skip (list 不在 / 空 → fallback は AI 側 default rule のみ)
+  [[ ${#terms[@]} -eq 0 ]] && return 0
+
+  local found=()
+  local t
+  for t in "${terms[@]}"; do
+    if printf '%s' "$content" | grep -qF "$t"; then
+      found+=("$t")
+    fi
+  done
+
+  if [[ ${#found[@]} -gt 0 ]]; then
+    local word_list
+    word_list=$(printf '%s\n' "${found[@]}" | tr '\n' ',' | sed 's/,$//')
+    GUARD_CLASS="Forbidden"
+    MESSAGE="${ICON_CRITICAL} private name detected: [${word_list}] in ${target_label}"
+    ADDITIONAL_CONTEXT="ai-tools repo は public。個人名 / 会社名 / project 固有名詞を public repo に書き込めません。
+対処: term を削除 / 匿名化 (<person-name> / <company-name> / <project-name>) して再実行してください。
+canonical list: ~/.claude/references-private/private-name-list.txt (user 記入のみ)
+ログ: ~/.claude/logs/private-name-block.log"
+    printf '[private-name-block] hit_term=%s target=%s\n' "$word_list" "$target_label" >&2
+    _append_private_name_log "$TOOL_NAME" "$word_list" "$target_label"
+  fi
+}
+
+# ====================================
 # parent 事前準備 missing 検出 (warn-only)
 # Task tool 発火 prompt が ≥500 word かつ file:line pattern / label 付き keyword
 # (verify cmd: / DoD: / target file:) のいずれも未出現の場合に warn を返す (block はしない)
@@ -1198,6 +1283,26 @@ case "$TOOL_NAME" in
       fi
     fi
 
+    # private-name block: private-name-list.txt の term を ai-tools 配下 file 書込に適用
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+      _PN_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
+      _PN_AI_TOOLS_PREFIX="$HOME/ai-tools/"
+      if [[ "$_PN_PATH" == "${_PN_AI_TOOLS_PREFIX}"* ]]; then
+        # 自己除外: rule 説明文として term を保持する file は判定対象外
+        _PN_REL="${_PN_PATH#"${_PN_AI_TOOLS_PREFIX}"}"
+        case "$_PN_REL" in
+          claude-code/rules/public-repo-private-data-block.md|\
+          claude-code/CLAUDE.md|\
+          claude-code/hooks/pre-tool-use.sh|\
+          claude-code/tests/unit/hooks/pre-tool-use.bats)
+            : ;;  # skip
+          *)
+            _check_private_name "$_PN_PATH" "$EDIT_CONTENT"
+            ;;
+        esac
+      fi
+    fi
+
     # Rename propagation detection (Edit tool only has old_string/new_string)
     _OLD_STRING=$(jq -r '.tool_input.old_string // empty' <<< "$INPUT")
     _NEW_STRING=$(jq -r '.tool_input.new_string // empty' <<< "$INPUT")
@@ -1323,6 +1428,54 @@ PYEOF
         if [[ -n "$_glab_text" ]]; then
           _glab_subcmd=$(printf '%s' "$COMMAND" | grep -oE 'glab (mr|issue) (create|note)' | head -1)
           _block_if_ai_jargon "$_glab_text" "${_glab_subcmd:-glab}"
+        fi
+      fi
+
+      # private-name block: git commit / gh / glab コマンドの外向き text を private-name-list.txt でチェック
+      if [[ "$GUARD_CLASS" != "Forbidden" ]]; then
+        _pn_cmd_text=""
+        _pn_cmd_label=""
+        # git commit -m
+        if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]]; then
+          if [[ "$COMMAND" =~ -m[[:space:]]+'([^'\'']*)' ]]; then
+            _pn_cmd_text="${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ -m[[:space:]]\"([^\"]*)\" ]]; then
+            _pn_cmd_text="${BASH_REMATCH[1]}"
+          fi
+          _pn_cmd_label="commit message"
+        fi
+        # gh pr / issue / release
+        if [[ -z "$_pn_cmd_label" ]] && { \
+            [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment|review|merge) ]] || \
+            [[ "$COMMAND" =~ gh[[:space:]]+release[[:space:]]+create ]]; }; then
+          if [[ "$COMMAND" =~ --body[[:space:]]+'([^'\'']*)' ]]; then
+            _pn_cmd_text="${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ --body[[:space:]]\"([^\"]*)\" ]]; then
+            _pn_cmd_text="${BASH_REMATCH[1]}"
+          fi
+          if [[ "$COMMAND" =~ --title[[:space:]]+'([^'\'']*)' ]]; then
+            _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
+            _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
+          fi
+          _pn_cmd_label=$(printf '%s' "$COMMAND" | grep -oE 'gh (pr|issue) (create|edit|comment|review|merge)|gh release create' | head -1)
+        fi
+        # glab
+        if [[ -z "$_pn_cmd_label" ]] && [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]]; then
+          if [[ "$COMMAND" =~ --description[[:space:]]+'([^'\'']*)' ]]; then
+            _pn_cmd_text="${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ --description[[:space:]]\"([^\"]*)\" ]]; then
+            _pn_cmd_text="${BASH_REMATCH[1]}"
+          fi
+          if [[ "$COMMAND" =~ --title[[:space:]]+'([^'\'']*)' ]]; then
+            _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
+            _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
+          fi
+          _pn_cmd_label=$(printf '%s' "$COMMAND" | grep -oE 'glab (mr|issue) (create|note)' | head -1)
+        fi
+        if [[ -n "$_pn_cmd_text" && -n "$_pn_cmd_label" ]]; then
+          _check_private_name "${_pn_cmd_label}" "$_pn_cmd_text"
         fi
       fi
     fi

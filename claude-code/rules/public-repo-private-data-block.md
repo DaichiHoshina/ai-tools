@@ -11,13 +11,51 @@ paths: ["**/*"]
 
 **social-hit (block)**: snkrdunk / oripa / @batch_name / @feature_tag / recovery-runbook / pm-consultation-draft
 
+## 個人名 / 会社名 / project 固有名詞 (block 全般)
+
+ai-tools repo は public のため、**個人名 / 会社名 / project 固有名詞 (codename / 社内 service 名 / 社内 tool 名)** を ai-tools 配下 file と commit message に書き込み禁止する。
+
+### canonical list (動的読込)
+
+- path: `~/.claude/references-private/private-name-list.txt`
+- 1 行 1 term、`#` で始まる行は comment
+- user が記入、AI は読込のみで edit 不可
+- file 不在 / 空の場合は static list (social-hit のみ) を fallback として使用
+
+### AI 側 default rule (list 不在時の fallback)
+
+list に literal match しない場合でも、AI は以下カテゴリの語を ai-tools 配下 file・commit message に出力しない:
+
+- **個人名**: フルネーム / 姓 / 名 / handle / nickname (本人 `daichi` / `DaichiHoshina` / `Daichi Hoshina` は allowlist で例外)
+- **会社名**: 現勤務先 / 過去勤務先 / 関連会社 / 取引先名
+- **project / product 固有名詞**: codename / 社内 service 名 / 社内 tool 名 / 社内 doc 名
+
+匿名化形式: `<person-name>` / `<company-name>` / `<project-name>` / `<service-name>` を使う。
+
+### allowlist (例外、block しない)
+
+- `daichi` / `DaichiHoshina` / `Daichi Hoshina` (本人)
+- `Anthropic` / `Claude` (tool 名 + 提供元)
+- OSS / public product 名 (`go` / `python` / `serena` / `claude-code` 等の一般技術固有名詞)
+
 ## block 条件
+
+### Write / Edit / MultiEdit (ai-tools 配下 file 書込)
 
 以下の**全て**を満たす場合に block する。
 
 1. tool が Write / Edit / MultiEdit のいずれか
 2. `file_path` が `~/ai-tools/` 配下 (`$HOME/ai-tools/` 絶対パス前方一致)
-3. content (`new_string` / `file_text` / `edits[].new_string`) に social-hit term が含まれる
+3. content (`new_string` / `file_text` / `edits[].new_string`) に social-hit term または `private-name-list.txt` 内 term が含まれる
+
+### Bash (git commit / gh / glab、commit message + PR / Issue body)
+
+以下を満たす場合に block する。
+
+1. tool が Bash
+2. command が `git commit` / `gh pr create` / `gh pr edit` / `gh issue create` / `gh issue comment` / `glab` 系のいずれか
+3. command 内 (`-m` 引数 / heredoc / `--body` 引数) に social-hit term または `private-name-list.txt` 内 term が含まれる
+4. allowlist (本人名 / Anthropic / OSS 名) は除外
 
 ## 自己除外 (allowlist)
 
