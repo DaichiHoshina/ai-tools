@@ -833,9 +833,9 @@ _check_session_split() {
 # fence: ~/.claude/logs/.sequential-fire-warned-<session_id>  (1 threshold 1 inject)
 # log: ~/.claude/logs/sequential-fire-warn.log
 #
-# parallel 判定: 直前 Task fire から 100ms (100000000 ns) 以内 = 同一 message 内並列発火
+# parallel 判定: 直前 Task fire から 500ms (500000000 ns) 以内 = 同一 message 内並列発火
 #   → counter をリセット (並列は問題ない)
-# sequential 判定: 100ms 超 = 別 message からの逐次発火
+# sequential 判定: 500ms 超 = 別 message からの逐次発火
 #   → counter++ し threshold (>=3) で warn 1 回 inject
 # ====================================
 _check_sequential_agent_fire() {
@@ -865,8 +865,8 @@ _check_sequential_agent_fire() {
   # 経過時間 (ns)
   local _ELAPSED=$(( _NOW_NS - _LAST_NS ))
 
-  # 100ms = 100000000 ns 以内 → 同一 message 内並列発火と推定 → counter リセット
-  local _PARALLEL_THRESHOLD_NS=100000000
+  # 500ms = 500000000 ns 以内 → 同一 message 内並列発火と推定 → counter リセット
+  local _PARALLEL_THRESHOLD_NS=500000000
   if (( _LAST_NS > 0 && _ELAPSED <= _PARALLEL_THRESHOLD_NS )); then
     # 並列発火検出: counter リセット (fence は維持)
     printf '0\n' > "$_COUNT_FILE" 2>/dev/null || true
