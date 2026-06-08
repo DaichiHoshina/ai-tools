@@ -27,6 +27,7 @@
 | `routes/users.ts の handler 修正` | `ユーザー登録の重複チェック追加` |
 | `formatter / linter / type 修正` | `lint 違反解消` |
 | `〜の整理` | `〜を背景に〜削除` (なぜを最低1つ) |
+| `session token 累積閾値超過時の通知機構実装` | `session token が 500K 超えたら /clear を推奨する` |
 
 ## Why を本文 1 行目に書く (必須)
 
@@ -81,3 +82,4 @@ commit前に `git log -1 --format=%B` で:
 - 1行目だけで変更の輪郭が伝わるか
 - diffを見ずに済む情報まで列挙してないか
 - 禁止語が混入していないか
+- 体言止め / 漢語連発 / 主語省略になっていないか (詳細: `PRINCIPLES.md` の「chat 草稿 → 外向き翻訳の 8 観点 sweep」)
