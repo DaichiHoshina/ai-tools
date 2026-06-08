@@ -195,3 +195,74 @@ _make_session_jsonl() {
   [ "$status" -eq 0 ]
   [[ ! "$output" =~ "delegation-suggest" ]]
 }
+
+# =============================================================================
+# Case S1-A: sequential 3 連続 Task fire で parallel-fire-suggest を注入する
+# 異なる session として 3 回 hook を逐次呼出し (間隔 > 100ms を timestamp 操作で模擬)
+# =============================================================================
+@test "sequential-agent-fire: warn injected after 3 sequential Task fires" {
+  local session_id="seqfire-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter=2、lastts を 1 秒前 (十分 > 100ms) に偽装 → 次の呼出しで sequential と判定
+  printf '2\n' > "${log_dir}/.agent-fire-count-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"test task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "parallel-fire-suggest" ]]
+}
+
+# =============================================================================
+# Case S1-B: fence 存在時は 2 回目以降の sequential fire で warn をスキップする
+# =============================================================================
+@test "sequential-agent-fire: no duplicate warn when fence exists" {
+  local session_id="seqfire-fence-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # fence を先に作成 (warn 済フラグ)
+  touch "${log_dir}/.sequential-fire-warned-${session_id}"
+  # counter=5、lastts を 1 秒前に偽装 (sequential 条件を満たす)
+  printf '5\n' > "${log_dir}/.agent-fire-count-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"test task again"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "parallel-fire-suggest" ]]
+}

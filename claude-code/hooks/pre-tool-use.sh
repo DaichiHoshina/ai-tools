@@ -823,6 +823,87 @@ _check_session_split() {
 
 # ====================================
 # large-repo 連続 Edit 強制委譲 signal (warn-only, pre-tool-use)
+# ====================================
+# parent が 1 message 1 Task で逐次 Agent fire する pattern を検出し、
+# 並列化を促す additionalContext を注入する (warn-only)
+#
+# 発火条件: tool_name == "Task" の pre-tool-use 時のみ
+# counter: ~/.claude/logs/.agent-fire-count-<session_id>  (整数 1 行)
+# 最終 fire timestamp: ~/.claude/logs/.agent-fire-lastts-<session_id>  (nanosec 整数)
+# fence: ~/.claude/logs/.sequential-fire-warned-<session_id>  (1 threshold 1 inject)
+# log: ~/.claude/logs/sequential-fire-warn.log
+#
+# parallel 判定: 直前 Task fire から 100ms (100000000 ns) 以内 = 同一 message 内並列発火
+#   → counter をリセット (並列は問題ない)
+# sequential 判定: 100ms 超 = 別 message からの逐次発火
+#   → counter++ し threshold (>=3) で warn 1 回 inject
+# ====================================
+_check_sequential_agent_fire() {
+  local session_id="$1"
+  [[ -z "$session_id" || "$session_id" == "null" ]] && return 0
+
+  local _LOG_DIR="${HOME}/.claude/logs"
+  mkdir -p "$_LOG_DIR" 2>/dev/null || true
+
+  local _COUNT_FILE="${_LOG_DIR}/.agent-fire-count-${session_id}"
+  local _LASTTS_FILE="${_LOG_DIR}/.agent-fire-lastts-${session_id}"
+  local _FENCE_FILE="${_LOG_DIR}/.sequential-fire-warned-${session_id}"
+
+  # 現在 timestamp (nanosec)
+  local _NOW_NS
+  _NOW_NS=$(date +%s%N 2>/dev/null || printf '%s000000000' "$(date +%s)")
+
+  # 直前 fire timestamp 取得
+  local _LAST_NS=0
+  [[ -f "$_LASTTS_FILE" ]] && read -r _LAST_NS < "$_LASTTS_FILE" 2>/dev/null || _LAST_NS=0
+  # 数値チェック (破損対策)
+  [[ "$_LAST_NS" =~ ^[0-9]+$ ]] || _LAST_NS=0
+
+  # timestamp を更新
+  printf '%s\n' "$_NOW_NS" > "$_LASTTS_FILE" 2>/dev/null || true
+
+  # 経過時間 (ns)
+  local _ELAPSED=$(( _NOW_NS - _LAST_NS ))
+
+  # 100ms = 100000000 ns 以内 → 同一 message 内並列発火と推定 → counter リセット
+  local _PARALLEL_THRESHOLD_NS=100000000
+  if (( _LAST_NS > 0 && _ELAPSED <= _PARALLEL_THRESHOLD_NS )); then
+    # 並列発火検出: counter リセット (fence は維持)
+    printf '0\n' > "$_COUNT_FILE" 2>/dev/null || true
+    return 0
+  fi
+
+  # fence 通過済み → 新 sequence でも再 warn しない
+  [[ -f "$_FENCE_FILE" ]] && return 0
+
+  # counter インクリメント
+  local _CUR=0
+  [[ -f "$_COUNT_FILE" ]] && read -r _CUR < "$_COUNT_FILE" 2>/dev/null || _CUR=0
+  [[ "$_CUR" =~ ^[0-9]+$ ]] || _CUR=0
+  _CUR=$(( _CUR + 1 ))
+  printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
+
+  # threshold 判定 (>= 3)
+  if (( _CUR >= 3 )); then
+    touch "$_FENCE_FILE" 2>/dev/null || true
+
+    # ログ追記
+    local _TS_LABEL
+    _TS_LABEL=$(date '+%Y-%m-%dT%H:%M:%S' 2>/dev/null || echo "unknown")
+    printf '%s | %s | counter=%s | elapsed_ms=%s\n' \
+      "$_TS_LABEL" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
+      >> "${_LOG_DIR}/sequential-fire-warn.log" 2>/dev/null || true
+
+    local _SUGGEST="[parallel-fire-suggest] last ${_CUR}+ Agent fires were sequential (1 per message). Fire N agents in a single message to enable parallel execution (1 message N tool_use)"
+    if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
+    else
+      ADDITIONAL_CONTEXT="${_SUGGEST}"
+    fi
+  fi
+}
+
+# ====================================
 # 同 session 内で直近 5 回連続 Write/Edit/MultiEdit が large-repo src に hit した場合に
 # developer-agent 委譲を促す additionalContext を注入する
 # counter: ~/.claude/logs/.large-repo-edit-count-<session_id>
@@ -1302,6 +1383,7 @@ PYEOF
     # エージェント起動はSafe（実際の操作は各エージェント内で判定）
     # ただし general-purpose は CLAUDE.md「原則使わない」最大コスト源 → Boundary 警告
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
+
     # 並列判定 self-review (全 Task 発火時に inject)
     PARALLEL_REVIEW=$'【並列 self-review (強制 echo)】\n1. Manager 経由なら allocation 中の formula_trace を user に 2 行 echo:\n   formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / <PASS|FAIL> (basis=<T_i_basis>)\n   fan-out: N=<n>, targets=<file count>\n2. Manager 未経由の直接 Task 発火 (例: explore-agent / developer-agent 単発) は 1 行 echo:\n   judgment: N=<n> / independent_tasks=<count> / parallel=<reason or \'single-task\'>\n3. 独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1)\n4. echo 抜けは under-parallel risk (canonical: references/PARALLEL-PATTERNS.md)'
 
@@ -1325,6 +1407,9 @@ ${PARALLEL_REVIEW}${PREP_WARN}"
     else
       ADDITIONAL_CONTEXT="${PARALLEL_REVIEW}${PREP_WARN}"
     fi
+
+    # 逐次 Agent fire 検出 (warn-only、既存 ADDITIONAL_CONTEXT に append)
+    _check_sequential_agent_fire "$SESSION_ID"
     ;;
 
   "Skill")
