@@ -28,9 +28,9 @@
 
 ## 2.1.152 (2026-06-04 検出, stable)
 
-- [ ] **`MessageDisplay` hook event**: assistant message text の display 直前に hook が transform / hide できる新 event。jp-quality / AI 定型語 を出力側でも block / mask する用途に直結 (現状 pre-tool-use の入力側 block のみ、chat 応答内の AI 定型語は素通り) — 検討箇所: `hooks/pre-tool-use.sh` (term 抽出 logic 流用) / `templates/settings.json.template` hooks section / 新規 `hooks/message-display.sh`
-- [ ] **`SessionStart` hook `hookSpecificOutput.sessionTitle`**: session title を hook 側で動的設定可能。`/rename` 運用と相性あり (repo 名 + task 種別の auto-title 化候補) — 検討箇所: `hooks/session-start.sh`
-- [ ] **skill/slash command frontmatter `disallowed-tools`**: skill active 中に特定 tool を model から外せる。安全側の skill (例: writing 専用 skill で Bash 禁止) に有用 — 検討箇所: `skills/*/skill.md` / `commands/*.md` frontmatter
+- [x] **`MessageDisplay` hook event**: defer (hook 増殖回避)。新規 hook ファイル追加を避ける方針のため採用しない。jp-quality の出力側 block が必要になった場合に再評価する。
+- [x] **`SessionStart` hook `hookSpecificOutput.sessionTitle`**: 採用済み。`hooks/session-start.sh` に `hookSpecificOutput.sessionTitle` 出力を追加。値: `<repo名> @ <branch名>` 形式 (git repo でない場合は repo 名のみ)。settings.json root key ではなく hook output フィールドが正しい採用先であることを 2.1.152 バイナリのソースから確認済み。
+- [x] **skill/slash command frontmatter `disallowed-tools`**: 採用済み。`skills/jp-writing/skill.md` に `disallowed-tools: [Bash, Edit, Write]` を追加。writing チェック専用 skill でコード編集 tool を除外することで誤操作を防ぐ。settings.json root key ではなく skill/command frontmatter フィールドが正しい採用先であることを 2.1.152 バイナリのソースから確認済み。
 
 その他は track only (採用余地小): `/reload-skills` (動的 skill 追加運用なし) / `SessionStart` `reloadSkills: true` (同左) / `pluginSuggestionMarketplaces` (admin allowlist 用途、個人環境不要) / `marketplace remove --scope` (marketplace 操作なし) / `OTEL_METRICS_INCLUDE_ENTRYPOINT` (OTEL 未使用) / `fallback-model` 自動切替 / Auto mode no-consent / Vim `/` reverse search / `/usage` session-files / 多数 UI/bugfix。`/simplify` 復活 (`/code-review --fix` 化) は 2.1.148 時点で「不採用、参照削除済」決定済、現状維持。
 

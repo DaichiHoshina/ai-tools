@@ -290,8 +290,37 @@ if [[ -n "${_AC_PREFIX}" ]]; then
 else
     _AC_FULL="${_AC_BASE}"
 fi
-jq -n \
-  --arg sm "${_SM_PREFIX} Session初期化完了 [color:${_SESSION_COLOR}]" \
-  --arg ac "${_AC_FULL}" \
-  --arg color "${_SESSION_COLOR}" \
-  '{systemMessage: $sm, additionalContext: $ac, color: $color}'
+
+# ====================================
+# sessionTitle (2.1.152 hookSpecificOutput.sessionTitle)
+# repo名 + ブランチ名でセッションを識別可能にする
+# ====================================
+_SESSION_TITLE=""
+if [[ -n "${_CWD:-}" && -d "${_CWD:-}" ]]; then
+    _REPO_NAME=$(basename "${_CWD}")
+    if git -C "${_CWD}" rev-parse --git-dir >/dev/null 2>&1; then
+        _GIT_BRANCH=$(git -C "${_CWD}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+        if [[ -n "${_GIT_BRANCH}" ]]; then
+            _SESSION_TITLE="${_REPO_NAME} @ ${_GIT_BRANCH}"
+        else
+            _SESSION_TITLE="${_REPO_NAME}"
+        fi
+    else
+        _SESSION_TITLE="${_REPO_NAME}"
+    fi
+fi
+
+if [[ -n "${_SESSION_TITLE}" ]]; then
+    jq -n \
+      --arg sm "${_SM_PREFIX} Session初期化完了 [color:${_SESSION_COLOR}]" \
+      --arg ac "${_AC_FULL}" \
+      --arg color "${_SESSION_COLOR}" \
+      --arg title "${_SESSION_TITLE}" \
+      '{systemMessage: $sm, additionalContext: $ac, color: $color, hookSpecificOutput: {hookEventName: "SessionStart", sessionTitle: $title}}'
+else
+    jq -n \
+      --arg sm "${_SM_PREFIX} Session初期化完了 [color:${_SESSION_COLOR}]" \
+      --arg ac "${_AC_FULL}" \
+      --arg color "${_SESSION_COLOR}" \
+      '{systemMessage: $sm, additionalContext: $ac, color: $color}'
+fi

@@ -2,6 +2,10 @@
 name: jp-writing
 description: "日本語出力品質チェック。4 list を PRINCIPLES.md から読み込む。/jp-writing 呼出し時に使用。"
 context: fork
+disallowed-tools:
+  - Bash
+  - Edit
+  - Write
 ---
 
 # jp-writing — 日本語出力品質チェック
