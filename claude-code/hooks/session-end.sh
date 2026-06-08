@@ -68,5 +68,28 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] $SESSION_ID | $PROJECT_NAME | msg:$TOTAL_ME
   fi
 ) 2>/dev/null &
 
+# --- hook state file purge（1日以上前の stale file を削除）---
+# 対象: 本 repo の hook 群が ~/.claude/logs/ 下に作る 6 種 state file
+# mtime +1 (24h超) のみ削除、warn-only (exit 0 維持)
+(
+  _LOGS_DIR="${HOME}/.claude/logs"
+  _purged=0
+  for _pat in \
+    '.session-split-warned-*' \
+    '.large-repo-edit-count-*' \
+    '.delegation-warned-*' \
+    '.agent-fire-count-*' \
+    '.agent-fire-lastts-*' \
+    '.sequential-fire-warned-*'; do
+    while IFS= read -r -d '' _f; do
+      rm -f -- "${_f}" 2>/dev/null && _purged=$(( _purged + 1 ))
+    done < <(find "${_LOGS_DIR}" -maxdepth 1 -name "${_pat}" -type f -mtime +1 -print0 2>/dev/null)
+  done
+  if [[ "${_purged}" -gt 0 ]]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] session-end: purged ${_purged} stale state file(s)" \
+      >> "${_LOGS_DIR}/hook-errors.log" 2>/dev/null || true
+  fi
+) 2>/dev/null || true
+
 # JSON出力（stdout閉鎖時のbroken pipeを無視）
 echo '{"systemMessage":"Session logged"}' 2>/dev/null || true
