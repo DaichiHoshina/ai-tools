@@ -16,7 +16,7 @@ Brief prohibition list only. Details: `guidelines/writing/`
 - Variable/file name lists (readable in diff)
 - Table-format file listings (duplicates diff)
 - Boilerplate like "changes in this PR"
-- **Why 欠落**: commit 本文 1 行目に動機 / 制約 / 解決対象を書かずに WHAT だけ記述 → 詳細: `guidelines/writing/commit-message.md` **"Why を本文 1 行目に書く"** section (canonical source)
+- **本文 = Why のみ**: commit の WHAT は subject 1 行のみ。本文を書く場合は Why (動機 / 制約 / 解決対象) を 1-3 行で書き、WHAT 補足 bullet / file list / 関数名列挙は禁止 → 詳細: `guidelines/writing/commit-message.md` **"原則"** + **"Why を本文 1 行目に書く"** section (canonical source)
 - **Reviewer assign**: `gh pr create` / `gh pr edit` で `--reviewer` flag を使わない。「reviewer assign しますか」「reviewer 提案」もこちらから持ち出さない (user が依頼した場合のみ対応)。auto-assign workflow (`.github/CODEOWNERS` 等) も勝手に編集しない。PR テンプレに reviewer 欄があれば空のまま push する
 
 **Why (reviewer)**: チームのレビュー分担はメンバー稼働 / 専門領域 / 直近の担当者ローテーション等を user が把握しており、AI が勝手に決めると不適切なアサインが発生する。
