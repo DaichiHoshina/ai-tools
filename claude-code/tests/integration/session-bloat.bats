@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =============================================================================
 # session-bloat check の bats tests
-# _check_session_bloat: elapsed > 3h or msg > 1000 で warn、15min throttle
+# _check_session_bloat: elapsed > 3h or msg > 1000 or token >= 500K で warn、15min throttle
 # =============================================================================
 
 setup() {
@@ -28,11 +28,12 @@ teardown() {
 }
 
 # ヘルパー: fake session jsonl を生成する
-# 引数: $1=session_id, $2=elapsed_seconds(from now), $3=msg_count
+# 引数: $1=session_id, $2=elapsed_seconds(from now), $3=msg_count, $4=tokens_per_assistant(省略可、default=0)
 _make_session_jsonl() {
   local session_id="$1"
   local elapsed_seconds="$2"
   local msg_count="$3"
+  local tokens_per_assistant="${4:-0}"
 
   local cwd="${HOME}/testproject"
   local slug="${cwd//\//-}"
@@ -49,12 +50,18 @@ _make_session_jsonl() {
   printf '{"type":"attachment","timestamp":"%s"}\n' "${start_ts}" > "${jsonl}"
 
   # user/assistant 行を msg_count 分追加
+  # assistant entry には tokens_per_assistant > 0 の場合に usage フィールドを付与
   local i
   for (( i=0; i<msg_count; i++ )); do
     if (( i % 2 == 0 )); then
       printf '{"type":"user","timestamp":"%s"}\n' "${start_ts}"
     else
-      printf '{"type":"assistant","timestamp":"%s"}\n' "${start_ts}"
+      if (( tokens_per_assistant > 0 )); then
+        printf '{"type":"assistant","timestamp":"%s","message":{"usage":{"input_tokens":%d,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":0}}}\n' \
+          "${start_ts}" "${tokens_per_assistant}"
+      else
+        printf '{"type":"assistant","timestamp":"%s"}\n' "${start_ts}"
+      fi
     fi
   done >> "${jsonl}"
 
@@ -135,4 +142,78 @@ _make_session_jsonl() {
   run bash -c "CLAUDE_CODE_SESSION_ID='${session_id}' JP_QUALITY_INJECT_OFF=1 CLAUDE_CTX_FILE='${HOME}/_ctx_unset' CLAUDE_SERENA_FAIL_COUNT='${HOME}/_serena_unset' bash '${HOOKS_DIR}/user-prompt-submit.sh' <<< '${input}'"
   [ "$status" -eq 0 ]
   [[ ! "$output" =~ "session-bloat" ]]
+}
+
+# =============================================================================
+# Case 4: token >= 500K → session-bloat warn が出る (token=XxxK 形式)
+# =============================================================================
+@test "session-bloat: warn when token >= 500K" {
+  local session_id="bats-test-token-$(date +%s)"
+  local date_today
+  date_today=$(date +%Y%m%d)
+
+  # throttle flag を削除
+  rm -f "/tmp/claude_session_bloat_${session_id}_${date_today}"
+
+  # elapsed 1h (3h 未満)、msg 100 (1000 未満)、token: assistant 10 entry × 60000 = 600K
+  # tokens_per_assistant=60000, msg_count=20 → assistant entry は 10 件 → 600K total
+  _make_session_jsonl "${session_id}" 3600 20 60000 > /dev/null
+  local cwd="${HOME}/testproject"
+  local input
+  input=$(printf '{"session_id":"%s","prompt":"hello","cwd":"%s"}' "${session_id}" "${cwd}")
+
+  run bash -c "CLAUDE_CODE_SESSION_ID='${session_id}' JP_QUALITY_INJECT_OFF=1 CLAUDE_CTX_FILE='${HOME}/_ctx_unset' CLAUDE_SERENA_FAIL_COUNT='${HOME}/_serena_unset' bash '${HOOKS_DIR}/user-prompt-submit.sh' <<< '${input}'"
+  [ "$status" -eq 0 ]
+  # token= を含む session-bloat warn が出ること
+  [[ "$output" =~ "session-bloat" ]]
+  [[ "$output" =~ "token=" ]]
+}
+
+# =============================================================================
+# Case 5: token < 500K かつ elapsed < 3h かつ msg < 1000 → warn 不要
+# =============================================================================
+@test "session-bloat: no warn when token=100K elapsed=1h msg=50" {
+  local session_id="bats-test-token-nowarn-$(date +%s)"
+  local date_today
+  date_today=$(date +%Y%m%d)
+
+  rm -f "/tmp/claude_session_bloat_${session_id}_${date_today}"
+
+  # tokens_per_assistant=10000, msg_count=20 → assistant 10 件 → 100K total
+  _make_session_jsonl "${session_id}" 3600 20 10000 > /dev/null
+  local cwd="${HOME}/testproject"
+  local input
+  input=$(printf '{"session_id":"%s","prompt":"hello","cwd":"%s"}' "${session_id}" "${cwd}")
+
+  run bash -c "CLAUDE_CODE_SESSION_ID='${session_id}' JP_QUALITY_INJECT_OFF=1 CLAUDE_CTX_FILE='${HOME}/_ctx_unset' CLAUDE_SERENA_FAIL_COUNT='${HOME}/_serena_unset' bash '${HOOKS_DIR}/user-prompt-submit.sh' <<< '${input}'"
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "session-bloat" ]]
+}
+
+# =============================================================================
+# Case 6: python3 失敗時 (PATH 隠蔽) → elapsed/msg 判定は動作する
+# =============================================================================
+@test "session-bloat: python3 failure falls back to elapsed/msg check" {
+  local session_id="bats-test-py3-fallback-$(date +%s)"
+  local date_today
+  date_today=$(date +%Y%m%d)
+
+  rm -f "/tmp/claude_session_bloat_${session_id}_${date_today}"
+
+  # elapsed 4h (3h 超)、msg 50、token=0 (python3 が無いので集計されない)
+  _make_session_jsonl "${session_id}" 14400 50 > /dev/null
+  local cwd="${HOME}/testproject"
+  local input
+  input=$(printf '{"session_id":"%s","prompt":"hello","cwd":"%s"}' "${session_id}" "${cwd}")
+
+  # python3 をスタブ化して失敗させる: fake_bin/python3 が常に exit 1 を返す
+  local fake_bin="${HOME}/fake_bin"
+  mkdir -p "${fake_bin}"
+  printf '#!/usr/bin/env bash\nexit 1\n' > "${fake_bin}/python3"
+  chmod +x "${fake_bin}/python3"
+  run bash -c "PATH='${fake_bin}:${PATH}' CLAUDE_CODE_SESSION_ID='${session_id}' JP_QUALITY_INJECT_OFF=1 CLAUDE_CTX_FILE='${HOME}/_ctx_unset' CLAUDE_SERENA_FAIL_COUNT='${HOME}/_serena_unset' bash '${HOOKS_DIR}/user-prompt-submit.sh' <<< '${input}'"
+  [ "$status" -eq 0 ]
+  # elapsed > 3h なので session-bloat warn は出るはず (elapsed= を含む)
+  [[ "$output" =~ "session-bloat" ]]
+  [[ "$output" =~ "elapsed=" ]]
 }

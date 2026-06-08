@@ -100,6 +100,39 @@ _check_session_bloat() {
   local _MSG_COUNT
   _MSG_COUNT=$(grep -c '"type":"user"\|"type":"assistant"' "${_JSONL}" 2>/dev/null) || _MSG_COUNT=0
 
+  # token 集計: assistant entry の usage フィールドを python3 で合算
+  # python3 採用理由: jsonl 大ファイルで jq より高速 (23ms vs 100ms+)
+  local _TOKEN_TOTAL=0
+  if command -v python3 &>/dev/null; then
+    _TOKEN_TOTAL=$(python3 -c "
+import json, sys
+total = 0
+try:
+    for line in open(sys.argv[1], 'r', errors='replace'):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except Exception:
+            continue
+        if obj.get('type') != 'assistant':
+            continue
+        usage = obj.get('message', {}).get('usage', {})
+        total += usage.get('input_tokens', 0) or 0
+        total += usage.get('cache_creation_input_tokens', 0) or 0
+        total += usage.get('cache_read_input_tokens', 0) or 0
+        total += usage.get('output_tokens', 0) or 0
+except Exception:
+    pass
+print(total)
+" "${_JSONL}" 2>/dev/null) || _TOKEN_TOTAL=0
+    # 数値以外が返った場合の fallback
+    if ! [[ "${_TOKEN_TOTAL}" =~ ^[0-9]+$ ]]; then
+      _TOKEN_TOTAL=0
+    fi
+  fi
+
   # 閾値判定
   local _WARN_REASON=""
   if (( _ELAPSED > 10800 )); then
@@ -111,6 +144,14 @@ _check_session_bloat() {
       _WARN_REASON="${_WARN_REASON} msg=${_MSG_COUNT}"
     else
       _WARN_REASON="msg=${_MSG_COUNT}"
+    fi
+  fi
+  if (( _TOKEN_TOTAL >= 500000 )); then
+    local _TOKEN_K=$(( _TOKEN_TOTAL / 1000 ))
+    if [[ -n "${_WARN_REASON}" ]]; then
+      _WARN_REASON="${_WARN_REASON} token=${_TOKEN_K}K"
+    else
+      _WARN_REASON="token=${_TOKEN_K}K"
     fi
   fi
 
