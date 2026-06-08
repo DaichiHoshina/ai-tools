@@ -59,6 +59,18 @@ Code body, code comments, docstrings out of scope.
 
 no arg or `write` → write mode. First token vs subcommand match; no match → treat whole arg as write topic.
 
+## 対象解決 (target resolution)
+
+**対象を user に聞き返さない**。以下の優先順で自動決定する。
+
+1. ARGUMENTS に file path (existing) → その file を対象
+2. ARGUMENTS に paste block (3 行以上 / 引用記号付) → その text を対象
+3. ARGUMENTS が write topic (subcommand 不一致 + 短文) → `write` mode で新規執筆
+4. ARGUMENTS 空 + subcommand なし → **直前 assistant 出力 (直近の chat turn の text)** を `review` 対象として self-check
+5. ARGUMENTS = `review` / `rewrite` 単独 (対象なし) → 直前 assistant 出力を対象
+
+`review` / `rewrite` で対象不明瞭でも質問せず 4 / 5 に従って実行する。
+
 ## Pre-execution (required order)
 
 ### 1. Temp Turn OFF genshijin (by output type)

@@ -14,6 +14,14 @@ disallowed-tools:
 
 `/jp-writing` 呼出し時: 対象テキストに対して 4 list 全ての self-check を実行し、hit した語の置換候補を提示する。
 
+**対象を user に聞き返さない**。優先順:
+
+1. ARGUMENTS に file path / paste text → それを対象
+2. ARGUMENTS 空 → **直前 assistant 出力 (直近 chat turn の text)** を default 対象
+3. 上記いずれも該当しない場合のみ topic として `write` 新規執筆扱い
+
+`「何をチェックしますか」`「対象を教えて」等の質問返しは禁止。
+
 ## 4 list の source
 
 全て canonical: `guidelines/writing/PRINCIPLES.md` から動的抽出。hook 内 literal 書かない (派生値禁止 rule)。
