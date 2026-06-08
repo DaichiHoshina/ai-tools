@@ -19,6 +19,8 @@
 | "リリース前レビュー", "PR最終レビュー", "全部入りレビュー", "全力レビュー" | `/review --multi <PR>`（4手段並列、最大コスト） |
 | "クラウドでレビュー", "ultrareview" | `/ultrareview`（cloud並列、別課金） |
 | "ブレスト", "設計検討", "アイデア出し" | `/brainstorm`（対話的設計精緻化） |
+| "API 設計", "API 設計して" | `/api-design`（API エンドポイント設計・OpenAPI 仕様作成） |
+| "バックエンド", "バックエンド実装" | `/backend-dev`（バックエンド実装・API 開発） |
 | "strict mode", "厳格モード" | `/session-mode strict`（本番作業向け） |
 | "fast mode", "高速モード", "プロトタイプモード" | `/session-mode fast` |
 | "normal mode", "通常モード" | `/session-mode normal` |
