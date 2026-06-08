@@ -11,16 +11,21 @@
 
 1 文中の読点 (`、`) は 3 個まで。超えたら文分割。読点 4+ は読者の認知負荷が急上昇する。出典: textlint-rule-preset-ja-technical-writing (max-ten rule)。
 
-## 連続漢字 6 文字上限
+## 連続漢字 4 文字上限
 
-漢字 7 文字以上の連続は読解負荷が高い。固有名詞は例外。
+漢字 5 文字以上の連続は読解負荷が高い。固有名詞・技術用語は例外、漢語連結のみ対象。
 
-| Before (連続漢字) | After (助詞挿入) |
+| Before (連続漢字) | After (助詞挿入 / 訓読み開く / 動詞化) |
 |---|---|
 | `利用者認証処理管理` | `利用者の認証処理を管理` |
 | `構造的変化傾向分析` | `構造的な変化傾向の分析` |
+| `段階的強化` | `段階的に強化` |
+| `逐次化検出` | `逐次に並ぶ状態を検出` |
+| `絶対禁止徹底` | `絶対に禁止する徹底` |
 
-出典: textlint-rule-preset-ja-technical-writing (max-kanji-continuous-len rule)。
+機械検出: `grep -oE '[一-龯]{5,}'`。
+
+出典: textlint-rule-preset-ja-technical-writing (max-kanji-continuous-len rule) を 2026-06-08 に 6→4 へ厳格化。
 
 ## 冗長表現の圧縮
 
