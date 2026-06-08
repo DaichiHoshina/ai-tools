@@ -148,3 +148,20 @@ wt isolation 下で動く時、親 repo 側 (`~/ai-tools/`) に既存 staged / m
 これらは親 session の作業中物なので **wt agent は触らない / 言及しない / commit 対象に含めない**。
 wt 内 commit は wt branch のみに対する commit、親 repo の状態は無視。
 
+### Self-exclusion allowlist (社内 product 名 literal を記述してよい file)
+
+`~/ai-tools/` repo は public であり、社内 product 名 / 社内識別子 (social-hit term) の書き込みは原則 `pre-tool-use.sh` が block する。ただし以下の file は `rules/public-repo-private-data-block.md` の **self-exclusion allowlist** 対象であり、rule 説明文として social-hit term を literal で保持することが許可されている。
+
+allowlist file:
+- `claude-code/rules/public-repo-private-data-block.md` (本 rule の説明文ゆえ literal 必須)
+- `claude-code/CLAUDE.md` (term list 説明)
+- `claude-code/hooks/pre-tool-use.sh` (block 判定 logic で literal 必要)
+
+委譲 task が上記 file を編集対象に含む場合、受領した dev は社内 product 名を literal で書く必要がある。social-hit term の canonical list は `rules/public-repo-private-data-block.md` を参照する。
+
+**安全側回避の禁止**: allowlist file 編集時に `<product-name>` 表記や広域 prefix マッチ (`~/ghq/github.com/*` 全体等) で社内 product 名を回避すると、block 判定 logic が不正確になる。allowlist file 内では literal 記述が正しい実装である。
+
+**本 file は allowlist 外**: `developer-agent-delegation-prompt.md` 自体は allowlist に含まれないため、本 file 内では social-hit term を literal で書かない。social-hit term list は `rules/public-repo-private-data-block.md` を cross-ref で参照する。
+
+**背景**: 2026-06-08 の cost hook 実装で、allowlist 内 file への literal 書込が必要な場面で dev agent が安全側に倒して広域 prefix マッチを選択した。その後の P1 fix で 1 ループ余計に発生したため、allowlist 範囲を委譲 prompt に明示して再発を防ぐ。
+
