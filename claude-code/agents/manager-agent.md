@@ -168,3 +168,21 @@ Parent calls Manager back with `Task(reviewer-agent)` result. Manager:
 - Decompose feedback (file, line, fix candidate) to task units
 - If changes cluster in one file → sequential; if spread → parallel allocation
 - Parent spawns `Task(developer-agent)×M` → after, **once only** `Task(reviewer-agent)` for re-verify
+
+## parallelism=1 算定の制約 (strict)
+
+`parallelism: 1` を返してよいのは以下のいずれかに該当する場合のみ。
+
+- **(a) single-task**: 独立 task が 1 件のみ (task list 全 1 件)
+- **(b) same-file-sequential**: 全 task が同一 file の sequential edit を要求 (file 内 symbol 順序依存等)
+- **(c) file-conflict**: 物理的 file 競合検出 (`references/PARALLEL-PATTERNS.md#worktree-applicability-flow` 参照)
+
+上記いずれにも該当しないのに `parallelism: 1` を返す場合、`formula_trace.downgrade_reason` に以下いずれかを必須明示する。
+
+- `single-task` / `same-file-sequential` / `file-conflict` / `formula-fail` / `parent-override`
+
+明示なき `parallelism: 1` を parent (orchestrator) は allocation 破棄して Manager を再走させる契約とする (`/flow` step 5 と整合)。
+
+### Why
+
+直前 /flow 分析 (2026-06-08) で peak=1 invocation 22 件中 8 件 (36%) が cap=1 起因と判明、Manager が独立 task でも parallelism=1 を選ぶ傾向があった。明示要求で誤判定を可視化し並列効率を改善する。
