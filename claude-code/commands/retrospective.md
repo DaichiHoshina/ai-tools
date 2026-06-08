@@ -42,6 +42,7 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 | usage stats | `ccusage daily --since 7` |
 | JP quality blocks | `tail -n 50 ~/.claude/logs/jp-quality-block.log` |
 | hook bench logs | `tail -n 20 ~/.claude/logs/bench-*.log` (glob) |
+| /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (当日 TSV 生成 → `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
 
 ### Phase 2: Signal Extraction (≤500 token output, parent inline only)
 
