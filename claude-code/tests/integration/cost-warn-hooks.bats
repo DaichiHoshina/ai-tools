@@ -132,17 +132,17 @@ _make_session_jsonl() {
 }
 
 # =============================================================================
-# Case 2 (B2): large-repo src 5 回連続 Edit → additionalContext に [delegation-suggest] を含む
+# Case 2 (B2): large-repo src 3 回連続 Edit → additionalContext に [delegation-suggest] を含む
 # =============================================================================
-@test "delegation-suggest: warn after 5 consecutive large-repo edits" {
+@test "delegation-suggest: warn after 3 consecutive large-repo edits" {
   local session_id="deleg-warn-$(date +%s%N | tail -c 6)"
   local _org="snkr"; local _suffix="dunk"
   local target_file="${HOME}/ghq/github.com/${_org}${_suffix}/src/main.go"
   local log_dir="${HOME}/.claude/logs"
 
-  # counter を 4 にセット (次の呼出しで threshold 到達)
+  # counter を 2 にセット (次の呼出しで threshold=3 到達、speed-bias)
   mkdir -p "${log_dir}"
-  printf '4\n' > "${log_dir}/.large-repo-edit-count-${session_id}"
+  printf '2\n' > "${log_dir}/.large-repo-edit-count-${session_id}"
 
   local input_file
   input_file=$(mktemp)
@@ -172,9 +172,9 @@ _make_session_jsonl() {
   local target_file="${HOME}/ghq/github.com/some-oss-org/oss-repo/main.go"
   local log_dir="${HOME}/.claude/logs"
 
-  # counter を 4 にセット (threshold 直前)
+  # counter を 2 にセット (threshold=3 直前)
   mkdir -p "${log_dir}"
-  printf '4\n' > "${log_dir}/.large-repo-edit-count-${session_id}"
+  printf '2\n' > "${log_dir}/.large-repo-edit-count-${session_id}"
 
   local input_file
   input_file=$(mktemp)
@@ -197,10 +197,10 @@ _make_session_jsonl() {
 }
 
 # =============================================================================
-# Case S1-A: sequential 3 連続 Task fire で parallel-fire-suggest を注入する
-# 異なる session として 3 回 hook を逐次呼出し (間隔 > 100ms を timestamp 操作で模擬)
+# Case S1-A: sequential 2 連続 Task fire で parallel-fire-suggest を注入する (speed-bias threshold)
+# 異なる session として 2 回 hook を逐次呼出し (間隔 > 100ms を timestamp 操作で模擬)
 # =============================================================================
-@test "sequential-agent-fire: warn injected after 3 sequential Task fires" {
+@test "sequential-agent-fire: warn injected after 2 sequential Task fires" {
   local session_id="seqfire-$(date +%s%N | tail -c 8)"
   local log_dir="${HOME}/.claude/logs"
   mkdir -p "${log_dir}"
@@ -208,8 +208,8 @@ _make_session_jsonl() {
   local hook="${HOOKS_DIR}/pre-tool-use.sh"
   local home_dir="${HOME}"
 
-  # counter=2、lastts を 1 秒前 (十分 > 100ms) に偽装 → 次の呼出しで sequential と判定
-  printf '2\n' > "${log_dir}/.agent-fire-count-${session_id}"
+  # counter=1、lastts を 1 秒前 (十分 > 100ms) に偽装 → 次の呼出しで sequential 2 到達 = threshold
+  printf '1\n' > "${log_dir}/.agent-fire-count-${session_id}"
   local _past_ns
   _past_ns=$(( $(date +%s%N) - 2000000000 ))
   printf '%s\n' "$_past_ns" > "${log_dir}/.agent-fire-lastts-${session_id}"

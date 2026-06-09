@@ -981,8 +981,8 @@ _check_sequential_agent_fire() {
   _CUR=$(( _CUR + 1 ))
   printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
 
-  # threshold 判定 (>= 3)
-  if (( _CUR >= 3 )); then
+  # threshold 判定 (>= 2、speed-bias)
+  if (( _CUR >= 2 )); then
     touch "$_FENCE_FILE" 2>/dev/null || true
 
     # ログ追記
@@ -992,7 +992,7 @@ _check_sequential_agent_fire() {
       "$_TS_LABEL" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
       >> "${_LOG_DIR}/sequential-fire-warn.log" 2>/dev/null || true
 
-    local _SUGGEST="[parallel-fire-suggest] last ${_CUR}+ Agent fires were sequential (1 per message). Fire N agents in a single message to enable parallel execution (1 message N tool_use)"
+    local _SUGGEST="[parallel-fire-suggest] last ${_CUR} Agent fires sequential (peak=1). 次の発火は 1 message 内 N tool_use 並列必須。independent task ≥2 なら 100% 並列、迷ったら並列側 (CLAUDE.md Auto-Delegation default=並列)"
     if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
       ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
     else
@@ -1020,21 +1020,24 @@ _check_large_repo_consecutive_edit() {
 
   # large-repo src pattern 判定
   # 対象: 明示 prefix に絞る (~/ghq/github.com/ 全体は OSS clone を巻き込むため削除)
+  # ai-tools 自身も対象 (speed-bias: parent inline edit が Opus 比率悪化の主因)
   # hook source は allowlist 対象のため social-hit term literal 記載可 (rules/public-repo-private-data-block.md)
   local _IS_LARGE_REPO=0
   case "$file_path" in
     "${HOME}"/ghq/github.com/snkrdunk/* | \
     "${HOME}"/ghq/github.com/snkrdunk-loadtest/* | \
-    "${HOME}"/ghq/github.com/snkrdunk-terraform/*)
+    "${HOME}"/ghq/github.com/snkrdunk-terraform/* | \
+    "${HOME}"/ghq/github.com/DaichiHoshina/ai-tools/* | \
+    "${HOME}"/ai-tools/*)
       _IS_LARGE_REPO=1 ;;
     *)
       _IS_LARGE_REPO=0 ;;
   esac
 
-  # src 拡張子チェック
+  # src 拡張子チェック (ai-tools の hook/skill/command/agent/rule は .sh/.md)
   local _IS_SRC=0
   case "$file_path" in
-    *.go|*.ts|*.tsx|*.py|*.dart|*.tf) _IS_SRC=1 ;;
+    *.go|*.ts|*.tsx|*.py|*.dart|*.tf|*.sh|*.md) _IS_SRC=1 ;;
   esac
 
   if [[ "$_IS_LARGE_REPO" -eq 1 && "$_IS_SRC" -eq 1 ]]; then
@@ -1044,10 +1047,10 @@ _check_large_repo_consecutive_edit() {
     _CUR=$(( _CUR + 1 ))
     printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
 
-    # threshold 判定 (>= 5)
-    if (( _CUR >= 5 )) && [[ ! -f "$_WARN_FILE" ]]; then
+    # threshold 判定 (>= 3、speed-bias)
+    if (( _CUR >= 3 )) && [[ ! -f "$_WARN_FILE" ]]; then
       touch "$_WARN_FILE" 2>/dev/null || true
-      local _SUGGEST="[delegation-suggest] last ${_CUR} edits on large-repo source. Next edit-class op → consider developer-agent delegation"
+      local _SUGGEST="[delegation-suggest] last ${_CUR} inline edits 検出。次の edit-class op は developer-agent 委譲 default (CLAUDE.md \"2 consecutive inline exceptions → mandatory delegation\" 違反リスク)"
       if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
         ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
       else
@@ -1366,7 +1369,7 @@ for raw in reversed(lines):
 PYEOF
       )
       if [ "$_DECL_FOUND" != "found" ]; then
-        _DECL_WARN="⚠ Sonnet 委譲宣言抜け: CLAUDE.md Auto-Delegation rule 違反。Edit/Write 前に 1 行宣言してください: 'Inline exception (reason: ...) → parent inline execution' または 'Inline prohibited (reason: ...) → delegate to developer-agent'"
+        _DECL_WARN="⚠ Sonnet 委譲宣言抜け: CLAUDE.md Auto-Delegation rule 違反。Edit/Write 前に 1 行宣言してください: 'Inline exception (reason: ...) → parent inline execution' または 'Inline prohibited (reason: ...) → delegate to developer-agent'。直近 inline 実行回数 ≥2 なら次回 mandatory delegation (CLAUDE.md \"Inline exception throttle\")"
         if [ -n "$ADDITIONAL_CONTEXT" ]; then
           ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_DECL_WARN}"
         else
@@ -1555,7 +1558,7 @@ PYEOF
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
 
     # 並列判定 self-review (全 Task 発火時に inject)
-    PARALLEL_REVIEW=$'【並列 self-review (強制 echo)】\n1. Manager 経由なら allocation 中の formula_trace を user に 2 行 echo:\n   formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / <PASS|FAIL> (basis=<T_i_basis>)\n   fan-out: N=<n>, targets=<file count>\n2. Manager 未経由の直接 Task 発火 (例: explore-agent / developer-agent 単発) は 1 行 echo:\n   judgment: N=<n> / independent_tasks=<count> / parallel=<reason or \'single-task\'>\n3. 独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1)\n4. echo 抜けは under-parallel risk (canonical: references/PARALLEL-PATTERNS.md)'
+    PARALLEL_REVIEW=$'【並列 self-review (強制 echo、default=並列/委譲)】\n0. default: 並列発火 + Sonnet 委譲。単発・inline 選択時は「なぜ並列/委譲しないか」を 1 行 echo (例: judgment: single-task because <specific reason>)。迷ったら並列・委譲側\n1. Manager 経由なら allocation 中の formula_trace を user に 2 行 echo:\n   formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / <PASS|FAIL> (basis=<T_i_basis>)\n   fan-out: N=<n>, targets=<file count>\n2. Manager 未経由の直接 Task 発火 (例: explore-agent / developer-agent 単発) は 1 行 echo:\n   judgment: N=<n> / independent_tasks=<count> / parallel=<reason or \'single-task\'>\n3. 独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1)\n4. echo 抜けは under-parallel risk (canonical: references/PARALLEL-PATTERNS.md)'
 
     # parent 事前準備 missing 検出 (warn-only、block しない)
     TASK_PROMPT=$(jq -r '.tool_input.prompt // empty' <<< "$INPUT")
