@@ -1202,6 +1202,75 @@ _inject_today_commits() {
   fi
 }
 
+# commit/PR 起草前に NG-DICTIONARY の block 系 term を ADDITIONAL_CONTEXT で事前 inject する
+# 目的: 起草段階でNG語を使わせず、block→retry ループを防ぐ (事後型 _inject_principles_on_commit と併存)
+# trigger: git commit / gh pr create / gh pr edit / gh pr review / gh issue create / glab 系コマンド
+# 重複抑制: SESSION_ID ベースの flag file で 1 session 1 回のみ inject
+_inject_ng_dict_on_commit_compose() {
+  local _session_key="${SESSION_ID:-$$}"
+  local _today
+  _today=$(date +%Y%m%d)
+  local _flag_file="/tmp/claude-ng-inject-${_session_key}-${_today}"
+  if [[ -f "$_flag_file" ]]; then
+    return 0
+  fi
+
+  local _ng_dict_file="${HOME}/.claude/guidelines/writing/NG-DICTIONARY.md"
+  local _word_replace_file="${HOME}/.claude/guidelines/writing/PRINCIPLES-word-replace.md"
+
+  # NG-DICTIONARY.md が存在しない場合は silent skip
+  if [[ ! -f "$_ng_dict_file" ]]; then
+    return 0
+  fi
+
+  # block 系 term を動的抽出: "(block)" を含む行から term list を取得
+  # 形式: **<name> (block)**: term1 / term2 / ...
+  local _block_terms=""
+  while IFS= read -r _line; do
+    if [[ "$_line" =~ \(block\) ]]; then
+      # "**: " 以降を term list として取得
+      local _terms_part="${_line#*\*\*: }"
+      if [[ -n "$_terms_part" && "$_terms_part" != "$_line" ]]; then
+        if [[ -n "$_block_terms" ]]; then
+          _block_terms="${_block_terms} / ${_terms_part}"
+        else
+          _block_terms="${_terms_part}"
+        fi
+      fi
+    fi
+  done < "$_ng_dict_file"
+
+  # 1 件も取れなければ silent skip
+  if [[ -z "$_block_terms" ]]; then
+    return 0
+  fi
+
+  # flag 書き込み (以降は重複 inject しない)
+  touch "$_flag_file" 2>/dev/null || true
+
+  # 置換ヒント: PRINCIPLES-word-replace.md があれば非日常英語の主要置換表を付加
+  local _replace_hint=""
+  if [[ -f "$_word_replace_file" ]]; then
+    # leverage/utilize/mitigate 等の代表的な非日常英語置換行を抽出 (最大 5 行)
+    _replace_hint=$(grep -E 'leverage|utilize|mitigate|facilitate|comprehensive' "$_word_replace_file" 2>/dev/null | head -5 | sed 's/^/  /' || true)
+  fi
+
+  local _inject_msg="【起草前 NG 語回避】以下の用語を commit message / PR 本文に使わないでください。source: guidelines/writing/NG-DICTIONARY.md
+block_terms: ${_block_terms}"
+  if [[ -n "$_replace_hint" ]]; then
+    _inject_msg="${_inject_msg}
+置換例 (非日常英語 → 平易な日本語):
+${_replace_hint}
+詳細: guidelines/writing/PRINCIPLES-word-replace.md"
+  fi
+
+  if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_inject_msg}"
+  else
+    ADDITIONAL_CONTEXT="${_inject_msg}"
+  fi
+}
+
 # ====================================
 # protection-mode 3層分類判定
 # ====================================
@@ -1509,7 +1578,7 @@ PYEOF
       fi
     fi
 
-    # 書く系 Bash コマンド: 今日の commit inject
+    # 書く系 Bash コマンド: 起草前 NG-DICTIONARY inject + 今日の commit inject
     # 対象: git commit / gh pr|issue|release / glab mr|issue|release
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ -n "$COMMAND" ]]; then
       if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]] \
@@ -1517,6 +1586,7 @@ PYEOF
          || [[ "$COMMAND" =~ gh[[:space:]]+release[[:space:]]+create ]] \
          || [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]] \
          || [[ "$COMMAND" =~ glab[[:space:]]+release[[:space:]]+create ]]; then
+        _inject_ng_dict_on_commit_compose
         _inject_today_commits
       fi
     fi

@@ -1205,3 +1205,85 @@ _run_social_hit_write() {
   [[ "$status" -eq 2 ]]
   echo "${output}" | grep -q "file="
 }
+
+# =============================================================================
+# _inject_ng_dict_on_commit_compose テスト
+# =============================================================================
+
+@test "ng-dict-inject: git commit -m で block_terms が additionalContext に inject される" {
+  local sid="ng-inject-test-$$"
+  local today
+  today=$(date +%Y%m%d)
+  rm -f "/tmp/claude-ng-inject-${sid}-${today}" 2>/dev/null || true
+
+  local result
+  result=$(_run_hook_with_session "Bash" \
+    '{"command":"git commit -m \"feat: add new feature\""}' "$sid")
+
+  rm -f "/tmp/claude-ng-inject-${sid}-${today}" 2>/dev/null || true
+
+  local ctx
+  ctx=$(get_additional_context "$result")
+  # block_terms が含まれること
+  [[ "$ctx" =~ "block_terms" ]]
+  # 難読漢語の代表例 (鑑みる) が含まれること
+  [[ "$ctx" =~ "鑑みる" ]]
+  # 非日常英語の代表例 (leverage) が含まれること
+  [[ "$ctx" =~ "leverage" ]]
+}
+
+@test "ng-dict-inject: 同一 session_id で 2 回目は重複 inject なし" {
+  local sid="ng-inject-dedup-$$"
+  local today
+  today=$(date +%Y%m%d)
+  rm -f "/tmp/claude-ng-inject-${sid}-${today}" 2>/dev/null || true
+
+  local result1
+  result1=$(_run_hook_with_session "Bash" \
+    '{"command":"git commit -m \"feat: first commit\""}' "$sid")
+  local result2
+  result2=$(_run_hook_with_session "Bash" \
+    '{"command":"git commit -m \"feat: second commit\""}' "$sid")
+
+  rm -f "/tmp/claude-ng-inject-${sid}-${today}" 2>/dev/null || true
+
+  # 1 回目: inject あり
+  [[ "$(get_additional_context "$result1")" =~ "block_terms" ]]
+  # 2 回目: inject なし (session 重複抑制)
+  [[ ! "$(get_additional_context "$result2")" =~ "block_terms" ]]
+}
+
+@test "ng-dict-inject: ls コマンドでは inject されない" {
+  local sid="ng-inject-skip-$$"
+  local today
+  today=$(date +%Y%m%d)
+  rm -f "/tmp/claude-ng-inject-${sid}-${today}" 2>/dev/null || true
+
+  local result
+  result=$(_run_hook_with_session "Bash" \
+    '{"command":"ls -la /tmp"}' "$sid")
+
+  rm -f "/tmp/claude-ng-inject-${sid}-${today}" 2>/dev/null || true
+
+  local ctx
+  ctx=$(get_additional_context "$result")
+  # 無関係コマンドでは block_terms が含まれないこと
+  [[ ! "$ctx" =~ "block_terms" ]]
+}
+
+@test "ng-dict-inject: gh pr create でも block_terms が inject される" {
+  local sid="ng-inject-gh-$$"
+  local today
+  today=$(date +%Y%m%d)
+  rm -f "/tmp/claude-ng-inject-${sid}-${today}" 2>/dev/null || true
+
+  local result
+  result=$(_run_hook_with_session "Bash" \
+    '{"command":"gh pr create --title \"feat: test\" --body \"description here\""}' "$sid")
+
+  rm -f "/tmp/claude-ng-inject-${sid}-${today}" 2>/dev/null || true
+
+  local ctx
+  ctx=$(get_additional_context "$result")
+  [[ "$ctx" =~ "block_terms" ]]
+}
