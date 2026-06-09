@@ -1,6 +1,6 @@
 # ESLintガイドライン
 
-ESLint v9+ Flat Config対応（2025年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+ESLint v10+ Flat Config対応（2026年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 
@@ -13,7 +13,7 @@ ESLint v9+ Flat Config対応（2025年）。共通ガイドラインは `~/.clau
 
 ---
 
-## v9.0主要変更（2025年）
+## v9.0主要変更（2025年）→ v10.0 GA（2026-02）
 
 | 変更点 | 旧 | 新 |
 |--------|----|----|
@@ -139,7 +139,7 @@ export default [
 
 | 項目 | 内容 | Since |
 |------|------|-------|
-| v10.0 | Flat Config改善、パフォーマンス向上 | ベータ |
+| v10.0 | Flat Config改善、パフォーマンス向上 | GA（2026-02） |
 | `defineConfig()` | 型安全な設定記述 | v9 |
 
 ---

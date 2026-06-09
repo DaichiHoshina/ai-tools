@@ -1,6 +1,6 @@
 # shadcn/uiガイドライン
 
-v2.5.0対応（2025年最新）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+shadcn CLI v4.11.0対応（2026年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 
@@ -22,7 +22,7 @@ shadcn/uiは**コンポーネントライブラリではなく、再利用可能
 
 ---
 
-## v2.5.0新機能（2025年）
+## v2.5.0以降の主要機能（CLI v4.11.0）
 
 ### "Resolve Anywhere"
 - レジストリがアプリ内の任意の場所にファイル配置可能

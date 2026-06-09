@@ -1,6 +1,6 @@
 # Tailwind CSSガイドライン
 
-Tailwind CSS v4.0対応（2025年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+Tailwind CSS v4.3対応（2026年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 
@@ -13,7 +13,7 @@ Tailwind CSS v4.0対応（2025年）。共通ガイドラインは `~/.claude/gu
 
 ---
 
-## v4.0新機能（2025年）
+## v4.x新機能（v4.0 リリース 2025年、v4.3が最新）
 
 ### 高速エンジン
 - フルビルド: **5倍高速化**

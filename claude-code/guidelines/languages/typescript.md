@@ -1,6 +1,6 @@
 # TypeScriptガイドライン
 
-TypeScript 6.0 (安定版6.0.3) 対応。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+TypeScript 6.0.3対応（2026年時点 stable）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 

@@ -1,6 +1,6 @@
 # Rustガイドライン
 
-Rust 2024 Edition対応。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+Rust 2024 Edition対応、stable 1.96.0（2026-06時点）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 

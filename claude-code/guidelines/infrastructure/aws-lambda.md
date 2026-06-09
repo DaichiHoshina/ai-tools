@@ -9,7 +9,7 @@
 | 項目 | 設定 |
 |------|------|
 | `function_name` | 環境プレフィックス付き（`${var.environment}-api-handler`） |
-| `runtime` | 最新LTS推奨（`nodejs20.x`, `python3.12`） |
+| `runtime` | 最新LTS推奨（`nodejs24.x`, `python3.14`） |
 | `memory_size` | ワークロードに応じて設定 |
 | `timeout` | 処理時間に応じて設定（デフォルト30秒） |
 
@@ -17,8 +17,8 @@
 
 | ランタイム | 設定 |
 |-----------|------|
-| Node.js | `runtime = "nodejs20.x"`, `handler = "index.handler"` |
-| Python | `runtime = "python3.12"`, `handler = "main.lambda_handler"` |
+| Node.js | `runtime = "nodejs24.x"`, `handler = "index.handler"` |
+| Python | `runtime = "python3.14"`, `handler = "main.lambda_handler"` |
 | Go | `runtime = "provided.al2023"`, `handler = "bootstrap"` |
 
 ---
