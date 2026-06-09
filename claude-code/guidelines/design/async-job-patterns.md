@@ -59,20 +59,48 @@ bounded_context/
 
 ## DLQ（Dead Letter Queue）設計
 
-| 項目 | 推奨 |
-|------|------|
+poison pillでconsumer全停止を防ぐ。
+
+| 設定項目 | 推奨 |
+|---------|------|
 | DLQ設置 | 全キューに必須 |
-| リトライ回数 | 2-3回（ジョブ特性に応じて調整） |
-| DLQ受信時のアラート | 即時通知（メッセージ数 > 0） |
+| max retry | 3〜5回（ジョブ特性に応じて調整） |
+| backoff | exponential（1s → 4s → 16s） |
+| DLQ到達条件 | retry超過またはparse失敗 |
+| DLQ受信時のアラート | 件数SLO、24h以上滞留でalert |
 | 再処理手順 | DLQメッセージ確認→原因修正→メインキューに再投入 |
+
+**DLQにmessageごと原因metadataを付与**（error message、stack trace、attempt count）。後で再投入や分析が可能に。
 
 ## 冪等性の確保
 
+at-least-once配信前提で「重複実行されても結果同じ」設計が必須。
+
 | パターン | 実装方法 |
 |---------|---------|
-| 一意キーによる重複排除 | メッセージIDやリクエストIDでDB制約 |
+| **Idempotency Key** | clientがUUID生成、server側でfingerprint保存・重複検出 |
+| **Natural key** | 業務キー（注文番号等）をunique制約 |
 | 状態チェック | 処理前に現在の状態を確認し、処理済みならスキップ |
 | トランザクション | DB操作とキュー操作の整合性を保つ |
+
+```http
+POST /payments
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
+```
+
+```go
+// dedup tableで重複排除（event consumer側）
+INSERT INTO event_dedup (event_id, processed_at)
+VALUES ($1, now())
+ON CONFLICT (event_id) DO NOTHING RETURNING event_id;
+// 挿入成功 → 未処理、失敗 → 重複スキップ
+```
+
+**設計要点**:
+- event_idはproducer側でUUID付与、全経路で保持
+- dedup tableはTTL/partitioningで肥大対策（例: 7日分のみ保持）
+- TTL: 24h程度でfingerprint削除（IETF draft準拠）
+- 業務transactionとdedup insertを**同一DB tx**に（別DBだとtwo-phase問題）
 
 ---
 

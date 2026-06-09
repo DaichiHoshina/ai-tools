@@ -89,44 +89,13 @@ for i := 0; i < 3; i++ {
 
 ## 5. Transactional Outboxパターン
 
-DB txとmessage publishのatomicity保証。
-
-```text
-TX 内:
-  INSERT INTO orders ...
-  INSERT INTO outbox (event, payload) ...
-COMMIT;
-
-別 worker:
-  outbox から poll → message broker publish → outbox 削除
-```
-
-| 利点 | 欠点 |
-|------|------|
-| DB txで完全atomic | DB負荷増 |
-| メッセージ消失なし | 順序保証は別途必要 |
-| event sourcing入口 | poll実装必要 |
-
-**代替**: CDC（Change Data Capture, Debezium等）でWALから直接publish。
+DB txとmessage publishのatomicity保証。詳細は [event-driven-architecture.md#5-transactional-outboxproducer側exactly-onceの実用解](./event-driven-architecture.md) 参照。
 
 ---
 
 ## 6. Idempotency
 
-分散環境で「重複実行されても結果同じ」必須。
-
-| 実装 | 仕組み |
-|------|--------|
-| **Idempotency Key** | clientがUUID生成、server側でfingerprint保存・重複検出 |
-| **Natural key** | 業務キー（注文番号等）をunique制約 |
-| **Version check** | 更新前state hashを引数化 |
-
-```http
-POST /payments
-Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
-```
-
-**TTL**: 24h程度でfingerprint削除（IETF draft準拠）。
+冪等性の実装パターン詳細は [design/async-job-patterns.md#冪等性の確保](../design/async-job-patterns.md) 参照。
 
 ---
 

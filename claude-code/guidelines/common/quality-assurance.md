@@ -112,6 +112,8 @@ Developer Agent → QA Agent → 問題あれば差し戻し → なければ承
 
 ## 最終チェックリスト
 
+実装フロー（タスク分割・実装前確認・完了定義）は [common/development-process.md](./development-process.md) 参照。
+
 ```
 □ セルフレビュー完了
 □ 全テスト Pass / カバレッジ ≥80%
