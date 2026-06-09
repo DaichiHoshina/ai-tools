@@ -60,6 +60,13 @@ if [[ -n "${CWD}" ]] && git -C "${CWD}" rev-parse --git-dir >/dev/null 2>&1; the
   done < <(git -C "${CWD}" log --since='30 minutes ago' --pretty='%H' 2>/dev/null || true)
 fi
 
+# === flow-baseline TSV 自動生成: 当日分が未生成の場合のみ async 実行 ===
+_FLOW_BASELINE="$HOME/.claude/scripts/flow-baseline.sh"
+_TODAY_TSV="$HOME/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv"
+if [[ -x "${_FLOW_BASELINE}" ]] && [[ ! -f "${_TODAY_TSV}" ]]; then
+  bash "${_FLOW_BASELINE}" --since 7d >>"$HOME/.claude/logs/hook-errors.log" 2>&1 &
+fi
+
 # === 出力: SQL notice と memory notice を連結 ===
 _SYSTEM_MSG=""
 if [[ -n "${_SQL_NOTICE}" ]] && [[ -n "${_MEMORY_NOTICE}" ]]; then
