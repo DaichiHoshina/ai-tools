@@ -40,7 +40,7 @@
 |----------|------|
 | `/resume` | 過去セッション継続 |
 | `/rename` | セッション名変更（引数なし→自動生成） |
-| `mcp__serena__onboarding` | 新規プロジェクト初期化（旧 `/serena オンボーディング` 廃止） |
+| `mcp__serena__onboarding` | 新規プロジェクト初期化（旧 `/serenaオンボーディング` 廃止） |
 | `/serena-refresh` | メモリ情報最新化 |
 | `/reload` | compact後のリカバリー |
 | `/doctor` | 環境確認 |

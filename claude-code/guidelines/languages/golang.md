@@ -1,6 +1,6 @@
 # Golang Guidelines
 
-Go 1.26.4 (2026-06-04 時点). Common: `~/.claude/guidelines/common/`.
+Go 1.26.4 (2026-06-04時点). Common: `~/.claude/guidelines/common/`.
 Related: `languages/go-performance.md` (escape/GC/pprof/PGO) / `languages/go-concurrency.md` (scheduler/channel sizing/leak detection).
 
 ## Core Principles

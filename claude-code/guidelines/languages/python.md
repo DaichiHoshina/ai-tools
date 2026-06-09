@@ -1,6 +1,6 @@
 # Pythonガイドライン
 
-Python 3.14.5対応（2026-06-04 時点）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
+Python 3.14.5対応（2026-06-04時点）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
 
 ---
 
