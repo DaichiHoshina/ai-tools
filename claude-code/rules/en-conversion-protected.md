@@ -9,7 +9,7 @@
 - `commands/post-comment.md` — 同上
 - `commands/design-doc.md` — 同上
 - `commands/prd.md` — 同上
-- `guidelines/writing/*.md` (全 file、canonical: `ls guidelines/writing/*.md` で導出) — 執筆規約・NG 辞書 56K chars、JP 文体規範
+- `guidelines/writing/*.md` (全 file、canonical: `ls guidelines/writing/*.md` で導出) — 執筆規約・NG 辞書・JP 文体規範
 
 ## Section 単位 (file 内一部のみ JP 維持)
 
