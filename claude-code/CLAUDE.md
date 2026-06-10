@@ -106,11 +106,13 @@ No other natural-language interpretation. Full list: `references/natural-languag
 
 ## Definition of Done (DoD)
 
-Apply relevant items only. Scale by change size (typo → #6 / new feature → all): (1) Types 0 errors (2) Tests pass ≥80% (3) Lint 0 (4) Security clean (5) Build success (6) **1 smoke test** (required). Bundle: `/lint-test` / `/verify-once`.
+Apply relevant items only. Scale by change size (typo → #6 / new feature → all): (1) Types 0 errors (2) Tests pass ≥80% (3) Lint 0 (4) Security clean (5) Build success (6) **1 smoke test** (required) (7) DB 変更含む場合 FK / 長 TX / replica lag / maintenance scope 波及 4 経路確認 (`[[feedback-db-change-review-blind-spot]]`). Bundle: `/lint-test` / `/verify-once`.
 
 ## Root Cause Analysis
 
 Structural fix over symptomatic. **Reproduce → identify → design → verify** 4 steps required. Details: `/root-cause` skill.
+
+本番切り戻しは CI 正規パス (revert PR → main merge → deploy) を第一手段とする。Platform 直接操作 (ECS task def rollback 等) は応急処置であり、次 deploy で上書きされるため revert PR と必ず並走する (`[[feedback-rollback-via-revert-pr]]`)。
 
 ## Compounding Engineering
 
