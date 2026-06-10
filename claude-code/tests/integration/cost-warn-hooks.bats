@@ -19,6 +19,9 @@ setup() {
   export JP_QUALITY_INJECT_OFF=1
   export CLAUDE_CTX_FILE="${HOME}/_ctx_unset"
   export CLAUDE_SERENA_FAIL_COUNT="${HOME}/_serena_unset"
+  # threshold 定数をロード
+  # shellcheck source=../../hooks/lib/thresholds.sh
+  source "${BATS_TEST_DIRNAME}/../../hooks/lib/thresholds.sh"
 }
 
 teardown() {
@@ -140,9 +143,9 @@ _make_session_jsonl() {
   local target_file="${HOME}/ghq/github.com/${_org}${_suffix}/src/main.go"
   local log_dir="${HOME}/.claude/logs"
 
-  # counter を 2 にセット (次の呼出しで threshold=3 到達、speed-bias)
+  # counter を threshold-1 にセット (次の呼出しで threshold 到達、speed-bias)
   mkdir -p "${log_dir}"
-  printf '2\n' > "${log_dir}/.large-repo-edit-count-${session_id}"
+  printf '%s\n' "$(( _TH_DELEGATE_SEQ - 1 ))" > "${log_dir}/.large-repo-edit-count-${session_id}"
 
   local input_file
   input_file=$(mktemp)
@@ -172,9 +175,9 @@ _make_session_jsonl() {
   local target_file="${HOME}/ghq/github.com/some-oss-org/oss-repo/main.go"
   local log_dir="${HOME}/.claude/logs"
 
-  # counter を 2 にセット (threshold=3 直前)
+  # counter を threshold-1 にセット (threshold 直前)
   mkdir -p "${log_dir}"
-  printf '2\n' > "${log_dir}/.large-repo-edit-count-${session_id}"
+  printf '%s\n' "$(( _TH_DELEGATE_SEQ - 1 ))" > "${log_dir}/.large-repo-edit-count-${session_id}"
 
   local input_file
   input_file=$(mktemp)
@@ -208,8 +211,8 @@ _make_session_jsonl() {
   local hook="${HOOKS_DIR}/pre-tool-use.sh"
   local home_dir="${HOME}"
 
-  # counter=1、lastts を 1 秒前 (十分 > 100ms) に偽装 → 次の呼出しで sequential 2 到達 = threshold
-  printf '1\n' > "${log_dir}/.agent-fire-count-${session_id}"
+  # counter=threshold-1、lastts を 1 秒前 (十分 > 100ms) に偽装 → 次の呼出しで threshold 到達
+  printf '%s\n' "$(( _TH_PARALLEL_SEQ - 1 ))" > "${log_dir}/.agent-fire-count-${session_id}"
   local _past_ns
   _past_ns=$(( $(date +%s%N) - 2000000000 ))
   printf '%s\n' "$_past_ns" > "${log_dir}/.agent-fire-lastts-${session_id}"

@@ -6,6 +6,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# shellcheck source=lib/thresholds.sh
+source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 
 # jq前提条件チェック
 require_jq
@@ -26,9 +28,9 @@ TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 LOG_DIR="${HOME}/.claude/logs"
 mkdir -p "$LOG_DIR"
 
-# ログファイルに記録（1000行超でローテーション）
+# ログファイルに記録（_TH_LOG_ROTATION_LINES 超でローテーション）
 LOG_FILE="${LOG_DIR}/subagent-events.log"
-if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE") -gt 1000 ]]; then
+if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE") -gt "${_TH_LOG_ROTATION_LINES}" ]]; then
   tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
 fi
 

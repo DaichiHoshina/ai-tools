@@ -30,6 +30,9 @@ else
   [[ -f "$_FALLBACK_JPLIB" ]] && source "$_FALLBACK_JPLIB" || true
 fi
 
+# shellcheck source=lib/thresholds.sh
+source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
+
 # Nerd Fonts icons
 ICON_CRITICAL=$'\u25c9'   # exclamation-circle (critical/forbidden)
 ICON_WARNING=$'\u25b2'    # exclamation-triangle (boundary)
@@ -465,8 +468,8 @@ _check_session_split() {
 
   local _AGE_H=$(( _ELAPSED / 3600 ))
   local _REASON=""
-  (( _ELAPSED >= 10800 )) && _REASON="age=${_AGE_H}h"
-  if (( _MSG_COUNT >= 1000 )); then
+  (( _ELAPSED >= _TH_SESSION_AGE_S )) && _REASON="age=${_AGE_H}h"
+  if (( _MSG_COUNT >= _TH_SESSION_MSG )); then
     [[ -n "$_REASON" ]] && _REASON="${_REASON} / "
     _REASON="${_REASON}messages=${_MSG_COUNT}"
   fi
@@ -537,8 +540,8 @@ _check_sequential_agent_fire() {
   # 経過時間 (ns)
   local _ELAPSED=$(( _NOW_NS - _LAST_NS ))
 
-  # 500ms = 500000000 ns 以内 → 同一 message 内並列発火と推定 → counter リセット
-  local _PARALLEL_THRESHOLD_NS=500000000
+  # 500ms 以内 → 同一 message 内並列発火と推定 → counter リセット
+  local _PARALLEL_THRESHOLD_NS=$_TH_PARALLEL_WINDOW_NS
   if (( _LAST_NS > 0 && _ELAPSED <= _PARALLEL_THRESHOLD_NS )); then
     # 並列発火検出: counter リセット (fence は維持)
     printf '0\n' > "$_COUNT_FILE" 2>/dev/null || true
@@ -555,8 +558,8 @@ _check_sequential_agent_fire() {
   _CUR=$(( _CUR + 1 ))
   printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
 
-  # threshold 判定 (>= 2、speed-bias)
-  if (( _CUR >= 2 )); then
+  # threshold 判定 (>= _TH_PARALLEL_SEQ、speed-bias)
+  if (( _CUR >= _TH_PARALLEL_SEQ )); then
     touch "$_FENCE_FILE" 2>/dev/null || true
 
     # ログ追記
@@ -621,8 +624,8 @@ _check_large_repo_consecutive_edit() {
     _CUR=$(( _CUR + 1 ))
     printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
 
-    # threshold 判定 (>= 3、speed-bias)
-    if (( _CUR >= 3 )) && [[ ! -f "$_WARN_FILE" ]]; then
+    # threshold 判定 (>= _TH_DELEGATE_SEQ、speed-bias)
+    if (( _CUR >= _TH_DELEGATE_SEQ )) && [[ ! -f "$_WARN_FILE" ]]; then
       touch "$_WARN_FILE" 2>/dev/null || true
       local _SUGGEST="[delegation-suggest] last ${_CUR} inline edits 検出。次の edit-class op は developer-agent 委譲 default (CLAUDE.md \"2 consecutive inline exceptions → mandatory delegation\" 違反リスク)"
       if [[ -n "$ADDITIONAL_CONTEXT" ]]; then

@@ -7,6 +7,8 @@ exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# shellcheck source=lib/thresholds.sh
+source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 require_jq
 
 INPUT=$(cat)
@@ -52,7 +54,7 @@ if [[ -n "${CWD}" ]] && git -C "${CWD}" rev-parse --git-dir >/dev/null 2>&1; the
       _STAT=$(git -C "${CWD}" show --stat "${_HASH}" 2>/dev/null | tail -1 || true)
       # "N files changed" / "1 file changed" の N を抽出
       _FILE_COUNT=$(printf '%s' "${_STAT}" | grep -oE '^[[:space:]]*[0-9]+' | tr -d '[:space:]' || true)
-      if [[ -n "${_FILE_COUNT}" ]] && [[ "${_FILE_COUNT}" -ge 3 ]]; then
+      if [[ -n "${_FILE_COUNT}" ]] && [[ "${_FILE_COUNT}" -ge "${_TH_STOP_MEMORY_FILES}" ]]; then
         _MEMORY_NOTICE="💾 memory-save 候補 (commit ${_SHORT_HASH}: ${_FILE_COUNT} files)、/memory-save 検討"
         break
       fi

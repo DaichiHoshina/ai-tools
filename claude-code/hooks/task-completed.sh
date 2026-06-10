@@ -6,6 +6,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# shellcheck source=lib/thresholds.sh
+source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 
 # Nerd Fonts icon
 # ICON_* は hook-utils.sh で定義済み
@@ -78,8 +80,8 @@ fi
 _TASK_COUNT=$((_TASK_COUNT + 1))
 printf '%s' "${_TASK_COUNT}" > "${_SESSION_TASK_FLAG}"
 
-# 累計 2 task 以上で /clear 推奨 notify
-if [[ "${_TASK_COUNT}" -ge 2 ]]; then
+# 累計 _TH_TASK_COMPLETED_SEQ 以上で /clear 推奨 notify
+if [[ "${_TASK_COUNT}" -ge "${_TH_TASK_COMPLETED_SEQ}" ]]; then
   echo "[task-done] 累計 ${_TASK_COUNT} tasks 完了、1 task = 1 session 原則で /clear 推奨" >&2
 fi
 

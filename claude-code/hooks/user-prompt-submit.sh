@@ -19,6 +19,9 @@ source "${LIB_DIR}/common.sh" || {
 load_lib "detect-from-keywords.sh" || exit 1
 load_lib "detect-technique.sh" || exit 1
 
+# shellcheck source=lib/thresholds.sh
+source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
+
 # === 前提条件チェック ===
 require_jq
 
@@ -135,18 +138,18 @@ print(total)
 
   # 閾値判定
   local _WARN_REASON=""
-  if (( _ELAPSED > 10800 )); then
+  if (( _ELAPSED > _TH_SESSION_AGE_S )); then
     local _HOURS=$(( _ELAPSED / 3600 ))
     _WARN_REASON="elapsed=${_HOURS}h"
   fi
-  if (( _MSG_COUNT > 1000 )); then
+  if (( _MSG_COUNT > _TH_SESSION_MSG )); then
     if [[ -n "${_WARN_REASON}" ]]; then
       _WARN_REASON="${_WARN_REASON} msg=${_MSG_COUNT}"
     else
       _WARN_REASON="msg=${_MSG_COUNT}"
     fi
   fi
-  if (( _TOKEN_TOTAL >= 500000 )); then
+  if (( _TOKEN_TOTAL >= _TH_TOKEN )); then
     local _TOKEN_K=$(( _TOKEN_TOTAL / 1000 ))
     if [[ -n "${_WARN_REASON}" ]]; then
       _WARN_REASON="${_WARN_REASON} token=${_TOKEN_K}K"
