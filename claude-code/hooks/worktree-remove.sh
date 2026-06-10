@@ -21,8 +21,10 @@ PROJECT_DIR="$HOME/.claude/projects/${SANITIZED}"
 
 [[ ! -d "$PROJECT_DIR" ]] && exit 0
 
-JSONL_COUNT=$(find "$PROJECT_DIR" -maxdepth 1 -name "*.jsonl" -type f 2>/dev/null | wc -l | tr -d ' ')
-MEM_REAL=$(find "$PROJECT_DIR/memory" -maxdepth 1 -type f -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+_jsonl_files=( "$PROJECT_DIR"/*.jsonl )
+[[ -e "${_jsonl_files[0]}" ]] && JSONL_COUNT=${#_jsonl_files[@]} || JSONL_COUNT=0
+_mem_files=( "$PROJECT_DIR/memory"/*.md )
+[[ -e "${_mem_files[0]}" ]] && MEM_REAL=${#_mem_files[@]} || MEM_REAL=0
 
 if [[ "$JSONL_COUNT" = "0" && "$MEM_REAL" = "0" ]]; then
   if [[ -L "$PROJECT_DIR/memory" ]]; then
