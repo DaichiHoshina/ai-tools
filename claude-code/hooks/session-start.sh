@@ -269,7 +269,7 @@ if [[ -f "${_MEMORY_INDEX}" ]] && [[ ! -f "${_PROMOTE_STATE_FILE}" ]]; then
     fi
     # trigger B: 同 prefix 3 file 以上 (feedback_xxx_*, reference_xxx_*, project_xxx_*, work-context-xxx_*)
     # prefix = 先頭 2 token (例: feedback_design_doc → feedback_design)
-    _TOPIC_COUNTS=$(find "${_MEMORY_DIR}" -maxdepth 1 -name '*.md' -printf '%f\n' 2>/dev/null \
+    _TOPIC_COUNTS=$(find "${_MEMORY_DIR}" -maxdepth 1 -name '*.md' -exec basename {} \; 2>/dev/null \
         | grep -v "^MEMORY.md$" \
         | sed -E 's/^([a-z]+([_-][a-z0-9]+)?).*\.md$/\1/' \
         | sort | uniq -c | awk '$1 >= 3 {print $2"("$1")"}' | tr '\n' ' ')
