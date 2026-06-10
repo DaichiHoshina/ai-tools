@@ -84,11 +84,6 @@ worktree 分離で物理並列化する。
 
 Changes present → return branch / parent merge / worktree delete. no changes → auto-delete. Collision → sequential downgrade, worktree left in place.
 
-### `worktree.baseRef` (advanced)
-
-Default `fresh` = base on `origin/<default>`. Set `"head"` per task in `~/.claude/settings.local.json` to carry unpushed commits to new worktree. Not recommended for regular use (main pollution risk).
-
-
 ## --auto fully autonomous mode (opt-in)
 
 | Decision | Action |
@@ -99,9 +94,7 @@ Default `fresh` = base on `origin/<default>`. Set `"head"` per task in `~/.claud
 | Design decision | Recommend, priority simple |
 | lint-test fail | Auto-fix 1×, 2nd fail stop + report |
 
-Flow: receive → judge → execute → lint-test → review-fix → secret check → /git-push → Serena memory → PushNotification.
-
-review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Warning 0** (max 3×, excess reported, continue).
+review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Warning 0** (max 3×, excess → report & continue).
 
 ## Execution logic
 
@@ -121,14 +114,6 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
    - P0 残 / P1: report & continue (`--auto` 時 stop)
    - codex 未配備: comprehensive single fallback
 10. Post-*impl* sequential steps from Task table (review は step 9 で完了済、skip)
-
-## Bug fix complexity
-
-| Level | Example | Flow |
-|-------|-----|-------|
-| Low | Typo | /diagnose → *impl* → /lint-test → /review → /git-push --pr |
-| Medium | Logic bug | /diagnose → Skill(root-cause) → *impl* → /lint-test → /review → /git-push --pr |
-| High | Race/Security | /diagnose → Task(root-cause-analyzer) → *impl* → /lint-test → /review → /git-push --pr |
 
 ## Integration rules
 
