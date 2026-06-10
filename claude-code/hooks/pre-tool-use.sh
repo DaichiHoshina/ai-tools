@@ -289,6 +289,36 @@ _check_social_hit() {
     _append_social_hit_log "$TOOL_NAME" "$word_list" "$file_path"
   fi
 }
+
+# Bash 外向き text (commit message / pr body 等) を social-hit term で判定する
+# 引数: label (人間可読: "commit message" / "gh pr create" 等), text
+_check_social_hit_in_text() {
+  local label="$1"
+  local text="$2"
+  [[ -z "$text" ]] && return 0
+  [[ -f "$_social_hit_rule_file" ]] || return 0
+
+  local found=()
+  while IFS= read -r word; do
+    [[ -z "$word" ]] && continue
+    if printf '%s' "$text" | grep -qF "$word"; then
+      found+=("$word")
+    fi
+  done < <(_extract_term_list "$_social_hit_rule_file" "social-hit (block)")
+
+  if [[ ${#found[@]} -gt 0 ]]; then
+    local word_list
+    word_list=$(printf '%s' "${found[*]}" | tr ' ' ',')
+    GUARD_CLASS="Forbidden"
+    MESSAGE="${ICON_CRITICAL} social-hit block: [${word_list}] in ${label}"
+    ADDITIONAL_CONTEXT="ai-tools repo は public。社内 product 名 / 識別子を ${label} に含められません。
+対処: term を削除 / 匿名化 (例: <product-name>) して再実行してください。
+ログ: ~/.claude/logs/social-hit-block.log"
+    printf '[social-hit-block] hit_term=%s label=%s\n' "$word_list" "$label" >&2
+    _append_social_hit_log "$TOOL_NAME" "$word_list" "${label}"
+  fi
+}
+
 # ====================================
 # private-name block
 # ~/.claude/references-private/private-name-list.txt を動的読込し、
@@ -1146,7 +1176,8 @@ PYEOF
           _pn_cmd_label=$(printf '%s' "$COMMAND" | grep -oE 'glab (mr|issue) (create|note)' | head -1)
         fi
         if [[ -n "$_pn_cmd_text" && -n "$_pn_cmd_label" ]]; then
-          _check_private_name "${_pn_cmd_label}" "$_pn_cmd_text"
+          _check_social_hit_in_text "${_pn_cmd_label}" "$_pn_cmd_text"
+          [[ "$GUARD_CLASS" == "Forbidden" ]] || _check_private_name "${_pn_cmd_label}" "$_pn_cmd_text"
         fi
       fi
     fi
