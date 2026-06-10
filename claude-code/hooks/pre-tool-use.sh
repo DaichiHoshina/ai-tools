@@ -518,7 +518,12 @@ _check_sequential_agent_fire() {
 
   # 現在 timestamp (nanosec)
   local _NOW_NS
-  _NOW_NS=$(date +%s%N 2>/dev/null || printf '%s000000000' "$(date +%s)")
+  if [[ -n "${EPOCHREALTIME:-}" ]]; then
+    # bash 5.0+ builtin: fork 0、形式 "1234567890.123456" → ns 9桁 padding
+    _NOW_NS="${EPOCHREALTIME/./}000"
+  else
+    _NOW_NS=$(date +%s%N 2>/dev/null || printf '%s000000000' "$(date +%s)")
+  fi
 
   # 直前 fire timestamp 取得
   local _LAST_NS=0
