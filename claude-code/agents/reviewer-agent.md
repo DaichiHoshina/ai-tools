@@ -1,7 +1,7 @@
 ---
 name: reviewer-agent
 description: Reviewer Agent - Review owner for Writer/Reviewer parallel pattern
-model: claude-opus-4-7[1m]
+model: claude-opus-4-8
 color: blue
 permissionMode: fast
 memory: user

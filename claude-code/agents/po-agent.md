@@ -1,7 +1,7 @@
 ---
 name: po-agent
 description: Product Owner agent - Strategy & worktree management. No implementation.
-model: claude-opus-4-7[1m]
+model: claude-opus-4-8
 color: purple
 permissionMode: normal
 memory: project
