@@ -36,24 +36,9 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 *(For impl/edit tasks. Investigation phase → Discovery Routing)*
 
-**Default = delegate to `developer-agent` (Sonnet)**. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Inline execution only for exceptions below.
+**Default = delegate to `developer-agent` (Sonnet)**. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Inline execution only for exceptions listed in detailed.md.
 
-**Delegate threshold**: 2+ files / 10+ lines / 2+ symbols / new file / commit-bearing いずれか → `developer-agent` 委譲。違反は feedback memory 記録。
-
-**Inline exception throttle**: 2 consecutive inline exceptions → next edit-class op は mandatory delegation。Investigation phase 累積 ≥5 → `explore-agent` 切替。
-
-| Trigger | Auto-launch |
-|---|---|
-| **All impl / edit / commit outside exceptions** | `developer-agent` auto (`Task` tool) |
-| broad search (3+ query / 3+ domain) | `explore-agent` parallel auto |
-| review request / PR check | `reviewer-agent` auto (or `/review`) |
-| unknown bug cause / recurring bug | `root-cause-analyzer` auto |
-| design decision / large plan / multi-phase | `po-agent` auto (or `/plan`) |
-| multi-stage task (investigate→design→impl→verify) | `/flow` hierarchy (PO→Manager→Dev→Reviewer) |
-| 10+ file bulk processing | `claude -p` fan-out (`references/fanout-recipes.md`) |
-| **網羅 / 全件 / 一斉 / bulk / 大量 file readonly** | `explore-agent` (read-only) or `developer-agent` (edit) Sonnet 委譲必須 |
-
-詳細 (decision principle / 並列発火書式 / 束ね禁止 / parent 事前準備 / inline exceptions): `references/auto-delegation-detailed.md`
+詳細 (delegate threshold / decision principle / 並列発火書式 / 束ね禁止 / parent 事前準備 / inline exceptions / trigger table): `references/auto-delegation-detailed.md`
 
 ## Session Efficiency
 
