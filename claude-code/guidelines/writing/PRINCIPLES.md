@@ -484,12 +484,7 @@ grep -nE '(M 行|K 行|→|外挿|諸元|逐次伝播|long TX|replica lag|disk I
 
 ### NG 辞書由来 grep (AI 定型語 / カタカナ造語禁止)
 
-```bash
-# AI 定型語 (NG-DICTIONARY.md の AI定型語 key から派生)
-grep -nE '(効果的に|効率的に|シームレス|包括的|堅牢|スケーラブル|最適化|無視可|余裕大)' <draft>
-```
-
-hit したら該当行を書き換えてから出力する。
+NG 語 canonical: [NG-DICTIONARY.md](NG-DICTIONARY.md)。全 key (AI定型語 / カタカナ造語禁止 / 難読漢語 / 弱い表現 / 冗長表現 / 非日常英語) の literal はそちら参照。hit したら該当行を書き換えてから出力する。
 
 ## 全体マップ — 各ルールがどう認知負荷を下げるか
 
