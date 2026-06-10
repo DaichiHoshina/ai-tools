@@ -67,7 +67,7 @@ verify_installation() {
         print_success "settings.json が存在します"
     else
         print_error "settings.json が見つかりません"
-        ((errors++))
+        errors=$(( errors + 1 ))
     fi
 
     if [ -f "$script_dir/.mcp.json" ]; then
@@ -80,14 +80,14 @@ verify_installation() {
         print_success "CLAUDE.md が存在します"
     else
         print_error "CLAUDE.md が見つかりません"
-        ((errors++))
+        errors=$(( errors + 1 ))
     fi
 
     if [ -f "$claude_dir/statusline.js" ]; then
         print_success "statusline.js が存在します"
     else
         print_error "statusline.js が見つかりません"
-        ((errors++))
+        errors=$(( errors + 1 ))
     fi
 
     # Check directories
