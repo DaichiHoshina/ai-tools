@@ -180,6 +180,16 @@
             "command": "~/.claude/hooks/serena-hook.sh activate"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/memory-dangling-check.sh",
+            "async": true
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
