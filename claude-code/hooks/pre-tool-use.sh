@@ -289,7 +289,6 @@ _check_social_hit() {
     _append_social_hit_log "$TOOL_NAME" "$word_list" "$file_path"
   fi
 }
-
 # ====================================
 # private-name block
 # ~/.claude/references-private/private-name-list.txt を動的読込し、
@@ -1035,11 +1034,18 @@ PYEOF
 
     # AI定型語チェック: git commit / gh / glab の外向き text を抽出して block
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ -n "$COMMAND" ]]; then
+      # single-quote 系 regex は変数経由で渡す (shell quoting による capture 空 bug 回避)
+      _re_m_sq="-m[[:space:]]+\'([^\']*)\'"
+      _re_body_sq="--body[[:space:]]+\'([^\']*)\'"
+      _re_title_sq="--title[[:space:]]+\'([^\']*)\'"
+      _re_notes_sq="--notes[[:space:]]+\'([^\']*)\'"
+      _re_desc_sq="--description[[:space:]]+\'([^\']*)\'"
+
       # --- git commit: -m オプション値を抽出 (commit-tree / commit-graph は除外) ---
       if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]]; then
         _commit_msg=""
         # -m "..." 形式
-        if [[ "$COMMAND" =~ -m[[:space:]]+'([^'\'']*)' ]]; then
+        if [[ "$COMMAND" =~ $_re_m_sq ]]; then
           _commit_msg="${BASH_REMATCH[1]}"
         elif [[ "$COMMAND" =~ -m[[:space:]]\"([^\"]*)\" ]]; then
           _commit_msg="${BASH_REMATCH[1]}"
@@ -1054,19 +1060,19 @@ PYEOF
           [[ "$COMMAND" =~ gh[[:space:]]+release[[:space:]]+create ]]; }; then
         _gh_text=""
         # --body "..." or --body '...'
-        if [[ "$COMMAND" =~ --body[[:space:]]+'([^'\'']*)' ]]; then
+        if [[ "$COMMAND" =~ $_re_body_sq ]]; then
           _gh_text="${BASH_REMATCH[1]}"
         elif [[ "$COMMAND" =~ --body[[:space:]]\"([^\"]*)\" ]]; then
           _gh_text="${BASH_REMATCH[1]}"
         fi
         # --title "..." or --title '...' (append to check text)
-        if [[ "$COMMAND" =~ --title[[:space:]]+'([^'\'']*)' ]]; then
+        if [[ "$COMMAND" =~ $_re_title_sq ]]; then
           _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
         elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
           _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
         fi
         # --notes "..." or --notes '...' (gh release create)
-        if [[ "$COMMAND" =~ --notes[[:space:]]+'([^'\'']*)' ]]; then
+        if [[ "$COMMAND" =~ $_re_notes_sq ]]; then
           _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
         elif [[ "$COMMAND" =~ --notes[[:space:]]\"([^\"]*)\" ]]; then
           _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
@@ -1080,12 +1086,12 @@ PYEOF
       # --- glab mr create / glab issue create / glab mr note ---
       if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]]; then
         _glab_text=""
-        if [[ "$COMMAND" =~ --description[[:space:]]+'([^'\'']*)' ]]; then
+        if [[ "$COMMAND" =~ $_re_desc_sq ]]; then
           _glab_text="${BASH_REMATCH[1]}"
         elif [[ "$COMMAND" =~ --description[[:space:]]\"([^\"]*)\" ]]; then
           _glab_text="${BASH_REMATCH[1]}"
         fi
-        if [[ "$COMMAND" =~ --title[[:space:]]+'([^'\'']*)' ]]; then
+        if [[ "$COMMAND" =~ $_re_title_sq ]]; then
           _glab_text="${_glab_text} ${BASH_REMATCH[1]}"
         elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
           _glab_text="${_glab_text} ${BASH_REMATCH[1]}"
@@ -1102,7 +1108,7 @@ PYEOF
         _pn_cmd_label=""
         # git commit -m
         if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]]; then
-          if [[ "$COMMAND" =~ -m[[:space:]]+'([^'\'']*)' ]]; then
+          if [[ "$COMMAND" =~ $_re_m_sq ]]; then
             _pn_cmd_text="${BASH_REMATCH[1]}"
           elif [[ "$COMMAND" =~ -m[[:space:]]\"([^\"]*)\" ]]; then
             _pn_cmd_text="${BASH_REMATCH[1]}"
@@ -1113,12 +1119,12 @@ PYEOF
         if [[ -z "$_pn_cmd_label" ]] && { \
             [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment|review|merge) ]] || \
             [[ "$COMMAND" =~ gh[[:space:]]+release[[:space:]]+create ]]; }; then
-          if [[ "$COMMAND" =~ --body[[:space:]]+'([^'\'']*)' ]]; then
+          if [[ "$COMMAND" =~ $_re_body_sq ]]; then
             _pn_cmd_text="${BASH_REMATCH[1]}"
           elif [[ "$COMMAND" =~ --body[[:space:]]\"([^\"]*)\" ]]; then
             _pn_cmd_text="${BASH_REMATCH[1]}"
           fi
-          if [[ "$COMMAND" =~ --title[[:space:]]+'([^'\'']*)' ]]; then
+          if [[ "$COMMAND" =~ $_re_title_sq ]]; then
             _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
           elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
             _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
@@ -1127,12 +1133,12 @@ PYEOF
         fi
         # glab
         if [[ -z "$_pn_cmd_label" ]] && [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]]; then
-          if [[ "$COMMAND" =~ --description[[:space:]]+'([^'\'']*)' ]]; then
+          if [[ "$COMMAND" =~ $_re_desc_sq ]]; then
             _pn_cmd_text="${BASH_REMATCH[1]}"
           elif [[ "$COMMAND" =~ --description[[:space:]]\"([^\"]*)\" ]]; then
             _pn_cmd_text="${BASH_REMATCH[1]}"
           fi
-          if [[ "$COMMAND" =~ --title[[:space:]]+'([^'\'']*)' ]]; then
+          if [[ "$COMMAND" =~ $_re_title_sq ]]; then
             _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
           elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
             _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
