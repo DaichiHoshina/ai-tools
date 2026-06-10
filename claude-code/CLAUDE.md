@@ -119,6 +119,8 @@ Structural fix over symptomatic. **Reproduce → identify → design → verify*
 
 Misbehavior / non-obvious success → document immediately → auto-avoid next session. Misbehavior → CLAUDE.md / skill / hook 記録。Fix 指示に "update CLAUDE.md or related skill" 追記。Details: `references/compounding-engineering-cycle.md`
 
+Memory write 先は Claude Code auto-memory (`~/.claude/projects/.../memory/`) のみ。Serena `.serena/memories/` は write 禁止 (二重管理回避、2026-06-10 決定)
+
 ## 書く前の自己確認 (chat 除く)
 
 外向き文章は **今日の commit を read してから書く** (`git log --since=midnight --pretty=format:'%h %s'`)。hook が書く系 tool 直前に自動 inject (2 source: 作業 repo + `~/ai-tools` guidelines)。コードコメント: `guidelines/writing/code-comment.md` 参照。
