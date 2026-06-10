@@ -114,7 +114,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
    - 行 1 (formula trace): `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / PASS|FAIL (basis=<T_i_basis>)`
    - 行 2 (fan-out 宣言): `fan-out: N=<n>, targets=<file count>`
    Manager の `formula_trace` field 全 12 sub-field のうち上記 echo 必須項目が欠落していたら fan-out 中止し Manager に再要求 (allocation 破棄)。worktree 適用 / skip 判断 (downgrade_reason 有無) も echo 行 1 に含める。`mkdir -p <impl_notes.dir>` 実行
-7. **Parallel fan-out**: 1 message 内 `Task(developer-agent)×N` 並列発火 (worktree 分離。N=1 sequential 分岐は step 5 で確定済)
+7. **Parallel fan-out**: 1 message 内 `Task(developer-agent)×N` 並列発火 (worktree 分離。N=1 sequential 分岐は step 5 で確定済)。**Bundle 必須** (L50 規定の運用具体化): fan-out 宣言 (N≥2) の直後 message に全 N 件の Task を bundle する。別 message に 1 件ずつ分けると逐次 chain 発火 (parentUuid 直列) になり「1 message 1 Agent N message 繰返しは逐次化するため禁止」(L50) 違反。N 宣言 : tool_use 発火 message = 1:1 厳守
 8. **Manager integrate**: 各 dev 完了報告を集約 → MERGED.md を `<impl_notes.dir>/MERGED.md` に persist
 9. **Team review**: `Task(reviewer-agent, --codex)` (comprehensive + codex parallel) → P0/P1 judge
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
