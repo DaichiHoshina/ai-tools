@@ -44,9 +44,7 @@ Code body, code comments, docstrings out of scope.
 
 ### 長い WHY 説明の 3 箇所分散パターン
 
-設計判断の WHY を 1 箇所に集中させた 10 行超のコメントブロックは読み負担大。**全体方針 + 個別 WHY を切り分け、関連コードの直上に分散配置**する。
-
-3 階層: **全体方針 (関数頭、2-3 行)** / **個別 WHY (操作行直上、1-2 行)** / **局所制約 (SQL 直上、1-2 行)**。実例: 13 行 → (3+2+2) 分散。判断基準: WHY コア保持 / 重複統合 / incident 日付・バージョン依存断定は削除。
+10 行超の WHY コメントブロックは分散配置する。3 階層: **全体方針 (関数頭、2-3 行)** / **個別 WHY (操作行直上、1-2 行)** / **局所制約 (SQL 直上、1-2 行)**。WHY コア保持・重複統合・日付依存断定削除。
 
 ## Subcommand
 
@@ -73,24 +71,17 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 
 ## Pre-execution (required order)
 
-### 1. Temp Turn OFF genshijin (by output type)
+**genshijin OFF**: write/rewrite body・outline は normal Japanese。review finding / progress は genshijin。
 
-| Output Type | Prose |
-|---------|----------|
-| write/rewrite body/draft | normal Japanese |
-| outline heading/intent | normal Japanese |
-| review finding/score | genshijin |
-| progress/confirm/error | genshijin |
-
-### 2. 4-Question Checkpoint (pre-write, mandatory)
+### 1. 4-Question Checkpoint (pre-write, mandatory)
 
 詳細: `guidelines/writing/PRINCIPLES.md` "書く前の4問" 参照。4問未確認なら **top 1 のみ質問** (reader > judgment > action > evidence)。推定値は `estimated: {Q}={value}` でデザインメモに記録する。
 
-### 3. Load Resources
+### 2. Load Resources
 
-Main: `guidelines/writing/PRINCIPLES.md` (~190 line) full load OK. Detailed pattern: load `references/writing-patterns.md` on demand.
+`guidelines/writing/PRINCIPLES.md` full load。詳細 pattern は `references/writing-patterns.md` on demand。
 
-### 4. Dynamic Load by Type
+### 3. Dynamic Load by Type
 
 | Detect Keyword | Extra Load |
 |---------|-----------|
