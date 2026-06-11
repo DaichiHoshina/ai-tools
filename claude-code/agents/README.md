@@ -183,7 +183,7 @@ Parent (Claude Code)
 | Tool | Purpose |
 |------|---------|
 | `initial_instructions` | Get Serena manual (required at task start) |
-| `onboarding` | Run project onboarding (activate 応答に状態自動添付) |
+| `onboarding` | Run project onboarding (state auto-attached to activate response) |
 | `serena_info` (v1.2.0) | On-demand usage info (version/context/active project) |
 
 ### Usage principles

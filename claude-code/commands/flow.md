@@ -5,9 +5,9 @@ description: Orchestration-first workflow — parent-led parallel fan-out (orche
 
 ## /flow - Orchestration-first workflow
 
-**核**: `/flow` は orchestration 専用 command。parent 指揮で worktree 並列発火を強制し、makespan 最短化を最上位 KPI とする。並列化が成立しない task (file 競合 / 単一 symbol edit 等) は sequential downgrade で fallback する。
+**Core**: `/flow` is an orchestration-only command. Forces worktree parallel fan-out under parent direction; minimizing makespan is the top KPI. Tasks where parallelism cannot hold (file conflicts / single-symbol edits etc.) fall back via sequential downgrade.
 
-> When to use: `/flow` (orchestrated parallel pipeline) / `/dev` (single-agent impl) / `/flow-auto` (`/flow --auto` alias、全自動) / `/review-fix-push` (review-loop only)
+> When to use: `/flow` (orchestrated parallel pipeline) / `/dev` (single-agent impl) / `/flow-auto` (`/flow --auto` alias, fully autonomous) / `/review-fix-push` (review-loop only)
 
 ## Task type detection
 
@@ -38,48 +38,48 @@ Boundary: "fix from error log"=1.5 / "bug root cause"=2 / "feature improvement"=
 
 ```text
 --skip-prd / --skip-test / --skip-review / --auto
---sequential  (opt-out: 物理的に並列化不能と parent 判断時のみ、PO/Manager は常時必須)
+--sequential  (opt-out: only when parent judges parallelism physically impossible; PO/Manager always required)
 ```
 
-**Default = orchestrate + parallel 強制 ON**。素の `/flow` 起動で parent 事前準備 (N 算定 / target echo / verify echo / DoD echo) + worktree 並列発火が同時発動する。`--auto` 追加で fully autonomous mode (確認スキップ + 自動 push)。`--sequential` は file 競合等で並列化が物理不可能な場合のみ使う緊急 fallback。
+**Default = orchestrate + parallel forced ON**. Plain `/flow` invocation fires parent pre-delegation (N calc / target echo / verify echo / DoD echo) + worktree parallel fan-out simultaneously. Add `--auto` for fully autonomous mode (skip confirmations + auto push). `--sequential` is an emergency fallback only when file conflicts make parallelism physically impossible.
 
 ## Orchestration (forced)
 
-Parent 指揮 mode を常時強制する。pre-delegation 4 step (N 算定 / target / verify / DoD) は **内部処理**で、user 提示は 2 行 (formula trace + fan-out 宣言、step 6 参照)。詳細 echo は subagent prompt に literal 埋込、chat 出力禁止。
+Always force parent-direction mode. Pre-delegation 4 steps (N calc / target / verify / DoD) are **internal**; user sees 2 lines only (formula trace + fan-out declaration, see step 6). Detailed echo goes into subagent prompt literals — no chat output.
 
-完了後、**1 message 内 N tool_use 並列発火** (1 message 1 Agent N message 繰返しは逐次化するため禁止)。仕様詳細: `references/orchestrate-mode.md` / `references/PARALLEL-PATTERNS.md`。
+After completion, **fire N tool_use in 1 message** (repeating 1 message 1 Agent N times causes sequential chaining — forbidden). Spec details: `references/orchestrate-mode.md` / `references/PARALLEL-PATTERNS.md`.
 
 ### Formula trace echo (mandatory)
 
-Manager 返却の `formula_trace` を parent が必ず chat に echo する (user に判定根拠を可視化)。echo format:
+Parent must echo Manager-returned `formula_trace` to chat (makes decision basis visible to user). Echo format:
 
 ```text
 formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / <PASS|FAIL> (basis=<T_i_basis>)
 fan-out: N=<n>, targets=<file count>
 ```
 
-`formula_trace` field 欠落 / `formula_result=FAIL` で `N>=2` のまま → parent fan-out 中止、Manager 再走 (allocation 破棄)。`N_chosen=1` → sequential downgrade 進行 (Manager 経由 / step 5 と整合)。
+`formula_trace` field missing / `formula_result=FAIL` with `N>=2` → parent stops fan-out, re-runs Manager (discards allocation). `N_chosen=1` → sequential downgrade proceeds (via Manager / consistent with step 5).
 
-Schema 詳細: `agents/manager-agent.md` Allocation plan format `formula_trace` field 定義参照。
+Schema details: see `agents/manager-agent.md` Allocation plan format `formula_trace` field definition.
 
 ## Parallel (forced)
 
-worktree 分離で物理並列化する。
+Physically parallelizes via worktree isolation.
 
 | Item | Action |
 |------|------|
 | Parallelism degree eval | Forced (Manager) |
 | worktree proposal | Forced (PO) |
-| worktree creation | `--auto` 時 4 skip 条件で自動、それ以外は user 確認 |
-| Sequential downgrade | file 競合 / 物理 conflict 検出時、または `--sequential` |
+| worktree creation | `--auto`: auto under 4 skip conditions; otherwise user confirm |
+| Sequential downgrade | On file conflict / physical conflict detected, or `--sequential` |
 
 ### `--auto` skip conditions
 
-詳細: `references/PARALLEL-PATTERNS.md` `` ### `/flow --parallel --auto` skip-confirmation 4 conditions `` 参照。概要: Parallel formula PASS + clean worktree + no branch/worktree collision + Creation fail → sequential downgrade + notify。
+Details: `references/PARALLEL-PATTERNS.md` `` ### `/flow --parallel --auto` skip-confirmation 4 conditions ``. Summary: Parallel formula PASS + clean worktree + no branch/worktree collision + Creation fail → sequential downgrade + notify.
 
 ### worktree cleanup
 
-詳細: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)` 参照。概要: Changes present → return branch + merge + delete / no changes → auto-delete / Collision → sequential downgrade + leave in place。
+Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`. Summary: Changes present → return branch + merge + delete / no changes → auto-delete / Collision → sequential downgrade + leave in place.
 
 ## --auto fully autonomous mode (opt-in)
 
@@ -95,27 +95,27 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 
 ## Execution logic
 
-1. **git status check**: 変更あり → WIP 確認後 step 2 (orchestration 継続、`/dev` redirect しない)
-2. **Pre-Manager downgrade check** (静的判定): `--sequential` 明示時のみ即時 downgrade、`/dev` 単体委譲 + PO/Manager skip。それ以外は step 3 へ
-3. **PO Agent (必須)**: 設計判断 / scope 切り分け。skip 不可 (旧 `--no-po` 廃止)
-4. **Manager Agent (必須)**: task 分割 / file 重複排除 / N 算定 + formula_trace 計算
-5. **Post-Manager downgrade check** (動的判定): Manager allocation が `parallelism: 1` *かつ* `worktree_required: false` *または* file 物理競合 (同一 file 同時 edit) → Dev×1 sequential 進行 (worktree 分離 skip = `Auto-apply features` の downgrade 該当、Manager integrate は dev 1 件なら集約 skip、Team review は実施)
-6. **Orchestration pre-delegation** (内部処理 + judgment trace echo): target / verify / DoD を subagent prompt に埋込み、user 提示は **2 行**:
-   - 行 1 (formula trace): `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / PASS|FAIL (basis=<T_i_basis>)`
-   - 行 2 (fan-out 宣言): `fan-out: N=<n>, targets=<file count>`
-   Manager の `formula_trace` field 全 12 sub-field のうち上記 echo 必須項目が欠落していたら fan-out 中止し Manager に再要求 (allocation 破棄)。worktree 適用 / skip 判断 (downgrade_reason 有無) も echo 行 1 に含める。`mkdir -p <impl_notes.dir>` 実行
-7. **Parallel fan-out**: 1 message 内 `Task(developer-agent)×N` 並列発火 (worktree 分離。N=1 sequential 分岐は step 5 で確定済)。**Bundle 必須** (L50 規定の運用具体化): fan-out 宣言 (N≥2) の直後 message に全 N 件の Task を bundle する。別 message に 1 件ずつ分けると逐次 chain 発火 (parentUuid 直列) になり「1 message 1 Agent N message 繰返しは逐次化するため禁止」(L50) 違反。N 宣言 : tool_use 発火 message = 1:1 厳守
-8. **Manager integrate**: 各 dev 完了報告を集約 → MERGED.md を `<impl_notes.dir>/MERGED.md` に persist
+1. **git status check**: changes found → confirm WIP then step 2 (continue orchestration, do not redirect to `/dev`)
+2. **Pre-Manager downgrade check** (static): immediate downgrade only when `--sequential` explicit — delegate single `/dev` + skip PO/Manager. Otherwise → step 3
+3. **PO Agent (required)**: design judgment / scope split. Cannot skip (legacy `--no-po` removed)
+4. **Manager Agent (required)**: task split / file dedup / N calc + formula_trace computation
+5. **Post-Manager downgrade check** (dynamic): Manager allocation `parallelism: 1` *and* `worktree_required: false` *or* physical file conflict (same file concurrent edit) → Dev×1 sequential (skip worktree isolation = downgrade in `Auto-apply features`; Manager integrate skips aggregation for 1 dev; Team review still runs)
+6. **Orchestration pre-delegation** (internal + judgment trace echo): embed target / verify / DoD in subagent prompt; user sees **2 lines**:
+   - line 1 (formula trace): `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / PASS|FAIL (basis=<T_i_basis>)`
+   - line 2 (fan-out declaration): `fan-out: N=<n>, targets=<file count>`
+   If any required echo field from Manager's `formula_trace` (12 sub-fields) is missing → stop fan-out, re-request from Manager (discard allocation). Include worktree apply/skip judgment (downgrade_reason presence) in echo line 1. Run `mkdir -p <impl_notes.dir>`
+7. **Parallel fan-out**: fire `Task(developer-agent)×N` in 1 message (worktree isolated; N=1 sequential path confirmed at step 5). **Bundle required** (operational spec of L50): bundle all N Tasks in the message immediately after fan-out declaration (N≥2). Splitting into 1-per-message creates sequential chain firing (parentUuid serial) — violates "repeating 1 message 1 Agent N times is sequential" (L50). N declaration : tool_use firing message = 1:1 strict
+8. **Manager integrate**: aggregate dev completion reports → persist MERGED.md at `<impl_notes.dir>/MERGED.md`
 9. **Team review**: `Task(reviewer-agent, --codex)` (comprehensive + codex parallel) → P0/P1 judge
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
-   - P0 残 / P1: report & continue (`--auto` 時 stop)
-   - codex 未配備: comprehensive single fallback
-10. Post-*impl* sequential steps from Task table (review は step 9 で完了済、skip)
+   - P0 remains / P1: report & continue (stop when `--auto`)
+   - codex not configured: comprehensive single fallback
+10. Post-*impl* sequential steps from Task table (review done at step 9, skip)
 
 ## Integration rules
 
 - Required: impl → /lint-test → /review → review-fix → /git-push
-- 2× fail rule: 2× fail w/ same approach → `/clear` → re-organize
+- 2× fail rule: 2× fail with same approach → `/clear` → re-organize
 
 ### Completion actions
 
@@ -133,7 +133,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 
 | Feature | Condition | Action |
 |------|------|------|
-| worktree isolation | Default forced, `--sequential` / downgrade で skip | `isolation: "worktree"` auto-create / cleanup |
+| worktree isolation | Default forced; skip on `--sequential` / downgrade | `isolation: "worktree"` auto-create / cleanup |
 | Post-impl verify | `--auto` complete | `/lint-test` (verify-app explicit only) |
 | `IMPL_NOTES` | Team path (Dev via Task()) | Dev writes `dev-<task-id>.md` → Manager merges → parent persists `MERGED.md` under `~/.claude/plans/impl-notes/<run-dir>/`. `/git-push --pr` consumes for PR draft (`--no-impl-notes` to skip) |
 
