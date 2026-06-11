@@ -326,20 +326,16 @@ _inject_commit_ng_top6_if_trigger() {
   local _LOG="${HOME}/.claude/logs/jp-quality-block.log"
   [[ -f "${_LOG}" ]] || return 1
 
-  local _NOW
+  # ISO8601 timestamp は辞書順 = 時系列順。bash 側で cutoff 文字列を 1 回生成し、
+  # awk 内で文字列比較するだけにして date fork を完全に排除する。
+  local _NOW _CUTOFF_STR
   printf -v _NOW '%(%s)T' -1
-  local _CUTOFF=$(( _NOW - 604800 ))
+  printf -v _CUTOFF_STR '%(%Y-%m-%dT%H:%M:%S)T' "$(( _NOW - 604800 ))"
 
   local _TOP
-  _TOP=$(awk -F'|' -v cutoff="${_CUTOFF}" '
+  _TOP=$(awk -F'|' -v cutoff="${_CUTOFF_STR}" '
     $4 ~ /block/ {
-      ts = $1
-      # macOS date -j -f でepoch変換
-      cmd = "date -j -f \"%Y-%m-%dT%H:%M:%S\" \"" substr(ts,1,19) "\" +%s 2>/dev/null"
-      epoch = ""
-      cmd | getline epoch
-      close(cmd)
-      if (epoch != "" && epoch+0 >= cutoff) {
+      if (substr($1,1,19) >= cutoff) {
         term = $3
         gsub(/^ +| +$/, "", term)
         if (term != "") count[term]++
