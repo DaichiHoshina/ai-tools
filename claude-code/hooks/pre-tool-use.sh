@@ -220,26 +220,6 @@ detect_rename_propagation() {
 # ====================================
 _social_hit_rule_file="$HOME/.claude/rules/public-repo-private-data-block.md"
 
-# social-hit block ログ出力関数
-_append_social_hit_log() {
-  local tool_name="$1"
-  local hit_term="$2"
-  local file_path="$3"
-  local log_dir="$HOME/.claude/logs"
-  local log_file="${log_dir}/social-hit-block.log"
-  mkdir -p "$log_dir" 2>/dev/null || true
-  if [[ -f "$log_file" ]]; then
-    local fsize
-    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
-    if [[ "${fsize}" -gt 1048576 ]]; then
-      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
-    fi
-  fi
-  local ts
-  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
-  printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$file_path" >> "$log_file" 2>/dev/null || true
-}
-
 # ai-tools public repo への social-hit term 書き込みを block する
 # 引数: file_path, content
 _check_social_hit() {
@@ -286,7 +266,7 @@ _check_social_hit() {
 対処: file_path を ~/.claude/references-private/ に切り替えるか、term を削除 / 匿名化して再実行してください。
 ログ: ~/.claude/logs/social-hit-block.log"
     printf '[social-hit-block] hit_term=%s file=%s\n' "$word_list" "$file_path" >&2
-    _append_social_hit_log "$TOOL_NAME" "$word_list" "$file_path"
+    _append_block_log "${HOME}/.claude/logs/social-hit-block.log" "$TOOL_NAME" "$word_list" "$file_path"
   fi
 }
 
@@ -315,7 +295,7 @@ _check_social_hit_in_text() {
 対処: term を削除 / 匿名化 (例: <product-name>) して再実行してください。
 ログ: ~/.claude/logs/social-hit-block.log"
     printf '[social-hit-block] hit_term=%s label=%s\n' "$word_list" "$label" >&2
-    _append_social_hit_log "$TOOL_NAME" "$word_list" "${label}"
+    _append_block_log "${HOME}/.claude/logs/social-hit-block.log" "$TOOL_NAME" "$word_list" "${label}"
   fi
 }
 
@@ -327,26 +307,6 @@ _check_social_hit_in_text() {
 # ====================================
 _private_name_list_file="$HOME/.claude/references-private/private-name-list.txt"
 _private_name_allowlist=("daichi" "DaichiHoshina" "Daichi Hoshina" "Anthropic" "Claude")
-
-# private-name block ログ出力関数
-_append_private_name_log() {
-  local tool_name="$1"
-  local hit_term="$2"
-  local target="$3"
-  local log_dir="$HOME/.claude/logs"
-  local log_file="${log_dir}/private-name-block.log"
-  mkdir -p "$log_dir" 2>/dev/null || true
-  if [[ -f "$log_file" ]]; then
-    local fsize
-    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
-    if [[ "${fsize}" -gt 1048576 ]]; then
-      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
-    fi
-  fi
-  local ts
-  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
-  printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$target" >> "$log_file" 2>/dev/null || true
-}
 
 # private-name-list.txt から term list を読込 (# 行・空行 skip、file 不在時は空)
 _load_private_name_terms() {
@@ -400,7 +360,7 @@ _check_private_name() {
 canonical list: ~/.claude/references-private/private-name-list.txt (user 記入のみ)
 ログ: ~/.claude/logs/private-name-block.log"
     printf '[private-name-block] hit_term=%s target=%s\n' "$word_list" "$target_label" >&2
-    _append_private_name_log "$TOOL_NAME" "$word_list" "$target_label"
+    _append_block_log "${HOME}/.claude/logs/private-name-block.log" "$TOOL_NAME" "$word_list" "$target_label"
   fi
 }
 

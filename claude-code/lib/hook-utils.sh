@@ -245,6 +245,32 @@ ensure_worktree_memory_link() {
 }
 
 # =============================================================================
+# block log 共通出力関数
+# social-hit / private-name どちらのブロックログにも使用する。
+# ローテーション判定 (1MB 超で .bak rename)、timestamp 付与、1 行 append が共通実装。
+# Usage: _append_block_log <log_file> <tool_name> <hit_term> <target>
+# =============================================================================
+_append_block_log() {
+  local log_file="$1"
+  local tool_name="$2"
+  local hit_term="$3"
+  local target="$4"
+  local log_dir
+  log_dir=$(dirname "$log_file")
+  mkdir -p "$log_dir" 2>/dev/null || true
+  if [[ -f "$log_file" ]]; then
+    local fsize
+    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
+    if [[ "${fsize}" -gt 1048576 ]]; then
+      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+    fi
+  fi
+  local ts
+  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$target" >> "$log_file" 2>/dev/null || true
+}
+
+# =============================================================================
 # ai-tools repo path helper
 # symlink (~/ai-tools/) と ghq 実 path の両方を OR 判定するユーティリティ。
 # symlink が存在しない環境でも block が正常動作するよう両 prefix を列挙する。
