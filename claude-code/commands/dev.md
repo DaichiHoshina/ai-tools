@@ -40,7 +40,7 @@ Launch Developer×N worktree parallel w/o PO/Manager. Formula detail: `reference
 
 ### `--parallel --auto` skip conditions
 
-詳細: `references/PARALLEL-PATTERNS.md` `### /dev --parallel --auto skip-confirmation 4 conditions` 参照。概要: formula PASS + clean worktree + no branch/worktree collision + creation fail → downgrade。
+詳細: `references/PARALLEL-PATTERNS.md` `` ### `/dev --parallel --auto` skip-confirmation 4 conditions `` 参照。概要: formula PASS + clean worktree + no branch/worktree collision + creation fail → downgrade。
 
 ### worktree cleanup
 

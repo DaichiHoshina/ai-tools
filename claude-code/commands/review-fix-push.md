@@ -21,7 +21,7 @@ Skill("comprehensive-review")
 
 ### Step 1.5: Self-Review Pass (必須)
 
-Step 1 の出力をそのまま fix にかけず、**必ず** 2 段階の Self-Review を通す。詳細: `commands/review.md` `## Self-Review (必須、2 段階)` 参照。noise discard 方針: `rules/review-noise-discard.md`。Critical 0 + Warning 0 → Step 2 で push へ skip。判断ログは user 提示に含めない。
+Step 1 の出力をそのまま fix にかけず、**必ず** 2 段階の Self-Review を通す。詳細: `commands/review.md` `## Delegation & Self-Review (必須、2 段階)` 参照。noise discard 方針: `rules/review-noise-discard.md`。Critical 0 + Warning 0 → Step 2 で push へ skip。判断ログは user 提示に含めない。
 
 ### Step 2: Decide
 

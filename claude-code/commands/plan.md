@@ -63,7 +63,7 @@ Launch Task(subagent_type: "po-agent")
 
 ## Self-Review (必須、2 段階)
 
-`/plan` 出力前に **必ず** 2 段階のセルフレビューを通す。skip 不可、PO Agent 経由 / Direct execution / `--update` / `--scope` 全モードで一律実行。Stage 共通定義: `commands/review.md` `## Self-Review (必須、2 段階)` 参照。noise discard 方針: `rules/review-noise-discard.md` 参照。
+`/plan` 出力前に **必ず** 2 段階のセルフレビューを通す。skip 不可、PO Agent 経由 / Direct execution / `--update` / `--scope` 全モードで一律実行。Stage 共通定義: `commands/review.md` `## Delegation & Self-Review (必須、2 段階)` 参照。noise discard 方針: `rules/review-noise-discard.md` 参照。
 
 ### Stage A: plan 固有 filter
 

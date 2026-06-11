@@ -75,7 +75,7 @@ worktree 分離で物理並列化する。
 
 ### `--auto` skip conditions
 
-詳細: `references/PARALLEL-PATTERNS.md` `### /flow --parallel --auto skip-confirmation 4 conditions` 参照。概要: Parallel formula PASS + clean worktree + no branch/worktree collision + Creation fail → sequential downgrade + notify。
+詳細: `references/PARALLEL-PATTERNS.md` `` ### `/flow --parallel --auto` skip-confirmation 4 conditions `` 参照。概要: Parallel formula PASS + clean worktree + no branch/worktree collision + Creation fail → sequential downgrade + notify。
 
 ### worktree cleanup
 
