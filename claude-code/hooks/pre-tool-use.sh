@@ -58,6 +58,139 @@ ADDITIONAL_CONTEXT=""
 # Rename propagation 検知
 # Heading / section / symbol rename 検知 → cross-ref 残存 warning
 # ====================================
+
+# git root を解決する: file_path のディレクトリから git root を探し stdout に出力
+# 引数: file_path (省略可、省略時は CWD から探す)
+_resolve_git_root() {
+  local file_path="${1:-.}"
+  if [ -n "$file_path" ] && [ "$file_path" != "." ] && [ -d "$(dirname "$file_path")" ]; then
+    local dir_path
+    dir_path="$(dirname "$file_path")"
+    (cd "$dir_path" && git rev-parse --show-toplevel 2>/dev/null) || dirname "$file_path"
+  else
+    git rev-parse --show-toplevel 2>/dev/null || echo "."
+  fi
+}
+
+# heading rename サブルーチン
+# 引数: old_str, new_str, file_path
+# 副作用: ADDITIONAL_CONTEXT にメッセージを追記する
+_detect_heading_rename() {
+  local old_str="$1"
+  local new_str="$2"
+  local file_path="${3:-.}"
+
+  [[ "$old_str" =~ ^(#{2,3})[[:space:]]+.+$ ]] || return 0
+  [[ "$new_str" =~ ^(#{2,3})[[:space:]]+.+$ ]] || return 0
+
+  local heading_level="${BASH_REMATCH[1]}"
+  local old_title new_title
+  old_title=$(echo "$old_str" | sed -E "s/^${heading_level}[[:space:]]+//" | sed 's/[[:space:]]*$//')
+  new_title=$(echo "$new_str" | sed -E "s/^${heading_level}[[:space:]]+//" | sed 's/[[:space:]]*$//')
+
+  local search_root
+  search_root=$(_resolve_git_root "$file_path")
+
+  # 旧 heading title の残存検索（.md, .sh, .ts/.tsx, .js, .py, .json, .yaml, .toml, .bats）
+  local grep_results
+  grep_results=$(find "$search_root" \
+    -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
+    -not -path "*/.git/*" \
+    -not -path "*/node_modules/*" \
+    -not -path "*/dist/*" \
+    -not -path "*/build/*" \
+    -exec grep -l "$old_title" {} \; 2>/dev/null | head -20)
+
+  if [ -n "$grep_results" ]; then
+    local _tmp_fc="${grep_results//$'\n'/}"
+    local file_count=$(( ${#grep_results} - ${#_tmp_fc} + 1 ))
+    local file_list="${grep_results//$'\n'/','}"; file_list="${file_list%,}"
+    local rename_warn="${ICON_WARNING} Rename検知: 旧heading「${old_title}」→「${new_title}」、${file_count}ファイルに残存（${file_list}）。cross-ref同期確認推奨"
+    if [ -n "$ADDITIONAL_CONTEXT" ]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${rename_warn}"
+    else
+      ADDITIONAL_CONTEXT="${rename_warn}"
+    fi
+  fi
+
+  # slug 形式 anchor の残存検索 (#old-slug)
+  # slug 化: 小文字化 / 英数・スペース・ハイフン以外除去 / 空白→ハイフン
+  local old_slug
+  old_slug=$(printf '%s' "$old_title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9 -]//g; s/ +/-/g')
+  if [ -n "$old_slug" ] && [ ${#old_slug} -gt 3 ]; then
+    local slug_pattern="#${old_slug}"
+    local slug_results
+    slug_results=$(find "$search_root" \
+      -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
+      -not -path "*/.git/*" \
+      -not -path "*/node_modules/*" \
+      -not -path "*/dist/*" \
+      -not -path "*/build/*" \
+      -exec grep -lF "$slug_pattern" {} \; 2>/dev/null | head -20)
+    if [ -n "$slug_results" ]; then
+      local slug_list="${slug_results//$'\n'/','}"; slug_list="${slug_list%,}"
+      local slug_warn="${ICON_WARNING} anchor slug 残存: 「${slug_pattern}」が残存（${slug_list}）。bats anchor・cross-ref 同期確認推奨"
+      if [ -n "$ADDITIONAL_CONTEXT" ]; then
+        ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${slug_warn}"
+      else
+        ADDITIONAL_CONTEXT="${slug_warn}"
+      fi
+    fi
+  fi
+}
+
+# symbol rename サブルーチン (識別子 1 個のみ置換を検知)
+# 引数: old_str, new_str, file_path
+# 副作用: ADDITIONAL_CONTEXT にメッセージを追記する
+_detect_symbol_rename() {
+  local old_str="$1"
+  local new_str="$2"
+  local file_path="${3:-.}"
+
+  # 識別子パターンが含まれるか確認 (false positive 削減)
+  [[ "$old_str" =~ [^a-zA-Z0-9_]?([a-zA-Z_][a-zA-Z0-9_]*)[^a-zA-Z0-9_]? ]] || return 0
+  [[ "$new_str" =~ [^a-zA-Z0-9_]?([a-zA-Z_][a-zA-Z0-9_]*)[^a-zA-Z0-9_]? ]] || return 0
+
+  # 識別子数を数える（1 個のみ rename と判定）
+  local _old_idents _new_idents
+  mapfile -t _old_idents < <(grep -o '[a-zA-Z_][a-zA-Z0-9_]*' <<< "$old_str")
+  mapfile -t _new_idents < <(grep -o '[a-zA-Z_][a-zA-Z0-9_]*' <<< "$new_str")
+  local old_count=${#_old_idents[@]}
+  local new_count=${#_new_idents[@]}
+
+  [ "$old_count" -eq 1 ] && [ "$new_count" -eq 1 ] || return 0
+
+  local old_ident="${_old_idents[0]}"
+  local new_ident="${_new_idents[0]}"
+  [ "$old_ident" != "$new_ident" ] || return 0
+
+  local search_root
+  search_root=$(_resolve_git_root "$file_path")
+
+  # 旧 identifier の残存検索
+  local grep_results
+  grep_results=$(find "$search_root" \
+    -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" \) \
+    -not -path "*/.git/*" \
+    -not -path "*/node_modules/*" \
+    -not -path "*/dist/*" \
+    -not -path "*/build/*" \
+    -exec grep -l "\b${old_ident}\b" {} \; 2>/dev/null | head -20)
+
+  if [ -n "$grep_results" ]; then
+    local _tmp_fc="${grep_results//$'\n'/}"
+    local file_count=$(( ${#grep_results} - ${#_tmp_fc} + 1 ))
+    local file_list="${grep_results//$'\n'/','}"; file_list="${file_list%,}"
+    local rename_warn="${ICON_WARNING} Rename検知: 「${old_ident}」→「${new_ident}」、${file_count}ファイルに残存（${file_list}）。cross-ref同期確認推奨"
+    if [ -n "$ADDITIONAL_CONTEXT" ]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${rename_warn}"
+    else
+      ADDITIONAL_CONTEXT="${rename_warn}"
+    fi
+  fi
+}
+
+# orchestrator: skip guard のみ担当し、2 つの private helper を順次呼ぶ
 detect_rename_propagation() {
   local old_str="$1"
   local new_str="$2"
@@ -68,148 +201,13 @@ detect_rename_propagation() {
     return
   fi
 
-  # Heading rename pattern: "## OldName" → "## NewName" or "### OldName" → "### NewName"
+  # heading rename を先に試みる (heading なら symbol rename は skip)
   if [[ "$old_str" =~ ^(#{2,3})[[:space:]]+.+$ ]] && [[ "$new_str" =~ ^(#{2,3})[[:space:]]+.+$ ]]; then
-    # heading rename 検知
-    # grep 対象: 旧名の heading 記号や anchor reference を検索
-    local heading_level="${BASH_REMATCH[1]}"
-    local old_title=$(echo "$old_str" | sed -E "s/^${heading_level}[[:space:]]+//" | sed 's/[[:space:]]*$//')
-    local new_title=$(echo "$new_str" | sed -E "s/^${heading_level}[[:space:]]+//" | sed 's/[[:space:]]*$//')
-
-    # repo root を取得: file_path のディレクトリから git root を探す
-    local search_root="."
-    if [ -n "$file_path" ] && [ "$file_path" != "." ] && [ -d "$(dirname "$file_path")" ]; then
-      # file_path から git root を探す
-      local dir_path
-      dir_path="$(dirname "$file_path")"
-      search_root=$(cd "$dir_path" && git rev-parse --show-toplevel 2>/dev/null) || search_root="$dir_path"
-    else
-      # fallback: current directory から git root を探す
-      search_root=$(git rev-parse --show-toplevel 2>/dev/null) || search_root="."
-    fi
-
-    # 旧名の残存検索（.md, .sh, .ts/.tsx, .js, .py, .json, .yaml, .toml, .bats）
-    local grep_results
-    grep_results=$(find "$search_root" \
-      -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
-      -not -path "*/.git/*" \
-      -not -path "*/node_modules/*" \
-      -not -path "*/dist/*" \
-      -not -path "*/build/*" \
-      -exec grep -l "$old_title" {} \; 2>/dev/null | head -20)
-
-    if [ -n "$grep_results" ]; then
-      local file_count
-      # bash builtin で行数カウント (wc -l fork 削減)
-      if [[ -z "$grep_results" ]]; then
-        file_count=0
-      else
-        local _tmp_fc="${grep_results//$'\n'/}"
-        file_count=$(( ${#grep_results} - ${#_tmp_fc} + 1 ))
-      fi
-      local file_list
-      # bash builtin で改行→カンマ変換 (tr fork 削減)
-      file_list="${grep_results//$'\n'/','}"; file_list="${file_list%,}"
-
-      local rename_warn="${ICON_WARNING} Rename検知: 旧heading「${old_title}」→「${new_title}」、${file_count}ファイルに残存（${file_list}）。cross-ref同期確認推奨"
-      if [ -n "$ADDITIONAL_CONTEXT" ]; then
-        ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${rename_warn}"
-      else
-        ADDITIONAL_CONTEXT="${rename_warn}"
-      fi
-    fi
-
-    # slug 形式 anchor の残存検索 (#old-slug)
-    # slug 化: 小文字化 / 英数・スペース・ハイフン以外除去 / 空白→ハイフン
-    local old_slug
-    old_slug=$(printf '%s' "$old_title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9 -]//g; s/ +/-/g')
-    if [ -n "$old_slug" ] && [ ${#old_slug} -gt 3 ]; then
-      local slug_pattern="#${old_slug}"
-      local slug_results
-      slug_results=$(find "$search_root" \
-        -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
-        -not -path "*/.git/*" \
-        -not -path "*/node_modules/*" \
-        -not -path "*/dist/*" \
-        -not -path "*/build/*" \
-        -exec grep -lF "$slug_pattern" {} \; 2>/dev/null | head -20)
-      if [ -n "$slug_results" ]; then
-        local slug_list
-        slug_list="${slug_results//$'\n'/','}"; slug_list="${slug_list%,}"
-        local slug_warn="${ICON_WARNING} anchor slug 残存: 「${slug_pattern}」が残存（${slug_list}）。bats anchor・cross-ref 同期確認推奨"
-        if [ -n "$ADDITIONAL_CONTEXT" ]; then
-          ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${slug_warn}"
-        else
-          ADDITIONAL_CONTEXT="${slug_warn}"
-        fi
-      fi
-    fi
-
+    _detect_heading_rename "$old_str" "$new_str" "$file_path"
     return
   fi
 
-  # Symbol rename pattern: 識別子 1 個のみ置換（foo_bar / camelCase / PascalCase）
-  # 前後の context が同じ = rename likely
-  # 単語の一部のみ置換は除外（false positive）
-  if [[ "$old_str" =~ [^a-zA-Z0-9_]?([a-zA-Z_][a-zA-Z0-9_]*)[^a-zA-Z0-9_]? ]] && [[ "$new_str" =~ [^a-zA-Z0-9_]?([a-zA-Z_][a-zA-Z0-9_]*)[^a-zA-Z0-9_]? ]]; then
-    # 置換個数を数える（1 個のみ rename と判定）
-    local _old_idents _new_idents
-    mapfile -t _old_idents < <(grep -o '[a-zA-Z_][a-zA-Z0-9_]*' <<< "$old_str")
-    mapfile -t _new_idents < <(grep -o '[a-zA-Z_][a-zA-Z0-9_]*' <<< "$new_str")
-    local old_count=${#_old_idents[@]}
-    local new_count=${#_new_idents[@]}
-
-    # identifier 1 個のみの置換と判定
-    if [ "$old_count" -eq 1 ] && [ "$new_count" -eq 1 ]; then
-      local old_ident="${_old_idents[0]}"
-      local new_ident="${_new_idents[0]}"
-
-      if [ "$old_ident" != "$new_ident" ]; then
-        # repo root を取得: file_path のディレクトリから git root を探す
-        local search_root="."
-        if [ -n "$file_path" ] && [ "$file_path" != "." ] && [ -d "$(dirname "$file_path")" ]; then
-          # file_path から git root を探す
-          local dir_path
-          dir_path="$(dirname "$file_path")"
-          search_root=$(cd "$dir_path" && git rev-parse --show-toplevel 2>/dev/null) || search_root="$dir_path"
-        else
-          # fallback: current directory から git root を探す
-          search_root=$(git rev-parse --show-toplevel 2>/dev/null) || search_root="."
-        fi
-
-        # 旧 identifier の残存検索
-        local grep_results
-        grep_results=$(find "$search_root" \
-          -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" \) \
-          -not -path "*/.git/*" \
-          -not -path "*/node_modules/*" \
-          -not -path "*/dist/*" \
-          -not -path "*/build/*" \
-          -exec grep -l "\b${old_ident}\b" {} \; 2>/dev/null | head -20)
-
-        if [ -n "$grep_results" ]; then
-          local file_count
-          # bash builtin で行数カウント (wc -l fork 削減)
-          if [[ -z "$grep_results" ]]; then
-            file_count=0
-          else
-            local _tmp_fc="${grep_results//$'\n'/}"
-            file_count=$(( ${#grep_results} - ${#_tmp_fc} + 1 ))
-          fi
-          local file_list
-          # bash builtin で改行→カンマ変換 (tr fork 削減)
-          file_list="${grep_results//$'\n'/','}"; file_list="${file_list%,}"
-
-          local rename_warn="${ICON_WARNING} Rename検知: 「${old_ident}」→「${new_ident}」、${file_count}ファイルに残存（${file_list}）。cross-ref同期確認推奨"
-          if [ -n "$ADDITIONAL_CONTEXT" ]; then
-            ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${rename_warn}"
-          else
-            ADDITIONAL_CONTEXT="${rename_warn}"
-          fi
-        fi
-      fi
-    fi
-  fi
+  _detect_symbol_rename "$old_str" "$new_str" "$file_path"
 }
 
 # ====================================
