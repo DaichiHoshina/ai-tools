@@ -1,14 +1,14 @@
-# UIデフォルト設定
+# UI Default Settings
 
-新規UI作成時のデフォルト方針。
+Default policy for new UI creation.
 
-- **ダークモード不要**（ライトモードのみ）
-- **ミニマルデザイン優先**（装飾は最小限）
-- **日本語対応**（日付はJST、通貨は円）
-- **配色**: 同一プロジェクト配下の既存UIがあれば合わせる
+- **No dark mode** (light mode only)
+- **Minimal design** (minimal decoration)
+- **Japanese locale** (dates in JST, currency in JPY)
+- **Color scheme**: match existing UI under the same project if any
 
-## 重い外部API呼び出し
+## Heavy External API Calls
 
-UI内で実行する場合は事前に所要時間を確認し、10秒超なら非同期+ローディング表示を提案。
+When executing within UI: confirm expected duration upfront. If >10 seconds, propose async + loading indicator.
 
-例: Argo diff, 大容量BigQueryクエリ, 外部サービスポーリング。
+Examples: Argo diff, large BigQuery queries, external service polling.

@@ -1,13 +1,13 @@
-# Claude Code パフォーマンス知見
+# Claude Code Performance Insights
 
-実測ベース（2026-04-22 初回、2026-05-18 再計測）。hook/agent のコスト構造、計測時の罠、再計測コマンド。
+Measurement-based (initial 2026-04-22, re-measured 2026-05-18). Hook/agent cost structure, measurement pitfalls, re-measurement commands.
 
-## hook 計測の落とし穴
+## Hook Measurement Pitfalls
 
-**初回実行はコールドキャッシュで 5-7倍遅く見える**。
+**First run is 5-7× slower due to cold cache.**
 
-| hook | 初回（誤導） | warm 5サンプル平均 |
-|------|------------|------------------|
+| hook | First run (misleading) | Warm 5-sample avg |
+|------|-----------------------|------------------|
 | subagent-start.sh | 520ms | **98ms** |
 | session-start.sh | 660ms | **90ms** |
 | pre-tool-use.sh | — | 30ms |
@@ -15,13 +15,13 @@
 | user-prompt-submit.sh | — | 50ms |
 | subagent-stop.sh | — | 100ms |
 
-**教訓**: hook パフォーマンス調査では必ずウォームアップ + 5サンプル以上の平均で測る。初回値だけで「遅い」と判定すると誤導される。
+**Lesson**: Always measure with warmup + 5+ sample average. Judging from first-run values only is misleading.
 
-## hook 新ベースライン（2026-05-18 計測）
+## Hook New Baseline (measured 2026-05-18)
 
-`hook-bench.sh`（warmup=5, runs=15）。bash spawn baseline = 33ms。
+`hook-bench.sh` (warmup=5, runs=15). bash spawn baseline = 33ms.
 
-| hook | median | p95 | 2026-04-22 比 |
+| hook | median | p95 | vs 2026-04-22 |
 |------|--------|-----|--------------|
 | pre-tool-use.sh | 64ms | 89ms | +34ms |
 | setup.sh | 63ms | 81ms | — |
@@ -37,58 +37,58 @@
 | session-start.sh | 125ms | 157ms | +35ms |
 | post-compact-reload.sh | 127ms | 181ms | — |
 
-**4-22 比で +30〜50ms ずつ重い** が、絶対値は全 hook で p95 < 200ms。体感ラグ域（>300ms）には届かず、`真のコスト源は agent LLM 時間` の構造は不変。回帰判定の閾値は p95 > 300ms を目安とする。
+**+30–50ms heavier vs 04-22**, but absolute values are all p95 < 200ms. Does not reach perceptible lag threshold (>300ms). **True cost source is agent LLM time** — unchanged. Regression threshold: p95 > 300ms.
 
-体感の軽量化（2026-05-18 ユーザ報告）は hook 層ではなく **skill 定義の `name-only` 化（settings.json 16件）+ MCP の deferred 化** による初期トークン削減が支配的と推定。
+Perceived lightness improvement (user report 2026-05-18) is estimated to be driven by **`name-only` skill definition (settings.json 16 entries) + MCP deferred initialization** reducing initial token consumption, not the hook layer.
 
-## コスト構造（hook vs agent）（計測 sample 少、参考値）
+## Cost Structure (hook vs agent) (small sample, reference values)
 
-ms レベル vs 分レベルの桁違い。
+ms-level vs minute-level — orders of magnitude apart.
 
-| 層 | 実時間 | 備考 |
-|----|-------|------|
-| hook 全種（warm） | 30-100ms | N≥15、信頼度高 |
-| developer-agent | **median 101s** (n=31, p25=58s p75=137s) | n=31、信頼度高 |
-| manager-agent | ~42s | n=2 参考値 |
+| Layer | Actual time | Notes |
+|-------|-------------|-------|
+| All hooks (warm) | 30–100ms | N≥15, high confidence |
+| developer-agent | **median 101s** (n=31, p25=58s p75=137s) | n=31, high confidence |
+| manager-agent | ~42s | n=2, reference only |
 | reviewer-agent | ~82s | n=27 |
-| po-agent | ~96s | n=9 参考値 |
+| po-agent | ~96s | n=9, reference only |
 | Explore (built-in) | ~99s | n=79 |
-| **general-purpose** | **115s（最大501s）** | n=21 |
-| explore-agent | ~123s | n=7 参考値 |
+| **general-purpose** | **115s (max 501s)** | n=21 |
+| explore-agent | ~123s | n=7, reference only |
 
-> **注**: developer-agent は 2026-05-23 実測 n=31 median=101s / avg=113s に更新。旧値（n=4 avg=60s）は過去の参考値。**n<10 の数値は再計測必須。**
+> **Note**: developer-agent updated to 2026-05-23 actual measurement n=31 median=101s / avg=113s. Old value (n=4 avg=60s) is a past reference. **n<10 values require re-measurement.**
 
-**真のコスト源は agent LLM 時間**。hook 最適化（100ms以下を削る）は費用対効果なし。改善は agent 起動頻度削減で狙う。
+**True cost source is agent LLM time.** Hook optimization (shaving <100ms) has poor ROI. Improve by reducing agent launch frequency.
 
-## agent 実測値とサンプル信頼度（計測 sample 少、参考値）
+## Agent Measurements and Sample Confidence (small sample, reference values)
 
-subagent-events.log 集計（2026-04-06〜2026-04-22）+ 2026-05-23 追加計測。
+subagent-events.log aggregation (2026-04-06–2026-04-22) + 2026-05-23 additional measurements.
 
-| agent | N | 平均 | 最大 | 備考 |
-|-------|---|------|------|------|
-| Explore (built-in) | 79 | 99s | 310s | 使用頻度最多 |
+| agent | N | avg | max | Notes |
+|-------|---|-----|-----|-------|
+| Explore (built-in) | 79 | 99s | 310s | Highest usage frequency |
 | reviewer-agent | 27 | 82s | 161s | Opus + comprehensive-review |
-| general-purpose | 21 | **115s** | **501s** | **使用を避ける** |
-| po-agent | 9* | 96s | 365s | 戦略判断 |
-| explore-agent | 7* | 123s | 289s | Haikuだがタスク範囲広い |
-| manager-agent | 2* | 42s | 68s | 計画のみ軽量 |
-| developer-agent (haiku) | 17 | 291s | 739s | haiku 平均、2026-04 計測 |
-| developer-agent (sonnet) | **31** | **113s** | **451s** | **2026-05-23 実測、median 101s / p25 58s / p75 137s** |
+| general-purpose | 21 | **115s** | **501s** | **Avoid** |
+| po-agent | 9* | 96s | 365s | Strategic decision-making |
+| explore-agent | 7* | 123s | 289s | Haiku but broad task scope |
+| manager-agent | 2* | 42s | 68s | Planning only, lightweight |
+| developer-agent (haiku) | 17 | 291s | 739s | haiku avg, 2026-04 measurement |
+| developer-agent (sonnet) | **31** | **113s** | **451s** | **2026-05-23 actual, median 101s / p25 58s / p75 137s** |
 
-`*` は N<10（または n<10 相当）の参考値（サンプル少、母数拡大で値ブレうる）。運用判断は N≥20 を優先。
+`*` = N<10 (or n<10 equivalent) reference values (small sample, values may change with more data). Prefer N≥20 for operational decisions.
 
-## 運用ルール（濫用防止）
+## Operational Rules (abuse prevention)
 
-- 1-2クエリで済む調査は **agent を起動せず直接 Bash grep/find/mcp__serena__find_symbol**
-- 3クエリ以上の広域探索のみ `Task(explore-agent)` ×4 並列起動
-- Claude Code CLI/SDK/API の仕様質問は `claude-code-guide` agent
-- `general-purpose` は原則非推奨（N=21 実測で最大コスト源）
+- 1-2 query investigations: **use Bash grep/find/mcp__serena__find_symbol directly, no agent launch**
+- 3+ query broad exploration only: `Task(explore-agent)` ×4 parallel launch
+- Claude Code CLI/SDK/API spec questions: `claude-code-guide` agent
+- `general-purpose`: not recommended in principle (N=21 measured, highest cost source)
 
-詳細は `claude-code/CLAUDE.md`「探索・調査の使い分け」参照。
+Details: `claude-code/CLAUDE.md` "Discovery / Investigation Routing".
 
-## 再計測コマンド
+## Re-measurement Commands
 
-### agent 実時間集計（全期間）
+### Agent actual time aggregation (all periods)
 
 ```bash
 awk '
@@ -98,7 +98,7 @@ awk '
 ' ~/.claude/logs/subagent-events.log | sort -k3 -t= -rn
 ```
 
-### hook warm 実測（5サンプル平均）
+### Hook warm measurement (5-sample average)
 
 ```bash
 INPUT='{"session_id":"test","cwd":"/tmp","agent_id":"a","agent_type":"t"}'
@@ -113,36 +113,36 @@ for h in subagent-start.sh session-start.sh pre-tool-use.sh post-tool-use.sh; do
 done
 ```
 
-### Team チェーン実測（特定時間帯）
+### Team chain measurement (specific time range)
 
 ```bash
 awk '/^\[2026-04-22T01:3[4-8]/' ~/.claude/logs/subagent-events.log
 ```
 
-## Sonnet 委譲 overhead 実測（2026-05-23 N=31 更新）
+## Sonnet Delegation Overhead Measurement (2026-05-23 N=31 update)
 
-`~/.claude/logs/subagent-events.log` 実測 (developer-agent sonnet 起動 N=31、2026-05-23 当日分)。
+`~/.claude/logs/subagent-events.log` actual (developer-agent sonnet launches N=31, 2026-05-23 same-day).
 
-- duration 分布: min=22s / p25=58s / median=101s / p75=137s / max=451s / avg=113s
-- 軽量 task proxy (bottom-20%): 22, 27, 27, 39, 44, 56 秒
-- delegate 起動フロア = 22s（startup overhead: Serena `activate_project` + prompt load）。20s 未満で完了する task は inline 確実有利
-- haiku 時代 N=17 avg 291s と比較すると sonnet 化で **2.6 倍高速化**（Sonnet 化で遅くなった仮説は否定）
-- 旧値「avg 60s / max 91s」は n=2 外れ値ベース。N=31 で大幅上方修正された。**n<10 の数値は再計測必須**
-- 判定基準: CLAUDE.md "Inline exceptions" の「期待 LLM 実行 <20s（1 symbol / 1 section 修正）」閾値は delegate min (22s) より下で妥当。20-60s grey zone は「迷ったら delegate」原則維持、60s 超は delegate 確実有利
+- Duration distribution: min=22s / p25=58s / median=101s / p75=137s / max=451s / avg=113s
+- Lightweight task proxy (bottom 20%): 22, 27, 27, 39, 44, 56 seconds
+- Delegate launch floor = 22s (startup overhead: Serena `activate_project` + prompt load). Tasks completing in <20s are clearly better inline
+- vs haiku N=17 avg 291s: Sonnet switch **2.6× faster** (hypothesis that Sonnet is slower is rejected)
+- Old value "avg 60s / max 91s" was n=2 outlier-based. N=31 shows significant upward revision. **n<10 values require re-measurement**
+- Decision threshold: CLAUDE.md "Inline exceptions" threshold of "expected LLM execution <20s (1 symbol / 1 section fix)" is below delegate min (22s) — valid. 20-60s grey zone: maintain "when in doubt, delegate" principle. >60s: delegate is clearly better
 
-## session-init-timing log 計測基盤（fbce383 以降）
+## session-init-timing Log Measurement Infrastructure (since fbce383)
 
-session 起動時間を継続計測するための基盤。plugin 増減 / Serena `~/.claude/projects/` 増減の効果を 7〜14 日蓄積して baseline 比較するために使用する。
+Infrastructure for continuous session startup time measurement. Used to accumulate 7–14 days of data to compare baseline against plugin count changes / Serena `~/.claude/projects/` count changes.
 
-**ログ・DB**:
-- log: `~/.claude/logs/session-init-timing.log`（形式: `[timestamp] session_id=X duration_ms=Y plugin_count=Z`、1000 行循環）
-- DB: `~/.claude/logs/analytics.db` の `sessions` table、`init_duration_ms INTEGER DEFAULT 0` カラム
+**Log / DB**:
+- log: `~/.claude/logs/session-init-timing.log` (format: `[timestamp] session_id=X duration_ms=Y plugin_count=Z`, 1000-line circular)
+- DB: `~/.claude/logs/analytics.db` `sessions` table, `init_duration_ms INTEGER DEFAULT 0` column
 
-**計測 hook**:
-- `claude-code/hooks/session-start.sh` L9 で `_SS_START_EPOCH=$(date +%s%N)` を記録、L126 で経過 ms 計算後 log に append
-- `claude-code/hooks/session-end.sh` が timing log から duration を grep して `analytics_insert_session` 第 11 引数に渡す
+**Measurement hooks**:
+- `claude-code/hooks/session-start.sh` L9 records `_SS_START_EPOCH=$(date +%s%N)`, L126 calculates elapsed ms and appends to log
+- `claude-code/hooks/session-end.sh` greps duration from timing log and passes as 11th argument to `analytics_insert_session`
 
-**集計コマンド例**:
+**Aggregation command**:
 
 ```bash
 sqlite3 ~/.claude/logs/analytics.db 'SELECT AVG(init_duration_ms) FROM sessions GROUP BY DATE(start_ts)'

@@ -1,35 +1,35 @@
-# コマンドクイックリファレンス
+# Commands Quick Reference
 
-Claude Code で使用できる全スラッシュコマンドの一覧。
+All slash commands available in Claude Code.
 
-| コマンド | 説明 | 主要用途 |
-|---------|------|---------|
-| /aliases | コマンドエイリアス定義 | エイリアス管理 |
-| /analytics | Claude Code利用状況を分析してインサイトを提示 | 分析・レポート |
-| /brainstorm | 対話的設計精緻化（Superpowers統合） | 設計・ブレスト |
-| /claude-update-fix | Claude Codeアップデート対応 - 差分検出・自動適用・未採用機能トラッキング | 設定・アップデート |
-| /dashboard | Claude Code利用状況ダッシュボードを起動 | 分析・可視化 |
-| /design-doc | チーム共有用の設計資料作成 - PRD→設計に落とす、md形式でローカル保存 | 設計・ドキュメント |
-| /dev | 直接実装コマンド - Agent不使用で直接実行。--quickオプションでhaiku高速実行。Agent Teamが必要なら /flow を使用。 | 実装 |
-| /diagnose | デバッグ支援 - エラーログ解析から原因特定・修正提案まで | デバッグ・分析 |
-| /docs | ナレッジ蓄積 - コード分析→Notionページ作成/更新 | ドキュメント |
-| /explore | 並列探索コマンド - 複数の観点から同時調査 | 分析・探索 |
-| /flow-auto | 完全自律ワークフロー - /flow --auto のショートカット。質問なし・承認スキップ・自動push。 | ワークフロー・自動化 |
-| /flow | ワークフロー自動化 - タスクタイプを自動判定して最適なワークフローを実行 | ワークフロー |
-| /git-pull | Git pull --rebase の安全実行。未コミット変更を自動stash→pull→pop。 | Git操作 |
-| /git-push | Git統合コマンド - commit → push → PR/MR作成を1コマンドで。モード自動判定。 | Git操作 |
-| /lint-test | CI相当のチェックをローカルで一括実行（build, lint, test, typecheck等） | テスト・検証 |
-| /memory-save | Serena memoryへの簡易保存 - 現在の作業状態を即座にメモリに記録 | メモリ |
-| /plan | 設計・計画用コマンド - PO Agent で戦略策定（読み取り専用） | 計画・設計 |
-| /prd | PRD作成 - 対話式で要件整理、数学的定式化（オプション）、10の専門家視点で厳格レビュー | 要件定義・PRD |
-| /protection-mode | Protection Mode（操作保護モード）を読み込み - 操作チェッカー・安全性分類をセッションに適用 | 設定・安全性 |
-| /refactor | リファクタリング用コマンド（言語ガイドライン自動読み込み） | リファクタリング |
-| /reload | CLAUDE.mdを再読み込みしてcompaction後のコンテキストを復元 | 設定・コンテキスト |
-| /retrospective | 振り返り - 過去のセッションを分析し、スキル・設定の改善案を提案 | 振り返り・改善 |
-| /review-fix-push | レビュー→修正→プッシュを1コマンドで実行。/review + /dev 全修正 + /git-push --pr の統合。 | レビュー・自動化 |
-| /review | コードレビュー用コマンド（comprehensive-reviewスキルで7観点統合レビュー） | レビュー |
-| /serena-refresh | Serenaデータとメモリーを最新化・整理 | メモリ・整理 |
-| /serena | 廃止（後方互換）。`/dev` `/diagnose` `/refactor` `/plan` へリダイレクト | 開発支援 |
-| /skills-manage | gh skill ベースのコミュニティスキル管理。検索・インストール・更新（tree SHA/pin/source tracking 付き）。 | スキル管理 |
-| /test | テスト作成専用モード - 既存コードに対するテストを作成 | テスト |
-| /update-guidelines | ガイドライン陳腐化チェック&自動修正 - バージョン/廃止機能/冗長性/AI可読性を3軸検査 | ガイドライン・保守 |
+| Command | Description | Primary use |
+|---------|-------------|-------------|
+| /aliases | Define command aliases | Alias management |
+| /analytics | Analyze Claude Code usage and present insights | Analysis / reporting |
+| /brainstorm | Interactive design refinement (Superpowers integration) | Design / brainstorming |
+| /claude-update-fix | Handle Claude Code updates - diff detection / auto-apply / unadopted feature tracking | Config / updates |
+| /dashboard | Launch Claude Code usage dashboard | Analysis / visualization |
+| /design-doc | Create team-shared design documents - from PRD to design, saved locally as md | Design / documentation |
+| /dev | Direct implementation - executes directly without agents. Use --quick for haiku fast execution. Use /flow if Agent Team needed. | Implementation |
+| /diagnose | Debug support - from error log analysis to root cause identification and fix suggestions | Debug / analysis |
+| /docs | Knowledge accumulation - code analysis → create/update Notion pages | Documentation |
+| /explore | Parallel exploration - simultaneous investigation from multiple perspectives | Analysis / exploration |
+| /flow-auto | Fully autonomous workflow - shortcut for /flow --auto. No questions, skip approvals, auto-push. | Workflow / automation |
+| /flow | Workflow automation - auto-detects task type and runs optimal workflow | Workflow |
+| /git-pull | Safe git pull --rebase. Auto stash → pull → pop for uncommitted changes. | Git operations |
+| /git-push | Git integration - commit → push → PR/MR creation in one command. Auto mode detection. | Git operations |
+| /lint-test | Run CI-equivalent checks locally (build, lint, test, typecheck, etc.) | Testing / verification |
+| /memory-save | Quick save to Serena memory - record current work state immediately | Memory |
+| /plan | Design and planning mode - strategy with PO Agent (read-only) | Planning / design |
+| /prd | PRD creation - interactive requirements, mathematical formalization (optional), strict review from 10 expert perspectives | Requirements / PRD |
+| /protection-mode | Load Protection Mode (operation guard mode) - apply operation checker and safety classifications to session | Config / safety |
+| /refactor | Refactoring mode (auto-loads language guidelines) | Refactoring |
+| /reload | Reload CLAUDE.md and restore post-compaction context | Config / context |
+| /retrospective | Retrospective - analyze past sessions, suggest skill and config improvements | Retrospective / improvement |
+| /review-fix-push | Review → fix → push in one command. Integrates /review + /dev full fixes + /git-push --pr. | Review / automation |
+| /review | Code review (7-perspective integrated review via comprehensive-review skill) | Review |
+| /serena-refresh | Refresh and organize Serena data and memories | Memory / cleanup |
+| /serena | Deprecated (backward compat). Redirects to `/dev` `/diagnose` `/refactor` `/plan` | Dev support |
+| /skills-manage | gh skill-based community skill management. Search / install / update (with tree SHA/pin/source tracking). | Skill management |
+| /test | Test creation mode - create tests for existing code | Testing |
+| /update-guidelines | Guideline staleness check and auto-fix - 3-axis inspection of version / deprecated features / redundancy / AI readability | Guidelines / maintenance |

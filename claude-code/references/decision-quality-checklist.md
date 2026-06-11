@@ -1,59 +1,59 @@
-# 意思決定品質チェックリスト
+# Decision Quality Checklist
 
-`/prd` Phase 1.7 / `/design-doc` Step 4・6 で AI が自動適用する5問。**未充足は Critical = draft 差し戻し**。
+Auto-applied by AI in `/prd` Phase 1.7 and `/design-doc` Step 4/6. **Unmet items = Critical → draft returned for revision.**
 
-## Q1. 真の目的か？（XY問題排除）
+## Q1. Is this the real objective? (XY problem elimination)
 
-- 目的を「なぜ?」で **2回掘り**、上位目的まで遡る
-- 当初目的が手段に過ぎなかった場合、上位目的に書き直す
-- **例**: 「検索を高速化」→ なぜ?「離脱率高い」→ なぜ?「ユーザーが情報を探せない」→ 真の目的=情報発見性向上
+- Ask "Why?" **twice**, tracing back to the higher-order objective
+- If the original objective is just a means, rewrite to the higher-order objective
+- **Example**: "Speed up search" → Why? "High bounce rate" → Why? "Users can't find info" → True objective = improve discoverability
 
-## Q2. 「作らない」を比較対象に入れたか？（Null hypothesis）
+## Q2. Did you include "do nothing" as an option? (Null hypothesis)
 
-- 以下3つを評価対象に必ず含める
-  - **やらない**（機会損失と保有コストの差し引き）
-  - **手作業継続**（運用コスト・スケール限界を数字で）
-  - **既存代替で済ます**（他社製品・OSS・社内別システム）
-- 採用判断は「作る価値 > やらない価値」が成り立つことを明示
+- Always include these three in evaluation:
+  - **Do nothing** (opportunity cost minus maintenance cost)
+  - **Continue manual** (operational cost and scale limits in numbers)
+  - **Use existing alternative** (competing products / OSS / internal system)
+- Adoption decision must explicitly state "build value > do nothing value"
 
-## Q3. 代替手段を3つ以上洗ったか？
+## Q3. Did you examine 3+ alternatives?
 
-- 候補軸: 自前 / OSS / SaaS / 設計変更 / 運用回避
-- **3つ以上**を比較表で並べる（コスト・期間・リスク・可逆性）
-- 採用案の優位性は「他案の弱点 vs 採用案の弱点」で語る（メリット羅列禁止）
+- Candidate axes: in-house / OSS / SaaS / design change / operational workaround
+- Compare **3+** in a table (cost / timeline / risk / reversibility)
+- State the adopted option's advantage as "other options' weaknesses vs adopted option's weaknesses" (no feature listing)
 
-## Q4. プレモータム3つ書いたか？
+## Q4. Did you write 3 pre-mortems?
 
-- 問い: **「6ヶ月後、この設計が失敗していた。何が原因か？」**
-- 3つ列挙、以下から最低1つずつ
-  - 技術的失敗（性能・スケール・互換性）
-  - 運用失敗（オンコール・監視・デプロイ）
-  - 想定外の使われ方（ユーザー・社内・悪意ある利用）
-- 各失敗に対する早期検知シグナルを併記
+- Question: **"6 months later, this design has failed. What caused it?"**
+- List 3, at minimum one from each:
+  - Technical failure (performance / scale / compatibility)
+  - Operational failure (on-call / monitoring / deployment)
+  - Unexpected usage (users / internal teams / malicious actors)
+- Include early detection signals for each failure
 
-## Q5. 前提が崩れる条件を1つ以上書いたか？
+## Q5. Did you write 1+ conditions that break the assumptions?
 
-- 「もし○○が変わったら、この設計は破綻する」
-- **例**: 利用者が10倍 / 認証要件変更 / 連携先 API 廃止 / コンプラ変更 / 主要担当者離脱
-- 崩れた時の撤退・乗換コストを概算
+- "If X changes, this design breaks"
+- **Examples**: 10× users / auth requirement changes / partner API deprecated / compliance changes / key person departure
+- Include rough estimate of exit / migration cost if assumption breaks
 
-## 適用ルール
+## Application Rules
 
-| コマンド | 適用箇所 | 違反時 |
-|---------|---------|--------|
-| `/prd` | Phase 1.7（draft 生成前） | 不足を AskUserQuestion で補完 |
-| `/design-doc` | Step 4（必須セクション化）+ Step 6（品質ガード） | Edit で書き直し、最大2 loop |
+| Command | Where applied | On violation |
+|---------|--------------|--------------|
+| `/prd` | Phase 1.7 (before draft generation) | Supplement with AskUserQuestion |
+| `/design-doc` | Step 4 (required sections) + Step 6 (quality guard) | Rewrite with Edit, max 2 loops |
 
-## NG パターン（Critical 判定）
+## NG Patterns (Critical judgment)
 
-- Q1: 上位目的が当初目的と同一 → 掘れていない
-- Q2: 「やらない」評価が1行コメントのみ → 比較になっていない
-- Q3: 代替案がメリット羅列で並列比較なし → 選定根拠不在
-- Q4: プレモータムが「バグが出る」程度 → 抽象すぎる
-- Q5: 「特になし」「想定外」 → 思考停止
+- Q1: Higher-order objective same as original → not drilled down
+- Q2: "Do nothing" evaluation is a 1-line comment only → not a comparison
+- Q3: Alternatives list features without parallel comparison → no selection rationale
+- Q4: Pre-mortem is just "bugs will occur" → too abstract
+- Q5: "Nothing in particular" / "unexpected" → stopped thinking
 
-## 関連
+## Related
 
-- `/root-cause`: Q1 の深掘り（5回なぜ）に使える
-- `/brainstorm --debate`: Q3 の代替案洗い出しを2者対立で強化
-- `/prd` Phase 3: 11ペルソナレビューと併用で網羅性向上
+- `/root-cause`: Q1 deep-drill (5 whys)
+- `/brainstorm --debate`: Q3 alternative exploration via two-party debate
+- `/prd` Phase 3: 11-persona review for comprehensive coverage

@@ -1,53 +1,53 @@
 ---
-name: PRDレビュー観点
-description: 人間レビュアーがPRDで集中すべき観点（AIツールでカバーされない領域）。
+name: PRD Review Checkpoints
+description: Review focus areas for human reviewers of PRDs (areas not covered by AI tools).
 type: reference
 ---
 
-# PRDレビュー観点（人間レビュアー用）
+# PRD Review Checkpoints (for Human Reviewers)
 
-AIツール（自動レビュー bot 等）が表記ゆれ・テンプレ充足・誤字を自動カバーするため、人間レビュアーは仕様の妥当性に集中する。
+AI tools (automated review bots, etc.) auto-cover notation inconsistencies, template compliance, and typos. Human reviewers should focus on specification validity.
 
-## 1. 仕様の定義明確性
+## 1. Specification Definition Clarity
 
-| 観点 | チェック内容 |
-|------|-------------|
-| **時刻・境界条件** | タイムスタンプフィールド名、タイムゾーン（JST/UTC等）、境界（`>=` か `>` か）が明示されているか |
-| **用語の一致** | ユビキタス言語・DB フィールド名・コードの命名と表現が一致しているか |
-| **判定ロジックの正本** | 複数の判定源がある場合、どちらを正本とするか明記されているか |
+| Aspect | Check |
+|--------|-------|
+| **Timestamps / boundary conditions** | Are timestamp field names, timezones (JST/UTC, etc.), and boundaries (`>=` vs `>`) explicit? |
+| **Term alignment** | Do ubiquitous language, DB field names, and code naming match? |
+| **Judgment logic source of truth** | When multiple judgment sources exist, is the authoritative one specified? |
 
-## 2. 受け入れ条件の検証可能性
+## 2. Acceptance Condition Verifiability
 
-- ユーザーストーリーに対して、**実装完了を判定できる受け入れ条件**が記載されているか
-- 境界値・例外ケース（在庫切れ、未ログイン、制限フラグあり等）が受け入れ条件に含まれているか
+- Does each user story have **acceptance conditions that determine implementation completion**?
+- Are boundary values and exception cases (out of stock, not logged in, restriction flag set, etc.) included in acceptance conditions?
 
-## 3. 実装・運用との整合性
+## 3. Implementation / Operational Consistency
 
-| 観点 | チェック内容 |
-|------|-------------|
-| **実装整合** | 仕様がシステムの実際の動作・制約（API、DB構造、既存ロジック）と矛盾しないか |
-| **リリース手順** | フィーチャーフラグ ON のタイミング・フェーズ順序・デプロイ順序に矛盾がないか |
-| **既存機能への影響** | 進行中・処理中のデータへの後方互換が保たれているか |
+| Aspect | Check |
+|--------|-------|
+| **Implementation alignment** | Does the spec not contradict actual system behavior and constraints (API, DB structure, existing logic)? |
+| **Release procedure** | Are feature flag ON timing / phase order / deployment sequence consistent? |
+| **Impact on existing features** | Is backward compatibility maintained for in-progress / processing data? |
 
-## 4. 考慮漏れ
+## 4. Coverage Gaps
 
-- **未ログインユーザー**の動作が定義されているか
-- **管理画面**の操作仕様が必要な機能で記載されているか
-- **エラー文言**が定義されているか（特に複数の失敗パターンがある場合）
-- **通知・メール**など非同期の副作用が漏れていないか
+- Is behavior for **unauthenticated users** defined where needed?
+- Is **admin screen** operation spec included for features that require it?
+- Are **error messages** defined (especially when multiple failure patterns exist)?
+- Are async side effects like **notifications / email** covered?
 
-## 5. PRD 作成者が「レビュー観点」を明示する慣習
+## 5. Reviewer Focus Areas Convention
 
-仕様の境界条件が曖昧になりやすい箇所は、PR 本文に以下の形式で明示するとレビューしやすい:
+When boundary conditions are likely to be ambiguous, include the following in the PR body for easier review:
 
 ```markdown
-## レビュー観点
+## Review focus areas
 
-- ○○の定義（システム上のどのフィールドを使うか）が実装と整合するか
-- ○○のタイミング定義がリリーススケジュールと矛盾しないか
+- Whether the definition of XX (which system field to use) aligns with implementation
+- Whether the timing definition of XX is consistent with the release schedule
 ```
 
-## 関連
+## Related
 
-- `decision-quality-checklist.md` — PRD/DesignDoc 共通の意思決定品質チェック
-- `../guidelines/writing/design-doc-protocol.md` — DesignDoc 側の書き方 (4 Step + 10 パターン + テンプレ選択)
+- `decision-quality-checklist.md` — 5-question decision quality check shared across PRD/DesignDoc
+- `../guidelines/writing/design-doc-protocol.md` — DesignDoc writing guide (4 steps + 10 patterns + template selection)

@@ -1,36 +1,36 @@
-# メモリ使い分け
+# Memory Usage Guide
 
-| メモリ | 用途 | 自動読み込み |
-|--------|------|-------------|
-| auto-memory (`~/.claude/projects/{project}/memory/`) | 安定したパターン・規約・ユーザー好み | 毎セッション自動（200行上限） |
-| Serena memory | 作業コンテキスト・振り返り・一時的な調査結果 | 手動read_memory |
+| Memory | Purpose | Auto-loaded |
+|--------|---------|------------|
+| auto-memory (`~/.claude/projects/{project}/memory/`) | Stable patterns / conventions / user preferences | Every session (200-line limit) |
+| Serena memory | Work context / retrospectives / transient investigation results | Manual `read_memory` |
 
-## ルール
+## Rules
 
-- 両方に同じ情報を書かない
-- auto-memoryはトークン消費するため簡潔に保つ
-- **Task Diary**: 以下のいずれかに該当する完了時のみ `/memory-save` を提案
-  - 3ファイル以上の変更
-  - 非自明な設計判断を伴うリファクタ
-  - インシデント対応
-  - 上記以外は `~/.claude/logs/task-diary.log` への自動蓄積で十分
+- Don't write the same information to both
+- Keep auto-memory concise — it consumes tokens every session
+- **Task Diary**: propose `/memory-save` only when any of these apply at completion:
+  - 3+ files changed
+  - Refactor with non-obvious design decisions
+  - Incident response
+  - Otherwise, automatic accumulation to `~/.claude/logs/task-diary.log` is sufficient
 
-## 記録対象（Compounding Engineering）
+## Recording Targets (Compounding Engineering)
 
-誤動作だけでなく **非自明な成功** も記録対象。Boris流の複利的改善で再現性を担保するため。
+Not only misbehavior but also **non-obvious successes** are recording targets. Boris-style compound improvement to ensure reproducibility.
 
-設定側（CLAUDE.md / skill / hook）を主保存先、auto-memory を補助とする。理由は auto-memory が Claude 自動判断で書き込まれるため陳腐化しやすく、設定側のほうが明示的かつ再現可能性が高いため。
+Config side (CLAUDE.md / skill / hook) is primary; auto-memory is supplementary. Reason: auto-memory is written by Claude's automatic judgment and becomes stale; config side is more explicit and reproducible.
 
-| 種別 | 例 | 主保存先 | 補助 | 書き込み主体 |
-|------|------|-------|-------|-------|
-| 誤動作（再発防止） | 同じパス指定誤り、想定外のファイル削除 | CLAUDE.md / skill / hook | auto-memory | ユーザー Edit / Claude 自動 |
-| 非自明な成功（再現用） | 試行錯誤で当たった判断、非標準アプローチ | CLAUDE.md / skill 化 | auto-memory | ユーザー指示 / Claude |
-| 一時的調査結果 | 障害調査中間状態、未確定仮説 | Serena memory | — | ユーザー（`/memory-save`） |
+| Type | Example | Primary storage | Supplementary | Write method |
+|------|---------|----------------|--------------|--------------|
+| Misbehavior (recurrence prevention) | Same path error, unexpected file deletion | CLAUDE.md / skill / hook | auto-memory | User Edit / Claude auto |
+| Non-obvious success (reproduction) | Trial-and-error hit, non-standard approach | CLAUDE.md / skill | auto-memory | User instruction / Claude |
+| Transient investigation | Incident investigation state, unconfirmed hypothesis | Serena memory | — | User (`/memory-save`) |
 
-**書き込み経路の補足:**
+**Write path notes:**
 
-- **CLAUDE.md / skill / hook**: ユーザーが Edit、または「CLAUDE.md か該当 skill を更新して」とプロンプト末尾で依頼すれば Claude が同会話で追記
-- **auto-memory**: Claude が会話文脈から自動判断して `~/.claude/projects/{project}/memory/` に書き出し（ユーザー直接コマンドなし）。重複や陳腐化が起きやすいので最優先は設定側
-- **Serena memory**: `/memory-save` で明示保存。3ファイル以上変更・非自明判断・インシデント対応時のみ
+- **CLAUDE.md / skill / hook**: User edits directly, or Claude appends in same conversation if prompted "update CLAUDE.md or relevant skill"
+- **auto-memory**: Claude auto-writes to `~/.claude/projects/{project}/memory/` from conversation context. Prone to duplication and staleness — config side takes priority
+- **Serena memory**: Explicit save via `/memory-save`. Only for 3+ file changes / non-obvious decisions / incident response
 
-設定（skill / hook）で再現できるものは memory より優先（skill 化が筋）。memory は Claude が自動参照する「補助ルール」「パターン」の置き場。
+Prioritize skill over memory for anything reproducible via config (skill is the right place). Memory is a "supplementary rule" / "pattern" store that Claude auto-references.

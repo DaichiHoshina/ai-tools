@@ -1,38 +1,38 @@
-# Checkpoint / Rewind 活用
+# Checkpoint / Rewind
 
-Claude Code は変更前に自動チェックポイントを作成する。会話・コード・両方を過去状態に復元可能。
+Claude Code auto-creates checkpoints before changes. Restore conversation, code, or both to a prior state.
 
-## 操作
+## Operations
 
-| 操作 | 効果 |
-|------|------|
-| `Esc` | Claude を途中停止。コンテキスト保持したまま方向転換 |
-| `Esc + Esc` または `/rewind` | rewindメニュー表示。会話のみ/コードのみ/両方/選択メッセージからsummarizeを選択 |
-| `"Undo that"` | Claude に直前の変更をrevertさせる |
-| `/clear` | 無関係タスク間でコンテキスト完全リセット |
+| Action | Effect |
+|--------|--------|
+| `Esc` | Stop Claude mid-execution. Keep context, change direction |
+| `Esc + Esc` or `/rewind` | Show rewind menu: conversation only / code only / both / summarize from selection |
+| `"Undo that"` | Ask Claude to revert the last change |
+| `/clear` | Full context reset between unrelated tasks |
 
-## 使いどころ
+## When to Use
 
-- **risky試行**: 「試してダメならrewind」前提で大胆な変更を走らせる
-- **会話汚染時**: 2回以上修正失敗したら会話クリーンアップ（summarize from here）
-- **実験ブランチ的活用**: 複数アプローチを順に試して良いものを採用
-- **セッションまたぎ**: checkpointはセッション終了後も保持。ターミナル閉じても rewind 可能
+- **Risky trials**: Run bold changes assuming "rewind if it fails"
+- **Contaminated conversation**: After 2+ failed corrections, clean up with summarize-from-here
+- **Experiment branching**: Try multiple approaches in sequence, keep the best
+- **Cross-session**: Checkpoints persist after session end. Rewind works after closing the terminal
 
-## 制約
+## Constraints
 
-- Checkpoint は **Claude が行った変更のみ**追跡。外部プロセス（手動編集、CIによる変更、git操作）は対象外
-- **git の代替ではない**。重要な状態保全は git commit で行う
-- rewind 中は新規ツール呼び出し不可
+- Checkpoints track **only Claude-made changes**. External processes (manual edits, CI, git operations) are excluded
+- **Not a git replacement**. Use git commit for important state preservation
+- No new tool calls during rewind
 
-## 公式推奨パターン
+## Official Recommended Pattern
 
-> 「carefully planning every move」より「tell Claude to try something risky. If it doesn't work, rewind and try a different approach.」
+> "tell Claude to try something risky. If it doesn't work, rewind and try a different approach." — over "carefully planning every move"
 
-計画コストと試行コストを比較して、試行が安いなら rewind 前提で走らせる方が早い。
+Compare planning cost vs trial cost. If trial is cheap, run with rewind assumed.
 
-## 関連コマンド
+## Related Commands
 
-- `claude --continue` — 直前セッション再開
-- `claude --resume` — 最近のセッションから選択再開
-- `/rename` — セッション名付与（例: `oauth-migration`, `debugging-memory-leak`）
-- `/btw` — コンテキスト汚染せず side question。回答はオーバーレイ表示で履歴に残らない
+- `claude --continue` — resume previous session
+- `claude --resume` — select from recent sessions
+- `/rename` — assign session name (e.g., `oauth-migration`, `debugging-memory-leak`)
+- `/btw` — side question without contaminating context. Answer shown in overlay, not saved to history

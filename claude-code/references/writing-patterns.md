@@ -1,80 +1,80 @@
 ---
-name: 文章執筆パターン集 (補足)
-description: 共通原則は guidelines/writing/PRINCIPLES.md。本ファイルは補足パターン (書き直し Phase / レビュー3段 / textlint / フェーズ境界 / skill 連携) のみ。
+name: Writing Patterns (Supplement)
+description: Common principles in guidelines/writing/PRINCIPLES.md. This file covers supplement patterns only (rewrite phases / 3-stage review / textlint / phase boundaries / skill integration).
 type: reference
 ---
 
-# 文章執筆パターン集 (補足)
+# Writing Patterns (Supplement)
 
-共通原則と適用先別ガイドは `guidelines/writing/` 参照。本ファイルは詳細パターン集 (長文 doc 書き直しフロー / textlint 規約 / フェーズ境界)。
+Common principles and per-medium guides: see `guidelines/writing/`. This file covers detailed pattern supplement (long-doc rewrite flow / textlint conventions / phase boundaries).
 
-- [`guidelines/writing/PRINCIPLES.md`](../guidelines/writing/PRINCIPLES.md) — 共通原則 (4 問 / 7 指針 / 3 変換 / 媒体別構造 / セルフチェック 6)
-- [`guidelines/writing/design-doc-protocol.md`](../guidelines/writing/design-doc-protocol.md) — DD 4 Step + 10 パターン + アンチパターン + セルフチェック 18
-- [`guidelines/writing/long-form-doc.md`](../guidelines/writing/long-form-doc.md) — 長文 doc (DD/PRD/RCA) + ADR/PRD/EARS テンプレ
-- [`guidelines/writing/external-post.md`](../guidelines/writing/external-post.md) — 短文 (PR コメント/Slack/Issue) + 5 軸採点
+- [`guidelines/writing/PRINCIPLES.md`](../guidelines/writing/PRINCIPLES.md) — common principles (4 questions / 7 guidelines / 3 transforms / medium-specific structure / self-check 6)
+- [`guidelines/writing/design-doc-protocol.md`](../guidelines/writing/design-doc-protocol.md) — DD 4-step + 10 patterns + anti-patterns + self-check 18
+- [`guidelines/writing/long-form-doc.md`](../guidelines/writing/long-form-doc.md) — long-form docs (DD/PRD/RCA) + ADR/PRD/EARS templates
+- [`guidelines/writing/external-post.md`](../guidelines/writing/external-post.md) — short-form (PR comments/Slack/Issues) + 5-axis scoring
 
-## 書き直し Phase 1-8 (長期レビューを経た DD/PRD の典型フェーズ)
+## Rewrite Phases 1-8 (typical phases for long-review DD/PRD)
 
-| Phase | 内容 |
-|-------|------|
-| 1 方針決定・ドラフト | PRD / 過去議論 / 朝会ログを全読してから着手 |
-| 2 全面清書 | テンプレ準拠、経緯記述 / 案 A・B 造語 / 網羅志向を排除 |
-| 3 自レビュー補強 | Security / API Design / Risks / Performance / Logging / Mermaid 図 / 数値根拠の出典追加 |
-| 4 コードベース突合 | migration 番号・カラム配置・型・API パス・前提条件を実装と一致 |
-| 5 レビュー反映削除 | テンプレ外 / 冗長 / 言い換え反復 / 自己参照 / PR 単語を削る |
-| 6 削りすぎ復元 | 文脈通らない箇所を再注入、削減と保持を交渉 |
-| 7 文体統一・lint | 体言止め / 敬体常体 / 単位 (万・億・ms・MB) / textlint |
-| 8 大方向転換 | 旧記述を残さず一気に新方針へ、変更履歴・経緯セクションも一掃 |
+| Phase | Content |
+|-------|---------|
+| 1 Policy / draft | Read PRD / past discussions / meeting notes fully before starting |
+| 2 Full rewrite | Template-compliant; remove background narratives / coined terms / exhaustive coverage |
+| 3 Self-review reinforcement | Add Security / API Design / Risks / Performance / Logging / Mermaid diagrams / numerical evidence |
+| 4 Codebase reconciliation | Align migration numbers / column layout / types / API paths / assumptions with implementation |
+| 5 Review incorporation / deletion | Delete non-template / redundant / paraphrase repetition / self-references / PR terms |
+| 6 Restore over-deletion | Re-inject meaning where context broke; negotiate deletion vs preservation |
+| 7 Style unification / lint | Nominal style / register / units (10k・100M・ms・MB) / textlint |
+| 8 Major pivot | Migrate to new policy in one pass; purge change history and background sections too |
 
-**回数見積もり**: 軽量テンプレ準拠ドラフト 3-5 commits / フルテンプレ 5-10 / 自由形式 20+ / 方針未確定でフル着手 50+。初稿でテンプレ準拠すると往復激減。
+**Rewrite count estimates**: lightweight template-compliant draft 3-5 commits / full template 5-10 / free-form 20+ / full template before policy confirmed 50+. Template compliance at initial draft dramatically reduces back-and-forth.
 
-### レビュー応答の対応表
+### Review Response Table
 
-| 指摘 | 対応 | Phase |
-|------|------|-------|
-| 「いらない」「これは何？」 | 即削除 | 5 |
-| 「もっと詳しく」「分かりにくい」 | 段落で補強 | 3 |
-| 「実装と違う」 | コード再確認 | 4 |
-| 「方針が違う」 | 過去議論を辿って合意案に戻す | 4 |
-| 「テンプレに無い」 | 該当セクション削除 | 5 |
-| 「文体混在」「単位揃ってない」 | 一括置換 | 7 |
+| Finding | Response | Phase |
+|---------|----------|-------|
+| "Not needed" / "What is this?" | Delete immediately | 5 |
+| "More detail" / "Unclear" | Add paragraph explanation | 3 |
+| "Differs from implementation" | Re-check code | 4 |
+| "Policy differs" | Trace past discussion, revert | 4 |
+| "Not in template" | Delete that section | 5 |
+| "Mixed style" / "Units inconsistent" | Bulk replace | 7 |
 
-## レビューは内容→文→構造の 3 段で別ループ
+## Review in 3 Stages: Content → Text → Structure
 
-1 回で全部見ると観点が混ざる。**内容→文→構造の順で抽象度が変わる**ので段 1→2→3 が効率的。
+Mixing all perspectives in one pass loses focus. **Content → Text → Structure changes abstraction level** — do stages 1→2→3 in order for efficiency.
 
-| 段 | 観点 | 対象 |
-|----|------|------|
-| 1 内容整合性 | ファイルパス / 構造体フィールド / DB NOT NULL / PRD 受け入れ条件の対応抜け / Phase 計画の依存 / Why-not 妥当性 | 既存コード grep |
-| 2 文章規定 | 評価語の根拠 / 助詞重複 / だ・である調 / AI listing pattern / 抽象語 / 読後アクション末尾明示 | NG 辞書 + textlint |
-| 3 読みやすさ | 情報密度 / 表 vs 段落バランス / 優先度 / 図解統一 / forward reference のアンカー化 / 新規読者目線 | AI 目視 |
+| Stage | Perspective | Target |
+|-------|-------------|--------|
+| 1 Content consistency | File paths / struct fields / DB NOT NULL / acceptance condition mapping gaps / plan dependencies / Why-not validity | Existing code grep |
+| 2 Text rules | Evidence for evaluation words / duplicate particles / register mixing / AI listing pattern / abstract terms / action-oriented endings | NG dictionary + textlint |
+| 3 Readability | Information density / table vs paragraph balance / priority / diagram consistency / forward reference anchors / new reader perspective | AI visual review |
 
-タイミング: 段 1 は `/design-doc` 出力後 PR 起票前、段 2 は PR 起票後 CI 通過後、段 3 は最後に「初見読者が読めるか」確認。
+Timing: Stage 1 after `/design-doc` output before PR creation, Stage 2 after PR creation after CI passes, Stage 3 last "can a first-time reader follow this?" check.
 
-## textlint で文体崩れを機械検出する
+## Detect Style Drift with textlint
 
-人間目視で見逃しやすい文体崩れは textlint (`@textlint-ja/ai-writing` + `textlint-rule-preset-ja-technical-writing`) で機械検出。CI conclusion が success でも annotation が付くため、PR 作成前にローカル実行。
+Use textlint (`@textlint-ja/ai-writing` + `textlint-rule-preset-ja-technical-writing`) to mechanically detect style drift that's easy to miss by eye. CI conclusion may be success even with annotations — run locally before creating PR.
 
-### 頻出 NG パターン
+### Common NG Patterns
 
-| 違反 | NG 例 | OK 例 |
-|------|-------|-------|
-| 文末「。」なし (見出し的に名詞句で終わる) | `含むもの` | `本設計では以下を扱う。` |
-| 絶対表現 | `完全に保証する` / `絶対に〜` / `必ず〜される` | `確実に届ける` / `〜される` |
-| 助詞重複 (一文に同じ助詞 2 回以上) | `処理が決済を含むため整合性が壊れる` (「が」「が」) | 文を分ける or 一方を「は」へ |
-| だ・である調混入 (常体ベースに「である」混在) | `〜は大きいからである。` | `〜は大きい。` / `〜のためだ。` |
-| AI listing pattern (リスト全項目が「**強調**: 説明」形式) | `- **高**: 設計を確定する前に〜`<br>`- **中**: 設計は変わらないが〜` | 表に変換 or 地の文に展開 |
+| Violation | NG example | OK example |
+|-----------|-----------|-----------|
+| Missing `。` at end of sentence (ends as noun phrase) | `含むもの` | `本設計では以下を扱う。` |
+| Absolute expression | `完全に保証する` / `絶対に〜` | `確実に届ける` / `〜される` |
+| Duplicate particles (same particle 2+ times in one sentence) | `処理が決済を含むため整合性が壊れる` ("が" twice) | Split sentence or replace one with `は` |
+| Register mixing (常体 base with `である` mixed in) | `〜は大きいからである。` | `〜は大きい。` / `〜のためだ。` |
+| AI listing pattern (all list items in `**emphasis**: explanation` form) | `- **高**: 設計を確定する前に〜` | Convert to table or expand to prose |
 
-**事実宣言の絶対表現は OK**: 「最終的に必ず 1 対 1 にマッピングされる」のような数学的事実宣言。禁止対象は「主観的に必ず守られる」のような根拠なき言い切り。
+**Factual absolute expressions are OK**: Mathematical fact declarations like "ultimately always maps 1-to-1". What's prohibited is groundless assertions like "will definitely be maintained".
 
-### ローカル実行
+### Local Run
 
 ```sh
 npx textlint -f pretty-error <path>.md
 npx markdownlint-cli2 <path>.md
 ```
 
-### CI annotation 確認 (GitHub)
+### CI Annotation Check (GitHub)
 
 ```sh
 gh api repos/{owner}/{repo}/commits/<SHA>/check-runs \
@@ -82,27 +82,27 @@ gh api repos/{owner}/{repo}/commits/<SHA>/check-runs \
 gh api repos/{owner}/{repo}/check-runs/<ID>/annotations
 ```
 
-`.github/workflows/` パスへの annotation は CI infra 由来で本文無関係なら無視可。
+Annotations on `.github/workflows/` path are from CI infra — ignore if unrelated to content.
 
-## 設計 / 計画 / 実行のフェーズ境界を越境しない
+## Don't Cross Design / Plan / Execute Phase Boundaries
 
-ドキュメント駆動開発の典型事故ポイント。
+Typical failure points in document-driven development.
 
-| フェーズ | 許可 | 禁止 | よくある違反 |
-|---------|------|------|--------------|
-| 設計 (DD / ADR) | 要件分析・代替案比較・設計判断 | 実装・テスト作成・タスク分解 | 設計中にコードを書き始める |
-| 計画 (タスク分解 / ProjectDocs) | タスク定義・依存整理・リスク評価 | 実装・設計変更・新機能追加 | 計画書を書きながら実装に手を出す |
-| 実行 (実装 / テスト) | 実装・テスト・ファイル操作 | 設計変更・スコープ拡大・新仕様追加 | 実装中に「ついでに」リファクタやスコープ追加 |
+| Phase | Allowed | Prohibited | Common violations |
+|-------|---------|-----------|------------------|
+| Design (DD / ADR) | Requirements analysis / alternative comparison / design decisions | Implementation / test creation / task breakdown | Start coding during design |
+| Planning (task breakdown / ProjectDocs) | Task definition / dependency mapping / risk assessment | Implementation / design changes / new features | Touch implementation while writing plan |
+| Execution (implementation / testing) | Implementation / tests / file operations | Design changes / scope expansion / new specs | "While I'm at it" refactoring or scope additions |
 
-**越境を検出する質問**: 「いま書いているのは、このフェーズの成果物か？」「これは次フェーズで書くべきものでないか？」答えに迷う時点で越境している。
+**Boundary detection question**: "Is what I'm writing now the artifact of this phase?" "Should this be written in the next phase?" If you hesitate, you're crossing the boundary.
 
-## 技術ドキュメント執筆時の skill 連携
+## Skill Integration for Technical Documentation
 
-技術系ドキュメント (API 設計・バックエンド設計) を書くときは関連 skill を併用、用語と構造のブレが減る。
+Use related skills when writing technical docs (API design / backend design) to reduce terminology and structural drift.
 
-| 書く対象 | 併用する skill |
-|----------|--------------|
-| REST/gRPC API 設計、エンドポイント仕様 | `/api-design` |
-| サービス層・データアクセス層・ジョブ設計 | `/backend-dev` |
-| マイクロサービス間連携・モノレポ構成 | `/microservices-monorepo` |
-| アーキテクチャ判断・DDD | `/clean-architecture-ddd` |
+| Writing target | Paired skill |
+|----------------|-------------|
+| REST/gRPC API design, endpoint specs | `/api-design` |
+| Service layer / data access layer / job design | `/backend-dev` |
+| Microservice integration / monorepo structure | `/microservices-monorepo` |
+| Architecture decisions / DDD | `/clean-architecture-ddd` |

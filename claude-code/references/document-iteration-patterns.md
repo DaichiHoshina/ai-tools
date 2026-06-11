@@ -1,142 +1,136 @@
 ---
-name: ドキュメント書き直しのフェーズ進行パターン
-description: 長期レビューを経た DesignDoc/PRD の書き直し履歴から抽出した、典型フェーズと各フェーズの修正パターン。
+name: Document Rewrite Phase Progression Patterns
+description: Typical phases and fix patterns extracted from DesignDoc/PRD rewrite history after long review cycles.
 type: reference
 ---
 
-# ドキュメント書き直しのフェーズ進行パターン
+# Document Rewrite Phase Progression Patterns
 
-長期間レビュー・書き直しを繰り返した DesignDoc/PRD の commit 履歴から抽出した、書き直しの典型フェーズと各フェーズで発生する修正パターン。書き直しの「動的進化」を扱う点で、原則・アンチパターン静的ガイドの `../guidelines/writing/design-doc-protocol.md` と補完関係。
+Typical rewrite phases and fix patterns extracted from DesignDoc/PRD commit history after extended review cycles. Complements the static guide `../guidelines/writing/design-doc-protocol.md` by covering the dynamic evolution of rewrites.
 
-## フェーズ進行（典型的な順序）
+## Phase Progression (typical order)
 
-| Phase | フェーズ | 典型 commit メッセージ例 |
-|---|---|---|
-| 1 | 方針決定・ドラフト | 「{機能名} DesignDoc」「スコープ確定: ...」「{方式}を追記」 |
-| 2 | 全面清書（テンプレ準拠） | 「テンプレ準拠で全面書き直し」「全面清書: 経緯記述を排除」 |
-| 3 | 自レビュー・補強 | 「Security/API Design セクション追加」「Mermaid 図で視認性向上」 |
-| 4 | コードベース突合・事実整合修正 | 「実装と整合」「{パス/番号}を実装に統一」 |
-| 5 | レビュー反映・削除 | 「レビュー反映: テンプレ外セクション削除」「冗長削減」 |
-| 6 | 削りすぎ復元 | 「削りすぎた箇条書きを意味が通る形に復元」 |
-| 7 | 文体統一・lint 対応 | 「体言止め統一」「textlint エラー修正（助詞重複・コロン終止）」 |
-| 8 | 大方向転換に伴う全体書き換え | 「方針大転換: {旧方針}廃止、{新方針}に統一」 |
+| Phase | Name | Typical commit message examples |
+|-------|------|---------------------------------|
+| 1 | Policy decision / draft | "{feature} DesignDoc" / "Scope confirmed: ..." / "Add {approach}" |
+| 2 | Full rewrite (template compliance) | "Full rewrite per template" / "Full rewrite: remove background narrative" |
+| 3 | Self-review / reinforcement | "Add Security/API Design sections" / "Improve visibility with Mermaid diagrams" |
+| 4 | Codebase reconciliation | "Align with implementation" / "Unify {path/number} with implementation" |
+| 5 | Review incorporation / deletion | "Review: delete non-template sections" / "Reduce redundancy" |
+| 6 | Restore over-deletion | "Restore over-deleted bullets to readable form" |
+| 7 | Style unification / lint | "Unify nominal style" / "Fix textlint errors (duplicate particles / colon-terminated)" |
+| 8 | Major pivot full rewrite | "Major pivot: abolish {old policy}, unify to {new policy}" |
 
-Phase 1〜7 は基本フロー、Phase 8 は中盤に発生して全体を Phase 2 からやり直しに戻すリセット型イベント。
+Phases 1–7 are the basic flow. Phase 8 is a mid-cycle reset event that restarts from Phase 2.
 
-## 各フェーズの典型修正パターン
+## Fix Patterns by Phase
 
-### Phase 2: 全面清書
+### Phase 2: Full Rewrite
 
-- ドラフト初期の経緯記述・自由形式・案 A / 案 B 等の造語を排除
-- テンプレに沿った見出しに整理
-- 「あれもこれも」の網羅志向を捨てて読みやすさ優先
-- 体言止め・bullet 階層を統一
+- Remove early-draft background narratives, free-form text, coined terms like "Plan A / Plan B"
+- Reorganize headings to match template
+- Drop exhaustive coverage mindset; prioritize readability
+- Unify nominal style and bullet hierarchy
 
-### Phase 3: 自レビュー補強
+### Phase 3: Self-Review Reinforcement
 
-抜けがちなセクションを追加:
+Commonly missing sections to add:
 
 - Security Considerations
 - API Design / System Integration
 - Risks / Performance
-- Logging / Monitoring（監視項目・統計値の具体化）
-- Mermaid 図（処理フロー・シーケンス）
-- 数値根拠の出典（ローカルベンチ・本番スペック・実測）
+- Logging / Monitoring (specific metrics)
+- Mermaid diagrams (flow / sequence)
+- Numerical evidence with sources (local bench / production specs / actual measurements)
 
-### Phase 4: コードベース突合
+### Phase 4: Codebase Reconciliation
 
-実装に追従する典型修正:
+| Target | Fix pattern |
+|--------|-------------|
+| Migration numbers | Re-check latest number on main and update |
+| Column layout / types | Match implementation (e.g., id INT→BIGINT) |
+| API paths | Align to implementation directory path |
+| Existing logic assumptions | Reflect code investigation results |
+| DB / infra versions | Verify against IaC / production config |
 
-| 突合対象 | 修正パターン |
-|---|---|
-| migration 番号 | mainの最新番号を再確認して書き換え |
-| カラム配置・型 | 実装と一致（例: id を INT→BIGINT に変更） |
-| API path | 実装ディレクトリパスに統一 |
-| 既存ロジックの前提 | コード調査結果を反映（例: 重複処理の防止条件追加） |
-| DB / インフラのバージョン | IaC / 本番設定を確認して機能の対応可否を明記 |
+### Phase 5: Review Incorporation / Deletion
 
-### Phase 5: レビュー反映・削除
+Deletion candidates reviewers typically flag:
 
-レビュアーが指摘する削除候補:
+- Non-template sections (preconditions / Why not / excessive L2/L3 nesting)
+- Redundant decision rationale tables, duplicate descriptions
+- "Should be simpler" / "not needed" comments → delete immediately
+- Same-concept paraphrase repetition
+- Self-references / PR terminology
 
-- テンプレ外セクション（前提条件 / Why not / L2/L3 過剰ネスト）
-- 冗長な決定根拠の表・重複記述
-- 「シンプルにできるはず」「いらない」コメントへの応答 → 即削除
-- 同じ概念の言い換え反復
-- 自己参照・PR 単語混入
+### Phase 6: Restore Over-Deletion
 
-### Phase 6: 削りすぎ復元
+- Re-inject meaning where context broke after Phase 5 cuts
+- Negotiate balance between deletion and preservation
+- Recovery: "delete but consolidate key points elsewhere"
 
-- Phase 5 で削った後、文脈が通らなくなった箇所の意味を再注入
-- 削除と保持のバランスをレビュアーと交渉
-- 「削るが要点は別箇所に統合」のリカバリー
+### Phase 7: Style Unification / Lint
 
-### Phase 7: 文体統一・lint
+- Unify nominal/polite style, units (10k / 100M / ms / MB)
+- Fix textlint errors (duplicate particles / colon-terminated / missing period / exaggeration / continuous kanji)
+- Unify bullet trailing punctuation
+- Fix term notation inconsistencies (fix concept name vs implementation identifier usage)
 
-- 体言止め / 敬体常体 / 単位（万・億・ms・MB）統一
-- textlint エラー修正（助詞重複・コロン終止・文末句点・誇張表現・漢字連続）
-- bullet 末尾の句点有無を統一
-- 用語の表記ゆれ修正（概念名と実装識別子の使い分け固定）
+### Phase 8: Major Pivot
 
-### Phase 8: 大方向転換
+When policy changes:
 
-方針が変わったときの一掃:
+- Migrate to new policy in one pass without leaving old descriptions
+- Delete "change history" / "background" sections too
+- Remove all provisional flags / backward-compat descriptions (if new policy is clean-cut migration)
+- Rewrite all affected Goals / Non-Goals / Risks / Migration Strategy
 
-- 旧記述を残さず一気に新方針へ移行
-- 「変更履歴」「経緯」セクションも一緒に削除
-- 暫定フラグ・互換維持の記述を全削除（新方針が一気移行なら）
-- 影響を受ける Goals / Non-Goals / Risks / Migration Strategy を全部書き直す
+## Rewrite Anti-Patterns
 
-## 書き直しのアンチパターン
-
-過去にハマったパターン:
-
-| アンチパターン | 症状 | 対処 |
+| Anti-pattern | Symptom | Fix |
 |---|---|---|
-| 部分修正の連鎖 | 1 コメント 1 コミットで 20+ 回往復 | レビューを溜めて 1 回で全面清書（Phase 2 投入） |
-| 削りすぎ | 構造を崩す削減で意味不明に | 削減と同時に必要情報を別箇所に再配置 |
-| 大方向転換時の旧記述残存 | 方針変えても古い表現が混入 | 「変更履歴」セクションも含めて一掃 |
-| 自レビュー欠落で提出 | レビュアーから基本指摘多発 | 提出前に Phase 3-4 を自分で実行 |
-| 実装との乖離 | 実装変更後にドキュメント更新漏れ | コードベース突合を Phase 4 で必ず実施 |
-| 方針確定前にフルテンプレで書き始め | Phase 8 リセットで全面書き直しが頻発 | Phase 1 で方針を固めるまで軽量版で書く |
+| Cascading partial fixes | 1 comment per commit, 20+ rounds | Batch reviews, do full rewrite in Phase 2 |
+| Over-deletion | Restructuring cuts make doc incomprehensible | Relocate key info when deleting |
+| Old descriptions remaining after pivot | Old phrasing mixed in after policy change | Purge including "change history" section |
+| Submit without self-review | Many basic findings from reviewer | Run Phases 3-4 yourself before submitting |
+| Divergence from implementation | Doc update missed after code change | Reconcile in Phase 4 |
+| Start full template before policy confirmed | Frequent Phase 8 resets | Write lightweight version until policy is firm |
 
-## レビュー応答の効率化
+## Review Response Table
 
-レビュー指摘の種類 → 即時対応の対応表:
-
-| 指摘の種類 | 対応 | 該当 Phase |
+| Finding type | Response | Phase |
 |---|---|---|
-| 「いらない」「これは何？」 | 即削除 | Phase 5 |
-| 「もっと詳しく」「分かりにくい」 | 段落で説明補強 | Phase 3 |
-| 「実装と違う」「現状と異なる」 | コード/実装 PR を再確認 | Phase 4 |
-| 「方針が違う」「過去の議論と矛盾」 | 過去議論を辿って合意案に戻す | Phase 4 |
-| 「テンプレに無い」 | 該当セクション削除 | Phase 5 |
-| 「文体が混在」「単位が揃っていない」 | 一括置換 | Phase 7 |
+| "Not needed" / "What is this?" | Delete immediately | 5 |
+| "More detail" / "Unclear" | Add paragraph explanation | 3 |
+| "Differs from implementation" | Re-check code | 4 |
+| "Policy differs" / "Contradicts past discussion" | Trace past discussion, revert to agreed-on plan | 4 |
+| "Not in template" | Delete that section | 5 |
+| "Mixed style" / "Units inconsistent" | Bulk replace | 7 |
 
-## 書き直し回数の見積もり
+## Rewrite Count Estimates
 
-| 初期ドラフトの状態 | 想定書き直し回数 |
+| Initial draft state | Expected rewrite count |
 |---|---|
-| 軽量テンプレ準拠でドラフト | 3〜5 commits |
-| フルテンプレ準拠でドラフト | 5〜10 commits |
-| 自由形式・経緯記述あり | 20+ commits（Phase 2 全面書き直し必須） |
-| 方針未確定でフルテンプレ着手 | 50+ commits（Phase 8 リセット複数回） |
+| Lightweight template-compliant draft | 3–5 commits |
+| Full template-compliant draft | 5–10 commits |
+| Free-form with background narratives | 20+ commits (Phase 2 full rewrite required) |
+| Full template started before policy confirmed | 50+ commits (multiple Phase 8 resets) |
 
-→ **初期ドラフト時点でテンプレ準拠を意識すると後工程の往復が激減する**。方針未確定なら軽量版で始めて確定後にフル版へ昇格する。
+**Template compliance at initial draft dramatically reduces back-and-forth.** Start lightweight if policy is unsettled; upgrade to full version after confirmation.
 
-## 効率化のための事前準備
+## Pre-work to Reduce Rewrite Count
 
-書き直し回数を減らすために初稿で守る:
+Follow these at first draft to minimize iterations:
 
-1. **Phase 1 で方針を固める**: PRD・過去議論・朝会ログを全読してから書き始める
-2. **テンプレ準拠で初稿を書く**: 自由形式は Phase 2 の全面書き直しを誘発
-3. **Phase 3-4 を自分で先に実行**: 自レビュー＋コード突合をしてからレビュー依頼
-4. **方針転換が予感されたら軽量版で書く**: フル版を捨てるのは精神的コストが高い
-5. **削除候補リストを意識する**: `../guidelines/writing/design-doc-protocol.md` の「アンチパターン」「セルフチェック 18」を参照
+1. **Fix policy in Phase 1**: Read PRD / past discussions / meeting notes fully before writing
+2. **Start template-compliant**: Free-form triggers Phase 2 full rewrite
+3. **Run Phases 3-4 yourself first**: Self-review + code reconciliation before requesting review
+4. **Write lightweight if pivot is anticipated**: Discarding a full draft has high psychological cost
+5. **Keep deletion candidates in mind**: See `../guidelines/writing/design-doc-protocol.md` "Anti-patterns" / "Self-check 18"
 
-## 関連
+## Related
 
-- `../guidelines/writing/design-doc-protocol.md` — DD 原則・アンチパターン・テンプレ選択・セルフチェック (静的ガイド)
-- `../guidelines/writing/PRINCIPLES.md` — 共通文章原則 (4 問・媒体別構造)
-- `decision-quality-checklist.md` — 意思決定品質の 5 問チェック（Phase 1 で適用）
-- `review-patterns-universal.md` — レビュー指摘の汎用パターン
+- `../guidelines/writing/design-doc-protocol.md` — DD principles / anti-patterns / template selection / self-check (static guide)
+- `../guidelines/writing/PRINCIPLES.md` — common writing principles (4 questions / medium-specific structure)
+- `decision-quality-checklist.md` — 5-question decision quality check (apply in Phase 1)
+- `review-patterns-universal.md` — universal review finding patterns

@@ -1,13 +1,13 @@
-# P1 user-prompt-submit.sh 強化 - テスト結果
+# P1 user-prompt-submit.sh Enhancement - Test Results
 
-## 実装完了日
+## Implementation Date
 2026-01-21
 
-## 変更サマリー
+## Change Summary
 
-### 追加機能
-1. **ファイルパス検出** (10パターン)
-   - Go言語 (`.go`)
+### Added Features
+1. **File path detection** (10 patterns)
+   - Go (`.go`)
    - TypeScript (`.ts`, `.tsx`)
    - React/Next.js (`pages/`, `components/`)
    - Dockerfile
@@ -16,118 +16,118 @@
    - gRPC/Protobuf (`.proto`)
    - Tailwind (`tailwind.config.js/ts`)
    - OpenAPI (`openapi.yaml`, `swagger.yaml`)
-   - テストファイル (`_test.go`, `.test.ts`, `.spec.ts`)
+   - Test files (`_test.go`, `.test.ts`, `.spec.ts`)
 
-2. **エラーログ検出** (6パターン)
-   - Docker接続エラー ("Cannot connect to the Docker daemon")
-   - Kubernetes Pod失敗 ("CrashLoopBackOff", "ImagePullBackOff")
-   - Terraform実行エラー ("Error acquiring state lock")
-   - TypeScript型エラー ("Property does not exist")
-   - Go言語エラー ("undefined:")
-   - セキュリティ関連 ("CVE-", "vulnerability", "XSS", "CSRF")
+2. **Error log detection** (6 patterns)
+   - Docker connection error ("Cannot connect to the Docker daemon")
+   - Kubernetes Pod failure ("CrashLoopBackOff", "ImagePullBackOff")
+   - Terraform execution error ("Error acquiring state lock")
+   - TypeScript type error ("Property does not exist")
+   - Go error ("undefined:")
+   - Security-related ("CVE-", "vulnerability", "XSS", "CSRF")
 
-3. **Git状態検出** (6パターン)
-   - ブランチ名からタスク推論
+3. **Git state detection** (6 patterns)
+   - Infer task from branch name
    - `feature/api` → api-design
    - `feature/ui` → react-best-practices
    - `fix/*` → security-error-review
    - `refactor/*` → code-quality-review + clean-architecture-ddd
    - `test/*` → docs-test-review
 
-4. **階層的検出ロジック**
-   - 優先度1: ファイルパス検出
-   - 優先度2: プロンプトキーワード検出
-   - 優先度3: エラーログ検出
-   - 優先度4: Git状態検出
+4. **Hierarchical detection logic**
+   - Priority 1: file path detection
+   - Priority 2: prompt keyword detection
+   - Priority 3: error log detection
+   - Priority 4: git state detection
 
-5. **重複排除・ソート機能**
-   - 連想配列でスキル/言語の重複排除
-   - アルファベット順ソート
+5. **Deduplication and sorting**
+   - Associative array for skill/language deduplication
+   - Alphabetical sort
 
-## テスト結果
+## Test Results
 
-### ✅ 成功テストケース (10/10)
+### Successful test cases (10/10)
 
-| # | テストケース | プロンプト | 検出結果 |
-|---|-------------|-----------|---------|
-| 1 | Go言語検出 | "Go言語でAPIを実装" | `golang`, `go-backend` |
-| 2 | Dockerエラー | "Cannot connect to the Docker daemon" | `docker-troubleshoot`, `dockerfile-best-practices` |
-| 3 | Kubernetes Pod失敗 | "CrashLoopBackOff エラー" | `kubernetes`, `security-error-review` |
-| 4 | TypeScript型エラー | "Property does not exist on type" | `typescript-backend` |
-| 5 | Go + API設計 | "Go言語でREST APIを設計" | `golang`, `api-design`, `go-backend` |
-| 6 | React + テスト | "Reactコンポーネントのテストを追加" | `react`, `docs-test-review`, `react-best-practices` |
-| 7 | CVE脆弱性 | "CVE-2024-1234 の対応が必要" | `security-error-review` |
-| 8 | 検出なし | "今日の天気はどうですか？" | (空出力) ✅ |
-| 9 | シンタックスチェック | `bash -n` | エラーなし ✅ |
-| 10 | JSON出力形式 | 全テスト | 正しいJSON形式 ✅ |
+| # | Test case | Prompt | Detection result |
+|---|-----------|--------|-----------------|
+| 1 | Go detection | "Implement API in Go" | `golang`, `go-backend` |
+| 2 | Docker error | "Cannot connect to the Docker daemon" | `docker-troubleshoot`, `dockerfile-best-practices` |
+| 3 | Kubernetes Pod failure | "CrashLoopBackOff error" | `kubernetes`, `security-error-review` |
+| 4 | TypeScript type error | "Property does not exist on type" | `typescript-backend` |
+| 5 | Go + API design | "Design REST API in Go" | `golang`, `api-design`, `go-backend` |
+| 6 | React + testing | "Add tests for React component" | `react`, `docs-test-review`, `react-best-practices` |
+| 7 | CVE vulnerability | "CVE-2024-1234 response needed" | `security-error-review` |
+| 8 | No detection | "What is the weather today?" | (empty output) |
+| 9 | Syntax check | `bash -n` | No errors |
+| 10 | JSON output format | All tests | Correct JSON format |
 
-### 検出パターン数
+### Detection pattern counts
 
-| カテゴリ | 既存 | 新規 | 合計 |
-|---------|:----:|:----:|:----:|
-| ファイルパス | 0 | 10 | **10** |
-| キーワード | 5 | 8 | **13** |
-| エラーログ | 0 | 6 | **6** |
-| Git状態 | 0 | 6 | **6** |
-| **総計** | **5** | **30** | **35** |
+| Category | Before | Added | Total |
+|----------|:------:|:-----:|:-----:|
+| File paths | 0 | 10 | **10** |
+| Keywords | 5 | 8 | **13** |
+| Error logs | 0 | 6 | **6** |
+| Git state | 0 | 6 | **6** |
+| **Total** | **5** | **30** | **35** |
 
-### 精度向上予測
+### Accuracy improvement projection
 
-- **既存**: キーワード検出のみ（5パターン） → 約70%精度
-- **強化後**: 35パターン（7倍増） → **約90%精度目標達成見込み**
+- **Before**: keyword detection only (5 patterns) → ~70% accuracy
+- **After**: 35 patterns (7× increase) → **~90% accuracy target achievable**
 
-## コード品質
+## Code Quality
 
-### ✅ チェック項目
-- [x] シンタックスエラーなし (`bash -n`)
-- [x] jq依存性チェック実装済み
-- [x] 関数化（可読性向上）
-- [x] 重複排除（連想配列）
-- [x] トークン節約（検出なし時は空出力）
-- [x] 後方互換性維持（JSON形式）
+### Checklist
+- [x] No syntax errors (`bash -n`)
+- [x] jq dependency check implemented
+- [x] Functionalized (readability)
+- [x] Deduplication (associative array)
+- [x] Token savings (empty output when no detection)
+- [x] Backward compatibility maintained (JSON format)
 
-### 実装パターン
+### Implementation patterns
 ```bash
-# 連想配列で重複排除
+# Deduplication via associative array
 declare -A DETECTED_LANGS_MAP
 declare -A DETECTED_SKILLS_MAP
 
-# 関数化
+# Functions
 detect_from_files()
 detect_from_keywords()
 detect_from_errors()
 detect_from_git_state()
 
-# 階層的実行
-detect_from_files      # 優先度1
-detect_from_keywords   # 優先度2
-detect_from_errors     # 優先度3
-detect_from_git_state  # 優先度4
+# Hierarchical execution
+detect_from_files      # priority 1
+detect_from_keywords   # priority 2
+detect_from_errors     # priority 3
+detect_from_git_state  # priority 4
 ```
 
-## 今後の改善案
+## Future Improvements
 
-### Phase 2 (任意)
-1. **機械学習統合**: プロンプト埋め込みベクトルでスキル推論
-2. **履歴学習**: 過去の成功パターンから推論精度向上
-3. **コンテキスト分析**: ファイル内容（コメント・TODO）から検出
-4. **パフォーマンス**: 検出ロジックの並列化
+### Phase 2 (optional)
+1. **ML integration**: skill inference via prompt embedding vectors
+2. **History learning**: improve inference accuracy from past success patterns
+3. **Context analysis**: detection from file contents (comments / TODOs)
+4. **Performance**: parallelize detection logic
 
-### Phase 3 (長期)
-1. **A/Bテスト**: 推奨スキルの適用率測定
-2. **フィードバックループ**: ユーザーがスキルを変更した場合の学習
-3. **統計ダッシュボード**: 検出精度の可視化
+### Phase 3 (long-term)
+1. **A/B testing**: measure skill recommendation adoption rate
+2. **Feedback loop**: learn when user changes suggested skill
+3. **Statistics dashboard**: visualize detection accuracy
 
-## 結論
+## Conclusion
 
-✅ **P1タスク完了**
-- 検出パターン: 5 → 35 (7倍増)
-- 精度目標: 70% → 90% (達成見込み)
-- コード品質: シンタックスチェック通過
-- 後方互換性: 維持
+**P1 task complete**
+- Detection patterns: 5 → 35 (7× increase)
+- Accuracy target: 70% → 90% (achievable)
+- Code quality: syntax check passed
+- Backward compatibility: maintained
 
 ---
 
-**実装者**: dev4 (General)
-**実装日**: 2026-01-21
-**検証済み**: シンタックスチェック + 手動テスト10ケース
+**Implementer**: dev4 (General)
+**Date**: 2026-01-21
+**Verified**: Syntax check + 10 manual test cases

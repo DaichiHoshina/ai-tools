@@ -1,50 +1,50 @@
-# CodeRabbit Claude Code プラグイン
+# CodeRabbit Claude Code Plugin
 
-## 構成
+## Configuration
 
-| 項目 | 値 |
-|------|-----|
+| Item | Value |
+|------|-------|
 | marketplace | `claude-plugins-official` |
-| ホスト | `coderabbitai/claude-plugin` |
+| host | `coderabbitai/claude-plugin` |
 | CLI | `~/.local/bin/coderabbit` (v0.4.3) |
-| プラグインバージョン | v1.1.0 |
+| plugin version | v1.1.0 |
 
-## セットアップ
+## Setup
 
 ```bash
-# インストール
+# Install
 claude plugin install coderabbit@claude-plugins-official
 
-# 認証（GitHub 連携）
+# Authenticate (GitHub integration)
 coderabbit auth login
 ```
 
-## コマンド
+## Commands
 
-| コマンド | 対象 |
-|---------|------|
-| `/coderabbit:review` | 全変更をレビュー |
-| `/coderabbit:review committed` | コミット済み変更のみ |
-| `/coderabbit:review uncommitted` | 未コミット変更のみ |
-| `/coderabbit:review --base main` | main との差分比較 |
+| Command | Target |
+|---------|--------|
+| `/coderabbit:review` | All changes |
+| `/coderabbit:review committed` | Committed changes only |
+| `/coderabbit:review uncommitted` | Uncommitted changes only |
+| `/coderabbit:review --base main` | Diff against main |
 
-自然言語「変更箇所のレビュー」でも起動する。
+Also triggered by natural language "review the changes".
 
-## 料金（2026-04 時点）
+## Pricing (as of 2026-04)
 
-| プラン | 内容 |
-|--------|------|
-| Free | public / private 無制限、PR 要約、IDE レビュー |
-| OSS public repo | 完全無料（永続） |
-| Pro 試用 | 14 日間（クレジットカード不要） |
-| Pro | $24/user/月 |
-| Pro Plus | $48/user/月 |
-| Enterprise | 要相談 |
+| Plan | Details |
+|------|---------|
+| Free | Unlimited public/private, PR summary, IDE review |
+| OSS public repo | Fully free (permanent) |
+| Pro trial | 14 days (no credit card required) |
+| Pro | $24/user/month |
+| Pro Plus | $48/user/month |
+| Enterprise | Contact sales |
 
-## ドキュメント
+## Docs
 
 https://docs.coderabbit.ai/cli/claude-code-integration
 
-## 注意
+## Note
 
-`claude-plugins-official` marketplace を削除すると CodeRabbit プラグインは削除されない（別途管理されているため）。詳細は `references/plugin-marketplace-caveats.md` 参照。
+Removing the `claude-plugins-official` marketplace does not remove the CodeRabbit plugin (managed separately). See `references/plugin-marketplace-caveats.md`.

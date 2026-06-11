@@ -5,7 +5,7 @@
 Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/flow`).
 
 | Resource type | Auto-fired | Notes |
-|-----------|---------|------|
+|---------------|-----------|-------|
 | **rule** | Auto-applied at launch | Loaded from `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md`, `claude-code/CLAUDE.md`. Project `.claude/rules/*.md` added if present. No explicit invoke. |
 | **hook** | Auto-fired via settings.json | PreToolUse, PostToolUse, SessionStart, UserPromptSubmit, Stop, Notification. **Same across all commands.** No explicit invoke. |
 | **agent** | Via Task tool | Parent launches with `Task(subagent_type)`: po-agent, manager-agent, developer-agent, reviewer-agent. |
@@ -19,8 +19,8 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 ### /dev - Implementation mode
 
 | Resource | Details |
-|---------|-----------|
-| **guideline** | **Required core**: `common/code-quality-design.md` / Conditional: `languages/typescript.md` (TypeScript detected), `languages/nextjs-react.md` (Next.js detected), `languages/golang.md` (Go detected) |
+|----------|---------|
+| **guideline** | **Required core**: `common/code-quality-design.md` / Conditional: `languages/typescript.md` (TypeScript), `languages/nextjs-react.md` (Next.js), `languages/golang.md` (Go) |
 | **skill** | UI dev: `ui-skills`, Backend dev: `backend-dev`, Common: `cleanup-enforcement` |
 | **agent** | None (direct execution, no Agent Team) |
 | **hook** | Common across all commands (see Legend) |
@@ -33,8 +33,8 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 ### /plan - Design and planning mode
 
 | Resource | Details |
-|---------|-----------|
-| **guideline** | **Required**: `design/clean-architecture.md`, `design/domain-driven-design.md` / Conditional: `infrastructure/terraform.md` (Terraform detected), `languages/golang.md` (Go detected), etc. |
+|----------|---------|
+| **guideline** | **Required**: `design/clean-architecture.md`, `design/domain-driven-design.md` / Conditional: `infrastructure/terraform.md` (Terraform), `languages/golang.md` (Go), etc. |
 | **skill** | Recommended: `clean-architecture-ddd`, `api-design`, `microservices-monorepo` (when detected), `load-guidelines`, `terraform` (IaC planning) |
 | **agent** | po-agent (for complex planning) |
 | **hook** | Common across all commands (see Legend) |
@@ -47,7 +47,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 ### /review - Review mode
 
 | Resource | Details |
-|---------|-----------|
+|----------|---------|
 | **guideline** | **Required**: `common/code-quality-design.md` / Conditional: `load-guidelines` auto-loads on language/framework detection |
 | **skill** | Recommended: `comprehensive-review` (main), Conditional: `uiux-review` (UI), `cleanup-enforcement` |
 | **agent** | reviewer-agent (via PO/Manager path), pr-review-toolkit:* 6 types (with `--deep` option) |
@@ -61,10 +61,10 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 ### /flow - Automated workflow execution
 
 | Resource | Details |
-|---------|-----------|
-| **guideline** | Loads guideline of the matched skill after task-type determination (e.g. RCA determination loads `root-cause` skill guidelines) |
-| **skill** | Dynamically selected by task type. Examples: design consultation → `clean-architecture-ddd`, incident → `incident-response`, root cause → `root-cause`, data analysis → `data-analysis`, IaC → `terraform` |
-| **agent** | po-agent (Step 1: design consultation) → manager-agent (Step 2: schedule creation) → developer-agent×N (Step 3: parallel implementation) → reviewer-agent (final review) |
+|----------|---------|
+| **guideline** | Loads guideline of matched skill after task-type determination (e.g., RCA loads `root-cause` skill guidelines) |
+| **skill** | Dynamically selected by task type: design consultation → `clean-architecture-ddd`, incident → `incident-response`, root cause → `root-cause`, data analysis → `data-analysis`, IaC → `terraform` |
+| **agent** | po-agent (Step 1) → manager-agent (Step 2) → developer-agent×N (Step 3) → reviewer-agent (final review) |
 | **hook** | Common across all commands (see Legend) |
 | **rule** | genshijin mode, markdown rules, git merge prohibition, root cause analysis rules (auto-applied) |
 
@@ -72,20 +72,18 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 
 ---
 
-## Verification procedures
+## Verification Procedures
 
 ### Static verification
 
 **Link validity (check all references from command-resource-map.md exist)**:
 
 ```bash
-# Extract file paths in inline code format and verify existence (claude-code/ as root)
-# Target: relative paths containing directory only (skip standalone filenames / glob/brace/regex literals)
 grep -oE '`[^`]+\.md`' claude-code/references/command-resource-map.md | \
   sed 's/`//g' | sort -u | while read p; do
-    [[ "$p" != */* ]] && continue          # Skip no-directory entries (descriptive terms)
-    [[ "$p" =~ []*{}+[] ]] && continue     # Skip glob/brace/regex literals
-    [[ "$p" =~ ^(~|/) ]] && continue       # Skip absolute paths / home
+    [[ "$p" != */* ]] && continue
+    [[ "$p" =~ []*{}+[] ]] && continue
+    [[ "$p" =~ ^(~|/) ]] && continue
     if [[ "$p" =~ ^claude-code/ ]]; then
       target="$p"
     elif [[ "$p" =~ ^(common|design|languages|infrastructure|backend|operations)/ ]]; then
@@ -120,7 +118,7 @@ wc -l claude-code/skills/load-guidelines/skill.md
 
 ---
 
-## Related references
+## Related References
 
 - `references/design-phase-flow.md` - Design phase transitions (brainstorm→prd→design-doc→plan)
 - `references/natural-language-triggers.md` - Full natural language trigger list

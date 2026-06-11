@@ -1,44 +1,44 @@
-# Private 設定の保管規約
+# Private Config Storage Convention
 
-個人/プロジェクト固有の commands・skills・hooks を public repo に含めず、`~/.claude/` 直置きで運用するための規約。
+Convention for running personal/project-specific commands, skills, and hooks directly under `~/.claude/` without including them in the public repo.
 
-## 動機
+## Motivation
 
-- public repo (`ai-tools`) は GitHub 公開・履歴永続。社名・案件名・コードネーム等の機密文字列は混入させない
-- プロジェクト固有のコマンドやスキルは個人開発フローに必須だが、汎用化できないものを repo に置くと汚染される
-- 既存の `~/.claude/references-private/` 運用を commands/skills/hooks に拡張
+- The public repo (`ai-tools`) is on GitHub with permanent history. Do not mix in confidential strings like company names, project names, or codenames
+- Project-specific commands and skills are essential for personal workflows, but non-generalizable ones pollute the repo
+- Extends the existing `~/.claude/references-private/` convention to commands/skills/hooks
 
-## 命名規約
+## Naming Convention
 
-| 用途 | 配置先 | 例 |
-|------|-------|-----|
-| 個人専用 command | `~/.claude/commands/private-*.md` | `private-deploy-staging.md` |
-| 個人専用 skill | `~/.claude/skills/private-*/` | `private-domain-rules/` |
-| 個人専用 hook | `~/.claude/hooks/private-*.sh` | `private-postedit-checker.sh` |
-| 同等代替 | `local-*` prefix も同じ扱い | `local-foo.md` |
+| Use | Location | Example |
+|-----|----------|---------|
+| Personal command | `~/.claude/commands/private-*.md` | `private-deploy-staging.md` |
+| Personal skill | `~/.claude/skills/private-*/` | `private-domain-rules/` |
+| Personal hook | `~/.claude/hooks/private-*.sh` | `private-postedit-checker.sh` |
+| Equivalent alternative | `local-*` prefix treated the same | `local-foo.md` |
 
-**禁止**: public repo (`ai-tools`) に `private-*` `local-*` prefix のファイル/ディレクトリを置かない。プロジェクト名・社名・コードネーム等の文字列も含めない（コメント・コミットメッセージ含む）。
+**Prohibited**: Do not place `private-*` / `local-*` prefixed files/directories in the public repo (`ai-tools`). Do not include project names, company names, or codenames anywhere (including comments and commit messages).
 
-## 保護メカニズム（install.sh / sync.sh）
+## Protection Mechanism (install.sh / sync.sh)
 
-`private-*` `local-*` prefix を破壊的同期から保護する仕組みが入っている:
+`private-*` and `local-*` prefixes are protected from destructive sync:
 
-- **install.sh**: skills/hooks の上書き時に `rsync --exclude='private-*' --exclude='local-*'` で除外
-- **sync.sh sync_to_local**: 全ディレクトリで `preserve_private` → `rm -rf` → `cp -r` → `restore_private` の退避パターン
-- **sync.sh sync_from_local**: rsync `--exclude` で repo への漏洩防止（最重要）
+- **install.sh**: Uses `rsync --exclude='private-*' --exclude='local-*'` when overwriting skills/hooks
+- **sync.sh sync_to_local**: `preserve_private` → `rm -rf` → `cp -r` → `restore_private` evacuation pattern for all directories
+- **sync.sh sync_from_local**: `rsync --exclude` prevents leakage to repo (most critical)
 
-新規ディレクトリを SYNC_ITEMS / install 対象に追加する際は、同じ保護を継承すること。
+When adding new directories to SYNC_ITEMS / install targets, inherit the same protection.
 
-## 想定運用フロー
+## Intended Workflow
 
-1. プロジェクト固有のコマンドが必要になる
-2. `~/.claude/commands/private-{purpose}.md` を直接作成（repo の `commands/` には作らない）
-3. Claude Code が自動で読み込む
-4. `install.sh` / `sync.sh` 実行しても保護機構により消えない
-5. バックアップは個人責任（repo 管理外）。気になるなら別 private repo or tar で保管
+1. A project-specific command becomes necessary
+2. Create `~/.claude/commands/private-{purpose}.md` directly (don't create in repo `commands/`)
+3. Claude Code loads it automatically
+4. Protection mechanism prevents deletion when `install.sh` / `sync.sh` runs
+5. Backup is the owner's responsibility (outside repo management). Use a separate private repo or tar if desired
 
-## アンチパターン
+## Anti-Patterns
 
-- repo 内に `commands/private-foo.md` 置いて `.gitignore` で除外 → 誤コミット事故リスク
-- repo 内のコメントにプロジェクト名記載 → grep で発見可能、漏洩
-- 保護機構の実装にプロジェクト名 hardcode → public repo に文字列残る（汎用 prefix で実装すること）
+- Place `commands/private-foo.md` inside repo and exclude with `.gitignore` → accidental commit risk
+- Write project name in repo comments → discoverable by grep, potential leak
+- Hardcode project names in protection mechanism implementation → string remains in public repo (implement with generic prefix)
