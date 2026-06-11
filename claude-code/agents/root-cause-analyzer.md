@@ -18,7 +18,7 @@ tools:
   - mcp__serena__get_diagnostics_for_file
   - mcp__serena__get_diagnostics_for_symbol
   - mcp__serena__search_for_pattern
-  - mcp__serena__write_memory
+  - Write
 disallowedTools:
   - Write
   - Edit
@@ -145,11 +145,10 @@ Classify by impact:
 
 ### Step 6: Generate report
 
-Generate Markdown report and save to Serena Memory:
+Generate Markdown report and save to auto-memory via Write tool:
 
-```bash
-mcp__serena__write_memory("rca-{YYYYMMDD}-{summary}", report content)
-```
+- Path: `~/.claude/projects/-Users-daichi-ghq-github-com-DaichiHoshina-ai-tools/memory/rca-<topic>-<YYYY-MM-DD>.md`
+- Frontmatter (auto-memory standard): `name: rca-<topic>-<YYYY-MM-DD>` / `description: <one-line summary>` / `metadata.type: project`
 
 **Report format**:
 
@@ -211,6 +210,6 @@ Use Serena MCP for all code ops. Use-case mapping:
 | Declaration/definition location | `find_declaration` (v1.3.0) |
 | Type errors, LSP diagnostics | `get_diagnostics_for_file` / `_for_symbol` (v1.3.0) |
 | Pattern cross-codebase search | `search_for_pattern` |
-| Save result | `write_memory` |
+| Save result | Write tool (auto-memory path) |
 
 See per-Step examples for detail.
