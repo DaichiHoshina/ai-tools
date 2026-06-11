@@ -1,16 +1,18 @@
 ---
-allowed-tools: Read, mcp__serena__*
-description: Restore context - reload CLAUDE.md after compaction to restore session context
+allowed-tools: Read, Bash
+description: Restore context - reload CLAUDE.md + auto-memory after compaction
 effort: low
 ---
 
 # /reload - Context Restore
 
-Use after compaction (conversation compression) or when saying "continue". Restore context from both CLAUDE.md + Serena memory.
+Use after compaction (conversation compression) or when saying "continue". Restore context from CLAUDE.md + Claude Code auto-memory.
 
-> **Automation**: `/compact` execution auto-runs `post-compact-reload.sh` (SessionStart compact hook) to execute this restore. Manual `/reload` only needed outside compaction.
+> **Automation**: `/compact` 実行で `post-compact-reload.sh` (PostCompact hook) が自動 trigger するため、手動 `/reload` は compact 以外の context 復元時のみ必要。
 
-**vs session-start.sh**: session-start runs auto at session start with Serena state check + memory load. `/reload` is **post-compaction re-restore** only.
+> **vs session-start.sh**: session-start runs auto at session start with memory load. `/reload` is **post-compaction re-restore** only.
+
+> **CLAUDE.md 規約準拠**: Serena `.serena/memories/` は read/write 禁止。auto-memory (`~/.claude/projects/.../memory/`) のみ使用。
 
 ## Usage
 
@@ -20,38 +22,38 @@ Use after compaction (conversation compression) or when saying "continue". Resto
 
 ## Task Execution
 
-Execute all steps below **automatically**:
+以下を **自動実行**:
 
 ### 1. Load CLAUDE.md
 
-Read `$HOME/.claude/CLAUDE.md`, understand instructions.
+`Read` で `$HOME/.claude/CLAUDE.md` を読み込み、指示を理解する。
 
-### 2. Restore Serena Memory (critical)
+### 2. Restore auto-memory
 
-```
-mcp__serena__list_memories
-→ 1. load latest 1 compact-restore-* memory (top priority)
-→ 2. if today has work-context-*, load it
-→ 3. load project-specific memory (if exists)
-→ 4. after review, delete loaded compact-restore-* (prevent accumulation)
+```text
+1. ls ~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/compact-restore-*.md
+   → 最新 mtime 1 件を Read (top priority)
+2. 当日の work-context-*.md があれば追加 Read
+3. project 固有 memory (style_and_conventions.md 等) があれば Read
+4. 読込済 compact-restore-* を rm で削除 (蓄積防止)
 ```
 
 ### 3. Load Project CLAUDE.md
 
-If cwd has `CLAUDE.md` or `.claude/rules/`, load it.
+cwd に `CLAUDE.md` / `.claude/rules/` あれば Read。
 
 ### 4. Restore Summary
 
-Report restored info concisely:
-- list of loaded memories
+復元内容を chat に summary 報告:
+- 読込 memory 一覧
 - previous task state (from compact-restore)
-- what to do next
+- 次アクション
 
 ## "Continue" Alternative
 
-Instead of saying "continue", use `/reload` to:
-- prevent post-compaction context loss
-- fully restore work state from Serena memory
-- resume prior work uninterrupted
+"continue" の代わりに `/reload` を使う:
+- post-compaction context loss 防止
+- auto-memory から full restore
+- 中断作業の即時再開
 
 ARGUMENTS: $ARGUMENTS

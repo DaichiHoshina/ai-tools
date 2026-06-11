@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-# PostCompact Reload Hook - compact後の自動コンテキスト復元
-# PostCompact イベントで発火（v2.1.76+公式フック）
-# compact後に /reload 相当の処理を自動実行するよう指示
-# git/ファイル情報を直接埋め込み、Serena MCP不要でも最低限の復元が可能
+# PostCompact Reload Hook - compact 後の自動コンテキスト復元
+# PostCompact イベントで発火 (v2.1.76+ 公式 hook)
+# compact 後に /reload 相当の処理を自動実行するよう AI に指示
+# git / file 情報を直接埋め込み、auto-memory 不在でも最低限の復元が可能
 #
-# 状態ファイル: ${HOME}/.claude/.compact-serena-state
-#   pre-compact.sh が書いた "connected"/"skipped" を読み取り、
-#   post 側の二重 health check を回避する。読んだら削除する契約。
+# 設計方針 (2026-06-11 修正):
+#   - Serena MCP は使わない (pre-compact 側で auto-memory に統一済)
+#   - 復元元: ~/.claude/projects/.../memory/compact-restore-*.md (Read tool で AI が読む)
+#
+# 状態 file: ${HOME}/.claude/.compact-memory-state
+#   pre-compact.sh が "ready:<timestamp>" を書く。読んだら削除する契約。
 
 set -euo pipefail
 
@@ -14,25 +17,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/hook-utils.sh
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 
-# ICON_* は hook-utils.sh で定義済み（source 経由で参照）
-
 require_jq
 
-# JSON入力を消費（未使用だが読み捨て必要）
 cat > /dev/null
 
 NL=$'\n'
+MEMORY_DIR="${HOME}/.claude/projects/-Users-daichi-hoshina-ai-tools/memory"
 
-# --- Serena 状態読み取り（pre-compact.sh から引き継ぎ） ---------------
-STATE_FILE="${HOME}/.claude/.compact-serena-state"
-SERENA_STATE="unknown"
+# --- pre-compact から状態引継ぎ ----------------------------------------
+STATE_FILE="${HOME}/.claude/.compact-memory-state"
+MEMORY_STATE="unknown"
+TIMESTAMP=""
 if [ -f "${STATE_FILE}" ]; then
-  SERENA_STATE=$(cat "${STATE_FILE}" 2>/dev/null || echo "unknown")
+  STATE_RAW=$(cat "${STATE_FILE}" 2>/dev/null || echo "unknown")
   rm -f "${STATE_FILE}"
+  MEMORY_STATE="${STATE_RAW%%:*}"
+  TIMESTAMP="${STATE_RAW#*:}"
+  [ "${TIMESTAMP}" = "${STATE_RAW}" ] && TIMESTAMP=""
 fi
 
-# --- 静的コンテキスト収集（MCP不要）---
-# git 4 コマンドを tmpfile 経由で並列実行し fork 直列 wait を削減
+# --- 静的 context 収集 (file system のみ、MCP 不要) -------------------
 _TMP_DIR=$(mktemp -d)
 PROJECT_DIR=$(pwd)
 git branch --show-current      >"${_TMP_DIR}/branch"    2>/dev/null &
@@ -46,19 +50,35 @@ GIT_LOG=$(cat "${_TMP_DIR}/log"    2>/dev/null || echo "")
 RECENT_FILES=$(head -15 "${_TMP_DIR}/recent" 2>/dev/null || echo "")
 rm -rf "${_TMP_DIR}"
 
-case "${SERENA_STATE}" in
-  connected)
-    SYSTEM_MESSAGE="${ICON_SUCCESS} COMPACT完了 - コンテキスト自動復元"
-    ;;
-  skipped)
-    SYSTEM_MESSAGE="${ICON_WARN} COMPACT完了（強行モード） - Serena 復元スキップ"
+# --- compact-restore-* の最新 file 探索 -------------------------------
+RESTORE_FILE=""
+if [ -d "${MEMORY_DIR}" ]; then
+  # ready 状態かつ timestamp あれば exact path、なければ最新 mtime
+  if [ "${MEMORY_STATE}" = "ready" ] && [ -n "${TIMESTAMP}" ]; then
+    CANDIDATE="${MEMORY_DIR}/compact-restore-${TIMESTAMP}.md"
+    [ -f "${CANDIDATE}" ] && RESTORE_FILE="${CANDIDATE}"
+  fi
+  if [ -z "${RESTORE_FILE}" ]; then
+    # find で最新 compact-restore-*.md を取得 (BSD/GNU 両対応の sort)
+    RESTORE_FILE=$(find "${MEMORY_DIR}" -maxdepth 1 -name 'compact-restore-*.md' -type f 2>/dev/null \
+      | sort -r | head -1)
+  fi
+fi
+
+case "${MEMORY_STATE}" in
+  ready)
+    if [ -n "${RESTORE_FILE}" ]; then
+      SYSTEM_MESSAGE="${ICON_SUCCESS} COMPACT完了 - auto-memory 自動復元"
+    else
+      SYSTEM_MESSAGE="${ICON_WARN} COMPACT完了 - 保存指示は出たが file 不在、git 情報のみ"
+    fi
     ;;
   *)
-    SYSTEM_MESSAGE="${ICON_WARN} COMPACT完了 - 状態不明のため git 情報のみ復元"
+    SYSTEM_MESSAGE="${ICON_WARN} COMPACT完了 - 状態不明、git 情報のみ復元"
     ;;
 esac
 
-ADDITIONAL_CONTEXT="## 現在のプロジェクト状態（hook収集済み）${NL}${NL}"
+ADDITIONAL_CONTEXT="## 現在のプロジェクト状態（hook 収集済）${NL}${NL}"
 ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **ディレクトリ**: ${PROJECT_DIR}${NL}"
 ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **ブランチ**: ${GIT_BRANCH}${NL}"
 
@@ -67,34 +87,25 @@ if [ -n "${GIT_STATUS}" ]; then
 fi
 
 if [ -n "${RECENT_FILES}" ]; then
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **直近の変更ファイル**:${NL}\`\`\`${NL}${RECENT_FILES}${NL}\`\`\`${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **直近変更 file**:${NL}\`\`\`${NL}${RECENT_FILES}${NL}\`\`\`${NL}"
 fi
 
 if [ -n "${GIT_LOG}" ]; then
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **直近コミット**:${NL}\`\`\`${NL}${GIT_LOG}${NL}\`\`\`${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **直近 commit**:${NL}\`\`\`${NL}${GIT_LOG}${NL}\`\`\`${NL}"
 fi
 
-case "${SERENA_STATE}" in
-  connected)
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}${NL}## Serena memory復元（自動実行）${NL}${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}1. \`mcp__serena__list_memories\` でメモリ一覧を取得${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. 最新の \`compact-restore-*\` メモリを読み込む${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. 当日の \`work-context-*\` メモリがあれば読み込む${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}4. 読み込んだ \`compact-restore-*\` は削除（蓄積防止）${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}5. 復元した情報のサマリーをユーザーに報告${NL}${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}ユーザーの操作なしで自動実行してください。"
-    ;;
-  skipped)
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}${NL}## ${ICON_WARN} 強行モードで compact 実行${NL}${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}CLAUDE_SKIP_COMPACT_SERENA_CHECK=1 のため Serena 保存をスキップして compact を実行。${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}上記 git 情報のみで作業継続し、失われた文脈はユーザーに確認すること。"
-    ;;
-  *)
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}${NL}## ${ICON_WARN} pre-compact hook 状態不明${NL}${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}pre-compact.sh の状態ファイルが存在しない。hook 連携失敗の可能性あり。${NL}"
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}git 情報のみで作業継続し、失われた文脈はユーザーに確認すること。"
-    ;;
-esac
+if [ -n "${RESTORE_FILE}" ]; then
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}${NL}## auto-memory 復元（自動実行）${NL}${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}1. **Read tool** で以下 file を読込:${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}   - \`${RESTORE_FILE}\`${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. 当日の \`work-context-*\` memory があれば追加 Read (任意)${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. 読込後、復元情報の summary を user に報告${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}4. 読込済 \`compact-restore-*\` file を削除（蓄積防止、\`rm\` via Bash）${NL}${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}user の操作なしで自動実行する。"
+else
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}${NL}## ${ICON_WARN} compact-restore file 不在${NL}${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}pre-compact の保存指示が失敗した可能性あり。git 情報のみで作業継続し、失われた文脈は user に確認する。"
+fi
 
 jq -n \
   --arg sm "${SYSTEM_MESSAGE}" \
