@@ -34,8 +34,8 @@ shadcn/uiは**コンポーネントライブラリではなく、再利用可能
 - Laravel、Vite、React Routerに対応
 - ルート設定を自動調整
 
-### Tailwind v4 & React 19プレビュー
-- Tailwind CSS v4の初回プレビュー実装
+### Tailwind v4 & React 19対応
+- Tailwind CSS v4実装
 - React 19サポート
 
 ### Next.js 16サポート
@@ -122,7 +122,7 @@ npx shadcn registry:mcp
 
 ---
 
-## エコシステム（2025年）
+## エコシステム（2026年）
 
 ### TanCN
 TanStack（Query、Table、Form）統合
