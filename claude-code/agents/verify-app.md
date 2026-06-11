@@ -5,6 +5,22 @@ model: sonnet
 color: green
 permissionMode: fast
 memory: project
+tools:
+  - Bash
+  - Read
+  - Grep
+  - Glob
+  - TaskCreate
+  - TaskUpdate
+  - TaskList
+  - mcp__serena__read_file
+  - mcp__serena__execute_shell_command
+disallowedTools:
+  - Write
+  - Edit
+  - MultiEdit
+  - WebSearch
+  - WebFetch
 ---
 
 # Verify-App Agent
