@@ -10,6 +10,9 @@ _HOOK_UTILS_LOADED=1
 
 set -euo pipefail
 
+# shellcheck source=../hooks/lib/thresholds.sh
+source "${BASH_SOURCE[0]%/*}/../hooks/lib/thresholds.sh"
+
 # -----------------------------------------------------------------------------
 # 共通アイコン (Nerd Fonts / Unicode)
 # 各hookでの重複定義と表記ブレ（ICON_WARN vs ICON_WARNING、✓ vs ✓）を解消。
@@ -283,7 +286,7 @@ _append_block_log() {
   if [[ -f "$log_file" ]]; then
     local fsize
     fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
-    if [[ "${fsize}" -gt 1048576 ]]; then
+    if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
     fi
   fi

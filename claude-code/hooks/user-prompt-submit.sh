@@ -29,7 +29,7 @@ require_jq
 input=$(cat)
 
 # 入力サイズ制限（1MB）
-if [ ${#input} -ge 1048576 ]; then
+if [ ${#input} -ge ${_TH_LOG_MAX_BYTES} ]; then
   echo '{"error":"Input too large (max 1MB)"}' >&2
   exit 1
 fi
@@ -61,7 +61,7 @@ _check_session_bloat() {
     return 0
   fi
 
-  # throttle check: 15分 (900秒) 以内なら skip
+  # throttle check: _TH_BLOAT_THROTTLE_S (15分) 以内なら skip
   local _BLOAT_FLAG="/tmp/claude_session_bloat_${session_id}_${date_today}"
   # EPOCHSECONDS は subshell/env 引き継ぎ依存で空になるケースがある
   # printf -v は bash 4.2+ builtin (fork ゼロ)
@@ -71,7 +71,7 @@ _check_session_bloat() {
     local _LAST_NOTIFIED
     read -r _LAST_NOTIFIED < "${_BLOAT_FLAG}" 2>/dev/null || _LAST_NOTIFIED="0"
     local _SINCE=$(( _NOW - ${_LAST_NOTIFIED:-0} ))
-    if (( _SINCE >= 0 && _SINCE < 900 )); then
+    if (( _SINCE >= 0 && _SINCE < _TH_BLOAT_THROTTLE_S )); then
       return 0
     fi
   fi
@@ -390,7 +390,7 @@ ${_OUTWARD_MODE_CTX}"
       mkdir -p "${_LOG_DIR}" 2>/dev/null || true
       if [[ -f "${_SIZE_LOG}" ]]; then
         _fsize=$(stat -f%z "${_SIZE_LOG}" 2>/dev/null || stat -c%s "${_SIZE_LOG}" 2>/dev/null || echo 0)
-        if [[ "${_fsize}" -gt 1048576 ]]; then
+        if [[ "${_fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
           mv "${_SIZE_LOG}" "${_SIZE_LOG}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
         fi
       fi

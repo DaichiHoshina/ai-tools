@@ -9,6 +9,9 @@ if [[ "${_JP_QUALITY_CHECK_LOADED:-}" == "1" ]]; then
 fi
 _JP_QUALITY_CHECK_LOADED=1
 
+# shellcheck source=../hooks/lib/thresholds.sh
+source "${BASH_SOURCE[0]%/*}/../hooks/lib/thresholds.sh"
+
 # ====================================
 # AI定型語 / カタカナ造語 block 関数
 # NG-DICTIONARY.md から動的抽出 → 外向き text に grep → hit で exit 2
@@ -33,7 +36,7 @@ _append_jp_quality_log() {
   if [[ -f "$log_file" ]]; then
     local fsize
     fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
-    if [[ "${fsize}" -gt 1048576 ]]; then
+    if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
     fi
   fi
@@ -144,7 +147,7 @@ _append_jp_quality_inject_log() {
   if [[ -f "$log_file" ]]; then
     local fsize
     fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
-    if [[ "${fsize}" -gt 1048576 ]]; then
+    if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
     fi
   fi
