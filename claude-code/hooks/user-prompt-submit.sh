@@ -195,17 +195,20 @@ fi
 # promptフィールド取得（<<< で fork 削減）
 prompt=$(jq -r '.prompt // empty' <<< "$input")
 
-# === /compact pre-save inject: /compact 検知時に marker 不在なら save 指示 ===
-# pre-compact.sh の decision:block は AI に届かず user 側 error 表示で止まるため、
-# user prompt 段階で /compact を検知して AI に「先に save しろ」と systemMessage で指示する。
-# AI がその場で Write tool で compact-restore-*.md を作る → user が再度 /compact で marker 検知して通常進行。
+# === compact 自然語 pre-save inject: AI に save 指示注入 ===
+# built-in /compact は user-prompt-submit を bypass して PreCompact 直行のため、
+# 自然語 "compact" / "コンパクト" / "save and compact" 等を trigger に AI 介入する。
+# Workflow: user が "compact" 打鍵 → AI が save 実行 → user に /compact を促す → user /compact → PreCompact が marker 検知して通常進行。
 _COMPACT_PRESAVE_MSG=""
-if [[ "${prompt}" =~ ^[[:space:]]*/compact([[:space:]]|$) ]]; then
+_prompt_lower_compact="${prompt,,}"
+if [[ "${_prompt_lower_compact}" =~ (^|[[:space:]])(compact|コンパクト)([[:space:]]|$) ]] \
+   || [[ "${_prompt_lower_compact}" == *"save and compact"* ]] \
+   || [[ "${_prompt_lower_compact}" == *"save して compact"* ]]; then
   _MEMORY_DIR="${HOME}/.claude/projects/-Users-daichi-hoshina-ai-tools/memory"
   if ! find "${_MEMORY_DIR}" -maxdepth 1 -name 'compact-restore-*.md' -type f -mmin -5 2>/dev/null | grep -q .; then
     _COMPACT_TS=$(date '+%Y%m%d_%H%M%S')
     _COMPACT_PATH="${_MEMORY_DIR}/compact-restore-${_COMPACT_TS}.md"
-    _COMPACT_PRESAVE_MSG="🔴 /compact 検知 + auto-memory save marker 不在。**最優先で即実行**: Write tool で \`${_COMPACT_PATH}\` に現在のタスク・編集中 file・残ステップを 7 field 形式で保存し、保存完了後に user に「memory save 完了。\`/compact\` を再実行してください」と明示すること。次の /compact で pre-compact.sh が marker を検知して通常進行する。"
+    _COMPACT_PRESAVE_MSG="🔴 compact 自然語検知 + auto-memory save marker 不在。**最優先で即実行**: Write tool で \`${_COMPACT_PATH}\` に現在のタスク・編集中 file・残ステップを 7 field 形式で保存し、保存完了後に user に「memory save 完了。\`/compact\` (slash command) を実行してください」と明示すること。次の /compact で pre-compact.sh が marker を検知して通常進行する。"
   fi
 fi
 
