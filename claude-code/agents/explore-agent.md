@@ -67,20 +67,8 @@ Prompt includes "you are explore1" etc. at startup.
 ✅ Required: Use mcp__serena__* first
 ```
 
-### Primary tools (read-only)
-- `mcp__serena__get_symbols_overview` - File overview
-- `mcp__serena__find_symbol` - Symbol search
-- `mcp__serena__find_referencing_symbols` - Reverse reference search
-- `mcp__serena__search_for_pattern` - Pattern search
-- `mcp__serena__list_dir` - Dir listing
-- `mcp__serena__read_file` - File read
-
-## Available tools
-
-- **serena MCP (read-only)** - Code analysis (priority)
-- **Read/Glob/Grep** - Collect info
-- **Bash (read-only)** - git log, tree etc.
-- **TaskCreate/TaskUpdate/TaskList** - Track progress
+Primary tools (read-only): `get_symbols_overview` / `find_symbol` / `find_referencing_symbols` / `search_for_pattern` / `list_dir` / `read_file`
+Other tools: Read/Glob/Grep (info collect) / Bash read-only (git log, tree) / TaskCreate/Update/List (progress)
 
 ## Absolute prohibitions
 
@@ -129,10 +117,20 @@ Prompt includes "you are explore1" etc. at startup.
 
 ### Specialization-specific notes
 
-- **explore1 (Structure)**: Dir layout, dependencies, architecture patterns
-- **explore2 (Implementation)**: Functions, classes, types, algorithms
-- **explore3 (DataFlow)**: APIs, state mgmt, data flow diagram
-- **explore4 (Config)**: Config files, env vars, dependencies
+- **explore1**: Also note cross-module coupling and circular dependency risks
+- **explore2**: Note algorithm complexity and edge-case handling gaps
+- **explore3**: Note async boundaries, error propagation, and missing validations
+- **explore4**: Note env var defaults, secret exposure risks, and version pin drift
+
+## Parallel fan-out template (recommended)
+
+When parent fires 4 explore agents in parallel, apply these split principles:
+
+- **Domain isolation**: assign each agent its specialization column from the table above; no overlap
+- **Scope deduplication**: shared entry files (e.g. `index.ts`) → assign to explore1 only; others skip
+- **Confidence gate**: each agent self-discards findings < 80% before reporting; parent does not re-filter
+- **Token budget**: each agent ≤300 words in Key findings + Highlights; Details uses `path:line` refs only
+- **Background flag**: set `run_in_background: true` on all 4 Task() calls in a single message for true parallelism
 
 ## Background execution (v2.1.49+)
 
@@ -143,20 +141,6 @@ Specify `run_in_background: true` for background runs. Use with `Task(explore-ag
 | Parallel startup | Caller specifies `run_in_background: true` |
 | Immediate result | Foreground (default) |
 
-## Diagram patterns
+## Diagram patterns (Mermaid)
 
-### Mermaid examples
-- **Dir layout**: graph TD
-- **Dependencies**: graph LR
-- **Data flow**: sequenceDiagram
-- **State**: stateDiagram-v2
-- **Class**: classDiagram
-
-```
-Example:
-graph TD
-  A[components] --> B[ui]
-  A --> C[features]
-  C --> D[auth]
-  C --> E[profile]
-```
+- Dir layout → `graph TD` / Dependencies → `graph LR` / Data flow → `sequenceDiagram` / State → `stateDiagram-v2` / Class → `classDiagram`
