@@ -54,9 +54,9 @@ teardown() {
 }
 
 @test "hooks: pre-compact accepts valid JSON input" {
-  # Serena 接続判定が環境依存なので skip flag で迂回（スモークテスト目的）
+  # smoke test: valid JSON → exit 0 (2026-06-11: Serena check 廃止後、env flag 不要)
   local input='{"session_id": "test", "workspace": {"current_dir": "/test"}, "current_tokens": 150000}'
-  run bash -c "echo '$input' | CLAUDE_SKIP_COMPACT_SERENA_CHECK=1 ${HOOKS_DIR}/pre-compact.sh"
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
   [ "$status" -eq 0 ]
 }
 
@@ -419,72 +419,71 @@ teardown() {
 }
 
 # =============================================================================
-# Integration: Pre-Compact Memory Save Flow
+# Integration: Pre-Compact Memory Save Flow (2026-06-11: Serena → auto-memory 統一)
 # =============================================================================
 
-# pre-compact.sh は `claude mcp list` で Serena 接続判定を行うため、
-# テスト用に PATH を差し替えて Connected/Disconnected をシミュレートする。
-_stub_claude_dir() {
-  local status_line="$1"
-  local dir
-  dir="$(mktemp -d)"
-  cat > "${dir}/claude" <<EOF
-#!/bin/bash
-echo "${status_line}"
-EOF
-  chmod +x "${dir}/claude"
-  echo "${dir}"
-}
+# pre-compact.sh は auto-memory (Write tool) への保存指示を出すため、
+# Serena 接続 check は廃止。state file は .compact-memory-state ("ready:<ts>")。
 
-@test "integration: pre-compact blocks when serena disconnected" {
-  local stub
-  stub="$(_stub_claude_dir 'serena: /path - ! Needs authentication')"
+@test "integration: pre-compact writes ready state and instructs Write tool" {
+  rm -f "${HOME}/.claude/.compact-memory-state"
   local input='{"session_id": "test"}'
-  run bash -c "echo '$input' | PATH='${stub}:$PATH' ${HOOKS_DIR}/pre-compact.sh"
-  rm -rf "${stub}"
-  [ "$status" -eq 2 ]
-  echo "$output" | jq -e '.decision == "block"' >/dev/null
-  [[ "$output" == *"Serena MCP 未接続"* ]]
-}
-
-@test "integration: pre-compact saves state when serena connected" {
-  local stub
-  stub="$(_stub_claude_dir 'serena: /path - ✓ Connected')"
-  local input='{"session_id": "test"}'
-  run bash -c "echo '$input' | PATH='${stub}:$PATH' ${HOOKS_DIR}/pre-compact.sh"
-  rm -rf "${stub}"
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
   [ "$status" -eq 0 ]
   echo "$output" | jq -e '.systemMessage' >/dev/null
-  [[ "$output" == *"write_memory"* ]]
-  # 状態ファイルが connected で書き込まれていること
-  [ "$(cat "${HOME}/.claude/.compact-serena-state")" = "connected" ]
+  [[ "$output" == *"Write tool"* ]]
+  [[ "$output" == *"compact-restore-"* ]]
+  local state
+  state="$(cat "${HOME}/.claude/.compact-memory-state")"
+  [[ "$state" =~ ^ready:[0-9]{8}_[0-9]{6}$ ]]
+  rm -f "${HOME}/.claude/.compact-memory-state"
 }
 
-@test "integration: pre-compact bypass flag skips check even if disconnected" {
-  local stub
-  stub="$(_stub_claude_dir 'serena: /path - ! Needs authentication')"
+@test "integration: pre-compact emits required body fields in instruction" {
+  rm -f "${HOME}/.claude/.compact-memory-state"
   local input='{"session_id": "test"}'
-  run bash -c "echo '$input' | CLAUDE_SKIP_COMPACT_SERENA_CHECK=1 PATH='${stub}:$PATH' ${HOOKS_DIR}/pre-compact.sh"
-  rm -rf "${stub}"
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"強行モード"* ]]
-  [ "$(cat "${HOME}/.claude/.compact-serena-state")" = "skipped" ]
+  [[ "$output" == *"現在のタスク"* ]]
+  [[ "$output" == *"完了済"* ]]
+  [[ "$output" == *"次アクション"* ]]
+  rm -f "${HOME}/.claude/.compact-memory-state"
 }
 
-@test "integration: post-compact-reload uses state from pre-compact" {
-  # pre-compact が残した状態ファイルをシミュレート
-  echo "connected" > "${HOME}/.claude/.compact-serena-state"
+@test "integration: post-compact-reload reads ready state and instructs Read tool" {
+  # Read tool 分岐を真に exercise するため、restore file を実在させる。
+  # 単に state file だけだと file 不在 fallback 分岐に落ちて、git-log embed の
+  # commit message に "auto-memory" 文字列が混入して vacuous pass する。
+  local ts="20991231_235959"
+  local memdir="${HOME}/.claude/projects/-Users-daichi-hoshina-ai-tools/memory"
+  local restore="${memdir}/compact-restore-${ts}.md"
+  mkdir -p "${memdir}"
+  echo "test fixture" > "${restore}"
+  echo "ready:${ts}" > "${HOME}/.claude/.compact-memory-state"
+  local input='{"session_id": "test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/post-compact-reload.sh"
+  rm -f "${restore}" "${HOME}/.claude/.compact-memory-state"
+  [ "$status" -eq 0 ]
+  # Read tool 分岐固有の文字列を assert (file 不在 fallback の文言と区別)
+  [[ "$output" == *"Read tool"* ]]
+  [[ "$output" == *"復元（自動実行）"* ]]
+  [ ! -f "${HOME}/.claude/.compact-memory-state" ]
+}
+
+@test "integration: post-compact-reload file-not-found branch when restore file missing" {
+  # state は ready だが restore file が無い場合の fallback 分岐
+  rm -f "${HOME}/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/compact-restore-19000101_000000.md"
+  echo "ready:19000101_000000" > "${HOME}/.claude/.compact-memory-state"
   local input='{"session_id": "test"}'
   run bash -c "echo '$input' | ${HOOKS_DIR}/post-compact-reload.sh"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"list_memories"* ]]
-  # 状態ファイルは使用後に削除される契約
-  [ ! -f "${HOME}/.claude/.compact-serena-state" ]
+  # MEMORY_DIR 内に他の compact-restore-* が無ければ fallback、あれば最新を拾う。
+  # どちらの分岐でも exit 0 + state file 削除契約は守られること。
+  [ ! -f "${HOME}/.claude/.compact-memory-state" ]
 }
 
 @test "integration: post-compact-reload handles missing state gracefully" {
-  # 状態ファイル無し = pre-compact が走らなかった状態
-  rm -f "${HOME}/.claude/.compact-serena-state"
+  rm -f "${HOME}/.claude/.compact-memory-state"
   local input='{"session_id": "test"}'
   run bash -c "echo '$input' | ${HOOKS_DIR}/post-compact-reload.sh"
   [ "$status" -eq 0 ]
