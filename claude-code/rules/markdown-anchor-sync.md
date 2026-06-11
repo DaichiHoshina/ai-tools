@@ -1,18 +1,18 @@
-# Markdown anchor 同期 rule
+# Markdown anchor sync rule
 
-`claude-code/` 配下の markdown heading を rename / EN 化 / 表記変更する commit は、bats test の exact-match anchor・他 file の cross-reference slug・`PARALLEL-PATTERNS.md` の literal を破壊するリスクがある。
+Commits that rename / EN-ify / reword markdown headings under `claude-code/` risk breaking bats test exact-match anchors, cross-reference slugs in other files, and `PARALLEL-PATTERNS.md` literals.
 
-## リスクの発生源
+## Sources of breakage
 
-| 変更種別 | 破壊対象 |
+| Change type | Breaks |
 |---------|---------|
-| heading rename / EN 化 | `tests/` 内 `require_anchor` / `grep -qF` 期待値 |
-| slug 変更 | 他 file の `#anchor-slug` cross-reference |
-| `PARALLEL-PATTERNS.md` 書き換え | `parallel-consistency.bats` の `allowed_summaries` / `forbidden_phrases` exact-match |
+| heading rename / EN conversion | `require_anchor` / `grep -qF` expectations in `tests/` |
+| slug change | `#anchor-slug` cross-references in other files |
+| `PARALLEL-PATTERNS.md` rewrite | `allowed_summaries` / `forbidden_phrases` exact-match in `parallel-consistency.bats` |
 
-## 必須手順（heading 変更前に実行）
+## Required steps (run before changing any heading)
 
-変更対象 heading の旧表記 `<heading>` および旧 slug `<slug>` を以下でチェックする。
+Check old `<heading>` and old slug `<slug>` with:
 
 ```bash
 # bats 期待値に使われているか確認
@@ -23,11 +23,11 @@ grep -rn "'<heading>'" claude-code/tests/
 grep -rn '#<slug>\b' claude-code/
 ```
 
-ヒットがある場合は、heading 変更と同一 commit で bats・cross-ref を更新する。
+If there are hits, update bats and cross-refs in the same commit as the heading change.
 
-### 一括 scan one-liner
+### Bulk scan one-liner
 
-heading を変更する commit を作る前に、`git diff` から旧 heading を抽出して bats / cross-ref を一気に scan する。
+Before creating a commit that changes headings, extract old headings from `git diff` and scan bats / cross-refs at once.
 
 ```bash
 git diff HEAD -- '*.md' | grep -E '^-#' | sed 's/^-//' | while read h; do
@@ -39,34 +39,34 @@ git diff HEAD -- '*.md' | grep -E '^-#' | sed 's/^-//' | while read h; do
 done
 ```
 
-hit があれば同一 commit で同期する。0 hit でも commit message に「heading rename / anchor confirmed clean」を 1 行追記し、次回 reviewer が検出済と判別できるようにする。
+On hits, sync in the same commit. On 0 hits, still append "heading rename / anchor confirmed clean" to the commit message so future reviewers know it was checked.
 
-## `/review` skill 必須オプション
+## Required `/review` option
 
-markdown heading を変更する PR のレビューは必ず以下で実行する。
+Run reviews for PRs that change markdown headings with:
 
 ```
 /review --focus=consistency
 ```
 
-最低 iter 2 まで回す（初回 review では bats anchor 破綻を検出できないケースがある）。
+Run at least 2 iterations (bats anchor breakage is sometimes missed in the first pass).
 
-## 過去事例（2026-05-23、commit `c67ade1`）
+## Past incident (2026-05-23, commit `c67ade1`)
 
-EN 化 commit で以下 3 heading を rename した。
+An EN-ify commit renamed 3 headings:
 
 - `## critical path 短縮判定式` → `## Critical-path reduction formula`
-- 他 2 heading も同様に EN 化
+- 2 other headings similarly EN-ified
 
-結果:
+Result:
 
-- `parallel-consistency.bats:50-52` の exact-match anchor が破綻 → 2 test failed
-- `agent-frontmatter.bats:87` の anchor が破綻 → 2 test failed
-- `flow.md` の `#worktree-applicability-flow` slug を初回誤記し、bats が catch しない caller が `manager-agent.md` / `po-agent.md` に残留した
+- `parallel-consistency.bats:50-52` exact-match anchor broke → 2 tests failed
+- `agent-frontmatter.bats:87` anchor broke → 2 tests failed
+- `flow.md` `#worktree-applicability-flow` slug was initially misspelled; callers not caught by bats remained in `manager-agent.md` / `po-agent.md`
 
-review iter 2 で初めて発覚した。iter 1 では見逃した。
+First detected in review iter 2. Missed in iter 1.
 
-## 適用範囲
+## Scope
 
-- 全 markdown rename PR（`claude-code/` 配下）
-- developer-agent 委譲 prompt にも、markdown heading 変更が含まれる場合はこの rule を明記する
+- All markdown rename PRs under `claude-code/`
+- When delegating to developer-agent and the change includes markdown heading renames, explicitly state this rule in the delegation prompt

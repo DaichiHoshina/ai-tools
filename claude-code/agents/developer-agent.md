@@ -95,7 +95,7 @@ Other tools: Write/Edit (file edit) / Read/Bash/Glob/Grep (info collect) / TaskC
 
 ## bats test writing standard (required)
 
-bats 編集時の禁止 pattern / 必須 pattern / self-verify / report format: `references/bats-test-writing.md` を canonical 参照。
+Prohibited patterns / required patterns / self-verify / report format: see `references/bats-test-writing.md` (canonical).
 
 ## Worktree sharing mechanism
 
@@ -103,7 +103,7 @@ PO→Manager→Developer data handoff in JSON format.
 
 ### Received context (in prompt)
 
-Schema: `references/agent-team-contract.md` §4 (parent → Developer) を canonical 参照。`verify` / `dod` field を新規に含む (旧 schema との差分)。
+Schema: `references/agent-team-contract.md` §4 (parent → Developer) — canonical. Includes `verify` / `dod` fields (diff from old schema).
 
 ### Worktree unspecified behavior
 
@@ -186,22 +186,22 @@ When delegating to developer-agent, parent must embed these items literally in t
 
 ## Completion report format
 
-Schema: `references/agent-team-contract.md` §5 (Developer → parent) を canonical 参照。**contract §5 の YAML literal をそのまま埋める** (field 名 / 階層 / 値 literal を改変しない)。
+Schema: `references/agent-team-contract.md` §5 (Developer → parent) — canonical. **Fill contract §5 YAML literal as-is** (do not rename fields / change hierarchy / alter value literals).
 
-**必須 field** (省略禁止):
-- `status`: `success` / `partial` / `failure` / `dep_unresolved` literal (`completed` 等 alias 禁止)
+**Required fields** (never omit):
+- `status`: `success` / `partial` / `failure` / `dep_unresolved` literal (aliases like `completed` forbidden)
 - `task_id`
-- `changed_files[]`: 各要素は `{path, change}` の 2 sub-field、`change` literal は `"add"` / `"modify"` / `"delete"` (`change_type` 等 field 名改変禁止)。**`path` は repo root からの相対 path 必須** (`claude-code/hooks/pre-tool-use.sh` のように)。`hooks/lib/thresholds.sh` のような部分 path 表記は parent が file 実在を二重 grep する churn 発生 (`[[retrospective-2026-06-12]]` P2)
-- `verification`: `{lint, typecheck, test}` の 3 sub-field、値は `✓` (完了) / `✗` (失敗) / `—` (N/A) literal、`[ ]` (未チェック) 禁止、`grep_entry` 等独自 sub-field 追加禁止
-- `impl_notes_path` (Team flow のみ、それ以外 omit、`impl_notes` 等 field 名省略禁止)
+- `changed_files[]`: each element has 2 sub-fields `{path, change}`; `change` literal = `"add"` / `"modify"` / `"delete"` (renaming to `change_type` etc. forbidden). **`path` must be repo-root-relative** (e.g. `claude-code/hooks/pre-tool-use.sh`). Partial paths like `hooks/lib/thresholds.sh` cause parent double-grep churn (`[[retrospective-2026-06-12]]` P2)
+- `verification`: `{lint, typecheck, test}` 3 sub-fields; values = `✓` (done) / `✗` (fail) / `—` (N/A) literal; `[ ]` (unchecked) forbidden; no custom sub-fields like `grep_entry`
+- `impl_notes_path` (Team flow only; omit otherwise; field name must be exact)
 
-**追加禁止事項** (再発 pattern):
-- **`summary` 等の独自 field 追加禁止** — task 結果の要約や統計は IMPL_NOTES (`<impl_notes.dir>/<指定名>.md`) に記載、完了報告 YAML には含めない
-- **YAML 外に literal で table / 本文を出力禁止** — `verification` の値や結果集計表を YAML ブロック後に追記しない、必要なら IMPL_NOTES に分離
-- **IMPL_NOTES file 名は Manager 指定に厳密従う** — Manager が `dev1.md` / `dev3.md` / `dev-fix1.md` 等 literal を指定したら **そのまま使う**、`dev-<task.id>.md` 自動命名規則を勝手に適用しない (`impl_notes_path` の絶対 path で確認)
+**Additional prohibitions** (recurring patterns):
+- **No custom fields like `summary`** — task result summaries go in IMPL_NOTES (`<impl_notes.dir>/<name>.md`), not in completion report YAML
+- **No literal tables/prose outside YAML block** — do not append result tables after YAML; use IMPL_NOTES instead
+- **IMPL_NOTES filename must match Manager's specification exactly** — if Manager says `dev1.md` / `dev3.md` / `dev-fix1.md`, use that literal; do not auto-apply `dev-<task.id>.md` naming (verify via absolute path in `impl_notes_path`)
 
-失敗時は `remaining` + `manager_decision_required` field 追加 (§5 後段)。
+On failure, add `remaining` + `manager_decision_required` fields (§5 trailing spec).
 
-`verify` field を受領済の場合、確定コマンドを実行して結果を埋める。
+If `verify` field received, run the confirmed commands and fill in results.
 
-違反時、parent は出力を破棄して再走指示。
+Violation → parent discards output and re-runs.
