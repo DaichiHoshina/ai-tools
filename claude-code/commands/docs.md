@@ -12,11 +12,11 @@ Archive completed work knowledge in Notion. Project-agnostic.
 > Full flow: `references/design-phase-flow.md`
 
 **Must-read**: When posting to Notion, follow these guidelines:
-- `guidelines/common/notion-writing.md` — structure・headings・tone・notation rules (core)
+- `guidelines/common/notion-writing.md` — structure, headings, tone, notation rules (core)
 - `guidelines/writing/long-form-doc.md` — user tone guide + interactive check dict
 - `guidelines/common/notion-design.md` — design patterns
-- `guidelines/common/notion-database.md` — DB design・templates
-- `guidelines/common/notion-operations.md` — AI use・permissions・external integration
+- `guidelines/common/notion-database.md` — DB design, templates
+- `guidelines/common/notion-operations.md` — AI use, permissions, external integration
 
 ## Document types & linked resources
 
@@ -59,7 +59,7 @@ Extract:
 - **Why**: why changed (commit msg, PR desc)
 - **How**: how implemented (main logic)
 - **Impact**: impact scope (dependents, usage)
-- **Caveat**: notes・known constraints
+- **Caveat**: notes, known constraints
 
 ### Step 4: Search Notion
 
@@ -70,7 +70,7 @@ Search existing related pages w/ `notion-search`.
 
 ### Step 4.8: writing check (pre-Notion post, required)
 
-Before `notion-create-pages` runs, AI self-checks draft body text (to be posted at Step 5). Target is md-form draft, not yet sent to Notion.
+Before `notion-create-pages` runs, AI self-checks draft body text. Target is md-form draft, not yet sent to Notion.
 
 Check items: writing axis NG table from `skills/comprehensive-review/skill.md` + NG dict from `guidelines/writing/long-form-doc.md`.
 
@@ -114,7 +114,7 @@ Type-specific templates:
 
 ### Step 5.5: Interactive rewrite (required)
 
-Detail・dict・template: see `guidelines/writing/long-form-doc.md`.
+Detail, dict, template: see `guidelines/writing/long-form-doc.md`.
 
 - Pre-load: `~/.claude/projects/{project}/memory/user_vocabulary.md` (skip known terms)
 - Execute 3 layers (Intent / Understanding / Expression) sequentially, ≤9 items total

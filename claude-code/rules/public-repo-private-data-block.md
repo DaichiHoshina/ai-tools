@@ -1,5 +1,5 @@
 ---
-description: ai-tools public repo への社内 product 名 / 社内識別子の書き込みを hard block する
+description: Hard-block internal product names / identifiers from being written to the ai-tools public repo
 paths: ["**/*"]
 ---
 

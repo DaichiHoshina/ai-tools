@@ -40,38 +40,38 @@ All responses in English (preserve technical terms, tool names).
 
 ### Return format
 
-Schema は `references/agent-team-contract.md` §1 (PO → parent) を canonical 参照。**contract §1 の YAML literal をそのまま埋める** (field 名 / 階層 / 型を改変しない)。
+Canonical: `references/agent-team-contract.md` §1 (PO → parent). **Fill contract §1 YAML literal as-is** (do not alter field names / hierarchy / types).
 
 **Field schema** (canonical source: `references/agent-team-contract.md` §1):
 
 | Field | Required | Type / constraint |
 |-------|----------|-------------------|
-| `execution_mode` | **required** | `team` (literal; `/flow` 経由では `direct` 選択禁止) |
-| `decision_reason` | **required** | string; strategy・worktree rationale 等の補足を全てここに集約 |
-| `worktree` | **required** | object `{path, branch, base_branch}`; null 化禁止 (main 継続なら実値を埋める) |
+| `execution_mode` | **required** | `team` (literal; `direct` forbidden when via `/flow`) |
+| `decision_reason` | **required** | string; consolidate all supplementary notes (strategy, worktree rationale etc.) here |
+| `worktree` | **required** | object `{path, branch, base_branch}`; no null (fill real values even if continuing on main) |
 | `worktree.path` | **required** | absolute path string |
 | `worktree.branch` | **required** | branch name string |
 | `worktree.base_branch` | **required** | branch name string |
-| `reviewer_qa_criteria` | **required** | object `{p0, p1, refix_loop_limit}`; 省略禁止 (軽量 task でも default literal を返す) |
-| `manager_instruction` | **required** | object; Markdown 文字列返却禁止 |
+| `reviewer_qa_criteria` | **required** | object `{p0, p1, refix_loop_limit}`; never omit (return default literal even for lightweight tasks) |
+| `manager_instruction` | **required** | object; returning Markdown string is forbidden |
 | `manager_instruction.goal` | **required** | string |
 | `manager_instruction.constraints` | **required** | array of strings |
-| `manager_instruction.priority` | **required** | array of strings; scalar (`p1` / `high` 等) 禁止 |
+| `manager_instruction.priority` | **required** | array of strings; scalar (`p1` / `high` etc.) forbidden |
 
-**禁止事項**:
-- contract §1 にない field を独自追加 (`strategy` / `worktree.create` / `worktree.rationale` 等) **禁止** — 補足は `decision_reason` に集約
+**Prohibitions**:
+- Adding fields not in contract §1 (`strategy` / `worktree.create` / `worktree.rationale` etc.) **forbidden** — consolidate supplementary notes into `decision_reason`
 
-違反時、parent は出力を破棄して再走指示。
+On violation, parent discards output and triggers re-run.
 
 ## Execution mode judgment (from `/flow`)
 
-**`/flow` 経由は `execution_mode: team` 固定。PO 判断対象外。**
+**Via `/flow`: `execution_mode: team` is fixed. PO has no discretion.**
 
-- task の規模 (1 file / docs-only / 軽量 等) を理由に `direct` 返却 **禁止**
-- 「Team overhead が無駄」「inline で十分」等の判断も **禁止** (downgrade は `/flow` 側で `--sequential` 明示時のみ実行、PO は関与しない)
-- contract §1 の `execution_mode` field は `team` を literal で返す (schema 上 `direct` は存在するが `/flow` 経由では選択肢にない)
+- Returning `direct` due to task size (1 file / docs-only / lightweight etc.) is **forbidden**
+- Judgments like "Team overhead wasteful" / "inline sufficient" are also **forbidden** (downgrade only via explicit `--sequential` on `/flow` side; PO does not participate)
+- Return `team` literally for `execution_mode` field (schema has `direct` but it is not an option via `/flow`)
 
-違反時 (PO が `direct` を返した場合)、parent は PO 出力を破棄して Manager 起動に進む。
+On violation (PO returns `direct`), parent discards PO output and proceeds to Manager launch.
 
 ## Worktree creation criteria
 
@@ -110,4 +110,4 @@ Schema は `references/agent-team-contract.md` §1 (PO → parent) を canonical
 
 ## Manager instruction format
 
-`references/agent-team-contract.md` §1 の `manager_instruction` field + `worktree` field を参照。parent が PO YAML から抽出し、Manager prompt に埋め込み。
+See `references/agent-team-contract.md` §1 `manager_instruction` field + `worktree` field. Parent extracts from PO YAML and embeds in Manager prompt.

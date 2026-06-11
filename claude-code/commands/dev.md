@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
-description: Default = developer-agent 委譲 (Sonnet)。inline は 1 symbol 修正のみ。--inline で強制 inline、--quick で短文 prompt、Team は /flow
+description: Default = developer-agent delegation (Sonnet). Inline for 1-symbol fix only. --inline forces inline, --quick for short prompts, Team via /flow
 ---
 
 ## /dev - Implementation mode
@@ -10,21 +10,21 @@ description: Default = developer-agent 委譲 (Sonnet)。inline は 1 symbol 修
 
 ## Default delegation
 
-`/dev` 起動時、デフォルトで `Task(developer-agent)` 自動委譲 (Sonnet 実行)。
+On `/dev` launch, delegate to `Task(developer-agent)` by default (Sonnet execution).
 
-| Flag | 動作 |
+| Flag | Behavior |
 |---|---|
-| (none) | `developer-agent` 委譲 (default) |
-| `--inline` | parent inline 実行 (1 symbol 修正のみ許可) |
-| `--quick` | sonnet 委譲、token 節約優先 (短文 prompt) |
-| `--team` | `/flow` 推奨、本 command では非対応 |
+| (none) | `developer-agent` delegation (default) |
+| `--inline` | parent inline execution (1-symbol fix only) |
+| `--quick` | Sonnet delegation, token-saving priority (short prompt) |
+| `--team` | use `/flow` instead; not supported here |
 
 ## Options
 
 ```bash
-/dev --quick <task>      # Fast mode (token 節約、1-2 files)
-/dev --parallel <task>   # Worktree parallel (no PO/Manager, developer-agent ×N 並列)
-/dev <task>              # Normal (developer-agent 委譲、sonnet)
+/dev --quick <task>      # Fast mode (token-saving, 1-2 files)
+/dev --parallel <task>   # Worktree parallel (no PO/Manager, developer-agent ×N)
+/dev <task>              # Normal (developer-agent delegation, Sonnet)
 # Team hierarchy + parallel needed? Use /flow --parallel
 ```
 
@@ -40,15 +40,15 @@ Launch Developer×N worktree parallel w/o PO/Manager. Formula detail: `reference
 
 ### `--parallel --auto` skip conditions
 
-詳細: `references/PARALLEL-PATTERNS.md` `` ### `/dev --parallel --auto` skip-confirmation 4 conditions `` 参照。概要: formula PASS + clean worktree + no branch/worktree collision + creation fail → downgrade。
+Details: `references/PARALLEL-PATTERNS.md` `### /dev --parallel --auto skip-confirmation 4 conditions`. Summary: formula PASS + clean worktree + no branch/worktree collision + creation fail → downgrade.
 
 ### worktree cleanup
 
-詳細: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)` 参照。概要: Changes present → return branch + merge + delete / no changes → auto-delete / collision → sequential downgrade + leave in place。
+Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`. Summary: Changes present → return branch + merge + delete / no changes → auto-delete / collision → sequential downgrade + leave in place.
 
 ## --quick (formerly /quick-fix)
 
-Use: 1-2 files typo / small bug / few-line change. **token 節約優先 (短文 prompt)、no Agent Team, minimal confirm**.
+Use: 1-2 files typo / small bug / few-line change. **Token-saving priority (short prompt), no Agent Team, minimal confirm**.
 
 Flow: identify file → fix (Serena MCP) → verify (lint/type) → propose commit.
 
@@ -98,7 +98,7 @@ After completion: `/lint-test` auto-detects lang + runs all checks (lint/typeche
 | Scenario | Action |
 |----------|--------|
 | 2 consecutive same-approach failures | suggest `/clear` & stop, request replan |
-| `--quick` unexpected error | fallback sonnet, continue minor fixes |
+| `--quick` unexpected error | fallback Sonnet, continue minor fixes |
 | Serena MCP fails | degrade to grep/Read, warn |
 
 PushNotification: notify only if task > 3min (`[dev] {task} done`).

@@ -9,20 +9,20 @@ Analyze past session history and work records, auto-generate improvement proposa
 
 ## Execution Flow
 
-### Phase 0: 保存先選択 (調査開始前)
+### Phase 0: Save destination (before investigation)
 
-AskUserQuestion で保存先を選択する。
+Ask user via AskUserQuestion.
 
 - question: "retrospective 保存先を選んでください"
 - options:
   1. `private` (default): `~/.claude/references-private/retrospective/YYYY-MM-DD_<slug>.md`
   2. `public`: `docs/reports/retrospective/YYYY-MM-DD_<slug>.md`
 
-**default = private**。社内情報混入を防ぐため、明示的に `public` を選んだ場合のみ public path に保存する。
+**default = private**. Select `public` only when explicitly chosen (prevent private data leak).
 
-**public 選択時の追加必須手順**:
-- 本文先頭 1 行に `rules/public-repo-private-data-block.md` 参照を echo する
-- 分析対象セッションに社内語 (social-hit term) が含まれないことを確認してから保存する
+**On public selection**:
+- Echo `rules/public-repo-private-data-block.md` reference at top of doc
+- Verify no social-hit terms in analyzed sessions before saving
 
 ### Phase 1: Data Collection
 
@@ -42,7 +42,7 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 | usage stats | `ccusage daily --since 7` |
 | JP quality blocks | `tail -n 50 ~/.claude/logs/jp-quality-block.log` |
 | hook bench logs | `tail -n 20 ~/.claude/logs/bench-*.log` (glob) |
-| /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (当日 TSV 生成 → `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
+| /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (generates `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
 
 ### Phase 2: Signal Extraction (≤500 token output, parent inline only)
 
@@ -71,7 +71,7 @@ Delegation rule: 1 domain = 1 agent call. Never bundle multiple domains into 1 p
 
 If writing failures detected (user feedback "hard to read" / "AI-smelling" / "so what?"), accumulate examples to memory for next session's hook reference.
 
-**保存先は Phase 0 選択結果に従う** (private / public)。
+**Save destination follows Phase 0 selection** (private / public).
 
 Save to: `~/.claude/projects/{project}/memory/writing_failure_{topic}.md` (frontmatter: `name` / `description` / `metadata.type: writing-failure` / `metadata.date`). Sections: What Happened / Relevant Location / Root Cause / Prevention (cite PRINCIPLES.md axis).
 
@@ -81,13 +81,13 @@ Memories injected via `~/.claude/CLAUDE.md` at session start → next session av
 
 AskUserQuestion → select proposals → implement (new skill / edit existing / add to CLAUDE.md / save memory)
 
-### Phase 5: pending-improvements memory 自動更新
+### Phase 5: pending-improvements memory auto-update
 
-採用結果と本日完了項目を `mcp__serena__write_memory(memory_name="pending-improvements", ...)` で更新。
-- 完了済リストに本日のセッション成果を追記
-- 残項目から消化分を除外、未採用提案は「残」に記録
-- 保留中項目 (技術障壁/発火条件未達) は維持
-- 知見セクションに本日学習を追加
+Update with `mcp__serena__write_memory(memory_name="pending-improvements", ...)`:
+- Append today's session results to completed list
+- Remove consumed items from pending, record unadopted proposals under "remaining"
+- Retain on-hold items (tech barrier / trigger unmet)
+- Add today's learnings to knowledge section
 
 ## Output Format
 
