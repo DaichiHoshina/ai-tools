@@ -5,7 +5,8 @@
 # =============================================================================
 
 setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
+  # shellcheck source=../helpers/common.bash
+  load "../helpers/common"
   export HOOKS_DIR="${PROJECT_ROOT}/hooks"
   export ORIG_HOME="$HOME"
   # テスト用 HOME (本番 .claude dir を汚染しない)

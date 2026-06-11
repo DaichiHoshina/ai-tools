@@ -67,6 +67,7 @@ sync_settings_hooks() {
     else
         rm -f "$tmpfile"
         print_error "settings.json hooks のマージに失敗しました"
+        return 1
     fi
 }
 
@@ -108,7 +109,7 @@ sync_settings_skill_overrides() {
     else
         rm -f "$tmpfile"
         print_error "settings.json skillOverrides のマージに失敗しました"
-        return
+        return 1
     fi
 
     # 孤立 override 検出: template から削除されたが live に残るキー

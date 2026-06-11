@@ -8,7 +8,8 @@
 bats_require_minimum_version 1.5.0
 
 setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
+  # shellcheck source=../helpers/common.bash
+  load "../helpers/common"
   export HOOKS_DIR="${PROJECT_ROOT}/hooks"
   export ORIG_HOME="$HOME"
   # テスト用 HOME (本番ファイルを汚染しない)

@@ -929,13 +929,21 @@ case "$TOOL_NAME" in
       :
     else
 
+    # jq 集約: Write/Edit で必要な 4 フィールドを 1 回取得 (fork 削減)
+    IFS=$'\t' read -r _EDIT_FILE_PATH EDIT_CONTENT _OLD_STRING _NEW_STRING < <(
+      extract_json_fields "$INPUT" \
+        '.tool_input.file_path // ""' \
+        'if .tool_input.content then .tool_input.content elif .tool_input.new_string then .tool_input.new_string elif .tool_input.edits then [.tool_input.edits[].new_string] | join("\n") else "" end' \
+        '.tool_input.old_string // ""' \
+        '.tool_input.new_string // ""'
+    )
+
     # large-repo 連続 Edit 委譲 signal (warn-only)
-    _EDIT_PATH_FOR_LARGE=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
-    _check_large_repo_consecutive_edit "$SESSION_ID" "$_EDIT_PATH_FOR_LARGE"
+    _check_large_repo_consecutive_edit "$SESSION_ID" "$_EDIT_FILE_PATH"
 
     # 直編集ガード: ~/.claude/{synced_dir}/... で repo source 存在時に redirect 推奨
     # sync.sh to-local で上書き消失するため、必ず repo source を編集する規約
-    _EDIT_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
+    _EDIT_PATH="$_EDIT_FILE_PATH"
     if [ -n "$_EDIT_PATH" ] && [[ "$_EDIT_PATH" == "$HOME/.claude/"* ]]; then
       _REL_PATH="${_EDIT_PATH#"$HOME/.claude/"}"
       _FIRST_COMP="${_REL_PATH%%/*}"
@@ -960,27 +968,20 @@ case "$TOOL_NAME" in
     fi
 
     # 危険パターン検出（機密リテラル/SSRF/SQL injection）
-    EDIT_CONTENT=$(jq -r '
-      if .tool_input.content then .tool_input.content
-      elif .tool_input.new_string then .tool_input.new_string
-      elif .tool_input.edits then [.tool_input.edits[].new_string] | join("\n")
-      else "" end
-    ' <<< "$INPUT")
     if [ -n "$EDIT_CONTENT" ]; then
       detect_dangerous_patterns "$EDIT_CONTENT"
     fi
 
     # social-hit block: ai-tools public repo への社内 product 名書き込み防止
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
-      _SOCIAL_HIT_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
-      if [ -n "$_SOCIAL_HIT_PATH" ]; then
-        _check_social_hit "$_SOCIAL_HIT_PATH" "$EDIT_CONTENT"
+      if [ -n "$_EDIT_FILE_PATH" ]; then
+        _check_social_hit "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
       fi
     fi
 
     # private-name block: private-name-list.txt の term を ai-tools 配下 file 書込に適用
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
-      _PN_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
+      _PN_PATH="$_EDIT_FILE_PATH"
       if _is_aitools_path "$_PN_PATH"; then
         # 自己除外: rule 説明文として term を保持する file は判定対象外
         _PN_REL=$(_aitools_relpath "$_PN_PATH")
@@ -998,18 +999,23 @@ case "$TOOL_NAME" in
     fi
 
     # Rename propagation detection (Edit tool only has old_string/new_string)
-    _OLD_STRING=$(jq -r '.tool_input.old_string // empty' <<< "$INPUT")
-    _NEW_STRING=$(jq -r '.tool_input.new_string // empty' <<< "$INPUT")
-    _FILE_PATH=$(jq -r '.tool_input.file_path // empty' <<< "$INPUT")
     if [ -n "$_OLD_STRING" ] && [ -n "$_NEW_STRING" ]; then
-      detect_rename_propagation "$_OLD_STRING" "$_NEW_STRING" "$_FILE_PATH"
+      detect_rename_propagation "$_OLD_STRING" "$_NEW_STRING" "$_EDIT_FILE_PATH"
     fi
 
     # Sonnet delegation declaration grep (CLAUDE.md Auto-Delegation "Edit/Write declaration rule")
     # fetch last 30 lines of latest assistant message from transcript_path; check for "Inline exception" / "Inline prohibited"
+    # session+transcript mtime キャッシュ: transcript 更新がない場合は python3 fork を skip
     _TRANSCRIPT=$(jq -r '.transcript_path // empty' <<< "$INPUT")
     if [ -n "$_TRANSCRIPT" ] && [ -f "$_TRANSCRIPT" ]; then
-      _DECL_FOUND=$(python3 - "$_TRANSCRIPT" <<'PYEOF'
+      _TRANSCRIPT_MTIME=$(stat -f '%m' "$_TRANSCRIPT" 2>/dev/null || stat -c '%Y' "$_TRANSCRIPT" 2>/dev/null || echo "0")
+      _TRANSCRIPT_CACHE_FLAG="/tmp/claude-transcript-decl-${SESSION_ID:-$$}-${_TRANSCRIPT_MTIME}"
+      if [[ -f "$_TRANSCRIPT_CACHE_FLAG" ]]; then
+        _DECL_FOUND=$(cat "$_TRANSCRIPT_CACHE_FLAG" 2>/dev/null || true)
+      else
+        # 古いキャッシュ (同セッション・異なる mtime) を削除してから scan
+        rm -f "/tmp/claude-transcript-decl-${SESSION_ID:-$$}"-* 2>/dev/null || true
+        _DECL_FOUND=$(python3 - "$_TRANSCRIPT" <<'PYEOF'
 import sys, json
 path = sys.argv[1]
 lines = []
@@ -1042,7 +1048,10 @@ for raw in reversed(lines):
         print('found')
     sys.exit(0)
 PYEOF
-      )
+        )
+        # scan 結果を mtime キャッシュとして保存
+        printf '%s' "${_DECL_FOUND:-}" > "$_TRANSCRIPT_CACHE_FLAG" 2>/dev/null || true
+      fi  # end: cache hit / miss
       if [ "$_DECL_FOUND" != "found" ]; then
         _DECL_WARN="⚠ Sonnet 委譲宣言抜け: CLAUDE.md Auto-Delegation rule 違反。Edit/Write 前に 1 行宣言してください: 'Inline exception (reason: ...) → parent inline execution' または 'Inline prohibited (reason: ...) → delegate to developer-agent'。直近 inline 実行回数 ≥2 なら次回 mandatory delegation (CLAUDE.md \"Inline exception throttle\")"
         if [ -n "$ADDITIONAL_CONTEXT" ]; then

@@ -40,8 +40,9 @@ teardown() {
 
 @test "sync.sh: supports diff mode" {
   # diff モードは非対話式で動作する
+  # 差分あり=1 / 差分なし=0 を返すため、0 or 1 のいずれかであることを確認
   run bash "${PROJECT_ROOT}/claude-code/sync.sh" diff
-  [ "$status" -eq 0 ]
+  [[ "$status" -eq 0 || "$status" -eq 1 ]]
 }
 
 @test "sync.sh: supports to-local mode" {
@@ -82,9 +83,10 @@ teardown() {
   rm -rf "$CLAUDE_DIR"
   [ ! -d "$CLAUDE_DIR" ]
   
-  # diffモードは読み取り専用なので、ディレクトリがなくてもエラーにならない
+  # diffモードは読み取り専用なので、ディレクトリがなくてもクラッシュしない
+  # 差分あり=1 / 差分なし=0 を返す
   run bash "${PROJECT_ROOT}/claude-code/sync.sh" diff
-  [ "$status" -eq 0 ]
+  [[ "$status" -eq 0 || "$status" -eq 1 ]]
 }
 
 @test "sync.sh: to-local creates ~/.claude when missing" {
@@ -330,12 +332,13 @@ teardown() {
 @test "sync.sh: is idempotent (can be run multiple times)" {
   # diffモードは何度実行しても同じ結果
   run bash "${PROJECT_ROOT}/claude-code/sync.sh" diff
+  local first_status="$status"
   local first_output="$output"
-  [ "$status" -eq 0 ]
-  
-  # 2回目も同じ結果
+  [[ "$first_status" -eq 0 || "$first_status" -eq 1 ]]
+
+  # 2回目も同じ結果（status も output も一致）
   run bash "${PROJECT_ROOT}/claude-code/sync.sh" diff
-  [ "$status" -eq 0 ]
+  [ "$status" -eq "$first_status" ]
   [ "$output" = "$first_output" ]
 }
 
@@ -424,10 +427,10 @@ teardown() {
   local claude_checksum
   claude_checksum=$(find "$CLAUDE_DIR" -type f 2>/dev/null | sort | xargs cat 2>/dev/null | md5sum)
   
-  # diffモードを実行
+  # diffモードを実行（差分あり=1 / 差分なし=0）
   run bash "${PROJECT_ROOT}/claude-code/sync.sh" diff
-  [ "$status" -eq 0 ]
-  
+  [[ "$status" -eq 0 || "$status" -eq 1 ]]
+
   # どちらも変更されていないことを確認
   local repo_after
   repo_after=$(find "${PROJECT_ROOT}/claude-code" -type f | sort | xargs cat 2>/dev/null | md5sum)

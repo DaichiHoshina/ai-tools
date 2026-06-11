@@ -264,10 +264,10 @@ sync_to_local() {
     done
 
     # settings.json hooks / skillOverrides / security-critical sections / root keys をテンプレートからマージ
-    sync_settings_hooks
-    sync_settings_skill_overrides
-    sync_settings_permissions
-    sync_settings_root_keys
+    sync_settings_hooks             || print_warning "settings.json 同期不完全 (hooks)"
+    sync_settings_skill_overrides   || print_warning "settings.json 同期不完全 (skillOverrides)"
+    sync_settings_permissions       || print_warning "settings.json 同期不完全 (permissions)"
+    sync_settings_root_keys         || print_warning "settings.json 同期不完全 (root keys)"
 
     # post-sync 整合性検証: 同期後に差分が残るのは異常（過去の直編集残骸 / コピー失敗の検出）
     # gh skill 管理スキル除外のため skills ディレクトリは個別判定する。
@@ -448,6 +448,9 @@ show_diff() {
 
     if [ "$has_diff" = false ]; then
         print_success "差分なし（同期済み）"
+        return 0
+    else
+        return 1
     fi
 }
 
@@ -569,14 +572,14 @@ main() {
 
     case "$mode" in
         to-local)
-            show_diff
+            show_diff || true
             echo ""
             if [ "$skip_confirm" = true ] || confirm "ローカルに反映しますか？"; then
                 sync_to_local
             fi
             ;;
         from-local)
-            show_diff
+            show_diff || true
             echo ""
             if [ "$skip_confirm" = true ] || confirm "リポジトリに反映しますか？"; then
                 sync_from_local

@@ -9,7 +9,8 @@
 # =============================================================================
 
 setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
+  # shellcheck source=../helpers/common.bash
+  load "../helpers/common"
 }
 
 @test "orchestrate-mode.md: 6 必須 section が存在する" {

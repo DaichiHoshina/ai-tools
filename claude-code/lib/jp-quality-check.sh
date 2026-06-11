@@ -3,6 +3,12 @@
 # pre-tool-use.sh から抽出: AI定型語 / カタカナ造語 / NG語 block 系
 # source してから使用する。GUARD_CLASS / MESSAGE / ADDITIONAL_CONTEXT / TOOL_NAME を参照・変更する。
 
+# 多重 source 防止
+if [[ "${_JP_QUALITY_CHECK_LOADED:-}" == "1" ]]; then
+    return 0
+fi
+_JP_QUALITY_CHECK_LOADED=1
+
 # ====================================
 # AI定型語 / カタカナ造語 block 関数
 # NG-DICTIONARY.md から動的抽出 → 外向き text に grep → hit で exit 2
@@ -84,9 +90,19 @@ _extract_ai_jargon() {
 
 # 必須 key sanity check: hook が exact match 参照する key が抽出 0 件なら fail-loud
 # NG-DICTIONARY.md key rename / 記法破壊を早期検出して silent pass を防ぐ
-# session 内 cache: _assert_required_keys_done=1 でスキップ (重複検査防止)
+# session+日付単位 flag file cache: 同セッション内の 7 grep を skip (重複検査防止)
+# SESSION_ID は caller (pre-tool-use.sh) が export して渡す想定、未設定時は $$ で代替
 _assert_required_keys() {
-  [[ "$_assert_required_keys_done" -eq 1 ]] && return 0
+  # per-process 変数での早期 return (同一プロセス内の2回目以降)
+  [[ "${_assert_required_keys_done:-0}" -eq 1 ]] && return 0
+
+  # session 単位 flag file: /tmp/claude-ngdict-keys-ok-<SESSION_ID>-<YYYYMMDD>
+  local _flag_path="/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}-$(date +%Y%m%d)"
+  if [[ -f "$_flag_path" ]]; then
+    _assert_required_keys_done=1
+    return 0
+  fi
+
   _assert_required_keys_done=1
   # NG-DICTIONARY.md 不在時は別経路で既に silent pass → この検査はスキップ
   [[ -f "$_principles_file" ]] || return 0
@@ -100,6 +116,8 @@ _assert_required_keys() {
       exit 2
     fi
   done
+  # 検査成功: flag file を touch して次回 session 内 skip を有効化
+  touch "$_flag_path" 2>/dev/null || true
 }
 
 # inject byte size log 出力関数
@@ -135,15 +153,19 @@ _check_term_list() {
   # code block を除去してからチェック
   local clean_text
   clean_text=$(_strip_code_blocks "$text")
-  local found=()
+  # 語リストを配列に収集
+  local words=()
   while IFS= read -r word; do
     [[ -z "$word" ]] && continue
-    if printf '%s' "$clean_text" | grep -qF "$word"; then
-      found+=("$word")
-    fi
+    words+=("$word")
   done < <(_extract_term_list "$_principles_file" "$key")
-  if [[ ${#found[@]} -gt 0 ]]; then
-    printf '%s\n' "${found[@]}"
+  [[ ${#words[@]} -eq 0 ]] && return 0
+
+  # 全語を1回の grep -oFf で hit 語を列挙 (N×fork → 1 fork)
+  local found
+  found=$(printf '%s' "$clean_text" | grep -oFf <(printf '%s\n' "${words[@]}") | sort -u || true)
+  if [[ -n "$found" ]]; then
+    printf '%s\n' "$found"
     return 1
   fi
   return 0
