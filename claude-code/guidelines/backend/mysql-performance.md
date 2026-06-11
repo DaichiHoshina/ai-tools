@@ -140,7 +140,7 @@ RECORD LOCKS ... index idx_status ... lock_mode X locks gap before rec insert in
 *** WE ROLL BACK TRANSACTION (2)
 ```
 
-Parse: extract HOLDS/WAITING FOR per TX → identify `lock_mode` type → confirm circular wait → victim = lower-weight TX.
+Parse: HOLDS/WAITING FOR per TX → identify `lock_mode` → confirm circular wait → victim = lower-weight TX.
 
 ### 7.2 Common deadlock patterns
 
@@ -158,7 +158,6 @@ SELECT * FROM performance_schema.data_lock_waits;
 SHOW GLOBAL STATUS LIKE 'Innodb_deadlocks';
 SET GLOBAL innodb_print_all_deadlocks = ON;
 ```
-
 SLO target: deadlock rate > 0.1% TX/min → redesign TX; < 0.01% → absorb with retry.
 
 ```go
@@ -189,9 +188,7 @@ return ErrTooManyRetries
 **Long-running TX**: even read-only TXs block purge → undo bloat. Root cause: autocommit OFF + idle session.
 
 ```sql
--- history list monitoring
 SHOW ENGINE INNODB STATUS\G  -- "History list length"
--- long TX detection
 SELECT trx_id, trx_started, trx_mysql_thread_id, trx_query
 FROM information_schema.innodb_trx ORDER BY trx_started LIMIT 10;
 ```
@@ -202,15 +199,15 @@ Threshold: history list length > 10M → severe purge lag; pressure on buffer po
 
 ## 9. InnoDB architecture
 
-**Buffer Pool**: LRU uses midpoint insertion — new pages inserted at 5/8 position; promoted to new sublist after `innodb_old_blocks_time` (default 1000ms). Goal: scan resistance. Target hit rate > 99%.
+**Buffer Pool**: LRU midpoint insertion — new pages at 5/8 position; promoted after `innodb_old_blocks_time` (default 1000ms). Scan resistance. Target hit rate > 99%.
 
-**Change Buffer**: buffers secondary index changes when target page is not in buffer pool. Effective for write-heavy + many secondary indexes. Not applied to unique secondary indexes. Consider `innodb_change_buffering = none` on SSD.
+**Change Buffer**: buffers secondary index changes when target page not in buffer pool. Effective for write-heavy + many secondary indexes. Not applied to unique indexes. Consider `innodb_change_buffering = none` on SSD.
 
-**Adaptive Hash Index (AHI)**: internalizes frequent B+tree lookups to O(1). Effective for read-heavy + frequent same-prefix access. Under heavy writes + contention, AHI latch itself becomes a bottleneck — monitor `btr_search_latch` waits in SEMAPHORES section.
+**Adaptive Hash Index (AHI)**: internalizes frequent B+tree lookups to O(1). Under heavy writes + contention, AHI latch becomes a bottleneck — monitor `btr_search_latch` waits in SEMAPHORES.
 
-**Doublewrite Buffer**: prevents partial page write. On SSDs with atomic write support, `innodb_doublewrite = OFF` halves writes. Leave ON otherwise.
+**Doublewrite Buffer**: prevents partial page write. On SSDs with atomic write, `innodb_doublewrite = OFF` halves writes. Leave ON otherwise.
 
-**Redo Log**: WAL. Use `innodb_redo_log_capacity` (8.0.30+). Redo full → forced checkpoint → write stall. Target size: 60-90 minutes of peak write throughput.
+**Redo Log**: WAL. Use `innodb_redo_log_capacity` (8.0.30+). Redo full → forced checkpoint → write stall. Target: 60-90 min of peak write throughput.
 
 ---
 
@@ -218,13 +215,10 @@ Threshold: history list length > 10M → severe purge lag; pressure on buffer po
 
 ```sql
 -- Counter sharding (16-way)
-UPDATE counters SET value = value + 1
-WHERE id = CONCAT('global_', FLOOR(RAND() * 16));
+UPDATE counters SET value = value + 1 WHERE id = CONCAT('global_', FLOOR(RAND() * 16));
 -- Read: SUM(value) WHERE id LIKE 'global_%'
-
 -- SKIP LOCKED queue (8.0+)
-SELECT id FROM jobs WHERE status = 'pending' ORDER BY id LIMIT 10
-FOR UPDATE SKIP LOCKED;
+SELECT id FROM jobs WHERE status = 'pending' ORDER BY id LIMIT 10 FOR UPDATE SKIP LOCKED;
 ```
 
 **Short TX rules**:
@@ -239,11 +233,9 @@ FOR UPDATE SKIP LOCKED;
 
 ## 11. 2PC and Group Commit
 
-InnoDB + binlog uses XA 2PC: (1) InnoDB redo prepare (fsync) → (2) binlog write (fsync) → (3) InnoDB redo commit (fsync).
+InnoDB + binlog uses XA 2PC: (1) redo prepare (fsync) → (2) binlog write (fsync) → (3) redo commit (fsync).
 
-Group Commit: `binlog_group_commit_sync_delay` / `binlog_group_commit_sync_no_delay_count` batches simultaneous commits to reduce fsyncs. Tune at high OLTP TPS (e.g., `delay=100us, count=20`).
-
-Monitor: `Binlog_commits / Binlog_group_commits` ratio — higher ratio = better efficiency.
+Group Commit: `binlog_group_commit_sync_delay` / `binlog_group_commit_sync_no_delay_count` batches commits to reduce fsyncs. Tune at high OLTP TPS (e.g., `delay=100us, count=20`). Monitor: `Binlog_commits / Binlog_group_commits` ratio — higher = better.
 
 ---
 
@@ -339,12 +331,8 @@ for i := range entities { entities[i].ID = int(firstID) + i }
 Warning comment template for bulk insert functions relying on `LastInsertId() + i`:
 
 ```go
-// bulkInsert relies on sequential ID assignment (LastInsertId() + i) for simple inserts
-// (multi-row VALUES, pre-determined row count, all rows auto-assigned).
-// The following additions break this assumption and require review:
-//   - INSERT ... SELECT / LOAD DATA / ON DUPLICATE KEY UPDATE to same table
-//   - Mixed-mode inserts (explicit ID rows mixed with auto-assigned rows)
-//   - Large migration backfill to same table
+// Relies on sequential ID assignment (LastInsertId() + i) for simple inserts.
+// Breaks with: INSERT...SELECT / ON DUPLICATE KEY UPDATE / mixed-mode inserts / migration backfill.
 // Ref: https://dev.mysql.com/doc/refman/8.4/en/innodb-auto-increment-handling.html
 ```
 
