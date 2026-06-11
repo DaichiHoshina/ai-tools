@@ -1,148 +1,148 @@
-# Rustガイドライン
+# Rust Guidelines
 
-Rust 2024 Edition対応、stable 1.96.0（2026-06時点）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
-
----
-
-## 基本原則
-
-- **所有権**: 借用チェッカーに従う
-- **ゼロコスト抽象化**: パフォーマンス重視
-- **安全性**: `unsafe` は最小限
-- **ツール**: `cargo fmt`, `clippy`, `rustfmt` 必須
-- **Idiom優先**: 公式ドキュメントパターン
+Rust 2024 Edition, stable 1.96.0 (as of 2026-06). Common guidelines: `~/.claude/guidelines/common/`.
 
 ---
 
-## ディレクトリ構成
+## Core Principles
 
-- `src/` - ソースコード
-  - `main.rs` または `lib.rs`
-  - `bin/` - 複数バイナリ
-- `tests/` - 統合テスト
-- `benches/` - ベンチマーク
-- `Cargo.toml` - 依存関係
-
----
-
-## 型システム
-
-### 基本
-- `struct` - データ構造
-- `enum` - 代数的データ型
-- `trait` - インターフェース
-- `impl` - 実装ブロック
-
-### ジェネリクス
-- `fn process<T: Display>(item: T)` - トレイト境界
-- `where T: Clone + Send` - 複雑な境界
-- `impl<T> Trait for Type<T>` - blanket impl
+- **Ownership**: follow the borrow checker
+- **Zero-cost abstractions**: prioritize performance
+- **Safety**: minimize `unsafe`
+- **Tools**: `cargo fmt`, `clippy`, `rustfmt` required
+- **Idiom-first**: follow official documentation patterns
 
 ---
 
-## 命名規則
+## Directory Structure
 
-- **クレート/モジュール**: `snake_case`
-- **型/トレイト**: `PascalCase`
-- **関数/変数**: `snake_case`
-- **定数**: `SCREAMING_SNAKE_CASE`
-- **ライフタイム**: `'a`, `'static`
-
----
-
-## クイックリファレンス
-
-### エラー処理
-
-| パターン | コード | 用途 |
-|---------|--------|------|
-| Result | `fn f() -> Result<T, E>` | 回復可能エラー |
-| Option | `fn find() -> Option<T>` | 値の有無 |
-| ? 演算子 | `let x = try_fn()?;` | エラー伝播 |
-| anyhow | `anyhow::Result<T>` | アプリエラー |
-| thiserror | `#[derive(Error)]` | ライブラリエラー |
-
-### 所有権
-
-| パターン | コード | 用途 |
-|---------|--------|------|
-| 所有権移動 | `let b = a;` | 所有権譲渡 |
-| 借用 | `&value` | 不変参照 |
-| 可変借用 | `&mut value` | 可変参照 |
-| Clone | `value.clone()` | 明示的コピー |
-| Rc/Arc | `Arc::new(data)` | 共有所有権 |
-
-### 非同期処理
-
-| パターン | コード | 用途 |
-|---------|--------|------|
-| async fn | `async fn fetch() -> Result<T>` | 非同期定義 |
-| await | `result.await?` | 非同期待機 |
-| spawn | `tokio::spawn(task)` | タスク生成 |
-| join | `tokio::join!(a, b)` | 並行実行 |
-
-### テスト
-
-| パターン | コード | 用途 |
-|---------|--------|------|
-| 単体 | `#[test] fn test_fn()` | ユニットテスト |
-| 非同期 | `#[tokio::test]` | 非同期テスト |
-| 失敗期待 | `#[should_panic]` | パニックテスト |
-| 無視 | `#[ignore]` | スキップ |
-
-## よくあるミス
-
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| `.unwrap()` 乱用 | `?` または `expect()` | パニック防止 |
-| `.clone()` 乱用 | 借用で解決 | パフォーマンス |
-| `unsafe` 多用 | 安全な代替 | メモリ安全性 |
-| `String` 返却 | `&str` 借用 | 不要なアロケーション |
-| 大きな `enum` | `Box<dyn Trait>` | スタックサイズ |
+- `src/` — source code
+  - `main.rs` or `lib.rs`
+  - `bin/` — multiple binaries
+- `tests/` — integration tests
+- `benches/` — benchmarks
+- `Cargo.toml` — dependencies
 
 ---
 
-## 古いパターン検出（レビュー/実装時チェック）
+## Type System
 
-`Cargo.toml` の `edition` と `rust-version` を確認してから指摘する。
+### Basics
+- `struct` — data structures
+- `enum` — algebraic data types
+- `trait` — interfaces
+- `impl` — implementation blocks
 
-### 🔴 Critical（必ず指摘）
+### Generics
+- `fn process<T: Display>(item: T)` — trait bounds
+- `where T: Clone + Send` — complex bounds
+- `impl<T> Trait for Type<T>` — blanket impl
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
-| `#[async_trait]` マクロ（大半のケース） | ネイティブ `async fn` in trait (RPITIT) | Edition 2024 |
-| `impl Trait` 返却不可（トレイト内） | `fn f() -> impl Trait` in trait | 1.75 |
-| `lazy_static!` マクロ | `std::sync::LazyLock` / `std::cell::LazyCell` | 1.80 |
+---
+
+## Naming Conventions
+
+- **Crate/Module**: `snake_case`
+- **Type/Trait**: `PascalCase`
+- **Function/Variable**: `snake_case`
+- **Constant**: `SCREAMING_SNAKE_CASE`
+- **Lifetime**: `'a`, `'static`
+
+---
+
+## Quick Reference
+
+### Error Handling
+
+| Pattern | Code | Use |
+|---------|------|-----|
+| Result | `fn f() -> Result<T, E>` | recoverable errors |
+| Option | `fn find() -> Option<T>` | presence/absence |
+| ? operator | `let x = try_fn()?;` | error propagation |
+| anyhow | `anyhow::Result<T>` | application errors |
+| thiserror | `#[derive(Error)]` | library errors |
+
+### Ownership
+
+| Pattern | Code | Use |
+|---------|------|-----|
+| Move | `let b = a;` | transfer ownership |
+| Borrow | `&value` | immutable reference |
+| Mutable borrow | `&mut value` | mutable reference |
+| Clone | `value.clone()` | explicit copy |
+| Rc/Arc | `Arc::new(data)` | shared ownership |
+
+### Async
+
+| Pattern | Code | Use |
+|---------|------|-----|
+| async fn | `async fn fetch() -> Result<T>` | async definition |
+| await | `result.await?` | async wait |
+| spawn | `tokio::spawn(task)` | task creation |
+| join | `tokio::join!(a, b)` | concurrent execution |
+
+### Testing
+
+| Pattern | Code | Use |
+|---------|------|-----|
+| Unit | `#[test] fn test_fn()` | unit test |
+| Async | `#[tokio::test]` | async test |
+| Expect panic | `#[should_panic]` | panic test |
+| Skip | `#[ignore]` | skip |
+
+## Common Mistakes
+
+| Avoid | Use | Reason |
+|-------|-----|--------|
+| `.unwrap()` overuse | `?` or `expect()` | prevent panic |
+| `.clone()` overuse | solve with borrowing | performance |
+| Heavy `unsafe` use | safe alternatives | memory safety |
+| Return `String` | borrow `&str` | unnecessary allocation |
+| Large `enum` | `Box<dyn Trait>` | stack size |
+
+---
+
+## Deprecated Pattern Detection (review / implementation)
+
+Check `Cargo.toml` `edition` and `rust-version` before flagging.
+
+### Critical (always flag)
+
+| Deprecated | Modern | Since |
+|------------|--------|-------|
+| `#[async_trait]` macro (most cases) | native `async fn` in trait (RPITIT) | Edition 2024 |
+| Cannot return `impl Trait` (in trait) | `fn f() -> impl Trait` in trait | 1.75 |
+| `lazy_static!` macro | `std::sync::LazyLock` / `std::cell::LazyCell` | 1.80 |
 | `once_cell::sync::Lazy` | `std::sync::LazyLock` | 1.80 |
 
-### 🟡 Warning（積極的に指摘）
+### Warning (proactively flag)
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
-| `Box<dyn Fn()>` クロージャ返却 | `impl Fn()` 返却（RPITIT） | 1.75 |
-| `if let Some(x) = a { if let Some(y) = b { } }` | `let chains`: `if let Some(x) = a && let Some(y) = b` | Edition 2024 |
-| 手動イテレータ実装 | `gen` ブロック（ジェネレータ） | Edition 2024 |
-| `async move \|\| { }` | `async \|\| { }` （asyncクロージャ安定化） | Edition 2024 |
-| `log` クレート | `tracing` クレート（構造化ログ + スパン） | 推奨 |
-| `failure` クレート | `thiserror` + `anyhow` | 推奨 |
-| `reqwest::blocking` | `reqwest` async + tokio | 推奨 |
-| `println!` デバッグ | `tracing::debug!` / `dbg!` | 推奨 |
-| `#[derive(Clone, Debug)]` 手動列挙 | `#[diagnostic]` 属性で改善されたエラーメッセージ活用 | 1.80 |
+| Deprecated | Modern | Since |
+|------------|--------|-------|
+| `Box<dyn Fn()>` closure return | `impl Fn()` return (RPITIT) | 1.75 |
+| Nested `if let Some(x) = a { if let Some(y) = b { } }` | `let chains`: `if let Some(x) = a && let Some(y) = b` | Edition 2024 |
+| Manual iterator impl | `gen` block (generators) | Edition 2024 |
+| `async move \|\| { }` | `async \|\| { }` (async closure stabilized) | Edition 2024 |
+| `log` crate | `tracing` crate (structured logging + spans) | recommended |
+| `failure` crate | `thiserror` + `anyhow` | recommended |
+| `reqwest::blocking` | `reqwest` async + tokio | recommended |
+| `println!` debugging | `tracing::debug!` / `dbg!` | recommended |
+| Manual `#[derive(Clone, Debug)]` enumeration | use `#[diagnostic]` attribute for improved error messages | 1.80 |
 
-### ℹ️ Info（提案レベル）
+### Info (suggestion level)
 
-| 項目 | 内容 | Since |
-|------|------|-------|
-| `cargo clippy --fix` | 多くの古いパターンを自動修正 | 常用 |
-| Edition 2024移行 | `cargo fix --edition` で自動マイグレーション | 2024 |
+| Item | Detail | Since |
+|------|--------|-------|
+| `cargo clippy --fix` | auto-fixes many deprecated patterns | always |
+| Edition 2024 migration | `cargo fix --edition` for auto-migration | 2024 |
 
 ---
 
-## クレート推奨
+## Recommended Crates
 
-| カテゴリ | クレート |
-|---------|---------|
-| 非同期 | `tokio`, `futures` |
+| Category | Crate |
+|----------|-------|
+| Async | `tokio`, `futures` |
 | Web | `axum`, `reqwest`, `serde` |
-| エラー | `thiserror` (ライブラリ), `anyhow` (アプリ) |
+| Error | `thiserror` (library), `anyhow` (application) |
 | CLI | `clap`, `tracing`, `color-eyre` |

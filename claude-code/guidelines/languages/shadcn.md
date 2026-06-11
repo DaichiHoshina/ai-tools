@@ -1,62 +1,62 @@
-# shadcn/uiガイドライン
+# shadcn/ui Guidelines
 
-shadcn CLI v4.11.0対応（2026年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
-
----
-
-## 基本原則
-
-- **コピー&ペースト**: NPMパッケージではなく、コードを直接プロジェクトに配置
-- **カスタマイズ可能**: 完全にカスタマイズ可能なコンポーネント
-- **アクセシビリティ**: WCAG準拠
-- **Radix UI + Tailwind**: 堅牢な基盤
+shadcn CLI v4.11.0 (2026). Common guidelines: `~/.claude/guidelines/common/`.
 
 ---
 
-## コンセプト
+## Core Principles
 
-shadcn/uiは**コンポーネントライブラリではなく、再利用可能なコンポーネント集**:
-- NPMでインストールせず、CLIでコードをコピー
-- プロジェクトに配置後、自由にカスタマイズ
-- 依存関係を最小限に抑える
+- **Copy & paste**: place code directly into the project, not an NPM package
+- **Customizable**: fully customizable components
+- **Accessibility**: WCAG compliant
+- **Radix UI + Tailwind**: solid foundation
 
 ---
 
-## v2.5.0以降の主要機能（CLI v4.11.0）
+## Concept
+
+shadcn/ui is **a collection of reusable components, not a component library**:
+- Install via CLI code copy, not NPM
+- Freely customize after placing in the project
+- Minimize dependencies
+
+---
+
+## Key Features since v2.5.0 (CLI v4.11.0)
 
 ### "Resolve Anywhere"
-- レジストリがアプリ内の任意の場所にファイル配置可能
-- 固定ファイル構造の制約を撤廃
-- インポート解決を自動化
+- Registry can place files anywhere in the app
+- Eliminates fixed file structure constraints
+- Automates import resolution
 
-### フレームワーク自動検出
-- CLIがフレームワークを自動検出
-- Laravel、Vite、React Routerに対応
-- ルート設定を自動調整
+### Framework Auto-detection
+- CLI auto-detects framework
+- Supports Laravel, Vite, React Router
+- Automatically adjusts route config
 
-### Tailwind v4 & React 19対応
-- Tailwind CSS v4実装
-- React 19サポート
+### Tailwind v4 & React 19 Support
+- Tailwind CSS v4 implementation
+- React 19 support
 
-### Next.js 16サポート
-- `init` コマンドでNext.js 16対応
+### Next.js 16 Support
+- `init` command supports Next.js 16
 
 ---
 
-## インストール
+## Installation
 
-### 初期化
+### Initialize
 ```bash
 npx shadcn@latest init
 ```
 
-対話式でプロジェクト設定:
+Interactive project setup:
 - TypeScript/JavaScript
-- スタイルテーマ
-- ベースカラー
-- CSS変数使用有無
+- Style theme
+- Base color
+- CSS variables usage
 
-### コンポーネント追加
+### Add Components
 ```bash
 npx shadcn@latest add button
 npx shadcn@latest add form
@@ -64,21 +64,21 @@ npx shadcn@latest add form
 
 ---
 
-## ディレクトリ構成
+## Directory Structure
 
 ```
 src/
 ├── components/
-│   └── ui/          # shadcn/uiコンポーネント
+│   └── ui/          # shadcn/ui components
 ├── lib/
-│   └── utils.ts     # ユーティリティ関数
+│   └── utils.ts     # utility functions
 ```
 
 ---
 
-## 主要コンポーネント
+## Key Components
 
-**Form** (React Hook Form + Zod統合):
+**Form** (React Hook Form + Zod integration):
 ```tsx
 const formSchema = z.object({ username: z.string().min(2).max(50) })
 function ProfileForm() {
@@ -87,16 +87,16 @@ function ProfileForm() {
 }
 ```
 
-**Button** / **Dialog** — variant指定で外観切替。Button: `default / destructive / outline / ghost`。Dialog: `DialogTrigger → DialogContent → DialogHeader` 構造。
+**Button** / **Dialog** — switch appearance with variant. Button: `default / destructive / outline / ghost`. Dialog: `DialogTrigger → DialogContent → DialogHeader` structure.
 
 ---
 
-## Blocks（v2.5+）
+## Blocks (v2.5+)
 
-すぐ使えるレイアウト:
-- ダッシュボードレイアウト
-- 認証ページ
-- レスポンシブ・アクセシブル・合成可能
+Ready-to-use layouts:
+- Dashboard layout
+- Authentication pages
+- Responsive, accessible, composable
 
 ```bash
 npx shadcn@latest add login-01
@@ -104,49 +104,49 @@ npx shadcn@latest add login-01
 
 ---
 
-## モノレポサポート
+## Monorepo Support
 
-CLIがモノレポ対応:
+CLI supports monorepo:
 ```bash
 npx shadcn@latest init --workspace=apps/web
 ```
 
 ---
 
-## MCP統合（近日公開）
+## MCP Integration (coming soon)
 
-ゼロコンフィグMCPサポート:
+Zero-config MCP support:
 ```bash
 npx shadcn registry:mcp
 ```
 
 ---
 
-## エコシステム（2026年）
+## Ecosystem (2026)
 
 ### TanCN
-TanStack（Query、Table、Form）統合
+TanStack (Query, Table, Form) integration
 
 ### FormCN
-フォームバリデーション特化
+Form validation focused
 
 ### Motion Primitives
-アニメーション統合
+Animation integration
 
 ---
 
-## ベストプラクティス
+## Best Practices
 
-### TypeScript活用
-- 全コンポーネント型安全
-- Props型を明示
+### TypeScript
+- All components type-safe
+- Explicit Props types
 
-### アクセシビリティ
-- ARIA属性自動付与（Radix UI）
-- キーボードナビゲーション対応
-- スクリーンリーダー対応
+### Accessibility
+- ARIA attributes auto-added (Radix UI)
+- Keyboard navigation support
+- Screen reader support
 
-### ダークモード
+### Dark Mode
 ```tsx
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -155,19 +155,19 @@ import { ThemeProvider } from "@/components/theme-provider"
 </ThemeProvider>
 ```
 
-### カスタマイズ
-コンポーネントはプロジェクト内にあるため、直接編集可能:
-- スタイル変更
-- 機能追加
-- バリアント追加
+### Customization
+Components live in the project, so edit them directly:
+- Style changes
+- Add features
+- Add variants
 
 ---
 
-## 推奨構成
+## Recommended Stack
 
-- **Next.js 15+** - App Router
-- **React 19** - 最新機能
-- **TypeScript** - 型安全性
-- **Tailwind CSS v4** - スタイリング
-- **Zod** - バリデーション
-- **React Hook Form** - フォーム管理
+- **Next.js 15+** — App Router
+- **React 19** — latest features
+- **TypeScript** — type safety
+- **Tailwind CSS v4** — styling
+- **Zod** — validation
+- **React Hook Form** — form management
