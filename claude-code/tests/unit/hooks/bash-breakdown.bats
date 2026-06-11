@@ -5,9 +5,10 @@
 # =============================================================================
 
 setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
+  load "../../helpers/common"
+  export PROJECT_ROOT
   export HOOK_FILE="${PROJECT_ROOT}/hooks/post-tool-use.sh"
-  export TEST_TMPDIR="$(mktemp -d)"
+  setup_test_tmpdir
   # HOME を上書きして ~/.claude/logs を tmp に向ける
   export ORIG_HOME="$HOME"
   export HOME="$TEST_TMPDIR"
@@ -16,7 +17,7 @@ setup() {
 
 teardown() {
   export HOME="$ORIG_HOME"
-  rm -rf "$TEST_TMPDIR"
+  teardown_test_tmpdir
 }
 
 # ヘルパー: Bash tool event JSON を生成してフックを実行

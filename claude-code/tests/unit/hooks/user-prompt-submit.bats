@@ -5,9 +5,10 @@
 # =============================================================================
 
 setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
+  load "../../helpers/common"
+  export PROJECT_ROOT
   export HOOK_FILE="${PROJECT_ROOT}/hooks/user-prompt-submit.sh"
-  export TEST_TMPDIR="$(mktemp -d)"
+  setup_test_tmpdir
 
   # テスト隔離: 実環境の /tmp/claude-ctx-pct, /tmp/claude-serena-fail-count を参照しない
   export CLAUDE_CTX_FILE="${TEST_TMPDIR}/_ctx_pct_unset"
@@ -22,7 +23,7 @@ setup() {
 }
 
 teardown() {
-  rm -rf "$TEST_TMPDIR"
+  teardown_test_tmpdir
 }
 
 # =============================================================================

@@ -5,9 +5,10 @@
 # =============================================================================
 
 setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
+  load "../../helpers/common"
+  export PROJECT_ROOT
   export HOOK_FILE="${PROJECT_ROOT}/hooks/session-end.sh"
-  export TEST_TMPDIR="$(mktemp -d)"
+  setup_test_tmpdir
   # session-end.sh は HOME/.claude/logs/ 配下を操作するため HOME を差し替え
   export HOME="${TEST_TMPDIR}"
   export LOGS_DIR="${TEST_TMPDIR}/.claude/logs"
@@ -15,7 +16,7 @@ setup() {
 }
 
 teardown() {
-  rm -rf "$TEST_TMPDIR"
+  teardown_test_tmpdir
 }
 
 # =============================================================================

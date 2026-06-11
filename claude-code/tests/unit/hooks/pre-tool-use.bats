@@ -5,13 +5,14 @@
 # =============================================================================
 
 setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
+  load "../../helpers/common"
+  export PROJECT_ROOT
   export HOOK_FILE="${PROJECT_ROOT}/hooks/pre-tool-use.sh"
-  export TEST_TMPDIR="$(mktemp -d)"
+  setup_test_tmpdir
 }
 
 teardown() {
-  rm -rf "$TEST_TMPDIR"
+  teardown_test_tmpdir
 }
 
 # =============================================================================
