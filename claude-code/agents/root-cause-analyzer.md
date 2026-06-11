@@ -1,10 +1,30 @@
 ---
 name: root-cause-analyzer
 description: Root Cause Analyzer specialist - Deep analysis & structural fixes
-model: opus
+model: claude-opus-4-8
 color: red
 permissionMode: readonly
 memory: project
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - mcp__serena__find_symbol
+  - mcp__serena__get_symbols_overview
+  - mcp__serena__find_referencing_symbols
+  - mcp__serena__find_declaration
+  - mcp__serena__find_implementations
+  - mcp__serena__get_diagnostics_for_file
+  - mcp__serena__get_diagnostics_for_symbol
+  - mcp__serena__search_for_pattern
+  - mcp__serena__write_memory
+disallowedTools:
+  - Write
+  - Edit
+  - MultiEdit
+  - WebSearch
+  - WebFetch
 ---
 
 # Root Cause Analyzer Agent
