@@ -1,158 +1,158 @@
-# 可観測性設計 ガイドライン
+# Observability Design Guidelines
 
-SLI/SLO設計、distributed tracing、metric/log/trace相関を構築する時に参照。OpenTelemetry semconv 2025準拠。
+Reference for building SLI/SLO, distributed tracing, and metric/log/trace correlation. Follows OpenTelemetry semconv 2025.
 
-## Tier区分
+## Tier classification
 
-| Tier | 内容 |
-|------|------|
-| Tier 1（必須） | SLI/SLO、構造化ログ、基本メトリクス |
-| Tier 2（規模別） | distributed tracing、Error Budget運用 |
-| Tier 3（深掘り） | OpenTelemetry semconv完全準拠、auto-instrumentation |
+| Tier | Content |
+|------|---------|
+| Tier 1 (required) | SLI/SLO, structured logging, basic metrics |
+| Tier 2 (scale-dependent) | Distributed tracing, Error Budget operation |
+| Tier 3 (advanced) | Full OpenTelemetry semconv compliance, auto-instrumentation |
 
 ---
 
 ## 1. SLI / SLO / Error Budget
 
-| 概念 | 定義 | 例 |
-|------|------|-----|
-| **SLI** | 観測可能なメトリクス | 可用性、レイテンシP99 |
-| **SLO** | 内部目標値 | 月次可用性99.9% |
-| **SLA** | 顧客契約値（SLOより緩い） | 月次可用性99.5% |
-| **Error Budget** | 許容失敗率 | `100% - SLO%` = 0.1% |
-| **Burn Rate** | 消費速度 | observed_errors / acceptable_errors |
+| Concept | Definition | Example |
+|---------|-----------|---------|
+| **SLI** | Observable metric | Availability, latency P99 |
+| **SLO** | Internal target | Monthly availability 99.9% |
+| **SLA** | Customer contract (looser than SLO) | Monthly availability 99.5% |
+| **Error Budget** | Allowable failure rate | `100% - SLO%` = 0.1% |
+| **Burn Rate** | Consumption speed | observed_errors / acceptable_errors |
 
-**SLO 99.9% の許容ダウンタイム**:
-- 30日 → 約43.2分
-- 7日 → 約10分
-- 1時間 → 約3.6秒
+**SLO 99.9% allowed downtime**:
+- 30 days → ~43.2 minutes
+- 7 days → ~10 minutes
+- 1 hour → ~3.6 seconds
 
 ---
 
-## 2. SLI設計（4 Golden Signals）
+## 2. SLI design (4 Golden Signals)
 
-| 種別 | SLI例 | 計測 |
-|------|--------|------|
+| Type | SLI example | Measurement |
+|------|-------------|------------|
 | **Latency** | P99 < 500ms | histogram |
-| **Traffic** | RPS、QPS | counter |
-| **Errors** | 5xx率 < 0.1% | counter（error/total） |
-| **Saturation** | CPU < 70%、queue depth | gauge |
+| **Traffic** | RPS, QPS | counter |
+| **Errors** | 5xx rate < 0.1% | counter (error/total) |
+| **Saturation** | CPU < 70%, queue depth | gauge |
 
-**SLI定義テンプレ**:
+**SLI definition template**:
 ```text
-有効リクエストのうち、200ms以内に成功応答した割合
-分子: count(status=2xx AND latency<200ms)
-分母: count(status IN (2xx,4xx,5xx) - status IN (401,429))
+Percentage of valid requests that returned a successful response within 200ms
+Numerator: count(status=2xx AND latency<200ms)
+Denominator: count(status IN (2xx,4xx,5xx) - status IN (401,429))
 ```
-（4xx計測対象除外は要件次第、認証/rate limit除外が定石）
+(Exclusion of some 4xx from denominator depends on requirements; excluding auth/rate-limit is standard)
 
 ---
 
-## 3. Burn Rateアラート（Multi-window）
+## 3. Burn Rate alert (multi-window)
 
-| Window | Burn Rate閾値 | 意味 | 通知 |
-|--------|--------------|------|------|
-| 1h | 14.4 | 1hで1日分消費 | PagerDuty緊急 |
-| 6h | 6 | 6hで1日分消費 | Slack警告 |
-| 3d | 1 | 平常通り | 無通知 |
+| Window | Burn Rate threshold | Meaning | Notification |
+|--------|--------------------|---------|-|
+| 1h | 14.4 | 1 day consumed in 1h | PagerDuty urgent |
+| 6h | 6 | 1 day consumed in 6h | Slack warning |
+| 3d | 1 | Normal rate | No notification |
 
-**式**: `burn_rate = error_rate / (1 - SLO)`
-
----
-
-## 4. 構造化ログ
-
-必須フィールド定義・禁止事項は `common/logging-standards.md` 参照。
+**Formula**: `burn_rate = error_rate / (1 - SLO)`
 
 ---
 
-## 5. Metric × Log × Trace相関
+## 4. Structured logging
+
+Required fields and prohibitions: see `common/logging-standards.md`.
+
+---
+
+## 5. Metric × Log × Trace correlation
 
 ```text
-Metric (急増検知)
-  → Log（trace_id で絞込）
-  → Trace（span 追跡で原因特定）
+Metric (detect spike)
+  → Log (filter by trace_id)
+  → Trace (follow spans to identify root cause)
 ```
 
-**実装**:
-- 全logに `trace_id`/`span_id` 自動付与（OpenTelemetry SDK）
-- exemplarでmetric ↔ trace直リンク
-- ダッシュボード: metricグラフ → クリックでtrace ID検索 → trace UI
+**Implementation**:
+- Auto-attach `trace_id`/`span_id` to all logs (OpenTelemetry SDK)
+- Exemplars for metric ↔ trace direct link
+- Dashboard: click metric graph → search trace ID → trace UI
 
 ---
 
-## 6. Distributed Tracing
+## 6. Distributed tracing
 
-| 要素 | 役割 |
-|------|------|
-| **trace_id** | 1リクエスト全体を識別（128bit） |
-| **span_id** | 1操作を識別（64bit） |
-| **parent_span_id** | 親子関係 |
-| **W3C Trace Context** | HTTP `traceparent` headerで伝播 |
+| Element | Role |
+|---------|------|
+| **trace_id** | Identifies full request (128-bit) |
+| **span_id** | Identifies single operation (64-bit) |
+| **parent_span_id** | Parent-child relationship |
+| **W3C Trace Context** | Propagate via HTTP `traceparent` header |
 
-**伝播例**:
+**Propagation example**:
 ```text
 Client → API Gateway → Order Service → Payment Service
-         traceparent header を毎ホップで継承・追加
+         inherit + add traceparent header at each hop
 ```
 
-**spanに必須属性**:
-- `service.name`、`service.version`
-- `http.method`、`http.status_code`、`http.url`
-- DB操作: `db.system`、`db.statement`（SQLをsanitize）
-- error時: `exception.type`、`exception.message`、`exception.stacktrace`
+**Required span attributes**:
+- `service.name`, `service.version`
+- `http.method`, `http.status_code`, `http.url`
+- DB operation: `db.system`, `db.statement` (sanitized SQL)
+- On error: `exception.type`, `exception.message`, `exception.stacktrace`
 
 ---
 
-## 7. インストルメンテーションchecklist
+## 7. Instrumentation checklist
 
-| 層 | 自動 | 手動追加 |
-|----|------|---------|
-| HTTP server | OTel auto | カスタムビジネス属性（user.id等） |
-| HTTP client | OTel auto | retry回数 |
-| DB driver | OTel auto | クエリ種別タグ |
-| Cache | 手動 | hit/miss |
-| Queue | 手動 | publish/consume span連結 |
-| Background job | 手動 | job.name、job.duration |
-
----
-
-## 8. ダッシュボード設計
-
-**最低3画面**:
-1. **Overview**: 4 Golden Signals + Error Budget残量
-2. **Service detail**: 各endpoint P50/P95/P99、エラー内訳
-3. **Trace explorer**: 直近のslow trace一覧 → drill-down
+| Layer | Auto | Manual additions |
+|-------|------|----------------|
+| HTTP server | OTel auto | Custom business attributes (user.id etc.) |
+| HTTP client | OTel auto | Retry count |
+| DB driver | OTel auto | Query type tag |
+| Cache | Manual | hit/miss |
+| Queue | Manual | Link publish/consume spans |
+| Background job | Manual | job.name, job.duration |
 
 ---
 
-## 9. アラート設計原則
+## 8. Dashboard design
 
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| CPU > 80% でalert | SLO違反 でalert | 顧客影響直結 |
-| 全エラーでalert | burn rate 14.4 / 6でalert | toil削減 |
-| 即PagerDuty | 多段（Slack→PD） | 重要度区分 |
-| 静的閾値のみ | 異常検知（anomaly） | 季節性吸収 |
+**Minimum 3 views**:
+1. **Overview**: 4 Golden Signals + Error Budget remaining
+2. **Service detail**: P50/P95/P99 per endpoint, error breakdown
+3. **Trace explorer**: recent slow traces → drill-down
 
-**alert fatigue回避**: 1日に1人あたり2件以下を目標。
+---
+
+## 9. Alert design principles
+
+| Avoid | Use instead | Reason |
+|-------|-------------|--------|
+| Alert on CPU > 80% | Alert on SLO violation | Directly tied to customer impact |
+| Alert on all errors | Alert on burn rate 14.4 / 6 | Reduces toil |
+| PagerDuty immediately | Multi-tier (Slack → PD) | Severity separation |
+| Static threshold only | Anomaly detection | Absorbs seasonality |
+
+**Alert fatigue prevention**: target < 2 alerts per person per day.
 
 ---
 
 ## 10. OpenTelemetry Semantic Conventions 2025
 
-主要semconv:
-- HTTP: `http.request.method`、`http.response.status_code`
-- DB: `db.system.name`、`db.operation.name`
-- Messaging: `messaging.system`、`messaging.operation.type`
-- GenAI: `gen_ai.system`、`gen_ai.request.model`（2025新規）
+Key semconv:
+- HTTP: `http.request.method`, `http.response.status_code`
+- DB: `db.system.name`, `db.operation.name`
+- Messaging: `messaging.system`, `messaging.operation.type`
+- GenAI: `gen_ai.system`, `gen_ai.request.model` (new in 2025)
 
-**2025安定化領域**: HTTP, Database, Messaging, GenAI（新規）。
+**2025 stable areas**: HTTP, Database, Messaging, GenAI (new).
 
 ---
 
-## 11. 参考
+## 11. References
 
 - Google SRE Workbook: Error Budget Policy
-- OpenTelemetry Semantic Conventions公式
-- 関連: `backend/database-performance.md`（slow query log）, `backend/security-hardening.md`（監査ログ統合）, `operations/monitoring-runbook.md`（インシデント対応）
+- OpenTelemetry Semantic Conventions official
+- Related: `backend/database-performance.md` (slow query log), `backend/security-hardening.md` (audit log integration), `operations/monitoring-runbook.md` (incident response)

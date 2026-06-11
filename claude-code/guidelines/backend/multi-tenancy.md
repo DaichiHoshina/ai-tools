@@ -1,74 +1,74 @@
-# Multi-tenancyガイドライン
+# Multi-tenancy Guidelines
 
-SaaS等で複数テナント（顧客）を1システムで捌く時のデータ分離・性能隔離・compliance設計。
+Data isolation, performance isolation, and compliance design when serving multiple tenants (customers) in a single system (SaaS etc.).
 
-## Tier区分
+## Tier classification
 
-| Tier | 内容 |
-|------|------|
-| Tier 1（必須） | 分離レベル選択、tenant識別、context伝播、誤クロス防止 |
-| Tier 2（規模別） | PostgreSQL RLS、noisy neighbor、tenant lifecycle、scaling戦略 |
-| Tier 3（深掘り） | tier間migration、compliance（GDPR/HIPAA）、cross-tenant analytics |
-
----
-
-## 1. 分離レベル3戦略
-
-| 戦略 | 分離粒度 | コスト | スケール上限 | 向く用途 |
-|------|---------|--------|------------|---------|
-| **DB分離**（database-per-tenant） | 最強 | 高（tenant数だけDB／ライセンス） | 低〜中（100s） | Enterprise顧客、HIPAA/PCI、data residency厳格 |
-| **Schema分離**（schema-per-tenant、shared DB） | 強 | 中（table数 = tenant × table） | 中（1,000s）、catalog肥大で性能劣化 | 中規模SaaS、準強い分離 |
-| **Row分離**（shared schema、`tenant_id` 列） | 弱（app層強制） | 最低 | 高（100,000s〜、sharding可） | B2B/B2C SaaS、コスト重視 |
-| **Hybrid** | 可変 | 可変 | 可変 | tier別（premiumのみDB分離、standardはrow） |
-
-**選定軸**:
-- compliance要件（HIPAA/PCI/GDPR data residency）→ DB分離
-- tenant数（想定100 vs 100,000）→ Row分離
-- noisy neighbor許容度 → 厳格ならDB分離
-- 運用体制（migration、backup、monitoringをtenant毎vs一括）
-
-**既定はRow分離**。後からtier別hybridに移行しやすい。初期からDB分離はoverengineeringの典型。
+| Tier | Content |
+|------|---------|
+| Tier 1 (required) | Isolation level selection, tenant identification, context propagation, cross-tenant prevention |
+| Tier 2 (scale-dependent) | PostgreSQL RLS, noisy neighbor, tenant lifecycle, scaling strategies |
+| Tier 3 (advanced) | Tier migration, compliance (GDPR/HIPAA), cross-tenant analytics |
 
 ---
 
-## 2. Tenant識別（リクエスト → tenant_id解決）
+## 1. Three isolation strategies
 
-| 方式 | 例 | 利点 | 欠点 |
-|------|-----|------|------|
-| **subdomain** | `acme.app.com` | SEO自然、routing明示、ブックマーク可能 | DNS + wildcard SSL必要 |
-| **path** | `/t/acme/dashboard` | 設定簡単 | URL冗長、SEO弱 |
-| **custom domain** | `portal.acme.com` | white-label可 | domain管理・SSL追加 |
-| **JWT claim** | token内 `tenant_id` | APIに自然 | URLからtenant不明、リンク共有しにくい |
-| **header** | `X-Tenant-ID` | 内部APIに好適 | クライアント側で管理必要 |
+| Strategy | Isolation | Cost | Scale ceiling | Suitable for |
+|----------|-----------|------|---------------|-------------|
+| **DB isolation** (database-per-tenant) | Strongest | High (DB/license per tenant) | Low-medium (100s) | Enterprise customers, HIPAA/PCI, strict data residency |
+| **Schema isolation** (schema-per-tenant, shared DB) | Strong | Medium (tables = tenants × tables) | Medium (1,000s); catalog bloat degrades perf | Mid-scale SaaS, near-strong isolation |
+| **Row isolation** (shared schema, `tenant_id` column) | Weak (app-layer enforced) | Lowest | High (100,000s+; sharding possible) | B2B/B2C SaaS, cost-focused |
+| **Hybrid** | Variable | Variable | Variable | Tier-based (DB isolation for premium, row for standard) |
 
-**推奨**: フロント向けはsubdomain（+ custom domainサポート）、内部APIはJWT claim。
+**Selection criteria**:
+- Compliance requirements (HIPAA/PCI/GDPR data residency) → DB isolation
+- Tenant count (100 vs 100,000) → Row isolation
+- Noisy neighbor tolerance → DB isolation if strict
+- Operations model (per-tenant vs bulk migration/backup/monitoring)
 
----
-
-## 3. Tenant Context伝播
-
-request全体でtenant_idを安全に引き回す。
-
-| 言語 | 手段 |
-|------|------|
-| **Go** | `context.Context` に `tenant_id` 格納、middlewareで注入 |
-| **Node.js** | `AsyncLocalStorage`（Node 16+）でnon-blocking伝播 |
-| **Python** | `contextvars.ContextVar`（asyncio対応） |
-| **Java** | `ThreadLocal`（blocking）or `Reactor Context`（reactive） |
-
-**原則**:
-- middlewareでrequest初期化時に1回だけ抽出、以降はcontext経由
-- DB query、外部API呼出、log、event publishの **全箇所でtenant_id注入**
-- context未設定時は **明示的にreject**（fail-safe）、デフォルトtenant禁止
+**Default: Row isolation.** Easy to migrate to tier-based hybrid later. Starting with DB isolation is typical over-engineering.
 
 ---
 
-## 4. Row分離の実装
+## 2. Tenant identification (request → tenant_id resolution)
 
-### スキーマ
+| Method | Example | Pros | Cons |
+|--------|---------|------|------|
+| **Subdomain** | `acme.app.com` | Natural SEO, explicit routing, bookmarkable | Requires DNS + wildcard SSL |
+| **Path** | `/t/acme/dashboard` | Easy config | Verbose URL, weak SEO |
+| **Custom domain** | `portal.acme.com` | White-label possible | Domain management + SSL overhead |
+| **JWT claim** | `tenant_id` in token | Natural for APIs | Tenant not visible in URL |
+| **Header** | `X-Tenant-ID` | Good for internal APIs | Client must manage |
+
+**Recommendation**: Subdomain for frontend (+ custom domain support); JWT claim for internal APIs.
+
+---
+
+## 3. Tenant context propagation
+
+Safely carry tenant_id throughout the request.
+
+| Language | Mechanism |
+|----------|-----------|
+| **Go** | Store `tenant_id` in `context.Context`; inject via middleware |
+| **Node.js** | `AsyncLocalStorage` (Node 16+) for non-blocking propagation |
+| **Python** | `contextvars.ContextVar` (asyncio compatible) |
+| **Java** | `ThreadLocal` (blocking) or `Reactor Context` (reactive) |
+
+**Rules**:
+- Extract once in middleware at request initialization; use context from that point on
+- Inject tenant_id at **all points**: DB queries, external API calls, logs, event publish
+- Reject explicitly when context is not set (fail-safe); no default tenant
+
+---
+
+## 4. Row isolation implementation
+
+### Schema
 
 ```sql
--- 全 tenant-scoped テーブルに tenant_id NOT NULL
+-- All tenant-scoped tables require tenant_id NOT NULL
 CREATE TABLE users (
   id UUID PRIMARY KEY,
   tenant_id UUID NOT NULL REFERENCES tenants(id),
@@ -79,148 +79,148 @@ CREATE INDEX idx_users_tenant_email ON users(tenant_id, email);
 CREATE UNIQUE INDEX uq_users_tenant_email ON users(tenant_id, email);
 ```
 
-**index設計**: `(tenant_id, ...)` 複合indexを全lookupに。`tenant_id` 単独indexはcardinality低で非効率。
+**Index design**: composite `(tenant_id, ...)` for all lookups. `tenant_id` alone is low-cardinality and inefficient.
 
-### Query強制
+### Query enforcement
 
-- ORM hook / middlewareで全queryに `WHERE tenant_id = :current_tenant` 自動注入
-- 生SQL書く箇所はcode review / lintで検出
-- 「tenant_idを条件に含まないSELECT」は **禁止lint rule** を作る
+- Auto-inject `WHERE tenant_id = :current_tenant` via ORM hook / middleware
+- Raw SQL locations: detect via code review / lint
+- "SELECT without tenant_id condition" → create a **forbidden lint rule**
 
-### 結合の制約
+### Join constraint
 
 ```sql
--- OK: 同一 tenant 内 JOIN
+-- OK: same-tenant JOIN
 SELECT o.*, u.email FROM orders o
 JOIN users u ON o.user_id = u.id AND o.tenant_id = u.tenant_id
 WHERE o.tenant_id = :current_tenant;
 ```
 
-cross-tenant JOINは禁止（`u.tenant_id = o.tenant_id` 条件を必ず付ける）。
+Cross-tenant JOIN is forbidden (always include `u.tenant_id = o.tenant_id` condition).
 
 ---
 
-## 5. PostgreSQL RLS（Row-Level Security）
+## 5. PostgreSQL RLS (Row-Level Security)
 
-app層bugでtenant漏洩を防ぐDB層防御。**app層強制と併用**（RLSだけに依存せず二重化）。
+DB-layer defense against app-layer bug exposing tenant data. **Use together with app-layer enforcement** (do not rely on RLS alone).
 
 ```sql
--- RLS 有効化
+-- Enable RLS
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE users FORCE ROW LEVEL SECURITY;  -- table owner にも適用
+ALTER TABLE users FORCE ROW LEVEL SECURITY;  -- apply to table owner too
 
--- policy 定義
+-- Define policy
 CREATE POLICY tenant_isolation ON users
   USING (tenant_id = current_setting('app.current_tenant', true)::uuid);
 
--- request 毎に BEGIN 直後で SET LOCAL（tx 終了で自動解除）
+-- Set per request: after BEGIN, before business query
 BEGIN;
 SET LOCAL app.current_tenant = '550e8400-e29b-41d4-a716-446655440000';
--- 業務 query
+-- business query
 COMMIT;
 ```
 
-**注意**:
-- **`SET LOCAL` 必須**（connection pool/PgBouncer transaction pooling下でsession-scoped `SET` は次requestにtenant contextが漏洩 → isolation崩壊）。必ず `BEGIN` 後に `SET LOCAL` でtx scopeに限定
-- `BYPASSRLS` 権限を持つroleでadmin/migration操作（業務roleは持たせない）
-- **`pg_dump` はRLSをbypassするのが既定**（table owner / superuserは `row_security=off` デフォルト）。backup/exportをtenant-safeにするには (a) 非owner role + `row_security=on` で実行、または (b) app経由のexportを使う。pg_dumpにtenant隔離を任せない
-- logical replicationもowner実行ならRLS無視、専用role必須
+**Cautions**:
+- **`SET LOCAL` is required** (under connection pool/PgBouncer transaction pooling, session-scoped `SET` leaks tenant context to next request → isolation broken). Always use `SET LOCAL` after `BEGIN` to scope to TX.
+- `BYPASSRLS` privilege only for admin/migration roles (never for business roles)
+- **`pg_dump` bypasses RLS by default** (table owner / superuser has `row_security=off`). For tenant-safe backup/export: (a) run with non-owner role + `row_security=on`, or (b) use app-layer export. Do not rely on pg_dump for tenant isolation.
+- Logical replication also ignores RLS if run as owner; use dedicated role.
 
-**MySQLはRLS非対応**。定義者権限付きVIEW + session variableで擬似実装可能だが、基本app層強制が本命。
-
----
-
-## 6. Noisy Neighbor対策
-
-1 tenantの過負荷が他に波及しない仕組み。
-
-| 対策 | 実装 |
-|------|------|
-| **connection pool分離** | tier別pool（premium tenantにdedicated pool） |
-| **query rate limit** | tenant毎のAPI rate limit（token bucket） |
-| **query timeout** | `SET LOCAL statement_timeout = '5s'` per tx |
-| **resource quota** | CPU/memory limit（cgroup、container per tier） |
-| **monitoring分離** | tenant毎のlatency / error rate / throughput metric |
-| **background job分離** | heavy jobはper-tenant queue or dedicated worker |
-
-**p99 monitoring**: 全tenant合算だとheavy tenantがp99を支配してinvisibleに。**tenant別p99** と全体p99を分けてSLO管理。
+**MySQL has no RLS**. Pseudo-implementation via definer-rights VIEW + session variable is possible, but app-layer enforcement is the primary approach.
 
 ---
 
-## 7. Tenant Lifecycle
+## 6. Noisy neighbor mitigation
 
-| Phase | 処理 | 注意 |
-|-------|------|------|
-| **provisioning** | tenant行insert、初期schema/data seed、DNS登録、welcome email | idempotentに（retry安全） |
-| **suspension** | 読取専用化、billing failure等で一時停止 | hard deleteしない、猶予期間 |
-| **export** | 全tenant dataをCSV/JSONでエクスポート（GDPR data portability） | large tenantはasync + 通知 |
-| **deletion** | GDPR right to erasure、cascade delete、backup含む完全消去 | retention期間 + audit log別保存、法的最低保持義務確認 |
-| **tier migration** | row → schema分離への昇格 | 低down-time（読取専用化 + dump/restore + 切替） |
+Prevent one tenant's overload from impacting others.
 
-**soft deleteの落とし穴**: `deleted_at IS NULL` 条件を忘れると削除済みtenantのdataがleak。tenant statusはenum（active/suspended/deleted）で明示。
+| Mitigation | Implementation |
+|-----------|---------------|
+| **Connection pool isolation** | Tier-based pools (dedicated pool for premium tenants) |
+| **Query rate limit** | Per-tenant API rate limit (token bucket) |
+| **Query timeout** | `SET LOCAL statement_timeout = '5s'` per TX |
+| **Resource quota** | CPU/memory limits (cgroup, container per tier) |
+| **Monitoring isolation** | Per-tenant latency / error rate / throughput metrics |
+| **Background job isolation** | Per-tenant queue or dedicated worker for heavy jobs |
+
+**p99 monitoring**: Aggregated p99 across all tenants hides heavy tenants. Track **per-tenant p99** and global p99 separately for SLO management.
 
 ---
 
-## 8. Scaling戦略
+## 7. Tenant lifecycle
 
-### Row分離でのscaling
+| Phase | Processing | Caution |
+|-------|-----------|---------|
+| **Provisioning** | Insert tenant row, seed initial schema/data, register DNS, send welcome email | Make idempotent (retry-safe) |
+| **Suspension** | Set read-only; temporary pause for billing failure etc. | No hard delete; allow grace period |
+| **Export** | Export all tenant data as CSV/JSON (GDPR data portability) | Large tenants: async + notification |
+| **Deletion** | GDPR right to erasure; cascade delete including DB, backup, log, cache, CDN, event store | Retention period + separate audit log; verify minimum legal retention |
+| **Tier migration** | Promote row → schema isolation | Minimize downtime (read-only + dump/restore + cutover) |
 
-- **水平sharding**: `tenant_id` をshard keyに。同一tenantは同一shardに集約（cross-shard JOIN不要）
-- **hot tenant対策**: heavy tenantをdedicated shardに分離（tier昇格と組合せ）
-- **consistent hashing**: tenant追加時のrebalanceコスト最小化
+**Soft delete pitfall**: forgetting `deleted_at IS NULL` leaks deleted tenant data. Use explicit status enum (active/suspended/deleted).
 
-### Schema分離の限界
+---
 
-PostgreSQLでschema 10,000+ はcatalog肥大（pg_class、pg_attribute）でquery planner遅延、autovacuum負荷増。経験則で **1,000 schemas超えたら要設計見直し**。
+## 8. Scaling strategies
 
-### DB分離の運用
+### Row isolation scaling
 
-- tenant毎にbackup / restore / migration実行 → 運用自動化必須
-- connection poolはtenant単位or shared（PgBouncerのtransaction pooling）
+- **Horizontal sharding**: use `tenant_id` as shard key; same tenant on same shard (no cross-shard JOIN)
+- **Hot tenant mitigation**: move heavy tenants to dedicated shard (combine with tier upgrade)
+- **Consistent hashing**: minimize rebalance cost when adding tenants
+
+### Schema isolation limits
+
+PostgreSQL with 10,000+ schemas causes catalog bloat (pg_class, pg_attribute) → query planner slowdown and autovacuum load increase. Rule of thumb: **redesign when exceeding 1,000 schemas**.
+
+### DB isolation operations
+
+- Run backup / restore / migration per tenant → operations automation required
+- Connection pool: per-tenant or shared (PgBouncer transaction pooling)
 
 ---
 
 ## 9. Compliance
 
-| 要件 | 対応 |
-|------|------|
-| **GDPR data residency** | region pinning（EU tenantはEU region DB）、cross-region replication禁止 |
-| **GDPR right to erasure** | 完全削除フロー（DB、backup、log、cache、CDN、event store） |
-| **HIPAA / PCI DSS** | DB分離推奨、audit log分離、encryption at rest/in transit、BAA |
-| **SOC 2** | tenant毎のaccess log、change log、anomaly detection |
-| **data export** | self-service export UI、machine-readable format |
+| Requirement | Response |
+|-------------|---------|
+| **GDPR data residency** | Region pinning (EU tenants on EU region DB); prohibit cross-region replication |
+| **GDPR right to erasure** | Complete deletion flow (DB, backup, log, cache, CDN, event store) |
+| **HIPAA / PCI DSS** | DB isolation recommended; separate audit log; encryption at rest/in transit; BAA |
+| **SOC 2** | Per-tenant access log, change log, anomaly detection |
+| **Data export** | Self-service export UI, machine-readable format |
 
 ---
 
-## 10. Cross-tenant Analytics
+## 10. Cross-tenant analytics
 
-集約データ分析はproduction DBで直接やらない。
+Do not run aggregation queries directly against production DB.
 
-- **dedicated read replica** or **data warehouse**（Snowflake/BigQuery）にETL
-- **anonymization**: `tenant_id` をhash化、PIIマスク
-- **aggregate only**: 個別recordでなく集計queryのみ許可
-- **access control**: analytics用roleはproduction DB書込権限なし
-
----
-
-## 11. アンチパターン
-
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| `WHERE tenant_id = ?` 書き忘れ | ORM hook / middleware自動注入 + lint | 他tenant data漏洩（critical） |
-| `BYPASSRLS` roleで全app動作 | 業務roleはRLS適用、adminのみbypass | 事故で全tenant横断 |
-| tenant_idをint auto-increment | UUID v7等の非連番 | enumeration攻撃（tenant列挙） |
-| cross-tenant JOIN | tenant_idをJOIN条件に含める | データ混在 |
-| shared lookup tableにtenantデータ混在 | tenant-scoped専用table | 削除時cascade破綻 |
-| schema-per-tenantで10,000+ 到達 | row分離 + sharding | catalog肥大 → planner遅延 |
-| soft deleteの `deleted_at` 条件漏れ | status enumで明示 + viewで隠蔽 | 削除済tenant data leak |
-| global一覧queryがtenant別p99を隠す | tenant別metricを分離監視 | heavy tenant見逃し |
+- ETL to **dedicated read replica** or **data warehouse** (Snowflake/BigQuery)
+- **Anonymization**: hash `tenant_id`; mask PII
+- **Aggregate only**: allow only aggregate queries, not individual records
+- **Access control**: analytics role has no write access to production DB
 
 ---
 
-## 12. 参考
+## 11. Anti-patterns
 
-- 「Multi-Tenant Data Architecture」(Microsoft Azure Architecture Center)
-- PostgreSQL RLS公式、AWS SaaS Factory
-- 「The SaaS Playbook」(Rob Walling)
-- 関連: `backend/database-performance.md`（index設計）、`backend/scalability-patterns.md`（sharding）、`backend/security-hardening.md`（認可）、`backend/observability-design.md`（tenant別metric）
+| Avoid | Use instead | Reason |
+|-------|-------------|--------|
+| Forgetting `WHERE tenant_id = ?` | ORM hook/middleware auto-inject + lint | Other tenant data leak (critical) |
+| `BYPASSRLS` role for all app operations | Business role with RLS; admin only for bypass | Accidental cross-tenant access |
+| int auto-increment for tenant_id | UUID v7 or non-sequential | Enumeration attack (tenant enumeration) |
+| Cross-tenant JOIN | Include tenant_id in JOIN condition | Data mixing |
+| Tenant data in shared lookup table | Tenant-scoped dedicated table | Cascade breaks on deletion |
+| schema-per-tenant reaching 10,000+ | Row isolation + sharding | Catalog bloat → planner slowdown |
+| `deleted_at` condition omission in soft delete | Explicit status enum + hide via view | Deleted tenant data leak |
+| Global list query hiding per-tenant p99 | Isolate tenant-specific monitoring | Heavy tenant goes undetected |
+
+---
+
+## 12. References
+
+- "Multi-Tenant Data Architecture" (Microsoft Azure Architecture Center)
+- PostgreSQL RLS official docs, AWS SaaS Factory
+- "The SaaS Playbook" (Rob Walling)
+- Related: `backend/database-performance.md` (index design), `backend/scalability-patterns.md` (sharding), `backend/security-hardening.md` (authorization), `backend/observability-design.md` (per-tenant metrics)
