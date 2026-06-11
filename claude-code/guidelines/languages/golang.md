@@ -130,11 +130,7 @@ Check `go.mod` `go` directive for target version before flagging.
 
 ### Build Tags
 
-| Tag | `t.Parallel()` | DB/Fixtures | Use |
-|-----|----------------|-------------|-----|
-| `parallel` | REQUIRED | FORBIDDEN (use mock) | Unit |
-| `serial` | FORBIDDEN | Allowed | Repository impl |
-| `integration` | FORBIDDEN | Allowed | Full-stack |
+ビルドタグ × DB × 並列化の対応表: `go-test-stability.md` 参照。
 
 ### Table-Driven / Flaky Test Prevention
 

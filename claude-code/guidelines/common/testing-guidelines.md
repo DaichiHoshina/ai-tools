@@ -96,15 +96,4 @@ npm test -- --coverage
 
 ### Go: テーブル駆動テスト
 
-**同じロジックを複数の入力パターンで検証**
-
-```go
-tests := []struct {
-  input int
-  want  int
-}{
-  {1, 2}, {2, 4},
-}
-```
-
-**Why**: メンテナンス性向上
+Go 詳細 (`map[string]struct{}` 必須 / 並列化 / go-cmp): `guidelines/languages/golang.md` / `guidelines/languages/go-test-stability.md` 参照。
