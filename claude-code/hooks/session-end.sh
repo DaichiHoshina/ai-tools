@@ -36,7 +36,8 @@ PROJECT_NAME=$(basename "$PROJECT_DIR")
 # ログ保存
 LOG_DIR="$HOME/.claude/session-logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/$(date +%Y%m%d).log"
+printf -v _LOG_DATE '%(%Y%m%d)T' -1
+LOG_FILE="$LOG_DIR/${_LOG_DATE}.log"
 
 # ローテーション（7日超削除）をバックグラウンドへ
 find "$LOG_DIR" -type f -mtime +7 -delete 2>/dev/null &

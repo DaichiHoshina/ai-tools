@@ -685,7 +685,7 @@ _inject_today_commits() {
   # session_id が取得できた場合はそれを使用 (session 単位で確実に重複抑制)
   # 取得できない場合は $$ fallback (毎 hook 起動別PIDで重複抑制は機能しないが inject 自体は行う)
   local _session_key="${SESSION_ID:-$$}"
-  local _today=$(date +%Y%m%d)
+  local _today; printf -v _today '%(%Y%m%d)T' -1
   local _flag_file="/tmp/claude-today-commits-${_session_key}-${_today}"
   if [[ -f "$_flag_file" ]]; then
     return 0
@@ -769,8 +769,7 @@ _inject_today_commits() {
 # 重複抑制: SESSION_ID ベースの flag file で 1 session 1 回のみ inject
 _inject_ng_dict_on_commit_compose() {
   local _session_key="${SESSION_ID:-$$}"
-  local _today
-  _today=$(date +%Y%m%d)
+  local _today; printf -v _today '%(%Y%m%d)T' -1
   local _flag_file="/tmp/claude-ng-inject-${_session_key}-${_today}"
   if [[ -f "$_flag_file" ]]; then
     return 0

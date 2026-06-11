@@ -29,7 +29,7 @@ eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "unknown") _CWD=\(.cwd // ""
 _SS_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SS_SESSION_ID}}"
 _SS_PROJECT=$(basename "${_CWD:-.}")
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
-_SS_DATE_TODAY=$(date +%Y%m%d)
+printf -v _SS_DATE_TODAY '%(%Y%m%d)T' -1
 
 # ====================================
 # statusline マーカー初期化
@@ -258,7 +258,7 @@ if [[ -n "${_CWD:-}" ]]; then
     [[ -f "${_MEMORY_INDEX}" ]] || _MEMORY_INDEX=""
 fi
 # state file は project 別 (memory も project 別、reminder も project 単位で 1 日 1 回)
-_PROMOTE_STATE_FILE="${_PROMOTE_STATE_DIR}/promote-prompted-${_CWD_SLUG:-default}-$(date +%Y%m%d)"
+_PROMOTE_STATE_FILE="${_PROMOTE_STATE_DIR}/promote-prompted-${_CWD_SLUG:-default}-${_SS_DATE_TODAY}"
 if [[ -f "${_MEMORY_INDEX}" ]] && [[ ! -f "${_PROMOTE_STATE_FILE}" ]]; then
     _MEMORY_DIR=$(dirname "${_MEMORY_INDEX}")
     _MEMORY_LINES=$(wc -l < "${_MEMORY_INDEX}" 2>/dev/null || echo 0)

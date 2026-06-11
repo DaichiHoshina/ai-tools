@@ -37,7 +37,8 @@ _append_jp_quality_log() {
     local fsize
     fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
-      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+      local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
+      mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
     fi
   fi
   local ts
@@ -148,7 +149,8 @@ _append_jp_quality_inject_log() {
     local fsize
     fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
-      mv "$log_file" "${log_file}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+      local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
+      mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
     fi
   fi
   local ts

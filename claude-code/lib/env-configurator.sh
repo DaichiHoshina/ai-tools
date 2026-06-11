@@ -151,7 +151,8 @@ configure_settings_json() {
         print_warning "settings.json が既に存在します"
         if confirm "上書きしますか？（既存はバックアップされます）"; then
             local backup
-            backup="$claude_dir/settings.json.backup.$(date +%Y%m%d%H%M%S)"
+            local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
+            backup="$claude_dir/settings.json.backup.${_bak_ts}"
             cp "$claude_dir/settings.json" "$backup"
             print_info "バックアップ: $backup"
             generate_settings_json

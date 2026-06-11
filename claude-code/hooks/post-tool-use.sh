@@ -17,7 +17,7 @@ INPUT=$(cat)
 eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") RELATIVE_PATH=\(.tool_input.relative_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "") BASH_STDOUT=\(if .tool_name == "Bash" then (.tool_response.stdout // "") else "" end)"' <<< "$INPUT")"
 SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
-DATE_TODAY=$(date +%Y%m%d)
+printf -v DATE_TODAY '%(%Y%m%d)T' -1
 
 # デフォルトメッセージ
 MESSAGE=""

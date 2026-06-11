@@ -46,7 +46,7 @@ fi
 IFS=$'\t' read -r _SESSION_ID _INIT_CWD < <(jq -r '[.session_id // "unknown", .cwd // ""] | @tsv' <<< "$input")
 _SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SESSION_ID}}"
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
-_DATE_TODAY=$(date +%Y%m%d)
+printf -v _DATE_TODAY '%(%Y%m%d)T' -1
 
 # === Session bloat check: 3h超 or msg 1000超で /clear 推奨通知 ===
 # throttle: 同 session 内 15min に1回のみ通知 (/tmp/claude_session_bloat_<id>_<date>)
@@ -391,7 +391,8 @@ ${_OUTWARD_MODE_CTX}"
       if [[ -f "${_SIZE_LOG}" ]]; then
         _fsize=$(stat -f%z "${_SIZE_LOG}" 2>/dev/null || stat -c%s "${_SIZE_LOG}" 2>/dev/null || echo 0)
         if [[ "${_fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
-          mv "${_SIZE_LOG}" "${_SIZE_LOG}.$(date +%Y%m%d%H%M%S).bak" 2>/dev/null || true
+          local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
+          mv "${_SIZE_LOG}" "${_SIZE_LOG}.${_bak_ts}.bak" 2>/dev/null || true
         fi
       fi
       _ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
