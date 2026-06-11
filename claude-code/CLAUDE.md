@@ -126,6 +126,8 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 
 **AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。
 
+**commit message 起草前 sweep** (7d 集計 top-6、`[[retrospective-2026-06-12]]` P1): `鑑みる` `踏襲` `喫緊` `leverage` `utilize` `mitigate` を **書く前に確認**して使わない。代替: `踏まえる` / `引き継ぐ` / `直近` / `使う` / `活かす` / `緩和する` 等。787 block/週 が retry loop の主因。
+
 ## References
 
 High freq: `references/model-selection.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md` / `references/developer-agent-delegation-prompt.md`

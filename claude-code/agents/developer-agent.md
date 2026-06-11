@@ -189,7 +189,7 @@ Schema: `references/agent-team-contract.md` §5 (Developer → parent) を canon
 **必須 field** (省略禁止):
 - `status`: `success` / `partial` / `failure` / `dep_unresolved` literal (`completed` 等 alias 禁止)
 - `task_id`
-- `changed_files[]`: 各要素は `{path, change}` の 2 sub-field、`change` literal は `"add"` / `"modify"` / `"delete"` (`change_type` 等 field 名改変禁止)
+- `changed_files[]`: 各要素は `{path, change}` の 2 sub-field、`change` literal は `"add"` / `"modify"` / `"delete"` (`change_type` 等 field 名改変禁止)。**`path` は repo root からの相対 path 必須** (`claude-code/hooks/pre-tool-use.sh` のように)。`hooks/lib/thresholds.sh` のような部分 path 表記は parent が file 実在を二重 grep する churn 発生 (`[[retrospective-2026-06-12]]` P2)
 - `verification`: `{lint, typecheck, test}` の 3 sub-field、値は `✓` (完了) / `✗` (失敗) / `—` (N/A) literal、`[ ]` (未チェック) 禁止、`grep_entry` 等独自 sub-field 追加禁止
 - `impl_notes_path` (Team flow のみ、それ以外 omit、`impl_notes` 等 field 名省略禁止)
 

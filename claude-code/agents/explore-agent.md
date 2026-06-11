@@ -114,7 +114,7 @@ Prompt includes "you are explore1" etc. at startup.
 ## Findings: [specialization]
 
 ### Key findings
-[Domain-specific findings]
+[Domain-specific findings, each tagged `confidence: XX%`]
 
 ### Details
 [File names, line numbers, symbol names]
@@ -124,6 +124,8 @@ Prompt includes "you are explore1" etc. at startup.
 ```
 
 **Zero case rule**: If no findings, do not omit sections. Use `### Key findings: None (reason: <scope & conclusion>)` to distinguish from "not executed."
+
+**Confidence score (必須)**: 各 finding に `confidence: XX%` を明示する。判定基準: file 実在 + grep hit + 1 次 source 直接読込 = 95-100% / file 実在 + 1 次 source 推定 = 80-94% / grep hit のみ 推測含む = 60-79% / 推測のみ = <60%。**< 80% は出力前に self-discard** (parent 側で hallucination 起因 churn 発生防止、`[[retrospective-2026-06-12]]` P3 の SKILL.md 18 file 誤検出事例参照)。
 
 ### Specialization-specific notes
 
