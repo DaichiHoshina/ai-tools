@@ -37,11 +37,11 @@ All responses in English (preserve technical terms, tool names).
 
 ## Input contract
 
-Schema: `references/agent-team-contract.md` §6 (parent → Reviewer) を canonical 参照。
+Schema: `references/agent-team-contract.md` §6 (parent → Reviewer) canonical reference.
 
-**Required**: `diff_target` のみ
+**Required**: `diff_target` only
 
-**Optional defaults** (missing 時の挙動):
+**Optional defaults** (behavior when missing):
 
 | Field (contract) | Default if missing |
 |------|-------------------|
