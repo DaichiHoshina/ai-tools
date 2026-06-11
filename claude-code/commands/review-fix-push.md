@@ -7,7 +7,7 @@ description: Review→fix→regression check→push in 1 command. /review + /dev
 
 Find issues via review → fix → **verify no regression via re-review** → push → create PR. Fix doesn't introduce new Critical issues.
 
-> **vs `/flow`**: `/flow` は「タスク記述からの新規実装 → PR」までを担う全工程経路、`/review-fix-push` は「既に書いたコードのレビューループ保証 → PR」専用。新規実装中は `/flow` の末尾 (`/review` + review-fix loop + `/git-push`) で `/review-fix-push` 相当を内包するため二重起動不要。既存変更を後追いで仕上げたい時のみ `/review-fix-push` を直接呼ぶ。
+> **vs `/flow`**: `/flow` owns the full path from task description to new implementation → PR. `/review-fix-push` is dedicated to "review-loop guarantee for already-written code → PR". New implementation uses `/flow`'s tail (`/review` + review-fix loop + `/git-push`), which subsumes `/review-fix-push` — no double invocation needed. Use `/review-fix-push` only to finish existing changes after the fact.
 
 ## Flow
 
@@ -21,7 +21,7 @@ Skill("comprehensive-review")
 
 ### Step 1.5: Self-Review Pass (必須)
 
-Step 1 の出力をそのまま fix にかけず、**必ず** 2 段階の Self-Review を通す。詳細: `commands/review.md` `## Delegation & Self-Review (必須、2 段階)` 参照。noise discard 方針: `rules/review-noise-discard.md`。Critical 0 + Warning 0 → Step 2 で push へ skip。判断ログは user 提示に含めない。
+Never feed Step 1 output directly to fix. Always apply 2-stage Self-Review. Details: `commands/review.md` `## Delegation & Self-Review (必須、2 段階)`. Noise discard policy: `rules/review-noise-discard.md`. Critical 0 + Warning 0 → skip to Step 2 (push). Judgment log: do not surface to user.
 
 ### Step 2: Decide
 
@@ -37,11 +37,11 @@ Step 1 の出力をそのまま fix にかけず、**必ず** 2 段階の Self-R
 | Critical | fix all (required) |
 | Warning | fix all (`--critical-only` skips) |
 
-Critical/Warning fixes は `Task(developer-agent)` へ委譲 (`CLAUDE.md` "Auto-Delegation" セクション準拠)。parent inline 実装は禁止。
+Delegate Critical/Warning fixes to `Task(developer-agent)` (per `CLAUDE.md` "Auto-Delegation" section). Parent inline implementation forbidden.
 
 ### Step 4: Regression Check (loop)
 
-Verify fix didn't create new issues **via re-review**. iteration 2 以降は scope 縮小で再 review を効率化（新規 finding 検出範囲は同等、前 iteration 領域は skip）。
+Verify fix didn't create new issues **via re-review**. From iteration 2 onward, narrow scope for efficiency (same detection range for new findings; skip prior-iteration areas).
 
 ```text
 initial_base = git rev-parse HEAD  # Step 1 review 対象の base

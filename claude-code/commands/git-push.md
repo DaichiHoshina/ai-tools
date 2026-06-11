@@ -41,15 +41,15 @@ Execute commit → push → PR/MR creation in single command.
 ### Common
 
 1. Check state (`git status --short` / `branch --show-current` / `diff --stat` / `log --oneline -5`)
-2. **Writing memory pre-check** (commit msg / PR body draft 前必須): `mcp__serena__list_memories` で `writing_failure_*` を確認、関連ありそうなら read してアンチパターン回避。ai-tools project の auto-memory にも `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/writing_failure_*` あり (link-overdose / compound-noun-stack 等)
+2. **Writing memory pre-check** (required before commit msg / PR body draft): check `writing_failure_*` via `mcp__serena__list_memories`; read relevant entries to avoid anti-patterns. ai-tools project auto-memory also at `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/writing_failure_*` (link-overdose / compound-noun-stack etc.)
 3. Uncommitted changes present → analyze diff → generate Conventional Commits msg → confirm w/ user → commit
-3.5. **writing check (commit message)**: commit msg draft を **生成時点で** NG 語チェックする (confirm 前)。
-   - `guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md) に対して grep 突き合わせ
-   - Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (max 3 loop)
-   - 3 loop 後も hit 残存 → 残存語を提示して user に続行確認
-   - **注**: hook (pre-tool-use.sh) が `git commit` 実行時に AI定型語を exit 2 でブロックする。reactive な block→rewrite loop を避けるため、生成時点で proactive に回避する事前 self-check として機能する
-   - **生成前想起**: PRINCIPLES.md の `**難読漢語 (block)**` / `**非日常英語 (block)**` list を出力前に想起し、和語・平易語に置換してから書く。例: 鑑みる→踏まえる、喫緊→急ぎ、leverage→使う
-   - **適用範囲**: `/git-push` 経由か parent 直接 `git commit` かを問わず、**commit message を生成する全ての経路で適用する原則**。今日 block 実例: 「影響なし」(AI定型語)
+3.5. **writing check (commit message)**: NG word check on commit msg draft **at generation time** (before confirm).
+   - grep against `guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md)
+   - Hit ≥1 → delete AI定型語 or replace with concrete expression; append 1-sentence evidence for 要根拠語; rewrite and re-check (max 3 loops)
+   - After 3 loops with remaining hits → present remaining words, ask user to confirm continuation
+   - **Note**: hook (pre-tool-use.sh) blocks AI定型語 at `git commit` with exit 2. This pre-check proactively avoids the reactive block→rewrite loop
+   - **Pre-generation recall**: recall `**難読漢語 (block)**` / `**非日常英語 (block)**` lists from PRINCIPLES.md before writing; replace with plain Japanese / plain English. E.g.: 鑑みる→踏まえる、喫緊→急ぎ、leverage→使う
+   - **Scope**: applies to **all paths generating commit messages**, regardless of `/git-push` or direct `git commit`. Today's block example: 「影響なし」(AI定型語)
 
 ### main mode
 
@@ -60,9 +60,9 @@ Execute commit → push → PR/MR creation in single command.
 ### pr mode
 
 3. `git push -u origin <branch>`
-4. **IMPL_NOTES detection** (skip on `--no-impl-notes`): under `~/.claude/plans/impl-notes/`, find dir whose `<feature-slug>` matches current branch name (sanitize both to kebab-case). If multiple, pick latest by timestamp prefix. If `MERGED.md` exists, read it and surface **Design decisions** + **Open questions** as PR body draft material in the user confirm step (do not auto-insert). No match → silent skip
+4. **IMPL_NOTES detection** (skip on `--no-impl-notes`): under `~/.claude/plans/impl-notes/`, find dir whose `<feature-slug>` matches current branch name (sanitize both to kebab-case). If multiple, pick latest by timestamp prefix. If `MERGED.md` exists, read it and surface **Design decisions** + **Open questions** as PR body draft material at user confirm step (do not auto-insert). No match → silent skip
 5. `gh pr create` / `glab mr create` (auto-detect remote)
-5.5. **writing check (PR body)**: PR body draft に step 3.5 と同じ NG 語チェック (max 3 loop) を適用。hook が `gh pr create` 時に block するため事前 self-check として機能。PR body に関連 issue/PR URL を含む場合、貼る前に `gh issue view` / `gh pr view` で番号実在を検証する (`rules/ai-output.md` `## URL / Issue・PR 番号検証` 参照)
+5.5. **writing check (PR body)**: apply same NG word check as step 3.5 (max 3 loops) to PR body draft. Acts as pre-check since hook blocks at `gh pr create`. If PR body includes related issue/PR URLs, verify number existence via `gh issue view` / `gh pr view` before inserting (see `rules/ai-output.md` `## URL / Issue & PR Number Validation`)
 6. Display PR/MR URL
 7. **Auto-review** (`--auto-review` specified only. Default OFF, on PR success, `gh` available, GitHub only):
    - Launch `/code-review:code-review <PR#>` w/ `Bash run_in_background:true` → get bash_id_A
@@ -121,7 +121,7 @@ Avoid: "implemented X", "improved Y" (no numbers), false test claims.
 
 Post-push/MR-create, if Jira ticket ID in commit msg or branch name, auto-comment MR/PR URL to ticket w/ `mcp__jira__jira_post`. ID not detected: warn only, push/MR create success (Jira integration is auxiliary, don't block main flow).
 
-**Auto-comment body also must pass PREP 3 from `~/.claude/rules/ai-output.md` + "4 questions before writing" from PRINCIPLES.md + "6-item self-check pre-output"**. Default template example: "Conclusion: PR create complete → review request / Reason: <branch name + change summary> / Next action: <reviewer assign or unclear>".
+**Auto-comment body must also pass PREP 3 from `~/.claude/rules/ai-output.md` + "4 questions before writing" from PRINCIPLES.md + "6-item self-check pre-output"**. Default template: "Conclusion: PR created → review request / Reason: <branch name + change summary> / Next action: <reviewer assignment or unclear>".
 
 ## Cautions
 

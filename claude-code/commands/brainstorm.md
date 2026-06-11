@@ -5,11 +5,11 @@ description: Interactive design refinement (Superpowers integration)
 
 ## /brainstorm - Interactive design refinement
 
-> **Goal**: launch Superpowers brainstorm skill, refine design interactively
+> **Goal**: launch Superpowers brainstorm skill, refine design interactively.
 
 ## Overview
 
-Pre-implementation design phase: refine interactively:
+Pre-implementation design phase. Refine interactively:
 
 - **Requirement clarification**: concretize vague specs
 - **Design options**: compare multiple approaches

@@ -113,7 +113,7 @@ Other tools: Read/Glob/Grep (info collect) / Bash read-only (git log, tree) / Ta
 
 **Zero case rule**: If no findings, do not omit sections. Use `### Key findings: None (reason: <scope & conclusion>)` to distinguish from "not executed."
 
-**Confidence score (必須)**: 各 finding に `confidence: XX%` を明示する。判定基準: file 実在 + grep hit + 1 次 source 直接読込 = 95-100% / file 実在 + 1 次 source 推定 = 80-94% / grep hit のみ 推測含む = 60-79% / 推測のみ = <60%。**< 80% は出力前に self-discard** (parent 側で hallucination 起因 churn 発生防止、`[[retrospective-2026-06-12]]` P3 の SKILL.md 18 file 誤検出事例参照)。
+**Confidence score (required)**: attach `confidence: XX%` to each finding. Criteria: file exists + grep hit + primary source direct read = 95-100% / file exists + primary source inferred = 80-94% / grep hit only with inference = 60-79% / inference only = <60%. **< 80% → self-discard before output** (prevents hallucination-driven churn on parent side; see `[[retrospective-2026-06-12]]` P3 SKILL.md 18-file false-positive case).
 
 ### Specialization-specific notes
 
