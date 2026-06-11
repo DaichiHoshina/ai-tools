@@ -1,119 +1,119 @@
-# セッション管理
+# Session Management
 
-長期タスク（複数日、大型機能、複雑調査）でのClaude Codeセッション運用。
+Claude Code session operations for long-running tasks (multi-day, large features, complex investigations).
 
-## コマンド
+## Commands
 
-| コマンド | 用途 |
-|---------|------|
-| `claude --continue` | 直前セッション再開（最も高頻度） |
-| `claude --resume` | 最近のセッションから選択再開。検索ボックスに PR URL 貼付で該当 PR を作成したセッションを検索（GitHub/GHE/GitLab/Bitbucket 対応、2.1.122+） |
-| `/rename <name>` | 現在のセッションに名前付与 |
-| `Esc + Esc` / `/rewind` | checkpoint復元（セッション終了後も永続） |
-| `/clear` | コンテキスト完全リセット（別タスク切替時） |
+| Command | Purpose |
+|---------|---------|
+| `claude --continue` | Resume previous session (most frequent) |
+| `claude --resume` | Select from recent sessions. Paste PR URL in search box to find session that created it (GitHub/GHE/GitLab/Bitbucket, 2.1.122+) |
+| `/rename <name>` | Name the current session |
+| `Esc + Esc` / `/rewind` | Restore checkpoint (persists after session end) |
+| `/clear` | Full context reset (when switching tasks) |
 
-## 権限モード方針
+## Permission mode policy
 
-| モード | 用途 |
-|------|------|
-| 通常モード | デフォルト。重要操作は都度承認 |
-| Auto Mode（Max/Team/Enterprise 限定） | `claude --help` の `auto-mode` subcommand 参照。許可リスト整備済み環境で都度承認を抑制 |
-| `--dangerously-skip-permissions` | 常用非推奨。sandbox 等の隔離環境専用。2.1.126 以降は `.claude/`、`.git/`、`.vscode/`、shell 設定ファイルへの書き込みもバイパス対象（catastrophic 削除のみ確認継続） |
+| Mode | Purpose |
+|------|---------|
+| Normal mode | Default. Approve important operations one by one |
+| Auto Mode (Max/Team/Enterprise only) | See `claude --help` `auto-mode` subcommand. Suppresses per-operation approval in prepared allowlist environments |
+| `--dangerously-skip-permissions` | Not for daily use. Sandbox/isolated environments only. From 2.1.126+, also bypasses writes to `.claude/`, `.git/`, `.vscode/`, shell config files (catastrophic deletion continues to require confirmation) |
 
-> 出典: Opus 4.7 リリース後の運用ガイド（[Qiita @ot12 2026-04-16](https://qiita.com/ot12/items/06420caf41a34a910c53)、二次情報）。Anthropic 公式 docs での明文化は未確認のため、運用判断材料として扱う。
+> Source: Post-Opus 4.7 release operations guide ([Qiita @ot12 2026-04-16](https://qiita.com/ot12/items/06420caf41a34a910c53), secondary source). Not officially documented by Anthropic; treat as operational reference.
 
-`--dangerously-skip-permissions` を毎回付ける運用は廃止する。許可リスト不足が原因なら `/fewer-permission-prompts` で半自動整備し、実行後 `~/.claude/settings.json` の `permissions.allow` を確認、不足分は手動追記する。
+Discontinue always-attaching `--dangerously-skip-permissions`. If caused by insufficient allowlist, use `/fewer-permission-prompts` for semi-automated maintenance, then check `~/.claude/settings.json` `permissions.allow` and manually add missing entries.
 
-## 命名規約
+## Naming convention
 
-セッション名は `{type}-{scope}` 形式を推奨。grep/一覧で識別しやすい。
+Recommend `{type}-{scope}` format. Easy to identify in grep/list.
 
-| type | 例 |
-|------|-----|
+| type | Example |
+|------|---------|
 | `migration-` | `migration-oauth`, `migration-react-19` |
 | `debug-` | `debug-memory-leak`, `debug-flaky-test` |
 | `investigate-` | `investigate-latency-spike` |
 | `feature-` | `feature-billing-v2` |
 | `refactor-` | `refactor-auth-middleware` |
 
-Jira/Linearチケット連動時: `{ID}-{brief}` 形式（例: `PROJ-1234-oauth-flow`）。ID で `--resume` リストから即座に見つけられる。
+Jira/Linear ticket linked: `{ID}-{brief}` format (e.g., `PROJ-1234-oauth-flow`). Find immediately in `--resume` list by ID.
 
-## 使い分け判断
+## Selection guide
 
-| 状況 | 推奨 |
-|------|------|
-| 5分以下の単発タスク | 名前付け不要、`/clear` でリセット |
-| 30分超の調査・実装 | `/rename` で命名、ターミナル閉じてもOK |
-| 別マシン・翌日以降再開 | `--resume` で選択、`--continue` は直前のみ |
-| 調査→実装フェーズ移行 | **fresh セッション起動**（`/clear` or 新ターミナル）で実装。調査コンテキストを残さない |
-| 複数機能を並行 | ターミナル別タブで個別セッション、各々 `/rename` |
+| Situation | Recommended |
+|-----------|------------|
+| Under 5 min, one-off task | No naming needed, reset with `/clear` |
+| 30+ min investigation / implementation | Name with `/rename`, OK to close terminal |
+| Resume from different machine / next day | Select with `--resume`, `--continue` is previous only |
+| Transition from investigation to implementation phase | **Fresh session** (`/clear` or new terminal). Do not carry investigation context |
+| Multiple features in parallel | Separate terminal tabs with individual sessions, each with `/rename` |
 
-## fresh 起動パターン（公式推奨）
+## Fresh launch pattern (officially recommended)
 
-> 調査・計画完了後、SPEC.md 等に書き出してから fresh セッションで実装開始
+> After investigation/planning, write to SPEC.md then start implementation in fresh session
 
-**理由**: 調査フェーズの失敗アプローチ・無関係ファイル読み込みが context に残ると実装品質低下。SPEC.md に固めて新セッションで始める方が速い。
+**Why**: Failed approaches and unrelated file reads from investigation phase remaining in context degrade implementation quality. Fixing in SPEC.md and starting fresh is faster.
 
 ```bash
-# フェーズ1: 調査（Plan Mode or /brainstorm で SPEC.md 作成）
+# Phase 1: Investigation (create SPEC.md with Plan Mode or /brainstorm)
 claude --rename investigate-oauth-design
 
-# フェーズ2: 実装（fresh セッション）
-claude  # 新規起動、SPEC.md を @ で参照
+# Phase 2: Implementation (fresh session)
+claude  # new launch, reference SPEC.md with @
 ```
 
-## よくある失敗
+## Common failures
 
-- **kitchen sink session**: 1セッションに無関係タスクを混ぜる → context 汚染、性能低下
-- **長引いた session の修正合戦**: 2回以上の修正失敗 → `/clear` して better prompt で再起動
-- **名前なしで複数並行**: `--resume` リストが全て `Untitled` で識別不能
+- **Kitchen sink session**: mixing unrelated tasks in one session → context contamination, performance degradation
+- **Extended session fix loop**: 2+ failed fixes → `/clear` and restart with better prompt
+- **Multiple parallel sessions unnamed**: `--resume` list all `Untitled`, cannot identify
 
-## プロジェクト state リセット（`claude project purge`）
+## Project state reset (`claude project purge`)
 
-セッション履歴・タスク・file history・config entry が壊れた / 巨大化した場合の最終手段（CLI 2.1.126+）。
+Last resort when session history / tasks / file history / config entries are corrupted or bloated (CLI 2.1.126+).
 
-| コマンド | 動作 |
-|---------|------|
-| `claude project purge --dry-run [path]` | 削除対象表示、実行なし |
-| `claude project purge -y [path]` | 確認なし削除 |
-| `claude project purge -i [path]` | 対話的選択削除 |
-| `claude project purge --all` | 全プロジェクト削除（要慎重） |
+| Command | Behavior |
+|---------|---------|
+| `claude project purge --dry-run [path]` | Show deletion targets, no execution |
+| `claude project purge -y [path]` | Delete without confirmation |
+| `claude project purge -i [path]` | Interactive selective deletion |
+| `claude project purge --all` | Delete all projects (use with care) |
 
-- `path` 省略時は CWD のプロジェクト
-- 削除対象: transcripts（`~/.claude/projects/<sanitized>/`）/ tasks / file history / config entry
-- セッション履歴も消えるため `--resume` 不可、必要なら削除前に export
+- `path` defaults to CWD project if omitted
+- Deletes: transcripts (`~/.claude/projects/<sanitized>/`) / tasks / file history / config entries
+- Session history also deleted, so `--resume` not possible; export before deletion if needed
 
-## checkpoint との関係
+## Relationship with checkpoints
 
-- checkpoint はセッション終了後も保持（ターミナル閉じても残る）
-- セッションA で実装 → 別の日に `--resume` → `Esc+Esc` で checkpoint 復元可能
-- ただし git commit は別レイヤー。checkpoint は Claude の変更のみ追跡
+- Checkpoints persist after session end (survive terminal close)
+- Implement in session A → resume with `--resume` another day → restore checkpoint with `Esc+Esc`
+- git commits are a separate layer; checkpoints track Claude changes only
 
-## マルチセッション並列運用（Boris流）
+## Multi-session parallel operation
 
-複雑機能・独立タスク並走時の運用パターン。Boris Cherny の公開運用例（howborisusesclaudecode.com）では複数セッション並列を主回路として扱う。理由は単一セッションの待ち時間（thinking / tool 実行）が直列ボトルネックになるため、複数セッション同時走行で人間側の手待ちを解消する。
+Pattern for running complex features and independent tasks in parallel. Boris Cherny's public approach (howborisusesclaudecode.com) treats multiple parallel sessions as the main circuit. Reason: thinking / tool execution wait time in a single session becomes a serial bottleneck; running multiple sessions simultaneously eliminates human idle time.
 
-| 項目 | 推奨 |
-|------|------|
-| 同時セッション数 | 3〜5（Boris 公開運用例の上限。それ超で通知洪水と context 追跡破綻） |
-| 作業ディレクトリ | 各セッション別 git worktree（`git worktree add`） |
-| 識別 | ターミナルタブに番号 1〜5、`/rename {type}-{scope}` |
-| 通知 | `hooks/teammate-idle.sh` で入力催促を OS 通知 |
-| 用途 | 独立タスク（FE/BE/test）、A/B 試行、長時間 verify と並行実装 |
+| Item | Recommended |
+|------|------------|
+| Simultaneous sessions | 3–5 (Boris's public upper limit; beyond that: notification flood and context tracking breakdown) |
+| Working directory | Separate git worktree per session (`git worktree add`) |
+| Identification | Terminal tab numbers 1–5, `/rename {type}-{scope}` |
+| Notifications | `hooks/teammate-idle.sh` for OS notifications on input prompts |
+| Use cases | Independent tasks (FE/BE/test), A/B trials, long-running verify and parallel implementation |
 
-**worktree 自動化との使い分け:**
+**Distinction from worktree automation:**
 
-- 短期・自動独立タスク → `/flow --parallel` / `/flow --parallel --auto` / `/dev --parallel` の `isolation: "worktree"`（自動作成・自動クリーンアップ）
-- 長期・人間判断介在 → 手動 `git worktree add` + 個別ターミナルセッション
+- Short-term, auto independent tasks → `/flow --parallel` / `/dev --parallel` `isolation: "worktree"` (auto create/cleanup)
+- Long-term, human judgment involved → manual `git worktree add` + individual terminal sessions
 
-判定式・適用条件・後片付け方針詳細: `references/PARALLEL-PATTERNS.md` 参照。
+Formula, conditions, cleanup policy: see `references/PARALLEL-PATTERNS.md`.
 
-**避けるべきパターン:**
+**Patterns to avoid:**
 
-- 同一ファイル並列編集（衝突確定）
-- セッション間で context を口頭共有（再現不能）
-- 5 並列超え（人間が追えない、通知洪水）
+- Same-file parallel editing (guaranteed conflict)
+- Sharing context between sessions verbally (not reproducible)
+- Over 5 parallel (humans cannot track, notification flood)
 
-上記3アンチパターンに共通する本質は「人間が状況を追えなくなる」こと。並列度より追跡可能性を優先する。
+Root of all 3 anti-patterns: "humans cannot track the situation". Prioritize traceability over parallelism.
 
-参考: [howborisusesclaudecode.com](https://howborisusesclaudecode.com/)
+Reference: [howborisusesclaudecode.com](https://howborisusesclaudecode.com/)

@@ -1,48 +1,48 @@
-# Skill tool 呼び出し pattern (forked execution 対応)
+# Skill Tool Invocation Pattern (forked execution)
 
-`Skill("comprehensive-review")` 等の Skill tool 起動は別プロセス (forked execution) で動作する。親 workspace の `git status` / `git diff` は不可視であり、引数なしで起動すると以下のエラーで失敗する。
+`Skill("comprehensive-review")` and similar Skill tool launches run as a separate process (forked execution). The parent workspace's `git status` / `git diff` are not visible; launching without arguments fails with:
 
 ```
 Diff target not provided. Cannot run review without scope.
 ```
 
-## 必須 args
+## Required args
 
-review / analysis 系 Skill を起動する場合は、以下のいずれかを必ず指定する。
+When launching review / analysis type Skills, always specify one of:
 
-| arg | 形式 | 用途 |
-|-----|------|------|
-| `--files=` | 絶対パスのカンマ区切り | 特定 file を対象にする |
-| `--diff-base=` | git ref | コミット差分を対象にする |
-| `--mode=` | `default` / `codex` / `adversarial` / `deep` | レビュー強度（任意） |
+| arg | Format | Purpose |
+|-----|--------|---------|
+| `--files=` | Comma-separated absolute paths | Target specific files |
+| `--diff-base=` | git ref | Target commit diff |
+| `--mode=` | `default` / `codex` / `adversarial` / `deep` | Review intensity (optional) |
 
-## 呼び出し例
+## Examples
 
 ```
-# 特定 file 指定
+# Specific files
 Skill(skill="comprehensive-review", args="--files=/abs/path/a.md,/abs/path/b.md --mode=default")
 
-# コミット差分指定
+# Commit diff
 Skill(skill="comprehensive-review", args="--diff-base=HEAD --mode=default")
 
-# ブランチ比較
+# Branch comparison
 Skill(skill="comprehensive-review", args="--diff-base=main..HEAD --mode=adversarial")
 
-# 1 コミット前との差分
+# One commit before
 Skill(skill="comprehensive-review", args="--diff-base=e5f32ed~1")
 ```
 
-## 適用対象 Skill
+## Applicable Skills
 
 - `comprehensive-review`
 - `security-review`
-- その他 review / analysis 系 skill 全般
+- All other review / analysis type skills
 
-## 発覚経緯
+## Discovery
 
-2026-05-23 `/review-fix-push` smoke test にて、引数なし起動が "Diff target not provided." で失敗することを確認した。
+Confirmed 2026-05-23 via `/review-fix-push` smoke test: launching without args fails with "Diff target not provided."
 
-## 関連 reference
+## Related
 
 - `references/review-commands.md`
 - `references/review-patterns-universal.md`

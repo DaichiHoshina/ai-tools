@@ -1,105 +1,105 @@
-# Design Doc テンプレート
+# Design Doc Template
 
-`/design-doc` コマンドが参照する12セクション固定テンプレート。チーム共有用の技術設計書。
+12-section fixed template referenced by `/design-doc` command. For team-shared technical design docs.
 
-## 12セクション構成
+## 12-section structure
 
 ```markdown
-# Design Doc: [タイトル]
+# Design Doc: [Title]
 
 ## 1. Overview
-- 何を実現するか（1〜2行）
-- PRDリンク / 参照
+- What is being realized (1–2 lines)
+- PRD link / reference
 
 ## 2. Goals / Non-Goals
 ### Goals
-- 達成すること
+- What to achieve
 ### Non-Goals
-- 今回やらないこと（スコープ境界を明示）
+- What is out of scope (explicit scope boundary)
 
 ## 3. Background
-- 現状の問題
-- なぜ変更が必要か（Why、PRDとの接続）
+- Current problem
+- Why change is needed (Why, connection to PRD)
 
 ## 4. High-Level Design
-- 全体構成（Mermaid アーキ図）
-- データフロー（Mermaid シーケンス図）
-- 責務境界（service/module 間の役割）
+- Overall structure (Mermaid arch diagram)
+- Data flow (Mermaid sequence diagram)
+- Responsibility boundary (roles between services/modules)
 
 ## 5. Detailed Design
-### 5.1 データモデル
-- テーブル設計 / ER図（Mermaid）
-- インデックス・制約
+### 5.1 Data model
+- Table design / ER diagram (Mermaid)
+- Indexes / constraints
 ### 5.2 API / Interface
-- エンドポイント / 関数シグネチャ
-- 入出力（型定義）
-### 5.3 処理フロー
-- シーケンス / 擬似コード（5行以内）
+- Endpoints / function signatures
+- I/O (type definitions)
+### 5.3 Processing flow
+- Sequence / pseudo-code (within 5 lines)
 
 ## 6. Alternatives
-- 検討した別案（案A/案B/…）
-- なぜ採用しなかったか（具体的理由）
+- Other options considered (Option A/B/...)
+- Why not adopted (specific reasons)
 
 ## 7. Trade-offs
-- 得られるもの / 失うもの
-- 数字で比較（性能・コスト・複雑性）
+- What is gained / lost
+- Numeric comparison (performance / cost / complexity)
 
 ## 8. Failure Handling
-- エラーケース列挙
-- リトライ方針
-- 冪等性保証
+- Error case enumeration
+- Retry policy
+- Idempotency guarantee
 
 ## 9. Migration Plan
-- Expand: 新要素追加（既存互換維持）
-- Migrate: データ移行 / デュアルライト
-- Contract: 旧要素削除
-（DB変更なしは「該当なし」と明記）
+- Expand: add new elements (maintain existing compatibility)
+- Migrate: data migration / dual-write
+- Contract: remove old elements
+(If no DB change: state "N/A")
 
 ## 10. Rollback Strategy
-- 失敗時に戻せるか
-- どの段階までなら無停止ロールバック可
+- Is rollback possible on failure
+- Up to which stage can zero-downtime rollback occur
 
 ## 11. Observability
-- ログ / メトリクス / アラート
+- Logs / metrics / alerts
 
 ## 12. Open Questions
-- 未確定事項（誰の判断待ちか明記）
-- 制約・前提（MySQL 8.0, TX isolation 等）
+- Unconfirmed items (who is waiting for decision)
+- Constraints / assumptions (MySQL 8.0, TX isolation etc.)
 ```
 
-## タイプ別適用
+## Type-based application
 
-| タイプ | 必須セクション | 省略可セクション |
-|--------|---------------|-----------------|
-| feature（デフォルト） | 1-12 全て | なし |
+| Type | Required sections | Optional sections |
+|------|------------------|------------------|
+| feature (default) | All 1–12 | None |
 | refactor | 1,3,5,6,7,9,10 | 2,4,8,11 |
-| arch | 1-4,6,7,11 | 5.1/5.3,9 |
+| arch | 1–4,6,7,11 | 5.1/5.3,9 |
 | adr | 1,3,6,7,10 | 2,4,5,8,9,11 |
-| db-migration | 1,3,5.1,8,9,10,11 | 4,6（代替案シンプル可） |
+| db-migration | 1,3,5.1,8,9,10,11 | 4,6 (alternatives can be simple) |
 
-## 品質ガード（タイプ別適用）
+## Quality guards (type-based)
 
-| チェック | feature | refactor | arch | adr | db-migration |
-|---------|---------|----------|------|-----|--------------|
-| Why（PRDとの接続） | 必須 | 必須 | 必須 | 必須 | 必須 |
-| Alternatives 2案以上 | 必須 | 推奨 | 必須 | 必須 | 推奨 |
-| Trade-offs 数字比較 | 必須 | 推奨 | 必須 | 必須 | 必須 |
-| Failure Handling 3件以上 | 必須 | 推奨 | 推奨 | 省略可 | 必須 |
-| Migration Expand/Migrate/Contract | DB変更時必須 | DB変更時必須 | 省略可 | 省略可 | **必須** |
-| Mermaid 図 1つ以上 | 必須 | 推奨 | 必須 | 推奨 | ER図必須 |
-| 制約・前提明記 | 必須 | 推奨 | 必須 | 必須 | 必須 |
+| Check | feature | refactor | arch | adr | db-migration |
+|-------|---------|----------|------|-----|--------------|
+| Why (connection to PRD) | required | required | required | required | required |
+| Alternatives 2+ options | required | recommended | required | required | recommended |
+| Trade-offs numeric comparison | required | recommended | required | required | required |
+| Failure Handling 3+ cases | required | recommended | recommended | optional | required |
+| Migration Expand/Migrate/Contract | required on DB change | required on DB change | optional | optional | **required** |
+| Mermaid diagram 1+ | required | recommended | required | recommended | ER diagram required |
+| Constraints / assumptions explicit | required | recommended | required | required | required |
 
-## 設計思想
+## Design philosophy
 
-> 良いDesign Docは「賢い設計」ではなく **「意思決定が伝わる設計」** になっているか。
+> A good Design Doc is not "clever design" but **"design where decisions are communicated"**.
 
-| 原則 | 悪い例 | 良い例 |
-|------|--------|--------|
-| Why を書く | 新テーブル作る | O(1)抽選のため新テーブル作る |
-| 比較とトレードオフ | 案Aで実装 | 案A/B比較、Bは負荷高く不採用 |
-| 変更耐性 | 今動く | 口数制限変更・配送業者追加に対応可 |
-| 責務境界 | 曖昧 | order-service: 注文 / shipping-service: 配送 |
-| 失敗ケース | 成功パスのみ | 在庫不足・API失敗・二重実行・冪等性 |
-| 移行戦略 | テーブル差し替え | Expand→Migrate→Contract 3段 |
+| Principle | Bad example | Good example |
+|-----------|-------------|-------------|
+| Write Why | Create new table | Create new table for O(1) lottery |
+| Comparison and tradeoffs | Implement with option A | Compare A/B, B rejected due to high load |
+| Change tolerance | Works now | Can handle quantity limit changes / new carrier additions |
+| Responsibility boundary | Ambiguous | order-service: orders / shipping-service: delivery |
+| Failure cases | Success path only | Out of stock / API failure / double execution / idempotency |
+| Migration strategy | Replace table | Expand→Migrate→Contract 3 stages |
 
-**レベル高い書き方**: 数字で語る（O(n)→O(1)、100req/s→1000req/s）、図で説明（シーケンス/ER/アーキ）、制約を書く（MySQL 8.0、READ COMMITTED）。
+**High-quality writing**: speak with numbers (O(n)→O(1), 100req/s→1000req/s), explain with diagrams (sequence/ER/arch), write constraints (MySQL 8.0, READ COMMITTED).
