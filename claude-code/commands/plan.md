@@ -48,7 +48,7 @@ Infrastructure → `infrastructure/terraform.md`, `infrastructure/aws-eks.md`.
 Launch Task(subagent_type: "po-agent")
   → requirement analysis → architecture design → worktree necessary? (confirm) → implementation approach
   → draft design document
-  → **Self-Review (必須、2 段階)** (→ `## Self-Review` section 参照)
+  → **Self-Review (required, 2-stage)** (→ `## Self-Review` section)
   → output filtered design document
   → propose next actions (to `/dev`)
 ```
@@ -58,21 +58,21 @@ Launch Task(subagent_type: "po-agent")
 1. Load guidelines (Step 0)
 2. Analyze codebase w/ Serena MCP
 3. Draft design document
-4. **Apply Self-Review 2-stage gate** (→ `## Self-Review` section 参照)
+4. **Apply Self-Review 2-stage gate** (→ `## Self-Review` section)
 5. Output filtered design document + propose implementation plan for `/dev`
 
-## Self-Review (必須、2 段階)
+## Self-Review (required, 2-stage)
 
-`/plan` 出力前に **必ず** 2 段階のセルフレビューを通す。skip 不可、PO Agent 経由 / Direct execution / `--update` / `--scope` 全モードで一律実行。Stage 共通定義: `commands/review.md` `## Delegation & Self-Review (必須、2 段階)` 参照。noise discard 方針: `rules/review-noise-discard.md` 参照。
+Run 2-stage self-review **before** any `/plan` output. Skip not allowed. Applies uniformly across PO Agent / Direct execution / `--update` / `--scope` modes. Stage common definition: `commands/review.md` `## Delegation & Self-Review` section. Noise discard policy: `rules/review-noise-discard.md`.
 
-### Stage A: plan 固有 filter
+### Stage A: plan-specific filter
 
-Investigation discard: speculative leads / hypothetical edge cases / findings unrelated to the change。
-Plan discard: compat shims / future abstractions / impossible-case error handling / non-boundary validation / scope creep / premature optimization / half-finished phases。
+Investigation discard: speculative leads / hypothetical edge cases / findings unrelated to the change.
+Plan discard: compat shims / future abstractions / impossible-case error handling / non-boundary validation / scope creep / premature optimization / half-finished phases.
 
-### Stage B: plan 固有 集合観点
+### Stage B: plan-specific aggregate view
 
-Phase 統合 (同一 root cause → 1 Phase) / 粒度整合 / convention 整合 / Zero-phase valid (padding 禁止)。判断 log は plan file に含めない。両 stage 通過した結果のみ Output Format に進む。
+Phase consolidation (same root cause → 1 Phase) / granularity alignment / convention alignment / Zero-phase valid (no padding). Do not include judgment log in plan file. Only results passing both stages proceed to Output Format.
 
 ## Plan storage
 

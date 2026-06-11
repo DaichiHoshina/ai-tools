@@ -33,7 +33,7 @@ All responses in English (preserve technical terms, tool names).
 
 ## PO instruction required items & fallback
 
-Schema: `references/agent-team-contract.md` §1 (PO output) を canonical 参照。
+Schema: `references/agent-team-contract.md` §1 (PO output) — canonical.
 
 | Field (contract) | Fallback |
 |------|----------|
@@ -93,20 +93,20 @@ Summary: Apply critical-path formula and `N_initial` algorithm per `references/P
 
 ## Allocation plan format
 
-Schema: `references/agent-team-contract.md` §3 (Manager → parent) を canonical 参照。**contract §3 の YAML literal をそのまま埋める** (field 名 / 階層 / 型を改変しない)。
+Schema: `references/agent-team-contract.md` §3 (Manager → parent) — canonical. **Fill contract §3 YAML literal as-is** (do not rename fields / change hierarchy / alter types).
 
-**必須 field** (省略禁止):
+**Required fields** (never omit):
 - `execution_mode` (parallel | staged | sequential)
 - `parallelism` (integer)
 - `worktree_required` (boolean)
 - `impl_notes.dir` (absolute path)
-- `tasks[]` 各要素に以下 5 field 全て:
-  - `developer_id`: `dev1` / `dev2` / `dev3` / `dev4` (literal、`dev-1` 等 hyphen 付与禁止)
-  - `task`: `{id, title, description, files, dependencies}` の 5 sub-field object (自由文字列 `task: \|` 禁止)
-  - `verify`: `{lint, typecheck, test}` の 3 sub-field object (該当なしは空文字列 `""`、単一 string 禁止)
-  - `dod`: 1 行 success criteria
+- `tasks[]` each element requires all 5 fields:
+  - `developer_id`: `dev1` / `dev2` / `dev3` / `dev4` (literal; hyphen form like `dev-1` forbidden)
+  - `task`: 5-sub-field object `{id, title, description, files, dependencies}` (free-string `task: |` forbidden)
+  - `verify`: 3-sub-field object `{lint, typecheck, test}` (empty string `""` if N/A; single string forbidden)
+  - `dod`: 1-line success criteria
 
-**新規必須 field**: `formula_trace`
+**Required field**: `formula_trace`
 - `independent_task_count`: integer
 - `N_chosen`: integer (= min(count, 8) after formula evaluation)
 - `T_i_estimates`: array of seconds (one per task, ordered by tasks[].developer_id)
@@ -120,12 +120,12 @@ Schema: `references/agent-team-contract.md` §3 (Manager → parent) を canonic
 - `formula_threshold`: literal `expected_parallel < expected_serial * 0.95`
 - `downgrade_reason`: string or null (filled if N was reduced from initial min(count,8))
 
-**禁止事項**:
-- contract §3 にない field 独自追加禁止
-- `task` / `verify` を自由文字列で返却禁止 (必ず sub-field object)
-- `developer_id` の hyphen 表記禁止 (`dev1` 固定)
+**Prohibitions**:
+- No custom fields outside contract §3
+- `task` / `verify` must be sub-field objects, not free strings
+- `developer_id` hyphen form forbidden (`dev1` only)
 
-違反時、parent は出力を破棄して再走指示。
+Violation → parent discards output and re-runs.
 
 Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。Manager MUST include computed formula_trace in every allocation (mandatory, not optional)。
 
@@ -169,20 +169,20 @@ Parent calls Manager back with `Task(reviewer-agent)` result. Manager:
 - If changes cluster in one file → sequential; if spread → parallel allocation
 - Parent spawns `Task(developer-agent)×M` → after, **once only** `Task(reviewer-agent)` for re-verify
 
-## parallelism=1 算定の制約 (strict)
+## parallelism=1 constraint (strict)
 
-`parallelism: 1` を返してよいのは以下のいずれかに該当する場合のみ。
+`parallelism: 1` is allowed only when one of the following applies:
 
-- **(a) single-task**: 独立 task が 1 件のみ (task list 全 1 件)
-- **(b) same-file-sequential**: 全 task が同一 file の sequential edit を要求 (file 内 symbol 順序依存等)
-- **(c) file-conflict**: 物理的 file 競合検出 (`references/PARALLEL-PATTERNS.md#worktree-applicability-flow` 参照)
+- **(a) single-task**: exactly 1 independent task in the task list
+- **(b) same-file-sequential**: all tasks require sequential edits to the same file (symbol-order dependency etc.)
+- **(c) file-conflict**: physical file conflict detected (see `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`)
 
-上記いずれにも該当しないのに `parallelism: 1` を返す場合、`formula_trace.downgrade_reason` に以下いずれかを必須明示する。
+If none of the above apply but `parallelism: 1` is returned, `formula_trace.downgrade_reason` must explicitly state one of:
 
 - `single-task` / `same-file-sequential` / `file-conflict` / `formula-fail` / `parent-override`
 
-明示なき `parallelism: 1` を parent (orchestrator) は allocation 破棄して Manager を再走させる契約とする (`/flow` step 5 と整合)。
+`parallelism: 1` without explicit reason → parent discards allocation and re-runs Manager (aligned with `/flow` step 5).
 
 ### Why
 
-直前 /flow 分析 (2026-06-08) で peak=1 invocation 22 件中 8 件 (36%) が cap=1 起因と判明、Manager が独立 task でも parallelism=1 を選ぶ傾向があった。明示要求で誤判定を可視化し並列効率を改善する。
+Analysis of /flow runs (2026-06-08): 8 of 22 peak=1 invocations (36%) were cap=1 caused by Manager choosing parallelism=1 even for independent tasks. Explicit reason requirement makes mis-judgments visible and improves parallel efficiency.
