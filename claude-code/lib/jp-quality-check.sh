@@ -90,14 +90,21 @@ _extract_ai_jargon() {
 
 # 必須 key sanity check: hook が exact match 参照する key が抽出 0 件なら fail-loud
 # NG-DICTIONARY.md key rename / 記法破壊を早期検出して silent pass を防ぐ
-# session+日付単位 flag file cache: 同セッション内の 7 grep を skip (重複検査防止)
+# session+mtime 単位 flag file cache: 同セッション内の 7 grep を skip、dict 編集時は mtime 変化で再検査
 # SESSION_ID は caller (pre-tool-use.sh) が export して渡す想定、未設定時は $$ で代替
 _assert_required_keys() {
   # per-process 変数での早期 return (同一プロセス内の2回目以降)
   [[ "${_assert_required_keys_done:-0}" -eq 1 ]] && return 0
 
-  # session 単位 flag file: /tmp/claude-ngdict-keys-ok-<SESSION_ID>-<YYYYMMDD>
-  local _flag_path="/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}-$(date +%Y%m%d)"
+  # session+mtime 単位 flag file: /tmp/claude-ngdict-keys-ok-<SESSION_ID>-<mtime>
+  # NG-DICTIONARY.md を同 session 内で編集した場合も mtime 変化で再検査する
+  local _dict_mtime
+  _dict_mtime=$(stat -f '%m' "$_principles_file" 2>/dev/null \
+    || stat -c '%Y' "$_principles_file" 2>/dev/null \
+    || echo "0")
+  local _flag_path="/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}-${_dict_mtime}"
+  # 古いキャッシュ (同セッション・異なる mtime) を削除
+  rm -f "/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}"-* 2>/dev/null || true
   if [[ -f "$_flag_path" ]]; then
     _assert_required_keys_done=1
     return 0
