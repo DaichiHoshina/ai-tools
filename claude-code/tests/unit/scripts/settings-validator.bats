@@ -56,7 +56,7 @@ teardown() {
 
     unset _SETTINGS_VALIDATOR_LOADED
     # shellcheck disable=SC1090
-    source '${SCRIPT_FILE}'
+    source "${SCRIPT_FILE}"
 
     # declare -f は関数が定義されていれば 0、未定義なら 1 を返す
     declare -f sync_settings_hooks > /dev/null
