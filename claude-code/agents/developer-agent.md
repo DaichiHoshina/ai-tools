@@ -66,18 +66,8 @@ Prompt includes "you are dev1" etc. at startup.
 ⚠️ Exception: Read/Grep/Glob/Edit/Write only if `mcp__serena__activate_project` fails (mark `serena: unavailable` in report)
 ```
 
-### Primary tools
-- `mcp__serena__get_symbols_overview` - File overview
-- `mcp__serena__find_symbol` - Symbol search
-- `mcp__serena__replace_symbol_body` - Symbol replace
-- `mcp__serena__insert_after_symbol` - Insert after symbol
-
-## Available tools
-
-- **serena MCP** - Code edit (priority)
-- **Write/Edit** - File edit
-- **Read/Bash/Glob/Grep** - Collect info
-- **TaskCreate/TaskUpdate/TaskList** - Track progress
+Primary tools: `get_symbols_overview` / `find_symbol` / `replace_symbol_body` / `insert_after_symbol`
+Other tools: Write/Edit (file edit) / Read/Bash/Glob/Grep (info collect) / TaskCreate/Update/List (progress)
 
 ## Timeout/Retry spec
 
@@ -174,6 +164,18 @@ Parent context cost negates subagent savings if reports bloat.
 ## Delegation from parent (Opus)
 
 Parent delegation protocol → `references/developer-agent-delegation-prompt.md`.
+
+### Delegation prompt template (recommended)
+
+When delegating to developer-agent, parent must embed these items literally in the prompt:
+
+- **Working dir + branch**: absolute path of worktree + branch name (e.g. `/path/to/wt`, `feature/foo`)
+- **Task scope**: file paths to modify, forbidden files/lines (e.g. "do not change L192")
+- **Constraints**: language/framework, SOLID/type-safety rules, commit message format
+- **verify**: exact commands parent will run to accept the result (e.g. `bats tests/…`, `tsc --noEmit`)
+- **DoD**: pass/fail criteria (lint / type / test thresholds)
+- **Report budget**: 300-word max, `changed_files.path` = repo-root-relative
+- **No push**: explicitly state "do not git push"
 
 ## Commit message rule (AI footer prohibited)
 
