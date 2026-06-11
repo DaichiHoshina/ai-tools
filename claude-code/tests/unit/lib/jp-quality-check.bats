@@ -213,6 +213,77 @@ teardown() {
 # Case 6: NG-DICTIONARY.md 不存在 → graceful fail (exit 0、block しない)
 # =============================================================================
 
+# =============================================================================
+# Case 7: cache flag 自己削除 bug 修正 — 2 回目呼出で flag が存在し grep skip される
+# =============================================================================
+
+@test "cache: 2 回目の _assert_required_keys 呼出で flag file が存在したまま残る" {
+  _make_ng_dict "$TEST_TMPDIR"
+  # SESSION_ID を固定値にして bash -c サブシェル内と一致させる
+  local sid='bats-cache-selfdelete-test'
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    export SESSION_ID='${sid}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    # 1 回目呼出 — flag file を生成させる
+    _assert_required_keys
+
+    # flag file が存在することを確認
+    flag_count=\$(ls /tmp/claude-ngdict-keys-ok-${sid}-* 2>/dev/null | wc -l | tr -d ' ')
+    [ \"\$flag_count\" -eq 1 ] || { echo \"1st call: flag_count=\$flag_count (expected 1)\" >&2; exit 1; }
+
+    # 2 回目呼出 — per-process 変数 guard で即 return するが、flag も残っていること
+    _assert_required_keys
+
+    flag_count2=\$(ls /tmp/claude-ngdict-keys-ok-${sid}-* 2>/dev/null | wc -l | tr -d ' ')
+    [ \"\$flag_count2\" -eq 1 ] || { echo \"2nd call: flag_count=\$flag_count2 (expected 1)\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+
+  # cleanup
+  rm -f "/tmp/claude-ngdict-keys-ok-${sid}-"*
+}
+
+@test "cache: mtime 更新後は旧 flag が削除され新 flag が生成される" {
+  _make_ng_dict "$TEST_TMPDIR"
+  local dict_path="${TEST_TMPDIR}/.claude/guidelines/writing/NG-DICTIONARY.md"
+  local sid='bats-cache-mtime-test'
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    export SESSION_ID='${sid}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    # 1 回目: 初期 mtime で flag 生成
+    _assert_required_keys
+    old_flags=(\$(ls /tmp/claude-ngdict-keys-ok-${sid}-* 2>/dev/null))
+    [ \"\${#old_flags[@]}\" -eq 1 ] || { echo \"initial flag count: \${#old_flags[@]}\" >&2; exit 1; }
+    old_flag=\"\${old_flags[0]}\"
+
+    # dict ファイルの mtime を未来に更新 (sleep 不要、touch -t で確実に変化)
+    touch -t 203001010000 '${dict_path}'
+
+    # per-process 変数をリセットして再呼出
+    unset _assert_required_keys_done 2>/dev/null || true
+    _assert_required_keys
+
+    # 旧 flag が消えて新 flag が 1 つだけ存在する
+    new_flags=(\$(ls /tmp/claude-ngdict-keys-ok-${sid}-* 2>/dev/null))
+    [ \"\${#new_flags[@]}\" -eq 1 ] || { echo \"new flag count: \${#new_flags[@]}\" >&2; exit 1; }
+    [ \"\${new_flags[0]}\" != \"\$old_flag\" ] || { echo 'flag unchanged after mtime update' >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+
+  # cleanup
+  rm -f "/tmp/claude-ngdict-keys-ok-${sid}-"*
+}
+
 @test "NG-DICTIONARY.md 不存在: _check_term_list は graceful fail で exit 0" {
   # TEST_TMPDIR には NG-DICTIONARY.md を置かない (HOME = TEST_TMPDIR のまま)
 

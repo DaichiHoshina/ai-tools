@@ -103,8 +103,12 @@ _assert_required_keys() {
     || stat -c '%Y' "$_principles_file" 2>/dev/null \
     || echo "0")
   local _flag_path="/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}-${_dict_mtime}"
-  # 古いキャッシュ (同セッション・異なる mtime) を削除
-  rm -f "/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}"-* 2>/dev/null || true
+  # 古いキャッシュ (同セッション・異なる mtime) のみ削除 — _flag_path 自体は残す
+  for _old_flag in "/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}"-*; do
+    [[ -e "$_old_flag" ]] || continue
+    [[ "$_old_flag" = "$_flag_path" ]] && continue
+    rm -f "$_old_flag" 2>/dev/null || true
+  done
   if [[ -f "$_flag_path" ]]; then
     _assert_required_keys_done=1
     return 0
