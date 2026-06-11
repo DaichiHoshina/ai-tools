@@ -58,9 +58,9 @@ Full detail: `references/PARALLEL-PATTERNS.md`
 
 Worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`
 
-Summary: Apply critical-path formula (`LPT_makespan + overhead < sum × 0.95`) from `references/PARALLEL-PATTERNS.md`. Parallel adoption requires: 2+ independent tasks + no shared file edits + integration owner defined. `N_initial = min(independent count, 8)`; if formula FAIL → reduce N by 1, re-evaluate (>=2), else N=1 sequential.
+Summary: Apply critical-path formula and `N_initial` algorithm per `references/PARALLEL-PATTERNS.md`. Parallel adoption requires: 2+ independent tasks + no shared file edits + integration owner defined.
 
-**Output requirement**: Manager MUST emit `formula_trace` object with all sub-fields above. Parent echoes this trace to user verbatim before fan-out (judgment transparency). Skipping `formula_trace` → parent rejects allocation and re-requests.
+**Output requirement**: Manager MUST emit `formula_trace` object (see Allocation plan format below). Parent echoes this trace to user verbatim before fan-out. Skipping `formula_trace` → parent rejects allocation and re-requests.
 
 ## Available tools (Serena MCP required)
 
