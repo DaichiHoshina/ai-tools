@@ -4,6 +4,16 @@
 
 `~/ai-tools/claude-code/` manages Claude Code config (commands / skills / hooks / agents / rules / guidelines / references). Synced to `~/.claude/` via `sync.sh`.
 
+## Quick Reference
+
+```bash
+cd ~/ai-tools/claude-code
+npm test                    # jest (statusline 等 JS test)
+bats -r tests/              # bash hook / lib / scripts の bats 全実行
+./sync.sh to-local --yes    # repo → ~/.claude 反映 (非対話)
+./scripts/hook-bench.sh     # hook latency 計測 (warmup=5 / runs=15)
+```
+
 ## Editing Rule (data-loss guard)
 
 - **Always edit source `~/ai-tools/claude-code/`. `~/.claude/` direct edits are wiped by `sync.sh to-local`** (applies to CLAUDE.md / commands / skills / hooks / agents / rules / guidelines / config / references)
