@@ -42,14 +42,24 @@ All responses in English (preserve technical terms, tool names).
 
 Schema は `references/agent-team-contract.md` §1 (PO → parent) を canonical 参照。**contract §1 の YAML literal をそのまま埋める** (field 名 / 階層 / 型を改変しない)。
 
-**必須 field** (省略禁止): `execution_mode` / `decision_reason` / `worktree` / `reviewer_qa_criteria` / `manager_instruction`
+**Field schema** (canonical source: `references/agent-team-contract.md` §1):
+
+| Field | Required | Type / constraint |
+|-------|----------|-------------------|
+| `execution_mode` | **required** | `team` (literal; `/flow` 経由では `direct` 選択禁止) |
+| `decision_reason` | **required** | string; strategy・worktree rationale 等の補足を全てここに集約 |
+| `worktree` | **required** | object `{path, branch, base_branch}`; null 化禁止 (main 継続なら実値を埋める) |
+| `worktree.path` | **required** | absolute path string |
+| `worktree.branch` | **required** | branch name string |
+| `worktree.base_branch` | **required** | branch name string |
+| `reviewer_qa_criteria` | **required** | object `{p0, p1, refix_loop_limit}`; 省略禁止 (軽量 task でも default literal を返す) |
+| `manager_instruction` | **required** | object; Markdown 文字列返却禁止 |
+| `manager_instruction.goal` | **required** | string |
+| `manager_instruction.constraints` | **required** | array of strings |
+| `manager_instruction.priority` | **required** | array of strings; scalar (`p1` / `high` 等) 禁止 |
 
 **禁止事項**:
 - contract §1 にない field を独自追加 (`strategy` / `worktree.create` / `worktree.rationale` 等) **禁止** — 補足は `decision_reason` に集約
-- `manager_instruction` を Markdown 文字列で返す **禁止** — contract §1 通り `goal` / `constraints` / `priority` の YAML 構造で返す
-- `manager_instruction.priority` を scalar (`p1` / `high` 等) で返す **禁止** — 配列 `["<top task>", "<next>"]` literal
-- `reviewer_qa_criteria` 省略 **禁止** — 軽量 task でも default 値 (`p0: [type-safety, security, data-integrity]` / `p1: []` / `refix_loop_limit: 1`) を literal で返す
-- `worktree` を `worktree.path: null` 等の null 化 **禁止** — main 継続なら `path: <main 作業 dir>` / `branch: main` / `base_branch: main` を埋める
 
 違反時、parent は出力を破棄して再走指示。
 
