@@ -1,148 +1,148 @@
 # db-concurrency review reference
 
-InnoDB暗黙デッドロック・lock wait timeout・hot row競合をdiffから検出する観点。SQL文字列 + TX境界 + isolation設定の組み合わせで判定する。
+Detect InnoDB implicit deadlock / lock wait timeout / hot row contention from diff. Judge by combination of SQL string + TX boundary + isolation setting.
 
-詳細背景は`guidelines/backend/mysql-performance.md` §6-7参照。
+Background: `guidelines/backend/mysql-performance.md` §6-7.
 
-## 検出パターン (high precision優先)
+## Detection patterns (high precision first)
 
-### P1. UPDATE/SELECT FOR UPDATE順序不定
+### P1. UPDATE/SELECT FOR UPDATE undefined order
 
-**症状**: 同一TXで複数rowを更新する際、入力配列をsortせず発行 → 別TXと逆順アクセスでデッドロック (§7.2パターンA)。
+**Symptom**: Updating multiple rows in same TX without sorting input array → reverse-order access with another TX → deadlock (§7.2 pattern A).
 
-**検出シグナル**:
+**Detection signals**:
 
-| シグナル | grepパターン例 |
-|---------|---------------|
-| ループ内のUPDATE/DELETE | `for .* { .*tx.*Exec.*UPDATE\|DELETE` |
-| 関数内2+のUPDATE文、ID元が引数 | UPDATEを2箇所以上 + 引数の`IDs []int64`等 |
-| `IN (?, ?, ?)` の引数sort不在 | `IN (` + 直前にsortなし |
+| Signal | grep pattern example |
+|--------|----------------------|
+| UPDATE/DELETE in loop | `for .* { .*tx.*Exec.*UPDATE\|DELETE` |
+| 2+ UPDATE statements in function, ID from args | 2+ UPDATE locations + args `IDs []int64` etc |
+| `IN (?, ?, ?)` with no prior sort | `IN (` + no sort before |
 
-**判定基準**: UPDATE発行前に`sort.Slice(ids, ...)` / `ORDER BY` / 単調なPK昇順保証が**ない**場合Warning。引数のID配列が呼び出し元で常にsort保証されているならコメントで明示要求。
+**Judgment**: Warning when no `sort.Slice(ids, ...)` / `ORDER BY` / monotonic PK ascending guarantee before UPDATE. If caller always guarantees sort, require explicit comment.
 
-**修正提案**: SQL側`ORDER BY id`、またはapp層で`slices.Sort(ids)`してから発行。
+**Fix**: SQL-side `ORDER BY id`, or app-side `slices.Sort(ids)` before issue.
 
-### P2. RR + 非unique/範囲FOR UPDATE + 後続INSERT
+### P2. RR + non-unique/range FOR UPDATE + subsequent INSERT
 
-**症状**: gap lock取得 → 同TX/別TXのINSERTがInsert Intention非互換で待機 → 環状デッドロック (§7.2パターンB)。
+**Symptom**: Gap lock acquired → INSERT in same/other TX incompatible with Insert Intention → circular deadlock (§7.2 pattern B).
 
-**検出シグナル**:
+**Detection signals**:
 
-| シグナル | 例 |
-|---------|---|
-| `SELECT ... FOR UPDATE` + `WHERE <非PK> =` or範囲 | `FOR UPDATE` + `BETWEEN\|IN\|>\|<` |
-| 同TX内で同table/同条件のINSERT | 直後に`INSERT INTO <同table>` |
-| 8.0未満のisolation明示なし | 既定RR、MySQL 8.0+も既定はRR |
+| Signal | Example |
+|--------|---------|
+| `SELECT ... FOR UPDATE` + `WHERE <non-PK> =` or range | `FOR UPDATE` + `BETWEEN\|IN\|>\|<` |
+| INSERT into same table/condition in same TX | Followed by `INSERT INTO <same table>` |
+| No explicit isolation below 8.0 | Default RR, MySQL 8.0+ also defaults to RR |
 
-**判定基準**: 3条件 (非unique FOR UPDATE / 同TX後続INSERT / RR isolation) のうち2+成立でWarning、3つ揃えばCritical候補。
+**Judgment**: Warning if 2+ of 3 conditions (non-unique FOR UPDATE / subsequent INSERT in TX / RR isolation) met; Critical candidate if all 3.
 
-**修正提案**:
-- isolationをRCへ降格 (`tx.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})`)
-- FOR UPDATEをunique等価条件に書き換え
-- TX分割しSELECT結果を外側で受け取りINSERT前に解放
+**Fix**:
+- Downgrade isolation to RC (`tx.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})`)
+- Rewrite FOR UPDATE to unique equality condition
+- Split TX, release before INSERT
 
-### P3. INSERT ... ON DUPLICATE KEY UPDATEの並行upsert
+### P3. INSERT ... ON DUPLICATE KEY UPDATE concurrent upsert
 
-**症状**: unique検査でS lock → UPDATE経路でX昇格、同keyへの並行upsertが昇格デッドロック (§7.2パターンC)。
+**Symptom**: S lock on unique check → X upgrade on UPDATE path, concurrent upsert on same key → upgrade deadlock (§7.2 pattern C).
 
-**検出シグナル**:
+**Detection signals**:
 
-| シグナル | 例 |
-|---------|---|
-| `ON DUPLICATE KEY UPDATE` | リテラル一致 |
-| handler/worker内の直接呼び出し | concurrency想定箇所 |
-| multi-row VALUES + ODKU | bulk upsert |
+| Signal | Example |
+|--------|---------|
+| `ON DUPLICATE KEY UPDATE` | Literal match |
+| Direct call in handler/worker | Concurrency-expected location |
+| Multi-row VALUES + ODKU | Bulk upsert |
 
-**判定基準**: ODKU使用箇所が並行実行可能な経路 (handler/job/worker) かつ同一keyに集中する可能性ありでWarning。idempotent前提のmigration内ODKUは対象外。
+**Judgment**: Warning if ODKU location is in concurrent execution path (handler/job/worker) and key concentration possible. ODKU inside idempotent migration is out of scope.
 
-**修正提案**:
-- `INSERT IGNORE` + 別途`UPDATE`に分離
-- 事前`SELECT FOR UPDATE`でX取得後に分岐
-- 同一key集中なら別keyへshardingまたはqueue化
+**Fix**:
+- Separate into `INSERT IGNORE` + separate `UPDATE`
+- Acquire X lock with `SELECT FOR UPDATE` then branch
+- Sharding or queue if same key concentration
 
-### P4. FKチェーンの暗黙S lock
+### P4. FK chain implicit S lock
 
-**症状**: 子INSERT/UPDATE → 親rowに暗黙S lock。別TXが親をX取得 → 待機。子操作と親更新が双方向で起きると環状 (§7.2パターンD)。
+**Symptom**: Child INSERT/UPDATE → implicit S lock on parent row. Other TX acquires X on parent → wait. Circular if child and parent updates happen bidirectionally (§7.2 pattern D).
 
-**検出シグナル**:
+**Detection signals**:
 
-| シグナル | 例 |
-|---------|---|
-| schema/migrationの`FOREIGN KEY` | `REFERENCES` |
-| 同TX内で親UPDATE + 子INSERT/UPDATE混在 | 順序不定 |
+| Signal | Example |
+|--------|---------|
+| `FOREIGN KEY` in schema/migration | `REFERENCES` |
+| Parent UPDATE + child INSERT/UPDATE coexist in same TX | Undefined order |
 
-**判定基準**: 親子両方の書き込みが同TXに同居 + 親rowが複数handlerから更新されるテーブルならWarning。
+**Judgment**: Warning if both parent/child writes in same TX and parent row is updated from multiple handlers.
 
-**修正提案**: FK削除 (整合性app担保) / 親と子の更新順序統一 / TX分割。
+**Fix**: Remove FK (app-enforced integrity) / unify parent-child update order / split TX.
 
 ### P5. UPDATE/DELETE without index
 
-**症状**: 非indexed列WHEREのUPDATE/DELETE → 全行scan + 全行row lock → 事実上table lock → デッドロック頻発・lock wait timeout頻発。
+**Symptom**: UPDATE/DELETE with non-indexed column WHERE → full scan + full row lock → effective table lock → frequent deadlock/lock wait timeout.
 
-**検出シグナル**:
+**Detection signals**:
 
-| シグナル | 例 |
-|---------|---|
-| `UPDATE\|DELETE FROM .+ WHERE <列名>` | 列名がschema上indexedか確認要 |
-| migrationにそのWHERE列のindex不在 | `CREATE INDEX` grep |
+| Signal | Example |
+|--------|---------|
+| `UPDATE\|DELETE FROM .+ WHERE <column>` | Check if column is indexed in schema |
+| Index absent for that WHERE column in migration | `CREATE INDEX` grep |
 
-**判定基準**: schema/migrationを参照して該当列にindexがなければCritical候補 (deadlock直結)。
+**Judgment**: Critical candidate if index absent on column after checking schema/migration (deadlock-direct).
 
-**修正提案**: index追加。EXPLAIN実行で`type=ALL`なら確定。
+**Fix**: Add index. Run EXPLAIN; `type=ALL` confirms.
 
-### P6. TX内外部I/O
+### P6. External I/O inside TX
 
-**症状**: TX中にHTTP / gRPC / message publish / time.Sleep → 外部レイテンシ中もlock保持、deadlock/timeout頻発。
+**Symptom**: HTTP / gRPC / message publish / time.Sleep inside TX → lock held during external latency → frequent deadlock/timeout.
 
-**検出シグナル**:
+**Detection signals**:
 
-| シグナル | 例 |
-|---------|---|
-| TX境界内に外部call | `tx.Begin` ~ `tx.Commit`の間に`http.Get` / `client.Call` / `Publish` / `sleep` |
-| ORM TX scope内のwait | `db.Transaction(func(tx) { ... external })`内のIO |
+| Signal | Example |
+|--------|---------|
+| External call within TX boundary | `http.Get` / `client.Call` / `Publish` / `sleep` between `tx.Begin` and `tx.Commit` |
+| Wait in ORM TX scope | External IO inside `db.Transaction(func(tx) { ... external })` |
 
-**判定基準**: TX scope内に同期外部call検出 → Critical (deadlock以前にlock wait timeoutが頻発)。
+**Judgment**: Critical if synchronous external call detected in TX scope (lock wait timeout before deadlock).
 
-**修正提案**: 外部I/O完了後にTX開く / outbox patternでDB commitとmessage送信を分離。
+**Fix**: Open TX after external I/O completes / use outbox pattern to separate DB commit and message send.
 
-### P7. デッドロックretry不在
+### P7. Missing deadlock retry
 
-**症状**: TX関数がER_LOCK_DEADLOCK (1213) で即fail → ユーザー操作失敗増。InnoDBは敗者TXを自動ROLLBACK済みなのでretry安全。
+**Symptom**: TX function immediately fails on ER_LOCK_DEADLOCK (1213) → increased user-facing failures. InnoDB auto-rolls back loser TX, so retry is safe.
 
-**検出シグナル**:
+**Detection signals**:
 
-| シグナル | 例 |
-|---------|---|
-| TX wrapper関数にretry loop不在 | `for ... retry`なし |
-| error判定なし | mysql errno 1213チェックなし |
+| Signal | Example |
+|--------|---------|
+| No retry loop in TX wrapper function | No `for ... retry` |
+| No error judgment | No mysql errno 1213 check |
 
-**判定基準**: TX境界を持つ共通関数 (repo/store/uow層) でretry実装が欠落 → Warning。1回起動限りのscript/migrationは対象外。
+**Judgment**: Warning if retry missing in common TX-boundary function (repo/store/uow layer). One-shot scripts/migrations out of scope.
 
-**修正提案**: 指数backoff + jitterのretry実装 (mysql-performance.md §7.4の雛形)。
+**Fix**: Implement exponential backoff + jitter retry (template in mysql-performance.md §7.4).
 
-### P8. AUTO-INC lock mode誤用
+### P8. AUTO-INC lock mode misuse
 
-**症状**: bulk INSERT + `lastInsertID + i`採番が`innodb_autoinc_lock_mode=2` (8.0既定) で連番非保証 → IDズレ。
+**Symptom**: Bulk INSERT + `lastInsertID + i` numbering with `innodb_autoinc_lock_mode=2` (8.0 default) → non-sequential IDs → ID mismatch.
 
-**検出シグナル**: mysql-performance.md §17で別途網羅 (bulk-insert-correctness観点)。本観点ではcross-reference扱い、重複出力しない。
+**Detection signals**: Covered separately in mysql-performance.md §17 (bulk-insert-correctness perspective). Treat as cross-reference here, do not duplicate output.
 
-## 出力ガイド
+## Output guide
 
-| Severity | 条件 |
-|----------|-----|
-| Critical | P2全条件成立 / P5 (indexed確認後欠如確定) / P6 (外部I/O検出明確) |
-| Warning | P1 / P3 / P4 / P7 / P2部分成立 |
-| Note | schema未参照で確定できないP5、idempotent前提のP3など |
+| Severity | Condition |
+|----------|-----------|
+| Critical | P2 all conditions met / P5 (index absence confirmed) / P6 (external I/O clearly detected) |
+| Warning | P1 / P3 / P4 / P7 / P2 partial |
+| Note | P5 without schema reference, idempotent-assumed P3, etc |
 
-## False Positive回避
+## False positive avoidance
 
-- migration script / 一回起動batch / 単体テストfixture → P3/P7適用外
-- TX境界が判定不能 (autocommit前提のORM call) → 検出しない
-- isolation設定が`READ COMMITTED`明示済 → P2のgap lock系除外
-- schema未参照でindex有無不明 → P5はnote止まり
+- Migration script / one-shot batch / unit test fixture → P3/P7 out of scope
+- TX boundary undeterminable (autocommit-assumed ORM call) → do not detect
+- `READ COMMITTED` isolation explicitly set → exclude P2 gap lock patterns
+- Index presence unknown without schema reference → P5 stays at note
 
-## 関連
+## Related
 
-- `guidelines/backend/mysql-performance.md` §6-7 (lock/deadlock詳細)
-- `guidelines/backend/database-performance.md` (PG版、PGはMVCC差でserialization failure→retry経路)
-- `guidelines/backend/distributed-transactions.md` (isolation level設計判断)
+- `guidelines/backend/mysql-performance.md` §6-7 (lock/deadlock details)
+- `guidelines/backend/database-performance.md` (PG version; PG uses MVCC → serialization failure → retry path)
+- `guidelines/backend/distributed-transactions.md` (isolation level design decisions)
