@@ -1,60 +1,58 @@
-# DBパフォーマンス ガイドライン
+# DB Performance Guidelines
 
-クエリ遅延・スループット限界・本番DB調査時に参照。**PostgreSQL 16-18専用** (PG固有: pg_stat_statements / EXPLAIN BUFFERS)。MySQL/InnoDBは `backend/mysql-performance.md` 参照。
+Reference for query latency, throughput limits, and production DB investigation. **PostgreSQL 16-18 only** (PG-specific: pg_stat_statements / EXPLAIN BUFFERS). For MySQL/InnoDB, see `backend/mysql-performance.md`.
 
-## Tier区分
+## Tier classification
 
-| Tier | 内容 |
-|------|------|
-| Tier 1（必須） | EXPLAIN、index基本、N+1検出、connection pool |
-| Tier 2（規模別） | パーティショニング、partial index、covering index |
-| Tier 3（深掘り） | query plan強制、HOT update、bloat管理 |
-
----
-
-## 1. 「DB遅い」診断5ステップ
-
-| Step | 確認 | コマンド/ツール |
-|------|------|---------------|
-| 1 | EXPLAIN ANALYZEで実行計画 | `EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) <query>` |
-| 2 | seq_scan vs index_scan確認 | プラン中の `Seq Scan` / `Index Scan` |
-| 3 | N+1発生有無 | クエリログ件数、ORM eager load設定 |
-| 4 | connection pool飽和 | `SHOW POOLS;`（PgBouncer）/ `pg_stat_activity` |
-| 5 | cache hit率 | `pg_statio_user_tables.heap_blks_hit / (hit + read)` |
-
-各Stepで原因特定したら下記の対応セクションへ。
+| Tier | Content |
+|------|---------|
+| Tier 1 (required) | EXPLAIN, index basics, N+1 detection, connection pool |
+| Tier 2 (scale-dependent) | Partitioning, partial index, covering index |
+| Tier 3 (advanced) | Force query plan, HOT update, bloat management |
 
 ---
 
-## 2. EXPLAIN読み方（PG 18更新含む）
+## 1. "DB slow" — 5-step diagnosis
 
-| プラン要素 | 意味 | 対処 |
-|-----------|------|------|
-| `Seq Scan` | 全件走査 | WHERE列にindex検討 |
-| `Index Scan` | index利用 | OK（ただしBuffers大ならカバリング検討） |
-| `Bitmap Heap Scan` | 複数index結合 | 複合indexで1本化検討 |
-| `Hash Join` | hash結合（メモリ内） | work_mem確認、Disk spillなら拡大 |
-| `Nested Loop` + 大件数 | N×M実行 | join順入替、index追加 |
-| `rows estimated` 大乖離 | 統計情報古い | `ANALYZE <table>` |
-
-**PG 18改善点**: 行推定が0.15単位で精緻化、Memory/Disk spill表示が標準化。
+| Step | Check | Command/Tool |
+|------|-------|--------------|
+| 1 | EXPLAIN ANALYZE execution plan | `EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) <query>` |
+| 2 | Seq scan vs index scan | `Seq Scan` / `Index Scan` in plan |
+| 3 | N+1 occurrence | Query log count, ORM eager load config |
+| 4 | Connection pool saturation | `SHOW POOLS;` (PgBouncer) / `pg_stat_activity` |
+| 5 | Cache hit rate | `pg_statio_user_tables.heap_blks_hit / (hit + read)` |
 
 ---
 
-## 3. インデックス設計
+## 2. Reading EXPLAIN (PG 18 updates included)
 
-| 種類 | 用途 | 例 |
-|------|------|-----|
-| **B-tree**（既定） | 等価・範囲・ORDER BY | `WHERE created_at > ?`, `ORDER BY id` |
-| **Hash** | 等価のみ（範囲不可） | `WHERE token = ?`（B-treeで十分なケース多い） |
-| **GIN** | 配列/JSONB/全文検索 | `WHERE tags @> ARRAY['x']` |
-| **BRIN** | 時系列・連続値 | 巨大logテーブル、`WHERE ts BETWEEN ...` |
+| Plan element | Meaning | Action |
+|-------------|---------|--------|
+| `Seq Scan` | Full table scan | Consider index on WHERE column |
+| `Index Scan` | Index used | OK (check Buffers; consider covering if large) |
+| `Bitmap Heap Scan` | Multiple index merge | Consolidate with composite index |
+| `Hash Join` | In-memory hash join | Check `work_mem`; expand if disk spill |
+| `Nested Loop` + large rows | N×M executions | Swap join order, add index |
+| `rows estimated` large gap | Stale statistics | Run `ANALYZE <table>` |
 
-**設計原則**:
-- 列順序 = WHERE/JOIN/ORDER BYの述語順に揃える
-- 複合index `(a, b)` は `WHERE a = ?` でも効くが `WHERE b = ?` は効かない
-- カバリングindex（INCLUDE句）でindex-only scan化
-- 未使用indexは定期削除（`pg_stat_user_indexes.idx_scan = 0`）
+**PG 18**: row estimation improved to 0.15 granularity; Memory/Disk spill display standardized.
+
+---
+
+## 3. Index design
+
+| Type | Use | Example |
+|------|-----|---------|
+| **B-tree** (default) | Equality, range, ORDER BY | `WHERE created_at > ?`, `ORDER BY id` |
+| **Hash** | Equality only (no range) | `WHERE token = ?` (B-tree often sufficient) |
+| **GIN** | Array/JSONB/full-text | `WHERE tags @> ARRAY['x']` |
+| **BRIN** | Time-series, sequential values | Large log table, `WHERE ts BETWEEN ...` |
+
+**Design rules**:
+- Column order = matches WHERE/JOIN/ORDER BY predicate order
+- Composite `(a, b)` works for `WHERE a = ?`; `WHERE b = ?` alone does not
+- Covering index (INCLUDE) for index-only scan
+- Drop unused indexes periodically (`pg_stat_user_indexes.idx_scan = 0`)
 
 ```sql
 CREATE INDEX idx_orders_user_status ON orders (user_id, status) INCLUDE (total);
@@ -62,76 +60,76 @@ CREATE INDEX idx_orders_user_status ON orders (user_id, status) INCLUDE (total);
 
 ---
 
-## 4. N+1検出と対策
+## 4. N+1 detection and fix
 
-| ORM | 検出 | 対策 |
-|-----|------|------|
-| Prisma | `@prisma/sqlcommenter` でSQL trace | `include`, `select` でeager load |
-| GORM | `gorm.io/plugin/prometheus` のquery count metric | `Preload("Relation")` |
-| SQLAlchemy | `sqlalchemy.event` でquery count log | `joinedload`, `selectinload` |
-| DataLoader | - | バッチローダーパターンで1クエリ化 |
+| ORM | Detection | Fix |
+|-----|-----------|-----|
+| Prisma | `@prisma/sqlcommenter` SQL trace | `include`, `select` for eager load |
+| GORM | `gorm.io/plugin/prometheus` query count metric | `Preload("Relation")` |
+| SQLAlchemy | `sqlalchemy.event` query count log | `joinedload`, `selectinload` |
+| DataLoader | - | Batch loader pattern for single query |
 
-**判定基準**: 1リクエストで同種クエリがN>10発生 → 即対処。
+**Threshold**: same-type query N>10 per request → fix immediately.
 
 ---
 
-## 5. Connection Pool sizing
+## 5. Connection pool sizing
 
-| 設定 | 公式 | 例（4 cores, 100 backend） |
-|------|------|--------------------------|
-| アプリpool max | `(CPU cores × 2) + 1` | 9 |
+| Setting | Formula | Example (4 cores, 100 backends) |
+|---------|---------|----------------------------------|
+| App pool max | `(CPU cores × 2) + 1` | 9 |
 | PgBouncer `default_pool_size` | 10-25 / DB | 25 |
-| PgBouncer `max_client_conn` | アプリ実max × backend数 | 1000 |
-| `reserve_pool_size` | 管理者用 | 5 |
+| PgBouncer `max_client_conn` | app real max × backend count | 1000 |
+| `reserve_pool_size` | Admin use | 5 |
 
-**監視**: PgBouncer `SHOW POOLS;` の `cl_waiting > 0` が継続 → pool不足、拡張。
+**Monitor**: PgBouncer `SHOW POOLS;` — `cl_waiting > 0` persisting → pool insufficient, expand.
 
 ---
 
-## 6. Slow Query運用
+## 6. Slow query operation
 
 ```sql
--- PG: 1秒超のクエリをログ
+-- Log queries over 1 second
 ALTER SYSTEM SET log_min_duration_statement = '1000';
 SELECT pg_reload_conf();
 
--- 統計情報拡張（pg_stat_statements）
+-- Top queries by total time
 SELECT query, calls, mean_exec_time, total_exec_time
 FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 10;
 ```
 
-**alert閾値例**: P95レイテンシ > 200msが5分継続 → Slack通知。
+**Alert threshold example**: P95 latency > 200ms for 5 minutes → Slack notification.
 
 ---
 
-## 7. パーティショニング
+## 7. Partitioning
 
-| 戦略 | 適用 | キー例 |
-|------|------|-------|
-| **Range（時系列）** | 古いデータ削除/集計 | `created_at` 月単位 |
-| **Hash** | 均等分散、hot partition回避 | `user_id` |
-| **List** | 明示的カテゴリ分離 | `region = 'jp'/'us'` |
+| Strategy | Use | Key example |
+|----------|-----|-------------|
+| **Range (time-series)** | Delete/aggregate old data | `created_at` monthly |
+| **Hash** | Uniform distribution, avoid hot partition | `user_id` |
+| **List** | Explicit category separation | `region = 'jp'/'us'` |
 
-**判定**: 単一テーブル100M行超、または直近データのみアクセス頻繁 → Range partition検討。
-
----
-
-## 8. よくあるアンチパターン
-
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| `SELECT *` | 必要列のみ列挙 | I/O削減、index-only scan化 |
-| `OFFSET 100000` | カーソルベース（`WHERE id > last_id`） | OFFSETは前N件全走査 |
-| 1リクエストで複数round-trip | バッチ化、JOIN | latency累積 |
-| ORMのlazy load放置 | eager load明示 | N+1温床 |
-| 全列にindex | 必要列のみ、複合検討 | 書込みoverhead |
-| 巨大トランザクション | 短く分割 | lock期間短縮 |
+**Threshold**: single table > 100M rows, or only recent data accessed frequently → consider Range partition.
 
 ---
 
-## 9. 参考
+## 8. Common anti-patterns
+
+| Avoid | Use instead | Reason |
+|-------|-------------|--------|
+| `SELECT *` | List required columns | Reduces I/O; enables index-only scan |
+| `OFFSET 100000` | Cursor-based (`WHERE id > last_id`) | OFFSET scans all preceding rows |
+| Multiple round-trips per request | Batch / JOIN | Latency accumulates |
+| ORM lazy load unchecked | Explicit eager load | N+1 source |
+| Index on every column | Required columns only; consider composite | Write overhead |
+| Large transactions | Split into smaller | Reduces lock duration |
+
+---
+
+## 9. References
 
 - PostgreSQL 18 EXPLAIN: future-architect.github.io/articles/20251008a/
-- Prisma Query Optimization公式
-- PgBouncer公式admin docs
-- 関連ガイドライン: `backend/distributed-transactions.md`（分離レベル）, `backend/caching-strategies.md`（cache先行）
+- Prisma Query Optimization docs
+- PgBouncer admin docs
+- Related: `backend/distributed-transactions.md` (isolation levels), `backend/caching-strategies.md` (cache first)

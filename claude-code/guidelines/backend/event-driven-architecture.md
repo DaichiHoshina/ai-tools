@@ -1,164 +1,162 @@
-# Event-Driven Architectureガイドライン
+# Event-Driven Architecture Guidelines
 
-Kafka/RabbitMQ/SQS/PubSub等の非同期メッセージング設計時に参照。単純バッチは `design/async-job-patterns.md`、TX整合は `backend/distributed-transactions.md` 参照。
+Reference for async messaging design with Kafka/RabbitMQ/SQS/PubSub etc. For simple batch jobs, see `design/async-job-patterns.md`. For TX consistency, see `backend/distributed-transactions.md`.
 
-## Tier区分
+## Tier classification
 
-| Tier | 内容 |
-|------|------|
-| Tier 1（必須） | broker選定、topic/partition設計、consumer group、delivery semantics |
-| Tier 2（規模別） | exactly-once実装、DLQ、retry戦略、schema registry、backpressure |
-| Tier 3（深掘り） | Event Sourcing、CDC、stream processing、transactional messaging |
-
----
-
-## 1. Broker選定（2025-2026時点）
-
-| Broker | 強み | 弱み | 代表用途 |
-|--------|------|------|---------|
-| **Kafka** | 高throughput（M msg/s）、partition順序、長期retention、エコシステム | 運用重、exactly-onceはtransactional API必要 | Event streaming、log aggregation、CDC |
-| **Redpanda** | Kafka API互換、軽量（C++、ZooKeeperなし）、低遅延 | 新しい、OSS版は機能制限 | Kafka代替、低遅延用途 |
-| **RabbitMQ** | 柔軟なrouting（exchange）、低遅延、運用簡単 | 順序保証はqueue単位、throughput中位 | Task queue、RPC、通知fan-out |
-| **AWS SQS Standard** | フルマネージド、無限scale | 順序保証なし、at-least-once | serverless、疎結合tasks |
-| **AWS SQS FIFO** | 順序保証（MessageGroupId）、dedup | throughput低（3,000 msg/s/group） | 順序必須・低throughput |
-| **AWS SNS + SQS** | Pub/Sub fan-out + 永続化 | 構成複雑 | マルチsubscriber通知 |
-| **Google Pub/Sub** | フルマネージド、ack deadline制御、exactly-once delivery (Pull) | GCP前提 | GCP環境のevent流通 |
-| **NATS JetStream** | 軽量、低遅延、stream + KV | ecosystem小 | IoT、edge、低遅延RPC |
-
-**判定軸**: 順序保証要件 / throughput / retention期間 / 運用コスト / vendor lockの5軸。迷ったらKafka互換（Kafka / Redpanda / MSK）。
+| Tier | Content |
+|------|---------|
+| Tier 1 (required) | Broker selection, topic/partition design, consumer group, delivery semantics |
+| Tier 2 (scale-dependent) | Exactly-once impl, DLQ, retry strategy, schema registry, backpressure |
+| Tier 3 (advanced) | Event Sourcing, CDC, stream processing, transactional messaging |
 
 ---
 
-## 2. Topic / Partition設計
+## 1. Broker selection (2025-2026)
 
-**原則**: partition = 順序単位 = 並列度上限。
+| Broker | Strengths | Weaknesses | Typical use |
+|--------|-----------|-----------|-------------|
+| **Kafka** | High throughput (M msg/s), partition order, long retention, ecosystem | Heavy ops; exactly-once requires transactional API | Event streaming, log aggregation, CDC |
+| **Redpanda** | Kafka API compatible, lightweight (C++, no ZooKeeper), low latency | Newer; OSS version has feature limits | Kafka replacement, low-latency use |
+| **RabbitMQ** | Flexible routing (exchange), low latency, easy ops | Order guarantee per queue only; medium throughput | Task queue, RPC, notification fan-out |
+| **AWS SQS Standard** | Fully managed, infinite scale | No order guarantee; at-least-once | Serverless, loosely coupled tasks |
+| **AWS SQS FIFO** | Order guarantee (MessageGroupId), dedup | Low throughput (3,000 msg/s/group) | Order-critical, low-throughput |
+| **AWS SNS + SQS** | Pub/Sub fan-out + persistence | Complex setup | Multi-subscriber notification |
+| **Google Pub/Sub** | Fully managed, ack deadline control, exactly-once delivery (Pull) | GCP only | Event routing in GCP |
+| **NATS JetStream** | Lightweight, low latency, stream + KV | Small ecosystem | IoT, edge, low-latency RPC |
 
-| 観点 | 指針 |
-|------|------|
-| partition key | 同一entityのeventを同一partitionに（例: `user_id`, `order_id`） |
-| partition数 | consumer最大並列数に合わせる。**増やすのは容易、減らすは不可**。初期は消費throughputの2-3倍 |
-| hot partition回避 | key分布の偏り検査（`kafka-consumer-groups --describe`）、salt付与で均等化 |
-| topic命名 | `{domain}.{entity}.{event}`（例: `order.v1.placed`、`user.v1.email_changed`） |
-| retention | event sourcing → 長期（無期限or compact）、通知系 → 7日程度 |
-
-**cross-partition順序は保証されない**。必要ならsingle partition（低throughput）or timestamp+mergeの自前実装。
-
----
-
-## 3. Consumer GroupとDelivery Semantics
-
-| Semantics | 実装 | 用途 | 注意 |
-|-----------|------|------|------|
-| **at-most-once** | auto commit前に処理 | metrics送信、ロス許容 | データ欠損 |
-| **at-least-once**（推奨） | 処理完了後manual commit | 一般OLTP | **消費側でidempotent必須** |
-| **exactly-once** | Kafka transactional producer + read_committed / SQS FIFO + dedup / Transactional Outbox | 金融、在庫 | 性能コスト大 |
-
-**Consumer rebalance**: Kafkaは **cooperative sticky**（2.4+）推奨、旧eagerは全revokeでstop-the-world。`partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor`。
-
-**1 partition = 最大1 consumer**。consumer数 > partition数 で余剰consumerはidle。
+**Decision axes**: ordering requirement / throughput / retention / ops cost / vendor lock (5 axes). Default: Kafka-compatible (Kafka / Redpanda / MSK).
 
 ---
 
-## 4. Idempotent Consumer（at-least-once受信側）
+## 2. Topic / partition design
 
-冪等性の実装パターン詳細は [design/async-job-patterns.md#冪等性の確保](../design/async-job-patterns.md) 参照。
+**Principle**: partition = ordering unit = parallelism ceiling.
 
----
+| Concern | Guidance |
+|---------|---------|
+| Partition key | Same entity events to same partition (e.g., `user_id`, `order_id`) |
+| Partition count | Match max consumer parallelism. **Easy to increase; impossible to decrease**. Initial: 2-3× expected throughput |
+| Hot partition prevention | Check key distribution (`kafka-consumer-groups --describe`); add salt to equalize |
+| Topic naming | `{domain}.{entity}.{event}` (e.g., `order.v1.placed`, `user.v1.email_changed`) |
+| Retention | Event sourcing → long-term (unlimited or compact); notification → ~7 days |
 
-## 5. Transactional Outbox（producer側exactly-onceの実用解）
-
-DB更新とevent発行のatomicity確保。
-
-| Step | 処理 |
-|------|------|
-| 1 | 業務更新 + `outbox` テーブルinsertを **同一tx** でcommit |
-| 2 | 別プロセス（relay/poller or Debezium CDC）がoutboxを読み → brokerにpublish |
-| 3 | publish成功でoutbox rowを削除or marked |
-
-**利点**: 2PC不要、DBとbrokerの整合。**欠点**: relay遅延（数ms〜秒）、outboxテーブル管理。
-
-CDC（Debezium等）でoutbox読取りするとrelay自前実装不要。
+**Cross-partition ordering is not guaranteed.** Use single partition (low throughput) or timestamp+merge for custom ordering.
 
 ---
 
-## 6. DLQ（Dead Letter Queue）
+## 3. Consumer group and delivery semantics
 
-DLQ詳細は [design/async-job-patterns.md#dlqdead-letter-queue設計](../design/async-job-patterns.md) 参照。
+| Semantics | Implementation | Use | Caution |
+|-----------|---------------|-----|---------|
+| **at-most-once** | Auto commit before processing | Metrics, loss-tolerant | Data loss |
+| **at-least-once** (recommended) | Manual commit after processing | General OLTP | **Consumer must be idempotent** |
+| **exactly-once** | Kafka transactional producer + read_committed / SQS FIFO + dedup / Transactional Outbox | Finance, inventory | High perf cost |
 
----
+**Consumer rebalance**: Use **cooperative sticky** (2.4+) for Kafka; old eager rebalance triggers stop-the-world full revoke. Set `partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor`.
 
-## 7. Schema Evolution
-
-Avro / Protobuf / JSON Schema + **Schema Registry**（Confluent、Apicurio）で管理。
-
-| 互換性モード | 意味 | 用途 |
-|-------------|------|------|
-| **BACKWARD**（既定） | 新schemaで旧data読める | consumer先行更新 |
-| **FORWARD** | 旧schemaで新data読める | producer先行更新 |
-| **FULL** | 双方向互換 | 最も厳格、推奨 |
-| **NONE** | 任意変更 | 非互換変更時の一時解除 |
-
-**破壊的変更**:
-- 必須field追加 → FORWARD壊れる
-- field削除 → BACKWARD壊れる
-- 型変更 → FULL壊れる
-
-→ major version bump + **dual write**（旧・新topic並走）、consumer移行後に旧停止。
+**1 partition = max 1 consumer**. Consumers exceeding partition count are idle.
 
 ---
 
-## 8. CDC（Change Data Capture）
+## 4. Idempotent consumer (at-least-once receiver)
 
-DB変更をevent化して他システムに伝播。
-
-| ツール | 対象 | 仕組み |
-|--------|------|--------|
-| **Debezium** | MySQL binlog、PostgreSQL WAL、MongoDB oplog | Kafka Connect経由でbrokerへ |
-| **AWS DMS** | 各種DB | CDCモードでS3/Kinesisへ |
-| **native logical replication**（PG） | PostgreSQL | publication/subscription |
-
-**snapshot + incremental**: 初回は全件snapshot、以降は差分（WAL / binlog）。
-
-**Outbox vs CDC**: Outboxはapp層で明示的なevent設計、CDCはDB変更をそのまま流す。Outbox推奨（event契約が明確、内部カラム変更に強い）。
+See [design/async-job-patterns.md#idempotency](../design/async-job-patterns.md) for implementation patterns.
 
 ---
 
-## 9. BackpressureとLag対策
+## 5. Transactional Outbox (producer-side exactly-once practical solution)
 
-consumerがproducerに追いつかない時の対処。
+Ensures atomicity of DB update and event publish.
 
-| 監視metric | 指針 |
-|------------|------|
-| consumer lag（`kafka-consumer-groups`） | 定常lagが増加 → 水平scale |
-| `/sched/latencies`（Go） | consumer内部の処理待ち |
-| max.poll.records | 1回poll取得数、下げるとper-batch処理軽減 |
+| Step | Processing |
+|------|-----------|
+| 1 | Business update + `outbox` table INSERT in **same TX** commit |
+| 2 | Separate process (relay/poller or Debezium CDC) reads outbox → publishes to broker |
+| 3 | On publish success: delete or mark outbox row |
 
-**対策優先順**:
-1. consumer instance増（partition数まで）
-2. 処理並列化（goroutine pool、worker pool）
-3. partition数増（要rebalance、downtime検討）
-4. 処理軽量化（重い処理は別topic + 別consumerに分離）
+**Pros**: No 2PC required; DB and broker stay consistent. **Cons**: relay delay (ms to seconds); outbox table management.
+
+CDC (Debezium etc.) can read the outbox, eliminating the need for a custom relay.
 
 ---
 
-## 10. アンチパターン
+## 6. DLQ (Dead Letter Queue)
 
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| queueを長期store代わり | event sourcing or DB | brokerはretention有限が前提 |
-| partition keyにtimestamp | entity ID | hot partition（最新に集中） |
-| consumer内で重いDB書込をblock | worker pool経由or別topic | lag増大 |
-| schema破壊的変更を無告知 | Schema Registry + 移行ドキュメント | consumer全停止リスク |
-| eventに巨大payload | IDのみ + DB参照（claim checkパターン） | broker size制限、network cost |
-| exactly-onceを自前実装 | Kafka transactional producer / Outbox | 隅のバグで整合崩壊 |
-| DLQを監視せず放置 | 件数SLO + 再投入フロー | バグ無視 → データ欠損 |
+See [design/async-job-patterns.md#dlq-dead-letter-queue-design](../design/async-job-patterns.md) for details.
 
 ---
 
-## 11. 参考
+## 7. Schema evolution
 
-- Confluent: Kafka公式ドキュメント、Schema Registry
-- 「Designing Data-Intensive Applications」(Martin Kleppmann)
-- 「Enterprise Integration Patterns」(Hohpe & Woolf)
-- Debezium公式、AWS SQS/SNS公式
-- 関連: `backend/distributed-transactions.md`（Saga/Outboxの整合）、`design/async-job-patterns.md`（task queue）、`backend/observability-design.md`（consumer lag監視）
+Avro / Protobuf / JSON Schema + **Schema Registry** (Confluent, Apicurio).
+
+| Compatibility mode | Meaning | Use |
+|-------------------|---------|-----|
+| **BACKWARD** (default) | New schema reads old data | Consumer-first deploy |
+| **FORWARD** | Old schema reads new data | Producer-first deploy |
+| **FULL** | Bidirectional compatible | Most strict; recommended |
+| **NONE** | Arbitrary change | Temporary when breaking |
+
+**Breaking changes**:
+- Add required field → breaks FORWARD
+- Delete field → breaks BACKWARD
+- Change type → breaks FULL
+
+→ Major version bump + **dual write** (old + new topics in parallel); stop old after consumer migration.
+
+---
+
+## 8. CDC (Change Data Capture)
+
+Convert DB changes to events and propagate to other systems.
+
+| Tool | Target | Mechanism |
+|------|--------|-----------|
+| **Debezium** | MySQL binlog, PostgreSQL WAL, MongoDB oplog | Via Kafka Connect to broker |
+| **AWS DMS** | Various DBs | CDC mode to S3/Kinesis |
+| **Native logical replication** (PG) | PostgreSQL | publication/subscription |
+
+**Snapshot + incremental**: initial full snapshot, then incremental (WAL/binlog).
+
+**Outbox vs CDC**: Outbox = explicit event design at app layer; CDC = stream DB changes directly. Outbox preferred (clear event contract; resilient to internal column changes).
+
+---
+
+## 9. Backpressure and lag mitigation
+
+| Monitoring metric | Guidance |
+|------------------|---------|
+| Consumer lag (`kafka-consumer-groups`) | Steadily increasing → scale horizontally |
+| `/sched/latencies` (Go) | Internal processing wait in consumer |
+| `max.poll.records` | Reduce to lighten per-batch processing |
+
+**Mitigation priority**:
+1. Add consumer instances (up to partition count)
+2. Parallelize processing (goroutine pool, worker pool)
+3. Increase partition count (requires rebalance; check downtime)
+4. Offload heavy processing (separate topic + consumer)
+
+---
+
+## 10. Anti-patterns
+
+| Avoid | Use instead | Reason |
+|-------|-------------|--------|
+| Queue as long-term store | Event sourcing or DB | Broker retention is finite by design |
+| Timestamp as partition key | Entity ID | Hot partition (all traffic at latest timestamp) |
+| Blocking heavy DB writes in consumer | Worker pool or separate topic | Lag increases |
+| Breaking schema change without notice | Schema Registry + migration doc | Risks consumer downtime |
+| Large payload in event | ID only + DB lookup (claim check pattern) | Broker size limits, network cost |
+| Custom exactly-once impl | Kafka transactional producer / Outbox | Corner-case bugs break consistency |
+| DLQ not monitored | Count SLO + replay flow | Bugs silently cause data loss |
+
+---
+
+## 11. References
+
+- Confluent: Kafka official docs, Schema Registry
+- "Designing Data-Intensive Applications" (Martin Kleppmann)
+- "Enterprise Integration Patterns" (Hohpe & Woolf)
+- Debezium official, AWS SQS/SNS official
+- Related: `backend/distributed-transactions.md` (Saga/Outbox consistency), `design/async-job-patterns.md` (task queue), `backend/observability-design.md` (consumer lag monitoring)

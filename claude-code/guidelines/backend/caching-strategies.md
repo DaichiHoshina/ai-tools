@@ -1,31 +1,31 @@
-# キャッシング戦略 ガイドライン
+# Caching Strategies Guidelines
 
-DB負荷削減・レイテンシ改善・スループット向上が必要な時に参照。Redis/Memcached/in-process問わず適用可。
+Reference for reducing DB load, improving latency, and increasing throughput. Applies to Redis/Memcached/in-process caching.
 
-## Tier区分
+## Tier classification
 
-| Tier | 内容 |
-|------|------|
-| Tier 1（必須） | Cache-Aside、TTL設計、invalidation基本 |
-| Tier 2（規模別） | Stampede対策、2層キャッシュ、warming |
-| Tier 3（深掘り） | Redis Cluster、consistent hashing |
-
----
-
-## 1. キャッシュパターン比較
-
-| パターン | 流れ | メリット | デメリット | 推奨用途 |
-|---------|------|---------|----------|---------|
-| **Cache-Aside**（推奨） | App: cache miss → DB → cache書込 | 障害時fallback容易、明示的制御 | 実装複雑、初回missあり | デフォルト |
-| **Read-Through** | Cache libraryがmiss時DB取得 | 実装簡潔 | cache障害でDB直叩き、cold時flood | Simple read系 |
-| **Write-Through** | Writeをcache + DB同時 | read時整合 | write遅延、cache障害で書込失敗 | 整合性最優先 |
-| **Write-Behind** | cacheのみ即書込、DB非同期 | write高速 | データ損失リスク | スコアボード等 |
-
-**判断**: 迷ったらCache-Aside。
+| Tier | Content |
+|------|---------|
+| Tier 1 (required) | Cache-Aside, TTL design, basic invalidation |
+| Tier 2 (scale-dependent) | Stampede protection, two-tier cache, warming |
+| Tier 3 (advanced) | Redis Cluster, consistent hashing |
 
 ---
 
-## 2. Cache-Aside実装（疑似コード）
+## 1. Cache pattern comparison
+
+| Pattern | Flow | Pros | Cons | Use |
+|---------|------|------|------|-----|
+| **Cache-Aside** (recommended) | App: cache miss → DB → write cache | Easy fallback on failure, explicit control | More code, cold miss | Default |
+| **Read-Through** | Cache library fetches DB on miss | Simple code | Cache failure → DB flood; cold start flood | Simple reads |
+| **Write-Through** | Write to cache + DB simultaneously | Consistent on read | Write latency; cache failure breaks writes | Consistency-critical |
+| **Write-Behind** | Write cache only; async DB sync | Fast writes | Data loss risk | Scoreboards etc. |
+
+**Default**: Cache-Aside when in doubt.
+
+---
+
+## 2. Cache-Aside implementation
 
 ```go
 val, err := cache.Get(key)
@@ -36,112 +36,112 @@ if err == ErrCacheMiss {
 return val
 ```
 
-**書込/更新時**:
+**On write/update**:
 ```go
 db.Update(...)
-cache.Del(key)  // invalidate（次回 read で reload）
+cache.Del(key)  // invalidate; next read reloads
 ```
 
 ---
 
-## 3. TTL設計
+## 3. TTL design
 
-| 種別 | 推奨TTL | 例 |
-|------|---------|-----|
-| ホットデータ（頻繁更新） | 30s - 5min | ランキング |
-| マスタデータ（稀更新） | 1h - 24h | 都道府県一覧 |
-| ユーザーセッション | sliding 30min | ログイン状態 |
-| API応答（idempotent） | 5min - 1h | 価格表 |
-| ジッター付与 | TTL × (1 ± 0.1) ランダム化 | stampede予防 |
+| Type | Recommended TTL | Example |
+|------|----------------|---------|
+| Hot data (frequent updates) | 30s - 5min | Rankings |
+| Master data (rare updates) | 1h - 24h | Prefecture list |
+| User session | sliding 30min | Login state |
+| API response (idempotent) | 5min - 1h | Price table |
+| Jitter | TTL × (1 ± 0.1) random | Stampede prevention |
 
-**原則**: 短すぎ → DB負荷／長すぎ → 整合性破綻。**ジッター必須**（同時失効回避）。
-
----
-
-## 4. Invalidation戦略
-
-| 戦略 | 仕組み | 適用場面 |
-|------|--------|---------|
-| **TTL only** | 期限到来で自然失効 | 整合性緩い、シンプル |
-| **Explicit del** | 書込時に明示削除 | ユーザー編集即反映 |
-| **Tag-based** | 関連キーをタグ単位一括削除 | カテゴリ更新で配下商品全失効 |
-| **Versioning** | キーにversion含める `user:v3:42` | 全件無効化を瞬時に |
-| **Pub/Sub** | invalidateイベントをsubscriber配信 | 多インスタンス間同期 |
+**Rule**: Too short → DB load; too long → stale data. **Jitter is required** (prevents simultaneous expiry).
 
 ---
 
-## 5. Cache Stampede対策
+## 4. Invalidation strategies
 
-**問題**: 人気キーがTTL失効した瞬間、N並列がDB殺到。
+| Strategy | Mechanism | Use |
+|----------|-----------|-----|
+| **TTL only** | Natural expiry | Loose consistency, simple |
+| **Explicit delete** | Delete on write | Immediate reflect on user edit |
+| **Tag-based** | Bulk delete keys by tag | Category update invalidates all child items |
+| **Versioning** | Include version in key `user:v3:42` | Instant full invalidation |
+| **Pub/Sub** | Publish invalidation event to subscribers | Multi-instance sync |
 
-| 対策 | 仕組み | 推奨 |
-|------|--------|------|
-| **Lock-based**（mutex） | 1スレッドのみDB照会、他は待機 | シンプル、低QPS |
-| **Probabilistic Early Expiration（PER）** | TTL残り少ない時、確率的に1スレッドが先回り更新 | **1M+ qps必須** |
-| **stale-while-revalidate** | TTL切れ後も短時間stale返却、裏で更新 | UX影響最小化 |
+---
 
-**PER数式**:
+## 5. Cache stampede protection
+
+**Problem**: Popular key expires; N concurrent requests flood DB.
+
+| Strategy | Mechanism | Use |
+|----------|-----------|-----|
+| **Lock-based (mutex)** | Only 1 thread queries DB; others wait | Simple, low QPS |
+| **Probabilistic Early Expiration (PER)** | Near-expiry: 1 thread proactively refreshes | **Required at 1M+ QPS** |
+| **stale-while-revalidate** | Serve stale briefly after expiry; refresh in background | Minimize UX impact |
+
+**PER formula**:
 ```text
 expires_at - now() < beta * delta * log(rand())
 ```
-（delta = 計算時間、beta ≈ 1.0）
+(delta = computation time, beta ≈ 1.0)
 
 ---
 
-## 6. 2層キャッシュ（local + distributed）
+## 6. Two-tier cache (local + distributed)
 
 ```text
 [App memory (LRU 100ms TTL)] → [Redis (5min TTL)] → [DB]
 ```
 
-| 層 | レイテンシ | 用途 |
-|----|----------|------|
-| L1（プロセス内） | < 1ms | 同一リクエスト内重複 |
-| L2（Redis等） | 1-5ms | インスタンス間共有 |
-| L3（DB） | 10-100ms | 真実の源泉 |
+| Tier | Latency | Use |
+|------|---------|-----|
+| L1 (in-process) | < 1ms | Dedup within same request |
+| L2 (Redis etc.) | 1-5ms | Share across instances |
+| L3 (DB) | 10-100ms | Source of truth |
 
-**注意**: L1が古い → L2 invalidateをpub/subで全instanceに伝搬必要。
+**Note**: L1 stale → propagate L2 invalidation to all instances via pub/sub.
 
 ---
 
-## 7. Redis Cluster slot設計
+## 7. Redis Cluster slot design
 
-- ハッシュタグ `{user_id}` で同slot集約 → 同userの複数keyを1ノードに
-- 横断アクセスはMGET不可、別slot跨ぐとCROSSSLOTエラー
-- 16384 slotをnode間で再配置可能（reshard）
+- Hash tag `{user_id}` collocates keys → same user's keys on same node
+- Cross-slot access: MGET not available; different slots → CROSSSLOT error
+- 16384 slots can be resharded across nodes
 
 ---
 
 ## 8. Cache warming
 
-- デプロイ直後、cronでhot keyを事前fetch → cold start回避
-- 失効直前に裏で再計算（PERと同思想）
+- Pre-fetch hot keys after deploy via cron → avoids cold start
+- Recompute in background before expiry (same idea as PER)
 
 ---
 
-## 9. 監視メトリクス
+## 9. Monitoring metrics
 
-| 指標 | 計算 | 目標 |
-|------|------|------|
+| Metric | Calculation | Target |
+|--------|-------------|--------|
 | Hit rate | hit / (hit + miss) | > 80% |
-| Eviction rate | evicted / total | 急増は容量不足 |
-| Memory fragmentation | used_memory_rss / used_memory | 1.5以下 |
+| Eviction rate | evicted / total | Rapid increase = capacity issue |
+| Memory fragmentation | used_memory_rss / used_memory | ≤ 1.5 |
 | Latency P99 | Redis SLOWLOG | < 5ms |
 
 ---
 
-## 10. アンチパターン
+## 10. Anti-patterns
 
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| 全TTL同一値 | ジッター付与 | stampede誘発 |
-| 巨大value（> 100KB） | 分割、参照のみcache | network/memory負荷 |
-| cacheを真実の源泉化 | DBがsource of truth | 障害時データロス |
-| Write-Behindを整合系に | Write-Through採用 | 書込ロスト |
+| Avoid | Use instead | Reason |
+|-------|-------------|--------|
+| All TTLs identical | Add jitter | Stampede trigger |
+| Large value (> 100KB) | Split; cache reference only | Network/memory overhead |
+| Cache as source of truth | DB is source of truth | Data loss on failure |
+| Write-Behind for consistency-critical | Write-Through | Write loss risk |
 
 ---
 
-## 11. 参考
+## 11. References
 
-- Redis Cache Stampede: redis.antirez.com/fundamental/cache-stampede-prevention.html
-- 関連: `backend/database-performance.md`（cache hit率）, `backend/scalability-patterns.md`（read replica）
+- Redis Cache Stampede: redis.antirez.com
+- Related: `backend/database-performance.md` (cache hit rate), `backend/scalability-patterns.md` (read replica)

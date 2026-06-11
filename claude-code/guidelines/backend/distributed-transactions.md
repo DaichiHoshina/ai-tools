@@ -1,58 +1,58 @@
-# 分散トランザクション ガイドライン
+# Distributed Transactions Guidelines
 
-複数サービス/DBにまたがる整合性保証、デッドロック対処、楽観/悲観ロック判定が必要な時に参照。
+Reference for consistency guarantees across multiple services/DBs, deadlock handling, and optimistic/pessimistic lock decisions.
 
-## Tier区分
+## Tier classification
 
-| Tier | 内容 |
-|------|------|
-| Tier 1（必須） | 分離レベル選択、楽観ロック、idempotency |
-| Tier 2（規模別） | Saga（orchestration/choreography）、Outbox |
-| Tier 3（深掘り） | 2PC、Event Sourcing、CRDT |
-
----
-
-## 1. 分離レベル使い分け（PostgreSQL想定）
-
-| レベル | 防げる現象 | 推奨用途 | コスト |
-|--------|----------|---------|--------|
-| **Read Uncommitted** | （PG実質Read Committed） | - | - |
-| **Read Committed**（既定） | dirty read | 一般OLTP | 低 |
-| **Repeatable Read** | + non-repeatable read, phantom (PGでは) | 集計、レポート | 中、serialization failure |
-| **Serializable**（SSI） | 全異常 | 金融、在庫 | 高、retry必須 |
-
-**判定**:
-- 単純CRUD → Read Committed
-- 同一tx内で複数回read → Repeatable Read
-- 真の整合性必要（残高/在庫） → Serializable + retry
+| Tier | Content |
+|------|---------|
+| Tier 1 (required) | Isolation level selection, optimistic lock, idempotency |
+| Tier 2 (scale-dependent) | Saga (orchestration/choreography), Outbox |
+| Tier 3 (advanced) | 2PC, Event Sourcing, CRDT |
 
 ---
 
-## 2. 楽観vs悲観ロック
+## 1. Isolation level selection (PostgreSQL)
 
-| 種別 | 仕組み | 適用 | 例 |
-|------|--------|------|-----|
-| **楽観ロック** | version列をWHEREで検証、UPDATE失敗→retry | 競合稀 | 商品編集、設定 |
-| **悲観ロック**（SELECT FOR UPDATE） | row lock取得 | 競合多、長tx禁 | 在庫減算、座席予約 |
+| Level | Prevents | Recommended use | Cost |
+|-------|----------|----------------|------|
+| **Read Uncommitted** | (PG: effectively Read Committed) | - | - |
+| **Read Committed** (default) | Dirty read | General OLTP | Low |
+| **Repeatable Read** | + non-repeatable read, phantom (in PG) | Aggregates, reports | Medium; serialization failure possible |
+| **Serializable** (SSI) | All anomalies | Finance, inventory | High; retry required |
 
-**楽観ロック実装**:
+**Decision**:
+- Simple CRUD → Read Committed
+- Multiple reads in same TX → Repeatable Read
+- True consistency required (balance/inventory) → Serializable + retry
+
+---
+
+## 2. Optimistic vs pessimistic lock
+
+| Type | Mechanism | Use | Example |
+|------|-----------|-----|---------|
+| **Optimistic** | Validate version column in WHERE; UPDATE failure → retry | Low contention | Product edit, settings |
+| **Pessimistic** (SELECT FOR UPDATE) | Acquire row lock | High contention, short TX | Inventory deduction, seat reservation |
+
+**Optimistic lock implementation**:
 ```sql
 UPDATE orders SET status='paid', version=version+1
-WHERE id=? AND version=?;  -- 0行更新 → 競合、retry
+WHERE id=? AND version=?;  -- 0 rows updated → conflict, retry
 ```
 
-**悲観ロック注意**: 長保持禁止、TX短く保つ、デッドロック対処必要。
+**Pessimistic lock caution**: never hold long; keep TX short; handle deadlocks.
 
 ---
 
-## 3. デッドロック対処
+## 3. Deadlock handling
 
-| 戦略 | 内容 |
-|------|------|
-| **lock順序統一** | 全txで同じ順序（例: id昇順）でlock取得 |
-| **timeout設定** | `SET lock_timeout = '3s'` で諦める |
-| **retry with backoff** | deadlock detected時にexponential backoff retry |
-| **粒度小さく** | row lock < table lock |
+| Strategy | Detail |
+|----------|--------|
+| **Unified lock order** | All TXs acquire locks in same order (e.g., ascending id) |
+| **Timeout** | `SET lock_timeout = '3s'` to give up |
+| **Retry with backoff** | Exponential backoff on deadlock detection |
+| **Smaller granularity** | Row lock < table lock |
 
 ```go
 for i := 0; i < 3; i++ {
@@ -64,78 +64,78 @@ for i := 0; i < 3; i++ {
 
 ---
 
-## 4. Sagaパターン
+## 4. Saga pattern
 
-長期txを「補償可能な小txの連鎖」に分解。
+Decompose long TXs into "a chain of compensatable small TXs".
 
-| 種別 | 制御 | メリット | デメリット |
-|------|------|---------|----------|
-| **Orchestration** | 中央orchestratorが各step指示 | 可視性高、デバッグ容易 | SPOF、結合 |
-| **Choreography** | event駆動、各service自律 | 疎結合、scale | 全体把握困難 |
+| Type | Control | Pros | Cons |
+|------|---------|------|------|
+| **Orchestration** | Central orchestrator directs each step | High visibility, easy debug | SPOF, coupling |
+| **Choreography** | Event-driven, each service self-directed | Loose coupling, scalable | Hard to grasp overall flow |
 
-**実装ルール**:
-- 各stepに対応する **補償アクション**（compensating action）必須
-- 失敗時は **逆順** に補償実行
-- 中間状態をDBに永続化（クラッシュ復旧）
-- 補償も冪等であること
+**Implementation rules**:
+- Each step requires a corresponding **compensating action**
+- On failure, execute compensation in **reverse order**
+- Persist intermediate state to DB (crash recovery)
+- Compensating actions must also be idempotent
 
-**例（注文）**:
+**Example (order)**:
 ```text
-予約座席 → 決済 → 配送手配
-失敗時補償: 配送キャンセル → 返金 → 座席解放
+Reserve seat → Payment → Arrange shipping
+Compensation: Cancel shipping → Refund → Release seat
 ```
 
 ---
 
-## 5. Transactional Outboxパターン
+## 5. Transactional Outbox pattern
 
-DB txとmessage publishのatomicity保証。詳細は [event-driven-architecture.md#5-transactional-outboxproducer側exactly-onceの実用解](./event-driven-architecture.md) 参照。
+Guarantees atomicity of DB TX and message publish. See [event-driven-architecture.md#5-transactional-outbox-producer-side-exactly-once-practical-solution](./event-driven-architecture.md) for details.
 
 ---
 
 ## 6. Idempotency
 
-冪等性の実装パターン詳細は [design/async-job-patterns.md#冪等性の確保](../design/async-job-patterns.md) 参照。
+See [design/async-job-patterns.md#idempotency](../design/async-job-patterns.md) for implementation patterns.
 
 ---
 
-## 7. 配信保証
+## 7. Delivery guarantees
 
-| 種別 | 仕組み | 用途 |
-|------|--------|------|
-| **At-most-once** | fire-and-forget | metrics（消失許容） |
-| **At-least-once**（推奨既定） | ack後commit、失敗 → 再送 | + 受信側idempotency必須 |
-| **Exactly-once**（実質的） | Kafka tx + idempotent producer | 厳密整合（高コスト） |
+| Type | Mechanism | Use |
+|------|-----------|-----|
+| **At-most-once** | Fire-and-forget | Metrics (loss acceptable) |
+| **At-least-once** (recommended default) | Ack after commit; failure → resend | + receiver idempotency required |
+| **Exactly-once** (practical) | Kafka TX + idempotent producer | Strict consistency (high cost) |
 
-**現実解**: At-least-once + 冪等処理 = "Effectively-once"。
-
----
-
-## 8. 2PC（Two-Phase Commit）
-
-- リソース全体のprepare → commit 2段
-- coordinator障害でblocking発生
-- 異DB跨ぎは現代ではSaga推奨、2PCは同一DBMS内の限定用途
+**Practical solution**: At-least-once + idempotent processing = "Effectively-once".
 
 ---
 
-## 9. 判定フロー
+## 8. 2PC (Two-Phase Commit)
+
+- prepare → commit in 2 phases across all resources
+- Coordinator failure causes blocking
+- For cross-DB use, prefer Saga in modern systems; 2PC limited to same-DBMS scenarios
+
+---
+
+## 9. Decision flow
 
 ```text
-分散整合性必要？
-├─ いいえ → 単一 DB tx + 適切な分離レベル
-└─ はい
-   ├─ 可逆操作（補償可）→ Saga
-   ├─ event ordering 重要 → Outbox + 順序保証 broker
-   └─ 強整合必須（同 DBMS） → 2PC（最終手段）
+Distributed consistency needed?
+├─ No → Single DB TX + appropriate isolation level
+└─ Yes
+   ├─ Reversible operations (compensatable) → Saga
+   ├─ Event ordering critical → Outbox + ordered broker
+   └─ Strong consistency required (same DBMS) → 2PC (last resort)
 ```
 
 ---
 
-## 10. 参考
+## 10. References
 
-- PG Transaction Isolation公式
+- PG Transaction Isolation official docs
 - Saga: ByteByteGo
 - Outbox: AWS Prescriptive Guidance
 - Idempotency Key RFC: IETF draft
-- 関連: `design/async-job-patterns.md`（DLQ）, `backend/observability-design.md`（trace相関）, `backend/event-driven-architecture.md`（Outbox/Kafka実装）
+- Related: `design/async-job-patterns.md` (DLQ), `backend/observability-design.md` (trace correlation), `backend/event-driven-architecture.md` (Outbox/Kafka impl)
