@@ -1,42 +1,42 @@
-# AWS Lambdaガイドライン
+# AWS Lambda Guidelines
 
-**目的**: サーバーレス関数の効率的な開発とセキュアなデプロイ
+**Purpose**: Efficient serverless function development and secure deployment
 
 ---
 
 ## terraform-aws-modules/lambda
 
-| 項目 | 設定 |
-|------|------|
-| `function_name` | 環境プレフィックス付き（`${var.environment}-api-handler`） |
-| `runtime` | 最新LTS推奨（`nodejs24.x`, `python3.14`） |
-| `memory_size` | ワークロードに応じて設定 |
-| `timeout` | 処理時間に応じて設定（デフォルト30秒） |
+| Item | Setting |
+|------|---------|
+| `function_name` | With environment prefix (`${var.environment}-api-handler`) |
+| `runtime` | Latest LTS recommended (`nodejs24.x`, `python3.14`) |
+| `memory_size` | Set based on workload |
+| `timeout` | Set based on processing time (default 30s) |
 
-### ランタイム別設定
+### Runtime-specific Settings
 
-| ランタイム | 設定 |
-|-----------|------|
+| Runtime | Setting |
+|---------|---------|
 | Node.js | `runtime = "nodejs24.x"`, `handler = "index.handler"` |
 | Python | `runtime = "python3.14"`, `handler = "main.lambda_handler"` |
 | Go | `runtime = "provided.al2023"`, `handler = "bootstrap"` |
 
 ---
 
-## VPC内Lambda
+## Lambda in VPC
 
-| 項目 | 内容 |
-|------|------|
-| インターネットアクセス | NAT Gateway経由 |
-| VPCエンドポイント | S3, DynamoDB, Secrets Manager推奨 |
-| 注意点 | コールドスタートが長くなる可能性 |
+| Item | Detail |
+|------|--------|
+| Internet access | Via NAT Gateway |
+| VPC endpoints | S3, DynamoDB, Secrets Manager recommended |
+| Note | May increase cold start duration |
 
 ---
 
-## トリガー設定
+## Trigger Configuration
 
-| トリガー | 設定 |
-|---------|------|
+| Trigger | Setting |
+|---------|---------|
 | API Gateway | `service = "apigateway"` |
 | EventBridge | `principal = "events.amazonaws.com"` |
 | S3 | `service = "s3"` |
@@ -45,93 +45,93 @@
 
 ## Lambda@Edge
 
-| 項目 | 設定 |
-|------|------|
-| 有効化 | `lambda_at_edge = true` でus-east-1に自動デプロイ |
-| タイムアウト制限 | Viewer 5秒、Origin 30秒 |
-| レスポンスサイズ | 制限あり |
+| Item | Setting |
+|------|---------|
+| Enable | `lambda_at_edge = true` auto-deploys to us-east-1 |
+| Timeout limit | Viewer 5s, Origin 30s |
+| Response size | Limited |
 
 ---
 
-## セキュリティ
+## Security
 
-| ❌ 禁止事項 | ✅ 推奨事項 |
-|------------|------------|
-| `*` リソースのIAMポリシー | Secrets Manager / SSM Parameter Store |
-| 環境変数でのシークレット直接設定 | X-Rayトレーシング有効化 |
-| ルートユーザーでの実行 | 最小権限IAMロール |
-| - | VPC配置（DBアクセス時） |
+| Forbidden | Recommended |
+|-----------|-------------|
+| `*` resource in IAM policy | Secrets Manager / SSM Parameter Store |
+| Set secrets directly as environment variables | Enable X-Ray tracing |
+| Execute as root user | Minimum-privilege IAM role |
+| — | VPC placement (when accessing DB) |
 
 ---
 
-## パフォーマンス
+## Performance
 
-### コールドスタート対策
+### Cold Start Mitigation
 
-| 方式 | 用途 |
-|------|------|
-| Provisioned Concurrency | クリティカルAPI向け |
-| SnapStart | Javaランタイム向け |
-| 軽量ランタイム | Node.js, Python推奨 |
+| Method | Use Case |
+|--------|---------|
+| Provisioned Concurrency | Critical APIs |
+| SnapStart | Java runtime |
+| Lightweight runtime | Node.js, Python recommended |
 
-### メモリ設定目安
+### Memory Size Guidelines
 
-| 処理内容 | メモリサイズ |
+| Workload | Memory Size |
 |---------|-------------|
-| 軽量API | 128-256 MB |
-| 一般処理 | 256-512 MB |
-| 重い処理 | 1024-3008 MB |
-| 機械学習 | 3008-10240 MB |
+| Lightweight API | 128-256 MB |
+| General processing | 256-512 MB |
+| Heavy processing | 1024-3008 MB |
+| Machine learning | 3008-10240 MB |
 
 ---
 
-## ログとモニタリング
+## Logging and Monitoring
 
-| 項目 | 設定 |
-|------|------|
-| ログ保持期間 | `cloudwatch_logs_retention_in_days = 30` |
-| トレーシング | `tracing_mode = "Active"`（X-Ray） |
+| Item | Setting |
+|------|---------|
+| Log retention | `cloudwatch_logs_retention_in_days = 30` |
+| Tracing | `tracing_mode = "Active"` (X-Ray) |
 
-### Powertools活用（Python推奨）
+### Powertools (Python recommended)
 
-Logger, Tracer, Metricsでログ・トレース・メトリクス統合（デコレーターで簡単実装）
+Logger, Tracer, Metrics for unified logging/tracing/metrics (easy implementation with decorators)
 
 ---
 
-## デプロイ
+## Deployment
 
-### CI/CDパイプライン
+### CI/CD Pipeline
 
-| ステップ | 内容 |
-|---------|------|
-| 1. テスト | テスト実行 |
+| Step | Content |
+|------|---------|
+| 1. Test | Run tests |
 | 2. Plan | `terraform plan` |
-| 3. レビュー | レビュー |
+| 3. Review | Review |
 | 4. Apply | `terraform apply` |
-| 5. スモークテスト | スモークテスト |
+| 5. Smoke test | Smoke test |
 
-### バージョニング
+### Versioning
 
-| 項目 | 設定 |
-|------|------|
-| バージョン発行 | `publish = true` |
-| エイリアス | `live` で本番参照 |
-
----
-
-## エラーハンドリング
-
-| 項目 | 設定 |
-|------|------|
-| DLQ | `dead_letter_target_arn` で失敗メッセージ保存 |
-| リトライ | `maximum_retry_attempts = 2` |
+| Item | Setting |
+|------|---------|
+| Publish version | `publish = true` |
+| Alias | `live` for production reference |
 
 ---
 
-## コスト最適化
+## Error Handling
 
-| 項目 | 内容 |
-|------|------|
-| メモリサイズ | AWS Lambda Power Tuning活用 |
-| 依存関係 | 不要な依存関係の削除 |
-| アーキテクチャ | ARM64（Graviton2）検討 |
+| Item | Setting |
+|------|---------|
+| DLQ | `dead_letter_target_arn` to save failed messages |
+| Retry | `maximum_retry_attempts = 2` |
+
+---
+
+## Cost Optimization
+
+| Item | Detail |
+|------|--------|
+| Memory size | Use AWS Lambda Power Tuning |
+| Dependencies | Remove unnecessary dependencies |
+| Architecture | Consider ARM64 (Graviton2) |

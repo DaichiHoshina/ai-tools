@@ -1,99 +1,99 @@
-# テストガイドライン
+# Testing Guidelines
 
-バグ早期発見 / リファクタリング安全性などテスト設計の基本原則。テスト追加 / 既存テストのレビュー時に参照。
+Basic principles of test design for early bug detection, safe refactoring, etc. Reference when adding tests or reviewing existing ones.
 
-## 基本原則
+## Core Principles
 
-| 原則 | 説明 | コード例 |
-|------|------|----------|
-| バグの早期発見 | コードの問題を早期に検出 | `expect(fn).toThrow(ValidationError)` |
-| リファクタリングの安全性 | 変更が既存機能を壊していないことを確認 | `beforeEach(() => resetDB())` |
-| ドキュメント | テストコードは仕様書としての役割 | `it('should handle 404 errors', ...)` |
-| 設計の改善 | テスタブルなコードは良い設計の指標 | `createUser(deps) // DI` |
+| Principle | Description | Code Example |
+|-----------|-------------|--------------|
+| Early bug detection | Detect code problems early | `expect(fn).toThrow(ValidationError)` |
+| Refactoring safety | Confirm changes don't break existing features | `beforeEach(() => resetDB())` |
+| Documentation | Test code serves as a specification | `it('should handle 404 errors', ...)` |
+| Design improvement | Testable code is an indicator of good design | `createUser(deps) // DI` |
 
-## クイックリファレンス
+## Quick Reference
 
-### テストの種類
+### Test Types
 
-| 種類 | 対象 | 特徴 | テストピラミッド |
-|------|------|------|-----------------|
-| 単体テスト | 関数・メソッド単位 | 高速、独立、外部依存なし | 多（基盤） |
-| 統合テスト | 複数モジュール連携 | DB・外部API使用 | 中 |
-| E2Eテスト | システム全体 | 最も遅い、壊れやすい | 少（頂点） |
+| Type | Target | Characteristics | Test Pyramid |
+|------|--------|-----------------|--------------|
+| Unit test | Function/method | Fast, independent, no external deps | Many (base) |
+| Integration test | Multi-module interaction | Uses DB/external API | Medium |
+| E2E test | Entire system | Slowest, most fragile | Few (top) |
 
-### AAAパターン
+### AAA Pattern
 
-| フェーズ | 説明 | 例 |
-|---------|------|-----|
-| Arrange | テストデータ・モック準備 | `const user = { id: 1 }` |
-| Act | テスト対象を実行 | `const result = getUser(1)` |
-| Assert | 結果を検証 | `expect(result).toBe(user)` |
+| Phase | Description | Example |
+|-------|-------------|---------|
+| Arrange | Prepare test data and mocks | `const user = { id: 1 }` |
+| Act | Execute the test target | `const result = getUser(1)` |
+| Assert | Verify the result | `expect(result).toBe(user)` |
 
-### 命名規則
+### Naming Conventions
 
-| パターン | 形式 | 例 |
-|---------|------|-----|
-| should型 | `should + 期待する動作` | `should return user when valid ID` |
-| 対象-条件-結果型 | `[対象] + [条件] + [結果]` | `createUser with invalid email throws error` |
-| 日本語 | 自然言語 | `有効なIDでユーザーを取得できる` |
+| Pattern | Format | Example |
+|---------|--------|---------|
+| should-style | `should + expected behavior` | `should return user when valid ID` |
+| target-condition-result | `[target] + [condition] + [result]` | `createUser with invalid email throws error` |
+| Japanese | Natural language | `有効なIDでユーザーを取得できる` |
 
-**重要**: 何をテストしているか・期待する動作が一目でわかること
+**Important**: Name should make it immediately clear what is being tested and the expected behavior.
 
-## ベストプラクティス
+## Best Practices
 
-| 原則 | 説明 |
-|------|------|
-| 独立性 | テスト間で状態を共有しない |
-| 高速 | 外部依存はモック化 |
-| 決定論的 | 同じ入力で常に同じ結果 |
-| シンプル | 1テスト1振る舞い |
-| 振る舞いをテスト | 内部実装ではなく公開APIをテスト |
+| Principle | Description |
+|-----------|-------------|
+| Independence | Do not share state between tests |
+| Fast | Mock external dependencies |
+| Deterministic | Same input always produces same result |
+| Simple | One behavior per test |
+| Test behavior | Test public API, not internal implementation |
 
-## モックとスタブ
+## Mocks and Stubs
 
-| ルール | 説明 |
-|--------|------|
-| 外部依存をモック化 | DB、外部API、ファイルシステム |
-| 内部ロジックはモック化しない | テスト対象の内部実装に依存しない |
+| Rule | Description |
+|------|-------------|
+| Mock external dependencies | DB, external APIs, filesystem |
+| Do not mock internal logic | Do not depend on implementation internals |
 
-## よくあるミス
+## Common Mistakes
 
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| 内部実装（privateフィールド）に依存 | 公開APIで検証 | 実装変更に強い |
-| 実際のDBを使用 | モック・インメモリDB | 高速化・独立性 |
-| テスト間で状態共有 | 各テストで初期化 | 独立性・決定論性 |
-| 1テストで複数の振る舞い検証 | 1テスト1振る舞い | 失敗箇所の特定 |
+| Avoid | Use | Reason |
+|-------|-----|--------|
+| Depend on internal implementation (private fields) | Verify via public API | Resilient to implementation changes |
+| Use real DB | Mock or in-memory DB | Speed and independence |
+| Share state between tests | Initialize in each test | Independence and determinism |
+| Verify multiple behaviors in one test | One behavior per test | Easier to locate failures |
 
-## テストカバレッジ
+## Test Coverage
 
-| 項目 | 基準 | 測定コマンド例 |
-|------|------|---------------|
-| 目標 | 80%以上 | `npm test -- --coverage` |
-| 重要 | カバレッジは手段、目的ではない | - |
-| 優先順位 | ビジネスロジック > インフラ層 | - |
+| Item | Standard | Example Command |
+|------|----------|----------------|
+| Target | ≥80% | `npm test -- --coverage` |
+| Important | Coverage is a means, not an end | — |
+| Priority | Business logic > infrastructure layer | — |
 
-**Go測定例**:
+**Go example**:
 ```bash
 go test -coverprofile=coverage.out ./...
 go tool cover -func=coverage.out
 ```
 
-**TypeScript測定例**:
+**TypeScript example**:
 ```bash
 npm test -- --coverage
-# coverage/lcov-report/index.html を確認
+# check coverage/lcov-report/index.html
 ```
 
-## 言語別ツール
+## Language-specific Tools
 
-| 言語/FW | テストツール | 特徴 |
-|---------|-------------|------|
-| Go | `testing` (標準) | テーブル駆動テスト推奨 |
-| TypeScript | Vitest, Jest | 高速、型安全 |
-| React | Testing Library | ユーザー視点のテスト |
-| E2E | Playwright | クロスブラウザ対応 |
+| Language/FW | Test Tool | Characteristics |
+|-------------|-----------|-----------------|
+| Go | `testing` (stdlib) | Table-driven tests recommended |
+| TypeScript | Vitest, Jest | Fast, type-safe |
+| React | Testing Library | User-perspective testing |
+| E2E | Playwright | Cross-browser support |
 
-### Go: テーブル駆動テスト
+### Go: Table-driven Tests
 
-Go 詳細 (`map[string]struct{}` 必須 / 並列化 / go-cmp): `guidelines/languages/golang.md` / `guidelines/languages/go-test-stability.md` 参照。
+Go details (`map[string]struct{}` required / parallelization / go-cmp): see `guidelines/languages/golang.md` / `guidelines/languages/go-test-stability.md`.

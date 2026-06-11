@@ -1,43 +1,43 @@
-# セッションモード
+# Session Modes
 
-セッション全体の動作モードを定義。モードに応じて確認フローと制約レベルが変化。
-
----
-
-## モード一覧
-
-| モード | 確認レベル | ユースケース |
-|--------|----------|-------------|
-| **strict** | すべてのBoundary操作で確認 | 本番作業、重要リファクタリング |
-| **normal** | 標準的な確認（デフォルト） | 通常の開発作業 |
-| **fast** | 確認を最小化 | プロトタイピング、探索的開発 |
+Defines the operation mode for the entire session. Confirmation flow and constraint level change based on mode.
 
 ---
 
-## モード別操作マトリクス
+## Mode List
 
-| 観点 | strict | normal (デフォルト) | fast |
-|------|--------|--------------------|----|
-| **確認が必要な操作** | git commit/push/merge / ファイル削除 / 設定ファイル変更 / パッケージ追加 / DB操作 | git commit/push/merge / 重要ファイル削除 / 設定ファイル変更 | git push / 重要ファイル削除(src//.git/) |
-| **自動許可される操作** | ファイル読取 / コード分析 / 提案 | ファイル読取・編集 / コード分析 / npm install / lint | git commit(ローカル) / ファイル編集削除 / npm install / lint・テスト |
-| **使用シーン** | 本番作業 / 重要リファクタ / セキュリティ変更 / 多人数PJ | 日常開発 / 機能追加 / バグ修正 | プロトタイプ / 探索的開発 / 個人PJ |
+| Mode | Confirmation Level | Use Case |
+|------|--------------------|---------|
+| **strict** | Confirm all Boundary operations | Production work, critical refactoring |
+| **normal** | Standard confirmation (default) | Normal development |
+| **fast** | Minimize confirmation | Prototyping, exploratory development |
 
 ---
 
-## 思考法ロード
+## Mode Operation Matrix
+
+| Aspect | strict | normal (default) | fast |
+|--------|--------|------------------|------|
+| **Operations requiring confirmation** | git commit/push/merge / file delete / config file change / package add / DB ops | git commit/push/merge / important file delete / config file change | git push / important file delete (src//.git/) |
+| **Auto-allowed operations** | File read / code analysis / suggestions | File read/edit / code analysis / npm install / lint | git commit (local) / file edit/delete / npm install / lint/test |
+| **Use scenario** | Production / critical refactor / security changes / large teams | Daily dev / feature add / bug fix | Prototype / exploratory dev / personal project |
+
+---
+
+## Load Thinking
 
 ```
-/protection-mode        # 基本（操作ガード + 3層分類）
-/protection-mode full   # フル（+ モード定義）
+/protection-mode        # Basic (operation guard + 3-layer classification)
+/protection-mode full   # Full (+ mode definition)
 ```
 
-モードは思考の厳格さの目安。`/protection-mode` でガイドラインを読み込むと、状況に応じた判断が可能になる。
+Mode is a guide for thinking strictness. Loading `/protection-mode` enables context-appropriate judgment.
 
 ---
 
-## モードの永続化
+## Mode Persistence
 
-モードはSerena Memoryに保存され、セッション間で維持される。
+Mode is saved in Serena Memory and persists across sessions.
 
 ```yaml
 memory_key: "session-mode"
@@ -49,41 +49,39 @@ content:
 
 ---
 
-## 8原則との関係
+## Relationship to 8 Principles
 
-8原則は**すべてのモードで有効**。モードは確認フローの厳格さを制御するのみ。
+The 8 principles are **valid in all modes**. Mode only controls the strictness of the confirmation flow.
 
-| 原則 | strict | normal | fast |
-|------|--------|--------|------|
-| mem（Serena memory） | ✅ | ✅ | ✅ |
-| serena（MCP使用） | ✅ | ✅ | ✅ |
-| guidelines（自動読込） | ✅ | ✅ | ✅ |
-| 自動処理禁止 | ✅厳格 | ✅ | ⚡緩和 |
-| 完了通知 | ✅ | ✅ | ✅ |
-| 型安全 | ✅ | ✅ | ✅ |
-| コマンド提案 | ✅ | ✅ | ✅ |
-| 確認済 | ✅厳格 | ✅ | ⚡緩和 |
-
----
+| Principle | strict | normal | fast |
+|-----------|--------|--------|------|
+| mem (Serena memory) | ✅ | ✅ | ✅ |
+| serena (MCP use) | ✅ | ✅ | ✅ |
+| guidelines (auto-load) | ✅ | ✅ | ✅ |
+| No auto-processing | ✅ strict | ✅ | ⚡ relaxed |
+| Completion notification | ✅ | ✅ | ✅ |
+| Type safety | ✅ | ✅ | ✅ |
+| Command suggestion | ✅ | ✅ | ✅ |
+| Confirmed | ✅ strict | ✅ | ⚡ relaxed |
 
 ---
 
-## コンテキスト管理
+## Context Management
 
-| 項目 | 制限 / 閾値 | アクション |
-|------|------------|----------|
-| MCP configured | ≤ 20 | (超過するとコンテキスト大幅縮小) |
-| MCP enabled | ≤ 8 | 不要なMCPは無効化 |
-| MCP tools | < 50 | - |
-| 使用率70% | - | `/compact` 検討 |
-| 使用率85% | - | 不要なMCP無効化 |
-| 使用率95% | - | 新セッション開始 |
+| Item | Limit / Threshold | Action |
+|------|-------------------|--------|
+| MCP configured | ≤20 | (exceeding this greatly reduces context) |
+| MCP enabled | ≤8 | Disable unused MCPs |
+| MCP tools | <50 | — |
+| Usage 70% | — | Consider `/compact` |
+| Usage 85% | — | Disable unnecessary MCPs |
+| Usage 95% | — | Start new session |
 
-**メモリ管理**: 起動時1回のみ読込 / 完了タスク即削除 / 繰り返し読込禁止
+**Memory management**: Load once at startup / delete completed tasks immediately / no repeated loading
 
 ---
 
-## 関連
+## Related
 
-- `guardrails.md` - 操作の分類（Safe/Boundary/Forbidden）
-- `/protection-mode` コマンド - 圏論的思考法ロード
+- `guardrails.md` — operation classification (Safe/Boundary/Forbidden)
+- `/protection-mode` command — load category-theory thinking

@@ -1,108 +1,108 @@
-# DDD (ドメイン駆動設計) ガイドライン
+# DDD (Domain-Driven Design) Guidelines
 
-> **目的**: ビジネスロジックを中心としたソフトウェア設計
+> **Purpose**: Software design centered on business logic
 
-## 基本原則
+## Core Principles
 
-| 原則 | 内容 |
-|------|------|
-| **ドメインモデル中心** | ビジネスルールをコードで表現 |
-| **ユビキタス言語** | チーム共通の用語を使用 |
-| **境界づけられたコンテキスト** | ドメインを適切に分割 |
-
----
-
-## 戦略的設計
-
-### 境界づけられたコンテキスト (Bounded Context)
-
-- 各コンテキストは独自のドメインモデルを持つ
-- コンテキスト間は明確なインターフェースで連携
-- 例: 「注文」と「配送」は別コンテキスト
-
-### コンテキストマップ
-
-| パターン | 関係性 | 使用例 |
-|----------|--------|--------|
-| **Shared Kernel** | 共有カーネル | 共通の基盤コード（慎重に使用 → 詳細は末尾「Shared Kernel」参照） |
-| **Customer-Supplier** | 上流・下流 | 注文システム → 在庫システム |
-| **Anticorruption Layer** | 防腐層 | 外部システムとの変換層 |
+| Principle | Detail |
+|-----------|--------|
+| **Domain model first** | Express business rules in code |
+| **Ubiquitous language** | Use shared team terminology |
+| **Bounded context** | Divide domain appropriately |
 
 ---
 
-## 戦術的設計
+## Strategic Design
 
-| 要素 | 特徴 | 例 | 注意点 |
-|------|------|-----|--------|
-| **Entity** | IDで区別、ライフサイクルあり、ビジネスロジック内包 | `User`, `Order` | データ構造でなく振る舞いを持つ |
-| **Value Object** | 不変、値で比較、副作用なし | `Money`, `Email`, `Address` | 生成後は変更不可 |
-| **Aggregate** | 一貫性境界、ルートエンティティ経由アクセス | `Order` (OrderItemを含む) | 小さく保つ（1-3エンティティ） |
-| **Repository** | 集約の永続化抽象、IFはDomain層 | `UserRepository` | DB詳細はInfrastructure層 |
-| **Domain Event** | 過去形、イミュータブル、疎結合 | `UserRegistered`, `OrderPlaced` | コンテキスト間通信に活用 |
+### Bounded Context
 
----
+- Each context has its own domain model
+- Contexts interact via clear interfaces
+- Example: "Order" and "Shipping" are separate contexts
 
-## 実装パターン
+### Context Map
 
-| パターン | 用途 | 例 |
-|----------|------|-----|
-| **Factory** | 複雑なオブジェクト生成、不変条件保証 | `UserFactory.create()` |
-| **Specification** | ビジネスルールをオブジェクト化、条件の組み合わせ | `IsAdultSpecification` |
+| Pattern | Relationship | Use Case |
+|---------|-------------|---------|
+| **Shared Kernel** | Shared kernel | Common foundation code (use cautiously → see "Shared Kernel" section below) |
+| **Customer-Supplier** | Upstream/downstream | Order system → Inventory system |
+| **Anticorruption Layer** | Anti-corruption | Transformation layer with external systems |
 
 ---
 
-## レイヤー構成
+## Tactical Design
 
-| レイヤー | 責務 | 依存先 |
-|----------|------|--------|
-| **Domain** | Entity, ValueObject, Repository IF, Domain Event | なし |
-| **Application** | UseCase, DTO | Domainのみ |
-| **Infrastructure** | Repository実装, 外部API | 全層可 |
-
-> 詳細は `clean-architecture.md` 参照
-
----
-
-## 命名規則
-
-| 要素 | 形式 | 例 |
-|------|------|-----|
-| **エンティティ** | 名詞 | `User`, `Order`, `Product` |
-| **値オブジェクト** | ドメイン用語 | `Money`, `Email`, `OrderId` |
-| **ドメインイベント** | 過去形 | `UserRegistered`, `OrderCompleted` |
-| **リポジトリ** | `{Aggregate}Repository` | `UserRepository` |
+| Element | Characteristics | Example | Notes |
+|---------|-----------------|---------|-------|
+| **Entity** | Identified by ID, has lifecycle, encapsulates business logic | `User`, `Order` | Has behavior, not just data structure |
+| **Value Object** | Immutable, compared by value, no side effects | `Money`, `Email`, `Address` | Immutable after creation |
+| **Aggregate** | Consistency boundary, access via root entity | `Order` (containing OrderItems) | Keep small (1-3 entities) |
+| **Repository** | Persistence abstraction for aggregates; IF in Domain layer | `UserRepository` | DB details in Infrastructure layer |
+| **Domain Event** | Past tense, immutable, loosely coupled | `UserRegistered`, `OrderPlaced` | Use for inter-context communication |
 
 ---
 
-## テスト戦略
+## Implementation Patterns
 
-| レイヤー | テスト種別 | 特徴 |
-|----------|-----------|------|
-| **Domain** | 単体テスト、モック不要 | ビジネスロジック検証 |
-| **Application** | Repositoryモック、フロー検証 | ユースケース検証 |
+| Pattern | Purpose | Example |
+|---------|---------|---------|
+| **Factory** | Complex object creation, invariant guarantee | `UserFactory.create()` |
+| **Specification** | Business rules as objects, combinable conditions | `IsAdultSpecification` |
 
 ---
 
-## ❌ アンチパターンvs ✅ ベストプラクティス
+## Layer Structure
 
-| ケース | ❌ NG | ✅ OK |
-|--------|-------|-------|
-| **ドメインモデル** | getter/setterのみ（貧血ドメイン） | ビジネスロジックを内包 |
-| **集約サイズ** | 1つの集約に多数のエンティティ | 小さな集約 + ID参照 |
-| **Domain Service** | 全てをDomain Serviceに | Entity / VOにロジック配置 |
-| **複数エンティティ跨ぎ** | Domain Serviceに実装 | UseCase層で調整 |
-| **技術詳細** | Domainに混入 | Infrastructureに隔離 |
-| **トランザクション境界** | 集約を超えた変更 | 集約単位で完結 |
-| **不変条件** | 無視 | 常に満たす |
-| **言語** | 技術用語中心 | ユビキタス言語をコードに反映 |
-| **イベント** | 密結合 | ドメインイベントで疎結合 |
+| Layer | Responsibility | Depends On |
+|-------|----------------|-----------|
+| **Domain** | Entity, ValueObject, Repository IF, Domain Event | None |
+| **Application** | UseCase, DTO | Domain only |
+| **Infrastructure** | Repository impl, external API | All layers |
+
+> Details: see `clean-architecture.md`
+
+---
+
+## Naming Conventions
+
+| Element | Format | Example |
+|---------|--------|---------|
+| **Entity** | Noun | `User`, `Order`, `Product` |
+| **Value Object** | Domain term | `Money`, `Email`, `OrderId` |
+| **Domain Event** | Past tense | `UserRegistered`, `OrderCompleted` |
+| **Repository** | `{Aggregate}Repository` | `UserRepository` |
+
+---
+
+## Test Strategy
+
+| Layer | Test Type | Characteristics |
+|-------|-----------|-----------------|
+| **Domain** | Unit test, no mocks | Verify business logic |
+| **Application** | Mock Repository, flow verification | Verify use cases |
+
+---
+
+## Anti-patterns vs Best Practices
+
+| Case | NG | OK |
+|------|----|----|
+| **Domain model** | getter/setter only (anemic domain) | Encapsulate business logic |
+| **Aggregate size** | Many entities in one aggregate | Small aggregates + ID references |
+| **Domain Service** | Everything in Domain Service | Place logic in Entity / VO |
+| **Cross-entity** | Implement in Domain Service | Coordinate in UseCase layer |
+| **Technical details** | Mixed into Domain | Isolate in Infrastructure |
+| **Transaction boundary** | Changes spanning aggregates | Complete within aggregate unit |
+| **Invariants** | Ignored | Always satisfied |
+| **Language** | Technical term-centric | Reflect ubiquitous language in code |
+| **Events** | Tight coupling | Loosely couple with domain events |
 
 ---
 
 ## Shared Kernel
 
-- クロスコンテキスト共有概念のみ配置（**最後の手段**、デフォルトではない）
-- 依存方向: 各コンテキストのDomain層 → Shared Kernel（逆は禁止）
-- **禁止**: インフラ懸念（DB変換等）、コンテキスト固有ロジック
-- 追加前の評価順: コンテキストローカル → ACL → Shared Kernel
-- 既存型のrename/削除/意味変更は破壊的変更として扱う
+- Place only cross-context shared concepts (**last resort**, not the default)
+- Dependency direction: Domain layer of each context → Shared Kernel (reverse is forbidden)
+- **Forbidden**: infrastructure concerns (DB conversion etc.), context-specific logic
+- Evaluation order before adding: context-local → ACL → Shared Kernel
+- Rename/delete/meaning changes to existing types are treated as breaking changes

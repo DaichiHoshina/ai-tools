@@ -1,99 +1,99 @@
-# 調査プロトコル(Investigation Protocol)
+# Investigation Protocol
 
-> **目的**: 調査精度を最大化し、見落としを防止
-
----
-
-## 3原則
-
-| 原則 | 内容 |
-|------|------|
-| 段階的深掘り | Level1概要把握(1-2分) → Level2詳細調査(5-10分) → Level3徹底分析 |
-| 複数ソース確認 | 発見事項ごとにソース ≥ 2。1ソースで結論を出さない |
-| 仮説検証サイクル | 仮説構築 → 証拠収集 → 検証 → 結論（失敗したら再構築） |
+> **Purpose**: Maximize investigation accuracy and prevent oversights
 
 ---
 
-## Serena MCP使用優先順位
+## 3 Principles
 
-| 優先 | ツール | 用途 |
-|------|--------|------|
-| 1 | `get_symbols_overview` | ファイル構造把握 |
-| 2 | `find_symbol` | 特定シンボル検索 |
-| 3 | `find_referencing_symbols` | 使用箇所特定 |
-| 4 | `search_for_pattern` | パターンマッチング |
-| 5 | Read/Grep/Glob | Serenaで不十分な場合のみ |
+| Principle | Detail |
+|-----------|--------|
+| Progressive deepening | Level 1 overview (1-2 min) → Level 2 detailed (5-10 min) → Level 3 thorough |
+| Multiple source confirmation | ≥2 sources per finding; never conclude from a single source |
+| Hypothesis-verification cycle | Build hypothesis → gather evidence → verify → conclude (rebuild on failure) |
 
 ---
 
-## 調査フェーズ
+## Serena MCP Priority
 
-### Phase 1: 情報収集
-
-- 調査目的・範囲・使用ツール・推定時間を定義してから開始
-- 調査範囲が50ファイル超の場合は絞り込みを優先
-
-### Phase 2: 分析
-
-- パターン検出: 確信度 ≥ 0.8のみ報告
-- 依存関係をグラフ構造で可視化
-- 矛盾する発見事項を検出・記録
-
-### Phase 3: 検証(必須)
-
-- 重要な発見はすべて別の方法で再確認
-- 反例・エッジケースを確認
-- 複数ソースでクロスチェック
-- 完全性確認: 必要項目が網羅されているか
+| Priority | Tool | Purpose |
+|----------|------|---------|
+| 1 | `get_symbols_overview` | Understand file structure |
+| 2 | `find_symbol` | Find specific symbol |
+| 3 | `find_referencing_symbols` | Locate usages |
+| 4 | `search_for_pattern` | Pattern matching |
+| 5 | Read/Grep/Glob | Only when Serena is insufficient |
 
 ---
 
-## 調査タイプ別チェックリスト
+## Investigation Phases
 
-| Type | 手順要点 | 検証観点 |
-|------|---------|---------|
-| **1コード** | symbols_overview → find_symbol → referencing → 依存マップ → アーキテクチャ特定 | 全コンポーネント確認 / 依存正確 / エッジケース |
-| **2バグ** | 再現手順明確化 → 関連コード特定 → データフロー追跡 → 複数仮説 → 根本原因特定 | 複数仮説 / 再現確認 / 副作用考慮 |
-| **3パフォーマンス** | 実測メトリクス → プロファイリング分析 → ホットスポット / N+1チェック → 最適化特定 | 測定データ基準 / 影響試算 |
-| **4セキュリティ** | 攻撃面・入力検証・認証認可確認 → データフロー → OWASP Top10 → CVSS評価 | 全入力ポイント / 実攻撃可能性 / 影響範囲 |
+### Phase 1: Information Gathering
 
----
+- Define purpose, scope, tools, and estimated time before starting
+- If scope exceeds 50 files, prioritize narrowing first
 
-## 品質基準
+### Phase 2: Analysis
 
-| 指標 | 基準値 |
-|------|--------|
-| 確認ソース数 | ≥ 3 |
-| 検証済み発見率 | ≥ 90% |
-| 矛盾数 | 0 |
-| 完全性 | ≥ 95% |
-| 確信度 | ≥ 85% |
+- Pattern detection: report only findings with confidence ≥ 0.8
+- Visualize dependency graph structure
+- Detect and record contradictory findings
 
----
+### Phase 3: Verification (required)
 
-## レッドフラグ(再調査トリガー)
-
-| 状態 | 対応 |
-|------|------|
-| 矛盾する情報 | 追加調査で解消 |
-| 確信度 < 0.8 | 証拠を追加収集 |
-| ソース1つのみ | 別ソースで確認 |
-| 完全性 < 0.9 | 見落とし再確認 |
-| 仮説を検証できない | 仮説を再構築 |
+- Re-confirm all important findings by an independent method
+- Check for counter-examples and edge cases
+- Cross-check with multiple sources
+- Completeness check: confirm all required items are covered
 
 ---
 
-## 調査レポートテンプレート
+## Investigation Type Checklists
+
+| Type | Key Steps | Verification Points |
+|------|-----------|---------------------|
+| **1 Code** | symbols_overview → find_symbol → referencing → dependency map → identify architecture | All components confirmed / dependencies accurate / edge cases |
+| **2 Bug** | Clarify repro steps → locate relevant code → trace data flow → multiple hypotheses → root cause | Multiple hypotheses / repro confirmed / side effects considered |
+| **3 Performance** | Measure metrics → profile analysis → check hotspots/N+1 → identify optimization | Measurement-based / impact estimated |
+| **4 Security** | Check attack surface/input validation/auth-authz → data flow → OWASP Top 10 → CVSS eval | All input points / actual exploitability / impact scope |
+
+---
+
+## Quality Standards
+
+| Metric | Threshold |
+|--------|-----------|
+| Confirmed sources | ≥3 |
+| Verified finding rate | ≥90% |
+| Contradictions | 0 |
+| Completeness | ≥95% |
+| Confidence | ≥85% |
+
+---
+
+## Red Flags (re-investigation triggers)
+
+| State | Action |
+|-------|--------|
+| Contradictory information | Resolve with additional investigation |
+| Confidence < 0.8 | Gather more evidence |
+| Single source only | Confirm with another source |
+| Completeness < 0.9 | Re-check for oversights |
+| Hypothesis cannot be verified | Rebuild hypothesis |
+
+---
+
+## Investigation Report Template
 
 ```markdown
-# 調査レポート: [調査対象]
-## 概要 — 目的 / 範囲 / 所要時間
-## 発見事項 — 内容 / ソース / 確信度XX% / 検証済
-## 依存関係 / 矛盾点 / 未確認事項
-## 結論・推奨事項
-## 品質メトリクス — ソース数X / 検証済X/Y / 完全性XX%
+# Investigation Report: [Target]
+## Summary — Purpose / Scope / Time taken
+## Findings — Content / Source / Confidence XX% / Verified
+## Dependencies / Contradictions / Unconfirmed items
+## Conclusions and recommendations
+## Quality metrics — Sources X / Verified X/Y / Completeness XX%
 ```
 
 ---
 
-**段階的調査、複数ソース確認、徹底検証で高精度な調査を実現**
+**Achieve high-accuracy investigation through progressive deepening, multiple source confirmation, and thorough verification.**

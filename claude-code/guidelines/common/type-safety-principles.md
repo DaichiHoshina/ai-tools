@@ -1,45 +1,45 @@
-# 型安全性の原則
+# Type Safety Principles
 
-型安全性はバグ早期発見・保守性向上の最重要原則。
-
----
-
-## any / interface{} 禁止
-
-| 言語 | ❌ 禁止 | ✅ 推奨 |
-|------|---------|---------|
-| TypeScript | `any` | `unknown` + 型ガード<br>ジェネリクス / Union型 |
-| Go | `interface{}` | ジェネリクス<br>`str, ok := data.(string)` パターン |
+Type safety is the most important principle for early bug detection and improved maintainability.
 
 ---
 
-## 型アサーション / as最小化
+## Forbid any / interface{}
 
-| 言語 | ❌ 禁止 | ✅ 推奨 |
-|------|---------|---------|
-| TypeScript | `data as User` | 型ガード関数で安全にナローイング |
+| Language | Forbidden | Recommended |
+|----------|-----------|-------------|
+| TypeScript | `any` | `unknown` + type guard / generics / union types |
+| Go | `interface{}` | generics / `str, ok := data.(string)` pattern |
+
+---
+
+## Minimize Type Assertions / as
+
+| Language | Forbidden | Recommended |
+|----------|-----------|-------------|
+| TypeScript | `data as User` | Narrow safely with type guard functions |
 | Go | `data.(string)` | `str, ok := data.(string)` |
 
 ---
 
-## null安全性
+## Null Safety
 
-| 言語 | 設定 | 使用方法 |
-|------|------|----------|
-| TypeScript | `strictNullChecks` 必須 | `?.` / `??` を活用<br>❌ Non-null assertion `!` 禁止 |
-| Go | - | ポインタのnilチェック徹底<br>Early returnでnilチェック明示 |
-
----
-
-## 型推論の活用
-
-冗長な型注釈を避け、型推論に任せる（戻り値の型が明確な場合）。
+| Language | Setting | Usage |
+|----------|---------|-------|
+| TypeScript | `strictNullChecks` required | Use `?.` / `??` / ❌ Non-null assertion `!` forbidden |
+| Go | — | Thorough nil checks on pointers; explicit nil check with early return |
 
 ---
 
-## やむを得ずany/asを使用する場合
+## Leverage Type Inference
 
-| 条件 | 内容 |
-|------|------|
-| 許可条件 | 外部ライブラリの型定義が不完全<br>既存コードとの一時的な互換性 |
-| **必須ルール** | **コメントで理由を明記**<br>使用範囲を最小限に<br>TODOコメントで将来削除計画を示す |
+Avoid redundant type annotations; rely on type inference when return types are obvious.
+
+---
+
+## When any/as Is Unavoidable
+
+| Condition | Detail |
+|-----------|--------|
+| Allowed conditions | Incomplete type definitions in external libraries / temporary compatibility with existing code |
+| **Required rules** | **Comment explaining the reason** / Minimize scope / Add TODO comment with future removal plan |

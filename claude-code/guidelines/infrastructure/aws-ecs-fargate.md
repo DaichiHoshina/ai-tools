@@ -1,91 +1,91 @@
-# AWS ECS / Fargateガイドライン
+# AWS ECS / Fargate Guidelines
 
-**目的**: コンテナワークロードの効率的な運用とセキュリティ確保
+**Purpose**: Efficient operation and security for container workloads
 
 ---
 
 ## terraform-aws-modules/ecs
 
-| 項目 | 設定 |
-|------|------|
-| `cluster_name` | 環境プレフィックス付き |
-| Execute Command | CloudWatch Logs連携 |
-| キャパシティプロバイダー | FARGATE + FARGATE_SPOT |
+| Item | Setting |
+|------|---------|
+| `cluster_name` | With environment prefix |
+| Execute Command | Integrate with CloudWatch Logs |
+| Capacity provider | FARGATE + FARGATE_SPOT |
 
 ---
 
-## サービス定義
+## Service Definition
 
-### 主要設定
+### Key Settings
 
-| 項目 | 設定 |
-|------|------|
-| `cpu` / `memory` | タスク全体のリソース |
-| `desired_count` | 希望タスク数 |
-| `container_definitions` | コンテナ設定 |
+| Item | Setting |
+|------|---------|
+| `cpu` / `memory` | Task-level resources |
+| `desired_count` | Desired task count |
+| `container_definitions` | Container configuration |
 
-### コンテナ設定必須項目
+### Required Container Settings
 
-| 項目 | 設定 |
-|------|------|
-| `essential` | `true`（主要コンテナ） |
-| `portMappings` | ポート設定 |
-| `healthCheck` | ヘルスチェック設定 |
-| `logConfiguration` | ログ設定（awslogs） |
-| `readonlyRootFilesystem` | `true`（セキュリティ強化） |
+| Item | Setting |
+|------|---------|
+| `essential` | `true` (primary container) |
+| `portMappings` | Port configuration |
+| `healthCheck` | Health check configuration |
+| `logConfiguration` | Log configuration (awslogs) |
+| `readonlyRootFilesystem` | `true` (security hardening) |
 
 ---
 
-## キャパシティプロバイダー戦略
+## Capacity Provider Strategy
 
-| タイプ | 価格 | 用途 |
-|--------|------|------|
-| FARGATE | 標準価格、高可用性 | 本番クリティカル |
-| FARGATE_SPOT | 最大70%割引、中断可能 | バッチ、開発 |
+| Type | Price | Use Case |
+|------|-------|---------|
+| FARGATE | Standard pricing, high availability | Production critical |
+| FARGATE_SPOT | Up to 70% discount, interruptible | Batch, development |
 
-### 推奨設定
+### Recommended Settings
 
-| 環境 | 設定 |
-|------|------|
-| 本番 | FARGATE base=50%, FARGATE_SPOT weight=50% |
-| 開発 | FARGATE_SPOT 100% |
-| バッチ | FARGATE_SPOT優先 |
+| Environment | Setting |
+|-------------|---------|
+| Production | FARGATE base=50%, FARGATE_SPOT weight=50% |
+| Development | FARGATE_SPOT 100% |
+| Batch | FARGATE_SPOT preferred |
 
 ---
 
 ## Service Connect
 
-| 項目 | 内容 |
-|------|------|
-| namespace | サービスメッシュ構成 |
-| DNS名 | サービス間通信（`web-app:80`） |
-| Cloud Map | 自動連携 |
+| Item | Detail |
+|------|--------|
+| Namespace | Service mesh configuration |
+| DNS name | Inter-service communication (`web-app:80`) |
+| Cloud Map | Automatic integration |
 
 ---
 
-## セキュリティ
+## Security
 
-| ❌ 禁止事項 | ✅ 必須設定 |
-|------------|------------|
-| 環境変数でシークレット直接設定 | `readonlyRootFilesystem = true` |
-| パブリックサブネットでのタスク実行 | Secrets Managerからシークレット取得 |
-| 過度に広いIAMポリシー | タスクロールの最小権限 |
-| - | プライベートサブネット配置 |
+| Forbidden | Required Setting |
+|-----------|-----------------|
+| Set secrets directly as environment variables | `readonlyRootFilesystem = true` |
+| Run tasks in public subnets | Get secrets from Secrets Manager |
+| Overly broad IAM policies | Minimum-privilege task role |
+| — | Private subnet placement |
 
 ---
 
-## ロギング
+## Logging
 
-### 標準設定
+### Standard Configuration
 
-| 項目 | 設定 |
-|------|------|
+| Item | Setting |
+|------|---------|
 | `logDriver` | `"awslogs"` |
-| CloudWatch Logsグループ | `/ecs/${service-name}` |
+| CloudWatch Logs group | `/ecs/${service-name}` |
 
-### FireLens統合
+### FireLens Integration
 
-Fluent Bitサイドカーで高度なログルーティング → Firehose / Elasticsearch連携
+Fluent Bit sidecar for advanced log routing → Firehose / Elasticsearch integration
 
 ---
 
@@ -93,59 +93,59 @@ Fluent Bitサイドカーで高度なログルーティング → Firehose / Ela
 
 ### Target Tracking
 
-| メトリクス | 設定 |
-|-----------|------|
-| `ECSServiceAverageCPUUtilization` | CPU使用率 |
-| `ECSServiceAverageMemoryUtilization` | メモリ使用率 |
-| `target_value` | 70%推奨 |
+| Metric | Setting |
+|--------|---------|
+| `ECSServiceAverageCPUUtilization` | CPU utilization |
+| `ECSServiceAverageMemoryUtilization` | Memory utilization |
+| `target_value` | 70% recommended |
 
-### クールダウン
+### Cooldown
 
-| 項目 | 設定 |
-|------|------|
-| `scale_out_cooldown` | 60秒 |
-| `scale_in_cooldown` | 300秒 |
+| Item | Setting |
+|------|---------|
+| `scale_out_cooldown` | 60 seconds |
+| `scale_in_cooldown` | 300 seconds |
 
 ---
 
-## デプロイ戦略
+## Deployment Strategy
 
-### ローリングアップデート
+### Rolling Update
 
-| 項目 | 設定 |
-|------|------|
-| `maximum_percent` | 200（新タスク先行起動） |
-| `minimum_healthy_percent` | 100（既存タスク維持） |
+| Item | Setting |
+|------|---------|
+| `maximum_percent` | 200 (start new tasks first) |
+| `minimum_healthy_percent` | 100 (keep existing tasks) |
 
 ### Blue/Green
 
-- CodeDeploy連携
-- ALBリスナールール切り替え
-- 自動ロールバック
+- CodeDeploy integration
+- ALB listener rule switch
+- Automatic rollback
 
 ---
 
-## EBSボリューム (Fargate)
+## EBS Volume (Fargate)
 
-| 項目 | 設定 |
-|------|------|
-| 用途 | ステートフルワークロード向け |
-| `encrypted` | `true`（KMS暗号化） |
-| `volume_type` | `gp3` 推奨 |
+| Item | Setting |
+|------|---------|
+| Use case | Stateful workloads |
+| `encrypted` | `true` (KMS encryption) |
+| `volume_type` | `gp3` recommended |
 
 ---
 
-## 監視
+## Monitoring
 
-### 必須メトリクス
+### Required Metrics
 
-- CPU / メモリ使用率
-- タスク数（Running, Pending, Stopped）
-- サービスイベント
-- ヘルスチェック失敗
+- CPU / memory utilization
+- Task count (Running, Pending, Stopped)
+- Service events
+- Health check failures
 
 ### CloudWatch Alarms
 
-- タスク停止アラート
-- CPU/メモリ閾値超過
-- ターゲットヘルス異常
+- Task stop alert
+- CPU/memory threshold exceeded
+- Target health anomaly
