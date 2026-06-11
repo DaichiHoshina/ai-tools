@@ -527,6 +527,36 @@ _clear_markers() {
   [[ "$output" == *"状態不明"* ]]
 }
 
+@test "integration: user-prompt-submit injects save instruction on /compact when marker absent" {
+  _clear_markers
+  local input='{"session_id": "test", "cwd": ".", "prompt": "/compact"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/user-prompt-submit.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"/compact 検知"* ]]
+  [[ "$output" == *"marker 不在"* ]]
+  [[ "$output" == *"Write tool"* ]]
+  [[ "$output" == *"再実行してください"* ]]
+}
+
+@test "integration: user-prompt-submit skips save instruction on /compact when marker present" {
+  _clear_markers
+  _setup_recent_marker
+  local input='{"session_id": "test", "cwd": ".", "prompt": "/compact"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/user-prompt-submit.sh"
+  _clear_markers
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"/compact 検知"* ]]
+  [[ "$output" != *"marker 不在"* ]]
+}
+
+@test "integration: user-prompt-submit skips save instruction on non-/compact prompts" {
+  _clear_markers
+  local input='{"session_id": "test", "cwd": ".", "prompt": "hello world"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/user-prompt-submit.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"/compact 検知"* ]]
+}
+
 # =============================================================================
 # Integration: User-Prompt-Submit Tech Detection
 # =============================================================================
