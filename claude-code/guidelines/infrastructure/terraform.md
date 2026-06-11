@@ -1,124 +1,124 @@
-# Terraformガイドライン
+# Terraform Guidelines
 
-**目的**: Infrastructure as Codeのベストプラクティスと一貫性のある設定管理
-
----
-
-## 基本原則
-
-| 原則 | 内容 |
-|------|------|
-| モジュール化 | 最初からモジュール化（小規模でもモジュール構造で開始） |
-| 公式モジュール | `terraform-aws-modules` などの検証済みモジュールを優先 |
-| バージョン固定 | TerraformとProviderのバージョンを固定 |
+**Purpose**: Infrastructure as Code best practices and consistent configuration management
 
 ---
 
-## ディレクトリ構成
+## Core Principles
 
-| ディレクトリ | 用途 |
-|-------------|------|
-| `environments/` | 環境別設定（dev, staging, production） |
-| `modules/` | 再利用可能なモジュール |
-| `shared/` | 共通リソース |
+| Principle | Detail |
+|-----------|--------|
+| Modularize | Start modular from the beginning (even small projects use module structure) |
+| Official modules | Prefer validated modules such as `terraform-aws-modules` |
+| Pin versions | Pin Terraform and Provider versions |
 
 ---
 
-## 必須設定
+## Directory Structure
+
+| Directory | Purpose |
+|-----------|---------|
+| `environments/` | Per-environment config (dev, staging, production) |
+| `modules/` | Reusable modules |
+| `shared/` | Common resources |
+
+---
+
+## Required Configuration
 
 ### Provider
 
-| 項目 | 設定 |
-|------|------|
-| `required_version` | Terraformバージョン固定 |
-| `required_providers` | プロバイダーバージョン固定 |
-| リージョン | 変数化 |
+| Item | Setting |
+|------|---------|
+| `required_version` | Pin Terraform version |
+| `required_providers` | Pin provider versions |
+| Region | Parameterize with variable |
 
-### State管理
+### State Management
 
-| 項目 | 設定 |
-|------|------|
-| バックエンド | S3 + DynamoDBでリモートステート |
-| 環境分離 | 環境ごとにステートファイル分離 |
-| 暗号化 | 暗号化有効化 |
+| Item | Setting |
+|------|---------|
+| Backend | Remote state with S3 + DynamoDB |
+| Environment isolation | Separate state files per environment |
+| Encryption | Enable encryption |
 
 ---
 
-## コーディング規約
+## Coding Conventions
 
-### 命名規則
+### Naming
 
-| 項目 | 規則 |
+| Item | Rule |
 |------|------|
-| リソース名 | `snake_case`（例: `web_server`） |
-| 環境識別子 | プレフィックス（例: `dev-`, `prod-`） |
+| Resource names | `snake_case` (e.g. `web_server`) |
+| Environment identifier | Prefix (e.g. `dev-`, `prod-`) |
 
-### 変数定義
+### Variable Definition
 
-| 項目 | ルール |
-|------|--------|
-| `description` | 必須 |
-| `type` | 明示的に指定 |
-| センシティブ情報 | `sensitive = true` |
-
-### タグ付け（必須）
-
-| タグ | 用途 |
+| Item | Rule |
 |------|------|
-| `Environment` | 環境名 |
-| `Project` | プロジェクト名 |
+| `description` | Required |
+| `type` | Explicitly specified |
+| Sensitive info | `sensitive = true` |
+
+### Tagging (Required)
+
+| Tag | Purpose |
+|-----|---------|
+| `Environment` | Environment name |
+| `Project` | Project name |
 | `Terraform` | `"true"` |
-| `ManagedBy` | 管理チーム |
+| `ManagedBy` | Managing team |
 
 ---
 
-## セキュリティ
+## Security
 
-| ❌ 禁止事項 | ✅ 推奨事項 |
-|------------|------------|
-| ハードコードされたシークレット | Secrets Manager / SSM Parameter Store連携 |
-| 過度にpermissiveなIAMポリシー（`*` 乱用） | KMSによる暗号化 |
-| パブリックアクセス可能なS3 | 最小権限の原則 |
-| 暗号化なしのストレージ | VPCエンドポイント活用 |
-
----
-
-## terraform-aws-modules主要モジュール
-
-| モジュール | 用途 |
-|-----------|------|
-| `terraform-aws-modules/vpc/aws` | ネットワーク基盤 |
-| `terraform-aws-modules/ec2-instance/aws` | インスタンス管理 |
-| `terraform-aws-modules/ecs/aws` | コンテナオーケストレーション |
-| `terraform-aws-modules/eks/aws` | Kubernetesクラスター |
-| `terraform-aws-modules/lambda/aws` | サーバーレス関数 |
-
-**バージョン固定**: モジュールバージョンはメジャーを固定（`version = "~> 6.0"`）
+| Forbidden | Recommended |
+|-----------|-------------|
+| Hardcoded secrets | Integrate with Secrets Manager / SSM Parameter Store |
+| Overly permissive IAM policies (`*` overuse) | KMS encryption |
+| Publicly accessible S3 | Principle of least privilege |
+| Unencrypted storage | Use VPC endpoints |
 
 ---
 
-## ワークフロー
+## terraform-aws-modules Key Modules
 
-### 変更適用フロー
+| Module | Purpose |
+|--------|---------|
+| `terraform-aws-modules/vpc/aws` | Network foundation |
+| `terraform-aws-modules/ec2-instance/aws` | Instance management |
+| `terraform-aws-modules/ecs/aws` | Container orchestration |
+| `terraform-aws-modules/eks/aws` | Kubernetes cluster |
+| `terraform-aws-modules/lambda/aws` | Serverless functions |
 
-| ステップ | コマンド |
-|---------|---------|
-| 1. フォーマット | `terraform fmt -recursive` |
-| 2. 構文検証 | `terraform validate` |
-| 3. 実行計画 | `terraform plan -out=tfplan` |
-| 4. 適用 | レビュー後 `terraform apply tfplan` |
-
-### CI/CD統合
-
-| タイミング | 実行内容 |
-|-----------|---------|
-| PR | `terraform plan` 自動実行 |
-| mainマージ | `terraform apply` |
-| 推奨ツール | Atlantis / Terraform Cloud |
+**Pin versions**: Fix major version for module versions (`version = "~> 6.0"`)
 
 ---
 
-## リファレンス
+## Workflow
+
+### Change Application Flow
+
+| Step | Command |
+|------|---------|
+| 1. Format | `terraform fmt -recursive` |
+| 2. Validate | `terraform validate` |
+| 3. Plan | `terraform plan -out=tfplan` |
+| 4. Apply | `terraform apply tfplan` after review |
+
+### CI/CD Integration
+
+| Timing | Action |
+|--------|--------|
+| PR | Auto-run `terraform plan` |
+| main merge | `terraform apply` |
+| Recommended tools | Atlantis / Terraform Cloud |
+
+---
+
+## References
 
 - Terraform AWS Provider: registry.terraform.io/providers/hashicorp/aws/latest/docs
 - Best Practices: terraform-best-practices.com

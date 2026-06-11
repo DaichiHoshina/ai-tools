@@ -1,84 +1,84 @@
-# リリース管理ガイドライン
+# Release Management Guidelines
 
-PR作成者とリリース担当者の責務分担、リリースフロー。PRマージ後の確認 / 本番リリース実行時に参照。
+Responsibility split between PR author and release owner, and the release flow. Reference after PR merge / when executing a production release.
 
-## 役割分担
+## Roles
 
-| 役割 | 責務 |
-|------|------|
-| PR作成者 | マージ → リリース後の自分の変更周辺を確認 → 完了報告 |
-| リリース担当者 | CI待ち → リリース実行 → 通知 → 監視 → 完了報告 |
+| Role | Responsibility |
+|------|----------------|
+| PR author | Merge → confirm own changes after release → report completion |
+| Release owner | Wait for CI → execute release → notify → monitor → report completion |
 
-## リリースフロー
+## Release Flow
 
 ```text
-PRマージ → mainのCI完了待ち（完了前リリース禁止）→ 前回障害なし確認
-→ リリース実行(GitHub Releases/CD) → デプロイ完了待ち
-→ リリースチャンネルで確認依頼 → 監視ダッシュボード10-15分監視 → 完了報告
+PR merge → wait for main CI completion (no release before completion) → confirm no prior incidents
+→ execute release (GitHub Releases/CD) → wait for deploy completion
+→ request confirmation in release channel → monitor dashboard 10-15 min → report completion
 ```
 
-## リリース確認不要の判断基準
+## When Release Verification Is Not Required
 
-「このリリースで本番の動作が変わるか？」で判断。
+Judge by: "Does this release change behavior in production?"
 
-| ケース | 確認 | 理由 |
-|--------|------|------|
-| 未使用のmodel/usecase追加（次PRの部品） | 不要 | まだ呼ばれていない |
-| fixture/テストデータ/リファクタ | 不要 | ユーザー影響なし |
-| API変更（レスポンスが変わる等） | **必要** | ユーザー影響あり |
-| migration | **必要** | 単独リリース必須 |
-| 画面変更 | **必要** | ユーザー影響あり |
+| Case | Check | Reason |
+|------|-------|--------|
+| Unused model/usecase added (parts for next PR) | Not needed | Not called yet |
+| Fixture/test data/refactor | Not needed | No user impact |
+| API change (response changes etc.) | **Required** | User impact |
+| Migration | **Required** | Must release alone |
+| Screen change | **Required** | User impact |
 
-## mainブランチのロック戦略
+## main Branch Lock Strategy
 
-### なぜロックが必要か
+### Why Locking Is Needed
 
-CI待ち中に他のマージが入るとCIがリスタートし、リリースできなくなる。
+If another merge lands while CI is running, CI restarts and the release cannot proceed.
 
-### 手順
+### Steps
 
-1. mainにPRをマージ（ロック前にマージ完了させる）
-2. マージ直後にmainをロック
-3. チームにロックした旨を共有
-4. CI完了 → リリース実行 → デプロイ → 確認
-5. ロック解除 + 解除を共有
+1. Merge PR to main (complete merge before locking)
+2. Lock main immediately after merge
+3. Notify team that main is locked
+4. CI completes → execute release → deploy → confirm
+5. Unlock + notify team
 
-### 特にロック必須のケース
+### Cases Where Lock Is Required
 
-| ケース | 理由 |
-|--------|------|
-| migration | 他PRのmigrationと実行順序が衝突する可能性 |
-| hotfix / Revert | 他の変更が混ざると原因特定・ロールバック困難 |
-| 決済関連 | 失敗時の影響が大きい |
-| 検索関連 | 影響範囲が広い |
+| Case | Reason |
+|------|--------|
+| Migration | Risk of execution order conflict with other PRs' migrations |
+| Hotfix / Revert | Other changes mixed in make root cause identification and rollback difficult |
+| Payment-related | High impact on failure |
+| Search-related | Wide impact scope |
 
-## Revert手順
+## Revert Steps
 
-1. CDパイプラインで1つ前のデプロイをRe-run
-2. チームチャンネルで共有（Re-runのURLを添付）
-3. RevertするPRを作成
-4. RevertのPRがmainにマージされたら追加リリース不要
+1. Re-run the previous deploy in the CD pipeline
+2. Share in team channel (attach Re-run URL)
+3. Create a Revert PR
+4. No additional release needed once the Revert PR is merged to main
 
-**注意**: DB変更を伴うリリースのRevertは必ず相談してから実行。
+**Note**: Always consult before reverting a release that includes DB changes.
 
-## 緊急リリース
+## Emergency Release
 
-1. テックリードへ通知
-2. mainで走っているCIを全てキャンセル
-3. リリースを即時実行
+1. Notify tech lead
+2. Cancel all CI currently running on main
+3. Execute release immediately
 
-## ルール
+## Rules
 
-| ルール | 理由 |
-|--------|------|
-| 金曜リリース禁止 | 障害対応が週末にかかるリスク |
-| migration単独リリース | 切り戻しを容易にするため |
-| main追従は `git merge --no-ff` | rebase禁止（レビューコメント位置が崩れる） |
-| マージしたものはその日のうちにリリース | 未リリースコードの滞留防止 |
+| Rule | Reason |
+|------|--------|
+| No Friday releases | Risk of incident response spilling into the weekend |
+| Migration releases must be solo | Enables easy rollback |
+| main sync with `git merge --no-ff` | Rebase forbidden (destroys review comment positions) |
+| Release merged code same day | Prevents unreleased code accumulation |
 
-## リリースタイミング
+## Release Timing
 
-| 条件 | リリース担当 |
-|------|------------|
-| 営業時間内マージ | リリース担当者（当番制） |
-| 営業時間外マージ | マージした本人（部品のみなら次回委ねてOK） |
+| Condition | Release Owner |
+|-----------|---------------|
+| Merged during business hours | Release owner (on rotation) |
+| Merged outside business hours | The person who merged (OK to defer to next time if parts-only) |

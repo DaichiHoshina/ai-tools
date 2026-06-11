@@ -1,51 +1,51 @@
-# ログ設計基準
+# Logging Standards
 
-ログレベル使い分けと構造化フィールド設計の基準。新規ログ追加 / 既存ログレビュー時に参照。
+Standards for log level usage and structured field design. Reference when adding new logs or reviewing existing ones.
 
-## 原則
+## Principles
 
-**短い英語メッセージ + 構造化フィールドで必要十分。** 言語より"何を残すか"が重要。debugは使わない。
+**Short English messages + structured fields — sufficient. What to record matters more than language.** Do not use debug level.
 
-## レベル
+## Levels
 
-| レベル | 用途 | 例 |
-|--------|------|-----|
-| error | 処理継続不可、即座の対応必要。到達不能パスも含む | DB接続失敗、外部API障害、switchのdefault到達、未対応enum値 |
-| warn | 異常だが処理継続可、要監視 | authz.denied、ID指定NotFound（文脈で判断）、rate_limited |
-| info | 正常系の重要イベント | リクエスト開始/完了、状態遷移、バッチ処理結果 |
+| Level | Purpose | Example |
+|-------|---------|---------|
+| error | Processing cannot continue; immediate action required. Includes unreachable paths | DB connection failure, external API failure, switch default reached, unhandled enum value |
+| warn | Abnormal but processing can continue; needs monitoring | authz.denied, ID-specified NotFound (context-dependent), rate_limited |
+| info | Important events in the normal flow | Request start/completion, state transition, batch processing result |
 
-**判断に迷う場合**: 正常系ならinfo、異常だが想定内ならwarn。フォールバック付きでも稀にしか起きない事象はwarn以上（infoに落とすと異常に気づけない）。
+**When in doubt**: normal flow → info; abnormal but expected → warn. Even with fallback, rare events should be warn or above (using info risks missing the anomaly).
 
-### コード未対応データ → Error
+### Unhandled Data → Error
 
-switchのdefaultやunknown型に到達した場合、フォールバックで処理継続していても**Error**。理由: コードが対応すべきデータが来ており、開発者の対応が必要なため。
+When reaching a switch default or unknown type, use **Error** even if processing continues with a fallback. Reason: the code should handle this data; developer action is required.
 
-| パターン | レベル | 例 |
-|---------|--------|-----|
-| unknown type/enum（switchのdefault到達） | error | unknown carrier type, unknown EC provider, unknown service level |
-| DB接続失敗（サービスが機能しない） | error | DB接続リトライ |
-| 外部接続失敗→リトライで復旧可能 | warn | SFTP/SSH接続リトライ |
-| フォールバック付きだが稀にしか起きない | warn | JSON unmarshal失敗→デフォルト値使用、SFTP削除失敗→処理継続 |
-| 非同期処理の待ち・ポーリング | info | PDF生成待ちリトライ、バッチタイプ無視 |
+| Pattern | Level | Example |
+|---------|-------|---------|
+| Unknown type/enum (switch default reached) | error | unknown carrier type, unknown EC provider, unknown service level |
+| DB connection failure (service non-functional) | error | DB connection retry |
+| External connection failure → recoverable via retry | warn | SFTP/SSH connection retry |
+| Has fallback but rarely occurs | warn | JSON unmarshal failure → default value used, SFTP delete failure → continue |
+| Async processing wait/polling | info | Waiting for PDF generation retry, batch type ignored |
 
-## 必須フィールド
+## Required Fields
 
-| 区分 | フィールド |
-|------|-----------|
-| 全ログ共通 | msg、event、request_id/trace_id、duration_ms、result |
-| エラー時 | error（stack付き）、error_type、error_code |
-| HTTP | method、path、status |
-| ドメイン | resource_type、resource_id |
-| マルチテナント | tenant_id/owner_id |
+| Category | Fields |
+|----------|--------|
+| All logs | msg, event, request_id/trace_id, duration_ms, result |
+| On error | error (with stack), error_type, error_code |
+| HTTP | method, path, status |
+| Domain | resource_type, resource_id |
+| Multi-tenant | tenant_id/owner_id |
 
-## NotFound判断
+## NotFound Decision
 
-一覧検索0件: ログ不要。ID指定NotFound: 文脈でwarn（event: `resource.get.not_found`、suspicion: `possible_id_probe`）
+List search with 0 results: no log needed. ID-specified NotFound: warn based on context (event: `resource.get.not_found`, suspicion: `possible_id_probe`)
 
-## warnにすべきセキュリティイベント
+## Security Events That Should Be warn
 
-`authz.denied`、`resource.get.not_found`、`validation.failed`、`rate_limited`、`auth.login_failed`
+`authz.denied`, `resource.get.not_found`, `validation.failed`, `rate_limited`, `auth.login_failed`
 
-## 禁止（ログに入れない）
+## Forbidden (do not include in logs)
 
-password、token、Cookie、Authorizationヘッダ、PII生値（要マスク/ハッシュ）、request body丸ごと（body_hashを使用）
+password, token, Cookie, Authorization header, raw PII (mask/hash required), entire request body (use body_hash instead)

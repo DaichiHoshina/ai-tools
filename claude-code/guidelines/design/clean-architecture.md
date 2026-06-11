@@ -1,75 +1,75 @@
-# クリーンアーキテクチャ ガイドライン
+# Clean Architecture Guidelines
 
-> **目的**: フレームワーク非依存・テスト容易なソフトウェア設計
+> **Purpose**: Framework-independent, testable software design
 
-## 基本原則
+## Core Principles
 
-| 原則 | 内容 |
-|------|------|
-| **依存性の方向** | 外側 → 内側（内側は外側を知らない） |
-| **関心の分離** | レイヤーごとに責務を分離 |
-| **フレームワーク独立** | ビジネスロジックは技術詳細から独立 |
-
----
-
-## レイヤー構成
-
-| レイヤー | 責務 | 含むもの | 依存先 |
-|----------|------|----------|--------|
-| **Domain** | ビジネスルール | Entity, ValueObject, Repository IF | なし |
-| **Application / UseCase** | アプリケーションロジック | UseCase, ApplicationService, DTO | Domainのみ |
-| **Interface / Presentation** | 入出力処理 | Controller, Presenter | Application, Domain |
-| **Infrastructure** | 技術詳細 | Repository実装, API Client, ORM | 全層可 |
+| Principle | Detail |
+|-----------|--------|
+| **Direction of dependency** | Outer → inner (inner knows nothing about outer) |
+| **Separation of concerns** | Separate responsibilities per layer |
+| **Framework independence** | Business logic is independent of technical details |
 
 ---
 
-## 依存性逆転の原則 (DIP)
+## Layer Structure
 
-| 要素 | 役割 | 例 |
-|------|------|-----|
-| **インターフェース** | 上位層で定義 | `UserRepository` (Domain) |
-| **実装** | 下位層で実装 | `PostgresUserRepository` (Infrastructure) |
-| **注入** | DIで接続 | 起動時に実装を注入 |
-
----
-
-## ディレクトリ構成
-
-| パターン | 構成例 | 特徴 |
-|----------|--------|------|
-| **機能ベース（推奨）** | `features/user/{domain,application,infrastructure}/` | 機能単位で分離、スケーラブル |
-| **レイヤーベース** | `{domain,application,infrastructure}/` | レイヤー単位で分離、シンプル |
+| Layer | Responsibility | Contains | Depends On |
+|-------|----------------|----------|------------|
+| **Domain** | Business rules | Entity, ValueObject, Repository IF | None |
+| **Application / UseCase** | Application logic | UseCase, ApplicationService, DTO | Domain only |
+| **Interface / Presentation** | I/O handling | Controller, Presenter | Application, Domain |
+| **Infrastructure** | Technical details | Repository impl, API Client, ORM | All layers |
 
 ---
 
-## データフロー
+## Dependency Inversion Principle (DIP)
+
+| Element | Role | Example |
+|---------|------|---------|
+| **Interface** | Defined in upper layer | `UserRepository` (Domain) |
+| **Implementation** | Implemented in lower layer | `PostgresUserRepository` (Infrastructure) |
+| **Injection** | Connected via DI | Inject implementation at startup |
+
+---
+
+## Directory Structure
+
+| Pattern | Example Structure | Characteristics |
+|---------|-------------------|-----------------|
+| **Feature-based (recommended)** | `features/user/{domain,application,infrastructure}/` | Feature-unit separation, scalable |
+| **Layer-based** | `{domain,application,infrastructure}/` | Layer-unit separation, simple |
+
+---
+
+## Data Flow
 
 ```
-Controller (リクエスト→DTO) → UseCase (ビジネスロジック) → Repository (永続化) → Presenter (レスポンス)
+Controller (request→DTO) → UseCase (business logic) → Repository (persistence) → Presenter (response)
 ```
 
-**境界を越えるデータ**: DTOで受け渡し、Domainエンティティは外部に漏らさない
+**Data crossing boundaries**: passed via DTO; Domain entities must not leak externally
 
 ---
 
-## テスト戦略
+## Test Strategy
 
-| レイヤー | テスト種別 | モック | 特徴 |
-|----------|-----------|--------|------|
-| **Domain** | 単体テスト | 不要 | ビジネスロジック検証 |
-| **Application** | 単体テスト | Repositoryをモック | フロー検証 |
-| **Infrastructure** | 統合テスト | 実DB使用 | 技術詳細検証 |
+| Layer | Test Type | Mock | Characteristics |
+|-------|-----------|------|-----------------|
+| **Domain** | Unit test | Not needed | Verify business logic |
+| **Application** | Unit test | Mock Repository | Verify flow |
+| **Infrastructure** | Integration test | Use real DB | Verify technical details |
 
 ---
 
-## ❌ アンチパターンvs ✅ ベストプラクティス
+## Anti-patterns vs Best Practices
 
-| ケース | ❌ NG | ✅ OK |
-|--------|-------|-------|
-| **フレームワーク依存** | Domainにフレームワーク固有コード | Infrastructureでフレームワーク使用 |
-| **貫通型アーキテクチャ** | Controller → DB直接アクセス | UseCase経由でアクセス |
-| **過剰な抽象化** | 全てにインターフェース | 必要な境界のみ抽象化 |
-| **ビジネスロジック配置** | Controllerに複雑なロジック | Domain / UseCaseに集約 |
-| **技術詳細** | UseCaseでフレームワーク固有処理 | Infrastructureに隔離 |
-| **テスト容易性** | DIなし | DIでテスト容易性確保 |
-| **レイヤー境界** | 曖昧な境界 | 明確な境界を定義 |
+| Case | NG | OK |
+|------|----|----|
+| **Framework coupling** | Framework-specific code in Domain | Use framework in Infrastructure |
+| **Penetrating architecture** | Controller → DB direct access | Access via UseCase |
+| **Over-abstraction** | Interfaces everywhere | Abstract only necessary boundaries |
+| **Business logic placement** | Complex logic in Controller | Consolidate in Domain / UseCase |
+| **Technical details** | Framework-specific processing in UseCase | Isolate in Infrastructure |
+| **Testability** | No DI | Ensure testability with DI |
+| **Layer boundary** | Ambiguous boundaries | Define clear boundaries |

@@ -1,8 +1,8 @@
-# ガードレール
+# Guardrails
 
-操作を3層（Safe/Boundary/Forbidden）に分類し、安全性を保証。
+Classify operations into 3 layers (Safe/Boundary/Forbidden) to guarantee safety.
 
-## 操作ガード
+## Operation Guard
 
 ```
 Guard : Action → {Allow, AskUser, Deny}
@@ -11,105 +11,105 @@ Guard(a) = AskUser ⟺ a ∈ Mor(Boundary)
 Guard(a) = Deny    ⟺ a ∈ Mor(Forbidden)
 ```
 
-安全性定理: Safeは常に安全 / Boundaryは承認で安全 / Forbiddenは実行不可。
+Safety theorem: Safe is always safe / Boundary is safe with approval / Forbidden cannot be executed.
 
-| 層 | 処理 | 説明 |
-|----|------|------|
-| **Safe** | 即実行 | 害のない操作 |
-| **Boundary** | 確認後実行 | 影響あり（モードで確認レベル変化） |
-| **Forbidden** | 実行不可 | 危険、常に拒否 |
+| Layer | Handling | Description |
+|-------|----------|-------------|
+| **Safe** | Execute immediately | Harmless operations |
+| **Boundary** | Execute after confirmation | Has impact (confirmation level changes by mode) |
+| **Forbidden** | Cannot execute | Dangerous, always rejected |
 
-## Safe（自動許可）
+## Safe (auto-allowed)
 
-- ファイル読取、コード分析・検索、ディレクトリ一覧
-- 提案・説明、コードレビュー（読取のみ）、ドキュメント参照
-- git status / log / diff、環境情報確認
+- File read, code analysis/search, directory listing
+- Suggestions, explanations, code review (read-only), doc reference
+- git status / log / diff, environment info check
 
-## Boundary（確認必要、モード別）
+## Boundary (confirmation required, varies by mode)
 
-### Git操作
+### Git Operations
 
-| 操作 | strict | normal | fast |
-|------|--------|--------|------|
-| git add | 確認 | 自動 | 自動 |
-| git commit | 確認 | 確認 | 自動 |
-| git push | 確認 | 確認 | 確認 |
-| git merge | 確認 | 確認 | 確認 |
-| git rebase（ローカル） | 確認 | 確認 | 自動 |
+| Operation | strict | normal | fast |
+|-----------|--------|--------|------|
+| git add | confirm | auto | auto |
+| git commit | confirm | confirm | auto |
+| git push | confirm | confirm | confirm |
+| git merge | confirm | confirm | confirm |
+| git rebase (local) | confirm | confirm | auto |
 
-### ファイル操作
+### File Operations
 
-| 操作 | strict | normal | fast |
-|------|--------|--------|------|
-| 編集 | 確認 | 自動 | 自動 |
-| 作成 | 確認 | 自動 | 自動 |
-| 通常削除 | 確認 | 確認 | 自動 |
-| 重要削除 | 確認 | 確認 | 確認 |
+| Operation | strict | normal | fast |
+|-----------|--------|--------|------|
+| Edit | confirm | auto | auto |
+| Create | confirm | auto | auto |
+| Normal delete | confirm | confirm | auto |
+| Important delete | confirm | confirm | confirm |
 
-重要ファイル: `src/`, `.git/`, `node_modules/`, `.env`, `package.json`, `go.mod` 等。
+Important files: `src/`, `.git/`, `node_modules/`, `.env`, `package.json`, `go.mod` etc.
 
-### パッケージ管理
+### Package Management
 
-| 操作 | strict | normal | fast |
-|------|--------|--------|------|
-| npm install（安全） | 確認 | 自動 | 自動 |
-| npm install（未知） | 確認 | 確認 | 確認 |
-| go get | 確認 | 自動 | 自動 |
+| Operation | strict | normal | fast |
+|-----------|--------|--------|------|
+| npm install (safe) | confirm | auto | auto |
+| npm install (unknown) | confirm | confirm | confirm |
+| go get | confirm | auto | auto |
 
-安全パッケージ: 高DL数 + 活発メンテ + 既知脆弱性なし。
+Safe packages: high download count + active maintenance + no known vulnerabilities.
 
-### 設定変更
+### Config Changes
 
-| 操作 | strict | normal | fast |
-|------|--------|--------|------|
-| .env変更 | 確認 | 確認 | 確認 |
-| package.json | 確認 | 確認 | 自動 |
-| tsconfig.json | 確認 | 自動 | 自動 |
-| Dockerfile | 確認 | 確認 | 自動 |
+| Operation | strict | normal | fast |
+|-----------|--------|--------|------|
+| .env change | confirm | confirm | confirm |
+| package.json | confirm | confirm | auto |
+| tsconfig.json | confirm | auto | auto |
+| Dockerfile | confirm | confirm | auto |
 
-## ❗️禁止事項（Hooks自動検出）
+## Forbidden (auto-detected by Hooks)
 
-| 禁止 | 理由 |
-|------|------|
-| format | prettier/eslint/go fmtはユーザー実行 |
-| commit | AI自動実行禁止（/git-push使用） |
-| auto_test | テスト自動作成禁止（テンプレ提案は可） |
-| unused | 「念のため」コード禁止（YAGNI） |
+| Forbidden | Reason |
+|-----------|--------|
+| format | prettier/eslint/go fmt are user-run |
+| commit | AI auto-execution forbidden (use `/git-push`) |
+| auto_test | Auto test creation forbidden (template suggestion OK) |
+| unused | "Just in case" code forbidden (YAGNI) |
 
-## 📊 品質基準
+## Quality Standards
 
-| メトリクス | 基準 |
-|-----------|------|
-| 関数サイズ | 50行以下 |
-| 引数 | 3個以下 |
-| 循環的複雑度 | 10以下 |
-| ネスト | 3段以下 |
+| Metric | Standard |
+|--------|----------|
+| Function size | ≤50 lines |
+| Arguments | ≤3 |
+| Cyclomatic complexity | ≤10 |
+| Nesting | ≤3 levels |
 
-## Forbidden（実行不可、全モード拒否）
+## Forbidden (rejected in all modes)
 
-- **システム破壊**: `rm -rf /`, `dd if=/dev/zero of=/dev/sda`, `kill -9 -1`, `shutdown -h now`, `mkfs.*`
-- **セキュリティ**: `chmod 777 -R /`, 秘密情報漏洩、認証情報公開、`.env` コミット、secrets push
-- **Git危険**: `git push --force` / `git reset --hard` リモート / `git clean -fdx`
-- **外部接続**: `curl | bash`, `wget | sh`, ユーザー入力の任意コード評価
-- **YAGNI違反**: 未使用コード生成 / 「念のため」「将来使うかも」の実装
+- **System destruction**: `rm -rf /`, `dd if=/dev/zero of=/dev/sda`, `kill -9 -1`, `shutdown -h now`, `mkfs.*`
+- **Security**: `chmod 777 -R /`, secret leaks, credential exposure, `.env` commit, secrets push
+- **Dangerous git**: `git push --force` / `git reset --hard` remote / `git clean -fdx`
+- **External connection**: `curl | bash`, `wget | sh`, arbitrary code eval from user input
+- **YAGNI violations**: generating unused code / "just in case" / "might use later" implementations
 
-## 確認フロー
+## Confirmation Flow
 
 ```
-strict: Boundary 全て確認 → 通知音 → 承認待ち → 実行
-normal: 重要 Boundary のみ確認、その他は自動
-fast:   最重要 Boundary のみ確認、Forbidden は拒否、その他は自動
+strict: Confirm all Boundary → notification sound → wait for approval → execute
+normal: Confirm only important Boundary, others auto
+fast:   Confirm only most important Boundary, Forbidden rejected, others auto
 ```
 
-通知: 確認時 / 完了時に `afplay ~/notification.mp3`。
+Notification: `afplay ~/notification.mp3` on confirmation and completion.
 
-## 例外処理
+## Exception Handling
 
-- Boundary拒否時: 理由説明 → 代替案 → 必要なら `/protection-mode` で思考法再確認
-- Forbidden検出時: 即拒否 → 危険性説明 → 安全な代替手段提案
+- On Boundary rejection: explain reason → suggest alternative → reload `/protection-mode` if needed
+- On Forbidden detection: immediate rejection → explain danger → suggest safe alternative
 
-## 関連
+## Related
 
-- `session-modes.md` - モード定義
-- `/protection-mode` - 圏論的思考法ロード
-- `claude-code/references/AI-THINKING-ESSENTIALS.md` - 5フェーズワークフロー含む
+- `session-modes.md` — mode definitions
+- `/protection-mode` — load category-theory thinking
+- `claude-code/references/AI-THINKING-ESSENTIALS.md` — includes 5-phase workflow

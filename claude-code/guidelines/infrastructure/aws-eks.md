@@ -1,102 +1,102 @@
-# AWS EKSガイドライン
+# AWS EKS Guidelines
 
-**目的**: Kubernetesクラスターの安全で効率的な運用
+**Purpose**: Safe and efficient Kubernetes cluster operation
 
 ---
 
 ## terraform-aws-modules/eks
 
-| 項目 | 設定 |
-|------|------|
-| `kubernetes_version` | 最新安定版（例: `1.33`） |
-| `endpoint_public_access` + `endpoint_private_access` | 両方有効化推奨 |
+| Item | Setting |
+|------|---------|
+| `kubernetes_version` | Latest stable (e.g. `1.33`) |
+| `endpoint_public_access` + `endpoint_private_access` | Both enabled recommended |
 | `enable_cluster_creator_admin_permissions` | `true` |
 
-### 必須アドオン
+### Required Add-ons
 
-| アドオン | 用途 |
-|---------|------|
-| `coredns` | DNS解決 |
-| `vpc-cni` | Podネットワーキング（PREFIX_DELEGATION推奨） |
-| `kube-proxy` | サービスプロキシ |
-| `eks-pod-identity-agent` | IAM認証 |
+| Add-on | Purpose |
+|--------|---------|
+| `coredns` | DNS resolution |
+| `vpc-cni` | Pod networking (PREFIX_DELEGATION recommended) |
+| `kube-proxy` | Service proxy |
+| `eks-pod-identity-agent` | IAM authentication |
 
 ---
 
-## ノードグループ
+## Node Groups
 
-### Managed Node Groups（推奨）
+### Managed Node Groups (recommended)
 
-| 項目 | 設定 |
-|------|------|
-| `ami_type` | `AL2023_x86_64_STANDARD`（最新AL2023） |
-| `instance_types` | 複数指定で可用性向上 |
-| `min_size` / `max_size` / `desired_size` | スケーリング設定 |
-| EBS | `gp3`, 暗号化有効 |
+| Item | Setting |
+|------|---------|
+| `ami_type` | `AL2023_x86_64_STANDARD` (latest AL2023) |
+| `instance_types` | Multiple for improved availability |
+| `min_size` / `max_size` / `desired_size` | Scaling configuration |
+| EBS | `gp3`, encryption enabled |
 
-### Spotノードグループ
+### Spot Node Groups
 
-| 項目 | 設定 |
-|------|------|
+| Item | Setting |
+|------|---------|
 | `capacity_type` | `"SPOT"` |
-| インスタンスタイプ | 複数指定 |
-| Taints | 専用ワークロード分離 |
+| Instance types | Multiple specified |
+| Taints | Dedicated workload isolation |
 
 ### Self-Managed Node Groups
 
-- カスタムAMI使用時
-- 高度なブートストラップ設定
+- When using custom AMI
+- Advanced bootstrap configuration
 
 ---
 
-## Fargateプロファイル
+## Fargate Profile
 
-- namespace + labelsでセレクター設定
-- 小規模/バースト性ワークロード向け
-- kube-systemのkube-dnsに推奨
-
----
-
-## Karpenter統合
-
-| 項目 | 設定 |
-|------|------|
-| 機能 | 動的ノードスケーリング |
-| 認証 | Pod Identityで認証 |
-| タグ | `karpenter.sh/discovery` 必須 |
+- Selector via namespace + labels
+- For small-scale/burst workloads
+- Recommended for kube-dns in kube-system
 
 ---
 
-## セキュリティ
+## Karpenter Integration
 
-| ❌ 禁止 | ✅ 必須設定 |
-|---------|------------|
-| - | プライベートサブネットへのノード配置 |
-| - | IRSA / Pod IdentityによるIAM認証 |
-| - | ネットワークポリシー |
-| - | クラスターログ有効化 |
+| Item | Setting |
+|------|---------|
+| Feature | Dynamic node scaling |
+| Auth | Pod Identity for authentication |
+| Tags | `karpenter.sh/discovery` required |
 
-### クラスターログ（全て有効化）
+---
+
+## Security
+
+| Forbidden | Required Setting |
+|-----------|-----------------|
+| — | Place nodes in private subnets |
+| — | IAM authentication with IRSA / Pod Identity |
+| — | Network policies |
+| — | Enable cluster logging |
+
+### Cluster Logs (enable all)
 
 - `api`, `audit`, `authenticator`
 - `controllerManager`, `scheduler`
 
 ---
 
-## 推奨アドオン
+## Recommended Add-ons
 
-| アドオン | 用途 |
-|---------|------|
-| `vpc-cni` | Podネットワーキング |
-| `coredns` | DNS解決 |
-| `kube-proxy` | サービスプロキシ |
-| `eks-pod-identity-agent` | IAM認証 |
-| `aws-ebs-csi-driver` | EBSボリューム（IRSA設定必須） |
-| `aws-efs-csi-driver` | EFSボリューム |
+| Add-on | Purpose |
+|--------|---------|
+| `vpc-cni` | Pod networking |
+| `coredns` | DNS resolution |
+| `kube-proxy` | Service proxy |
+| `eks-pod-identity-agent` | IAM authentication |
+| `aws-ebs-csi-driver` | EBS volumes (IRSA config required) |
+| `aws-efs-csi-driver` | EFS volumes |
 
 ---
 
-## kubectlアクセス
+## kubectl Access
 
 ```bash
 aws eks update-kubeconfig --region ap-northeast-1 --name ${cluster_name}
@@ -104,43 +104,43 @@ aws eks update-kubeconfig --region ap-northeast-1 --name ${cluster_name}
 
 ---
 
-## 監視
+## Monitoring
 
-### 必須メトリクス
+### Required Metrics
 
-- ノードCPU/メモリ使用率
-- Pod状態（Running, Pending, Failed）
-- APIサーバーレイテンシ
-- コントロールプレーンログ
+- Node CPU/memory utilization
+- Pod status (Running, Pending, Failed)
+- API server latency
+- Control plane logs
 
 ### Container Insights
 
-`amazon-cloudwatch-observability` アドオン有効化
+Enable `amazon-cloudwatch-observability` add-on
 
 ---
 
-## アップグレード戦略
+## Upgrade Strategy
 
-### バージョン管理
+### Version Management
 
-- マイナーバージョンは順次アップグレード
-- ノードグループはBlue/Green
+- Upgrade minor versions sequentially
+- Node groups via Blue/Green
 
-### アップグレード順序
+### Upgrade Order
 
-| ステップ | 内容 |
-|---------|------|
-| 1. コントロールプレーン | クラスターバージョン更新 |
-| 2. アドオン | アドオンバージョン更新 |
-| 3. ノードグループ | 順次入れ替え |
+| Step | Content |
+|------|---------|
+| 1. Control plane | Update cluster version |
+| 2. Add-ons | Update add-on versions |
+| 3. Node groups | Replace sequentially |
 
 ---
 
-## コスト最適化
+## Cost Optimization
 
-| 方式 | 用途 |
-|------|------|
-| Spotインスタンス | 耐障害性ワークロード |
-| Karpenter | 動的ノードスケーリング |
-| Fargate | 小規模/バースト性ワークロード |
-| Right-sizing | 適切なインスタンスタイプ選定 |
+| Method | Use Case |
+|--------|---------|
+| Spot instances | Fault-tolerant workloads |
+| Karpenter | Dynamic node scaling |
+| Fargate | Small-scale/burst workloads |
+| Right-sizing | Select appropriate instance types |

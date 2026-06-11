@@ -1,32 +1,32 @@
-# 技術的注意点・落とし穴
+# Technical Pitfalls
 
-設計なし実装 / デグレ誘発などの避けるべき実装パターン集。新機能着手前のセルフチェック / コードレビュー時に参照。
+Collection of implementation patterns to avoid: implementation without design, regression-inducing changes, etc. Reference as a self-check before starting new features or during code review.
 
-## 絶対禁止パターン
+## Absolutely Forbidden Patterns
 
-| パターン | ❌ 禁止 | ✅ 正しい |
-|---------|---------|----------|
-| 設計なし実装 | 実装しながら設計<br>「とりあえず動かす」「後で直す」 | 設計完了 → 実装開始 |
-| デグレ防止 | 既存props/関数シグネチャ/CSSクラス名変更 | 新機能は新コンポーネント、既存は拡張のみ |
-| バリデーション | 実装しながら設計 | 仕様書先行 → rules/ でルール定義 → テスト確認 |
-
----
-
-## 具体的な落とし穴
-
-| 項目 | 対策 |
-|------|------|
-| 座標計算 | 変換関数で明確化（座標系混在を防ぐ） |
-| アクションタイプ | 値の統一（`text` と `message` の混在を防ぐ） |
-| バリデーションキー | ルール名とメッセージキーのマッピング |
+| Pattern | Forbidden | Correct |
+|---------|-----------|---------|
+| Implementation without design | Designing while implementing / "make it work first" / "fix later" | Complete design → then implement |
+| Regression prevention | Changing existing props/function signatures/CSS class names | New features use new components; existing ones extend only |
+| Validation | Designing while implementing | Spec first → define rules in `rules/` → verify with tests |
 
 ---
 
-## 過去のミス事例
+## Specific Pitfalls
 
-| ミス | 原因 | 対策 |
-|------|------|------|
-| lint fix 3回繰り返し | 開発環境未整備 | 開発環境整備、pre-commit hook |
-| デグレ2回発生 | 影響範囲未把握 | 影響範囲把握、テスト実行 |
-| バリデーション設計5回変更 | 仕様書なし | 仕様書先行 |
-| 不要コード大量削除 | 過剰実装 | 現在必要な機能のみ実装 |
+| Item | Counter-measure |
+|------|----------------|
+| Coordinate calculations | Clarify with conversion functions (prevent mixed coordinate systems) |
+| Action types | Unify values (prevent mixing `text` and `message`) |
+| Validation keys | Map rule names to message keys |
+
+---
+
+## Past Mistakes
+
+| Mistake | Cause | Counter-measure |
+|---------|-------|----------------|
+| lint fix repeated 3 times | Dev environment not set up | Set up dev environment, pre-commit hook |
+| Regression occurred twice | Impact scope not understood | Understand impact scope, run tests |
+| Validation design changed 5 times | No spec doc | Write spec first |
+| Large amount of unnecessary code deleted | Over-implementation | Implement only currently needed features |

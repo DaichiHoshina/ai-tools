@@ -1,92 +1,92 @@
-# Claude Code実践Tips
+# Claude Code Practical Tips
 
-コンテキスト管理 / 圧縮対策などClaude Code運用Tips。session長期化 / token消費が気になる時に参照。
+Context management / compaction tips for Claude Code operation. Reference when session length or token consumption is a concern.
 
-## コンテキスト管理
+## Context Management
 
-| 項目 | 内容 |
-|------|------|
-| 監視 | statusLineのbrainマーク = コンテキストサイズ |
-| 圧縮閾値 | 80%超でauto compact発動 → 品質劣化 |
-| **鉄則** | **タスク終了後は再起動**（Ctrl-C 2回or `/exit`） |
-| 確認 | `/context` で使用状況確認 |
+| Item | Detail |
+|------|--------|
+| Monitor | Brain mark in statusLine = context size |
+| Compaction threshold | Auto compact triggers above 80% → quality degrades |
+| **Rule** | **Restart after task completion** (Ctrl-C ×2 or `/exit`) |
+| Check | `/context` to view usage |
 
-### 圧縮対処
+### Handling Compaction
 
-| ❌ 避ける | ✅ 推奨 |
-|----------|---------|
-| 圧縮頻発を放置 | auto-compact OFF → 手動 `/compact` |
-| 圧縮後に何もしない | 圧縮後は `/reload` でCLAUDE.md再読み込み |
-| タスク終了後も閉じない | 一連タスク完了後に再起動 |
-
----
-
-## サブエージェント
-
-| 項目 | 内容 |
-|------|------|
-| 3層構造 | PO → Manager → Developer (1-4) |
-| **使う** | 複数ファイル実装、並列処理、設計→実装→レビュー |
-| **使わない** | 単一ファイル修正、シンプルなバグ修正 |
-| worktree分離 | `isolation: "worktree"` で独立コピーで作業（v2.1.47+） |
-| 管理 | `claude agents` で実行中エージェント確認（CLI） |
-| 停止 | Ctrl+Fでバックグラウンドエージェント停止 |
+| Avoid | Recommended |
+|-------|-------------|
+| Ignore frequent compaction | Turn off auto-compact → use manual `/compact` |
+| Do nothing after compact | Run `/reload` after compact to re-read CLAUDE.md |
+| Leave session open after task | Restart after completing a task set |
 
 ---
 
-## よく使うコマンド
+## Sub-agents
 
-| コマンド | 用途 |
-|----------|------|
-| `/resume` | 過去セッション継続 |
-| `/rename` | セッション名変更（引数なし→自動生成） |
-| `mcp__serena__onboarding` | 新規プロジェクト初期化（旧 `/serenaオンボーディング` 廃止） |
-| `/serena-refresh` | メモリ情報最新化 |
-| `/reload` | compact後のリカバリー |
-| `/doctor` | 環境確認 |
-| `/status` | 設定確認 |
-| `/context` | コンテキストサイズ確認 |
-| `claude auth login` | 認証ログイン（CLI） |
-| `claude auth status` | 認証状態確認（CLI） |
-| `claude auth logout` | 認証ログアウト（CLI） |
-| `claude agents` | 実行中エージェント一覧（CLI） |
+| Item | Detail |
+|------|--------|
+| 3-layer structure | PO → Manager → Developer (1-4) |
+| **Use** | Multi-file impl, parallel work, design→impl→review |
+| **Do not use** | Single-file edits, simple bug fixes |
+| Worktree isolation | `isolation: "worktree"` for independent copy per agent (v2.1.47+) |
+| Manage | `claude agents` to list running agents (CLI) |
+| Stop | Ctrl+F to stop background agents |
 
 ---
 
-## ファイル参照機能（v2.1.41+）
+## Common Commands
 
-| 記法 | 説明 |
-|------|------|
-| `@README.md` | ファイル全体を参照 |
-| `@README.md#installation` | 特定セクションを参照（アンカーフラグメント） |
-
-**用途**: 会話中に特定のドキュメントセクションを正確に参照したい時に便利
+| Command | Purpose |
+|---------|---------|
+| `/resume` | Resume past session |
+| `/rename` | Rename session (no arg → auto-generate) |
+| `mcp__serena__onboarding` | Initialize new project (replaces deprecated `/serenaオンボーディング`) |
+| `/serena-refresh` | Refresh memory info |
+| `/reload` | Recovery after compact |
+| `/doctor` | Check environment |
+| `/status` | Check settings |
+| `/context` | Check context size |
+| `claude auth login` | Authenticate (CLI) |
+| `claude auth status` | Check auth status (CLI) |
+| `claude auth logout` | Log out (CLI) |
+| `claude agents` | List running agents (CLI) |
 
 ---
 
-## トラブルシューティング
+## File Reference (v2.1.41+)
 
-| 問題 | 対処 |
-|------|------|
-| 想定外の動作 | ESCで生成停止 → 追加指示 |
-| バックグラウンド暴走 | Ctrl+Fでバックグラウンドエージェント停止 |
-| 圧縮頻発 | タスク終了後に再起動 |
-| 認証エラー | `claude auth status` で確認 → `claude auth login` で再認証 |
-| AWS認証ハング | v2.1.41で3分タイムアウト追加（自動復旧） |
+| Syntax | Description |
+|--------|-------------|
+| `@README.md` | Reference entire file |
+| `@README.md#installation` | Reference a specific section (anchor fragment) |
+
+**Use case**: Useful when you need to reference a specific documentation section precisely during a conversation.
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| Unexpected behavior | Esc to stop generation → add instruction |
+| Background runaway | Ctrl+F to stop background agent |
+| Frequent compaction | Restart after task completion |
+| Auth error | Check `claude auth status` → re-auth with `claude auth login` |
+| AWS auth hang | v2.1.41 added 3-min timeout (auto-recovers) |
 
 ---
 
 ## Git Worktree
 
-複数Claude Codeで並行作業時に便利。シンプルなタスクは「worktree不要、ブランチだけ切って」と指示。
+Useful for parallel work across multiple Claude Code instances. For simple tasks, instruct "no worktree needed, just branch."
 
 ---
 
-## コスト管理
+## Cost Management
 
-| 項目 | 内容 |
-|------|------|
-| 料金確認 | statusLineで料金確認 |
-| MCP | 必要最小限に（コンテキスト大量消費） |
-| Skill | 必要時のみ知識ロード |
-| タスク分割 | 終わったら再起動 |
+| Item | Detail |
+|------|--------|
+| Check cost | View in statusLine |
+| MCP | Keep to minimum (heavy context consumption) |
+| Skill | Load knowledge only when needed |
+| Task split | Restart after finishing |

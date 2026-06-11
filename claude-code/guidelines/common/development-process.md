@@ -1,50 +1,50 @@
-# 開発プロセス
+# Development Process
 
-実装前 / 実装中 / レビュー前のチェックリスト。新規タスク着手時 / PR作成前に参照。
+Checklists for before / during / before review of implementation. Reference when starting a new task or before creating a PR.
 
-## 実装前チェックリスト
+## Pre-implementation Checklist
 
-| 項目 | 確認内容 |
-|------|----------|
-| 要件定義 | 仕様書の精読完了 |
-| タスク分割 | 指示された仕様からタスクを考案・分割完了 |
-| 既存調査 | 類似機能調査完了 |
-| データ設計 | データ構造・API仕様確認完了 |
-| コンポーネント | コンポーネント分割設計完了 |
-| バリデーション | バリデーション仕様の明文化完了 |
-| 座標・計算 | 座標系・計算ロジックの詳細設計完了（UI系） |
-| 影響範囲 | 影響範囲の特定・テスト計画作成完了 |
-| 情報把握 | claude-codeが必要な情報をすべて把握 |
-| **確認必須** | **タスク実行前に、タスク内容が合っているかユーザーに確認** |
-
----
-
-## 実装中の必須ルール
-
-| ❌ 禁止 | ✅ 必須 |
-|---------|---------|
-| コミット前にdiff未確認 | セルフレビュー: コミット前に必ずdiff確認 |
-| 保存時にlint未実行 | 保存時にlint+prettier必ず実行 |
+| Item | Check |
+|------|-------|
+| Requirements | Spec doc read completely |
+| Task breakdown | Tasks derived from spec and broken down |
+| Existing survey | Similar features surveyed |
+| Data design | Data structures and API specs confirmed |
+| Components | Component breakdown designed |
+| Validation | Validation spec documented |
+| Coordinates/calculations | Coordinate system and calculation logic detailed (for UI) |
+| Impact scope | Impact scope identified and test plan created |
+| Information | claude-code has all necessary information |
+| **Confirm** | **Confirm task content with user before executing** |
 
 ---
 
-## タスク実行時の注意事項
+## Required Rules During Implementation
 
-| 項目 | 内容 |
-|------|------|
-| 品質チェック | タスク実行後は品質チェック実施 |
-| 動作確認 | ユーザーが実施（自分で実行しない） |
-| エラー時 | エラーメッセージと発生原因をユーザーに伝える |
+| Forbidden | Required |
+|-----------|----------|
+| Commit without checking diff | Self-review: always check diff before commit |
+| Save without running lint | Run lint + prettier on every save |
 
 ---
 
-## 実装完了の定義
+## Notes During Task Execution
 
-| チェック項目 | 内容 |
-|-------------|------|
-| 仕様通り | 設計仕様通りの動作確認完了 |
-| デグレッション | 既存機能のデグレッションテスト完了 |
-| 品質 | lint/prettier/test全通過 |
-| クリーン | 不要コード・コメント削除完了 |
-| ドキュメント | ドキュメント更新完了 |
-| レビュー | レビュー指摘事項対応完了 |
+| Item | Detail |
+|------|--------|
+| Quality check | Run quality check after task execution |
+| Operation check | Done by user (do not execute yourself) |
+| On error | Report error message and cause to user |
+
+---
+
+## Definition of Done
+
+| Check | Detail |
+|-------|--------|
+| On spec | Behavior confirmed to match design spec |
+| Regression | Regression test for existing features complete |
+| Quality | lint/prettier/test all pass |
+| Clean | Unnecessary code and comments removed |
+| Docs | Documentation updated |
+| Review | All review feedback addressed |

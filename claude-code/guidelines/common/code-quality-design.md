@@ -1,48 +1,48 @@
-# コード品質・設計思想
+# Code Quality and Design Philosophy
 
-統一感 / 可読性 / テスタビリティなどコード品質の判定軸とレビュー観点。コードレビュー / 設計判断時に参照。
+Quality criteria and review perspectives for consistency, readability, and testability. Reference during code reviews and design decisions.
 
-## クイックリファレンス
+## Quick Reference
 
-### 品質基準
+### Quality Standards
 
-| 項目 | ルール |
-|------|--------|
-| 統一感 | 既存コードの書き方・設計を踏襲 |
-| 可読性 | 独りよがりなコーディング禁止 |
-| マジックナンバー | 必ず定数化 |
-| 命名 | 関数名・変数名にこだわる |
-
-### コメント原則
-
-| ルール | 説明 |
-|--------|------|
-| 言語 | 日本語（ですます調不要） |
-| 自明なコメント禁止 | 見ればわかる処理にコメント不要 |
-| 意図・理由を説明 | 複雑なロジックの「なぜ」「目的」を記載 |
-
-### 設計思想
-
-| 原則 | 説明 |
+| Item | Rule |
 |------|------|
-| レイヤードアーキテクチャ | 変更容易性を重視した柔軟な設計 |
-| リーダブルなコード | 読みづらいコードは分割、行数が多い関数は避ける |
-| 依存関係 | 疎結合を意識、他ページのコンポーネントは使わない |
-| APIレスポンスは生データ | UI都合の集計値を埋め込まず、生データを返してフロント側で集計する。複数UIから再利用しやすくサーバ側仕様変更が減る |
-| 変更箇所の単一化 | 仕様変更が想定される箇所は変更が1箇所で済む設計を選ぶ。重複・分散があれば抽出して1箇所に集約 |
+| Consistency | Follow existing code style and design patterns |
+| Readability | No self-indulgent coding |
+| Magic numbers | Always extract as named constants |
+| Naming | Care about function and variable names |
 
-## よくあるミス
+### Comment Principles
 
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| `const name = "太郎"; // 名前を設定` | `const name = "太郎";` | 自明なコメント不要 |
-| `const MAX = 100;` | `const MAX_RETRY_COUNT = 100;` | 定数名で意図を表現 |
-| 200行の関数 | 10-50行の関数に分割 | 可読性・テスタビリティ向上 |
-| 他ページのコンポーネントimport | 共通化or複製 | 疎結合維持 |
+| Rule | Description |
+|------|-------------|
+| Language | Japanese (no formal tone needed) |
+| No obvious comments | Skip comments for self-evident code |
+| Explain intent/reason | Document the "why" and "purpose" of complex logic |
 
-**良いコメント例**:
+### Design Philosophy
+
+| Principle | Description |
+|-----------|-------------|
+| Layered architecture | Flexible design prioritizing ease of change |
+| Readable code | Split hard-to-read code; avoid long functions |
+| Dependencies | Keep loosely coupled; do not use components from other pages |
+| API responses are raw data | Return raw data without UI-specific aggregations; enables reuse across multiple UIs and reduces server-side spec changes |
+| Single point of change | Design so spec changes require changes in only one place; extract and consolidate any duplication |
+
+## Common Mistakes
+
+| Avoid | Use | Reason |
+|-------|-----|--------|
+| `const name = "太郎"; // 名前を設定` | `const name = "太郎";` | Obvious comment unnecessary |
+| `const MAX = 100;` | `const MAX_RETRY_COUNT = 100;` | Name expresses intent |
+| 200-line function | Split into 10-50-line functions | Improves readability and testability |
+| Importing components from other pages | Commonalize or copy | Maintains loose coupling |
+
+**Good comment example**:
 ```ts
 // conform-to/reactの自動バリデーションを無効化しているため手動で実装
 ```
 
-**Why**: 意図・理由を説明
+**Why**: Explains intent and reason
