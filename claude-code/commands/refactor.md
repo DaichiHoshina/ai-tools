@@ -39,8 +39,6 @@ Auto-load guidelines:
 - `clean-architecture-ddd` - clean arch + DDD principles
 - `comprehensive-review --focus=quality` - design/quality/type safety integrated check (Phase 2-5 built-in, legacy names also work)
 
-Detail: [SKILL-MIGRATION.md](../tutorials/SKILL-MIGRATION.md)
-
 ## Flow
 
 1. **Load guidelines** - execute Step 0 above

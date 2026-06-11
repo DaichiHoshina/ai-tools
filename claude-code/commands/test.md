@@ -33,8 +33,6 @@ Auto-load:
 - `comprehensive-review --focus=docs` - test/doc quality (Phase 2-5 built-in, legacy names work)
 - `comprehensive-review --focus=quality` - test type safety/structure quality (Phase 2-5 built-in, legacy names work)
 
-Detail: [SKILL-MIGRATION.md](../tutorials/SKILL-MIGRATION.md)
-
 **Auto-review after:**
 Post-creation, auto-run `comprehensive-review --focus=docs` Skill:
 - test meaning check

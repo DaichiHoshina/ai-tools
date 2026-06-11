@@ -73,7 +73,7 @@ Design correctness / assumptions / real-world failure points を challenge。`--
 
 ## Deep Flow
 
-`pr-review-toolkit` 6 agents を並列実行。詳細: [`references/review-modes-advanced.md`](../references/review-modes-advanced.md)。**Cost warning**: tens of seconds ~ minutes × 6 parallel。Daily = default。
+`pr-review-toolkit` 6 agents を並列実行。**Cost warning**: tens of seconds ~ minutes × 6 parallel。Daily = default。
 
 ## Multi Flow
 
@@ -84,7 +84,7 @@ PR required。4 メソッド並列実行:
 3. 4 出力をマージ・重複排除
 4. `gh pr comment <PR> --body-file -` で auto-post
 
-Aggregation (3+一致 = Critical confirmed 等): [`references/review-modes-advanced.md`](../references/review-modes-advanced.md)。用途: pre-merge / release-critical / security patch。Daily 不推奨。
+Aggregation (3+一致 = Critical confirmed 等)。用途: pre-merge / release-critical / security patch。Daily 不推奨。
 
 ## Output Format
 
@@ -108,4 +108,4 @@ Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / 
 - **scope**: changed files (git diff). exclude: auto-gen / vendor / node_modules / lock
 - **difit**: local only, background after review (require `npm i -g difit`, suppress: `--no-difit`)
 
-detail: [`references/command-resource-map.md`](../references/command-resource-map.md) / [`references/review-modes-advanced.md`](../references/review-modes-advanced.md)
+detail: policy / scope 詳細は `references/` 内 review 関連 file 参照。

@@ -131,7 +131,7 @@ Parent (Claude Code)
 - Parent launches multiple `Task`s in 1 message for parallelism
 - Parallel patterns, worktree apply decision, responsibility separation: `references/PARALLEL-PATTERNS.md`
 
-> **⚠️ Read before changing design**: [ADR 0001: Agent Team is parent-handled](../../docs/adr/0001-parent-handled-agent-hierarchy.md) — revert to self-running violates official docs. CI guards via bats test `tests/integration/agent-frontmatter.bats`.
+> **⚠️ Read before changing design**: Agent Team is parent-handled (ADR 0001) — revert to self-running violates official docs. CI guards via bats test `tests/integration/agent-frontmatter.bats`.
 
 ---
 
