@@ -1,5 +1,5 @@
 ---
-allowed-tools: mcp__serena__*, Read
+allowed-tools: Write, Read
 description: Alias of /save-compact (save Serena memory → /compact → auto reload)
 effort: low
 ---
