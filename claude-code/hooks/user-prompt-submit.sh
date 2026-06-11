@@ -309,6 +309,51 @@ _inject_outward_mode_if_trigger() {
   return 1
 }
 
+# === commit/push trigger → NG top-6 term inject ===
+# commit message 生成前に block top-6 term を注入して retry loop を事前回避する
+# 派生値禁止 rule 準拠: top-6 は log から動的抽出 (literal 埋め込み禁止)
+_inject_commit_ng_top6_if_trigger() {
+  local prompt="$1"
+  local prompt_lower="${prompt,,}"
+  local triggers=("push" "pushして" "commit" "/git-push" "/commit" "pr 作" "pr を作" "プルリク")
+  local hit=0
+  local t
+  for t in "${triggers[@]}"; do
+    if [[ "${prompt_lower}" == *"${t,,}"* ]]; then hit=1; break; fi
+  done
+  (( hit )) || return 1
+
+  local _LOG="${HOME}/.claude/logs/jp-quality-block.log"
+  [[ -f "${_LOG}" ]] || return 1
+
+  local _NOW
+  printf -v _NOW '%(%s)T' -1
+  local _CUTOFF=$(( _NOW - 604800 ))
+
+  local _TOP
+  _TOP=$(awk -F'|' -v cutoff="${_CUTOFF}" '
+    $4 ~ /block/ {
+      ts = $1
+      # macOS date -j -f でepoch変換
+      cmd = "date -j -f \"%Y-%m-%dT%H:%M:%S\" \"" substr(ts,1,19) "\" +%s 2>/dev/null"
+      epoch = ""
+      cmd | getline epoch
+      close(cmd)
+      if (epoch != "" && epoch+0 >= cutoff) {
+        term = $3
+        gsub(/^ +| +$/, "", term)
+        if (term != "") count[term]++
+      }
+    }
+    END {
+      for (k in count) print count[k], k
+    }' "${_LOG}" 2>/dev/null | sort -rn | head -6 | awk '{$1=""; sub(/^ /,""); print}' | paste -sd "," -)
+
+  [[ -n "${_TOP}" ]] || return 1
+  printf '%s\n' "[commit-ng-pre-sweep] commit/push trigger 検出。直近7日 block top-6: ${_TOP}。commit message 生成前に必ず回避。代替: 鑑みる→踏まえる / 踏襲→引き継ぐ / 喫緊→直近 / leverage→使う / utilize→活かす / mitigate→緩和する。source: ~/.claude/logs/jp-quality-block.log"
+  return 0
+}
+
 # === JP品質 inject (AI定型語 + カタカナ造語 + jargon + 略語) ===
 # PRINCIPLES.md の canonical list を動的抽出して chat 応答 / 外向き文書に注入する
 # 派生値禁止 rule 準拠: hook 内に語 list literal を持たない
@@ -387,6 +432,17 @@ ${_SOFTBLOCK_CTX}"
 ${_OUTWARD_MODE_CTX}"
       else
         _AI_TERMS_CTX="${_OUTWARD_MODE_CTX}"
+      fi
+    fi
+
+    # commit/push trigger 検出 → NG top-N term inject
+    _COMMIT_NG_CTX=""
+    if _COMMIT_NG_CTX=$(_inject_commit_ng_top6_if_trigger "$prompt" 2>/dev/null); then
+      if [[ -n "${_AI_TERMS_CTX}" ]]; then
+        _AI_TERMS_CTX="${_AI_TERMS_CTX}
+${_COMMIT_NG_CTX}"
+      else
+        _AI_TERMS_CTX="${_COMMIT_NG_CTX}"
       fi
     fi
 
