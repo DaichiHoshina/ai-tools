@@ -48,6 +48,43 @@ _SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SESSION_ID}}"
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
 printf -v _DATE_TODAY '%(%Y%m%d)T' -1
 
+# jsonl ファイルの assistant entry から token 合計を集計して stdout に出力する
+# 引数: jsonl_path
+# 出力: 整数 (集計失敗時は 0)
+# python3 採用理由: jsonl 大ファイルで jq より高速 (23ms vs 100ms+)
+_sum_jsonl_tokens() {
+  local jsonl_path="$1"
+  local _total=0
+  if command -v python3 &>/dev/null; then
+    _total=$(python3 -c "
+import json, sys
+total = 0
+try:
+    for line in open(sys.argv[1], 'r', errors='replace'):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except Exception:
+            continue
+        if obj.get('type') != 'assistant':
+            continue
+        usage = obj.get('message', {}).get('usage', {})
+        total += usage.get('input_tokens', 0) or 0
+        total += usage.get('cache_creation_input_tokens', 0) or 0
+        total += usage.get('cache_read_input_tokens', 0) or 0
+        total += usage.get('output_tokens', 0) or 0
+except Exception:
+    pass
+print(total)
+" "${jsonl_path}" 2>/dev/null) || _total=0
+    # 数値以外が返った場合の fallback
+    [[ "${_total}" =~ ^[0-9]+$ ]] || _total=0
+  fi
+  printf '%s' "${_total}"
+}
+
 # === Session bloat check: 3h超 or msg 1000超で /clear 推奨通知 ===
 # throttle: 同 session 内 15min に1回のみ通知 (/tmp/claude_session_bloat_<id>_<date>)
 _check_session_bloat() {
@@ -93,38 +130,9 @@ _check_session_bloat() {
   local _MSG_COUNT
   _MSG_COUNT=$(grep -c '"type":"user"\|"type":"assistant"' "${_JSONL}" 2>/dev/null) || _MSG_COUNT=0
 
-  # token 集計: assistant entry の usage フィールドを python3 で合算
-  # python3 採用理由: jsonl 大ファイルで jq より高速 (23ms vs 100ms+)
-  local _TOKEN_TOTAL=0
-  if command -v python3 &>/dev/null; then
-    _TOKEN_TOTAL=$(python3 -c "
-import json, sys
-total = 0
-try:
-    for line in open(sys.argv[1], 'r', errors='replace'):
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            obj = json.loads(line)
-        except Exception:
-            continue
-        if obj.get('type') != 'assistant':
-            continue
-        usage = obj.get('message', {}).get('usage', {})
-        total += usage.get('input_tokens', 0) or 0
-        total += usage.get('cache_creation_input_tokens', 0) or 0
-        total += usage.get('cache_read_input_tokens', 0) or 0
-        total += usage.get('output_tokens', 0) or 0
-except Exception:
-    pass
-print(total)
-" "${_JSONL}" 2>/dev/null) || _TOKEN_TOTAL=0
-    # 数値以外が返った場合の fallback
-    if ! [[ "${_TOKEN_TOTAL}" =~ ^[0-9]+$ ]]; then
-      _TOKEN_TOTAL=0
-    fi
-  fi
+  # token 集計: _sum_jsonl_tokens helper に委譲
+  local _TOKEN_TOTAL
+  _TOKEN_TOTAL=$(_sum_jsonl_tokens "${_JSONL}")
 
   # 閾値判定
   local _WARN_REASON=""
