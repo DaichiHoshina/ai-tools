@@ -12,7 +12,7 @@ source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 require_jq
 
 INPUT=$(cat)
-send_stop_notification "$INPUT" "" "" "robot" "default"
+send_stop_notification "$INPUT" "" "Glass" "robot" "default"
 
 CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 PROJECT_NAME=$(basename "${CWD:-unknown}")
