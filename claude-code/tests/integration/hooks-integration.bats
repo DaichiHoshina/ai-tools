@@ -54,9 +54,10 @@ teardown() {
 }
 
 @test "hooks: pre-compact accepts valid JSON input" {
-  # smoke test: valid JSON → exit 0 (2026-06-11: Serena check 廃止後、env flag 不要)
+  # smoke test: valid JSON → exit 0
+  # block + auto-retry 方式のため marker check を skip する CLAUDE_FORCE_COMPACT=1 で迂回
   local input='{"session_id": "test", "workspace": {"current_dir": "/test"}, "current_tokens": 150000}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
+  run bash -c "echo '$input' | CLAUDE_FORCE_COMPACT=1 ${HOOKS_DIR}/pre-compact.sh"
   [ "$status" -eq 0 ]
 }
 
@@ -420,33 +421,69 @@ teardown() {
 
 # =============================================================================
 # Integration: Pre-Compact Memory Save Flow (2026-06-11: Serena → auto-memory 統一)
+# block + auto-retry 方式: marker (直近 5 分以内 compact-restore-*.md) 不在で block、
+# 存在で通常進行
 # =============================================================================
 
-# pre-compact.sh は auto-memory (Write tool) への保存指示を出すため、
-# Serena 接続 check は廃止。state file は .compact-memory-state ("ready:<ts>")。
+# helper: 直近 marker 配置 (通常進行 path 用)
+_setup_recent_marker() {
+  local memdir="${HOME}/.claude/projects/-Users-daichi-hoshina-ai-tools/memory"
+  mkdir -p "${memdir}"
+  echo "fixture" > "${memdir}/compact-restore-test-marker.md"
+}
 
-@test "integration: pre-compact writes ready state and instructs Write tool" {
+# helper: marker 全消去 (block path 用)
+_clear_markers() {
+  local memdir="${HOME}/.claude/projects/-Users-daichi-hoshina-ai-tools/memory"
+  rm -f "${memdir}"/compact-restore-*.md
+}
+
+@test "integration: pre-compact blocks when no recent save marker" {
+  _clear_markers
   rm -f "${HOME}/.claude/.compact-memory-state"
   local input='{"session_id": "test"}'
   run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
-  [ "$status" -eq 0 ]
-  echo "$output" | jq -e '.systemMessage' >/dev/null
+  [ "$status" -eq 2 ]
+  echo "$output" | jq -e '.decision == "block"' >/dev/null
+  [[ "$output" == *"COMPACT中止"* ]]
   [[ "$output" == *"Write tool"* ]]
-  [[ "$output" == *"compact-restore-"* ]]
+  [[ "$output" == *"再実行してください"* ]]
+}
+
+@test "integration: pre-compact emits required body fields in block instruction" {
+  _clear_markers
+  rm -f "${HOME}/.claude/.compact-memory-state"
+  local input='{"session_id": "test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"現在のタスク"* ]]
+  [[ "$output" == *"完了済"* ]]
+  [[ "$output" == *"次アクション"* ]]
+}
+
+@test "integration: pre-compact proceeds when recent save marker present" {
+  _clear_markers
+  _setup_recent_marker
+  rm -f "${HOME}/.claude/.compact-memory-state"
+  local input='{"session_id": "test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
+  _clear_markers
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"COMPACT進行"* ]]
   local state
   state="$(cat "${HOME}/.claude/.compact-memory-state")"
   [[ "$state" =~ ^ready:[0-9]{8}_[0-9]{6}$ ]]
   rm -f "${HOME}/.claude/.compact-memory-state"
 }
 
-@test "integration: pre-compact emits required body fields in instruction" {
+@test "integration: pre-compact CLAUDE_FORCE_COMPACT skips marker check" {
+  _clear_markers
   rm -f "${HOME}/.claude/.compact-memory-state"
   local input='{"session_id": "test"}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-compact.sh"
+  run bash -c "echo '$input' | CLAUDE_FORCE_COMPACT=1 ${HOOKS_DIR}/pre-compact.sh"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"現在のタスク"* ]]
-  [[ "$output" == *"完了済"* ]]
-  [[ "$output" == *"次アクション"* ]]
+  [[ "$output" == *"強行モード"* ]]
+  [ -f "${HOME}/.claude/.compact-memory-state" ]
   rm -f "${HOME}/.claude/.compact-memory-state"
 }
 
