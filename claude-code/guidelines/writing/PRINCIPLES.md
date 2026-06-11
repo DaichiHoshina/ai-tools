@@ -73,7 +73,7 @@ rename に伴い他 file / 同 file 内 cross-ref も `[未決事項 #X]` → `[
 ### 長文 (Design Doc / PRD / RCA / Notionページ)
 
 - **TL;DR冒頭1-3文で結論**。「本稿では〜について述べる」系導入は削除
-- **報告型doc (負荷試験 / 計測 / 障害 / 検証 / KPI共有) は冒頭3行で「最大値 / 測定条件 / 次アクション」必須**。最大値=計測した上限/閾値の具体数値、測定条件=どの環境/負荷/期間で測ったか、次アクション=読み手が approve / scale / 修正 のどれを決めるか。数値を結論行の本体に置き、別セクションに散らさない。詳細は [[writing_failure_conclusion_missing]] memory 参照
+- **報告型doc (負荷試験 / 計測 / 障害 / 検証 / KPI共有) は冒頭3行で「最大値 / 測定条件 / 次アクション」必須**。最大値=計測した上限/閾値の具体数値、測定条件=どの環境/負荷/期間で測ったか、次アクション=読み手が approve / scale / 修正 のどれを決めるか。数値を結論行の本体に置き、別セクションに散らさない。
 - 800-1500字 / ページ、2000字超なら分割
 - 1セクション = 地の文3-5割 + 箇条書き / 表5-7割
 - 箇条書きは3-5項目。7超は表or段落分割
@@ -291,7 +291,7 @@ chat の体言止め圧縮をそのまま外向き (PR / Slack / Notion / 報告
 
 機械検出: `grep -oE '[一-龯]{5,}'` で外向き prose を sweep する。
 
-出典: textlint-rule-preset-ja-technical-writing (max-kanji-continuous-len rule) を 2026-06-08 に 6→4 へ厳格化 ([[feedback-jp-kanji-5-consecutive-block]])。
+出典: textlint-rule-preset-ja-technical-writing (max-kanji-continuous-len rule) を 2026-06-08 に 6→4 へ厳格化。
 
 ### ひらく漢字 7 品詞 (ひらがな表記推奨)
 

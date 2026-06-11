@@ -9,7 +9,7 @@ CLAUDE.md `## Session Efficiency` section の本文詳細。CLAUDE.md には poi
 - **Success-criteria principle**: "what defines success" over procedural steps
 - **Verify first**: post-impl run test/lint/typecheck (DoD below)
 - **MCP tool args: verify spec before writing**: use `ToolSearch select:<tool>` to confirm param names; do not rely on LLM autocorrect `[[hook-principles-path-bug-incident]]`
-- **After regex replace, run `git diff --stat` immediately**: serena `replace_content` regex forces DOTALL/MULTILINE — `.*\n` greedy wipe risk. Single line: **literal + trailing `\n`**; multi-line: **non-greedy `.*?` + explicit end anchor** (`[[serena-replace-regex-dotall-pitfall]]`)
+- **After regex replace, run `git diff --stat` immediately**: serena `replace_content` regex forces DOTALL/MULTILINE — `.*\n` greedy wipe risk. Single line: **literal + trailing `\n`**; multi-line: **non-greedy `.*?` + explicit end anchor**
 - **Minimize confirmation / choice**: execute safe ops without prompting; apply recommended option directly for minor choices. Confirm only for: file deletion / deploy / external send / critical decisions (architecture / cost / irreversible)
 - **推奨自走 mode (default ON)**: parent の推奨判断は user 確認なしで実行する。「要決定: A/B/C」echo + 案提示 + user 確認は **以下のみに限定**:
   - 破壊操作 (file/branch 削除 / force push / DB drop / rm -rf 等)
