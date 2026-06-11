@@ -73,16 +73,13 @@ worktree 分離で物理並列化する。
 | worktree creation | `--auto` 時 4 skip 条件で自動、それ以外は user 確認 |
 | Sequential downgrade | file 競合 / 物理 conflict 検出時、または `--sequential` |
 
-### `--auto` 4 skip conditions
+### `--auto` skip conditions
 
-1. Parallel formula PASS (式は `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula` 参照、first choice `N=8`)
-2. clean worktree (git status / stash both none)
-3. branch/worktree name no collision
-4. Creation fail → sequential downgrade + notify
+詳細: `references/PARALLEL-PATTERNS.md` `### /flow --parallel --auto skip-confirmation 4 conditions` 参照。概要: Parallel formula PASS + clean worktree + no branch/worktree collision + Creation fail → sequential downgrade + notify。
 
 ### worktree cleanup
 
-Changes present → return branch / parent merge / worktree delete. no changes → auto-delete. Collision → sequential downgrade, worktree left in place.
+詳細: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)` 参照。概要: Changes present → return branch + merge + delete / no changes → auto-delete / Collision → sequential downgrade + leave in place。
 
 ## --auto fully autonomous mode (opt-in)
 

@@ -38,17 +38,13 @@ Launch Developer×N worktree parallel w/o PO/Manager. Formula detail: `reference
 | worktree proposal | Forced |
 | worktree creation | User confirm required |
 
-### `--parallel --auto` 3 skip conditions
+### `--parallel --auto` skip conditions
 
-1. Direct-exec formula PASS (式は `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula` 参照、first choice `N=8`) + independent 2 + fully isolated
-2. clean worktree
-3. branch/worktree name no collision
-
-worktree creation fail → downgrade to sequential (`N=1`, current branch), notify even on `--auto` (`> [WARN] worktree creation fail → sequential downgrade`).
+詳細: `references/PARALLEL-PATTERNS.md` `### /dev --parallel --auto skip-confirmation 4 conditions` 参照。概要: formula PASS + clean worktree + no branch/worktree collision + creation fail → downgrade。
 
 ### worktree cleanup
 
-Changes present → return branch・parent merge・delete / no changes → auto-delete / collision → sequential downgrade・leave in place.
+詳細: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)` 参照。概要: Changes present → return branch + merge + delete / no changes → auto-delete / collision → sequential downgrade + leave in place。
 
 ## --quick (formerly /quick-fix)
 

@@ -21,14 +21,7 @@ Skill("comprehensive-review")
 
 ### Step 1.5: Self-Review Pass (必須)
 
-> **Default 厳しめ filter**: noise discard 方針は `rules/review-noise-discard.md` 参照。
-
-Step 1 の出力をそのまま fix にかけず、**必ず** `/review` の Self-Review 2 段階を通す。詳細: [`review.md`](review.md) "Self-Review (必須、2 段階)" section。
-
-- **Stage A (per-finding gate)**: `comprehensive-review` skill 内の Self-Filter Gate が一次評価 (Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点)。command 側でも **safety net として再評価**、skill 漏れの finding (特に propagation incompleteness / cross-ref desync 系) を捕捉。7 観点で discard 判定
-- **Stage B (result-wide pass)**: 重複統合 / トーン整合 / project convention 整合 / zero-finding 判定を **必ず** 適用。skill 側 Pre-emission にも一部重複系チェックはあるが、集合視点での重複統合・トーン整合・convention 整合は `/review-fix-push` 固有の付加価値層
-- 結果として Critical 0 + Warning 0 になり得る。その場合 Step 2 で push へ skip
-- Self-Review 判断ログ自体は user 提示に含めない (verdict 変更のみ反映)
+Step 1 の出力をそのまま fix にかけず、**必ず** 2 段階の Self-Review を通す。詳細: `commands/review.md` `## Self-Review (必須、2 段階)` 参照。noise discard 方針: `rules/review-noise-discard.md`。Critical 0 + Warning 0 → Step 2 で push へ skip。判断ログは user 提示に含めない。
 
 ### Step 2: Decide
 
@@ -66,8 +59,6 @@ loop iteration = 1..max_iterations:
         re-execute Step 3 (fix new Critical only)
         prev_iter_commit = git rev-parse HEAD  # 次 iteration の base に
 ```
-
-各 iteration の review 結果も Step 1.5 と同じ Self-Review (Stage A + B **両方 full 適用**) を通す。skill 内 gate が漏らした finding を command 側で再評価、false-positive と skill 漏れの双方を捕捉して fix loop の質を担保。
 
 **Loop exit conditions**:
 

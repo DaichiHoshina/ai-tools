@@ -48,7 +48,7 @@ Infrastructure → `infrastructure/terraform.md`, `infrastructure/aws-eks.md`.
 Launch Task(subagent_type: "po-agent")
   → requirement analysis → architecture design → worktree necessary? (confirm) → implementation approach
   → draft design document
-  → **Self-Review (必須、2 段階)** — Stage A: per-item Filter Gate / Stage B: Result-wide Pass
+  → **Self-Review (必須、2 段階)** (→ `## Self-Review` section 参照)
   → output filtered design document
   → propose next actions (to `/dev`)
 ```
@@ -58,45 +58,21 @@ Launch Task(subagent_type: "po-agent")
 1. Load guidelines (Step 0)
 2. Analyze codebase w/ Serena MCP
 3. Draft design document
-4. **Apply Self-Review 2-stage gate** to investigation findings and draft plan — Stage A (per-item discard) + Stage B (集合観点) を出力前に必ず通す
+4. **Apply Self-Review 2-stage gate** (→ `## Self-Review` section 参照)
 5. Output filtered design document + propose implementation plan for `/dev`
 
 ## Self-Review (必須、2 段階)
 
-`/plan` 出力前に **必ず** 以下 2 段階のセルフレビューを実行する。skip 不可、PO Agent 経由 / Direct execution / `--update` / `--scope` 全モードで一律実行。Stage A 通過後に Stage B を通し、両 stage 通過した item のみが Output Format に進む。
+`/plan` 出力前に **必ず** 2 段階のセルフレビューを通す。skip 不可、PO Agent 経由 / Direct execution / `--update` / `--scope` 全モードで一律実行。Stage 共通定義: `commands/review.md` `## Self-Review (必須、2 段階)` 参照。noise discard 方針: `rules/review-noise-discard.md` 参照。
 
-### Stage A: Per-item Filter Gate (moderate strictness)
+### Stage A: plan 固有 filter
 
-investigation findings (Phase 1) と draft plan (Phase 4) の各 item を個別に評価し discard 判定する。
+Investigation discard: speculative leads / hypothetical edge cases / findings unrelated to the change。
+Plan discard: compat shims / future abstractions / impossible-case error handling / non-boundary validation / scope creep / premature optimization / half-finished phases。
 
-**Investigation filter** (discard from carry-forward):
+### Stage B: plan 固有 集合観点
 
-- Speculative "could be relevant" leads not anchored to user request or observed code
-- Hypothetical edge cases not in scope of the user's stated task
-- Findings about existing code unrelated to the requested change
-
-**Plan filter** (discard from draft):
-
-- Backwards-compat shims / migration paths the user did not ask for
-- Abstractions designed for hypothetical future use ("might need a strategy interface later")
-- Error handling for cases that cannot happen given the system boundary
-- Validation at non-boundary points (trust internal contracts)
-- Scope creep beyond the stated request (cleanup, refactors, "while we're at it")
-- Premature optimization without measured baseline
-- Half-finished phases ("Phase 3: explore other approaches")
-
-### Stage B: Result-wide Pass (集合観点)
-
-Stage A 通過後の plan 全体を **集合として** もう一度見直す。以下 4 観点:
-
-1. **Phase 統合 / 重複削除**: 同一 file / 同一 layer / 同一 root cause を複数 Phase が別 item として持っていないか? 統合して 1 Phase に。
-2. **粒度整合**: Phase 間で粒度がバラついていないか? (例: Phase 1 = 1 symbol 修正 vs Phase 2 = module 全体 refactor の混在) → 粒度を揃えるか、説明で正当化。
-3. **Project convention 整合**: CLAUDE.md / guidelines / 既存コード規約・既存パターンと矛盾しないか? 規約外の独自設計は破棄 or 規約準拠に修正。
-4. **Zero-phase 判定**: 結果として 0 Phase plan は valid 出力 (Stage A で全 item discard された場合)。padding (無理に何か出す) 禁止、その旨を明示して終わる。
-
-Stage B の判断 log は plan file に含めない (verdict が変わった場合のみ反映)。zero-phase 含め、両 stage を通過した結果のみが Output Format に進む。
-
-If the plan loses size after filter, that is healthy — ship the smaller version. Zero-step plans are valid when the request truly resolves to a single edit.
+Phase 統合 (同一 root cause → 1 Phase) / 粒度整合 / convention 整合 / Zero-phase valid (padding 禁止)。判断 log は plan file に含めない。両 stage 通過した結果のみ Output Format に進む。
 
 ## Plan storage
 
