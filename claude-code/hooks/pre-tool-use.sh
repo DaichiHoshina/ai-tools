@@ -433,22 +433,17 @@ _check_session_split() {
   local _WARN_FILE="${HOME}/.claude/logs/.session-split-warned-${session_id}"
   [[ -f "$_WARN_FILE" ]] && return 0  # 既に通知済 → skip
 
-  # jsonl path 構築 (user-prompt-submit.sh と同一 slug 変換)
+  # jsonl path 構築 (msg count で引き続き使用)
   local _slug="${cwd//\//-}"
   _slug="${_slug//\./-}"
   local _JSONL="${HOME}/.claude/projects/${_slug}/${session_id}.jsonl"
   [[ ! -f "$_JSONL" ]] && return 0
 
-  # session start epoch
+  # session start epoch (共通関数で解決)
   local _NOW
   printf -v _NOW '%(%s)T' -1
-  local _TS_RAW
-  _TS_RAW=$(head -20 "$_JSONL" 2>/dev/null | grep -m1 '"timestamp":"' | grep -o '"timestamp":"[^"]*"' | cut -d'"' -f4) || true
-  [[ -z "$_TS_RAW" ]] && return 0
-  local _TS_TRIM="${_TS_RAW%%.*}"
-  _TS_TRIM="${_TS_TRIM%Z}"
   local _START_EPOCH
-  _START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$_TS_TRIM" "+%s" 2>/dev/null) || return 0
+  _START_EPOCH=$(_resolve_session_jsonl_epoch "$session_id" "$cwd") || return 0
   local _ELAPSED=$(( _NOW - _START_EPOCH ))
 
   # msg count

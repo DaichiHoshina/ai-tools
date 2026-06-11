@@ -76,8 +76,7 @@ _check_session_bloat() {
     fi
   fi
 
-  # session jsonl path 構築
-  # cwd: /Users/daichi/... → slug: -Users-daichi-...  (/ → -、. → -)
+  # jsonl path 構築 (msg count / token 集計で引き続き使用)
   local _slug="${cwd//\//-}"
   _slug="${_slug//\./-}"
   local _JSONL="${HOME}/.claude/projects/${_slug}/${session_id}.jsonl"
@@ -85,18 +84,9 @@ _check_session_bloat() {
     return 0
   fi
 
-  # session start timestamp (先頭20行から最初のtimestampフィールドを抽出)
-  local _TS_RAW
-  _TS_RAW=$(head -20 "${_JSONL}" 2>/dev/null | grep -m1 '"timestamp":"' | grep -o '"timestamp":"[^"]*"' | cut -d'"' -f4) || true
-  if [[ -z "${_TS_RAW}" ]]; then
-    return 0
-  fi
-  # ISO8601 → epoch (macOS date -j -f)
-  # 形式: 2026-05-23T03:59:12.225Z → strip milliseconds + Z
-  local _TS_TRIM="${_TS_RAW%%.*}"  # .225Z を除去
-  _TS_TRIM="${_TS_TRIM%Z}"         # 末尾Z除去 (fractional がない場合)
+  # session start epoch (共通関数で解決)
   local _START_EPOCH
-  _START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${_TS_TRIM}" "+%s" 2>/dev/null) || return 0
+  _START_EPOCH=$(_resolve_session_jsonl_epoch "$session_id" "$cwd") || return 0
   local _ELAPSED=$(( _NOW - _START_EPOCH ))
 
   # msg count: user + assistant type 行数

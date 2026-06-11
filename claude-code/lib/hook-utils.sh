@@ -245,6 +245,28 @@ ensure_worktree_memory_link() {
 }
 
 # =============================================================================
+# JSONL session epoch 解決関数
+# session_id + cwd から JSONL path を導出し、先頭 timestamp を epoch 整数に変換して stdout へ出力する。
+# JSONL 不在 / timestamp 不在 / date 変換失敗の場合は stdout 空で rc=1 を返す。
+# Usage: epoch=$(_resolve_session_jsonl_epoch "$session_id" "$cwd") || return 0
+# =============================================================================
+_resolve_session_jsonl_epoch() {
+  local session_id="$1"
+  local cwd="$2"
+  # slug 変換: / → -、. → -
+  local _slug="${cwd//\//-}"
+  _slug="${_slug//\./-}"
+  local _JSONL="${HOME}/.claude/projects/${_slug}/${session_id}.jsonl"
+  [[ -f "$_JSONL" ]] || return 1
+  local _TS_RAW
+  _TS_RAW=$(head -20 "$_JSONL" 2>/dev/null | grep -m1 '"timestamp":"' | grep -o '"timestamp":"[^"]*"' | cut -d'"' -f4) || true
+  [[ -n "$_TS_RAW" ]] || return 1
+  local _TS_TRIM="${_TS_RAW%%.*}"  # .225Z → .225Z 除去
+  _TS_TRIM="${_TS_TRIM%Z}"          # 末尾 Z 除去 (fractional なし場合)
+  date -j -f "%Y-%m-%dT%H:%M:%S" "$_TS_TRIM" "+%s" 2>/dev/null || return 1
+}
+
+# =============================================================================
 # block log 共通出力関数
 # social-hit / private-name どちらのブロックログにも使用する。
 # ローテーション判定 (1MB 超で .bak rename)、timestamp 付与、1 行 append が共通実装。
