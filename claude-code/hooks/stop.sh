@@ -18,7 +18,7 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 PROJECT_NAME=$(basename "${CWD:-unknown}")
 LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // "Done"')
 NOTIFY_BODY="${LAST_MSG:0:80}"
-TERM_SEQ=$(build_terminal_sequence "Claude Code [${PROJECT_NAME}] ${ICON_SUCCESS} Done" "${NOTIFY_BODY}" "false")
+TERM_SEQ=$(build_terminal_sequence "Claude Code [${PROJECT_NAME}] ${ICON_SUCCESS} Done" "${NOTIFY_BODY}" "true")
 
 # === SQL auto-pbcopy: 最終応答中の最後の ```sql ブロックを clipboard へ ===
 # 末尾改行は bash $() の auto-strip で 1 個消費、pbcopy 不在環境 (Linux/CI) は silent skip
