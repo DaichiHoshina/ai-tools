@@ -1,63 +1,63 @@
-# ADR 0001: Agent Team は親ハンドリング型で構築する
+# ADR 0001: Build Agent Team with Parent-Handled Architecture
 
 - **Status**: Accepted
 - **Date**: 2026-04-22
-- **決定者**: DaichiHoshina
-- **関連コミット**: `f3cb78a refactor(agents): 自走型階層を親ハンドリング型に戻す`
-- **リバート対象**: `42146e6 feat(agents): Team階層を自走型に変更`
+- **Decision maker**: DaichiHoshina
+- **Related commit**: `f3cb78a refactor(agents): revert self-orchestrating hierarchy to parent-handled`
+- **Reverted target**: `42146e6 feat(agents): change team hierarchy to self-orchestrating`
 
 ## Context
 
-ai-tools の Agent Team（PO → Manager → Developer × N → Manager(統合)）を Claude Code で実行する際、commit `42146e6` では「各層が次層を自ら `Task(next-agent)` で起動する自走型」に変更した。意図は親のハンドリング漏れ防止と並列起動の最適化。
+When running the ai-tools Agent Team (PO → Manager → Developer × N → Manager(integration)) in Claude Code, commit `42146e6` changed to a "self-orchestrating" model where each layer spawns the next via `Task(next-agent)`. The intent was to prevent parent handling omissions and optimize parallel launch.
 
-2026-04-22 の実挙動検証で、PO が Manager を起動せず自ら Write/Edit で実装を完結してしまう違反を観測。公式ドキュメント（https://code.claude.com/docs/en/sub-agents.md）で以下の仕様が明記されているのを発見:
+On 2026-04-22, during live behavior verification, we observed a violation where PO launched Write/Edit directly to complete implementation without spawning Manager. We discovered the following spec in the official documentation (https://code.claude.com/docs/en/sub-agents.md):
 
 > **Subagents cannot spawn other subagents**, so `Agent(agent_type)` has no effect in subagent definitions.
 
-つまり `Task(manager-agent)` を po-agent の `tools` に書いても効果はなく、PO はフォールバックとしてデフォルト継承の Write/Edit で直接実装してしまっていた。自走型は Claude Code の sub-agent 機構では原理的に実現不可能。
+Meaning: even if `Task(manager-agent)` is written in po-agent's `tools`, it has no effect — PO falls back to inherited default Write/Edit for direct implementation. Self-orchestrating architecture is fundamentally impossible with Claude Code's sub-agent mechanism.
 
 ## Decision
 
-**親（Claude Code メインスレッド）が PO → Manager → Developer × N → Manager(統合) の各層を順次・明示的に起動する親ハンドリング型を採用する。**
+**Adopt parent-handled architecture where parent (Claude Code main thread) explicitly launches each layer — PO → Manager → Developer × N → Manager(integration) — sequentially.**
 
-追加の防衛策:
+Additional defenses:
 
-- 非実装系 agent（`po-agent`, `manager-agent`, `explore-agent`）の frontmatter に `disallowedTools: [Write, Edit, MultiEdit]` を明記し、ツール継承による実装違反を物理的に封じる
-- 全 agent の `tools` から `Task(xxx)` 記法を削除（仕様上機能しない宣言）
-- `/flow` コマンドの手順を「親が各層を順次起動」として明文化
-- bats テスト `tests/integration/agent-frontmatter.bats` で上記不変条件を機械的に検証
+- Explicitly add `disallowedTools: [Write, Edit, MultiEdit]` to frontmatter of non-implementation agents (`po-agent`, `manager-agent`, `explore-agent`) to physically block implementation violations from tool inheritance
+- Remove all `Task(xxx)` notation from agent `tools` (non-functional per spec)
+- Document `/flow` command procedure as "parent launches each layer sequentially"
+- Mechanically verify invariants in bats test `tests/integration/agent-frontmatter.bats`
 
 ## Consequences
 
-### 良い点
+### Benefits
 
-- **仕様準拠**: Claude Code の sub-agent 機構が想定する使い方に合致
-- **違反の物理封じ**: `disallowedTools` で PO/Manager が実装を試みても Write/Edit が拒否される
-- **回帰防止**: bats テストが不変条件を守る。将来「自走型の方が効率的」と誤解して変更しても CI で検知
-- **並列性は維持**: 親が 1メッセージで複数 `Task(developer-agent)` を呼び出せば並列起動可能
+- **Spec-compliant**: Aligns with the intended use of Claude Code's sub-agent mechanism
+- **Physical violation blocking**: `disallowedTools` rejects Write/Edit if PO/Manager attempts implementation
+- **Regression prevention**: bats tests guard invariants. Future change believing "self-orchestrating is more efficient" will be caught by CI
+- **Parallelism preserved**: parent can call multiple `Task(developer-agent)` in 1 message for parallel launch
 
-### 悪い点 / 受容するトレードオフ
+### Drawbacks / accepted tradeoffs
 
-- **親の責務が増える**: Claude Code がフロー全体を把握し、各層を順次呼ぶ必要がある → `commands/flow.md` に明文化して対処
-- **メッセージ数が増える**: 親 → PO → 親 → Manager → 親 → Dev × N → 親 → Manager の 5 往復。自走型なら 1 呼び出しで済む想定だった → 仕様上不可なので妥協
+- **Increased parent responsibility**: Claude Code must track the entire flow and call each layer sequentially → mitigated by documenting in `commands/flow.md`
+- **More messages**: parent → PO → parent → Manager → parent → Dev × N → parent → Manager = 5 round trips. Self-orchestrating was supposed to be 1 call → impossible per spec, so accepted
 
 ## Alternatives Considered
 
-### 1. 自走型（sub-agent から sub-agent を spawn）
+### 1. Self-orchestrating (sub-agent spawns sub-agent)
 
-- **選択しなかった理由**: Claude Code 仕様上 `Agent(agent_type)` は subagent definition で効果なし。実装検証で PO が Write/Edit 違反を起こすことを確認済み
+- **Not selected**: `Agent(agent_type)` has no effect in subagent definition per Claude Code spec. Verified PO commits Write/Edit violations in implementation testing
 
-### 2. `claude --agent` main thread モード
+### 2. `claude --agent` main thread mode
 
-- **選択しなかった理由**: main thread agent なら spawn 可能だが、`/flow` 等のスラッシュコマンド体験と整合させるコストが高い。運用複雑化
+- **Not selected**: main thread agent can spawn, but cost of aligning with `/flow` slash command UX is high. Operations complexity increase
 
-### 3. agent-teams 機能への全面移行
+### 3. Full migration to agent-teams feature
 
-- **選択しなかった理由**: 並列+相互通信が必要な規模ではない。学習コスト・書き換え範囲大
+- **Not selected**: scale requiring parallel + mutual communication is not needed. High learning cost and rewrite scope
 
 ## References
 
-- [Claude Code Sub-agents docs](https://code.claude.com/docs/en/sub-agents.md) - `tools` allowlist、`disallowedTools` denylist、sub-agent spawn 不可の仕様
-- `claude-code/agents/README.md` - 親ハンドリング型の階層図
-- `claude-code/commands/flow.md` - 親がステップ毎に Task を呼ぶ手順
-- `claude-code/tests/integration/agent-frontmatter.bats` - 不変条件の機械検証
+- [Claude Code Sub-agents docs](https://code.claude.com/docs/en/sub-agents.md) - `tools` allowlist, `disallowedTools` denylist, sub-agent spawn impossible spec
+- `claude-code/agents/README.md` - parent-handled hierarchy diagram
+- `claude-code/commands/flow.md` - procedure where parent calls Task per step
+- `claude-code/tests/integration/agent-frontmatter.bats` - mechanical invariant verification

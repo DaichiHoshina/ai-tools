@@ -1,20 +1,20 @@
-# 横並び作業（複数リポジトリ）
+# Multi-Repo Workflow (parallel work)
 
-「横並びで」「同じ修正を」と指示された場合のフロー。
+Flow when instructed "apply the same fix" across multiple repositories.
 
-## 手順
+## Procedure
 
-1. 対象リポジトリを確認（ユーザーに列挙を依頼）
-2. 1つ目のリポジトリで修正を実施
-3. 修正内容を確認後、残りのリポジトリに同様の修正を適用
-4. 各リポジトリで `/git-push --pr` を実行
+1. Confirm target repositories (ask user to enumerate)
+2. Apply fix in the first repository
+3. After confirming changes, apply the same fix to remaining repositories
+4. Run `/git-push --pr` per repository
 
-## PR分割戦略
+## PR split strategy
 
-差分が大きくなる場合は複数PRに分割:
+When diff is large, split into multiple PRs:
 
-- **各PRが単独でmainにマージしても壊れない**ように作る
-- 分割例: migration → model/repository → usecase → handler → frontend
-- 未使用コードの先行投入はOK（次PRで使う前提）
-- migrationは単独PRでリリース（他変更と混ぜない）
-- 数値閾値（10ファイル / 500行 / migration単独）の詳細: `ticket-to-pr-workflow.md` §4
+- **Each PR must not break main when merged independently**
+- Split example: migration → model/repository → usecase → handler → frontend
+- Unused code may be introduced early (to be used in next PR)
+- Migration must be a standalone PR (do not mix with other changes)
+- Numeric thresholds (10 files / 500 lines / migration standalone): details in `ticket-to-pr-workflow.md` §4

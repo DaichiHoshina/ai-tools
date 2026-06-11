@@ -1,43 +1,43 @@
-# エディタレス開発環境セットアップ
+# Editorless Development Environment Setup
 
-エディタをほぼ開かず、Claude Code + ターミナルツールだけで開発を完結させる環境構築ガイド。
+Guide for setting up a development environment that works entirely with Claude Code + terminal tools, rarely opening an editor.
 
-## ツール構成
+## Tool composition
 
-| ツール | 用途 | インストール |
+| Tool | Purpose | Install |
 |--------|------|------------|
-| [mo](https://github.com/k1LoW/mo) | Markdown ビューア（ブラウザ表示） | `brew install k1LoW/tap/mo` |
-| [difit](https://github.com/yoshiko-pg/difit) | Git diff の GitHub 風ビューア | `npm install -g difit` |
-| `o` (自作) | スマートオープナー（ファイルタイプで自動振り分け） | 後述 |
-| `oo` (自作) | クリップボードの内容を `o` で開く | 後述 |
+| [mo](https://github.com/k1LoW/mo) | Markdown viewer (browser display) | `brew install k1LoW/tap/mo` |
+| [difit](https://github.com/yoshiko-pg/difit) | GitHub-style git diff viewer | `npm install -g difit` |
+| `o` (custom) | Smart opener (auto-dispatches by file type) | See below |
+| `oo` (custom) | Opens clipboard content with `o` | See below |
 
-## 1. ツールインストール
+## 1. Tool installation
 
 ```bash
 brew install k1LoW/tap/mo
 npm install -g difit
 ```
 
-## 2. スマートオープナー `o` の作成
+## 2. Create smart opener `o`
 
-`~/bin/o` に配置（`~/bin` が PATH に含まれていること）。
+Place at `~/bin/o` (`~/bin` must be in PATH).
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Smart opener: ファイルタイプで自動振り分け
-#   .md/.markdown → mo（Markdownビューア）
-#   引数なし（gitリポ内）→ difit（GitHub風diffビューア）
-#   gitリポ内 + rev指定 → difit <rev>
-#   その他 → macOS open
+# Smart opener: dispatch by file type
+#   .md/.markdown → mo (Markdown viewer)
+#   no args (inside git repo) → difit (GitHub-style diff viewer)
+#   inside git repo + rev specified → difit <rev>
+#   other → macOS open
 
 if [[ $# -eq 0 ]]; then
   if git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
     exec difit
   else
     echo "Usage: o <file|git-rev>"
-    echo "  o spec.md        → mo (Markdownビューア)"
+    echo "  o spec.md        → mo (Markdown viewer)"
     echo "  o                 → difit (git diff)"
     echo "  o HEAD~1          → difit HEAD~1"
     echo "  o --all           → difit --all"
@@ -48,12 +48,12 @@ fi
 
 ARG="$1"
 
-# difit オプション (--all, --staged, --cached) はそのまま渡す
+# difit options (--all, --staged, --cached) pass through directly
 if [[ "$ARG" == --* ]]; then
   exec difit "$@"
 fi
 
-# git rev っぽい引数 (HEAD~N, commit hash, branch名) → difit
+# git rev-like arg (HEAD~N, commit hash, branch name) → difit
 if git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
   if git rev-parse --verify "$ARG" &>/dev/null 2>&1; then
     if [[ ! -f "$ARG" ]]; then
@@ -62,7 +62,7 @@ if git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
   fi
 fi
 
-# ファイルパスの場合: 拡張子で振り分け
+# File path: dispatch by extension
 if [[ -f "$ARG" ]]; then
   case "${ARG##*.}" in
     md|markdown|mdx)
@@ -74,7 +74,7 @@ if [[ -f "$ARG" ]]; then
   esac
 fi
 
-# ファイルが存在しない場合もopen（URLなど）
+# File does not exist: open anyway (URLs etc.)
 exec open "$@"
 ```
 
@@ -82,21 +82,21 @@ exec open "$@"
 chmod +x ~/bin/o
 ```
 
-## 3. クリップボードオープナー `oo` の作成
+## 3. Create clipboard opener `oo`
 
-`~/bin/oo` に配置。Claude Code 内で `! oo` として使用。
+Place at `~/bin/oo`. Use as `! oo` inside Claude Code.
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-# クリップボードの内容を o で開く
-# 使い方: パスを選択 → Cmd+C → `! oo`
+# Open clipboard contents with o
+# Usage: select path → Cmd+C → `! oo`
 
 CLIP="$(pbpaste | tr -d '`' | xargs)"
 
 if [[ -z "$CLIP" ]]; then
-  echo "クリップボードが空"
+  echo "Clipboard is empty"
   exit 1
 fi
 
@@ -107,14 +107,14 @@ exec o "$CLIP"
 chmod +x ~/bin/oo
 ```
 
-## 4. Mo.app（macOS デフォルトアプリ登録）
+## 4. Mo.app (register as macOS default app)
 
-`mo` は CLI ツールのため、macOS のファイル関連付けには `.app` ラッパーが必要。
+`mo` is a CLI tool, so a `.app` wrapper is needed for macOS file association.
 
-### 作成
+### Create
 
 ```bash
-# AppleScript で .app を作成
+# Create .app with AppleScript
 osacompile -o ~/Applications/Mo.app -e '
 on open these_items
     set file_list to ""
@@ -131,7 +131,7 @@ end open
 '
 ```
 
-### Info.plist に BundleIdentifier と拡張子を追加
+### Add BundleIdentifier and extensions to Info.plist
 
 ```bash
 /usr/libexec/PlistBuddy -c "Add CFBundleIdentifier string com.local.mo-viewer" \
@@ -147,51 +147,51 @@ end open
   ~/Applications/Mo.app/Contents/Info.plist
 ```
 
-### デフォルトアプリに設定
+### Set as default app
 
 ```bash
 brew install duti
 
-# Launch Services に登録
+# Register with Launch Services
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
   -f ~/Applications/Mo.app
 
-# .md / .markdown のデフォルトに設定
+# Set as default for .md / .markdown
 duti -s com.local.mo-viewer .md viewer
 duti -s com.local.mo-viewer .markdown viewer
 ```
 
-確認:
+Verify:
 
 ```bash
 duti -x md
 # → Mo /Users/<user>/Applications/Mo.app com.local.mo-viewer
 ```
 
-## 5. iTerm2 設定
+## 5. iTerm2 settings
 
-Preferences → Profiles → Advanced → Semantic History を **「Open with default app」** に設定。
+Preferences → Profiles → Advanced → Semantic History → set to **"Open with default app"**.
 
-これにより Claude Code 出力内の `.md` ファイルパスを **Cmd+クリック** で mo が起動する。
+This enables **Cmd+click** on `.md` file paths in Claude Code output to launch mo.
 
-## 使い方まとめ
+## Usage summary
 
-### Claude Code 内
+### Inside Claude Code
 
-| 操作 | 動作 |
+| Action | Result |
 |------|------|
-| `.md` パスを Cmd+クリック | Mo.app → mo → ブラウザ表示 |
-| `! o` | difit で現在の git diff 表示 |
-| `! o HEAD~1` | difit で前コミットとの差分 |
-| `! o --all` | difit で全変更（unstaged 含む） |
-| `! oo` | クリップボードのパスを o で開く |
+| Cmd+click `.md` path | Mo.app → mo → browser display |
+| `! o` | Show current git diff with difit |
+| `! o HEAD~1` | Show diff with previous commit |
+| `! o --all` | Show all changes (including unstaged) |
+| `! oo` | Open clipboard path with o |
 
-### ターミナル（通常シェル）
+### Terminal (normal shell)
 
 ```bash
-o spec.md           # mo で Markdown 表示
-o                   # difit で git diff
-o HEAD~1            # difit で差分
-o image.png         # macOS プレビュー
-open spec.md        # Mo.app 経由で mo 起動
+o spec.md           # display Markdown with mo
+o                   # git diff with difit
+o HEAD~1            # diff with difit
+o image.png         # macOS preview
+open spec.md        # launch mo via Mo.app
 ```
