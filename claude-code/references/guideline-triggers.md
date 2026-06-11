@@ -1,37 +1,37 @@
-# Guideline Triggers - サブトピックキーワード検出表
+# Guideline Triggers — Subtopic Keyword Detection Table
 
-`load-guidelines` skill からサブトピック発火時に参照。タスク本文/変更内容に以下キーワードを検出した場合、該当ガイドラインを追加読込する。**一括投入禁止**（該当1-2本のみ）。
+Referenced by `load-guidelines` skill when subtopic triggers fire. When the following keywords appear in task text / changes, load the corresponding guideline. **Do not load in bulk** (only 1-2 relevant files).
 
-## 設計サブトピック
+## Design subtopics
 
-| トリガーキーワード | 追加読込 |
+| Trigger keywords | Load |
 |------------------|---------|
-| queue, worker, cron, 非同期ジョブ, job scheduler | `~/.claude/guidelines/design/async-job-patterns.md` |
+| queue, worker, cron, async job, job scheduler | `~/.claude/guidelines/design/async-job-patterns.md` |
 
-## バックエンドサブトピック
+## Backend subtopics
 
-| トリガーキーワード | 追加読込 |
+| Trigger keywords | Load |
 |------------------|---------|
 | slow query, index, N+1, connection pool, PostgreSQL, pg_stat | `~/.claude/guidelines/backend/database-performance.md` |
 | MySQL, InnoDB, EXPLAIN FORMAT=JSON, buffer pool, GTID, online DDL, redo log | `~/.claude/guidelines/backend/mysql-performance.md` |
-| EXPLAIN（DBMS不明） | 上記2つ両方読込（DBMS確認後に絞る） |
+| EXPLAIN (DBMS unknown) | Load both above (narrow after DBMS confirmed) |
 | cache, Redis, TTL, stampede | `~/.claude/guidelines/backend/caching-strategies.md` |
 | transaction, saga, isolation, deadlock, idempotency | `~/.claude/guidelines/backend/distributed-transactions.md` |
 | SLO, SLI, tracing, OpenTelemetry, observability | `~/.claude/guidelines/backend/observability-design.md` |
 | OWASP, rate limit, secret, mTLS, authn, authz | `~/.claude/guidelines/backend/security-hardening.md` |
 | scale, sharding, read replica, circuit breaker, bulkhead | `~/.claude/guidelines/backend/scalability-patterns.md` |
 | Kafka, Redpanda, RabbitMQ, SQS, SNS, Pub/Sub, event-driven, partition, consumer group, DLQ, exactly-once, schema registry, Debezium, CDC | `~/.claude/guidelines/backend/event-driven-architecture.md` |
-| multi-tenant, tenancy, tenant_id, RLS, row-level security, SaaS分離, schema-per-tenant, database-per-tenant | `~/.claude/guidelines/backend/multi-tenancy.md` |
+| multi-tenant, tenancy, tenant_id, RLS, row-level security, SaaS isolation, schema-per-tenant, database-per-tenant | `~/.claude/guidelines/backend/multi-tenancy.md` |
 
-## 言語深堀りサブトピック
+## Language deep-dive subtopics
 
-| トリガーキーワード | 追加読込 |
+| Trigger keywords | Load |
 |------------------|---------|
 | escape analysis, pprof, GOGC, GOMEMLIMIT, sync.Pool, PGO, allocation, benchstat | `~/.claude/guidelines/languages/go-performance.md` |
 | goroutine, GOMAXPROCS, scheduler, channel buffer, leak, mutex contention, race condition | `~/.claude/guidelines/languages/go-concurrency.md` |
 
-## 利用原則
+## Usage principles
 
-- タスクにキーワード含まれない場合は読込しない（トークン節約）
-- 複数キーワードヒット時は最も関連性の高い1-2本に絞る
-- 新規ガイドライン追加時はこの表のみ更新、skill 本体は変更不要
+- If task contains no keywords, do not load (token savings)
+- When multiple keywords hit, narrow to most relevant 1-2 files
+- When adding new guidelines, update only this table — no changes needed to skill body

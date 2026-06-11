@@ -1,59 +1,59 @@
-# `/review` 詳細リファレンス
+# `/review` Advanced Reference
 
-`commands/review.md` から外出しした詳細仕様（agent table・集約方針・コメント JSON 形式・レビュー方針）。コマンド本体はサマリのみで、参照はここから。
+Detailed spec extracted from `commands/review.md` (agent table / aggregation policy / comment JSON format / review policy). Command body holds summary only; refer here for details.
 
-## Deep フロー詳細（agent table）
+## Deep flow details (agent table)
 
-`pr-review-toolkit` の6 agent を **1 message 内 6 Agent tool 同時呼び出し** で並列起動。
+Launch `pr-review-toolkit`'s 6 agents as **6 simultaneous Agent tool calls in 1 message**.
 
-| subagent_type | 観点 |
+| subagent_type | Perspective |
 |---------------|------|
-| `pr-review-toolkit:code-reviewer` | CLAUDE.md準拠・ベストプラクティス |
-| `pr-review-toolkit:silent-failure-hunter` | エラー握りつぶし・空 catch |
-| `pr-review-toolkit:type-design-analyzer` | 型による不変条件表現 |
-| `pr-review-toolkit:comment-analyzer` | コメント正確性・comment rot |
-| `pr-review-toolkit:pr-test-analyzer` | テストカバレッジ・edge case |
-| `pr-review-toolkit:code-simplifier` | コード簡素化・可読性 |
+| `pr-review-toolkit:code-reviewer` | CLAUDE.md compliance / best practices |
+| `pr-review-toolkit:silent-failure-hunter` | Swallowed errors / empty catch |
+| `pr-review-toolkit:type-design-analyzer` | Expressing invariants with types |
+| `pr-review-toolkit:comment-analyzer` | Comment accuracy / comment rot |
+| `pr-review-toolkit:pr-test-analyzer` | Test coverage / edge cases |
+| `pr-review-toolkit:code-simplifier` | Code simplification / readability |
 
-各 agent prompt に対象 diff（`git diff` or `gh pr diff <N>`）を埋め込む。**コスト警告**: agent 起動コストが大きい（数十秒〜数分×6並列）。日常は `/review` で十分。
+Embed target diff (`git diff` or `gh pr diff <N>`) in each agent prompt. **Cost warning**: agent launch cost is significant (tens of seconds to minutes × 6 parallel). Daily use: `/review` is sufficient.
 
-集約: 信頼度80未満は Warning 降格、同一ファイル:行で観点違いはマージ。
+Aggregation: confidence <80 → downgrade to Warning; same file:line with different perspectives → merge.
 
-## Multi フロー集約方針
+## Multi flow aggregation policy
 
-| 状態 | 扱い |
+| State | Handling |
 |------|------|
-| 3手段以上で指摘 | Critical 確定 |
-| 2手段で指摘 | Critical |
-| 1手段のみ | Warning |
-| 信頼度80未満（comprehensive側） | Warning 降格 |
+| 3+ methods flagged | Critical confirmed |
+| 2 methods flagged | Critical |
+| 1 method only | Warning |
+| Confidence <80 (comprehensive side) | Downgrade to Warning |
 
-**重複除去**: 同一ファイル:行±3行で同種指摘は1件にマージ、ソース手段を `[plugin][codex]` 等で併記。
+**Deduplication**: same file:line ±3 lines same-type → merge to 1 finding, annotate source method as `[plugin][codex]` etc.
 
-`/review --plugin` の単独投稿機能は `--multi` に統合済み。plugin だけ使いたい場合は `/code-review:code-review <PR>` を直接呼び出し。
+`/review --plugin` standalone post feature merged into `--multi`. To use plugin alone: call `/code-review:code-review <PR>` directly.
 
-## レビュー方針
+## Review policy
 
-- **厳しめ**: 見逃しより過検出を優先
-- **差分のみ**: 既存コードへの指摘は行わない
-- **大量の差分**: 1ファイルずつ
-- **優先度**: Critical → Warning
-- **具体的な修正案**: 指摘 + 改善方法
-- **並列実行**: 11観点を並列
+- **Strict**: over-detection preferred over miss
+- **Diff only**: do not flag existing code outside the change
+- **Large diffs**: process 1 file at a time
+- **Priority**: Critical → Warning
+- **Concrete fix proposals**: finding + improvement method
+- **Parallel execution**: 11 perspectives in parallel
 
-レビュー対象に含める: 変更ファイル（git diff）、新規追加。除外: auto-generated、vendor/node_modules、lock ファイル。
+Include: changed files (git diff), newly added. Exclude: auto-generated, vendor/node_modules, lock files.
 
-## difit 連携: コメント JSON 形式
+## difit integration: comment JSON format
 
 ```json
 {
   "type": "thread",
   "filePath": "src/domain/user.ts",
   "position": { "side": "new", "line": 45 },
-  "body": "🔴 Critical: [設計] ...\n\n修正案: ..."
+  "body": "🔴 Critical: [design] ...\n\nFix proposal: ..."
 }
 ```
 
 - body prefix: Critical → `🔴 Critical:` / Warning → `🟡 Warning:`
-- 行番号不明時は `line: 1`
-- 全 finding を1つの `--comment '<JSON配列>'` で `difit staged` or `difit .` に渡す
+- When line number unknown: `line: 1`
+- Pass all findings as single `--comment '<JSON array>'` to `difit staged` or `difit .`

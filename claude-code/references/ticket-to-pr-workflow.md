@@ -1,106 +1,103 @@
 ---
-name: チケット → PR完成までのワークフロー
-description: チケット起点で PR 完成までの実行段階制（分類・worktree・WIP PR・PR分割閾値）
+name: ticket-to-pr-workflow
+description: Execution stage workflow from ticket to PR completion (classification / worktree / WIP PR / PR split thresholds).
 type: reference
 ---
 
-# チケット → PR 完成までのワークフロー
+# Ticket → PR Workflow
 
-`design-phase-flow.md` がアイデア → /docs の **コマンド遷移** を扱うのに対し、
-本ファイルはチケット起点の **実行段階制** を扱う。プロジェクト非依存の
-4 パターンをまとめる。
+While `design-phase-flow.md` covers **command transitions** from idea to /docs, this file covers the **execution stages** from ticket origin. Covers 4 project-agnostic patterns.
 
-## 1. チケット起点の分類フロー
+## 1. Ticket classification flow
 
-チケット（issue / Jira / Linear）を読み込んだ直後、3 種類に分類して次フェーズを決める。
+Immediately after reading a ticket (issue / Jira / Linear), classify into 3 types and decide next phase.
 
-| タイプ | 判定基準 | 次フェーズ |
+| Type | Criteria | Next phase |
 |--------|---------|-----------|
-| **新機能・仕様変更** | 新しい動作を追加・変更する | `/prd` → `/design-doc` → `/dev` |
-| **バグ修正** | 既存の動作が壊れている | `/diagnose` → `/dev` |
-| **軽微（タイポ・文言）** | コードロジックに影響しない | `/dev --quick` で直接実装 |
+| **New feature / spec change** | Adding or changing behavior | `/prd` → `/design-doc` → `/dev` |
+| **Bug fix** | Existing behavior is broken | `/diagnose` → `/dev` |
+| **Minor (typo / wording)** | No impact on code logic | `/dev --quick` direct impl |
 
-要件整理の項目（新機能のみ）:
+Requirements items (new features only):
 
-| 項目 | 内容 |
+| Item | Content |
 |------|------|
-| 対象ユーザー | 該当ロール |
-| 実現したい動作 | 具体的に |
-| 影響範囲 | 既存機能・画面・API |
-| エッジケース | 未ログイン、上限、フラグ OFF 時など |
-| 非同期副作用 | メール・通知・ログ |
+| Target users | Applicable roles |
+| Desired behavior | Specific and concrete |
+| Scope of impact | Existing features / screens / APIs |
+| Edge cases | Not logged in, limits, flag OFF, etc. |
+| Async side effects | Email / notifications / logs |
 
-不明項目は「不明（要確認）」と明記して進める（曖昧なまま進めない）。
+Mark unclear items as "unclear (needs confirmation)" and proceed (do not proceed on ambiguity).
 
-## 2. issue → worktree 自動準備パターン
+## 2. Issue → worktree auto-setup pattern
 
-長期 issue 作業では worktree を分けて main 作業を阻害しない。命名規約と分岐:
+For long-term issue work, separate worktree to avoid blocking main work. Naming convention and branching:
 
 ```bash
 WT_REPO="${HOME}/ghq/github.com/{org}/{repo}"
-WT_PATH="${TMPDIR:-/tmp}/wt-{issue番号}"
+WT_PATH="${TMPDIR:-/tmp}/wt-{issue-number}"
 
 if [ -d "$WT_PATH" ]; then
-  cd "$WT_PATH"   # 既存worktreeに移動
+  cd "$WT_PATH"   # move to existing worktree
 else
   git -C "$WT_REPO" fetch origin main
-  git -C "$WT_REPO" worktree add -b {issue番号}-{要約英語} "$WT_PATH" origin/main
+  git -C "$WT_REPO" worktree add -b {issue-number}-{summary-english} "$WT_PATH" origin/main
   cd "$WT_PATH"
-  # 依存物のセットアップ（言語/フレームワーク依存）
+  # dependency setup (language/framework dependent)
 fi
 ```
 
-ブランチ命名: `{issue番号}-{要約英語}`（grep でissue 番号引きやすい）。
+Branch naming: `{issue-number}-{summary-english}` (easy to grep by issue number).
 
-## 3. WIP PR 段階制
+## 3. WIP PR stages
 
-実装直後ではなく **段階的に** PR を完成させる。
+Complete PR **incrementally** rather than immediately after implementation.
 
-| Step | 内容 | タイミング |
+| Step | Content | Timing |
 |------|------|-----------|
-| A | WIP PR (draft, `[WIP]` prefix) を**早期作成** | 実装着手直後 |
-| B | CI 通過確認 | コミット後 |
-| C | 動作確認チェックリスト出力 | CI 通過後 |
-| D | エビデンス（スクショ/録画）添付・WIP 外し | 動確完了後 |
+| A | Create WIP PR (draft, `[WIP]` prefix) **early** | Immediately after starting impl |
+| B | Confirm CI pass | After commit |
+| C | Output operation verification checklist | After CI pass |
+| D | Attach evidence (screenshot/recording), remove WIP | After operation verification |
 
 **Why early WIP PR**:
-- レビュワーへの早期同期、コンフリクト早期発見
-- CI 赤判明前に PR URL 共有 → 他作業のブロック減
-- 仕様議論を Issue でなく PR コード上で進められる
+- Early sync to reviewers, early conflict detection
+- Share PR URL before CI red is known → reduces blocking of other work
+- Move spec discussion to PR code rather than Issue
 
-動確チェックリストの雛形:
+Operation verification checklist template:
 
 ```markdown
-### ローカル動作確認チェックリスト
+### Local operation verification checklist
 
-#### 必要なテストデータ
-- [ ] {PRD/設計書から自動抽出}
+#### Required test data
+- [ ] {auto-extracted from PRD/design doc}
 
-#### 確認シナリオ
-- [ ] 正常系
-- [ ] 境界値・エッジケース
-- [ ] 既存機能への影響
+#### Verification scenarios
+- [ ] Normal flow
+- [ ] Boundary values / edge cases
+- [ ] Impact on existing features
 
-#### エビデンス
-- [ ] スクリーンショットまたは画面録画
+#### Evidence
+- [ ] Screenshot or screen recording
 ```
 
-## 4. PR 分割の数値閾値
+## 4. PR split numeric thresholds
 
-`design-phase-flow.md` の PR分割戦略の詳細閾値:
+Detailed thresholds for PR split strategy from `design-phase-flow.md`:
 
-| 条件 | 判断 |
+| Condition | Decision |
 |------|------|
-| 変更 10 ファイル以上 | 分割検討 |
-| migration / DB スキーマ変更含む | **必ず単独 PR**（他変更と混ぜない） |
-| 500 行以上の変更 | レイヤー分割 (model/repo → usecase → handler → frontend) |
+| 10+ changed files | Consider splitting |
+| Includes migration / DB schema change | **Mandatory standalone PR** (do not mix with other changes) |
+| 500+ line changes | Layer split (model/repo → usecase → handler → frontend) |
 
-migration が単独 PR でないと困る理由: ロールバック時に application 変更も
-巻き戻る、デプロイ順序の事故が起きやすい。
+Why migration must be standalone PR: rolling back bundles application changes too, and deployment order accidents are common.
 
-## 関連
+## Related
 
-- `design-phase-flow.md` — 上流のコマンド遷移（/brainstorm → /prd → ...）
-- `prd-review-checkpoints.md` — 受け入れ条件・時刻境界条件の検証観点
-- `multi-repo-workflow.md` — worktree 並列実行パターン
-- `../guidelines/writing/design-doc-protocol.md` — Design Doc 4 Step + 12 セクション / 軽量 5 節テンプレ
+- `design-phase-flow.md` — upstream command transitions (/brainstorm → /prd → ...)
+- `prd-review-checkpoints.md` — acceptance criteria / time boundary condition verification
+- `multi-repo-workflow.md` — worktree parallel execution patterns
+- `../guidelines/writing/design-doc-protocol.md` — Design Doc 4 steps + 12 sections / lightweight 5-section template

@@ -1,63 +1,63 @@
-# Serena 未採用機能トラッキング
+# Serena Unadopted Feature Tracking
 
-`/serena-update-fix` が検出した、リポジトリ側で採用余地のある Serena 新機能を蓄積する。
+Accumulates Serena new features detected by `/serena-update-fix` that have adoption potential in this repo.
 
-## 書式
+## Format
 
 ```markdown
-## <バージョン> (YYYY-MM-DD 検出)
-- [ ] **<機能名>**: <概要> — 検討箇所: <ファイル/プロジェクト>
+## <version> (detected YYYY-MM-DD)
+- [ ] **<feature>**: <summary> — review at: <file/project>
 ```
 
-採用時はチェック、陳腐化時は打ち消し（`~~機能名~~ (obsolete YYYY-MM-DD): <1文の理由>`）。理由欄は必須（3か月後の検証コスト回避のため）。
+Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-DD): <1-line reason>`). Reason is required (avoids re-investigation cost 3 months later).
 
-**ライフサイクル**: 採用済み（チェック済み）エントリは、次回 `/serena-update-fix` 実行時に自動削除。陳腐化エントリは1バージョン後に自動削除。未採用のまま残るエントリは継続追跡。
+**Lifecycle**: Adopted (checked) entries auto-deleted on next `/serena-update-fix` run. Obsolete entries auto-deleted one version later. Unadopted entries remain tracked.
 
 ---
 
-## main pre-release (2026-06-08 検出、次 tag で確定)
+## main pre-release (detected 2026-06-08, confirmed on next tag)
 
-- [ ] **`typescript_vts` `initialization_options`**: `ls_specific_settings.typescript_vts` 配下に initializationOptions dict を渡せる。Yarn PnP + `typescript.tsdk` 指定の TS project で必須 — 検討箇所: 将来 Yarn PnP TS project を activate した時のみ (現状無し)
-- [ ] **`jetbrains_launch_command`**: project activate 時に IDE 自動起動 — 検討箇所: JetBrains IDE 未使用、scope 外
-- [ ] **Dashboard `trusted_hosts` configurable**: v1.5.2 で導入された host validation を緩和、remote 接続許可 — 検討箇所: dashboard を remote 接続する場合のみ (現状 local default 運用)
-- `find_project_root` worktree fix [pre-release]: worktree が parent project の `.serena/project.yml` に hijack される bug 修正、bugfix 対応不要 (CLI agent を worktree 内起動する運用で恩恵あり、設定変更なし)
-- CLI flag 永続化 bug fix [pre-release]: `start-mcp-server` の transient flag が config 保存される bug、bugfix 対応不要
-- `SvelteLanguageServer` TS/JS routing fix [pre-release]: Svelte project の bugfix、Svelte 未使用 scope 外
+- [ ] **`typescript_vts` `initialization_options`**: Pass initializationOptions dict under `ls_specific_settings.typescript_vts`. Required for Yarn PnP + `typescript.tsdk` TS projects — review at: only when activating a Yarn PnP TS project (none currently)
+- [ ] **`jetbrains_launch_command`**: Auto-launch IDE on project activate — review at: JetBrains IDE not used, out of scope
+- [ ] **Dashboard `trusted_hosts` configurable**: Relax host validation from v1.5.2, allow remote connections — review at: only if connecting dashboard remotely (currently local default)
+- `find_project_root` worktree fix [pre-release]: Fixes bug where worktree hijacks parent project's `.serena/project.yml`. No action needed (benefits CLI agent launched inside worktree, no config change)
+- CLI flag persistence bug fix [pre-release]: `start-mcp-server` transient flag saved to config. Bug fix, no action needed
+- `SvelteLanguageServer` TS/JS routing fix [pre-release]: Svelte project bug fix. Svelte not used, out of scope
 
-## v1.5.2–v1.5.3 (2026-05-28 検出)
+## v1.5.2–v1.5.3 (detected 2026-05-28)
 
-新規 Opportunity なし。v1.5.3 はタグのみ (本体変更 v1.5.2 完結)。
+No new opportunities. v1.5.3 is tag-only (core changes completed in v1.5.2).
 
-- `serena-agent` CLI entrypoint (`uvx serena-agent`) [v1.5.2]: 当方は `serena start-mcp-server` 維持、alternative entrypoint で rename ではない、切替不要
-- Fortls / pyright on-the-fly install [v1.5.2]: LSP 内部実装、project.yml 影響なし。Fortran 未使用、Python は claude-plugins-official `pyright-lsp` 経路で別管理
-- Not-existing path returns `False` on ignored checks [v1.5.2]: bug fix、対応不要
-- Hooks code-file 拡張子 list 拡張 [v1.5.2]: reminder hook counter 内部のみ、設定影響なし
+- `serena-agent` CLI entrypoint (`uvx serena-agent`) [v1.5.2]: Keeping `serena start-mcp-server`, alternative entrypoint not a rename, no switch needed
+- Fortls / pyright on-the-fly install [v1.5.2]: Internal LSP impl, no project.yml impact. Fortran unused; Python managed via claude-plugins-official `pyright-lsp`
+- Not-existing path returns `False` on ignored checks [v1.5.2]: Bug fix, no action needed
+- Hooks code-file extension list expanded [v1.5.2]: Internal to reminder hook counter, no config impact
 
-## v1.5.0–v1.5.1 (2026-05-19 検出)
+## v1.5.0–v1.5.1 (detected 2026-05-19)
 
-- [x] **`search_for_pattern` `multiline=False` opt-out** (v1.5.0): 既定は `multiline=True` で `re.DOTALL|MULTILINE` 有効。1 行限定検索に切り替えれば `.*` greedy 過食を抑制可 — 検討箇所: 2026-05-18 dotall 事故と同パターンを再発させない為、1 行スコープが明確な search では明示指定。`replace_content` には未開放 (Tool API は dotall hardcode のまま) (採用 2026-06-08: references/serena-usage-guidelines.md)
-- [x] **`replace_content` ambiguity ガード** (v1.5.0): `ContentReplacer.replace()` がマッチ内に同パターン再出現する場合 `ValueError("Match is ambiguous: ...")` を返すよう改善。2026-05-18 のような `.*\n` greedy が 5 ファイル横断で発火するケースの一部を構造的に阻止 — エラー文言出現時の対応 (literal mode or 終端 anchor 明示) を即時切替できる体制 (採用 2026-06-08: references/serena-usage-guidelines.md)
-- [ ] **`mem:<name>` メモリ間相互参照** (v1.5.0): メモリ本文から `mem:<name>` で他メモリ参照、rename 時に自動伝播。現状 `~/.claude/projects/.../memory/MEMORY.md` の手書きリンク (`[[name]]` 記法) を Serena 公式記法へ寄せる選択肢 — 検討箇所: 既存 user 補助メモリ 20+ 件、現状 `~/.claude/` 直置きで Serena `write_memory` 経路を通っていないため伝播対象外。Serena 管理メモリへ移行する場合のみ価値あり
-- [ ] **`memory_maintenance` onboarding seed** (v1.5.0): onboarding 時に memory スタイル規約の seed メモリを配置、`global/memory_maintenance` で全プロジェクト共通化可能 — 検討箇所: 現状 `~/.claude/CLAUDE.md` + `rules/genshijin.md` で代替済み、Serena 管理メモリ移行時に統合検討
-- ~~**`serena memories` CLI command group** (v1.5.0)~~ (obsolete 2026-06-08): CLI scope は `.serena/memories/` のみ対象、当方の `~/.claude/projects/.../memory/` は Serena 管理外で `serena memories list` の対象外。`/memory-save` 整合性検査の CLI 寄せ替えは scope mismatch で不可
-- [ ] **CUE LSP** (v1.5.1): `cue lsp` 経由で CUE 言語サポート — 検討箇所: CUE プロジェクト activate 時のみ (現状無し)
-- [ ] **GDScript LSP** (v1.5.0): Godot エディタ内蔵 LSP に TCP 接続 — 検討箇所: Godot プロジェクト activate 時のみ (現状無し)
+- [x] **`search_for_pattern` `multiline=False` opt-out** (v1.5.0): Default is `multiline=True` with `re.DOTALL|MULTILINE`. Opt out for single-line searches to suppress `.*` greedy over-match — review at: explicitly specify for searches with clear single-line scope to prevent recurrence of 2026-05-18 dotall incident. `replace_content` not yet exposed (Tool API hardcodes dotall). (adopted 2026-06-08: references/serena-usage-guidelines.md)
+- [x] **`replace_content` ambiguity guard** (v1.5.0): `ContentReplacer.replace()` returns `ValueError("Match is ambiguous: ...")` when the match contains the same pattern. Structurally prevents some cases like the 2026-05-18 `.*\n` greedy fire across 5 files — be ready to switch to literal mode or explicit end anchor on error. (adopted 2026-06-08: references/serena-usage-guidelines.md)
+- [ ] **`mem:<name>` inter-memory references** (v1.5.0): Reference other memories from body with `mem:<name>`, auto-propagates on rename. Option to align from handwritten `[[name]]` notation in `~/.claude/projects/.../memory/MEMORY.md` to official Serena notation — review at: 20+ existing user-assist memories are in `~/.claude/` direct, outside Serena `write_memory` path and not propagation targets. Value only if migrating to Serena-managed memories
+- [ ] **`memory_maintenance` onboarding seed** (v1.5.0): Place seed memory for memory style rules at onboarding, shareable across all projects via `global/memory_maintenance` — review at: currently substituted by `~/.claude/CLAUDE.md` + `rules/genshijin.md`. Consider integrating when migrating to Serena-managed memories
+- ~~**`serena memories` CLI command group** (v1.5.0)~~ (obsolete 2026-06-08): CLI scope targets only `.serena/memories/`. Our `~/.claude/projects/.../memory/` is outside Serena management; `serena memories list` does not cover it. CLI migration for `/memory-save` consistency checks is a scope mismatch
+- [ ] **CUE LSP** (v1.5.1): CUE language support via `cue lsp` — review at: only when activating a CUE project (none currently)
+- [ ] **GDScript LSP** (v1.5.0): TCP connection to Godot editor's built-in LSP — review at: only when activating a Godot project (none currently)
 
-## v1.3.0 (2026-05-12 検出)
+## v1.3.0 (detected 2026-05-12)
 
-- [ ] **`additional_workspace_folders`**: クロスパッケージ参照対応（v1.3.0 時点 TypeScript のみ実装）。monorepo で兄弟パッケージのシンボル解決が可能 — 検討箇所: 将来 TypeScript monorepo を activate した時、または他言語拡張時。現在の activate プロジェクトは go/bash/dart/terraform/python で対象外
-- [ ] **`added_modes`**: project.yml で `base_modes` 上書き不可、`added_modes` で追加のみ。現状全プロジェクト `added_modes:` 空欄なので影響なし — 検討箇所: 各プロジェクトの `.serena/project.yml`（カスタムモード追加が必要になった時）
-- ~~**`base_modes` 既定変更** (`interactive`/`editing` が default_modes → base_modes)~~ (obsolete 2026-05-12): global default の挙動変更のみ、project 側で意識不要のため tracking 不要
+- [ ] **`additional_workspace_folders`**: Cross-package reference support (TypeScript only as of v1.3.0). Enables symbol resolution for sibling packages in monorepos — review at: when activating a TypeScript monorepo or on extension to other languages. Current activated projects are go/bash/dart/terraform/python, out of scope
+- [ ] **`added_modes`**: Cannot override `base_modes` in project.yml; add-only via `added_modes`. All projects currently have `added_modes:` empty, no impact — review at: each project's `.serena/project.yml` when adding custom modes
+- ~~**`base_modes` default change** (`interactive`/`editing` moved from default_modes → base_modes)~~ (obsolete 2026-05-12): Global default behavior change only, no project-side awareness needed
 
-## v1.0.0 (2026-05-12 検出 / 過去遡及)
+## v1.0.0 (detected 2026-05-12, retroactive)
 
-- [ ] **`project.local.yml` local override**: project.yml の個人/ローカル設定を git 非追跡で分離可能 — 検討箇所: 各プロジェクトで個人固有設定（`ls_specific_settings` の絶対パス等）が必要になった時
-- [ ] **`ls_specific_settings` 活用**: language server ごとの個別設定（JDK パス、custom binary 等）— 検討箇所: Java/Scala/MATLAB 等を扱うプロジェクトを activate した時。現状 go/bash/dart/terraform/python のみで対象外
-- [ ] **monorepo / multi-language `project.yml`**: 1 プロジェクトで複数言語定義可能 — 検討箇所: `ghq/github.com/<org>/<repo>` 等が将来 go + typescript 混在する場合
+- [ ] **`project.local.yml` local override**: Separate personal/local settings from project.yml without git tracking — review at: when personal-specific settings (absolute paths in `ls_specific_settings` etc.) are needed per project
+- [ ] **`ls_specific_settings` utilization**: Per-language-server settings (JDK path, custom binary, etc.) — review at: when activating Java/Scala/MATLAB etc. Currently only go/bash/dart/terraform/python, out of scope
+- [ ] **monorepo / multi-language `project.yml`**: Define multiple languages in one project — review at: when a repo mixes go + typescript
 
-## 条件発火 (体感問題待ち、予防的着手はしない)
+## Conditional triggers (wait for felt pain, no preemptive action)
 
-以下は採用検討対象だが、現状 ROI 不明 / 既存独自実装で動作中のため**発火条件を満たすまで保留**。
+Adoption candidates but ROI unclear / existing custom impl working — **hold until trigger condition met**.
 
-- [ ] **`cc-system-prompt-override` 採用** (Opus 4.7 bias 対策): Claude Code 内蔵 tool (Read/Edit/Grep) に偏る bias を Serena tool へ誘導する system prompt override。詳細 `serena/docs/02-usage/030_clients.md`、設定例 `references/serena-cc-prompt-setup.md` — **発火条件**: Serena 使うべき場面 (symbol 検索 / シンボル単位編集) で Read 連発する bias を本人が体感した時。予防着手は大手術 (CC 起動 alias 変更 or CLAUDE.md 全面追記) で ROI 不明 (2026-05-15 判定)
-- [ ] **Serena reminder hooks 統合** (`serena-hooks remind/activate/cleanup/auto-approve`): PreToolUse / SessionStart / Stop に Serena 公式 hook を組み込み、現状の独自 sh 体系と差し替え検討。詳細 `serena/docs/02-usage/030_clients.md` — **発火条件**: Serena MCP 関連で繰り返し困った時 (再接続必要 / state 不整合 / project activate 失敗) — 現状独自 hook で動作中、置き換えは regression リスクあり予防着手しない (2026-05-15 判定)
+- [ ] **`cc-system-prompt-override` adoption** (Opus 4.7 bias mitigation): System prompt override to guide bias away from Claude Code built-in tools (Read/Edit/Grep) toward Serena tools. Details in `serena/docs/02-usage/030_clients.md`, setup example `references/serena-cc-prompt-setup.md` — **trigger**: when user feels the bias of Read-spamming in contexts where Serena should be used (symbol search / symbol-level edit). Preemptive action is major surgery (CC launch alias change or full CLAUDE.md rewrite), ROI unclear (judged 2026-05-15)
+- [ ] **Serena reminder hooks integration** (`serena-hooks remind/activate/cleanup/auto-approve`): Integrate Serena official hooks into PreToolUse / SessionStart / Stop, consider replacing current custom sh system. Details in `serena/docs/02-usage/030_clients.md` — **trigger**: when repeatedly troubled by Serena MCP issues (reconnection needed / state inconsistency / project activate failure). Currently working with custom hooks; replacement has regression risk, no preemptive action (judged 2026-05-15)

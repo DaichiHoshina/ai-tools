@@ -1,128 +1,128 @@
 # Parallel Refactor Split Strategies
 
-> **目的**: 大量 file refactor を developer-agent N 並列に分割する戦略 library。CLAUDE.md "委譲分割義務" rule を refactor domain に特化した実装ガイド。
+> **Purpose**: Strategy library for splitting large-scale file refactors across N parallel developer-agents. Specializes the CLAUDE.md "bundle prohibition" rule to the refactor domain.
 
-並列 N の formula と overhead 計算は `references/PARALLEL-PATTERNS.md` canonical。本 file は **refactor 固有の分割戦略** のみ扱う。
+Parallelism formula and overhead calculation: canonical in `references/PARALLEL-PATTERNS.md`. This file covers **refactor-specific split strategies** only.
 
-## 適用条件
+## Applicability
 
-以下を**全て満たす**場合に並列分割を検討する。
+Apply parallel split when **all** of the following are true:
 
-- 対象 file 数 5+
-- file 間の依存が低い (同一 symbol を複数 file が参照しない)
-- deadline が tight または makespan 短縮を優先する
+- 5+ target files
+- Low inter-file dependencies (same symbol not referenced across multiple files)
+- Tight deadline or makespan reduction is priority
 
-## 3 戦略
+## 3 Strategies
 
-### A. directory 単位分割
+### A. Directory-unit split
 
-**file group を dir tree で切り、dir ごとに dev を割り当てる。**
+**Divide file groups by dir tree; assign one dev per dir.**
 
-同一 dir 内に変更が集中し、dir 間に共有 import / 共通 symbol がない場合に有効。
+Effective when changes concentrate inside individual dirs with no shared imports / common symbols across dirs.
 
-実例 (commit `fdd03c6`, 28 file):
+Example (commit `fdd03c6`, 28 files):
 
 | dev | target dir |
 |-----|-----------|
-| dev1 | `guidelines/backend/*` (mysql-performance.md, database-performance.md 他) |
-| dev2 | `guidelines/common/*` (session-modes.md, investigation-protocol.md 他) |
-| dev3 | `guidelines/languages/*` (eslint.md, typescript.md 他) |
+| dev1 | `guidelines/backend/*` |
+| dev2 | `guidelines/common/*` |
+| dev3 | `guidelines/languages/*` |
 | dev4 | `guidelines/writing/*` + `guidelines/operations/*` |
 
-この分割なら 4 並列で makespan ≈ max(T_dev) に短縮できた。逐次実施より ~75% 短縮見込み。
+4-parallel → makespan ≈ max(T_dev); ~75% reduction vs sequential.
 
-**禁則**: dir をまたぐ cross-reference anchor を変更するとき → 同一 dev に両 file を入れるか、anchor 変更を別 phase に切り出す。
+**Prohibition**: when changing cross-dir cross-reference anchors → put both files in same dev, or extract anchor change to a separate phase.
 
-### B. layer 単位分割
+### B. Layer-unit split
 
-**1 file 内の layer (frontmatter / body / footer) を dev 別に担当する。**
+**Assign different devs to independent layers (frontmatter / body / footer) within files.**
 
-file 数が少なく、各 layer が独立している場合に有効。ただし同一 file への並列 edit は git conflict を起こすため **1 file に 1 dev のみ** という物理制約が優先される。
+Effective when file count is small and each layer is independent. However, physical constraint takes priority: **1 file = 1 dev only** (parallel edits to same file cause git conflicts).
 
-実用場面: 大量 file の frontmatter だけ一斉更新 + body リファクタリングを別 dev に分ける (フェーズ分割)。
+Practical use: update all-file frontmatter in bulk + separate dev handles body refactoring (phase split).
 
 ```text
-Phase 1: dev1-N で frontmatter 更新 (全 file)
-Phase 2: dev1-N で body リファクタリング (Phase 1 完了後)
+Phase 1: dev1-N update frontmatter (all files)
+Phase 2: dev1-N body refactoring (after Phase 1 completes)
 ```
 
-Phase 間の依存があるため Phase 1 完了を確認してから Phase 2 を発火する。
+Phase dependency: confirm Phase 1 complete before firing Phase 2.
 
-### C. rule 適用単位分割
+### C. Rule-unit split
 
-**PRINCIPLES.md 等の rule ごとに dev を割り当て、各 dev が全 file の自担当 rule のみ touch する。**
+**Assign one dev per rule from PRINCIPLES.md etc.; each dev touches only their assigned rule across all files.**
 
-rule 間に独立性があり、1 file を複数 dev が同時編集しない保証が取れる場合に有効。
+Effective when rules are independent and no single file is edited by 2+ devs simultaneously.
 
-例:
+Example:
 
-| dev | 担当 rule | touch する変更内容 |
+| dev | rule | changes |
 |-----|----------|--------------------|
-| dev1 | preamble 圧縮 | 各 file の冒頭前置きを 1 文に圧縮 |
-| dev2 | code block 短縮 | 5 行超 code block を table 化 |
-| dev3 | surplus examples 削減 | 例示 section を 2-3 block に削減 |
+| dev1 | preamble compression | compress opening preamble to 1 sentence per file |
+| dev2 | code block shortening | convert 5-line+ code blocks to tables |
+| dev3 | surplus example reduction | reduce example sections to 2-3 blocks |
 
-**禁則**: 同一 file を 2+ dev が同時に touch するルール割り当ては物理 conflict 確定 → 戦略 A に切り替える。
+**Prohibition**: rule assignment where 2+ devs touch the same file simultaneously → guaranteed conflict; switch to strategy A.
 
-## 戦略 decision tree
+## Strategy decision tree
 
 ```text
-対象 file 5+?
-  No → 逐次実行 (並列 overhead が割に合わない)
+5+ target files?
+  No → sequential (parallel overhead not worth it)
   Yes
     ↓
-  dir 間の共有 symbol / anchor 変更あり?
-    Yes → 依存箇所を別フェーズに切り出し → 残りを戦略 A
+  Cross-dir shared symbol / anchor changes?
+    Yes → extract dependencies to separate phase → remainder via strategy A
     No
       ↓
-    1 file を複数 dev が同時 touch する rule があるか?
-      Yes → 戦略 A (dir 単位) に統一
+    Does any rule require multiple devs on same file simultaneously?
+      Yes → strategy A (dir-unit)
       No
         ↓
-        rule 間が独立? → 戦略 C
-        layer 間が独立? → 戦略 B (フェーズ分割)
-        それ以外 → 戦略 A
+        Rules independent? → strategy C
+        Layers independent? → strategy B (phase split)
+        Otherwise → strategy A
 ```
 
-## N (並列数) 概略
+## N (parallelism) estimate
 
 ```text
 N = min(8, ceil(total_files / 5))
 ```
 
-詳細な formula (overhead 込み) は `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula` canonical。本 file は概略のみ。
+Detailed formula (with overhead): canonical in `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula`. This file is estimate-only.
 
-## conflict 事前検出
+## Pre-launch conflict detection
 
-並列 dev 起動前に以下を実行し、編集対象と modified file の重複を確認する。
+Run the following before launching parallel devs to detect overlap between edit targets and modified files.
 
 ```bash
-# modified file と target file の重複チェック
+# Check overlap between modified files and target files
 git ls-files -m | grep -Fx -f <(echo "$TARGET_FILES")
 ```
 
-重複あり → 先行 session の完了を待つか、target 振り分けを変更する。
+Overlap found → wait for prior session to complete, or reassign targets.
 
-## NG pattern (束ね禁止)
+## NG patterns (bundle prohibition)
 
-**1 dev に 28 file 全投げは逐次処理と等価。**
+**Throwing all 28 files to 1 dev is equivalent to sequential processing.**
 
-| パターン | 弊害 | 代替 |
+| Pattern | Problem | Alternative |
 |---------|------|------|
-| 1 prompt に全 file を列挙 | dev 内で逐次処理、makespan = sum(T_i) | 戦略 A/B/C で dir / layer / rule 単位に分割 |
-| 2+ domain (異 dir group) を 1 dev に束ねる | CLAUDE.md "委譲分割義務" 違反、makespan 累積 | domain 別に並列発火 |
-| 全 file の anchor 変更を並列 dev に分散 | cross-reference desync、bats 破壊リスク | anchor 変更のみ先行フェーズで逐次実施 |
+| List all files in 1 prompt | Sequential processing inside dev, makespan = sum(T_i) | Split by dir / layer / rule (strategies A/B/C) |
+| Bundle 2+ domains (different dir groups) in 1 dev | Violates CLAUDE.md "bundle prohibition", makespan accumulates | Fire per-domain in parallel |
+| Distribute cross-file anchor changes across parallel devs | Cross-reference desync, bats breakage risk | Do anchor changes first in a sequential phase |
 
-逐次 vs 並列の makespan 試算例 (commit `fdd03c6` 実績から):
+Makespan estimate example (from commit `fdd03c6` actuals):
 
 ```text
-逐次 (1 dev, 28 file): sum(T_i) ≈ 28 × 60s = 1680s
-並列 (4 dev, 戦略 A): LPT_makespan ≈ 420s + overhead_direct(4) = 420 + 100 = 520s
-短縮率: (1680 - 520) / 1680 ≈ 69%
+Sequential (1 dev, 28 files): sum(T_i) ≈ 28 × 60s = 1680s
+Parallel (4 dev, strategy A): LPT_makespan ≈ 420s + overhead_direct(4) = 420 + 100 = 520s
+Reduction: (1680 - 520) / 1680 ≈ 69%
 ```
 
-## 関連ドキュメント
+## Related
 
-- `references/PARALLEL-PATTERNS.md` — 並列判定 formula、N 選択 rule、worktree 適用フロー (canonical)
-- `CLAUDE.md` "委譲分割義務" section — 束ね禁止 rule の根拠
-- `rules/markdown-anchor-sync.md` — anchor 変更時の bats / cross-ref 同期手順
+- `references/PARALLEL-PATTERNS.md` — parallelism formula, N selection rule, worktree flow (canonical)
+- `CLAUDE.md` "bundle prohibition" — basis for split obligation
+- `rules/markdown-anchor-sync.md` — bats / cross-ref sync on anchor changes
