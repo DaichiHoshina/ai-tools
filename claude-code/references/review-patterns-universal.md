@@ -1,72 +1,72 @@
 ---
-name: レビュー指摘パターン集（汎用）
-description: 設計判断・SQL方言・PRレビューで頻出する汎用的な指摘パターン。
+name: Universal Review Finding Patterns
+description: Project/language-agnostic finding patterns extracted from past PR reviews — design decisions and SQL dialects.
 type: reference
 ---
 
-# レビュー指摘パターン集（汎用）
+# Universal Review Finding Patterns
 
-過去の PR レビューから抽出した、特定プロジェクト/言語に依存しない指摘パターン。
+Project/language-agnostic finding patterns extracted from past PR reviews.
 
 ## SQL
 
-### SQL-1. DB 方言を採用 DB に合わせる
+### SQL-1. Match DB dialect to the adopted DB
 
-採用 DB で動かない構文を書かない。レビュー時は構文がその DB で有効か確認する。
+Do not write syntax that does not work on the adopted DB. On review, confirm syntax is valid for that DB.
 
-| 構文 | MySQL 8.0+ | PostgreSQL |
+| Syntax | MySQL 8.0+ | PostgreSQL |
 |---|---|---|
 | `FOR UPDATE SKIP LOCKED` | OK | OK |
-| `FOR UPDATE OF table_name SKIP LOCKED` | NG（`OF` 不可） | OK |
-| `RETURNING` 句 | NG | OK |
-| `INSERT ... ON CONFLICT` | NG（`ON DUPLICATE KEY` を使う） | OK |
+| `FOR UPDATE OF table_name SKIP LOCKED` | NG (`OF` not supported) | OK |
+| `RETURNING` clause | NG | OK |
+| `INSERT ... ON CONFLICT` | NG (use `ON DUPLICATE KEY`) | OK |
 
-DesignDoc・想定 SQL でも採用 DB の構文で書く。AI 生成時に他 DB 方言が混入しがち。
+Write DesignDoc and assumed SQL using adopted DB syntax. AI-generated output tends to mix other DB dialects.
 
-## 設計判断
+## Design decisions
 
-### 1. API の分割・統合を検討する
+### 1. Consider API split vs. merge
 
-新しい API を作る前に、既存 API に機能を追加するほうが自然でないか検討する。Design Doc の段階で議論しておくのが望ましい。
+Before creating a new API, evaluate whether adding functionality to an existing API is more natural. Discuss at DesignDoc stage.
 
-### 2. API 削除時のクライアント考慮
+### 2. Consider clients when deleting APIs
 
-エンドポイントを削除・破壊的変更する場合、どのクライアントが参照しているかで方針が異なる。
+When deleting or breaking-change an endpoint, policy differs by client type:
 
-| クライアント | 削除条件 |
+| Client | Deletion condition |
 |---|---|
-| Web のみ | Web 側の参照がなくなれば削除 OK |
-| ネイティブアプリ | そのバージョンが強制アップデートで消滅した後に削除 |
+| Web only | OK to delete once web references are gone |
+| Native app | Delete after forced update eliminates that version |
 
-- **強制アップデート**: あるバージョン以上でないとアプリを使えなくする仕組み
-- ネイティブアプリ向け API は、削除時に「どのバージョンから使われているか」「現在の強制アプデラインはどこか」を確認する
+- **Forced update**: mechanism preventing use below a certain version
+- For native app APIs: confirm "which versions use it" and "current forced update threshold" before deletion
 
-### 3. 既出議論との整合性を確認する
+### 3. Verify consistency with prior discussions
 
-朝会・チャット・過去 PR で既に方針が出ているテーマは、書く前に直近の議論ログを確認する。独自案を出すなら、既出案を代替案として並べて採否理由を示す。
+For topics where policy was already decided in standup / chat / past PR, check recent discussion logs before writing. If proposing an alternative, present prior proposals as alternatives with adoption rationale.
 
-- レビュアーは過去議論を覚えている。整合しないと「以前の議論を反映していない」指摘が飛ぶ
-- 過去議論を反映済みなら本文か Appendix に「{日付}の{場}で合意」と一行添える
+- Reviewers remember prior discussions. Inconsistency triggers "not reflecting prior discussion"
+- If prior discussions are reflected, add one line in body or Appendix: "agreed in {date} {venue}"
 
-### 4. 新方式採用時に不要になる旧概念を棚卸しする
+### 4. Review concepts made obsolete by new approach
 
-設計を新方式に切り替えるとき、旧方式前提の概念（リトライ上限・フォールバック・互換フラグ等）が新方式では不要になっていないか確認する。惰性で残すと過剰実装になる。
+When switching to a new approach, verify that concepts premised on the old approach (retry limits / fallbacks / compatibility flags etc.) are no longer needed. Leaving them creates over-engineering.
 
-| 例 | 旧方式での役割 | 新方式で不要になる理由 |
+| Example | Old approach role | Reason obsolete in new approach |
 |---|---|---|
-| リトライ上限 | 衝突時の再試行 | 排他ロックで取れない＝在庫不足、リトライしても結果同じ |
-| 互換フラグ | 新旧アルゴリズム並存 | メンテナンス時間内一気移行なら並存しない |
-| フォールバック分岐 | 新方式失敗時の旧方式呼び出し | 新方式が単純なら不要 |
+| Retry limit | Retry on collision | Exclusive lock means cannot acquire = out of stock, retry produces same result |
+| Compatibility flag | Old/new algorithm coexistence | No coexistence needed if switching all at once during maintenance window |
+| Fallback branch | Old approach call on new approach failure | Unnecessary if new approach is simple |
 
-### 5. 保守的見積もりで設計を複雑化させない
+### 5. Do not over-engineer with conservative estimates
 
-「念のため」「将来の拡張に備えて」で互換フラグ・段階移行・分割設計を導入する前に、本番データ規模・アクセスパターンを確認する。実データが想定より小さければシンプルな一気移行で済むことが多い。
+Before introducing compatibility flags / phased migration / split design for "just in case" or "future extensibility", confirm production data scale and access patterns. If actual data is smaller than assumed, simple one-shot migration usually suffices.
 
-- 確認手段: 本番 DB read-only 接続、メトリクス、過去のリリース実績
-- 見積もりが固まる前に保守的設計を組むと、レビューで「規模を確認すべき」と差し戻される
+- Verification: production DB read-only connection, metrics, past release history
+- Building conservative design before estimates solidify leads to "should verify scale" pushback in review
 
-## 関連
+## Related
 
-- `../guidelines/writing/design-doc-protocol.md` — DesignDoc 4 Step + アンチパターン + セルフチェック 18
-- `decision-quality-checklist.md` — 意思決定品質の 5 問チェック
-- `~/ai-tools/claude-code/guidelines/common/technical-pitfalls.md` — 技術的な落とし穴
+- `../guidelines/writing/design-doc-protocol.md` — DesignDoc 4 steps + anti-patterns + self-check 18
+- `decision-quality-checklist.md` — 5-question decision quality check
+- `~/ai-tools/claude-code/guidelines/common/technical-pitfalls.md` — technical pitfalls

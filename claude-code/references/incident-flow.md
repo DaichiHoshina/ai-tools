@@ -1,13 +1,13 @@
-# エラー調査・インシデント対応
+# Error Investigation / Incident Response
 
-エラーログを貼られた時の対応フロー。
+Response flow when error logs are shared.
 
-## ステップ
+## Steps
 
-1. **分類**: 既知エラー（設定ミス・想定内）か未知エラーか判定
-2. **影響範囲**: ユーザー影響あり → 即対応、なし → チケット化
-3. **原因特定**: ログから根本原因を特定（対症療法禁止）
-4. **対応判断**: 修正 or 設定変更 or 監視継続をユーザーに提案
+1. **Classify**: Determine if known error (config mistake / expected) or unknown
+2. **Scope**: User impact present → respond immediately; none → create ticket
+3. **Root cause**: Identify root cause from logs (symptomatic fixes forbidden)
+4. **Decision**: Propose fix / config change / monitor to user
 
-詳細フロー: `/incident-response` skill 参照。
-根本原因分析: `/root-cause` skill 参照。
+Details: `/incident-response` skill.
+Root cause analysis: `/root-cause` skill.

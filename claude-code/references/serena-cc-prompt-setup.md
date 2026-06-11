@@ -1,26 +1,26 @@
-# Serena CC system-prompt override 運用ガイド
+# Serena CC System-Prompt Override Setup
 
-Serena v1.2.0 で追加された `serena prompts print-cc-system-prompt-override` を Claude Code 起動時に `--append-system-prompt` で注入し、Serena symbolic tools の優先度を system prompt レイヤで強化する。
+`serena prompts print-cc-system-prompt-override` added in Serena v1.2.0. Inject at Claude Code startup via `--append-system-prompt` to reinforce Serena symbolic tool priority at system prompt layer.
 
-## 仕組み
+## How it works
 
-- 既存 reminder hooks (`be89e99`、SessionStart/PreToolUse/Stop) は **messages レイヤ** に通知
-- cc-system-prompt-override は **system prompt レイヤ** に Serena ツール優先度ルールを注入
-- 両者は補完関係（重複なし）
+- Existing reminder hooks (`be89e99`, SessionStart/PreToolUse/Stop) notify at **messages layer**
+- cc-system-prompt-override injects Serena tool priority rules at **system prompt layer**
+- Complementary (no duplication)
 
-## セットアップ
+## Setup
 
-### 1. プロンプトファイル生成
+### 1. Generate prompt file
 
 ```bash
 PYTHONWARNINGS=ignore uv run --directory ~/serena serena prompts print-cc-system-prompt-override > ~/.claude/serena-cc-prompt.txt
 ```
 
-Serena アップデート時は `/serena-update-fix` で再生成（Phase 5 に組込済み）。
+Regenerate on Serena update via `/serena-update-fix` (built into Phase 5).
 
-### 2. CC 起動方法（推奨: `ccs` shell 関数）
+### 2. Launch method (recommended: `ccs` shell function)
 
-`~/.zshrc` / `~/.bashrc` に追加:
+Add to `~/.zshrc` / `~/.bashrc`:
 
 ```bash
 ccs() {
@@ -28,33 +28,33 @@ ccs() {
   if [[ -r "$prompt_file" ]]; then
     command claude --append-system-prompt "$(cat "$prompt_file")" "$@"
   else
-    echo "[ccs] $prompt_file が無い → 通常 claude で起動 (生成: /serena-update-fix)" >&2
+    echo "[ccs] $prompt_file not found → launching normal claude (generate: /serena-update-fix)" >&2
     command claude "$@"
   fi
 }
 ```
 
-通常起動と使い分け:
-- `claude` → 通常起動（Serena override なし、CLAUDE.md のみ）
-- `ccs` → Serena symbolic tools 優先ルールを system prompt に追加注入
+Usage:
+- `claude` → normal launch (no Serena override, CLAUDE.md only)
+- `ccs` → Serena symbolic tools priority rules injected into system prompt
 
-### 3. 起動確認
+### 3. Verify launch
 
-`/btw Serena ツール優先度ルールが system prompt にある?` 等で読み取れているか確認。
+Check with `/btw Serena tool priority rules in system prompt?`.
 
-## 注意
+## Notes
 
-- ファイル size: 154 行（〜3.5KB）。`--append-system-prompt` のキャッシュ効率を考慮し、毎セッション同じ内容で安定させる
-- Serena 未インストール時はファイル生成スキップ
-- `--bare` mode 起動時は `--append-system-prompt` 明示が必要（CLAUDE.md 自動読込なし）
+- File size: 154 lines (~3.5KB). Keep stable same content each session for `--append-system-prompt` cache efficiency
+- Skip file generation if Serena not installed
+- `--bare` mode requires explicit `--append-system-prompt` (no CLAUDE.md auto-load)
 
-## CLAUDE.md inline 化との比較
+## Comparison: `ccs` function vs. CLAUDE.md inline
 
-| 観点 | `ccs` 関数 (`--append-system-prompt`) | CLAUDE.md inline |
-|------|---------------------|------------------|
-| 侵襲度 | 低（`ccs` 明示起動時のみ） | 高（全 project の memory に常駐） |
-| 更新性 | ファイル再生成のみ | CLAUDE.md 手編集 + sync 必要 |
-| キャッシュ | system prompt cache（独立） | CLAUDE.md cache（他編集で invalidate） |
-| Serena 未使用 project | `claude` で通常起動可 | CLAUDE.md 改行コメント必要 |
+| Aspect | `ccs` (`--append-system-prompt`) | CLAUDE.md inline |
+|--------|----------------------------------|-----------------|
+| Invasiveness | Low (only on explicit `ccs` launch) | High (always in all project memory) |
+| Updateability | File regeneration only | CLAUDE.md manual edit + sync required |
+| Cache | System prompt cache (independent) | CLAUDE.md cache (invalidated by other edits) |
+| Non-Serena projects | Normal launch with `claude` | Need CLAUDE.md comment |
 
-→ **`ccs` 関数経由を推奨**。CLAUDE.md inline は Serena 専業環境のみ。
+**Recommendation**: `ccs` function. CLAUDE.md inline only for Serena-dedicated environments.

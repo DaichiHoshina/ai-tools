@@ -1,6 +1,6 @@
-# 実装計画: CI設定追加
+# Implementation Plan: CI Setup
 
-## アーキテクチャ概要
+## Architecture overview
 
 ```
 GitHub PR/Push
@@ -8,186 +8,126 @@ GitHub PR/Push
 GitHub Actions Workflow
     ↓
 ┌─────────────────────────────────┐
-│ Job 1: shellcheck（並列）       │
-│ Job 2: markdownlint（並列）     │
-│ Job 3: install test（並列）     │
-│ Job 4: sync test（並列）        │
+│ Job 1: shellcheck (parallel)    │
+│ Job 2: markdownlint (parallel)  │
+│ Job 3: install test (parallel)  │
+│ Job 4: sync test (parallel)     │
 └─────────────────────────────────┘
     ↓
-全Job成功 → CI成功 ✓
-いずれか失敗 → CI失敗 ✗
+All jobs pass → CI success
+Any job fails → CI failure
 ```
 
-## ファイル構成
+## File structure
 
 ```
 .github/
   workflows/
-    ci.yml                    # メインCI workflow
-.shellcheckrc                 # shellcheck設定
-.markdownlintrc              # markdownlint設定
+    ci.yml                    # Main CI workflow
+.shellcheckrc                 # shellcheck config
+.markdownlintrc               # markdownlint config
 scripts/
-  test-install.sh            # install.shテストスクリプト
-  test-sync.sh               # sync.shテストスクリプト
+  test-install.sh             # install.sh test script
+  test-sync.sh                # sync.sh test script
 ```
 
-## 実装詳細
+## Implementation details
 
 ### 1. .github/workflows/ci.yml
 
-**トリガー**:
-- pull_request（全ブランチ）
-- push（mainブランチのみ）
-
-**Job構成**:
+**Triggers**: pull_request (all branches) / push (main branch only)
 
 #### Job 1: shellcheck
-- Ubuntu最新版で実行
-- shellcheckをインストール（apt-get）
-- 全.shファイルを検証
-- エラーコード: SC2086, SC2155等を検出
+- Ubuntu latest
+- Install shellcheck (apt-get)
+- Validate all .sh files
+- Detect SC2086, SC2155 etc.
 
 #### Job 2: markdownlint
-- Ubuntu最新版で実行
-- markdownlint-cliをインストール（npm）
-- 全.mdファイルを検証
-- .markdownlintrc設定適用
+- Ubuntu latest
+- Install markdownlint-cli (npm)
+- Validate all .md files
+- Apply .markdownlintrc config
 
 #### Job 3: install-test
-- Ubuntu最新版で実行
-- 一時ディレクトリで実行
-- install.shの動作確認
-- エラー検出
+- Ubuntu latest
+- Run in temp directory
+- Verify install.sh operation
 
 #### Job 4: sync-test
-- Ubuntu最新版で実行
-- sync.shの各モード（to-local, from-local, diff）をテスト
-- エラー検出
+- Ubuntu latest
+- Test sync.sh each mode (to-local, from-local, diff)
 
 ### 2. .shellcheckrc
 
-**除外ルール**:
-- SC1090: source先が変数の場合（lib/i18n.sh等）
-- SC1091: sourceファイルが見つからない場合（CI環境特有）
-
-**有効化ルール**:
-- SC2086: 変数のクォート忘れ
-- SC2155: declare -r と代入の同時実行
-- SC2164: cd失敗時の処理なし
+**Excluded rules**: SC1090 (source with variable), SC1091 (source file not found in CI)  
+**Enabled rules**: SC2086 (unquoted variables), SC2155 (declare -r with assignment), SC2164 (cd without error handling)
 
 ### 3. .markdownlintrc
 
-**緩和ルール**:
-- MD013: 行長制限を緩和（200文字まで）
-- MD033: HTMLタグ許可（テーブル等で使用）
-- MD041: 先頭H1なくてもOK
-
-**厳格ルール**:
-- MD001: ヘッダーレベルの段階的増加
-- MD003: ヘッダースタイル統一
-- MD022: ヘッダー前後の空行
+**Relaxed rules**: MD013 line length (up to 200 chars), MD033 HTML tags, MD041 first H1  
+**Strict rules**: MD001 header level increment, MD003 header style, MD022 blank lines around headers
 
 ### 4. scripts/test-install.sh
 
-**テストフロー**:
-1. 一時ディレクトリ作成
-2. install.shを--dry-runモードで実行（将来追加）
-3. 現時点では構文チェックのみ
-4. エラーがあれば終了コード1
-
-**検証項目**:
-- install.shが実行可能
-- 基本的な構文エラーなし
+Test flow:
+1. Create temp directory
+2. Run install.sh in syntax-check mode
+3. Exit code 1 on error
 
 ### 5. scripts/test-sync.sh
 
-**テストフロー**:
-1. 一時ディレクトリ作成
-2. sync.sh diffモードを実行
-3. エラーがあれば終了コード1
+Test flow:
+1. Create temp directory
+2. Run sync.sh diff mode
+3. Exit code 1 on error
 
-**検証項目**:
-- sync.shが実行可能
-- diffモードが正常動作
+## Parallel execution strategy
 
-## 並列実行戦略
+All 4 jobs run in parallel (independent). Benefits: all complete within 5 minutes; all errors detected in one run even if one fails.
 
-**並列実行Job**:
-- shellcheck（独立）
-- markdownlint（独立）
-- install-test（独立）
-- sync-test（独立）
+## Error handling
 
-**メリット**:
-- 4つのJobを同時実行 → 実行時間短縮（5分以内）
-- 1つ失敗してもすべて実行 → 全エラーを一度に確認可能
+| Type | Behavior |
+|------|---------|
+| shellcheck SC2086 etc. (critical) | CI failure |
+| shellcheck SC1090 etc. (info) | Warning only |
+| markdownlint MD001 etc. (structural) | CI failure |
+| markdownlint MD013 (line length) | Warning only (relaxed config) |
+| install.sh / sync.sh execution error | CI failure |
 
-## エラーハンドリング
+## Implementation steps
 
-**shellcheckエラー**:
-- SC2086等の重要エラー → CI失敗
-- SC1090等の情報 → 警告のみ
+1. Create config files (.shellcheckrc, .markdownlintrc)
+2. Create test scripts (test-install.sh, test-sync.sh)
+3. Create GitHub Actions workflow (ci.yml)
+4. Local verification
 
-**markdownlintエラー**:
-- MD001等の構造エラー → CI失敗
-- MD013（行長）→ 警告のみ（緩和設定）
+## Verification plan
 
-**テストエラー**:
-- install.sh実行エラー → CI失敗
-- sync.sh実行エラー → CI失敗
+### Phase 1: Local
+```bash
+shellcheck claude-code/install.sh
+markdownlint README.md
+bash scripts/test-install.sh
+bash scripts/test-sync.sh
+```
 
-## 実装ステップ
+### Phase 2: CI
+- Create PR to trigger CI
+- Confirm all jobs succeed
+- Check error logs on failure
 
-### ステップ1: 設定ファイル作成
-- .shellcheckrc
-- .markdownlintrc
+## Performance targets
 
-### ステップ2: テストスクリプト作成
-- scripts/test-install.sh
-- scripts/test-sync.sh
+- shellcheck: within 1 min
+- markdownlint: within 2 min
+- install-test: within 30s
+- sync-test: within 30s
+- Total: within 5 min (parallel)
 
-### ステップ3: GitHub Actions workflow作成
-- .github/workflows/ci.yml
+## Security
 
-### ステップ4: ローカル検証
-- shellcheck 実行
-- markdownlint 実行
-- テストスクリプト実行
-
-## 検証計画
-
-### Phase 1: ローカル検証
-- shellcheck claude-code/install.sh
-- markdownlint README.md
-- bash scripts/test-install.sh
-- bash scripts/test-sync.sh
-
-### Phase 2: CI検証
-- PR作成してCIトリガー
-- 全Jobの成功確認
-- エラー時のログ確認
-
-## 期待される結果
-
-**成功時**:
-- 全4 Jobsが成功（緑チェックマーク）
-- PRマージ可能
-
-**失敗時**:
-- 失敗したJobが明確に表示（赤X）
-- エラーログで原因特定
-- PRマージブロック
-
-## セキュリティ考慮事項
-
-- secrets不要（公開リポジトリ前提）
-- 外部スクリプト実行なし
-- パブリックなnpmパッケージのみ使用
-
-## パフォーマンス目標
-
-- shellcheck: 1分以内
-- markdownlint: 2分以内
-- install-test: 30秒以内
-- sync-test: 30秒以内
-- 合計: 5分以内（並列実行）
+- No secrets required (public repo)
+- No external script execution
+- Only public npm packages

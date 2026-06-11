@@ -1,39 +1,39 @@
-# 自然言語トリガー
+# Natural Language Triggers
 
-頻用パターンのみ自然語解釈する。その他は明示コマンド（`/commandname`）を使用。
+Only high-frequency patterns are interpreted from natural language. For others, use explicit commands (`/commandname`).
 
-## トリガー一覧
+## Trigger list
 
-| ユーザー入力 | 実行コマンド |
-|-------------|-------------|
-| "pushして", "push" | `/git-push --pr`（ブランチ作成→PR） |
-| "main push", "mainにpush" | `/git-push --main`（mainブランチ直接push） |
-| "sync push", "push sync" | `/git-push` → `sync.sh to-local`（ai-toolsリポジトリ時のみ） |
+| User input | Command executed |
+|------------|----------------|
+| "pushして", "push" | `/git-push --pr` (create branch → PR) |
+| "main push", "mainにpush" | `/git-push --main` (push directly to main) |
+| "sync push", "push sync" | `/git-push` → `sync.sh to-local` (ai-tools repo only) |
 | "全自動で", "autoで", "おまかせ" | `/flow-auto` |
-| "横並びで", "同じ修正を" | 複数リポジトリ横並び作業（multi-repo-workflow.md参照） |
-| "レビュー", "レビューして", "コードレビュー" | `/review`（デフォルト、内部でモード自動推定） |
+| "横並びで", "同じ修正を" | Multi-repo parallel work (see multi-repo-workflow.md) |
+| "レビュー", "レビューして", "コードレビュー" | `/review` (default, mode auto-detected internally) |
 | "PR<番号>レビュー", "<PR-URL>レビュー" | `/review <PR>` |
 | "codexでレビュー", "セカンドオピニオン" | `/review --codex` |
-| "設計レビュー", "敵対レビュー", "設計問い詰め", "アーキテクチャレビュー" | `/review --adversarial`（codex adversarial-review 委譲） |
-| "深掘りレビュー", "厳しめレビュー", "徹底レビュー", "詳細レビュー" | `/review --deep`（pr-review-toolkit 6 agent並列） |
-| "リリース前レビュー", "PR最終レビュー", "全部入りレビュー", "全力レビュー" | `/review --multi <PR>`（4手段並列、最大コスト） |
-| "クラウドでレビュー", "ultrareview" | `/ultrareview`（cloud並列、別課金） |
-| "ブレスト", "設計検討", "アイデア出し" | `/brainstorm`（対話的設計精緻化） |
-| "API 設計", "API 設計して" | `/api-design`（API エンドポイント設計・OpenAPI 仕様作成） |
-| "バックエンド", "バックエンド実装" | `/backend-dev`（バックエンド実装・API 開発） |
-| "strict mode", "厳格モード" | `/session-mode strict`（本番作業向け） |
+| "設計レビュー", "敵対レビュー", "設計問い詰め", "アーキテクチャレビュー" | `/review --adversarial` (codex adversarial-review delegation) |
+| "深掘りレビュー", "厳しめレビュー", "徹底レビュー", "詳細レビュー" | `/review --deep` (pr-review-toolkit 6 agents parallel) |
+| "リリース前レビュー", "PR最終レビュー", "全部入りレビュー", "全力レビュー" | `/review --multi <PR>` (4 methods parallel, max cost) |
+| "クラウドでレビュー", "ultrareview" | `/ultrareview` (cloud parallel, separate billing) |
+| "ブレスト", "設計検討", "アイデア出し" | `/brainstorm` (interactive design refinement) |
+| "API 設計", "API 設計して" | `/api-design` (API endpoint design / OpenAPI spec) |
+| "バックエンド", "バックエンド実装" | `/backend-dev` (backend implementation / API development) |
+| "strict mode", "厳格モード" | `/session-mode strict` (for production work) |
 | "fast mode", "高速モード", "プロトタイプモード" | `/session-mode fast` |
 | "normal mode", "通常モード" | `/session-mode normal` |
-| "並列実行で" | `/flow --parallel`（worktree 提案、PO 確認必須） |
-| "Developer 並列で" | `/flow --parallel`（同上） |
-| "worktree 分けて" | `/flow --parallel`（同上） |
-| "wt 分けて" | `/flow --parallel`（同上） |
-| "team で", "agent team で" | `/flow`（PO/Manager/Dev 階層を強制起動） |
-| "分担で", "本格的に" | `/flow`（同上、軽量タスク pre-check を回避） |
-| "Slack に投げて", "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message`（送信先 channel/DM 確認後） |
-| "Notion に書いて", "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages`（親 page 確認後） |
-| "PR コメント残して", "レビューコメント残して" | `/post-comment`（PR 番号/URL 必須） |
+| "並列実行で" | `/flow --parallel` (worktree proposal, PO confirmation required) |
+| "Developer 並列で" | `/flow --parallel` (same) |
+| "worktree 分けて" | `/flow --parallel` (same) |
+| "wt 分けて" | `/flow --parallel` (same) |
+| "team で", "agent team で" | `/flow` (force PO/Manager/Dev hierarchy) |
+| "分担で", "本格的に" | `/flow` (same, skip lightweight task pre-check) |
+| "Slack に投げて", "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message` (confirm channel/DM first) |
+| "Notion に書いて", "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages` (confirm parent page first) |
+| "PR コメント残して", "レビューコメント残して" | `/post-comment` (PR number/URL required) |
 
-## 解釈しない例
+## Not interpreted
 
-上記以外（`修正してpush`、`元に戻して`、`codexで{タスク}` 等）は自然語解釈しない。明示コマンド（例: `/undo`）を使う。誤判定・トークン消費を避けるため。
+Inputs not listed above (`修正してpush`, `元に戻して`, `codexで{task}` etc.) are not interpreted from natural language. Use explicit commands (e.g., `/undo`). Avoids misinterpretation and token waste.
