@@ -5,31 +5,31 @@ description: Comprehensive code review (comprehensive-review skill + optional ex
 
 # /review - Comprehensive Code Review
 
-> `comprehensive-review` skill で 12 観点レビュー実行。`--deep`/`--multi` で外部レビュアー並列化。
-> Noise filter 方針: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/SKILL.md` Step -1
+> Runs 12-angle review via `comprehensive-review` skill. `--deep`/`--multi` parallelizes external reviewers.
+> Noise filter policy: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/SKILL.md` Step -1
 
-## Delegation & Self-Review (必須、2 段階)
+## Delegation & Self-Review (required, 2 stages)
 
-**Delegation**: `comprehensive-review` skill を `reviewer-agent` (Sonnet) に Task 委譲。委譲 prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus は Stage B filter のみ担当。
+**Delegation**: Delegate `comprehensive-review` skill to `reviewer-agent` (Sonnet) via Task. Delegation prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus handles Stage B filter only.
 
-`/review` 系コマンド出力前に **必ず** 以下 2 段階のセルフレビューを実行する。`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial` 全モードで一律適用、skip 不可。
+**Always** run the following 2-stage self-review before outputting `/review` results. Applied uniformly to all modes (`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial`) — cannot skip.
 
 ### Stage A: Finding Self-Review Gate (per-finding)
 
-skill の Step 4.5 が Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription の 7 観点で一次評価済。**parent Opus が同 7 観点で safety net 再評価を必ず実行**。propagation incompleteness / cross-ref desync 系は重点確認。判断ログは出力に含めない。
+Skill Step 4.5 has already done primary eval on 7 angles: Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription. **Parent Opus must run safety-net re-eval on the same 7 angles**. Prioritize propagation incompleteness / cross-ref desync. Do not include judgment log in output.
 
-adversarial モード: Evidence/Scope 判定基準は緩め (design challenge 性質)、Stage B の重複統合は通常通り。
+Adversarial mode: relax Evidence/Scope criteria (design-challenge nature); Stage B dedup proceeds as normal.
 
-### Stage B: Result Self-Review Pass (全体)
+### Stage B: Result Self-Review Pass (overall)
 
-1. **重複統合**: 同一 root cause を複数 lens が別 finding にしていないか → 1 件に統合
-2. **トーン整合**: Critical 多発時は false alarm 警戒、再評価
-3. **Project convention**: CLAUDE.md / guidelines に照らして妥当か、規約外の好み指摘は破棄
-4. **Zero-finding**: 0 件は valid、padding 禁止
+1. **Dedup**: multiple lenses producing separate findings from same root cause → consolidate to 1
+2. **Tone consistency**: many Criticals → watch for false alarms, re-evaluate
+3. **Project convention**: check against CLAUDE.md / guidelines; discard preference-based findings outside conventions
+4. **Zero-finding**: 0 is valid — no padding
 
 ## Step 0: Auto-infer Mode (no flags)
 
-起動時 flags なし → 推奨モードを提示しユーザ確認後実行 (heavy モードは同意なし自動実行禁止)。
+No flags on launch → present recommended mode, execute after user confirm (heavy modes must not auto-run without consent).
 
 | Situation | Recommend |
 |-----------|-----------|
@@ -69,26 +69,26 @@ Via plugin: `node "${CODEX_PLUGIN_ROOT}/scripts/codex-companion.mjs" <review|adv
 
 ## Adversarial Flow
 
-Design correctness / assumptions / real-world failure points を challenge。`--base <ref>` / `--scope auto|working-tree|branch` / `--background` → `/codex:status`/`/codex:result <id>`. 用途: design review / pre-PR self-challenge。実装欠陥は `/review` default。
+Challenges design correctness / assumptions / real-world failure points. `--base <ref>` / `--scope auto|working-tree|branch` / `--background` → `/codex:status`/`/codex:result <id>`. Use: design review / pre-PR self-challenge. Implementation defects → `/review` default.
 
 ## Deep Flow
 
-`pr-review-toolkit` 6 agents を並列実行。**Cost warning**: tens of seconds ~ minutes × 6 parallel。Daily = default。
+Run `pr-review-toolkit` 6 agents in parallel. **Cost warning**: tens of seconds ~ minutes × 6 parallel. Daily = default.
 
 ## Multi Flow
 
-PR required。4 メソッド並列実行:
+PR required. Run 4 methods in parallel:
 
-1. PR diff を `/tmp/review-multi-<PR>.diff` に取得
-2. 並列: (a) `comprehensive-review` skill / (b) codex plugin / (c) `/code-review:code-review` / (d) `coderabbit:code-review`
-3. 4 出力をマージ・重複排除
-4. `gh pr comment <PR> --body-file -` で auto-post
+1. Fetch PR diff to `/tmp/review-multi-<PR>.diff`
+2. Parallel: (a) `comprehensive-review` skill / (b) codex plugin / (c) `/code-review:code-review` / (d) `coderabbit:code-review`
+3. Merge 4 outputs, deduplicate
+4. Auto-post via `gh pr comment <PR> --body-file -`
 
-Aggregation (3+一致 = Critical confirmed 等)。用途: pre-merge / release-critical / security patch。Daily 不推奨。
+Aggregation (3+ agree = Critical confirmed etc.). Use: pre-merge / release-critical / security patch. Not recommended daily.
 
 ## Output Format
 
-SKILL.md と同一フォーマット。追加ラベル:
+Same format as SKILL.md. Additional labels:
 
 ```markdown
 ### 🔴 Critical (fix required, confidence ≥80)
@@ -96,11 +96,11 @@ SKILL.md と同一フォーマット。追加ラベル:
 Total: Critical N / Warning N
 ```
 
-Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / Multi/Deep partial fail → `### Degrade factors`。
+Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / Multi/Deep partial fail → `### Degrade factors`.
 
 ## Critical/Warning ↔ P0/P1
 
-`/review` solo = `Critical→P0` / `Warning→P1` / else `P2/P3`。Team path = report only。詳細: [`reviewer-agent.md`](../agents/reviewer-agent.md)。
+`/review` solo = `Critical→P0` / `Warning→P1` / else `P2/P3`. Team path = report only. Details: [`reviewer-agent.md`](../agents/reviewer-agent.md).
 
 ## Review Policy & Scope
 
@@ -108,4 +108,4 @@ Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / 
 - **scope**: changed files (git diff). exclude: auto-gen / vendor / node_modules / lock
 - **difit**: local only, background after review (require `npm i -g difit`, suppress: `--no-difit`)
 
-detail: policy / scope 詳細は `references/` 内 review 関連 file 参照。
+Details: see review-related files under `references/`.

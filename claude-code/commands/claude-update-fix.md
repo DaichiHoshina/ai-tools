@@ -16,21 +16,21 @@ cat claude-code/VERSION                                          # last confirme
 cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null
 ```
 
-**Channel 判定** (release channel に合わせて追従):
+**Channel judgment** (track per release channel):
 
-| 条件 | CHANNEL | TARGET |
+| Condition | CHANNEL | TARGET |
 |------|---------|--------|
 | `claude --version` == `dist-tags.stable` | `stable` | `stable` tag version |
 | `claude --version` == `dist-tags.latest` | `latest` | `latest` tag version |
-| どちらとも不一致 (中間 version / 手動固定) | `stable` (保守) | `stable` tag version |
+| neither matches (mid-version / manually pinned) | `stable` (conservative) | `stable` tag version |
 
-判定理由: stable channel 運用時に `latest` のみで入った rename / 新 hook を採用すると、stable CLI ではコマンド未存在で破壊的になる。channel に対応する target で fetch 範囲・bump 対象を揃える。
+Rationale: on stable channel, adopting renames/new hooks that only landed in `latest` would break stable CLI (command not found). Align fetch scope and bump target to the channel-appropriate target.
 
-**判定**:
-- `VERSION > TARGET` (next channel 利用 / 手動先行 bump / channel switch 後 downgrade) → no-op exit、`> [WARN] VERSION (X) > TARGET (Y)、channel target 未達。fetch 範囲負方向ゆえ skip。手動で VERSION を TARGET に揃えるか確認` を表示
-- `TARGET == VERSION` + opportunities 解決済 → "already up to date" & exit
-- `TARGET == VERSION` + opportunities exist → Phase 3-B のみ
-- `TARGET > VERSION` → Phase 2 へ (CHANGELOG fetch 範囲: `VERSION+1` ~ `TARGET`)
+**Decision**:
+- `VERSION > TARGET` (next channel / pre-bump / post-channel-switch downgrade) → no-op exit; display `> [WARN] VERSION (X) > TARGET (Y), below channel target. Fetch range goes backward — skip. Confirm manually aligning VERSION to TARGET`
+- `TARGET == VERSION` + opportunities resolved → "already up to date" & exit
+- `TARGET == VERSION` + opportunities exist → Phase 3-B only
+- `TARGET > VERSION` → Phase 2 (CHANGELOG fetch range: `VERSION+1` ~ `TARGET`)
 
 ## Phase 2: CHANGELOG structured extraction
 
@@ -51,7 +51,7 @@ Extract confirmed-to-current range, tag each entry (multi-tag OK):
 | `SKILL` | skill, frontmatter, description char-limit | → 3-6 |
 | `COMMAND` | slash command, new `/` command names | → 3-7 |
 
-no tag (UI/perf/bugfix etc) → ignore.
+No tag (UI/perf/bugfix etc) → ignore.
 
 ## Phase 3: Extension point map (fixed mapping table)
 
@@ -61,7 +61,7 @@ For each tag, run grep/read at **decisive detection points**. Generate fix sugge
 |-----|------------------|------------------|
 | 3-1 RENAME | `claude-code/agents/*.md`, `commands/*.md`, `skills/*/skill.md`, `CLAUDE.md`, `hooks/*.sh`, `templates/settings.json.template` | grep old name, replace w/ new name |
 | 3-2 HOOK | `claude-code/hooks/*.sh`, `hooks` section in `templates/settings.json.template` | new event: suggest template if unregistered. I/O change: grep existing hook schema |
-| 3-3 SETTING | `claude-code/templates/settings.json.template` | new key: suggest add to template (live `.claude/settings.json` は `sync.sh to-local` で template canonical 上書きされるため編集対象外、CLAUDE.md "root keys are template canonical" rule 準拠). deprecated: suggest remove |
+| 3-3 SETTING | `claude-code/templates/settings.json.template` | new key: suggest add to template (live `.claude/settings.json` is overwritten by `sync.sh to-local` — not an edit target; per CLAUDE.md "root keys are template canonical"). deprecated: suggest remove |
 | 3-4 MODEL | `claude-code/CLAUDE.md`, `agents/*.md` frontmatter, `skills/*/skill.md`, `scripts/**/*.{sh,py}` | grep old model ID, replace all |
 | 3-5 TOOL | `allowed-tools:` and tool lists in `claude-code/agents/*.md` | tool rename: replace. new tool: suggest if useful for agent |
 | 3-6 SKILL | `claude-code/skills/*/skill.md` frontmatter | validate new rules (e.g. description length) |
@@ -69,7 +69,7 @@ For each tag, run grep/read at **decisive detection points**. Generate fix sugge
 
 ### 3-B. Opportunity re-evaluation
 
-Re-check each item in prior `CLAUDE-CODE-OPPORTUNITIES.md`. Adopted/stale → close. Unimplemented + valid → continue.
+Re-check each item in prior `CLAUDE-CODE-OPPORTUNITIES.md`. Adopted/stale → close. Unimplemented + still valid → continue.
 
 ## Phase 4: Application (by tier)
 
@@ -85,7 +85,7 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 
 ## Phase 5: Cleanup (after Phase 4 confirm-apply)
 
-1. Update `claude-code/VERSION` to **TARGET** (Phase 1 で確定した channel 対応 version、`latest` ではなく channel target を書き込む)
+1. Update `claude-code/VERSION` to **TARGET** (channel-matched version confirmed in Phase 1; write channel target, not `latest`)
 2. Run `./claude-code/sync.sh to-local --yes` (at this step only)
 3. Update opportunity file (reflect Phase 3-B diffs)
 4. If major changes (3+ files or non-obvious decisions), save to Serena memory as `claude-update-YYYYMMDD`
@@ -95,22 +95,22 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 `claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md`:
 
 ```markdown
-## <version> (YYYY-MM-DD 検出, <channel>)
-- [ ] **<feature name>**: <summary> — 検討箇所: <file/agent>
+## <version> (detected YYYY-MM-DD, <channel>)
+- [ ] **<feature name>**: <summary> — review target: <file/agent>
 ```
 
-- `<channel>` = `stable` or `latest` (Phase 1 で確定したもの)。channel を書き残しておくと、後の channel switch 時に過去履歴のスコープが追える
+- `<channel>` = `stable` or `latest` (as determined in Phase 1). Recording channel lets you scope past history correctly after a channel switch
 - when adopted: check & reference in commit msg
 - when stale: strike out as `~~<feature name>~~ (obsolete YYYY-MM-DD)`
 
 ## Notes
 
 - `claude doctor` is interactive; use `claude --version` instead
-- `npm view ... dist-tags --json` fails (network 等) → 安全 fallback: 現 `VERSION` を TARGET 扱いで no-op exit、warning 表示 (`> [WARN] dist-tags fetch fail、channel 判定不可。CLI 再接続後に再実行を`)。**`latest` 自動採用は禁止** (stable channel 環境で破壊的変更を引き込むリスク、本 Phase 1 安全側設計と矛盾)
-- stable channel 運用時、`latest` のみで入った feature は `Track only` (Opportunity) でも記録しない (stable 到達後に次回検出される) — Phase 2 fetch 範囲を TARGET で限定する目的
-- if CHANGELOG fetch fails: minimal analysis w/ `claude --help` + npm view
-- auto-apply must remain git-diff-reviewable (do not run sync.sh until after confirm-apply)
-- **VERSION ファイル更新は stable tag に揃える** — Phase 5 Step 1 で書き込む値は `dist-tags.stable`（`latest` は書き込まない）
-- **CHANGELOG / 機能反映の対象範囲は `(現 VERSION + 1) ~ stable tag` まで** — stable 未到達 version の feature は採用せず、Opportunity 記録もしない（stable 到達後に次回 `/claude-update-fix` 実行時に自然に検出される）
-- **latest channel への切替はユーザ明示確認後のみ** — デフォルトは stable。ユーザから "latest channel に切り替えて" 等の明示がない限り `latest` を TARGET に採用しない
-- 根拠: 2026-05-23 時点 `dist-tags.stable = 2.1.142`、`dist-tags.latest = 2.1.150`。stable 環境で latest 限定 feature（rename / 新 hook / 新 setting key 等）を取り込むと CLI 未実装ゆえ破壊的変更が入る
+- `npm view ... dist-tags --json` fails (network etc.) → safe fallback: treat current `VERSION` as TARGET, no-op exit, display `> [WARN] dist-tags fetch failed, cannot determine channel. Re-run after CLI reconnects`. **Auto-adopting `latest` is forbidden** (risks pulling breaking changes on stable channel, contradicting Phase 1 safe-side design)
+- On stable channel, features only in `latest` are not recorded even as `Track only` (Opportunity) — they surface naturally on next run after reaching stable. Purpose: limit Phase 2 fetch scope to TARGET
+- If CHANGELOG fetch fails: minimal analysis via `claude --help` + npm view
+- Auto-apply must remain git-diff-reviewable (do not run sync.sh until after confirm-apply)
+- **VERSION file update aligns to stable tag** — value written in Phase 5 Step 1 is `dist-tags.stable` (do not write `latest`)
+- **CHANGELOG / feature adoption scope is `(current VERSION + 1) ~ stable tag`** — do not adopt features from versions not yet on stable; no Opportunity entry either (detected naturally on next `/claude-update-fix` after stable arrival)
+- **Switching to latest channel requires explicit user confirmation** — default is stable. Do not adopt `latest` as TARGET without explicit instruction such as "switch to latest channel"
+- Rationale: as of 2026-05-23, `dist-tags.stable = 2.1.142`, `dist-tags.latest = 2.1.150`. Pulling latest-only features (renames / new hooks / new setting keys etc.) on stable breaks CLI due to unimplemented commands
