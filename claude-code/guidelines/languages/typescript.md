@@ -1,155 +1,155 @@
-# TypeScriptガイドライン
+# TypeScript Guidelines
 
-TypeScript 6.0.3対応（2026年時点 stable）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
-
----
-
-## 基本原則
-
-- **strict: true必須**: 全strictオプション有効化
-- **型システム最大活用**: コンパイル時エラー検出
-- **ECMAScript最新**: ES2024サポート（5.7+）
-- **関数型**: 不変性、純粋関数
+TypeScript 6.0.3 (stable as of 2026). Common guidelines: `~/.claude/guidelines/common/`.
 
 ---
 
-## ディレクトリ構成
+## Core Principles
 
-- `domain/` - エンティティ、値オブジェクト
-- `application/` - ユースケース
-- `infrastructure/` - DB、外部API
-- `presentation/` - コントローラー、DTO
-
----
-
-## 型定義（厳格）
-
-### 禁止事項
-- **any禁止**: `unknown` + 型ガード
-- **as禁止**: 型ガード関数でナローイング
-- **! 禁止**: 明示的nullチェック
-
-### 型の使い分け
-- `interface` - オブジェクト形状
-- `type` - ユニオン・交差型
-- **Branded Type** - ID型安全性
-- **const assertion** - `as const`
-- **Utility Types** - `Partial<T>`, `Pick<T,K>`, `Omit<T,K>`, `Record<K,V>` 等（詳細は下記「クイックリファレンス > Utility Types」節の表）
+- **strict: true required**: enable all strict options
+- **Maximize the type system**: catch errors at compile time
+- **Latest ECMAScript**: ES2024 support (5.7+)
+- **Functional**: immutability, pure functions
 
 ---
 
-## 命名規則
+## Directory Structure
 
-- 変数・関数: camelCase
-- 型・クラス: PascalCase
-- 定数: UPPER_SNAKE_CASE
-- private: # prefix
+- `domain/` — entities, value objects
+- `application/` — use cases
+- `infrastructure/` — DB, external APIs
+- `presentation/` — controllers, DTOs
+
+---
+
+## Type Definitions (strict)
+
+### Prohibitions
+- **no `any`**: use `unknown` + type guard
+- **no `as`**: narrow with type guard functions
+- **no `!`**: explicit null checks
+
+### Type Usage
+- `interface` — object shape
+- `type` — union/intersection types
+- **Branded Type** — ID type safety
+- **const assertion** — `as const`
+- **Utility Types** — `Partial<T>`, `Pick<T,K>`, `Omit<T,K>`, `Record<K,V>` etc. (see Quick Reference > Utility Types table)
+
+---
+
+## Naming Conventions
+
+- Variable/Function: camelCase
+- Type/Class: PascalCase
+- Constant: UPPER_SNAKE_CASE
+- Private: # prefix
 
 ---
 
 ## null/undefined
 
-- `?.` - Optional Chaining
-- `??` - Nullish Coalescing
-- 型ガード: `function isUser(data: unknown): data is User`
+- `?.` — Optional Chaining
+- `??` — Nullish Coalescing
+- Type guard: `function isUser(data: unknown): data is User`
 
 ---
 
-## 関数設計
+## Function Design
 
-- 純粋関数優先
-- 副作用を明示的に分離
-- 早期リターン
+- Prefer pure functions
+- Isolate side effects explicitly
+- Early return
 
 ---
 
-## クイックリファレンス
+## Quick Reference
 
-### 型定義
+### Type Definitions
 
-| 用途 | コード | 説明 |
-|------|--------|------|
-| 型安全unknown | `unknown` + 型ガード | anyの代替 |
-| Union | `type Status = "active" \| "inactive"` | いずれか |
-| Intersection | `type A & B` | 両方の型 |
-| Branded Type | `type UserId = string & { __brand: "UserId" }` | ID型区別 |
-| const assertion | `as const` | リテラル型 |
+| Use | Code | Description |
+|-----|------|-------------|
+| Type-safe unknown | `unknown` + type guard | alternative to any |
+| Union | `type Status = "active" \| "inactive"` | either |
+| Intersection | `type A & B` | both types |
+| Branded Type | `type UserId = string & { __brand: "UserId" }` | distinguish ID types |
+| const assertion | `as const` | literal type |
 
 ### Utility Types
 
-| 型 | 用途 |
-|----|------|
-| `Partial<T>` | 全プロパティをオプション化 |
-| `Required<T>` | 全プロパティを必須化 |
-| `Readonly<T>` | 全プロパティを読み取り専用化 |
-| `Pick<T, K>` | 特定プロパティ抽出 |
-| `Omit<T, K>` | 特定プロパティ除外 |
-| `Record<K, V>` | キー・値のマップ |
-| `NonNullable<T>` | null/undefined除外 |
-| `ReturnType<F>` | 関数の戻り型抽出 |
-| `Parameters<F>` | 関数の引数型抽出（tuple） |
-| `Awaited<T>` | Promise解決型抽出 |
+| Type | Use |
+|------|-----|
+| `Partial<T>` | make all properties optional |
+| `Required<T>` | make all properties required |
+| `Readonly<T>` | make all properties read-only |
+| `Pick<T, K>` | extract specific properties |
+| `Omit<T, K>` | exclude specific properties |
+| `Record<K, V>` | key-value map |
+| `NonNullable<T>` | exclude null/undefined |
+| `ReturnType<F>` | extract function return type |
+| `Parameters<F>` | extract function parameter types (tuple) |
+| `Awaited<T>` | extract resolved Promise type |
 
-### エラー処理
+### Error Handling
 
-| パターン | コード | 用途 |
-|---------|--------|------|
-| Result型 | `type Result<T, E> = { ok: true; value: T } \| { ok: false; error: E }` | 関数型エラー処理 |
-| カスタムエラー | `class NotFoundError extends Error` | 型付きエラー |
-| try-catch | `try { ... } catch (error) { ... }` | 例外処理 |
+| Pattern | Code | Use |
+|---------|------|-----|
+| Result type | `type Result<T, E> = { ok: true; value: T } \| { ok: false; error: E }` | functional error handling |
+| Custom error | `class NotFoundError extends Error` | typed errors |
+| try-catch | `try { ... } catch (error) { ... }` | exception handling |
 
-## よくあるミス
+## Common Mistakes
 
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| `function process(data: any)` | `function process<T>(data: T)` | 型安全性 |
-| `const user = data as User` | `if (isUser(data))` | ランタイム安全 |
-| `user.name!.toUpperCase()` | `user.name?.toUpperCase()` | null安全 |
-| `throw new Error()` | `Result<T, E>` 型 | 制御フロー明確化 |
+| Avoid | Use | Reason |
+|-------|-----|--------|
+| `function process(data: any)` | `function process<T>(data: T)` | type safety |
+| `const user = data as User` | `if (isUser(data))` | runtime safety |
+| `user.name!.toUpperCase()` | `user.name?.toUpperCase()` | null safety |
+| `throw new Error()` | `Result<T, E>` type | clear control flow |
 
 ---
 
-## 古いパターン検出（レビュー/実装時チェック）
+## Deprecated Pattern Detection (review / implementation)
 
-`tsconfig.json` の `target` と `package.json` のTypeScriptバージョンを確認してから指摘する。
+Check `tsconfig.json` `target` and `package.json` TypeScript version before flagging.
 
-### 🔴 Critical（必ず指摘）
+### Critical (always flag)
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
-| `enum Foo { ... }` (数値enum) | `as const` オブジェクトorユニオン型 | TS全般 |
-| `namespace` | ES Modules (`import`/`export`) | TS全般 |
-| `/// <reference>` | `import` 文 | TS全般 |
+| Deprecated | Modern | Since |
+|------------|--------|-------|
+| `enum Foo { ... }` (numeric enum) | `as const` object or union type | general TS |
+| `namespace` | ES Modules (`import`/`export`) | general TS |
+| `/// <reference>` | `import` statement | general TS |
 | `require()` | `import` (ESM) | ES2015+ |
-| `any` 型の使用 | `unknown` + 型ガードorジェネリクス | strict |
+| `any` type usage | `unknown` + type guard or generics | strict |
 
-### 🟡 Warning（積極的に指摘）
+### Warning (proactively flag)
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
-| `Promise.then().catch()` チェーン | `async`/`await` + `try`/`catch` | ES2017 |
-| `Object.assign({}, obj)` | スプレッド `{ ...obj }` | ES2018 |
+| Deprecated | Modern | Since |
+|------------|--------|-------|
+| `Promise.then().catch()` chain | `async`/`await` + `try`/`catch` | ES2017 |
+| `Object.assign({}, obj)` | spread `{ ...obj }` | ES2018 |
 | `arr.indexOf(x) !== -1` | `arr.includes(x)` | ES2016 |
 | `Object.keys(obj).forEach(...)` | `Object.entries(obj)` / `for...of` | ES2017 |
 | `arr.filter(...)[0]` | `arr.find(...)` | ES2015 |
-| `arr.reduce` で配列グルーピング | `Object.groupBy()` / `Map.groupBy()` | ES2024/TS5.7 |
+| `arr.reduce` for array grouping | `Object.groupBy()` / `Map.groupBy()` | ES2024/TS5.7 |
 | `lodash.get(obj, 'a.b.c')` | Optional chaining `obj?.a?.b?.c` | TS3.7/ES2020 |
 | `x === null \|\| x === undefined` | `x ?? fallback` (Nullish Coalescing) | TS3.7/ES2020 |
 | `x != null ? x : fallback` | `x ?? fallback` | TS3.7/ES2020 |
-| class component (`extends React.Component`) | 関数コンポーネント + Hooks | React 16.8+ |
+| class component (`extends React.Component`) | function component + Hooks | React 16.8+ |
 | `@decorator` (legacy/experimental) | Stage 3 Decorators | TS5.0 |
-| `typeof x === 'string'` 繰返し | `satisfies` で型保証 | TS4.9 |
+| Repeated `typeof x === 'string'` | `satisfies` for type assurance | TS4.9 |
 
-### ℹ️ Info（提案レベル）
+### Info (suggestion level)
 
-| 項目 | 内容 | Since |
-|------|------|-------|
-| TS 7.0 (Project Corsa) | ネイティブコンパイラで10倍高速化。6.0はJS版最終版 | 2026予定 |
-| `--erasableSyntaxOnly` | ランタイムに影響する構文を検出 | TS5.8 |
+| Item | Detail | Since |
+|------|--------|-------|
+| TS 7.0 (Project Corsa) | native compiler for 10x speedup; 6.0 is last JS version | planned 2026 |
+| `--erasableSyntaxOnly` | detect runtime-affecting syntax | TS5.8 |
 
 ---
 
-## tsconfig.json必須設定
+## tsconfig.json Required Settings
 
 ```json
 {
@@ -165,7 +165,7 @@ TypeScript 6.0.3対応（2026年時点 stable）。共通ガイドラインは `
 
 ---
 
-## ツール
+## Tools
 
 - ESLint + typescript-eslint
 - Prettier

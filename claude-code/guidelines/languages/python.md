@@ -1,140 +1,140 @@
-# Pythonガイドライン
+# Python Guidelines
 
-Python 3.14.6対応（2026-06-10リリース）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
-
----
-
-## 基本原則
-
-- **PEP 8準拠**: スタイルガイド必須
-- **型ヒント必須**: `mypy --strict` でチェック
-- **明示は暗黙より良い**: Zen of Python
-- **ツール**: `ruff`, `black`, `mypy` 推奨
-- **仮想環境**: `uv`, `poetry`, `venv` 必須
+Python 3.14.6 (released 2026-06-10). Common guidelines: `~/.claude/guidelines/common/`.
 
 ---
 
-## ディレクトリ構成
+## Core Principles
 
-- `src/` - ソースコード
-- `tests/` - テストコード
-- `pyproject.toml` - プロジェクト設定
-- `requirements.txt` または `uv.lock` - 依存関係
+- **PEP 8 compliance**: required
+- **Type hints required**: check with `mypy --strict`
+- **Explicit over implicit**: Zen of Python
+- **Tools**: `ruff`, `black`, `mypy` recommended
+- **Virtual environments**: `uv`, `poetry`, `venv` required
 
 ---
 
-## 型定義
+## Directory Structure
 
-### 基本型ヒント
+- `src/` — source code
+- `tests/` — test code
+- `pyproject.toml` — project config
+- `requirements.txt` or `uv.lock` — dependencies
+
+---
+
+## Type Definitions
+
+### Basic Type Hints
 - `def func(name: str, age: int) -> bool:`
 - `list[str]`, `dict[str, int]` (3.9+)
-- `str | None` (3.10+) Union型
+- `str | None` (3.10+) union type
 
-### 高度な型
-- `TypedDict` - 辞書の型定義
-- `Protocol` - 構造的サブタイピング
-- `Generic[T]` - ジェネリクス
-- `Self` (3.11+) - 自己参照型
-
----
-
-## 命名規則
-
-- **モジュール/パッケージ**: `snake_case`
-- **クラス**: `PascalCase`
-- **関数/変数**: `snake_case`
-- **定数**: `UPPER_SNAKE_CASE`
-- **プライベート**: `_prefix`
+### Advanced Types
+- `TypedDict` — typed dict definitions
+- `Protocol` — structural subtyping
+- `Generic[T]` — generics
+- `Self` (3.11+) — self-referential type
 
 ---
 
-## クイックリファレンス
+## Naming Conventions
 
-### エラー処理
-
-| パターン | コード | 用途 |
-|---------|--------|------|
-| 基本 | `try: ... except Exception as e: ...` | 例外捕捉 |
-| 再発行 | `raise RuntimeError("msg") from e` | チェーン |
-| カスタム | `class CustomError(Exception): ...` | 独自例外 |
-| コンテキスト | `with open(f) as fp: ...` | リソース管理 |
-
-### 非同期処理
-
-| パターン | コード | 用途 |
-|---------|--------|------|
-| async関数 | `async def fetch(): ...` | 非同期定義 |
-| await | `result = await fetch()` | 非同期呼び出し |
-| 並行実行 | `await asyncio.gather(*tasks)` | 同時実行 |
-| タイムアウト | `async with asyncio.timeout(5):` (3.11+) | 制限時間 |
-
-### テスト
-
-| パターン | コード | 用途 |
-|---------|--------|------|
-| 基本 | `def test_func():` | pytest |
-| フィクスチャ | `@pytest.fixture` | テスト前処理 |
-| パラメータ化 | `@pytest.mark.parametrize` | 複数ケース |
-| モック | `from unittest.mock import Mock` | テストダブル |
-
-## よくあるミス
-
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| `except:` (裸) | `except Exception:` | BaseException捕捉防止 |
-| `from module import *` | 明示的インポート | 名前空間汚染 |
-| `def f(lst=[]):` | `def f(lst=None):` | ミュータブルデフォルト |
-| グローバル変数 | 依存性注入 | テスタビリティ |
-| `type: ignore` 乱用 | 適切な型定義 | 型安全性 |
+- **Module/Package**: `snake_case`
+- **Class**: `PascalCase`
+- **Function/Variable**: `snake_case`
+- **Constant**: `UPPER_SNAKE_CASE`
+- **Private**: `_prefix`
 
 ---
 
-## 古いパターン検出（レビュー/実装時チェック）
+## Quick Reference
 
-`pyproject.toml` の `requires-python` または実行バージョンを確認してから指摘する。
+### Error Handling
 
-### 🔴 Critical（必ず指摘）
+| Pattern | Code | Use |
+|---------|------|-----|
+| Basic | `try: ... except Exception as e: ...` | catch exceptions |
+| Re-raise | `raise RuntimeError("msg") from e` | chain |
+| Custom | `class CustomError(Exception): ...` | custom exceptions |
+| Context | `with open(f) as fp: ...` | resource management |
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
+### Async Processing
+
+| Pattern | Code | Use |
+|---------|------|-----|
+| async function | `async def fetch(): ...` | async definition |
+| await | `result = await fetch()` | async call |
+| Concurrent | `await asyncio.gather(*tasks)` | parallel execution |
+| Timeout | `async with asyncio.timeout(5):` (3.11+) | time limit |
+
+### Testing
+
+| Pattern | Code | Use |
+|---------|------|-----|
+| Basic | `def test_func():` | pytest |
+| Fixture | `@pytest.fixture` | test setup |
+| Parametrize | `@pytest.mark.parametrize` | multiple cases |
+| Mock | `from unittest.mock import Mock` | test doubles |
+
+## Common Mistakes
+
+| Avoid | Use | Reason |
+|-------|-----|--------|
+| `except:` (bare) | `except Exception:` | prevents BaseException capture |
+| `from module import *` | explicit imports | namespace pollution |
+| `def f(lst=[]):` | `def f(lst=None):` | mutable default |
+| global variables | dependency injection | testability |
+| `type: ignore` overuse | proper type definitions | type safety |
+
+---
+
+## Deprecated Pattern Detection (review / implementation)
+
+Check `pyproject.toml` `requires-python` or runtime version before flagging.
+
+### Critical (always flag)
+
+| Deprecated | Modern | Since |
+|------------|--------|-------|
 | `typing.Optional[X]` | `X \| None` | 3.10 |
 | `typing.Union[X, Y]` | `X \| Y` | 3.10 |
 | `typing.List[str]`, `typing.Dict[str, int]` | `list[str]`, `dict[str, int]` | 3.9 |
 | `typing.Tuple`, `typing.Set`, `typing.FrozenSet` | `tuple`, `set`, `frozenset` | 3.9 |
 | `% formatting` / `.format()` | f-string `f"..."` | 3.6 |
 | `setup.py` / `setup.cfg` | `pyproject.toml` | PEP 621 |
-| `pip install` + `requirements.txt` のみ | `uv` / `poetry` でロックファイル管理 | 推奨 |
+| `pip install` + `requirements.txt` only | `uv` / `poetry` with lock file | recommended |
 
-### 🟡 Warning（積極的に指摘）
+### Warning (proactively flag)
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
-| `TypeAlias = Union[...]` 変数 | `type` 文 (`type Alias = X \| Y`) | 3.12 |
-| `typing.TypeGuard` | `typing.TypeIs`（より正確な型ナローイング） | 3.13 |
+| Deprecated | Modern | Since |
+|------------|--------|-------|
+| `TypeAlias = Union[...]` variable | `type` statement (`type Alias = X \| Y`) | 3.12 |
+| `typing.TypeGuard` | `typing.TypeIs` (more precise type narrowing) | 3.13 |
 | `os.path.join()` | `pathlib.Path` | 3.4 |
-| `urllib.request` | `httpx` or `requests` | 推奨 |
-| `print()` デバッグ | `logging` / `structlog` | 推奨 |
-| `@staticmethod` で代用 | モジュールレベル関数 | Pythonic |
+| `urllib.request` | `httpx` or `requests` | recommended |
+| `print()` debugging | `logging` / `structlog` | recommended |
+| `@staticmethod` as substitute | module-level function | Pythonic |
 | `asyncio.gather()` | `asyncio.TaskGroup()` | 3.11 |
 | `asyncio.wait_for(coro, timeout)` | `async with asyncio.timeout(n):` | 3.11 |
-| 自己参照型に `"ClassName"` 文字列 | `Self` 型 | 3.11 |
-| `try/except` で例外まとめ処理 | `ExceptionGroup` + `except*` | 3.11 |
-| `dict` で型付き辞書 | `TypedDict` | 3.8 |
-| `dataclass` なしの手動 `__init__` | `@dataclass` or `pydantic.BaseModel` | 3.7 |
+| `"ClassName"` string for self-referential type | `Self` type | 3.11 |
+| `try/except` grouping exceptions | `ExceptionGroup` + `except*` | 3.11 |
+| `dict` for typed dict | `TypedDict` | 3.8 |
+| Manual `__init__` without dataclass | `@dataclass` or `pydantic.BaseModel` | 3.7 |
 
-### ℹ️ Info（提案レベル）
+### Info (suggestion level)
 
-| 項目 | 内容 | Since |
-|------|------|-------|
-| Free-threaded mode | GIL無効化実験（`--disable-gil`） | 3.13 |
-| `copy.replace()` | オブジェクト部分コピー | 3.13 |
-| Per-Interpreter GIL | サブインタープリタ毎の独立GIL | 3.12 |
+| Item | Detail | Since |
+|------|--------|-------|
+| Free-threaded mode | GIL disable experiment (`--disable-gil`) | 3.13 |
+| `copy.replace()` | partial object copy | 3.13 |
+| Per-Interpreter GIL | independent GIL per sub-interpreter | 3.12 |
 
 ---
 
-## フレームワーク
+## Frameworks
 
-| フレームワーク | ポイント |
-|--------------|---------|
-| FastAPI | Pydantic BaseModel + 型ヒント、`Depends` でDI |
-| Django | `manage.py check --deploy`、QuerySet遅延評価 |
+| Framework | Key Points |
+|-----------|-----------|
+| FastAPI | Pydantic BaseModel + type hints, DI via `Depends` |
+| Django | `manage.py check --deploy`, QuerySet lazy evaluation |

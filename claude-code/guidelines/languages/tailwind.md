@@ -1,58 +1,58 @@
-# Tailwind CSSガイドライン
+# Tailwind CSS Guidelines
 
-Tailwind CSS v4.3対応（2026年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
-
----
-
-## 基本原則
-
-- **Utility-First**: ユーティリティクラス中心の設計
-- **レスポンシブ**: モバイルファーストのブレークポイント
-- **カスタマイズ可能**: テーマ・デザイントークンで一元管理
-- **パフォーマンス**: 未使用CSSの自動削除
+Tailwind CSS v4.3 (2026). Common guidelines: `~/.claude/guidelines/common/`.
 
 ---
 
-## v4.x新機能（v4.0 リリース 2025年、v4.3が最新）
+## Core Principles
 
-### 高速エンジン
-- フルビルド: **5倍高速化**
-- インクリメンタルビルド: **100倍以上高速化**（マイクロ秒単位）
-
-### モダンCSS活用
-- Cascade Layers使用
-- `@property`で登録カスタムプロパティ
-- `color-mix()`サポート
-
-### セットアップ簡素化
-- 依存関係削減
-- ゼロコンフィグ
-- CSS1行で導入: `@import "tailwindcss";`
-
-### Vite統合
-- 公式Viteプラグイン
-- 自動コンテンツ検出（設定不要）
-- 最大パフォーマンス
+- **Utility-First**: utility class-centric design
+- **Responsive**: mobile-first breakpoints
+- **Customizable**: centralized management via theme/design tokens
+- **Performance**: automatic removal of unused CSS
 
 ---
 
-## 新ユーティリティ・バリアント
+## v4.x Features (v4.0 released 2025, v4.3 latest)
 
-### not-* バリアント
-他のバリアント・セレクター・メディアクエリに一致しない時のみスタイル適用:
+### Fast Engine
+- Full build: **5x faster**
+- Incremental build: **100x+ faster** (microsecond-level)
+
+### Modern CSS
+- Cascade Layers
+- Registered custom properties via `@property`
+- `color-mix()` support
+
+### Simplified Setup
+- Reduced dependencies
+- Zero config
+- Single CSS import: `@import "tailwindcss";`
+
+### Vite Integration
+- Official Vite plugin
+- Auto content detection (no config needed)
+- Maximum performance
+
+---
+
+## New Utilities and Variants
+
+### not-* Variant
+Apply styles only when no other variant/selector/media query matches:
 ```html
 <div class="not-hover:opacity-50">...</div>
 ```
 
-### 新ユーティリティ
-- `color-scheme` - ダーク/ライトモード制御
-- `field-sizing` - フォームフィールドサイズ
-- 複雑シャドウサポート
-- `inert` - 非活性要素
+### New Utilities
+- `color-scheme` — dark/light mode control
+- `field-sizing` — form field sizing
+- Complex shadow support
+- `inert` — inactive elements
 
 ---
 
-## ブラウザサポート
+## Browser Support
 
 - Safari 16.4+
 - Chrome 111+
@@ -60,29 +60,29 @@ Tailwind CSS v4.3対応（2026年）。共通ガイドラインは `~/.claude/gu
 
 ---
 
-## ベストプラクティス
+## Best Practices
 
-### クラス命名
-- 意味的に明確なユーティリティの組合せ
-- 複雑な組合せはコンポーネント化
+### Class Naming
+- Semantically clear utility combinations
+- Extract complex combinations into components
 
-### レスポンシブ設計
+### Responsive Design
 ```html
 <div class="w-full md:w-1/2 lg:w-1/3">
 ```
 
-### ダークモード
+### Dark Mode
 ```html
 <div class="bg-white dark:bg-gray-900">
 ```
 
-### 再利用
-- 繰り返しパターン → `@apply`でコンポーネント化
-- ただし、過度な`@apply`使用は避ける（Utility-First原則）
+### Reuse
+- Repeated patterns → componentize with `@apply`
+- Avoid excessive `@apply` use (violates Utility-First principle)
 
 ---
 
-## Next.js統合
+## Next.js Integration
 
 ```bash
 npm install tailwindcss@next @tailwindcss/vite@next
@@ -98,9 +98,9 @@ export default { experimental: { vitePlugins: [tailwindcss()] } }
 
 ---
 
-## カスタマイズ
+## Customization
 
-### CSS変数でテーマ定義
+### Theme via CSS Variables
 ```css
 @theme {
   --color-primary: #3b82f6;
@@ -108,15 +108,15 @@ export default { experimental: { vitePlugins: [tailwindcss()] } }
 }
 ```
 
-### 使用
+### Usage
 ```html
 <h1 class="text-primary font-display">
 ```
 
 ---
 
-## パフォーマンス最適化
+## Performance Optimization
 
-- PurgeCSS統合（v4で自動）
-- JIT（Just-In-Time）モード標準
-- 本番ビルドで未使用CSS自動削除
+- PurgeCSS integrated (automatic in v4)
+- JIT (Just-In-Time) mode standard
+- Unused CSS auto-removed in production build

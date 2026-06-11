@@ -1,8 +1,8 @@
-# Goテスト安定性ガイドライン
+# Go Test Stability Guidelines
 
-Flakyテスト防止のためのパターン集。
+Patterns to prevent flaky tests.
 
-## 動的データの検証
+## Dynamic Data Validation
 
 ```go
 // ❌ Bad: auto-generated IDを期待値に含める
@@ -11,7 +11,7 @@ assert.Equal(t, entity.Order{Id: 1, BuyerId: 101}, actual)
 assert.Greater(t, actual.Id, 0); assert.Equal(t, 101, actual.BuyerId)
 ```
 
-## 共有データの並列安全性
+## Parallel Safety for Shared Data
 
 ```go
 // ❌ Bad: 並列テストで共有スライスをsort → race condition
@@ -21,30 +21,30 @@ copy(cp, tt.expected)
 sort.Slice(cp, ...) // Safe
 ```
 
-## テスト種別とビルドタグ
+## Test Types and Build Tags
 
-| 種別 | 対象 | DB | ビルドタグ例 |
-|------|------|----|------------|
-| Unit Test | DBアクセスなしの純粋関数 | 不要 | `parallel` |
-| Repository Test | Repository層のCRUD | 実DB | `serial` |
-| Usecase Test | ビジネスロジック | gomock | `parallel` |
-| Integration Test | API全体（HTTP-レスポンス） | 実DB | `integration` |
+| Type | Target | DB | Build tag |
+|------|--------|----|-----------|
+| Unit Test | pure functions without DB access | not needed | `parallel` |
+| Repository Test | Repository layer CRUD | real DB | `serial` |
+| Usecase Test | business logic | gomock | `parallel` |
+| Integration Test | full API (HTTP response) | real DB | `integration` |
 
-## テスト規約
+## Test Rules
 
-| ルール | 詳細 |
-|--------|------|
-| テーブル駆動テスト | `map[string]struct{}` 必須 |
-| 並列化 | `t.Parallel()` 必須（Repository Testは除く） |
-| 構造体比較 | `go-cmp` を使用 |
-| テストデータ | Repository Testは `testfixtures`（YAML） |
-| モック | Usecase Testは `gomock` |
+| Rule | Detail |
+|------|--------|
+| Table-driven tests | `map[string]struct{}` required |
+| Parallelization | `t.Parallel()` required (except Repository Test) |
+| Struct comparison | use `go-cmp` |
+| Test data | Repository Test uses `testfixtures` (YAML) |
+| Mocks | Usecase Test uses `gomock` |
 
-## Flakyテスト防止チェックリスト
+## Flaky Test Prevention Checklist
 
-- [ ] auto-generated ID（DB auto_increment等）を期待値に含めていないか
-- [ ] DB外部キーエラーを適切にハンドリングしているか
-- [ ] 並列テストで共有データをdeep copyしているか
-- [ ] テストフィクスチャが標準化・統一されているか
-- [ ] 時刻依存のテストに `clock` インターフェースを使っているか
-- [ ] テストDBのデータを各テストで初期化しているか
+- [ ] No auto-generated IDs (DB auto_increment etc.) in expected values
+- [ ] DB foreign key errors handled appropriately
+- [ ] Shared data deep-copied in parallel tests
+- [ ] Test fixtures standardized and unified
+- [ ] Time-dependent tests use `clock` interface
+- [ ] Test DB data initialized for each test

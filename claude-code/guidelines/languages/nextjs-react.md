@@ -1,151 +1,151 @@
-# Next.js / Reactガイドライン
+# Next.js / React Guidelines
 
-Next.js 16.2 + React 19.2対応（2026年5月）。共通: `~/.claude/guidelines/common/`。
+Next.js 16.2 + React 19.2 (May 2026). Common: `~/.claude/guidelines/common/`.
 
-16.2新機能: React Compiler安定化（自動メモ化）、Turbopack Server Fast Refresh、Web Worker Origin for WASM、Subresource Integrity。
+16.2 features: React Compiler stable (auto-memoization), Turbopack Server Fast Refresh, Web Worker Origin for WASM, Subresource Integrity.
 
-## 基本原則
+## Core Principles
 
-- **Server Components First**: デフォルトServer Component
-- **Client Component**: `'use client'` は最小限（インタラクション必要時のみ）
-- **Concurrent Rendering**: React 19でデフォルト有効
-- **React Compiler**: 自動最適化により `useMemo`/`useCallback` 不要なケース多
-- **型安全**: Props・イベントハンドラも明示的型付け
+- **Server Components First**: Server Component by default
+- **Client Component**: minimize `'use client'` (only when interaction is required)
+- **Concurrent Rendering**: enabled by default in React 19
+- **React Compiler**: auto-optimization eliminates most `useMemo`/`useCallback` needs
+- **Type safety**: explicit types for Props and event handlers
 
-## ディレクトリ構成
+## Directory Structure
 
-`app/`（App Router、API Routes）/ `features/`（domain/application/presentation）/ `shared/`（共通）。
+`app/` (App Router, API Routes) / `features/` (domain/application/presentation) / `shared/` (common).
 
-## クイックリファレンス
+## Quick Reference
 
-### コンポーネント種別
+### Component Types
 
-| 種別 | 用途 | 特徴 |
-|------|------|------|
-| Server Component | データフェッチ、静的表示 | async/await可、デフォルト |
-| Client Component | インタラクション、状態 | `'use client'` 必須 |
-| Server Action | ミューテーション | `'use server'` |
+| Type | Use | Characteristics |
+|------|-----|-----------------|
+| Server Component | data fetching, static rendering | async/await support, default |
+| Client Component | interaction, state | `'use client'` required |
+| Server Action | mutations | `'use server'` |
 
-### よく使うHooks
+### Common Hooks
 
-| Hook | 用途 | 制約 |
-|------|------|------|
-| `useState` | ローカル状態 | Clientのみ |
-| `useEffect` | 副作用 | Clientのみ |
-| `use()` | ストリーミングデータ | Server/Client両方 |
-| `useActionState` | Server Action状態 | React 19+ |
-| `useOptimistic` | 楽観的UI | React 19+ |
+| Hook | Use | Constraint |
+|------|-----|------------|
+| `useState` | local state | Client only |
+| `useEffect` | side effects | Client only |
+| `use()` | streaming data | Server/Client both |
+| `useActionState` | Server Action state | React 19+ |
+| `useOptimistic` | optimistic UI | React 19+ |
 
-### データフェッチ
+### Data Fetching
 
-| 方法 | 用途 | キャッシュ |
-|------|------|----------|
-| `fetch()` | Server Component | デフォルト有効 |
-| TanStack Query | Client Component | 自動管理 |
-| Server Actions | ミューテーション | `revalidatePath()` |
+| Method | Use | Cache |
+|--------|-----|-------|
+| `fetch()` | Server Component | enabled by default |
+| TanStack Query | Client Component | auto-managed |
+| Server Actions | mutations | `revalidatePath()` |
 
-## よくあるミス
+## Common Mistakes
 
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| Server Componentで `ssr: false` | 通常の `import` | Next.js 15+ でエラー |
-| Client Componentで `dynamic(..., {ssr: false})` | 通常の `import` | 冗長 |
-| `process.env.NEXT_PUBLIC_*` 関数内直接参照 | 設定ファイル経由 | ビルド時静的置換 |
-| Contextでグローバル状態 | Zustand/Jotai | パフォーマンス |
-| `useEffect` でデータフェッチ | Server Component or TanStack Query | サーバー側で完結 |
+| Avoid | Use | Reason |
+|-------|-----|--------|
+| `ssr: false` in Server Component | normal `import` | error in Next.js 15+ |
+| `dynamic(..., {ssr: false})` in Client Component | normal `import` | redundant |
+| Direct `process.env.NEXT_PUBLIC_*` in functions | via config file | statically replaced at build time |
+| Context for global state | Zustand/Jotai | performance |
+| `useEffect` for data fetching | Server Component or TanStack Query | handle server-side |
 
-## 古いパターン検出
+## Deprecated Pattern Detection
 
-`package.json` の `next`/`react` バージョン確認してから指摘。
+Check `package.json` `next`/`react` version before flagging.
 
-### 🔴 Critical（必ず指摘）
+### Critical (always flag)
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
-| `pages/`（Pages Router） | `app/`（App Router） | Next 13 |
-| `getServerSideProps`/`getStaticProps` | Server Componentで直接 `fetch`/DB | Next 13 |
+| Deprecated | Modern | Since |
+|------------|--------|-------|
+| `pages/` (Pages Router) | `app/` (App Router) | Next 13 |
+| `getServerSideProps`/`getStaticProps` | direct `fetch`/DB in Server Component | Next 13 |
 | `getInitialProps` | Server Component or Server Actions | Next 13 |
-| class component | 関数コンポーネント + Hooks | React 16.8 |
-| `next/router` | `next/navigation`（`useRouter`/`usePathname`） | Next 13 |
+| class component | function component + Hooks | React 16.8 |
+| `next/router` | `next/navigation` (`useRouter`/`usePathname`) | Next 13 |
 | `next.config.js` | `next.config.ts` | Next 15 |
 
-### 🟡 Warning（積極的に指摘）
+### Warning (proactively flag)
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
-| `useMemo`/`useCallback` 多用 | React Compiler自動最適化 | React 19 |
+| Deprecated | Modern | Since |
+|------------|--------|-------|
+| Heavy `useMemo`/`useCallback` use | React Compiler auto-optimization | React 19 |
 | `useFormState` | `useActionState` | React 19 |
-| `forwardRef` | `ref` をpropsで直接受取 | React 19 |
-| `<Context.Provider>` | `<Context>` で直接提供 | React 19 |
+| `forwardRef` | accept `ref` directly as prop | React 19 |
+| `<Context.Provider>` | provide directly via `<Context>` | React 19 |
 | `useContext(Ctx)` | `use(Ctx)` | React 19 |
-| Promiseを `useEffect` で解決 | `use(promise)` でrender内読込 | React 19 |
-| `next/head` | `export const metadata`（App Router） | Next 13 |
-| `middleware.ts` でプロキシ処理 | `proxy.ts`（ネットワーク境界明確化） | Next 16 |
-| 手動キャッシュ制御 | `"use cache"` ディレクティブ | Next 16 |
-| CSS-in-JS（styled-components等） | Tailwind / CSS Modules | Next 13+（RSC非対応） |
+| Resolve Promise in `useEffect` | `use(promise)` inside render | React 19 |
+| `next/head` | `export const metadata` (App Router) | Next 13 |
+| Proxy in `middleware.ts` | `proxy.ts` (clear network boundary) | Next 16 |
+| Manual cache control | `"use cache"` directive | Next 16 |
+| CSS-in-JS (styled-components etc.) | Tailwind / CSS Modules | Next 13+ (RSC incompatible) |
 
-### ℹ️ Info
+### Info
 
-| 項目 | 内容 | Since |
-|------|------|-------|
-| Activity Component | `<Activity mode="hidden">` で表示/非表示制御 | React 19.2 |
-| useEffectEvent | 非リアクティブロジックをeffectから分離 | React 19.2 |
-| View Transitions | ナビゲーション時アニメーション | Next 16 |
+| Item | Detail | Since |
+|------|--------|-------|
+| Activity Component | `<Activity mode="hidden">` for show/hide control | React 19.2 |
+| useEffectEvent | separate non-reactive logic from effects | React 19.2 |
+| View Transitions | navigation animations | Next 16 |
 
-## コンポーネント設計
+## Component Design
 
-### Server Components（デフォルト）
+### Server Components (default)
 
-- async/await直接使用
-- DB・APIコールはサーバー側実行
-- `use()` Hookでストリーミングデータ
+- Use async/await directly
+- Execute DB/API calls server-side
+- Use `use()` Hook for streaming data
 
-### Client Components（必要時のみ）
+### Client Components (only when needed)
 
-`'use client'` が必要なケース:
-- state / イベント（`onClick`, `onChange`）
-- ライフサイクル（`useEffect`）
-- ブラウザAPI（`localStorage`, `window`）
+`'use client'` required when:
+- state / events (`onClick`, `onChange`)
+- lifecycle (`useEffect`)
+- browser APIs (`localStorage`, `window`)
 
-戦略: 小さなClient Islands、葉のコンポーネントのみClient化。
+Strategy: small Client Islands; only leaf components as Client.
 
 ### dynamic import
 
-- 原則: `'use client'` ファイルで `dynamic` + `ssr: false` 不要（既にクライアント実行）
-- Next.js 15+: Server Componentで `ssr: false` はエラー
-- 推奨: 通常 `import`（Client内）/ `dynamic()` でコード分割（ssr: falseなし）
+- In general: `'use client'` files do not need `dynamic` + `ssr: false` (already client-executed)
+- Next.js 15+: `ssr: false` in Server Component is an error
+- Recommended: normal `import` (inside Client) / `dynamic()` for code splitting (no `ssr: false`)
 
-## 状態管理
+## State Management
 
-| 種別 | 推奨 |
-|------|------|
-| Server State | TanStack Query（キャッシュ、再検証、楽観更新） |
-| ローカルUI | `useState` |
-| 複雑ローカル | `useReducer` |
-| グローバル | Zustand/Jotai（必要最小限） |
-| 静的値（DI・テーマ） | Context |
+| Type | Recommended |
+|------|-------------|
+| Server State | TanStack Query (cache, revalidation, optimistic updates) |
+| Local UI | `useState` |
+| Complex local | `useReducer` |
+| Global | Zustand/Jotai (minimal) |
+| Static values (DI, theme) | Context |
 
-## データフェッチ（Next.js 15-16）
+## Data Fetching (Next.js 15-16)
 
-### キャッシュ設定
+### Cache Configuration
 
-- `export const dynamic = 'force-dynamic'` — SSR強制
-- `export const revalidate = 60` — ISR（60秒）
-- `fetch(..., { next: { revalidate: 3600 } })` — 個別
+- `export const dynamic = 'force-dynamic'` — force SSR
+- `export const revalidate = 60` — ISR (60 seconds)
+- `fetch(..., { next: { revalidate: 3600 } })` — per-request
 
 ### Server Actions
 
-`'use server'` でミューテーション。`revalidatePath()` / `revalidateTag()` で再検証。
+Mutations via `'use server'`. Revalidate with `revalidatePath()` / `revalidateTag()`.
 
-### エラーハンドリング
+### Error Handling
 
-`error.tsx`（エラー境界）/ `loading.tsx`（Suspenseローディング）/ `not-found.tsx`（404）。
+`error.tsx` (error boundary) / `loading.tsx` (Suspense loading) / `not-found.tsx` (404).
 
-## 環境変数
+## Environment Variables
 
-関数スコープ内で `process.env.NEXT_PUBLIC_*` 直接参照禁止（Next.jsビルド時静的置換のため埋め込めない可能性）。
+Do not reference `process.env.NEXT_PUBLIC_*` directly inside function scope (may not embed due to Next.js static replacement at build time).
 
-推奨: `src/config/*.ts` で一元管理。
+Recommended: centralize in `src/config/*.ts`.
 
 ```ts
 export const appConfig = {
@@ -153,26 +153,26 @@ export const appConfig = {
 } as const
 ```
 
-## フォーム（React 19）
+## Forms (React 19)
 
-新Hooks: `useActionState`（フォーム処理+状態）/ `useFormStatus`（送信状態）/ `useOptimistic`（楽観的更新）。
+New Hooks: `useActionState` (form processing + state) / `useFormStatus` (submit state) / `useOptimistic` (optimistic updates).
 
-推奨ライブラリ: React Hook Form + zod / Conform（Server Actions連携）。
+Recommended libraries: React Hook Form + zod / Conform (Server Actions integration).
 
-## セキュリティ
+## Security
 
-CVE-2025-55182（React2Shell）対応済み（19.0.3/19.1.4/19.2.3）。
+CVE-2025-55182 (React2Shell) addressed (19.0.3/19.1.4/19.2.3).
 
-## パフォーマンス
+## Performance
 
-- Next.js: `next/image`（画像最適化）/ `revalidateTag()`（キャッシュ戦略）/ `export const runtime = 'edge'`（グローバル高速化）/ Turbopack（5-10xビルド高速化）
-- React 19: `useTransition`（スムーズUX）/ Concurrent Rendering（UIフリーズ防止）
+- Next.js: `next/image` (image optimization) / `revalidateTag()` (cache strategy) / `export const runtime = 'edge'` (global speed) / Turbopack (5-10x build speedup)
+- React 19: `useTransition` (smooth UX) / Concurrent Rendering (prevent UI freeze)
 
-## Hooksルール
+## Hooks Rules
 
-トップレベルのみ（条件・ループ内禁止）/ React関数内のみ / 依存配列を正確に（ESLint警告従う）。
+Top-level only (forbidden inside conditions/loops) / inside React functions only / accurate dependency arrays (follow ESLint warnings).
 
-## 型定義
+## Type Definitions
 
 ### Props
 
@@ -184,9 +184,9 @@ type Props = {
 }
 ```
 
-### イベントハンドラ
+### Event Handlers
 
-`React.MouseEvent<HTMLButtonElement>` / `React.FormEvent<HTMLFormElement>` / `React.ChangeEvent<HTMLInputElement>`。
+`React.MouseEvent<HTMLButtonElement>` / `React.FormEvent<HTMLFormElement>` / `React.ChangeEvent<HTMLInputElement>`
 
 ### Ref
 

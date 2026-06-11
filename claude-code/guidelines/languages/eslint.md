@@ -1,28 +1,28 @@
-# ESLintガイドライン
+# ESLint Guidelines
 
-ESLint v10+ Flat Config対応（2026年）。共通ガイドラインは `~/.claude/guidelines/common/` 参照。
-
----
-
-## 基本原則
-
-- **Flat Config標準**: v9からflat configがデフォルト
-- **型安全**: `defineConfig()`で型安全な設定
-- **プラグイン統合**: typescript-eslint、prettier等
-- **自動修正**: `--fix`で多くの問題を自動解決
+ESLint v10+ Flat Config (2026). Common guidelines: `~/.claude/guidelines/common/`.
 
 ---
 
-## v9.0主要変更（2025年）→ v10.0 GA（2026-02）
+## Core Principles
 
-| 変更点 | 旧 | 新 |
-|--------|----|----|
-| Config形式 | `.eslintrc*` | `eslint.config.js` (Flat Config) |
-| 型安全設定 | - | `defineConfig()` ヘルパー |
-| extends | 削除→ | ユーザー要望で復活 (新形式) |
-| グローバル除外 | `.eslintignore` | `globalIgnores()` / `ignores` プロパティ |
+- **Flat Config standard**: default since v9
+- **Type safety**: type-safe config via `defineConfig()`
+- **Plugin integration**: typescript-eslint, prettier, etc.
+- **Auto-fix**: `--fix` resolves most issues automatically
 
-**Flat Config例 (型安全+extends+globalIgnores)**:
+---
+
+## v9.0 Changes (2025) → v10.0 GA (2026-02)
+
+| Change | Old | New |
+|--------|-----|-----|
+| Config format | `.eslintrc*` | `eslint.config.js` (Flat Config) |
+| Type-safe config | — | `defineConfig()` helper |
+| extends | removed → | restored by user request (new format) |
+| Global ignores | `.eslintignore` | `globalIgnores()` / `ignores` property |
+
+**Flat Config example (type-safe + extends + globalIgnores)**:
 ```js
 import { defineConfig, globalIgnores } from 'eslint'
 import recommended from '@eslint/js/recommended'
@@ -35,9 +35,9 @@ export default defineConfig([
 
 ---
 
-## Flat Config基本構造
+## Flat Config Structure
 
-ファイル名: `eslint.config.js` / `.mjs` / `.cjs`
+Filename: `eslint.config.js` / `.mjs` / `.cjs`
 
 ```js
 export default [
@@ -49,7 +49,7 @@ export default [
 ]
 ```
 
-## TypeScript統合
+## TypeScript Integration
 
 ```js
 import tseslint from 'typescript-eslint'
@@ -58,7 +58,7 @@ export default tseslint.config(...tseslint.configs.recommended, {
 })
 ```
 
-## Next.js統合
+## Next.js Integration
 
 ```js
 import { defineConfig } from 'eslint'
@@ -71,82 +71,81 @@ export default defineConfig([{
 
 ---
 
-## 推奨ルール
+## Recommended Rules
 
 ### TypeScript
-- `@typescript-eslint/no-explicit-any: error` - any禁止
-- `@typescript-eslint/no-unused-vars: error` - 未使用変数禁止
-- `@typescript-eslint/strict-boolean-expressions: warn` - 厳格なboolean式
+- `@typescript-eslint/no-explicit-any: error` — ban any
+- `@typescript-eslint/no-unused-vars: error` — ban unused vars
+- `@typescript-eslint/strict-boolean-expressions: warn` — strict boolean expressions
 
 ### React
-- `react/prop-types: off` - TypeScript使用時は不要
-- `react-hooks/rules-of-hooks: error` - Hooksルール厳守
-- `react-hooks/exhaustive-deps: warn` - 依存配列チェック
+- `react/prop-types: off` — not needed with TypeScript
+- `react-hooks/rules-of-hooks: error` — enforce Hooks rules
+- `react-hooks/exhaustive-deps: warn` — check dependency arrays
 
 ### Import
-- `import/order: warn` - インポート順序
-- `import/no-duplicates: error` - 重複インポート禁止
+- `import/order: warn` — import ordering
+- `import/no-duplicates: error` — ban duplicate imports
 
 ---
 
-## Prettier統合
+## Prettier Integration
 
-### eslint-config-prettier
-競合するルールを無効化:
+Disable conflicting rules with `eslint-config-prettier`:
 ```js
 import prettier from 'eslint-config-prettier'
 
 export default [
-  // ...他の設定
+  // ...other config
   prettier
 ]
 ```
 
 ---
 
-## マイグレーション
+## Migration
 
-旧設定からの移行: `npx @eslint/migrate-config .eslintrc.json`
+Migrate from legacy config: `npx @eslint/migrate-config .eslintrc.json`
 
 ---
 
-## 古いパターン検出（レビュー/実装時チェック）
+## Deprecated Pattern Detection (review / implementation)
 
-`package.json` の `eslint` バージョンとプロジェクトの設定ファイル形式を確認してから指摘する。
+Check `package.json` `eslint` version and project config format before flagging.
 
-### 🔴 Critical（必ず指摘）
+### Critical (always flag)
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
+| Deprecated | Modern | Since |
+|------------|--------|-------|
 | `.eslintrc` / `.eslintrc.json` / `.eslintrc.js` | `eslint.config.js` (Flat Config) | v9 |
-| `extends: [...]` (旧形式) | `defineConfig()` + `extends` (新形式) | v9 |
+| `extends: [...]` (old format) | `defineConfig()` + `extends` (new format) | v9 |
 | `env: { browser: true, node: true }` | `languageOptions.globals` | v9 |
-| `parserOptions` トップレベル | `languageOptions.parserOptions` | v9 |
-| `plugins: ['@typescript-eslint']` (文字列) | `plugins: { '@typescript-eslint': tseslint }` (オブジェクト) | v9 |
-| `.eslintignore` ファイル | `ignores` プロパティor `globalIgnores()` | v9 |
-| `overrides: [...]` | `files` パターンで複数設定オブジェクト | v9 |
+| `parserOptions` top-level | `languageOptions.parserOptions` | v9 |
+| `plugins: ['@typescript-eslint']` (string) | `plugins: { '@typescript-eslint': tseslint }` (object) | v9 |
+| `.eslintignore` file | `ignores` property or `globalIgnores()` | v9 |
+| `overrides: [...]` | multiple config objects with `files` patterns | v9 |
 
-### 🟡 Warning（積極的に指摘）
+### Warning (proactively flag)
 
-| ❌ 古い | ✅ モダン | Since |
-|---------|----------|-------|
-| `tslint` / `tslint.json` | ESLint + typescript-eslint | 2019年非推奨 |
-| `prettier` をESLintルールで実行 | `eslint-config-prettier` で競合無効化 + 別途prettier実行 | 推奨 |
-| `eslint-plugin-react` の `prop-types` ルール | TypeScriptのProps型で代替 | TS使用時 |
-| `@typescript-eslint/` v7以前の設定 | v8+ の `tseslint.config()` 形式 | v8 |
+| Deprecated | Modern | Since |
+|------------|--------|-------|
+| `tslint` / `tslint.json` | ESLint + typescript-eslint | deprecated 2019 |
+| Run prettier as ESLint rule | `eslint-config-prettier` to disable conflicts + run prettier separately | recommended |
+| `eslint-plugin-react` `prop-types` rule | TypeScript Props types | when using TS |
+| `@typescript-eslint/` pre-v7 config | v8+ `tseslint.config()` format | v8 |
 
-### ℹ️ Info（提案レベル）
+### Info (suggestion level)
 
-| 項目 | 内容 | Since |
-|------|------|-------|
-| v10.0 | Flat Config改善、パフォーマンス向上 | GA（2026-02） |
-| `defineConfig()` | 型安全な設定記述 | v9 |
+| Item | Detail | Since |
+|------|--------|-------|
+| v10.0 | Flat Config improvements, performance gains | GA (2026-02) |
+| `defineConfig()` | type-safe config authoring | v9 |
 
 ---
 
-## 実行
+## Usage
 
 ```bash
-npx eslint .          # チェック
-npx eslint . --fix    # 自動修正
+npx eslint .          # check
+npx eslint . --fix    # auto-fix
 ```

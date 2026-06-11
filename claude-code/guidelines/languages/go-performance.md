@@ -1,48 +1,48 @@
-# Goパフォーマンス ガイドライン
+# Go Performance Guidelines
 
-CPU/メモリ最適化、allocation削減、PGO適用が必要な時に参照。基礎は `languages/golang.md`。
+Reference for CPU/memory optimization, allocation reduction, and PGO. Basics: `languages/golang.md`.
 
-## Tier区分
+## Tiers
 
-| Tier | 内容 |
-|------|------|
-| Tier 1（必須） | escape analysis、benchmark、pprof CPU/heap |
-| Tier 2（規模別） | sync.Pool、ゼロコピー、map preallocation、inline budget |
-| Tier 3（深掘り） | PGO、GOGC/GOMEMLIMIT、runtime/metrics、火炎グラフ |
+| Tier | Content |
+|------|---------|
+| Tier 1 (required) | escape analysis, benchmarks, pprof CPU/heap |
+| Tier 2 (scale-dependent) | sync.Pool, zero-copy, map preallocation, inline budget |
+| Tier 3 (deep dive) | PGO, GOGC/GOMEMLIMIT, runtime/metrics, flame graphs |
 
 ---
 
-## 1. 「Goが遅い」5ステップ診断
+## 1. "Go is slow" 5-Step Diagnosis
 
-| Step | 確認 | コマンド |
-|------|------|---------|
-| 1 | benchmark取得 | `go test -bench=. -benchmem -count=10` |
+| Step | Check | Command |
+|------|-------|---------|
+| 1 | get benchmark | `go test -bench=. -benchmem -count=10` |
 | 2 | CPU profile | `go test -cpuprofile=cpu.out -bench=.` → `go tool pprof cpu.out` |
 | 3 | heap profile | `go test -memprofile=mem.out -bench=.` → `pprof -alloc_objects mem.out` |
-| 4 | hot path特定 | `pprof` で `top10`、`list <func>` でソース行レベル |
-| 5 | 改善後benchstat | `benchstat old.txt new.txt` で統計的有意差確認 |
+| 4 | identify hot path | `pprof` `top10`, `list <func>` for source-line detail |
+| 5 | post-fix benchstat | `benchstat old.txt new.txt` to confirm statistical significance |
 
-**原則**: 計測なし最適化禁止。まずprofiling、ボトルネック特定、改善、再測定。
+**Rule**: no optimization without measurement. Profile first, identify bottleneck, fix, re-measure.
 
 ---
 
-## 2. Escape Analysis（heap vs stack）
+## 2. Escape Analysis (heap vs stack)
 
 ```bash
 go build -gcflags='-m=2' ./... 2>&1 | grep "escapes"
 ```
 
-**stack配置（速い）**:
-- ローカル変数で関数外に逃げない
-- 関数戻り値で値型として返す（small struct）
+**Stack allocation (fast)**:
+- Local variable that does not escape the function
+- Return value as a value type (small struct)
 
-**heap escape（遅い、GC圧）**:
-- interfaceへの代入（型情報をruntimeで持つ）
-- ポインタを関数外（戻り値、global、closure）に渡す
-- 動的サイズのslice/map生成
-- `fmt.Println(x)` 等の `interface{}` 引数
+**Heap escape (slow, GC pressure)**:
+- Assignment to interface (type info held at runtime)
+- Pointer passed outside function (return value, global, closure)
+- Dynamically sized slice/map creation
+- `interface{}` arguments like `fmt.Println(x)`
 
-**回避例**:
+**Avoidance examples**:
 
 ```go
 func bad() *User { return &User{} }              // heap escape
@@ -52,18 +52,18 @@ var buf [64]byte; _ = string(buf[:])             // stack（fixed size）
 
 ---
 
-## 3. Allocation削減
+## 3. Allocation Reduction
 
-| パターン | 効果 |
-|---------|------|
-| **map preallocation** | `make(map[K]V, size)` でrehash回避 |
-| **slice preallocation** | `make([]T, 0, capHint)` でgrow回避 |
-| **string concat** | `+=` 連発 → `strings.Builder`、`fmt.Sprintf("%d",n)` → `strconv.Itoa(n)` / `FormatInt` |
-| **[]byte ↔ stringゼロコピー** | `unsafe.String`/`unsafe.SliceData`（Go 1.20+）。**安全代替**を優先（`strings.Builder`, `[]byte(s)`）、`unsafe` は局所化＋元slice不変が関数内で保証できる時のみ |
-| **sync.Pool** | 短命大object再利用、GC圧削減 |
-| **interface化避ける** | `any` 引数はescape、ジェネリクス検討 |
+| Pattern | Effect |
+|---------|--------|
+| **map preallocation** | `make(map[K]V, size)` avoids rehash |
+| **slice preallocation** | `make([]T, 0, capHint)` avoids grow |
+| **string concat** | `+=` repeated → `strings.Builder`; `fmt.Sprintf("%d",n)` → `strconv.Itoa(n)` / `FormatInt` |
+| **[]byte ↔ string zero-copy** | `unsafe.String`/`unsafe.SliceData` (Go 1.20+). Prefer **safe alternatives** (`strings.Builder`, `[]byte(s)`); `unsafe` only when localized and original slice immutability is guaranteed within the function |
+| **sync.Pool** | reuse short-lived large objects, reduce GC pressure |
+| **avoid interface boxing** | `any` argument escapes; consider generics |
 
-**sync.Pool使用例**:
+**sync.Pool example**:
 
 ```go
 var bufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
@@ -71,35 +71,35 @@ buf := bufPool.Get().(*bytes.Buffer); defer bufPool.Put(buf)
 buf.Reset()  // 使用前 Reset 必須
 ```
 
-**注意**: sync.PoolはGCで内容flush可能、cache不可。size統一推奨（巨大object混在でmemory hog）。
+**Note**: sync.Pool contents can be flushed by GC; not a cache. Uniform size recommended (mixing large objects causes memory hogging).
 
 ---
 
-## 4. inline budget
+## 4. Inline Budget
 
-Goコンパイラは関数を **コスト80以下** で自動inline。inlineされると関数呼出overheadがゼロ化、escapeも改善。
+The Go compiler auto-inlines functions with **cost ≤ 80**. Inlining eliminates call overhead and improves escape behavior.
 
-| 確認 | コマンド |
-|------|---------|
-| inline判定 | `go build -gcflags='-m=2' ./...` で `can inline` / `cannot inline (cost X)` |
-| inline強制不可 | `//go:noinline` で明示的にinline抑制（profiling用） |
-| inline制御 | `-gcflags='-l'` はinlining **無効化**（debug用）。aggressive inlineの正式手段は **PGO（後述）**、内部 `-l=4` 等は非公開デバッグ水準で本番非推奨 |
+| Check | Command |
+|-------|---------|
+| Inline decision | `go build -gcflags='-m=2' ./...` → `can inline` / `cannot inline (cost X)` |
+| Disable inline | `//go:noinline` for explicit suppression (profiling use) |
+| Inline control | `-gcflags='-l'` **disables** inlining (debug only). Aggressive inlining = **PGO** (see below); internal `-l=4` etc. are undocumented debug levels, not for production |
 
-**ホット関数をinlineさせるコツ**: 短く保つ（loop / 大switchなし）、interface引数避ける。
+**Tips for inlining hot functions**: keep them short (no loops / large switch), avoid interface arguments.
 
 ---
 
-## 5. pprofプロファイル種別
+## 5. pprof Profile Types
 
-| 種別 | 取得 | 用途 |
-|------|------|------|
-| **CPU** | `runtime/pprof.StartCPUProfile` | 計算時間ボトルネック |
-| **heap** | `-memprofile` / `/debug/pprof/heap` | メモリallocation元 |
-| **goroutine** | `/debug/pprof/goroutine` | leak、stuck検出 |
-| **mutex** | `/debug/pprof/mutex`（要 `runtime.SetMutexProfileFraction`） | lock contention |
-| **block** | `/debug/pprof/block`（要 `runtime.SetBlockProfileRate`） | channel/syscall待ち |
+| Type | Capture | Use |
+|------|---------|-----|
+| **CPU** | `runtime/pprof.StartCPUProfile` | compute bottleneck |
+| **heap** | `-memprofile` / `/debug/pprof/heap` | allocation source |
+| **goroutine** | `/debug/pprof/goroutine` | leak, stuck detection |
+| **mutex** | `/debug/pprof/mutex` (requires `runtime.SetMutexProfileFraction`) | lock contention |
+| **block** | `/debug/pprof/block` (requires `runtime.SetBlockProfileRate`) | channel/syscall wait |
 
-**pprofインタラクティブ**:
+**pprof interactive**:
 ```text
 top10                # 上位10
 list <funcName>      # ソース行
@@ -107,13 +107,13 @@ web                  # SVG 火炎グラフ
 peek <funcName>      # 呼出元/呼出先
 ```
 
-**火炎グラフ読み方**: 横幅 = 累積時間、上に行くほど呼出深く、**幅広いブロック = 最適化候補**。
+**Flame graph reading**: width = cumulative time; higher = deeper call stack; **wide blocks = optimization candidates**.
 
 ---
 
-## 6. PGO（Profile-Guided Optimization、Go 1.21+ 安定）
+## 6. PGO (Profile-Guided Optimization, stable Go 1.21+)
 
-本番ワークロードprofileをbuildに取り込み、hot pathを集中最適化（inline拡大、register割当改善）。**2-7% 性能向上事例あり**。
+Feed production workload profiles into the build to intensively optimize hot paths (expanded inlining, improved register allocation). **2-7% performance improvement observed**.
 
 ```bash
 # 1. 本番 profile 採取
@@ -126,27 +126,27 @@ mv cpu.pprof cmd/server/default.pgo
 go build -pgo=auto ./cmd/server
 ```
 
-**運用**: 月次でprofile更新、CIでPGO buildを成果物化。
+**Operations**: update profile monthly; include PGO build in CI artifacts.
 
 ---
 
 ## 7. GC Tuning
 
-| 環境変数 | 既定 | 効果 |
-|---------|------|------|
-| `GOGC` | 100 | heap倍増でGC、低くする → GC頻度↑ pause短く |
-| `GOMEMLIMIT`（Go 1.19+） | math.MaxInt64 | soft heap limit、超えそうならGC積極化 |
-| `GODEBUG=gctrace=1` | - | GC毎にログ出力（pause時間/heap size） |
+| Env var | Default | Effect |
+|---------|---------|--------|
+| `GOGC` | 100 | trigger GC when heap doubles; lower → more frequent GC, shorter pauses |
+| `GOMEMLIMIT` (Go 1.19+) | math.MaxInt64 | soft heap limit; aggressively GC before exceeding |
+| `GODEBUG=gctrace=1` | — | log each GC (pause time / heap size) |
 
-**典型シナリオ**:
-- container memory limitある → `GOMEMLIMIT=memory_limit*0.9` でOOMKilled回避
-- batch処理でlatency重要でない → `GOGC=200` でGC間隔広げてthroughput優先
+**Typical scenarios**:
+- Container with memory limit → `GOMEMLIMIT=memory_limit*0.9` to avoid OOMKilled
+- Batch job where latency is not critical → `GOGC=200` to widen GC interval for throughput
 
 ---
 
-## 8. runtime/metrics（Go 1.16+）
+## 8. runtime/metrics (Go 1.16+)
 
-`runtime.ReadMemStats` より**低コストで詳細**。
+**Lower cost and more detail** than `runtime.ReadMemStats`.
 
 ```go
 samples := []metrics.Sample{
@@ -156,29 +156,29 @@ samples := []metrics.Sample{
 metrics.Read(samples)
 ```
 
-代表metric:
-- `/gc/heap/live:bytes` - 生存heap
-- `/gc/heap/allocs:bytes` - 累計allocation
-- `/sched/latencies:seconds` - goroutine ready→running待ち時間（histogram）
+Key metrics:
+- `/gc/heap/live:bytes` — live heap
+- `/gc/heap/allocs:bytes` — cumulative allocation
+- `/sched/latencies:seconds` — goroutine ready→running wait time (histogram)
 
 ---
 
-## 9. アンチパターン
+## 9. Anti-patterns
 
-| ❌ 避ける | ✅ 使う | 理由 |
-|----------|---------|------|
-| `fmt.Sprintf("%d", n)` 高頻度 | `strconv.Itoa(n)` | format parser重い |
-| `for _, v := range bigSlice` で大struct copy | `for i := range bigSlice` で `&bigSlice[i]` | copy cost |
-| 大structをvalue渡し | pointer渡し（escape問題ならsync.Pool） | copy cost |
-| 無闇にgoroutine生成 | worker pool（go-concurrency参照） | scheduler負荷 |
-| `interface{}` slice | ジェネリクス（1.18+） | escape防止 |
-| 計測なし最適化 | benchmark + benchstat必須 | 多くは効果なしor退行 |
+| Avoid | Use | Reason |
+|-------|-----|--------|
+| `fmt.Sprintf("%d", n)` high-frequency | `strconv.Itoa(n)` | format parser overhead |
+| `for _, v := range bigSlice` with large struct copy | `for i := range bigSlice` with `&bigSlice[i]` | copy cost |
+| Pass large struct by value | pass by pointer (use sync.Pool if escape is an issue) | copy cost |
+| Indiscriminate goroutine creation | worker pool (see go-concurrency) | scheduler overhead |
+| `interface{}` slice | generics (1.18+) | prevents escape |
+| Optimize without measurement | benchmark + benchstat required | most attempts have no effect or regress |
 
 ---
 
-## 10. 参考
+## 10. References
 
-- Go 1.21 PGO公式: pkg.go.dev/cmd/go#hdr-Profile-guided_optimization
-- Dave Cheney「High Performance Go Workshop」
-- runtime/metrics公式
-- 関連: `languages/go-concurrency.md`（並行最適化）、`languages/golang.md`（基礎）、`backend/observability-design.md`（profiling運用）
+- Go 1.21 PGO official: pkg.go.dev/cmd/go#hdr-Profile-guided_optimization
+- Dave Cheney "High Performance Go Workshop"
+- runtime/metrics official docs
+- Related: `languages/go-concurrency.md` (concurrency optimization), `languages/golang.md` (basics), `backend/observability-design.md` (profiling operations)

@@ -1,94 +1,94 @@
-# 監視・Runbookガイドライン
+# Monitoring / Runbook Guidelines
 
-SLOバーンレート閾値とアラート発報時の対応緊急度。本番障害対応 / SLO違反検知時に参照。
+SLO burn rate thresholds and response urgency on alert. Reference on production incidents or SLO violation detection.
 
-## SLO Burn Rateアラート対応
+## SLO Burn Rate Alert Response
 
-### Burn Rate閾値と対応緊急度
+### Burn Rate Thresholds and Urgency
 
-| Long Window | Short Window | Burn Rate | バジェット枯渇目安 | 対応緊急度 |
-|-------------|--------------|-----------|-------------------|-----------|
-| 1h | 5m | 14.4 | 約49h | **即時対応** |
-| 6h | 30m | 6 | 約114h | 当日中対応 |
-| 48h | 240m | 3 | 約192h | 翌営業日対応 |
+| Long Window | Short Window | Burn Rate | Budget exhaustion estimate | Urgency |
+|-------------|--------------|-----------|---------------------------|---------|
+| 1h | 5m | 14.4 | ~49h | **Immediate** |
+| 6h | 30m | 6 | ~114h | Same-day |
+| 48h | 240m | 3 | ~192h | Next business day |
 
-### 対応フロー
-
-```text
-アラート受信
-  ↓
-障害ダッシュボードを開く
-  ↓
-原因特定（レイヤー別切り分け）
-  ├── CDN/LB: 5xxエラー率上昇？キャッシュヒット率低下？
-  ├── コンテナ: CPU/メモリ逼迫？タスク数減少？502増加？
-  ├── アプリケーション: エラーログ急増？特定エンドポイントのレイテンシ悪化？
-  ├── DB: CPU逼迫？コネクション急増？
-  └── キャッシュ: ヒット率低下？メモリ逼迫？
-  ↓
-対処実行 or 緩和策（LBで空レスポンス、スケールアウト、Reader追加）
-```
-
-## インフラアラート対応パターン
-
-| アラート種別 | 原因の切り分け | 緩和策 |
-|-------------|--------------|--------|
-| コンテナタスク数低下 | デプロイ失敗、プラットフォーム障害 | タスク数手動増加、バージョンダウングレード |
-| DB CPU > 80% | 重いクエリ、コネクション急増 | Reader追加、重いクエリ特定・改善 |
-| Lock Wait Timeout | 長時間トランザクション | ロック保持トランザクション特定・kill |
-| キュー詰まり | Consumer障害、処理遅延 | Worker側エラー確認、DLQ確認 |
-| DLQ受信 | Worker処理失敗 | メッセージ内容確認→原因修正→再処理 |
-| キャッシュ帯域超過 | GET集中、キャッシュ肥大化 | ノード追加、キャッシュ戦略見直し |
-| LB 502増加 | コンテナ側OOM等 | メモリ割り当て増加、メモリリーク調査 |
-| バッチ未起動 | リソース不足 | 別AZで再実行 |
-| メール送信レート超過 | 大量配信 | 送信元特定、レート制限引き上げ申請 |
-
-## セキュリティアラート対応
-
-| 攻撃種別 | 検知条件 | 即時対応 |
-|---------|---------|---------|
-| パスワードリスト攻撃 | ログインエンドポイントへの大量リクエスト | WAF IPブロック、被害アカウント確認 |
-| クレジットカード不正利用 | 決済エンドポイントへの大量リクエスト | WAF IPブロック、不正カード無効化 |
-| XSS攻撃 | `<script` パターン大量検知 | WAFルール確認、成功有無の確認 |
-| WAFカウント急増 | 特定ルールで大量カウント | 攻撃パターン分析、Blockルール昇格検討 |
-| 管理画面Public公開 | セキュリティグループ変更検知 | SG/WAF設定確認、IP制限復元 |
-
-## APIエラー対応
-
-| アラート | 対応 | 注意 |
-|---------|------|------|
-| 重要API 5xx | トレースIDで絞り込み→APMで詳細確認 | - |
-| 一定期間成功なし | 障害の可能性→調査開始 | 深夜帯は誤検知の可能性 |
-| 決済コールバックエラー率上昇 | アクセスログ→トレースID→詳細調査 | ハンドラー未到達の可能性も確認 |
-| エラーログ急増（閾値超過） | 特定サービス・エンドポイントへの集中確認 | - |
-
-## Syntheticsテスト失敗対応
+### Response Flow
 
 ```text
-1. 定期実行を停止する（失敗が続くため）
-2. 対象ページが表示されるか手動確認
-   ├── 表示されない → 障害の可能性 → 原因特定・復旧
-   └── 表示される → テストシナリオが原因 → シナリオ修正
-3. 確認結果を通知スレッドに共有
+Receive alert
+  ↓
+Open incident dashboard
+  ↓
+Identify cause (layer-by-layer triage)
+  ├── CDN/LB: 5xx error rate spike? Cache hit rate drop?
+  ├── Container: CPU/memory pressure? Task count decrease? 502 increase?
+  ├── Application: error log surge? latency degradation on specific endpoint?
+  ├── DB: CPU pressure? connection spike?
+  └── Cache: hit rate drop? memory pressure?
+  ↓
+Execute fix or mitigation (LB empty response, scale out, add Reader)
 ```
 
-## エスカレーション判断
+## Infra Alert Response Patterns
 
-| 重要度 | 通知先 | 条件例 |
-|--------|--------|--------|
-| CRITICAL | PagerDuty（即時） | 可用性SLO 1hウィンドウ超過 |
-| HIGH | 緊急チャンネル | 6hウィンドウ超過、セキュリティ、決済障害 |
-| MEDIUM | 通常アラートチャンネル | Burn Rate警告、一般prodアラート |
+| Alert type | Triage | Mitigation |
+|------------|--------|-----------|
+| Container task count drop | deploy failure, platform outage | manual task increase, version downgrade |
+| DB CPU > 80% | heavy query, connection spike | add Reader, identify/fix heavy query |
+| Lock Wait Timeout | long-running transaction | identify and kill lock-holding transaction |
+| Queue backlog | consumer failure, processing delay | check worker errors, check DLQ |
+| DLQ received | worker processing failure | inspect message → fix cause → reprocess |
+| Cache bandwidth exceeded | GET concentration, cache bloat | add node, review cache strategy |
+| LB 502 increase | container OOM etc. | increase memory allocation, investigate memory leak |
+| Batch not started | insufficient resources | re-run in another AZ |
+| Email send rate exceeded | large-scale delivery | identify sender, request rate limit increase |
 
-## Runbookテンプレート
+## Security Alert Response
 
-新規Runbook作成時の構成:
+| Attack type | Detection condition | Immediate action |
+|-------------|--------------------|--------------------|
+| Credential stuffing | high request volume to login endpoint | WAF IP block, check affected accounts |
+| Credit card fraud | high request volume to payment endpoint | WAF IP block, invalidate fraudulent cards |
+| XSS attack | large volume of `<script` pattern detected | verify WAF rules, check for successful hits |
+| WAF count spike | high count on specific rule | analyze attack pattern, consider promoting to Block rule |
+| Admin panel public exposure | security group change detected | verify SG/WAF config, restore IP restriction |
+
+## API Error Response
+
+| Alert | Action | Note |
+|-------|--------|------|
+| Critical API 5xx | narrow by trace ID → APM for details | — |
+| No success for a period | possible outage → begin investigation | late-night hours may be false positives |
+| Payment callback error rate increase | access log → trace ID → detailed investigation | also check for handler not reached |
+| Error log surge (threshold exceeded) | check concentration on specific service/endpoint | — |
+
+## Synthetics Test Failure Response
+
+```text
+1. Stop scheduled execution (failures will continue)
+2. Manually verify target page is accessible
+   ├── Not accessible → possible outage → identify cause and recover
+   └── Accessible → test scenario is the issue → fix scenario
+3. Share findings in notification thread
+```
+
+## Escalation Decision
+
+| Severity | Notify | Condition examples |
+|----------|--------|--------------------|
+| CRITICAL | PagerDuty (immediate) | availability SLO 1h window exceeded |
+| HIGH | emergency channel | 6h window exceeded, security, payment outage |
+| MEDIUM | standard alert channel | burn rate warning, general prod alert |
+
+## Runbook Template
+
+Structure for new runbook creation:
 
 ```markdown
-# {アラート名} 対応 Runbook
-## 概要 — 監視対象と重要理由
-## モニター情報 — モニター名 / 通知先 / 閾値(具体値)
-## 対応フロー — 1.初動確認 2.原因切り分け 3.対処実行
-## エスカレーション — 誰に、どの条件で
-## 参考リンク — ダッシュボード・関連ドキュメント
+# {Alert name} Response Runbook
+## Overview — what is monitored and why it matters
+## Monitor info — monitor name / notification target / threshold (specific values)
+## Response flow — 1. initial check 2. triage 3. execute fix
+## Escalation — who, under what conditions
+## Reference links — dashboards, related documents
 ```
