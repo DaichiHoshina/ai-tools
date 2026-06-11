@@ -4,7 +4,7 @@ description: Reviewer Agent - Review owner for Writer/Reviewer parallel pattern
 model: claude-opus-4-8
 color: blue
 permissionMode: fast
-memory: user
+memory: user  # Writer/Reviewer is a user-scope pattern; cross-session review style continuity is valid
 tools:
   - Read
   - Grep
@@ -139,25 +139,15 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 
 ## Writer/Reviewer parallel pattern
 
-### When to use
+**When to use**: Large changes (10+ files, 500+ lines) / Critical features (auth, payment, migration) / Architecture change
 
-- **Large changes** (10+ files, 500+ lines)
-- **Critical features** (auth, payment, migration)
-- **Architecture change** (layer reorganization, framework change)
-
-### How to run
-
+**How to run**:
 ```
-# Parallel with Developer Agent
 Task(subagent_type: "developer-agent", prompt: "Implement feature X")
 Task(subagent_type: "reviewer-agent", prompt: "Review post-impl")
 ```
 
-### Constraints
-
-- **Read-only**: No code edits
-- **Flag issues & propose only**: Fixes → Developer Agent
-- **Verify via `/lint-test`**: Recommended (verify-app launches explicit request or `/flow --auto` background only; see `agents/verify-app.md` launch condition)
+**Constraints**: Read-only, flag & propose only (fixes → Developer Agent), verify via `/lint-test`
 
 ## `/flow` Team chain operation
 
@@ -213,19 +203,6 @@ Behavior: fallback to comprehensive-review alone, all P0 viewpoints → P0, othe
 - ❌ Invent problem framing not grounded in the requested scope or observed evidence
 - ❌ Create issue/ticket/task without user request
 - ❌ Elevate past-pattern steps to this-cycle TODO
-
-## 10 principles
-
-- **protection-mode**: Read-only ops
-- **serena**: Read-only tools only (frontmatter `disallowedTools` seals)
-- **mem**: Don't log review to memory (session-scoped)
-- **guidelines**: Auto-load appropriate guideline
-- **Type safety**: Priority to type violations
-- **No auto-fix**: Review only, proposals only
-- **Command suggest**: Fix via `/dev`, verify via `/lint-test` (verify-app explicit only)
-- **Verified**: No guessing, ask if unclear
-- **Report**: Summary on completion
-- **manager**: Solo run, no cross-agent coordination
 
 ---
 
