@@ -11,7 +11,6 @@ Claude Code 利用状況分析スクリプト
 import argparse
 import csv
 import json
-import os
 import sqlite3
 import subprocess
 import sys
@@ -547,7 +546,7 @@ def run_full(conn: sqlite3.Connection) -> str:
     lines = [
         "## Claude Code 利用分析レポート",
         "",
-        f"### サマリー（直近30日）",
+        "### サマリー（直近30日）",
         "| 指標 | 値 | 前期比 |",
         "|------|-----|--------|",
         f"| セッション数 | {sess['session_count']} | {sess_pct} |",

@@ -6,7 +6,6 @@ stdlib unittest 使用（pytest 不要）
     python3 -m unittest tests/unit/scripts/test_analytics_review_history.py
 """
 import importlib.util
-import json
 import tempfile
 import unittest
 from pathlib import Path
