@@ -248,6 +248,23 @@ ensure_worktree_memory_link() {
 }
 
 # =============================================================================
+# ISO8601 UTC timestamp → epoch 秒 変換関数 (クロスプラットフォーム)
+# BSD (date -j) → GNU (date -d) の順に試行する。fractional 秒 (.225) / 末尾 Z は除去。
+# 変換失敗の場合は stdout 空で rc=1 を返す。
+# Usage: epoch=$(_iso8601_to_epoch "2026-06-12T01:02:03.000Z") || ...
+# =============================================================================
+_iso8601_to_epoch() {
+  local ts="${1:-}"
+  [[ -n "$ts" ]] || return 1
+  local _trim="${ts%%.*}"  # .225Z → 除去
+  _trim="${_trim%Z}"        # 末尾 Z 除去 (fractional なし場合)
+  # jsonl timestamp は UTC。BSD は date -j -f、GNU は date -d で解釈
+  TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "$_trim" "+%s" 2>/dev/null \
+    || TZ=UTC date -d "${_trim}Z" "+%s" 2>/dev/null \
+    || return 1
+}
+
+# =============================================================================
 # JSONL session epoch 解決関数
 # session_id + cwd から JSONL path を導出し、先頭 timestamp を epoch 整数に変換して stdout へ出力する。
 # JSONL 不在 / timestamp 不在 / date 変換失敗の場合は stdout 空で rc=1 を返す。
@@ -264,10 +281,7 @@ _resolve_session_jsonl_epoch() {
   local _TS_RAW
   _TS_RAW=$(head -20 "$_JSONL" 2>/dev/null | grep -m1 '"timestamp":"' | grep -o '"timestamp":"[^"]*"' | cut -d'"' -f4) || true
   [[ -n "$_TS_RAW" ]] || return 1
-  local _TS_TRIM="${_TS_RAW%%.*}"  # .225Z → .225Z 除去
-  _TS_TRIM="${_TS_TRIM%Z}"          # 末尾 Z 除去 (fractional なし場合)
-  # jsonl timestamp は UTC、TZ=UTC で local 解釈ズレ回避
-  TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "$_TS_TRIM" "+%s" 2>/dev/null || return 1
+  _iso8601_to_epoch "$_TS_RAW" || return 1
 }
 
 # =============================================================================

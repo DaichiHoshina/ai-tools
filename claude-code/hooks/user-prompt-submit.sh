@@ -48,17 +48,22 @@ _SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SESSION_ID}}"
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
 printf -v _DATE_TODAY '%(%Y%m%d)T' -1
 
-# jsonl ファイルの assistant entry から token 合計を集計して stdout に出力する
+# jsonl を 1 pass で走査し msg_count / token 合計 / 末尾 user timestamp の epoch を集計する
 # 引数: jsonl_path
-# 出力: 整数 (集計失敗時は 0)
-# python3 採用理由: jsonl 大ファイルで jq より高速 (23ms vs 100ms+)
-_sum_jsonl_tokens() {
+# 出力: TSV 1 行 "msg_count\ttoken_total\tlast_user_epoch" (集計失敗時は "0\t0\t0")
+# python3 採用理由: jsonl 大ファイルで jq より高速 (23ms vs 100ms+)。
+# grep -c / python token 集計 / tail+grep+sed timestamp 抽出 の 3 走査を 1 走査に集約。
+# timestamp は python 内で epoch 変換 (BSD 専用 date -j fork を排除しクロスプラットフォーム化)。
+_scan_jsonl_session() {
   local jsonl_path="$1"
-  local _total=0
+  local _out=""
   if command -v python3 &>/dev/null; then
-    _total=$(python3 -c "
+    _out=$(python3 -c "
 import json, sys
+from datetime import datetime, timezone
+count = 0
 total = 0
+last_user_epoch = 0
 try:
     for line in open(sys.argv[1], 'r', errors='replace'):
         line = line.strip()
@@ -68,21 +73,35 @@ try:
             obj = json.loads(line)
         except Exception:
             continue
-        if obj.get('type') != 'assistant':
-            continue
-        usage = obj.get('message', {}).get('usage', {})
-        total += usage.get('input_tokens', 0) or 0
-        total += usage.get('cache_creation_input_tokens', 0) or 0
-        total += usage.get('cache_read_input_tokens', 0) or 0
-        total += usage.get('output_tokens', 0) or 0
+        t = obj.get('type')
+        if t in ('user', 'assistant'):
+            count += 1
+        if t == 'assistant':
+            usage = obj.get('message', {}).get('usage', {})
+            total += usage.get('input_tokens', 0) or 0
+            total += usage.get('cache_creation_input_tokens', 0) or 0
+            total += usage.get('cache_read_input_tokens', 0) or 0
+            total += usage.get('output_tokens', 0) or 0
+        elif t == 'user':
+            ts = obj.get('timestamp')
+            if ts:
+                try:
+                    s = ts.split('.')[0].rstrip('Z')
+                    dt = datetime.strptime(s, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc)
+                    last_user_epoch = int(dt.timestamp())
+                except Exception:
+                    pass
 except Exception:
     pass
-print(total)
-" "${jsonl_path}" 2>/dev/null) || _total=0
-    # 数値以外が返った場合の fallback
-    [[ "${_total}" =~ ^[0-9]+$ ]] || _total=0
+print(f'{count}\t{total}\t{last_user_epoch}')
+" "${jsonl_path}" 2>/dev/null) || _out=""
   fi
-  printf '%s' "${_total}"
+  # 形式検証 (3 列 TSV / 全列整数) に失敗したら 0 で fallback
+  if [[ ! "${_out}" =~ ^[0-9]+$'\t'[0-9]+$'\t'[0-9]+$ ]]; then
+    _out=$'0\t0\t0'
+  fi
+  # 末尾改行付与: read (set -e 下) が EOF で rc=1 を返してスクリプトを落とさないため
+  printf '%s\n' "${_out}"
 }
 
 # === Session bloat check: 3h超 or msg 1000超で /clear 推奨通知 ===
@@ -120,30 +139,31 @@ _check_session_bloat() {
   _START_EPOCH=$(_resolve_session_jsonl_epoch "$session_id" "$cwd") || return 0
   local _ELAPSED=$(( _NOW - _START_EPOCH ))
 
-  # msg count: user + assistant type 行数
-  local _MSG_COUNT
-  _MSG_COUNT=$(grep -c '"type":"user"\|"type":"assistant"' "${_JSONL}" 2>/dev/null) || _MSG_COUNT=0
+  # jsonl 走査: msg_count / token 合計 / 末尾 user epoch を 1 pass で取得 (TSV)
+  # mtime+size 署名でキャッシュ (jsonl は append-only。署名一致なら python 再走査 skip)
+  local _MSG_COUNT _TOKEN_TOTAL _LAST_EPOCH
+  local _SIG _SCAN_CACHE
+  # GNU (stat -c) を先に試す: GNU の stat -f は filesystem mode となり garbage を返すため順序重要
+  _SIG=$(stat -c '%Y-%s' "${_JSONL}" 2>/dev/null || stat -f '%m-%z' "${_JSONL}" 2>/dev/null || echo "0-0")
+  _SCAN_CACHE="/tmp/claude-session-scan-${session_id}-${_SIG}"
+  if [[ -f "${_SCAN_CACHE}" ]]; then
+    IFS=$'\t' read -r _MSG_COUNT _TOKEN_TOTAL _LAST_EPOCH < "${_SCAN_CACHE}" 2>/dev/null \
+      || { _MSG_COUNT=0; _TOKEN_TOTAL=0; _LAST_EPOCH=0; }
+  else
+    IFS=$'\t' read -r _MSG_COUNT _TOKEN_TOTAL _LAST_EPOCH < <(_scan_jsonl_session "${_JSONL}")
+    printf '%s\t%s\t%s\n' "${_MSG_COUNT}" "${_TOKEN_TOTAL}" "${_LAST_EPOCH}" > "${_SCAN_CACHE}" 2>/dev/null || true
+    # 同 session の stale cache (旧署名) を掃除
+    local _f
+    for _f in /tmp/claude-session-scan-${session_id}-*; do
+      [[ "${_f}" == "${_SCAN_CACHE}" ]] || rm -f "${_f}" 2>/dev/null || true
+    done
+  fi
+  : "${_MSG_COUNT:=0}" "${_TOKEN_TOTAL:=0}" "${_LAST_EPOCH:=0}"
 
-  # token 集計: _sum_jsonl_tokens helper に委譲
-  local _TOKEN_TOTAL
-  _TOKEN_TOTAL=$(_sum_jsonl_tokens "${_JSONL}")
-
-  # idle 検知: jsonl 末尾 user message の timestamp と現在時刻の差分
-  # tail -c で末尾のみ読み、grep+sed の 1 pipeline で最後の user timestamp を抽出
-  # BSD awk 非互換 (gawk match array) を避けるため grep -oE 維持
+  # idle 検知: 末尾 user message epoch と現在時刻の差分 (epoch は python 内で変換済み)
   local _IDLE_S=0
-  local _LAST_USER_TS
-  _LAST_USER_TS=$(tail -c 65536 "${_JSONL}" 2>/dev/null \
-    | grep -oE '"type":"user"[^}]*"timestamp":"[^"]*"' \
-    | tail -1 \
-    | sed -E 's/.*"timestamp":"([^"]+)"$/\1/')
-  if [[ -n "${_LAST_USER_TS}" ]]; then
-    # jsonl の timestamp は UTC (末尾 Z)、TZ=UTC で local 解釈ズレを回避
-    local _LAST_EPOCH
-    _LAST_EPOCH=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "${_LAST_USER_TS%.*}" "+%s" 2>/dev/null) || _LAST_EPOCH=0
-    if (( _LAST_EPOCH > 0 )); then
-      _IDLE_S=$(( _NOW - _LAST_EPOCH ))
-    fi
+  if (( _LAST_EPOCH > 0 )); then
+    _IDLE_S=$(( _NOW - _LAST_EPOCH ))
   fi
 
   # urgent / warn 判定 (urgent が優先)
