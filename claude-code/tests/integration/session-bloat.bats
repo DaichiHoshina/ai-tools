@@ -46,8 +46,9 @@ _make_session_jsonl() {
   # 1行目: timestamp (session start = now - elapsed)
   local start_epoch=$(( EPOCHSECONDS - elapsed_seconds ))
   # macOS: date -r <epoch> で ISO8601 生成 (Linux fallback: date -d @)
+  # UTC 表記で生成 (parser 側が TZ=UTC で解釈するため一致させる)
   local start_ts
-  start_ts=$(date -r "${start_epoch}" "+%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null || date -d "@${start_epoch}" "+%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null)
+  start_ts=$(date -u -r "${start_epoch}" "+%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null || date -u -d "@${start_epoch}" "+%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null)
   printf '{"type":"attachment","timestamp":"%s"}\n' "${start_ts}" > "${jsonl}"
 
   # user/assistant 行を msg_count 分追加
@@ -146,9 +147,9 @@ _make_session_jsonl() {
 }
 
 # =============================================================================
-# Case 4: token >= 500K → session-bloat warn が出る (token=XxxK 形式)
+# Case 4: token >= 5M → session-bloat warn が出る (token=XM 形式)
 # =============================================================================
-@test "session-bloat: warn when token >= 500K" {
+@test "session-bloat: warn when token >= 5M" {
   local session_id="bats-test-token-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
@@ -156,32 +157,30 @@ _make_session_jsonl() {
   # throttle flag を削除
   rm -f "/tmp/claude_session_bloat_${session_id}_${date_today}"
 
-  # elapsed 1h (3h 未満)、msg 100 (1000 未満)、token: assistant 10 entry × 60000 = 600K
-  # tokens_per_assistant=60000, msg_count=20 → assistant entry は 10 件 → 600K total
-  _make_session_jsonl "${session_id}" 3600 20 60000 > /dev/null
+  # elapsed 1h (3h 未満)、msg 100 (1000 未満)、token: assistant 10 entry × 600000 = 6M
+  _make_session_jsonl "${session_id}" 3600 20 600000 > /dev/null
   local cwd="${HOME}/testproject"
   local input
   input=$(printf '{"session_id":"%s","prompt":"hello","cwd":"%s"}' "${session_id}" "${cwd}")
 
   run bash -c "CLAUDE_CODE_SESSION_ID='${session_id}' JP_QUALITY_INJECT_OFF=1 CLAUDE_CTX_FILE='${HOME}/_ctx_unset' CLAUDE_SERENA_FAIL_COUNT='${HOME}/_serena_unset' bash '${HOOKS_DIR}/user-prompt-submit.sh' <<< '${input}'"
   [ "$status" -eq 0 ]
-  # token= を含む session-bloat warn が出ること
   [[ "$output" =~ "session-bloat" ]]
   [[ "$output" =~ "token=" ]]
 }
 
 # =============================================================================
-# Case 5: token < 500K かつ elapsed < 3h かつ msg < 1000 → warn 不要
+# Case 5: token < 5M かつ elapsed < 3h かつ msg < 1000 → warn 不要
 # =============================================================================
-@test "session-bloat: no warn when token=100K elapsed=1h msg=50" {
+@test "session-bloat: no warn when token=1M elapsed=25min msg=50" {
   local session_id="bats-test-token-nowarn-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
   rm -f "/tmp/claude_session_bloat_${session_id}_${date_today}"
 
-  # tokens_per_assistant=10000, msg_count=20 → assistant 10 件 → 100K total
-  _make_session_jsonl "${session_id}" 3600 20 10000 > /dev/null
+  # elapsed 25min (idle 30min 閾値未達)、token 1M (< 5M)、msg 20 (< 1000)
+  _make_session_jsonl "${session_id}" 1500 20 100000 > /dev/null
   local cwd="${HOME}/testproject"
   local input
   input=$(printf '{"session_id":"%s","prompt":"hello","cwd":"%s"}' "${session_id}" "${cwd}")
@@ -217,4 +216,51 @@ _make_session_jsonl() {
   # elapsed > 3h なので session-bloat warn は出るはず (elapsed= を含む)
   [[ "$output" =~ "session-bloat" ]]
   [[ "$output" =~ "elapsed=" ]]
+}
+
+# =============================================================================
+# Case 7: token >= 50M → URGENT level warn が出る
+# =============================================================================
+@test "session-bloat: URGENT when token >= 50M" {
+  local session_id="bats-test-urgent-$(date +%s)"
+  local date_today
+  date_today=$(date +%Y%m%d)
+
+  rm -f "/tmp/claude_session_bloat_${session_id}_${date_today}"
+  rm -f "/tmp/claude_session_bloat_urgent_${session_id}_${date_today}"
+
+  # tokens_per_assistant=6000000, msg_count=20 → assistant 10 件 → 60M total
+  _make_session_jsonl "${session_id}" 3600 20 6000000 > /dev/null
+  local cwd="${HOME}/testproject"
+  local input
+  input=$(printf '{"session_id":"%s","prompt":"hello","cwd":"%s"}' "${session_id}" "${cwd}")
+
+  run bash -c "CLAUDE_CODE_SESSION_ID='${session_id}' JP_QUALITY_INJECT_OFF=1 CLAUDE_CTX_FILE='${HOME}/_ctx_unset' CLAUDE_SERENA_FAIL_COUNT='${HOME}/_serena_unset' bash '${HOOKS_DIR}/user-prompt-submit.sh' <<< '${input}'"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "URGENT" ]]
+  [[ "$output" =~ "token=60M" ]]
+}
+
+# =============================================================================
+# Case 8: idle >= 30min → idle keyword 付きで warn が出る
+# =============================================================================
+@test "session-bloat: warn when idle >= 30min" {
+  local session_id="bats-test-idle-$(date +%s)"
+  local date_today
+  date_today=$(date +%Y%m%d)
+
+  rm -f "/tmp/claude_session_bloat_${session_id}_${date_today}"
+
+  # session 60min 前開始、最終 user message は jsonl 末尾の最新 user 行
+  # _make_session_jsonl は全 entry が同じ start_ts なので、idle は ~ elapsed と等しくなる
+  # elapsed 3600s (= 60min idle) で elapsed 閾値 3h は未達、idle 30min は達成
+  _make_session_jsonl "${session_id}" 3600 10 > /dev/null
+  local cwd="${HOME}/testproject"
+  local input
+  input=$(printf '{"session_id":"%s","prompt":"hello","cwd":"%s"}' "${session_id}" "${cwd}")
+
+  run bash -c "CLAUDE_CODE_SESSION_ID='${session_id}' JP_QUALITY_INJECT_OFF=1 CLAUDE_CTX_FILE='${HOME}/_ctx_unset' CLAUDE_SERENA_FAIL_COUNT='${HOME}/_serena_unset' bash '${HOOKS_DIR}/user-prompt-submit.sh' <<< '${input}'"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "session-bloat" ]]
+  [[ "$output" =~ "idle=" ]]
 }

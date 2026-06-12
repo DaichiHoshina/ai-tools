@@ -266,7 +266,8 @@ _resolve_session_jsonl_epoch() {
   [[ -n "$_TS_RAW" ]] || return 1
   local _TS_TRIM="${_TS_RAW%%.*}"  # .225Z → .225Z 除去
   _TS_TRIM="${_TS_TRIM%Z}"          # 末尾 Z 除去 (fractional なし場合)
-  date -j -f "%Y-%m-%dT%H:%M:%S" "$_TS_TRIM" "+%s" 2>/dev/null || return 1
+  # jsonl timestamp は UTC、TZ=UTC で local 解釈ズレ回避
+  TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "$_TS_TRIM" "+%s" 2>/dev/null || return 1
 }
 
 # =============================================================================

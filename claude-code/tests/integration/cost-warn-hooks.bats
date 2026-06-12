@@ -48,8 +48,9 @@ _make_session_jsonl() {
 
   local start_epoch=$(( EPOCHSECONDS - elapsed_seconds ))
   local start_ts
-  start_ts=$(date -r "${start_epoch}" "+%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null \
-    || date -d "@${start_epoch}" "+%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null)
+  # UTC で生成 (parser 側 _resolve_session_jsonl_epoch が TZ=UTC で解釈するため)
+  start_ts=$(date -u -r "${start_epoch}" "+%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null \
+    || date -u -d "@${start_epoch}" "+%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null)
 
   printf '{"type":"attachment","timestamp":"%s"}\n' "${start_ts}" > "${jsonl}"
   local i

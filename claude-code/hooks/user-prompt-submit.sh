@@ -98,20 +98,14 @@ _check_session_bloat() {
     return 0
   fi
 
-  # throttle check: _TH_BLOAT_THROTTLE_S (15分) 以内なら skip
+  # throttle: warn 用 (15min) と urgent 用 (5min) を別 flag で管理
+  # urgent 判定後は warn flag を共有して二重通知防止
   local _BLOAT_FLAG="/tmp/claude_session_bloat_${session_id}_${date_today}"
+  local _BLOAT_URGENT_FLAG="/tmp/claude_session_bloat_urgent_${session_id}_${date_today}"
   # EPOCHSECONDS は subshell/env 引き継ぎ依存で空になるケースがある
   # printf -v は bash 4.2+ builtin (fork ゼロ)
   local _NOW
   printf -v _NOW '%(%s)T' -1
-  if [[ -f "${_BLOAT_FLAG}" ]]; then
-    local _LAST_NOTIFIED
-    read -r _LAST_NOTIFIED < "${_BLOAT_FLAG}" 2>/dev/null || _LAST_NOTIFIED="0"
-    local _SINCE=$(( _NOW - ${_LAST_NOTIFIED:-0} ))
-    if (( _SINCE >= 0 && _SINCE < _TH_BLOAT_THROTTLE_S )); then
-      return 0
-    fi
-  fi
 
   # jsonl path 構築 (msg count / token 集計で引き続き使用)
   local _slug="${cwd//\//-}"
@@ -134,35 +128,92 @@ _check_session_bloat() {
   local _TOKEN_TOTAL
   _TOKEN_TOTAL=$(_sum_jsonl_tokens "${_JSONL}")
 
-  # 閾値判定
+  # idle 検知: jsonl 末尾 user message の timestamp と現在時刻の差分
+  # tail -c で末尾のみ読み、grep+sed の 1 pipeline で最後の user timestamp を抽出
+  # BSD awk 非互換 (gawk match array) を避けるため grep -oE 維持
+  local _IDLE_S=0
+  local _LAST_USER_TS
+  _LAST_USER_TS=$(tail -c 65536 "${_JSONL}" 2>/dev/null \
+    | grep -oE '"type":"user"[^}]*"timestamp":"[^"]*"' \
+    | tail -1 \
+    | sed -E 's/.*"timestamp":"([^"]+)"$/\1/')
+  if [[ -n "${_LAST_USER_TS}" ]]; then
+    # jsonl の timestamp は UTC (末尾 Z)、TZ=UTC で local 解釈ズレを回避
+    local _LAST_EPOCH
+    _LAST_EPOCH=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%S" "${_LAST_USER_TS%.*}" "+%s" 2>/dev/null) || _LAST_EPOCH=0
+    if (( _LAST_EPOCH > 0 )); then
+      _IDLE_S=$(( _NOW - _LAST_EPOCH ))
+    fi
+  fi
+
+  # urgent / warn 判定 (urgent が優先)
+  local _LEVEL=""
   local _WARN_REASON=""
+  if (( _ELAPSED > _TH_SESSION_AGE_URGENT_S )) || (( _TOKEN_TOTAL >= _TH_TOKEN_URGENT )); then
+    _LEVEL="urgent"
+  elif (( _ELAPSED > _TH_SESSION_AGE_S )) \
+    || (( _MSG_COUNT > _TH_SESSION_MSG )) \
+    || (( _TOKEN_TOTAL >= _TH_TOKEN )) \
+    || (( _IDLE_S >= _TH_IDLE_S )); then
+    _LEVEL="warn"
+  fi
+
+  if [[ -z "${_LEVEL}" ]]; then
+    return 0
+  fi
+
+  # throttle: level ごとに flag 別管理
+  local _FLAG_FILE _THROTTLE_S
+  if [[ "${_LEVEL}" == "urgent" ]]; then
+    _FLAG_FILE="${_BLOAT_URGENT_FLAG}"
+    _THROTTLE_S="${_TH_BLOAT_THROTTLE_URGENT_S}"
+  else
+    _FLAG_FILE="${_BLOAT_FLAG}"
+    _THROTTLE_S="${_TH_BLOAT_THROTTLE_S}"
+  fi
+  if [[ -f "${_FLAG_FILE}" ]]; then
+    local _LAST_NOTIFIED
+    read -r _LAST_NOTIFIED < "${_FLAG_FILE}" 2>/dev/null || _LAST_NOTIFIED="0"
+    local _SINCE=$(( _NOW - ${_LAST_NOTIFIED:-0} ))
+    if (( _SINCE >= 0 && _SINCE < _THROTTLE_S )); then
+      return 0
+    fi
+  fi
+
+  # reason 文字列構築
   if (( _ELAPSED > _TH_SESSION_AGE_S )); then
     local _HOURS=$(( _ELAPSED / 3600 ))
     _WARN_REASON="elapsed=${_HOURS}h"
   fi
   if (( _MSG_COUNT > _TH_SESSION_MSG )); then
-    if [[ -n "${_WARN_REASON}" ]]; then
-      _WARN_REASON="${_WARN_REASON} msg=${_MSG_COUNT}"
-    else
-      _WARN_REASON="msg=${_MSG_COUNT}"
-    fi
+    _WARN_REASON="${_WARN_REASON:+${_WARN_REASON} }msg=${_MSG_COUNT}"
   fi
   if (( _TOKEN_TOTAL >= _TH_TOKEN )); then
-    local _TOKEN_K=$(( _TOKEN_TOTAL / 1000 ))
-    if [[ -n "${_WARN_REASON}" ]]; then
-      _WARN_REASON="${_WARN_REASON} token=${_TOKEN_K}K"
+    # 5M 以上は M 単位で表示
+    if (( _TOKEN_TOTAL >= 1000000 )); then
+      local _TOKEN_M=$(( _TOKEN_TOTAL / 1000000 ))
+      _WARN_REASON="${_WARN_REASON:+${_WARN_REASON} }token=${_TOKEN_M}M"
     else
-      _WARN_REASON="token=${_TOKEN_K}K"
+      local _TOKEN_K=$(( _TOKEN_TOTAL / 1000 ))
+      _WARN_REASON="${_WARN_REASON:+${_WARN_REASON} }token=${_TOKEN_K}K"
     fi
   fi
-
-  if [[ -n "${_WARN_REASON}" ]]; then
-    # throttle flag 更新 (末尾 \n 必須: read が EOF exit 1 で || fallback しないよう)
-    printf '%s\n' "${_NOW}" > "${_BLOAT_FLAG}" 2>/dev/null || true
-    printf '%s' "[session-bloat] ${_WARN_REASON}、/clear で session split 推奨" > /dev/stderr 2>/dev/null || true
-    # result_var に warn メッセージをセット (nameref 相当: eval で代入)
-    eval "${result_var}='⚠️ [session-bloat] ${_WARN_REASON}、/clear で session split 推奨 (token 節約のため task 境界でリセット)。'"
+  if (( _IDLE_S >= _TH_IDLE_S )); then
+    local _IDLE_MIN=$(( _IDLE_S / 60 ))
+    _WARN_REASON="${_WARN_REASON:+${_WARN_REASON} }idle=${_IDLE_MIN}min"
   fi
+
+  # throttle flag 更新 (末尾 \n 必須: read が EOF exit 1 で || fallback しないよう)
+  printf '%s\n' "${_NOW}" > "${_FLAG_FILE}" 2>/dev/null || true
+
+  local _MSG
+  if [[ "${_LEVEL}" == "urgent" ]]; then
+    _MSG="🚨 [session-bloat:URGENT] ${_WARN_REASON}、現タスク完了次第 /clear 必須 (cache_read 累積で 1 prompt あたり数 M token 浪費中)。"
+  else
+    _MSG="⚠️ [session-bloat] ${_WARN_REASON}、task 境界で /clear 推奨 (token 節約のため session split)。"
+  fi
+  printf '%s' "${_MSG}" > /dev/stderr 2>/dev/null || true
+  eval "${result_var}=\${_MSG}"
 }
 
 _BLOAT_NOTICE_MSG=""
