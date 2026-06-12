@@ -77,9 +77,16 @@ file_hash() {
   fi
 }
 
-# --- mtime YYYY-MM-DD 取得 (macOS stat) ---
+# --- mtime YYYY-MM-DD 取得 (GNU stat → macOS stat fallback) ---
 file_mtime() {
   local f="$1"
+  local _m
+  # GNU: %y は "YYYY-MM-DD HH:MM:..." なので先頭の日付部のみ取り出す
+  if _m=$(stat -c '%y' -- "${f}" 2>/dev/null); then
+    echo "${_m%% *}"
+    return
+  fi
+  # BSD/macOS: %Sm + -t で整形
   stat -f '%Sm' -t '%Y-%m-%d' -- "${f}" 2>/dev/null || echo "unknown"
 }
 
@@ -87,7 +94,7 @@ file_mtime() {
 file_age_days() {
   local f="$1"
   local mtime_epoch
-  mtime_epoch=$(stat -f '%m' -- "${f}" 2>/dev/null) || echo 0
+  mtime_epoch=$(stat -c '%Y' -- "${f}" 2>/dev/null || stat -f '%m' -- "${f}" 2>/dev/null) || echo 0
   local now_epoch
   now_epoch=$(date +%s)
   echo $(( (now_epoch - mtime_epoch) / 86400 ))

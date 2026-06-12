@@ -520,13 +520,13 @@ ${_COMMIT_NG_CTX}"
       _SIZE_LOG="${_LOG_DIR}/jp-quality-inject-size.log"
       mkdir -p "${_LOG_DIR}" 2>/dev/null || true
       if [[ -f "${_SIZE_LOG}" ]]; then
-        _fsize=$(stat -f%z "${_SIZE_LOG}" 2>/dev/null || stat -c%s "${_SIZE_LOG}" 2>/dev/null || echo 0)
+        _fsize=$(stat -c%s "${_SIZE_LOG}" 2>/dev/null || stat -f%z "${_SIZE_LOG}" 2>/dev/null || echo 0)
         if [[ "${_fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
-          local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
+          printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
           mv "${_SIZE_LOG}" "${_SIZE_LOG}.${_bak_ts}.bak" 2>/dev/null || true
         fi
       fi
-      _ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+      printf -v _ts '%(%Y-%m-%dT%H:%M:%S%z)T' -1
       printf '%s | %d bytes | session=%s\n' "${_ts}" "${_INJECT_SIZE}" "${_SESSION_ID:-unknown}" >> "${_SIZE_LOG}" 2>/dev/null || true
     fi
   fi

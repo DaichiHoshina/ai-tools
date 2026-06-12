@@ -975,7 +975,7 @@ case "$TOOL_NAME" in
     # session+transcript mtime キャッシュ: transcript 更新がない場合は python3 fork を skip
     _TRANSCRIPT=$(jq -r '.transcript_path // empty' <<< "$INPUT")
     if [ -n "$_TRANSCRIPT" ] && [ -f "$_TRANSCRIPT" ]; then
-      _TRANSCRIPT_MTIME=$(stat -f '%m' "$_TRANSCRIPT" 2>/dev/null || stat -c '%Y' "$_TRANSCRIPT" 2>/dev/null || echo "0")
+      _TRANSCRIPT_MTIME=$(stat -c '%Y' "$_TRANSCRIPT" 2>/dev/null || stat -f '%m' "$_TRANSCRIPT" 2>/dev/null || echo "0")
       _TRANSCRIPT_CACHE_FLAG="/tmp/claude-transcript-decl-${SESSION_ID:-$$}-${_TRANSCRIPT_MTIME}"
       if [[ -f "$_TRANSCRIPT_CACHE_FLAG" ]]; then
         _DECL_FOUND=$(cat "$_TRANSCRIPT_CACHE_FLAG" 2>/dev/null || true)

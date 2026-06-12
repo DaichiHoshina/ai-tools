@@ -57,7 +57,7 @@ _SETTINGS_FILE="${HOME}/.claude/settings.json"
 # キャッシュが24時間以内なら再利用
 _NEED_DIAG=true
 if [[ -f "${_DIAG_CACHE}" ]]; then
-  _CACHE_AGE=$(( EPOCHSECONDS - $(stat -f%m "${_DIAG_CACHE}" 2>/dev/null || echo 0) ))
+  _CACHE_AGE=$(( EPOCHSECONDS - $(stat -c%Y "${_DIAG_CACHE}" 2>/dev/null || stat -f%m "${_DIAG_CACHE}" 2>/dev/null || echo 0) ))
   if [[ ${_CACHE_AGE} -lt 86400 ]]; then
     _DIAG_MSG=$(<"${_DIAG_CACHE}")
     _NEED_DIAG=false
@@ -119,7 +119,7 @@ if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
   _CWD_CACHE="${HOME}/.claude/cache/cwd-multi-repo-${_CWD_SAFE}.cache"
   _CWD_CACHE_HIT=false
   if [[ -f "${_CWD_CACHE}" ]]; then
-    _CWD_CACHE_AGE=$(( EPOCHSECONDS - $(stat -f%m "${_CWD_CACHE}" 2>/dev/null || echo 0) ))
+    _CWD_CACHE_AGE=$(( EPOCHSECONDS - $(stat -c%Y "${_CWD_CACHE}" 2>/dev/null || stat -f%m "${_CWD_CACHE}" 2>/dev/null || echo 0) ))
     if [[ ${_CWD_CACHE_AGE} -lt 3600 ]]; then
       _CWD_GUARD_MSG=$(<"${_CWD_CACHE}")
       _CWD_CACHE_HIT=true
@@ -164,7 +164,7 @@ _SS_PLUGIN_CACHE="${HOME}/.claude/cache/plugin-count.cache"
 _SS_PLUGIN_COUNT=0
 _SS_PLUGIN_CACHE_HIT=false
 if [[ -f "${_SS_PLUGIN_CACHE}" ]]; then
-  _SS_PLUGIN_CACHE_AGE=$(( EPOCHSECONDS - $(stat -f%m "${_SS_PLUGIN_CACHE}" 2>/dev/null || echo 0) ))
+  _SS_PLUGIN_CACHE_AGE=$(( EPOCHSECONDS - $(stat -c%Y "${_SS_PLUGIN_CACHE}" 2>/dev/null || stat -f%m "${_SS_PLUGIN_CACHE}" 2>/dev/null || echo 0) ))
   if [[ ${_SS_PLUGIN_CACHE_AGE} -lt 86400 ]]; then
     _SS_PLUGIN_COUNT=$(<"${_SS_PLUGIN_CACHE}")
     _SS_PLUGIN_CACHE_HIT=true
@@ -202,9 +202,9 @@ _COLOR_PARSED_CACHE="${HOME}/.claude/cache/dir-colors-parsed.cache"
 _SESSION_COLOR="default"
 if [[ -f "${_COLOR_CONFIG}" ]]; then
     _COLOR_DATA=""
-    _COLOR_CONFIG_MTIME=$(stat -f%m "${_COLOR_CONFIG}" 2>/dev/null || echo 0)
+    _COLOR_CONFIG_MTIME=$(stat -c%Y "${_COLOR_CONFIG}" 2>/dev/null || stat -f%m "${_COLOR_CONFIG}" 2>/dev/null || echo 0)
     if [[ -f "${_COLOR_PARSED_CACHE}" ]]; then
-        _COLOR_CACHE_MTIME=$(stat -f%m "${_COLOR_PARSED_CACHE}" 2>/dev/null || echo 0)
+        _COLOR_CACHE_MTIME=$(stat -c%Y "${_COLOR_PARSED_CACHE}" 2>/dev/null || stat -f%m "${_COLOR_PARSED_CACHE}" 2>/dev/null || echo 0)
         if [[ ${_COLOR_CACHE_MTIME} -ge ${_COLOR_CONFIG_MTIME} ]]; then
             _COLOR_DATA=$(<"${_COLOR_PARSED_CACHE}")
         fi

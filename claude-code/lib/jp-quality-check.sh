@@ -35,14 +35,14 @@ _append_jp_quality_log() {
   # ファイルサイズ rotation: 1MB 超えたら mv してから新規
   if [[ -f "$log_file" ]]; then
     local fsize
-    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
+    fsize=$(stat -c%s "$log_file" 2>/dev/null || stat -f%z "$log_file" 2>/dev/null || echo 0)
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
       mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
     fi
   fi
   local ts
-  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf -v ts '%(%Y-%m-%dT%H:%M:%S%z)T' -1
   printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$action" >> "$log_file" 2>/dev/null || true
 }
 
@@ -103,8 +103,8 @@ _assert_required_keys() {
   # session+mtime 単位 flag file: /tmp/claude-ngdict-keys-ok-<SESSION_ID>-<mtime>
   # NG-DICTIONARY.md を同 session 内で編集した場合も mtime 変化で再検査する
   local _dict_mtime
-  _dict_mtime=$(stat -f '%m' "$_principles_file" 2>/dev/null \
-    || stat -c '%Y' "$_principles_file" 2>/dev/null \
+  _dict_mtime=$(stat -c '%Y' "$_principles_file" 2>/dev/null \
+    || stat -f '%m' "$_principles_file" 2>/dev/null \
     || echo "0")
   local _flag_path="/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}-${_dict_mtime}"
   # 古いキャッシュ (同セッション・異なる mtime) のみ削除 — _flag_path 自体は残す
@@ -147,14 +147,14 @@ _append_jp_quality_inject_log() {
   # ファイルサイズ rotation: 1MB 超えたら mv してから新規
   if [[ -f "$log_file" ]]; then
     local fsize
-    fsize=$(stat -f%z "$log_file" 2>/dev/null || stat -c%s "$log_file" 2>/dev/null || echo 0)
+    fsize=$(stat -c%s "$log_file" 2>/dev/null || stat -f%z "$log_file" 2>/dev/null || echo 0)
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
       mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
     fi
   fi
   local ts
-  ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf -v ts '%(%Y-%m-%dT%H:%M:%S%z)T' -1
   printf '%s | tool=%s | bytes=%s | threshold=1500 | status=%s\n' \
     "$ts" "$tool_name" "$bytes" "$status_str" >> "$log_file" 2>/dev/null || true
 }

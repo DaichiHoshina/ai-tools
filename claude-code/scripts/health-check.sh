@@ -71,14 +71,14 @@ render_plans_staleness() {
   while IFS= read -r -d '' plan_file; do
     [ -f "$plan_file" ] || continue
     local mtime_epoch
-    mtime_epoch=$(stat -f "%m" "$plan_file" 2>/dev/null) || continue
+    mtime_epoch=$(stat -c "%Y" "$plan_file" 2>/dev/null || stat -f "%m" "$plan_file" 2>/dev/null) || continue
     local age_seconds=$(( current_epoch - mtime_epoch ))
     local age_days=$(( age_seconds / 86400 ))
 
     if [ "$age_days" -gt "$threshold_days" ]; then
       found_any=1
       local size_kb
-      size_kb=$(( $(stat -f "%z" "$plan_file" 2>/dev/null || echo 0) / 1024 ))
+      size_kb=$(( $(stat -c "%s" "$plan_file" 2>/dev/null || stat -f "%z" "$plan_file" 2>/dev/null || echo 0) / 1024 ))
       local filename
       filename=$(basename "$plan_file")
       stale_names+=("$filename")

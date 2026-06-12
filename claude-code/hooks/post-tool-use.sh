@@ -140,7 +140,7 @@ case "$TOOL_NAME" in
       _FULL60="${COMMAND//$'\t'/ }"
       _FULL60="${_FULL60//$'\n'/ }"
       _FULL60="${_FULL60:0:60}"
-      _TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+      TZ=UTC printf -v _TS '%(%Y-%m-%dT%H:%M:%SZ)T' -1
       printf '%s\t%s\t%s\n' "${_TS}" "${_TOKEN}" "${_FULL60}" >> "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || true
     fi
     # statusline マーカー更新ロジック
