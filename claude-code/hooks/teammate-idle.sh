@@ -23,7 +23,7 @@ IFS=$'\t' read -r TEAMMATE_NAME TEAM_NAME < <(
     '.teammate_name // "unknown"' \
     '.team_name // "unknown"'
 )
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+TZ=UTC printf -v TIMESTAMP '%(%Y-%m-%dT%H:%M:%SZ)T' -1
 
 # ログディレクトリ
 LOG_DIR="${HOME}/.claude/logs"

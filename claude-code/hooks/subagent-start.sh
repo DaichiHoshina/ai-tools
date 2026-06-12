@@ -22,7 +22,7 @@ IFS=$'\t' read -r AGENT_ID AGENT_TYPE CWD < <(
     '.agent_type // "unknown"' \
     '.cwd // "."'
 )
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+TZ=UTC printf -v TIMESTAMP '%(%Y-%m-%dT%H:%M:%SZ)T' -1
 
 # ログディレクトリ作成
 LOG_DIR="${HOME}/.claude/logs"
@@ -41,11 +41,9 @@ if [[ -f "$LOG_FILE" ]]; then
   # awk 1 fork で「最終マッチ行のタイムスタンプ + 24h START カウント」を同時取得
   # index() は固定文字列検索（AGENT_TYPE に正規表現メタ文字が含まれても誤マッチしない）
   # Field 2: -F'[][]' で各角括弧を区切りとし、`[2026-... ]` の中身を取得
-  # cutoff: 24h 前を BSD (date -r) → GNU (date -d @) の順で生成しクロスプラットフォーム対応
+  # cutoff: 24h 前を printf -v builtin で生成 (date fork 不要・クロスプラットフォーム)
   _CUTOFF_EPOCH=$(( _NOW_EPOCH - 86400 ))
-  _CUTOFF_DATE=$(date -u -r "${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
-    || date -u -d "@${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
-    || echo "")
+  TZ=UTC printf -v _CUTOFF_DATE '%(%Y-%m-%dT%H:%M:%SZ)T' "${_CUTOFF_EPOCH}"
   read -r _LAST_SAME RECENT_COUNT < <(
     awk -F'[][]' \
       -v t="type=${AGENT_TYPE} " \

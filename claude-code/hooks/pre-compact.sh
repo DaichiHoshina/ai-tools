@@ -34,7 +34,7 @@ NL=$'\n'
 STATE_FILE="${HOME}/.claude/.compact-memory-state"
 mkdir -p "$(dirname "${STATE_FILE}")"
 
-TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+printf -v TIMESTAMP '%(%Y%m%d_%H%M%S)T' -1
 MEMORY_DIR="${HOME}/.claude/projects/-Users-daichi-hoshina-ai-tools/memory"
 MEMORY_PATH="${MEMORY_DIR}/compact-restore-${TIMESTAMP}.md"
 

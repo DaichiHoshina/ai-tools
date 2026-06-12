@@ -476,7 +476,7 @@ _check_session_split() {
   mkdir -p "${HOME}/.claude/logs" 2>/dev/null || true
   touch "$_WARN_FILE" 2>/dev/null || true
   local _TS_LABEL
-  _TS_LABEL=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
+  printf -v _TS_LABEL '%(%Y-%m-%dT%H:%M:%S%z)T' -1
   printf '%s | %s | %s | msg=%s\n' "$_TS_LABEL" "$session_id" "age=${_AGE_H}h" "$_MSG_COUNT" \
     >> "${HOME}/.claude/logs/session-split-warn.log" 2>/dev/null || true
 
@@ -561,7 +561,7 @@ _check_sequential_agent_fire() {
 
     # ログ追記
     local _TS_LABEL
-    _TS_LABEL=$(date '+%Y-%m-%dT%H:%M:%S' 2>/dev/null || echo "unknown")
+    printf -v _TS_LABEL '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s | %s | counter=%s | elapsed_ms=%s\n' \
       "$_TS_LABEL" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
       >> "${_LOG_DIR}/sequential-fire-warn.log" 2>/dev/null || true

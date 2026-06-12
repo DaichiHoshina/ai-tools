@@ -13,7 +13,7 @@ mkdir -p "${LOG_DIR}"
 # JSON入力を読み取り（1回のみ）
 INPUT=$(cat)
 
-TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+printf -v TIMESTAMP '%(%Y-%m-%d %H:%M:%S)T' -1
 
 # フィールド一括抽出（jq 1回）
 IFS=$'\t' read -r TOOL_NAME _SESSION_ID_JSON CWD DURATION_MS < <(

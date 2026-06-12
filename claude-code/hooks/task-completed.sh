@@ -28,7 +28,7 @@ IFS=$'\t' read -r TASK_ID TASK_SUBJECT TEAMMATE_NAME TEAM_NAME CWD SESSION_ID < 
     '.cwd // ""' \
     '.session_id // "unknown"'
 )
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+TZ=UTC printf -v TIMESTAMP '%(%Y-%m-%dT%H:%M:%SZ)T' -1
 
 # cwd フォールバック（JSONになければ環境から取得）
 if [ -z "${CWD}" ]; then
@@ -59,13 +59,13 @@ DIARY_FILE="${LOG_DIR}/task-diary.log"
 echo "[${TIMESTAMP}] ${TASK_SUBJECT} | by=${TEAMMATE_NAME} team=${TEAM_NAME} cwd=${PROJECT_NAME}" >> "$DIARY_FILE"
 
 # 統計情報計算（今日の完了タスク数）
-TODAY=$(date -u +"%Y-%m-%d")
+TZ=UTC printf -v TODAY '%(%Y-%m-%d)T' -1
 COMPLETED_TODAY=$(grep -c "${TODAY}.*COMPLETED" "$LOG_FILE" 2>/dev/null || echo "0")
 
 # 1 task = 1 session 原則: セッション内累計タスク数をカウント
 # /tmp flag: session_id + YYYYMMDD で stale / 混線回避
 # SESSION_ID 空時は flag 名が二重 _ になり全 session 共有 → カウント混線するため unknown へ正規化
-_TODAY_YYYYMMDD=$(date -u +"%Y%m%d")
+TZ=UTC printf -v _TODAY_YYYYMMDD '%(%Y%m%d)T' -1
 [[ -z "${SESSION_ID}" ]] && SESSION_ID="unknown"
 _SESSION_TASK_FLAG="/tmp/claude_task_count_${SESSION_ID}_${_TODAY_YYYYMMDD}.flag"
 # 現在カウント読込（ファイル未存在時は 0）

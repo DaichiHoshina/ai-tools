@@ -20,7 +20,7 @@ IFS=$'\t' read -r AGENT_ID AGENT_TYPE CWD < <(
     '.agent_type // "unknown"' \
     '.cwd // "."'
 )
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+TZ=UTC printf -v TIMESTAMP '%(%Y-%m-%dT%H:%M:%SZ)T' -1
 
 # ログディレクトリ作成
 LOG_DIR="${HOME}/.claude/logs"
@@ -50,12 +50,9 @@ if [ -f "$LOG_FILE" ]; then
   _NOW_STOP_EPOCH="${EPOCHSECONDS:-$(date +"%s")}"
   # cutoff epoch を bash 算術で計算し、awk 内で ISO8601 prefix 比較
   # ISO8601 は辞書順 = 時刻順なので先頭 13 文字 (YYYY-MM-DDTHH) 比較で 1h 精度近似
-  # 24h 前の時刻を printf で生成（date fork 不要）
+  # 24h 前の時刻を printf -v builtin で生成 (epoch → ISO8601、date fork 不要)
   _CUTOFF_EPOCH=$((_NOW_STOP_EPOCH - 86400))
-  # epoch → ISO8601 は bash 単体では困難なため date fork 1 本だけ維持
-  _CUTOFF_DATE=$(date -u -r "${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
-    || date -u -d "@${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
-    || echo "")
+  TZ=UTC printf -v _CUTOFF_DATE '%(%Y-%m-%dT%H:%M:%SZ)T' "${_CUTOFF_EPOCH}"
   # awk 1 fork: START 文字列取得 + STOP カウントを同時実行
   # start_ts は文字列のまま返し、epoch 変換は _iso8601_to_epoch (BSD/GNU 両対応) で行う
   read -r _START_TIME RECENT_COUNT < <(

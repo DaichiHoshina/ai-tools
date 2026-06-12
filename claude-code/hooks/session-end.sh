@@ -43,7 +43,8 @@ LOG_FILE="$LOG_DIR/${_LOG_DATE}.log"
 find "$LOG_DIR" -type f -mtime +7 -delete 2>/dev/null &
 
 # ログ追記
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] $SESSION_ID | $PROJECT_NAME | msg:$TOTAL_MESSAGES | tok:$TOTAL_TOKENS | ${DURATION}s" >> "$LOG_FILE"
+printf -v _SE_TS '%(%Y-%m-%d %H:%M:%S)T' -1
+echo "[${_SE_TS}] $SESSION_ID | $PROJECT_NAME | msg:$TOTAL_MESSAGES | tok:$TOTAL_TOKENS | ${DURATION}s" >> "$LOG_FILE"
 
 # --- Analytics記録をバックグラウンドへ ---
 (
