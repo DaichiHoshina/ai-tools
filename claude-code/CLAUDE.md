@@ -60,7 +60,7 @@ Do not write derived values (count / sum / list length) computable from a canoni
 
 ## Public-repo private-data block
 
-**ai-tools repo は public**。社内 product 名 / 社内識別子 (`snkrdunk` `oripa` `@batch_name` `@feature_tag` `recovery-runbook` `pm-consultation-draft` 等) に加え、**個人名 / 会社名 / project 固有名詞** を `~/ai-tools/` 配下 file・commit message に書き込み禁止。`pre-tool-use.sh` が hard block。canonical list: `~/.claude/references-private/private-name-list.txt` (user 記入、AI 読込のみ)。詳細 + allowlist + AI 側 fallback rule: `rules/public-repo-private-data-block.md` (`[[public-repo-social-hit-incident]]`)。
+**ai-tools repo は public**。社内 product 名 / 社内識別子 (`snkrdunk` `@batch_name` `@feature_tag` `recovery-runbook` `pm-consultation-draft` 等) に加え、**個人名 / 会社名 / project 固有名詞** を `~/ai-tools/` 配下 file・commit message に書き込み禁止。`pre-tool-use.sh` が hard block。canonical list: `~/.claude/references-private/private-name-list.txt` (user 記入、AI 読込のみ)。詳細 + allowlist + AI 側 fallback rule: `rules/public-repo-private-data-block.md` (`[[public-repo-social-hit-incident]]`)。
 
 **Hook block / NG-DICTIONARY.md**: AI 定型語 / カタカナ造語禁止 / 難読漢語 / 非日常英語を hook block。`**<name> (block|warn-only)**: <terms>` 形式 canonical。**既存 key (`AI定型語` / `カタカナ造語禁止` / `断定語 (warn-only)`) の name 変更禁止** — hook が exact match 参照。
 

@@ -9,7 +9,7 @@ paths: ["**/*"]
 
 ## social-hit term canonical list
 
-**social-hit (block)**: snkrdunk / oripa / @batch_name / @feature_tag / recovery-runbook / pm-consultation-draft
+**social-hit (block)**: snkrdunk / @batch_name / @feature_tag / recovery-runbook / pm-consultation-draft
 
 ## 個人名 / 会社名 / project 固有名詞 (block 全般)
 

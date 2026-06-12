@@ -1154,7 +1154,8 @@ _run_social_hit_write() {
 }
 
 @test "social-hit: stderr 出力に file= パスが含まれる" {
-  local term2="ori""pa"
+  # oripa は 2026-06-12 に allowlist 化 (業界一般名称) のため snkrdunk で代替
+  local term2="snkr""dunk"
   local target_path
   target_path="${HOME}/ai-tools/claude-code/another-file.md"
   _run_social_hit_write "${target_path}" "${term2} data pipeline"
@@ -1199,7 +1200,8 @@ _run_social_hit_write() {
 }
 
 @test "social-hit: ghq 実 path でも file= パスが stderr 出力に含まれる" {
-  local term2="ori""pa"
+  # oripa は 2026-06-12 に allowlist 化 のため snkrdunk で代替
+  local term2="snkr""dunk"
   local ghq_path
   ghq_path="${HOME}/ghq/github.com/DaichiHoshina/ai-tools/claude-code/docs/report.md"
   _run_social_hit_write "${ghq_path}" "${term2} pipeline data"
