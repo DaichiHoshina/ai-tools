@@ -24,6 +24,8 @@ For N independent tasks: **place N `Agent` tool_use calls in a single assistant 
 
 Before delegating, parent must: (a) identify target `file:line` (`find_symbol` / `grep`) (b) finalize verify command (c) condense DoD to 1 line. Do not push exploration to subagent (exploration phase dominates makespan). Prompts without explicit targets trigger full-repo scans.
 
+**Dedup before fan-out:** before firing N agents, merge query lines that target the same file group or the same symbol set into 1 agent. Parallelism = count of *distinct* domains, not raw query count. Each extra agent adds a full LLM run (explore-agent avg 123s), so a redundant launch is pure waste. Never merge genuinely independent domains and never drop below 1.
+
 ## Agent fire self-review (required before Task tool)
 
 Self-check parallelization before firing Task tool. Checklist canonical: `references/PARALLEL-PATTERNS.md` (do not duplicate in CLAUDE.md). Hook auto-injects self-review reminder as additionalContext on Task fire.
@@ -32,9 +34,13 @@ Self-check parallelization before firing Task tool. Checklist canonical: `refere
 
 Q&A / already-read file check (file already Read in same session, no additional Read needed; additional Read required → count toward throttle) / dry-run / **1 symbol inside body replace** / **1 section edit** / **same-file 1 config value change** / **expected LLM execution <20s** / **read-only command 1 item** (`git status` / `ls` / `cat` / `wc -l` / etc)
 
+**Grey zone (20–60s expected):** delegate launch floor is 22s startup (`performance-insights.md`). So a task that finishes inline in 20–60s often costs more if delegated. Rule: default inline when it is a single-file / single-symbol edit AND no commit. Delegate only when 2+ files are touched. Above 60s: delegate is clearly better.
+
 ## Inline exception throttle
 
 2 consecutive inline exceptions in same session → next edit-class op is **mandatory** developer-agent delegation (reset counter after delegation). Investigation phase (Q&A / dry-run excluded; Read/Bash for investigation only): cumulative ≥5 → switch to `explore-agent`.
+
+Read-only local queries (`git status` / `ls` / single `grep` / `find_symbol`) do NOT count toward this throttle. They are the cheapest, highest-frequency path, so counting them would push an `explore-agent` launch too early and add cost instead of saving it.
 
 Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any of 2+ files, 10+ lines, or 2+ symbols; **commit-bearing** → delegate immediately (no inline commit). Violations recorded in feedback memory.
 
