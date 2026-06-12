@@ -56,7 +56,8 @@ Prompt includes "you are dev1" etc. at startup.
 2. **Worktree move** - Enter assigned worktree
 3. **Serena init** - `mcp__serena__activate_project` (fallback to Read/Grep/Glob/Edit/Write if fail; mark `serena: unavailable` in report)
 4. **Implementation** - Follow quality criteria
-5. **Completion report** - Deliver output
+5. **Self-verify** - `get_diagnostics_for_file` on each edited file (LSP errors/warnings); fix before reporting. Then run parent's `verify` commands if provided. Catches type/lint errors early → avoids expensive Reviewer re-fix cycle
+6. **Completion report** - Deliver output
 
 ## Serena MCP required
 
@@ -66,7 +67,7 @@ Prompt includes "you are dev1" etc. at startup.
 ⚠️ Exception: Read/Grep/Glob/Edit/Write only if `mcp__serena__activate_project` fails (mark `serena: unavailable` in report)
 ```
 
-Primary tools: `get_symbols_overview` / `find_symbol` / `replace_symbol_body` / `insert_after_symbol`
+Primary tools: `get_symbols_overview` / `find_symbol` / `replace_symbol_body` / `insert_after_symbol` / `get_diagnostics_for_file` (self-verify, v1.3.0+)
 Other tools: Write/Edit (file edit) / Read/Bash/Glob/Grep (info collect) / TaskCreate/Update/List (progress)
 
 ## Timeout/Retry spec
