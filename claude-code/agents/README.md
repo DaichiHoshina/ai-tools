@@ -8,10 +8,10 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 
 | Agent | Model | Role | Primary use |
 |-------|-------|------|-------------|
-| **reviewer-agent** | sonnet | Review owner | Code quality, security, test review |
-| **root-cause-analyzer** | sonnet | RCA specialist | 5Whys analysis, structural fixes |
-| **po-agent** | sonnet | Strategy decider | Product strategy, worktree mgmt, decision return |
-| **manager-agent** | sonnet | Task decomposition & allocation | Large task allocation, integration verify |
+| **reviewer-agent** | opus 4.8 | Review owner | Code quality, security, test review |
+| **root-cause-analyzer** | opus 4.8 | RCA specialist | 5Whys analysis, structural fixes |
+| **po-agent** | opus 4.8 | Strategy decider | Product strategy, worktree mgmt, decision return |
+| **manager-agent** | opus 4.8 | Task decomposition & allocation | Large task allocation, integration verify |
 | **developer-agent** | sonnet | Implementer | Code impl, fix, add |
 | **explore-agent** | sonnet | Explorer/analyzer | Codebase investigation, parallel search |
 | **verify-app** | sonnet | Verifier | Build, test, lint integration check |
