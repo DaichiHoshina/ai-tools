@@ -88,7 +88,7 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 1. Update `claude-code/VERSION` to **TARGET** (channel-matched version confirmed in Phase 1; write channel target, not `latest`)
 2. Run `./claude-code/sync.sh to-local --yes` (at this step only)
 3. Update opportunity file (reflect Phase 3-B diffs)
-4. If major changes (3+ files or non-obvious decisions), save to Serena memory as `claude-update-YYYYMMDD`
+4. If major changes (3+ files or non-obvious decisions), save to Claude Code auto-memory (`~/.claude/projects/<project>/memory/claude-update-YYYYMMDD.md` via `Write`) — Serena `write_memory` forbidden (2026-06-10)
 
 ## Opportunity tracking format
 

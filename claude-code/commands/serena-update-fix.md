@@ -81,7 +81,7 @@ After auto-apply, show all diffs, then ask-apply.
    PYTHONWARNINGS=ignore uv run --directory ~/serena serena prompts print-cc-system-prompt-override > ~/.claude/serena-cc-prompt.txt
    ```
    ops detail: `references/serena-cc-prompt-setup.md`
-6. if 3+ file changes OR non-trivial judgment, save to Serena memory `serena-update-YYYYMMDD`
+6. if 3+ file changes OR non-trivial judgment, save to Claude Code auto-memory (`~/.claude/projects/<project>/memory/serena-update-YYYYMMDD.md` via `Write`) — Serena `write_memory` forbidden (2026-06-10)
 
 ## Notes
 

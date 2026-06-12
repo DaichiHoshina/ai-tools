@@ -105,12 +105,12 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
    - line 2 (fan-out declaration): `fan-out: N=<n>, targets=<file count>`
    If any required echo field from Manager's `formula_trace` (12 sub-fields) is missing → stop fan-out, re-request from Manager (discard allocation). Include worktree apply/skip judgment (downgrade_reason presence) in echo line 1. Run `mkdir -p <impl_notes.dir>`
 7. **Parallel fan-out**: fire `Task(developer-agent)×N` in 1 message (worktree isolated; N=1 sequential path confirmed at step 5). **Bundle required** (operational spec of L50): bundle all N Tasks in the message immediately after fan-out declaration (N≥2). Splitting into 1-per-message creates sequential chain firing (parentUuid serial) — violates "repeating 1 message 1 Agent N times is sequential" (L50). N declaration : tool_use firing message = 1:1 strict
-8. **Manager integrate**: aggregate dev completion reports → persist MERGED.md at `<impl_notes.dir>/MERGED.md`
-9. **Team review**: `Task(reviewer-agent, --codex)` (comprehensive + codex parallel) → P0/P1 judge
+8. **Parallel integrate + review** (fire both in 1 message): `Task(manager-agent)` integrate **and** `Task(reviewer-agent, --codex)` simultaneously. Reviewer reviews `diff_target` and skips MERGED.md (`agents/reviewer-agent.md`: "no impact on review scope"), so it does **not** depend on Manager's notes integration → overlapping removes `integration_cost` (~42s) from the critical path (was serial 8→9). Manager → aggregate dev reports + persist MERGED.md at `<impl_notes.dir>/MERGED.md`; Reviewer (comprehensive + codex parallel) → P0/P1 judge. Bundle the 2 Task calls in 1 message (same 1-message rule as dev fan-out; splitting serializes)
+9. **P0 re-fix loop** (after both step-8 agents return):
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
    - P0 remains / P1: report & continue (stop when `--auto`)
    - codex not configured: comprehensive single fallback
-10. Post-*impl* sequential steps from Task table (review done at step 9, skip)
+10. Post-*impl* sequential steps from Task table (review done at step 8, skip)
 
 ## Integration rules
 
@@ -119,7 +119,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 
 ### Completion actions
 
-- Save Serena memory (`work-context-YYYYMMDD-{topic}`)
+- Save to Claude Code auto-memory via `Write`: `~/.claude/projects/<project>/memory/work-context-YYYYMMDD-{topic}.md` (Serena `write_memory` forbidden — 2026-06-10)
 - `--auto`: secret check → /git-push --pr → PushNotification
 - Normal: AskUserQuestion "push?"
 
