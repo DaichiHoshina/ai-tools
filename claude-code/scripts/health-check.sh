@@ -232,7 +232,10 @@ PY
       Y="${YM%年*}"
       M="${YM#*年}"
       M="${M%月}"
-      MENT_EPOCH=$(date -j -f "%Y-%m-%d" "${Y}-$(printf '%02d' "$M")-01" +%s 2>/dev/null) || continue
+      MM=$(printf '%02d' "$M")
+      # BSD (date -j) → GNU (date -d) の順で epoch 変換しクロスプラットフォーム対応
+      MENT_EPOCH=$(date -j -f "%Y-%m-%d" "${Y}-${MM}-01" +%s 2>/dev/null \
+        || date -d "${Y}-${MM}-01" +%s 2>/dev/null) || continue
       DAYS_OLD=$(( (TODAY_EPOCH - MENT_EPOCH) / 86400 ))
       if [ "$DAYS_OLD" -gt 90 ]; then
         printf "%s :: %s [%d 日経過]\n" "$(basename "$f")" "$line" "$DAYS_OLD"

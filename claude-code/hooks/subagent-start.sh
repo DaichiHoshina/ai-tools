@@ -36,12 +36,16 @@ fi
 
 # 重複起動検知: 直近60秒以内に同一 agent_type が起動済みなら警告
 _DUP_WARN=""
-_NOW_EPOCH=$(date +%s)
+_NOW_EPOCH="${EPOCHSECONDS:-$(date +%s)}"
 if [[ -f "$LOG_FILE" ]]; then
   # awk 1 fork で「最終マッチ行のタイムスタンプ + 24h START カウント」を同時取得
   # index() は固定文字列検索（AGENT_TYPE に正規表現メタ文字が含まれても誤マッチしない）
   # Field 2: -F'[][]' で各角括弧を区切りとし、`[2026-... ]` の中身を取得
-  _CUTOFF_DATE=$(date -u -v-24H +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "")
+  # cutoff: 24h 前を BSD (date -r) → GNU (date -d @) の順で生成しクロスプラットフォーム対応
+  _CUTOFF_EPOCH=$(( _NOW_EPOCH - 86400 ))
+  _CUTOFF_DATE=$(date -u -r "${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
+    || date -u -d "@${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
+    || echo "")
   read -r _LAST_SAME RECENT_COUNT < <(
     awk -F'[][]' \
       -v t="type=${AGENT_TYPE} " \
@@ -55,7 +59,7 @@ if [[ -f "$LOG_FILE" ]]; then
       ' "$LOG_FILE" || echo " 0"
   )
   if [[ -n "$_LAST_SAME" ]]; then
-    _LAST_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$_LAST_SAME" +%s 2>/dev/null || echo 0)
+    _LAST_EPOCH=$(_iso8601_to_epoch "$_LAST_SAME" || echo 0)
     if [[ "$_LAST_EPOCH" -gt 0 ]]; then
       _DIFF=$((_NOW_EPOCH - _LAST_EPOCH))
       if [[ "$_DIFF" -lt 60 ]]; then

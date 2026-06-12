@@ -56,10 +56,8 @@ if [ -f "$LOG_FILE" ]; then
   _CUTOFF_DATE=$(date -u -r "${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
     || date -u -d "@${_CUTOFF_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
     || echo "")
-  # awk 1 fork: START epoch 変換 + STOP カウントを同時実行（date -j fork を排除）
-  # mktime() は gawk 拡張。macOS の awk は mawk 相当で mktime 非対応のため
-  # ISO8601 を文字列分解して epoch 秒を手計算するのは複雑すぎるため
-  # start_ts は文字列のまま返し、後続の date -j fork 1 本のみ維持
+  # awk 1 fork: START 文字列取得 + STOP カウントを同時実行
+  # start_ts は文字列のまま返し、epoch 変換は _iso8601_to_epoch (BSD/GNU 両対応) で行う
   read -r _START_TIME RECENT_COUNT < <(
     awk -F'[][]' \
       -v aid="agent_id=${AGENT_ID}" \
@@ -73,7 +71,7 @@ if [ -f "$LOG_FILE" ]; then
       ' "$LOG_FILE" || echo " 0"
   )
   if [ -n "$_START_TIME" ] && [ "$AGENT_ID" != "unknown" ]; then
-    START_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$_START_TIME" +"%s" 2>/dev/null || echo "0")
+    START_EPOCH=$(_iso8601_to_epoch "$_START_TIME" || echo "0")
     if [ "$START_EPOCH" -gt 0 ]; then
       DURATION_SEC=$((_NOW_STOP_EPOCH - START_EPOCH))
       if [ $DURATION_SEC -ge 60 ]; then
