@@ -58,8 +58,6 @@ monorepo/
 - **Sync call chain**: A→B→C→D cascade. Causes failure cascade → consider async event-driven.
 - **Shared DB**: Violates Database per Service. Give each its own.
 
-> Implementation examples: see `guidelines/design/microservices-kubernetes.md`.
-
 ---
 
 ## Checklist
@@ -118,5 +116,5 @@ Zero findings / Monolith (no microservices):
 
 ## Related Guidelines / Context7
 
-- `guidelines/design/microservices-kubernetes.md`, `design/clean-architecture.md`
+- `guidelines/design/clean-architecture.md`, `guidelines/design/domain-driven-design.md`
 - Context7: `/vercel/turborepo`, `/nrwl/nx`, "saga pattern", "circuit breaker"

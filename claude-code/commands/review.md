@@ -6,7 +6,7 @@ description: Comprehensive code review (comprehensive-review skill + optional ex
 # /review - Comprehensive Code Review
 
 > Runs 12-angle review via `comprehensive-review` skill. `--deep`/`--multi` parallelizes external reviewers.
-> Noise filter policy: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/SKILL.md` Step -1
+> Noise filter policy: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/skill.md` Step -1
 
 ## Delegation & Self-Review (required, 2 stages)
 
@@ -46,7 +46,7 @@ material: `git diff --shortstat` / `gh pr diff <PR>` / `gh pr view <PR> --json b
 |----------|----------|
 | none | review local diff |
 | URL/number | `gh pr diff` / `glab mr diff` |
-| `--focus=<angle>` | narrow 12 angles (see SKILL.md) |
+| `--focus=<angle>` | narrow 12 angles (see skill.md) |
 | `--no-difit` | suppress difit (local only) |
 
 | Mode | Delegate | PR | Cost |
@@ -88,7 +88,7 @@ Aggregation (3+ agree = Critical confirmed etc.). Use: pre-merge / release-criti
 
 ## Output Format
 
-Same format as SKILL.md. Additional labels:
+Same format as skill.md. Additional labels:
 
 ```markdown
 ### 🔴 Critical (fix required, confidence ≥80)
