@@ -27,7 +27,7 @@ Match keywords top-down, **first hit wins**. If mixed, ask user. `*impl*` = expa
 | 5 | ドキュメント, docs, README | Docs | /docs → /review → /git-push --pr |
 | 6 | テスト作成, test追加, spec | Testing | /test → /review → /lint-test → /git-push --pr |
 | 7 | 追加, 実装, 新規, 機能, add | New feature | /prd → /plan → *impl* → /test → /review → /lint-test → /git-push --pr |
-| 8 | データ分析, analysis, SQL | Analysis | Skill(data-analysis) → /docs → /git-push --pr |
+| 8 | データ分析, analysis, SQL | Analysis | *impl* → /docs → /git-push --pr |
 | 9 | インフラ, terraform, k8s, IaC | Infrastructure | /plan → Skill(terraform) → /lint-test → /git-push --pr |
 | 10 | 調査のみ, 診断, troubleshoot | Investigation (read-only) | /diagnose → /docs |
 | 11 | その他 | New feature (default) | |
