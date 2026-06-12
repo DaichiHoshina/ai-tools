@@ -72,6 +72,35 @@ _resolve_git_root() {
   fi
 }
 
+# repo 内を 1 パス grep し、マッチしたファイル path を改行区切りで stdout 出力 (最大 20 件)。
+# git work tree 内では git grep (単一プロセス / .gitignore 尊重 / tracked+untracked) を使う。
+# 非 git path では従来の find -exec grep に fallback する (bench/test の /tmp 等)。
+# 引数: search_root, mode(fixed|regex), pattern
+# 注: git grep は no-match で rc=1、head の SIGPIPE で rc=141 になりうるため末尾 || true で吸収
+#     (呼び出し側は set -euo pipefail 下のため)
+_repo_grep_files() {
+  local search_root="$1"
+  local mode="$2"
+  local pattern="$3"
+  if git -C "$search_root" rev-parse --is-inside-work-tree &>/dev/null; then
+    local _mflag="-F"
+    [[ "$mode" == "regex" ]] && _mflag="-E"
+    git -C "$search_root" grep -l "$_mflag" --untracked -e "$pattern" -- \
+      '*.md' '*.sh' '*.ts' '*.tsx' '*.js' '*.py' '*.json' '*.yaml' '*.yml' '*.toml' '*.bats' \
+      2>/dev/null | head -20 || true
+  else
+    local _gflag="-l"
+    [[ "$mode" == "fixed" ]] && _gflag="-lF"
+    find "$search_root" \
+      -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
+      -not -path "*/.git/*" \
+      -not -path "*/node_modules/*" \
+      -not -path "*/dist/*" \
+      -not -path "*/build/*" \
+      -exec grep "$_gflag" "$pattern" {} \; 2>/dev/null | head -20 || true
+  fi
+}
+
 # heading rename サブルーチン
 # 引数: old_str, new_str, file_path
 # 副作用: ADDITIONAL_CONTEXT にメッセージを追記する
@@ -79,6 +108,7 @@ _detect_heading_rename() {
   local old_str="$1"
   local new_str="$2"
   local file_path="${3:-.}"
+  local search_root="${4:-$(_resolve_git_root "$file_path")}"
 
   [[ "$old_str" =~ ^(#{2,3})[[:space:]]+.+$ ]] || return 0
   [[ "$new_str" =~ ^(#{2,3})[[:space:]]+.+$ ]] || return 0
@@ -88,18 +118,9 @@ _detect_heading_rename() {
   old_title=$(echo "$old_str" | sed -E "s/^${heading_level}[[:space:]]+//" | sed 's/[[:space:]]*$//')
   new_title=$(echo "$new_str" | sed -E "s/^${heading_level}[[:space:]]+//" | sed 's/[[:space:]]*$//')
 
-  local search_root
-  search_root=$(_resolve_git_root "$file_path")
-
   # 旧 heading title の残存検索（.md, .sh, .ts/.tsx, .js, .py, .json, .yaml, .toml, .bats）
   local grep_results
-  grep_results=$(find "$search_root" \
-    -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
-    -not -path "*/.git/*" \
-    -not -path "*/node_modules/*" \
-    -not -path "*/dist/*" \
-    -not -path "*/build/*" \
-    -exec grep -l "$old_title" {} \; 2>/dev/null | head -20)
+  grep_results=$(_repo_grep_files "$search_root" fixed "$old_title")
 
   if [ -n "$grep_results" ]; then
     local _tmp_fc="${grep_results//$'\n'/}"
@@ -120,13 +141,7 @@ _detect_heading_rename() {
   if [ -n "$old_slug" ] && [ ${#old_slug} -gt 3 ]; then
     local slug_pattern="#${old_slug}"
     local slug_results
-    slug_results=$(find "$search_root" \
-      -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" -o -name "*.bats" \) \
-      -not -path "*/.git/*" \
-      -not -path "*/node_modules/*" \
-      -not -path "*/dist/*" \
-      -not -path "*/build/*" \
-      -exec grep -lF "$slug_pattern" {} \; 2>/dev/null | head -20)
+    slug_results=$(_repo_grep_files "$search_root" fixed "$slug_pattern")
     if [ -n "$slug_results" ]; then
       local slug_list="${slug_results//$'\n'/','}"; slug_list="${slug_list%,}"
       local slug_warn="${ICON_WARNING} anchor slug 残存: 「${slug_pattern}」が残存（${slug_list}）。bats anchor・cross-ref 同期確認推奨"
@@ -146,6 +161,7 @@ _detect_symbol_rename() {
   local old_str="$1"
   local new_str="$2"
   local file_path="${3:-.}"
+  local search_root="${4:-$(_resolve_git_root "$file_path")}"
 
   # 識別子パターンが含まれるか確認 (false positive 削減)
   [[ "$old_str" =~ [^a-zA-Z0-9_]?([a-zA-Z_][a-zA-Z0-9_]*)[^a-zA-Z0-9_]? ]] || return 0
@@ -164,18 +180,9 @@ _detect_symbol_rename() {
   local new_ident="${_new_idents[0]}"
   [ "$old_ident" != "$new_ident" ] || return 0
 
-  local search_root
-  search_root=$(_resolve_git_root "$file_path")
-
-  # 旧 identifier の残存検索
+  # 旧 identifier の残存検索 (word boundary)
   local grep_results
-  grep_results=$(find "$search_root" \
-    -type f \( -name "*.md" -o -name "*.sh" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" \) \
-    -not -path "*/.git/*" \
-    -not -path "*/node_modules/*" \
-    -not -path "*/dist/*" \
-    -not -path "*/build/*" \
-    -exec grep -l "\b${old_ident}\b" {} \; 2>/dev/null | head -20)
+  grep_results=$(_repo_grep_files "$search_root" regex "\b${old_ident}\b")
 
   if [ -n "$grep_results" ]; then
     local _tmp_fc="${grep_results//$'\n'/}"
@@ -201,13 +208,17 @@ detect_rename_propagation() {
     return
   fi
 
+  # git root を 1 回だけ解決し helper に渡す (helper 毎の重複解決を排除)
+  local search_root
+  search_root=$(_resolve_git_root "$file_path")
+
   # heading rename を先に試みる (heading なら symbol rename は skip)
   if [[ "$old_str" =~ ^(#{2,3})[[:space:]]+.+$ ]] && [[ "$new_str" =~ ^(#{2,3})[[:space:]]+.+$ ]]; then
-    _detect_heading_rename "$old_str" "$new_str" "$file_path"
+    _detect_heading_rename "$old_str" "$new_str" "$file_path" "$search_root"
     return
   fi
 
-  _detect_symbol_rename "$old_str" "$new_str" "$file_path"
+  _detect_symbol_rename "$old_str" "$new_str" "$file_path" "$search_root"
 }
 
 # ====================================
@@ -246,14 +257,17 @@ _check_social_hit() {
       ;;
   esac
 
-  # social-hit term 抽出 + grep
-  local found=()
+  # social-hit term 抽出 → 1 パス grep で hit 語列挙 (N×fork → 1 fork、jp-quality-check.sh:182 と同手法)
+  local found=() _terms=() word
   while IFS= read -r word; do
     [[ -z "$word" ]] && continue
-    if printf '%s' "$content" | grep -qF "$word"; then
-      found+=("$word")
-    fi
+    _terms+=("$word")
   done < <(_extract_term_list "$_social_hit_rule_file" "social-hit (block)")
+  if [[ ${#_terms[@]} -gt 0 ]]; then
+    local _found_raw
+    _found_raw=$(printf '%s' "$content" | grep -oFf <(printf '%s\n' "${_terms[@]}") | sort -u || true)
+    [[ -n "$_found_raw" ]] && mapfile -t found < <(printf '%s\n' "$_found_raw")
+  fi
 
   if [[ ${#found[@]} -gt 0 ]]; then
     local word_list
@@ -276,13 +290,16 @@ _check_social_hit_in_text() {
   [[ -z "$text" ]] && return 0
   [[ -f "$_social_hit_rule_file" ]] || return 0
 
-  local found=()
+  local found=() _terms=() word
   while IFS= read -r word; do
     [[ -z "$word" ]] && continue
-    if printf '%s' "$text" | grep -qF "$word"; then
-      found+=("$word")
-    fi
+    _terms+=("$word")
   done < <(_extract_term_list "$_social_hit_rule_file" "social-hit (block)")
+  if [[ ${#_terms[@]} -gt 0 ]]; then
+    local _found_raw
+    _found_raw=$(printf '%s' "$text" | grep -oFf <(printf '%s\n' "${_terms[@]}") | sort -u || true)
+    [[ -n "$_found_raw" ]] && mapfile -t found < <(printf '%s\n' "$_found_raw")
+  fi
 
   if [[ ${#found[@]} -gt 0 ]]; then
     local word_list
@@ -340,13 +357,11 @@ _check_private_name() {
   # term が 0 件なら skip (list 不在 / 空 → fallback は AI 側 default rule のみ)
   [[ ${#terms[@]} -eq 0 ]] && return 0
 
+  # 1 パス grep で hit 語列挙 (N×fork → 1 fork、jp-quality-check.sh:182 と同手法)
   local found=()
-  local t
-  for t in "${terms[@]}"; do
-    if printf '%s' "$content" | grep -qF "$t"; then
-      found+=("$t")
-    fi
-  done
+  local _found_raw
+  _found_raw=$(printf '%s' "$content" | grep -oFf <(printf '%s\n' "${terms[@]}") | sort -u || true)
+  [[ -n "$_found_raw" ]] && mapfile -t found < <(printf '%s\n' "$_found_raw")
 
   if [[ ${#found[@]} -gt 0 ]]; then
     local word_list
