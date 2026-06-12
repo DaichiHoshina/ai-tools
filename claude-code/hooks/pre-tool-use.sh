@@ -40,12 +40,9 @@ ICON_WARNING=$'\u25b2'    # exclamation-triangle (boundary)
 # JSON入力を読み込む
 INPUT=$(cat)
 
-# ツール名を取得
-TOOL_NAME=$(jq -r '.tool_name // empty' <<< "$INPUT")
-
-# セッションID取得: stdin JSON の .session_id を優先 (他 hook と同様の方式)
+# ツール名 + セッションID を jq 1 回で取得 (fork 削減、@tsv + read。他 hook と同方式)
 # CLAUDE_CODE_SESSION_ID env は Claude Code v2.1.90+ で export される場合があるため fallback で参照
-SESSION_ID=$(jq -r '.session_id // empty' <<< "$INPUT")
+IFS=$'\t' read -r TOOL_NAME SESSION_ID < <(jq -r '[.tool_name // "", .session_id // ""] | @tsv' <<< "$INPUT")
 SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 
 # protection-mode判定変数
