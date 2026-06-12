@@ -111,7 +111,7 @@ Output:
 {concrete fix steps}
 ```
 
-Save to Serena Memory:
+Save to Claude Code auto-memory (Serena `write_memory` forbidden — 2026-06-10 decision):
 ```text
-mcp__serena__write_memory("rca-{date}-{summary}", report)
+Write → ~/.claude/projects/<project-key>/memory/rca-{date}-{summary}.md
 ```

@@ -1,7 +1,7 @@
 ---
 name: root-cause
 description: Root cause analysis (5 Why): bugs to recurrence prevention. Use for RCA.
-allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*
+allowed-tools: Read, Write, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*
 model: sonnet
 requires-guidelines:
   - common
@@ -56,14 +56,16 @@ Use Serena MCP to search codebase for same pattern.
 
 ### Step 6: Report Generation
 
-Save to Serena Memory: `mcp__serena__write_memory("rca-{date}-{summary}", content)`
+Save to Claude Code auto-memory via `Write`: `~/.claude/projects/<project-key>/memory/rca-{date}-{summary}.md` (Serena `write_memory` forbidden — 2026-06-10 decision, avoid dual management)
 
 ## Serena MCP Priority Use
 
 - `mcp__serena__find_symbol` - Symbol search
 - `mcp__serena__find_referencing_symbols` - Trace usage
+- `mcp__serena__find_implementations` - Detect if a broken interface has multiple impls sharing the root cause (systemic vs local)
 - `mcp__serena__search_for_pattern` - Pattern detection
 - `mcp__serena__get_symbols_overview` - File structure
+- `mcp__serena__get_diagnostics_for_file` - Verify type-safety of the fix post-RCA
 
 ## Output Example
 
