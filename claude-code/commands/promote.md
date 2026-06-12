@@ -86,7 +86,6 @@ Apply to `~/.claude/` side (CLAUDE.md "Editing Rule" compliant, local-edit wipe 
 
 ## When to use
 
-- `/scan` to show triggers at session start
 - On detecting 3+ files with same topic (`~/.claude/references-private/memory-promotion-flow.md` §6 trigger B)
 - MEMORY.md exceeds 50 lines (trigger A)
 - Single file exceeds 5KB / 150 lines (trigger D)

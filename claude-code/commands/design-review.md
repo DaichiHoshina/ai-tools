@@ -30,7 +30,7 @@ git log --no-decorate origin/HEAD...
 git diff --merge-base origin/HEAD
 ```
 
-を agent に渡す。preview URL (dev server) を user に確認、未起動なら `npm run dev` 等を `/run` で起動してから渡す。
+を agent に渡す。preview URL (dev server) を user に確認、未起動なら `npm run dev` 等で起動してから渡す。
 
 ## Review phases (agent が実行)
 

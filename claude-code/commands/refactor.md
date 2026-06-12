@@ -88,7 +88,6 @@ Auto-load guidelines:
 | Command | Relation |
 |---------|------|
 | `/dev` | new feature implementation, different goal |
-| `/tdd` | test-driven. equal to refactor Refactor phase |
 | `/lint-test` | CI equivalent check, required after refactoring |
 
 ## Failure Handling

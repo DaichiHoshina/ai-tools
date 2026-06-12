@@ -116,7 +116,6 @@ PushNotification: notify only if task > 3min (`[dev] {task} done`).
 | Command | Relation |
 |---------|----------|
 | `/refactor` | structure improvement w/o behavior change. Can run after `/dev` |
-| `/tdd` | test-driven. Test-first variant of `/dev` |
 | `/lint-test` | CI-equivalent checks. Recommended after `/dev` |
 
 **Pre-impl user confirmation required. Use Serena MCP for code ops.**
