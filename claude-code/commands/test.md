@@ -7,7 +7,7 @@ description: Test creation mode - write tests for existing code
 
 ## protection-mode
 
-Auto-apply via `/flow`. Single run: recommend `Skill("protection-mode")` if changing files.
+Auto-apply via `/flow`. Single run: recommend `/protection-mode` if changing files.
 
 ## Step 0: Auto-load Guidelines (required)
 

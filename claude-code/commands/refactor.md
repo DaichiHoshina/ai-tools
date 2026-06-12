@@ -7,7 +7,7 @@ description: Refactoring mode (auto-load language guidelines)
 
 ## protection-mode
 
-Auto-apply via `/flow`. Single run: recommend `Skill("protection-mode")` if changing files.
+Auto-apply via `/flow`. Single run: recommend `/protection-mode` if changing files.
 
 ## Think Mode (critical)
 
