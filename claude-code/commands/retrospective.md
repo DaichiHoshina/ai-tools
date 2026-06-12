@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, Glob, Grep, Bash, mcp__serena__*
+allowed-tools: Read, Write, Glob, Grep, Bash, mcp__serena__*
 description: Retrospective - analyze past sessions, auto-propose skill/config improvements
 ---
 
@@ -83,7 +83,7 @@ AskUserQuestion → select proposals → implement (new skill / edit existing / 
 
 ### Phase 5: pending-improvements memory auto-update
 
-Update with `mcp__serena__write_memory(memory_name="pending-improvements", ...)`:
+Read then re-write `~/.claude/projects/{project}/memory/pending-improvements.md` via `Write` (Serena `write_memory` forbidden — 2026-06-10 decision, avoid dual management; read-modify-write the auto-memory file):
 - Append today's session results to completed list
 - Remove consumed items from pending, record unadopted proposals under "remaining"
 - Retain on-hold items (tech barrier / trigger unmet)

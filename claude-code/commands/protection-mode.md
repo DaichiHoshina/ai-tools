@@ -1,5 +1,5 @@
 ---
-allowed-tools: Read, mcp__serena__read_memory, mcp__serena__write_memory
+allowed-tools: Read, Write
 description: Load Protection Mode - apply operation checker and safety classification to session
 ---
 
@@ -7,10 +7,10 @@ description: Load Protection Mode - apply operation checker and safety classific
 
 ## Execution Logic
 
-1. **Check Serena memory**: `read_memory("protection-mode-loaded")` → skip if exists
+1. **Check load flag**: `~/.claude/projects/{project}/memory/protection-mode-loaded.md` exists → skip
 2. **First-time file load**: `skill.md` + `guardrails.md` (with `full` arg, also `session-modes.md`)
 3. **Apply session mode**: Skill(session-mode) applies strict/normal/fast operation guards
-4. **Save to memory**: `write_memory("protection-mode-loaded", {loaded_at, summary})` (warn if save fails, proceed to Step 5)
+4. **Save flag**: `Write` `~/.claude/projects/{project}/memory/protection-mode-loaded.md` ({loaded_at, summary}) — Serena `write_memory` forbidden (2026-06-10 decision); auto-memory only (warn if save fails, proceed to Step 5)
 5. **Report application**: display current constraints (format below)
 
 **Application report format**:

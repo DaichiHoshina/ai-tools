@@ -46,7 +46,7 @@ Execution guard: InvariantCheck at each phase completion. Violation → forced s
 ## 5 Operating Principles
 
 1. **Complexity check**: Receive task → Simple/TaskDecomposition/AgentHierarchy → select appropriate file
-2. **Completion monad**: `complete(task) = (afplay notify, serena.write_memory(result))`
+2. **Completion monad**: `complete(task) = (afplay notify, write_auto_memory(result))` (Claude Code auto-memory; Serena `write_memory` forbidden — 2026-06-10)
 3. **Confirm notify**: `confirm(boundary) = (afplay confirm sound, wait_user_approval())`
 4. **Code of conduct**: clean → careful → cooperative
 5. **Response format**: quote user input → state execution mode → commutative diagram (current → next step)

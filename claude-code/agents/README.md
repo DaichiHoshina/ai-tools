@@ -172,11 +172,8 @@ Parent (Claude Code)
 
 | Tool | Purpose | Recommended agent |
 |------|---------|-------------------|
-| `list_memories` / `read_memory` | Read existing | All agents |
-| `write_memory` | Write new | po, manager, developer |
-| `edit_memory` | Partial update (diff not full replace) | po, manager |
-| `rename_memory` | Rename key | po, manager |
-| `delete_memory` | Delete | po, manager |
+| `list_memories` / `read_memory` | Read existing Serena memories | All agents |
+| `write_memory` / `edit_memory` / `rename_memory` / `delete_memory` | **Forbidden** (2026-06-10) — write to Claude Code auto-memory (`~/.claude/projects/.../memory/`) via `Write` instead, avoid dual management | — |
 
 ### Onboarding
 
@@ -191,7 +188,7 @@ Parent (Claude Code)
 - **Symbol edit**: Prefer `replace_symbol_body` family over Edit for tighter side-effect scope
 - **Rename**: Use `rename_symbol` over grep→Edit for lower ref-miss risk
 - **Delete**: Use `safe_delete_symbol` to pre-detect dangling refs
-- **Memory update**: Use `edit_memory` over `write_memory` to keep diffs visible
+- **Memory write**: Serena memory writes forbidden (2026-06-10) — write to Claude Code auto-memory (`~/.claude/projects/.../memory/`) via `Write`. Serena memory is read-only (`list_memories` / `read_memory`)
 
 ---
 
