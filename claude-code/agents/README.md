@@ -12,9 +12,9 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 | **root-cause-analyzer** | opus 4.8 | RCA specialist | 5Whys analysis, structural fixes |
 | **po-agent** | opus 4.8 | Strategy decider | Product strategy, worktree mgmt, decision return |
 | **manager-agent** | opus 4.8 | Task decomposition & allocation | Large task allocation, integration verify |
-| **developer-agent** | sonnet | Implementer | Code impl, fix, add |
-| **explore-agent** | sonnet | Explorer/analyzer | Codebase investigation, parallel search |
-| **verify-app** | sonnet | Verifier | Build, test, lint integration check |
+| **developer-agent** | sonnet 4.6 | Implementer | Code impl, fix, add |
+| **explore-agent** | sonnet 4.6 | Explorer/analyzer | Codebase investigation, parallel search |
+| **verify-app** | sonnet 4.6 | Verifier | Build, test, lint integration check |
 
 ## Agent startup cost (highlights)
 

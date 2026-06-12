@@ -1,7 +1,7 @@
 ---
 name: verify-app
 description: Verification Agent - Comprehensive build, test, lint checks
-model: sonnet
+model: claude-sonnet-4-6
 color: green
 permissionMode: fast
 memory: project
