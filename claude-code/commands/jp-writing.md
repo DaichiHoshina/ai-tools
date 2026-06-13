@@ -93,7 +93,7 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 ## 5-Axis Check (review/rewrite required)
 
 ```
-[A] readability: 1 sentence ≤60 chars / paragraph 3-5 sentences / explicit subject
+[A] readability: 1 sentence ≤60 chars (web/short) or ≤100 (tech doc) / 読点 ≤3 / 連続漢字 ≤4 / paragraph 3-5 sentences / explicit subject
 [B] visibility: heading hierarchy / bullet use / tables for types
 [C] signal: PREP or TL;DR+detail / conclusion first
 [D] evidence: praise word + number/case (AI smell 3-transform)
