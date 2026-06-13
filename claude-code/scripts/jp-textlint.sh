@@ -52,10 +52,13 @@ if [[ -n "$ten" ]]; then
 fi
 
 # 3. 文長 >100 字 (python3 で文字数カウント)
+# heading 行 (^#) と空行を除去してから。で分割する。除去しないと heading が
+# 直近句点までのブロックに巻き込まれ、1 文の字数が過大計上される。
 if command -v python3 >/dev/null 2>&1; then
   longs=$(printf '%s' "$clean" | python3 -c '
 import sys, re
-for s in re.split("。", sys.stdin.read()):
+lines = [l for l in sys.stdin.read().splitlines() if l.strip() and not l.lstrip().startswith("#")]
+for s in re.split("。", "\n".join(lines)):
     s = s.strip()
     if len(s) > 100:
         print(f"  {len(s)}字: {s[:45]}…")
