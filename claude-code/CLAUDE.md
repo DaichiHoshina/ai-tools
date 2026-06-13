@@ -133,6 +133,7 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 prose 出力に下記を proactive 適用する (hook block 待ちの retry を減らす = token 節約)。
 - 結論を冒頭に書く / 抽象語は数値・具体例に開く / 1 文を短く (読点 3 個まで)
 - AI定型語・カタカナ造語・難読漢語を使わない (canonical: `guidelines/writing/NG-DICTIONARY.md`)
+- 連続漢字 4 字まで (助詞で開く: 利用者認証処理→利用者の認証処理) / 冗長圧縮 (〜することができる→できる) / 弱い表現は断定 or「未確認」明示 / 形式名詞・副詞はひらがな
 - 外向き prose・docs は 1 文 100 字 (短文 60 字) 上限、chat は genshijin を継続
 - 深い書き直し / 全観点 self-check が要る時のみ `/jp-writing`。詳細規範: `guidelines/writing/PRINCIPLES.md`
 
