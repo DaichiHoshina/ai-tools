@@ -177,9 +177,10 @@ _check_term_list() {
   done < <(_extract_term_list "$_principles_file" "$key")
   [[ ${#words[@]} -eq 0 ]] && return 0
 
-  # 全語を1回の grep -oFf で hit 語を列挙 (N×fork → 1 fork)
+  # 全語を1回の grep -ioFf で hit 語を列挙 (N×fork → 1 fork)
+  # -i: 英語 NG 語 (leverage / Leverage / LEVERAGE 等) の大文字小文字差を取りこぼさない。JP 語は無影響
   local found
-  found=$(printf '%s' "$clean_text" | grep -oFf <(printf '%s\n' "${words[@]}") | sort -u || true)
+  found=$(printf '%s' "$clean_text" | grep -ioFf <(printf '%s\n' "${words[@]}") | sort -u || true)
   if [[ -n "$found" ]]; then
     printf '%s\n' "$found"
     return 1
@@ -191,6 +192,36 @@ _check_term_list() {
 _check_ai_jargon() {
   local text="$1"
   _check_term_list "$text" "AI定型語"
+}
+
+# 構造的可読性の機械検出 (連続漢字≥5 / 読点≥4)。warn-only、block しない。
+# PRINCIPLES.md `## 文単位の品質規約` (連続漢字 4 文字上限 / 読点 3 個まで) を機械検出に接続。
+# 固有名詞・技術用語で誤検知しうるため warn 止まり。出力: warn 文字列 (検出ゼロなら空)。
+# 表示は count + 漢字 sample のみ (UTF-8 truncation による mojibake を避ける)。
+_check_structural_quality() {
+  local text="$1"
+  [[ -z "$text" ]] && return 0
+  local clean
+  clean=$(_strip_code_blocks "$text")
+  local out=""
+  # 連続漢字 5 文字以上。grep '[一-龯]' は C locale で byte 範囲マッチに化けるため python3 で Unicode 正確判定。
+  # python3 不在なら graceful skip (読点 check は継続)。outward text 時のみ呼ばれるため fork 1 本は許容。
+  if command -v python3 &>/dev/null; then
+    local kanji kc ksample
+    kanji=$(printf '%s' "$clean" | python3 -c 'import sys,re
+h=sorted(set(re.findall(r"[一-龯]{5,}", sys.stdin.read())))
+print(f"{len(h)}\t"+" ".join(h[:3]))' 2>/dev/null || printf '0\t')
+    IFS=$'\t' read -r kc ksample <<< "$kanji"
+    if [[ "${kc:-0}" =~ ^[0-9]+$ ]] && (( kc > 0 )); then
+      out="連続漢字≥5: ${kc}種 (${ksample}) → 助詞挿入/訓読み開く; "
+    fi
+  fi
+  # 読点 4 個以上の文 (。区切り、、を gsub で数える。byte-safe)
+  local tc
+  tc=$(printf '%s' "$clean" | awk 'BEGIN{RS="。"} { n=gsub(/、/,"x"); if(n>=4)c++ } END{ print c+0 }')
+  [[ "${tc:-0}" -gt 0 ]] && out="${out}読点≥4の文: ${tc}個 → 文分割; "
+  [[ -n "$out" ]] && printf '%s' "${out%; }"
+  return 0
 }
 
 # 外向き text を AI語 + カタカナ造語チェックし、hit 時に Forbidden block をセットする
@@ -249,8 +280,24 @@ _block_if_ai_jargon() {
     _append_jp_quality_log "$context_label" "$_warn_list" "warn"
   fi
 
-  # block なし → return
+  # 構造的可読性 warn (連続漢字 / 読点)。block しない、additionalContext に追記
+  local _struct_warn
+  _struct_warn=$(_check_structural_quality "$text")
+  local _struct_msg=""
+  if [[ -n "$_struct_warn" ]]; then
+    _append_jp_quality_log "$context_label" "structural: ${_struct_warn}" "warn"
+    _struct_msg="${ICON_WARNING:-▲} 可読性 warn (${context_label}): ${_struct_warn}"
+  fi
+
+  # block なし → return (構造 warn があれば additionalContext に載せる)
   if [[ "$_has_block" -eq 0 ]]; then
+    if [[ -n "$_struct_msg" ]]; then
+      if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+        ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_struct_msg}"
+      else
+        ADDITIONAL_CONTEXT="${_struct_msg}"
+      fi
+    fi
     return
   fi
 
@@ -303,5 +350,10 @@ ${_detail_lines}"
     ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}
 block list (この session で全て回避):
 ${_ref_lines}"
+  fi
+
+  # block 時も構造 warn を併記 (修正ついでに可読性も直す)
+  if [[ -n "$_struct_msg" ]]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_struct_msg}"
   fi
 }

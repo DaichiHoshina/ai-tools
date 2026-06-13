@@ -439,6 +439,8 @@ web 出力時は `## Web 可読性` の追加 check 4 項目も適用。
 self-check 6 項目通過後、残存 NG の機械検出を 1 行 grep で実施する。
 chat draft 段階では hook block が発火しないため、自走 sweep を規範とする。
 
+**一括検査**: `scripts/jp-textlint.sh <file>` で 連続漢字≥5 / 読点≥4 / 文長>100 / NG辞書 hit をまとめて検出できる (textlint 相当、手動起動)。pre-tool-use hook は外向き書込時に連続漢字・読点を warn-only で自動検出する (block はしない)。
+
 ### 基本 grep (略記・記号・jargon)
 
 ```bash
