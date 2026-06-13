@@ -20,7 +20,21 @@ else
 fi
 
 # code block / inline code を除去
-clean=$(printf '%s' "$text" | awk '/^```/{b=!b;next} !b{print}' | sed 's/`[^`]*`/ /g')
+# Bug1: 0-3sp インデント fence も対象 / Bug2: 未閉じ fence は prose 扱いに倒す (後続 drop 防止)
+# Bug3: 2連 backtick ``foo`` を先に除去してから単一 `foo` を除去
+# shellcheck disable=SC2016
+_awk_fenceclean='{lines[NR]=$0} END{
+  b=0; last_open=0
+  for(i=1;i<=NR;i++){if(lines[i]~/^[[:space:]]{0,3}```/){b=!b;if(b)last_open=i}}
+  unclosed_start=(b==1)?last_open:0; b=0
+  for(i=1;i<=NR;i++){
+    is_fence=(lines[i]~/^[[:space:]]{0,3}```/)
+    if(is_fence&&i!=unclosed_start){b=!b}
+    else if(i==unclosed_start){b=0;print lines[i]}
+    else if(!b){print lines[i]}
+  }}'
+# shellcheck disable=SC2016
+clean=$(printf '%s' "$text" | awk "$_awk_fenceclean" | sed -E 's/``[^`]*``/ /g; s/`[^`]*`/ /g')
 
 issues=0
 echo "## jp-textlint: ${src}"
