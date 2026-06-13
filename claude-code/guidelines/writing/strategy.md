@@ -44,6 +44,7 @@ Technical Spec (現時点の仕様スナップショット)
 - **PRDとADRは独立**: PRDは「何を作るか」、ADRは「技術判断の記録」。PRD内で技術判断を書かない
 - **Design DocはPRDにリンク**: 必ずPRD/Issueリンクを貼る。WhyがPRD側にあるため
 - **Product Specはリリース後にPRDから派生**: PRD時点の想定vs実装結果の差分を埋める
+- **改定時の追従 (orphan 防止)**: PRD / ADR を改定したら、参照する Design Doc / Technical Spec / runbook のリンク・前提条件を確認し、乖離があれば即座に追従させる。古い設計が残ると新メンバーが混乱する。突合観点: [long-form-doc.md](long-form-doc.md) 参照
 
 ## 保存先
 

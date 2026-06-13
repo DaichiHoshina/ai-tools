@@ -286,6 +286,8 @@ dryRun := cfg.GetBoolSafe("dry_run", true)
 
 新規 PR やレビュー時に以下の手順でコメントを分類する。
 
+機械検出 (事前 sweep): 抽出したコメントを file に集めて `scripts/jp-textlint.sh <file>` を通すと、NG辞書 / 連続漢字 / 読点 / 文長を一括検出できる。冗長表現・弱い表現の混入を自動で拾ってから、下記 10 分類で精査する。
+
 ### 抽出コマンド
 
 ```bash

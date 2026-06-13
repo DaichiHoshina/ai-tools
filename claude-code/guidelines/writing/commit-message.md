@@ -83,3 +83,5 @@ commit前に `git log -1 --format=%B` で:
 - diffを見ずに済む情報まで列挙してないか
 - 禁止語が混入していないか
 - 体言止め / 漢語連発 / 主語省略になっていないか (詳細: `PRINCIPLES.md` の「chat 草稿 → 外向き翻訳の 8 観点 sweep」)
+
+機械検出 (任意): commit message を draft file に書き出して `scripts/jp-textlint.sh <draft>` で NG辞書 / 連続漢字 / 読点 / 文長を一括チェックできる。commit message は AI定型語 block の最多発生源 (週 787 件) のため、事前 sweep で retry を減らせる。
