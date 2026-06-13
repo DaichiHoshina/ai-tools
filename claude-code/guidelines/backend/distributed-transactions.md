@@ -95,7 +95,7 @@ Guarantees atomicity of DB TX and message publish. See [event-driven-architectur
 
 ## 6. Idempotency
 
-See [design/async-job-patterns.md#idempotency](../design/async-job-patterns.md) for implementation patterns.
+See [design/async-job-patterns.md#ensuring-idempotency](../design/async-job-patterns.md#ensuring-idempotency) for implementation patterns.
 
 ---
 

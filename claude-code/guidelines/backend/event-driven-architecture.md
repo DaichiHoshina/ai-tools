@@ -61,7 +61,7 @@ Reference for async messaging design with Kafka/RabbitMQ/SQS/PubSub etc. For sim
 
 ## 4. Idempotent consumer (at-least-once receiver)
 
-See [design/async-job-patterns.md#idempotency](../design/async-job-patterns.md) for implementation patterns.
+See [design/async-job-patterns.md#ensuring-idempotency](../design/async-job-patterns.md#ensuring-idempotency) for implementation patterns.
 
 ---
 

@@ -160,7 +160,7 @@ Check `go.mod` `go` directive for target version before flagging.
 - INSERT/UPDATE via ORM Insert/Update; raw SQL FORBIDDEN
 - Table alias `AS` FORBIDDEN (except self-join)
 - `SELECT *` FORBIDDEN
-- Raw SQL bulk INSERT exception: `LastInsertId() + i` numbering limited to simple inserts only (FORBIDDEN: `INSERT...SELECT` / `ON DUPLICATE KEY UPDATE` / mixed / dynamic row count / migration backfill). Details: [backend/mysql-performance.md §12](../backend/mysql-performance.md)
+- Raw SQL bulk INSERT exception: `LastInsertId() + i` numbering limited to simple inserts only (FORBIDDEN: `INSERT...SELECT` / `ON DUPLICATE KEY UPDATE` / mixed / dynamic row count / migration backfill). Details: [backend/mysql-performance.md §17](../backend/mysql-performance.md)
 
 ## Entity / Nullable
 
