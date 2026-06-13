@@ -79,4 +79,5 @@ On-demand index from CLAUDE.md.
 | Private config storage convention | `private-config-convention.md` |
 | Plugin marketplace caveats (cascade uninstall) | `plugin-marketplace-caveats.md` |
 | CodeRabbit plugin cheat sheet | `coderabbit-plugin.md` |
+| Shell snapshot が rc を上書きする挙動 / CLAUDECODE 判定 | `shell-snapshot-rc-override.md` |
 | Claude Code official best practices (JA) | https://code.claude.com/docs/ja/best-practices |
