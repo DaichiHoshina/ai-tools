@@ -216,9 +216,12 @@ print(f"{len(h)}\t"+" ".join(h[:3]))' 2>/dev/null || printf '0\t')
       out="連続漢字≥5: ${kc}種 (${ksample}) → 助詞挿入/訓読み開く; "
     fi
   fi
-  # 読点 4 個以上の文 (。区切り、、を gsub で数える。byte-safe)
+  # 読点 4 個以上の文 (。で改行分割してから行=文として数える。byte-safe)
+  # macOS awk はマルチバイト RS 非対応のため sed で改行化してから処理する
+  # 。を改行へ置換 (BSD/GNU sed 両対応の $'\n' 形式)。SC1003 は誤検出のため抑止
   local tc
-  tc=$(printf '%s' "$clean" | awk 'BEGIN{RS="。"} { n=gsub(/、/,"x"); if(n>=4)c++ } END{ print c+0 }')
+  # shellcheck disable=SC1003
+  tc=$(printf '%s' "$clean" | sed 's/。/\'$'\n''/g' | awk '{ n=gsub(/、/,"x"); if(n>=4)c++ } END{ print c+0 }')
   [[ "${tc:-0}" -gt 0 ]] && out="${out}読点≥4の文: ${tc}個 → 文分割; "
   [[ -n "$out" ]] && printf '%s' "${out%; }"
   return 0

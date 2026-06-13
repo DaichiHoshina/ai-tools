@@ -40,8 +40,11 @@ for w, n in c.most_common():
   fi
 fi
 
-# 2. 読点 4 個以上の文 (。区切り、byte-safe)
-ten=$(printf '%s' "$clean" | awk 'BEGIN{RS="。"} { s=$0; n=gsub(/、/,"、"); if(n>=4){ gsub(/^[ \t\r\n]+/,"",s); print "  読点"n"個: " s } }' || true)
+# 2. 読点 4 個以上の文 (。で改行分割してから行=文として数える、byte-safe)
+# macOS awk はマルチバイト RS 非対応のため sed で改行化してから処理する
+# 。を改行へ置換 (BSD/GNU sed 両対応の $'\n' 形式)。SC1003 は誤検出のため抑止
+# shellcheck disable=SC1003
+ten=$(printf '%s' "$clean" | sed 's/。/\'$'\n''/g' | awk '{ s=$0; n=gsub(/、/,"、"); if(n>=4){ gsub(/^[ \t\r]+/,"",s); print "  読点"n"個: " s "。" } }' || true)
 if [[ -n "$ten" ]]; then
   echo ""; echo "### 読点 ≥4 の文 (文分割)"
   printf '%s\n' "$ten"
