@@ -128,6 +128,14 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 
 **Commit message pre-draft sweep** (top-6 over 7d, `[[retrospective-2026-06-12]]` P1): avoid `鑑みる` `踏襲` `喫緊` `leverage` `utilize` `mitigate` — **check before writing**. Alternatives: `踏まえる` / `引き継ぐ` / `直近` / `使う` / `活かす` / `緩和する` etc. 787 blocks/week is the main cause of retry loops.
 
+## Default Readability (全出力 baseline、/jp-writing 不要)
+
+prose 出力に下記を proactive 適用する (hook block 待ちの retry を減らす = token 節約)。
+- 結論を冒頭に書く / 抽象語は数値・具体例に開く / 1 文を短く (読点 3 個まで)
+- AI定型語・カタカナ造語・難読漢語を使わない (canonical: `guidelines/writing/NG-DICTIONARY.md`)
+- 外向き prose・docs は 1 文 100 字 (短文 60 字) 上限、chat は genshijin を継続
+- 深い書き直し / 全観点 self-check が要る時のみ `/jp-writing`。詳細規範: `guidelines/writing/PRINCIPLES.md`
+
 ## References
 
 High-freq: `references/model-selection.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md` / `references/developer-agent-delegation-prompt.md`
