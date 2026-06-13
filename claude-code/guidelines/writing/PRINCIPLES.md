@@ -471,7 +471,7 @@ NG 語 canonical: [NG-DICTIONARY.md](NG-DICTIONARY.md)。全 key (AI定型語 / 
 - [commit-message.md](commit-message.md) — コミットメッセージ固有
 - [pr-description.md](pr-description.md) — PR本文 + レビュー応答
 - [external-post.md](external-post.md) — 短文向け詳細 (PREP / ストーリー型 / 5軸採点)
-- [long-form-doc.md](long-form-doc.md) — 長文向け詳細 (TL;DR / 3層リライト / ADR/PRD/EARSテンプレ、**PR-Bで本実装予定、現状stub**)
+- [long-form-doc.md](long-form-doc.md) — 長文向け詳細 (TL;DR / 3層リライト / ADR/PRD/EARSテンプレ)
 - [design-doc-protocol.md](design-doc-protocol.md) — DesignDoc専用プロトコル
 - [auto-knowledge-update.md](auto-knowledge-update.md) — セッション中の学び追記
 - `references/writing-patterns.md` — 詳細パターン集 (textlint / 図表型 / 書き直しPhase / 専門用語置換)

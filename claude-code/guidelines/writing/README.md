@@ -12,6 +12,8 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 
 迷ったとき: rulesで禁止リスト確認 → guidelines/writing/ で原則と適用先確認 → references/ で詳細パターン参照。
 
+**機械検出**: 出力前に `scripts/jp-textlint.sh <file>` で 連続漢字≥5 / 読点≥4 / 文長>100 / NG辞書 hit を一括チェックできる。外向き書込時は `pre-tool-use.sh` が連続漢字・読点を warn-only で自動検出する (block はしない)。NG辞書 canonical: [NG-DICTIONARY.md](NG-DICTIONARY.md)、置換例: [PRINCIPLES-word-replace.md](PRINCIPLES-word-replace.md)。
+
 ## ファイル一覧
 
 ### 共通
