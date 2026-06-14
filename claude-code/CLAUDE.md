@@ -52,7 +52,7 @@ Details (delegate threshold / decision principle / parallel fire format / bundle
 
 ## Session Efficiency
 
-Details: `references/session-efficiency-detailed.md`. Key: **autonomous mode ON by default** (confirm only for: destructive ops / external sends / large design branches / flow stage that changes next-stage assumptions / **re-try of same op immediately after Esc interrupt** (`[[feedback-no-retry-after-interrupt]]`); see ref for full list) / **long output = conclusion first + PREP structure** / **decision request = leading `要決定:` block** / **Token budget**: Read with `limit`/`offset` (>200-line files), Bash long output via `| head -N` / `| tail -N`, code via Serena symbolic (`find_symbol` > full Read), casual chat via `/btw` to avoid history pollution
+**Autonomous mode ON by default**. Confirm only for: destructive ops / external sends / large design branches / flow stage changing next-stage assumptions / re-try right after Esc interrupt (`[[feedback-no-retry-after-interrupt]]`). Long output = conclusion-first + PREP. Decision request = leading `要決定:` block. Token budget: Read with `limit`/`offset` (>200-line files), Bash long output via `| head/tail -N`, code via Serena `find_symbol` over full Read, casual chat via `/btw`. Full list: `references/session-efficiency-detailed.md`.
 
 ## No Derived Literals
 
@@ -71,6 +71,7 @@ Do not write derived values (count / sum / list length) computable from a canoni
 ## Context Management
 
 - **>40% → suggest `/compact`**. Task boundary is the best savings point for `/clear` (5+ min idle = cache TTL expired). After 30 min → suggest `/clear` once in chat.
+- **Long session = top cost source**: measured 200-turn-plus sessions hold 88% of cache_read spend. `user-prompt-submit.sh` auto-warns at 400 msg (~200 turn) and urgent at 1000 msg (~500 turn). On warn, finish current task then `/clear` — cache_read is billed every turn at base-context size.
 - **Same problem fails twice in a row → suggest `/clear` + rewrite prompt** (accumulated failure context is the primary failure mode, independent of capacity).
 - Continue: "generate next-session mega-prompt" → paste into new session. Uncontaminated question: `/btw`
 
@@ -126,17 +127,16 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 
 **AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。
 
-**Commit message pre-draft sweep** (top-6 over 7d, `[[retrospective-2026-06-12]]` P1): avoid `鑑みる` `踏襲` `喫緊` `leverage` `utilize` `mitigate` — **check before writing**. Alternatives: `踏まえる` / `引き継ぐ` / `直近` / `使う` / `活かす` / `緩和する` etc. 787 blocks/week is the main cause of retry loops.
+**Commit message pre-draft sweep** (`[[retrospective-2026-06-12]]` P1): avoid `鑑みる` `踏襲` `喫緊` `leverage` `utilize` `mitigate` — check before writing. Use `踏まえる` / `引き継ぐ` / `直近` / `使う` / `活かす` / `緩和する`.
 
 ## Default Readability (全出力 baseline、/jp-writing 不要)
 
-prose 出力に下記を proactive 適用する (hook block 待ちの retry を減らす = token 節約)。
-- 結論を冒頭に書く / 抽象語は数値・具体例に開く / 1 文を短く (読点 3 個まで)
-- AI定型語・カタカナ造語・難読漢語を使わない (canonical: `guidelines/writing/NG-DICTIONARY.md`)
-- 連続漢字 4 字まで (助詞で開く: 利用者認証処理→利用者の認証処理) / 冗長圧縮 (〜することができる→できる) / 弱い表現は断定 or「未確認」明示 / 形式名詞・副詞はひらがな
-- 外向き prose・docs は 1 文 100 字 (短文 60 字) 上限、chat は genshijin を継続
-- 外向き doc は**種別の guideline を on-demand で 1 本だけ読んでから書く** (commit→`commit-message.md` / PR→`pr-description.md` / DD・RCA→`design-doc-protocol.md`・`long-form-doc.md` / Notion・短文→`external-post.md` / 一覧: `guidelines/writing/README.md` 媒体別 quick reference)。常時全ロードはしない (token 爆発回避)
-- 深い書き直し / 全観点 self-check が要る時のみ `/jp-writing`。詳細規範: `guidelines/writing/PRINCIPLES.md`
+prose 出力に proactive 適用 (hook block 待ち retry を減らす = token 節約)。
+- 結論冒頭 / 抽象語は数値・具体例に開く / 1 文短く (読点 3 個まで) / 連続漢字 4 字まで (助詞で開く) / 冗長圧縮 (〜できる) / 弱い表現は断定 or「未確認」明示 / 形式名詞・副詞はひらがな
+- AI定型語・カタカナ造語・難読漢語を使わない (`guidelines/writing/NG-DICTIONARY.md`)
+- 外向き prose・docs は 1 文 100 字 (短文 60 字) 上限、chat は genshijin 継続
+- 外向き doc は**種別 guideline を on-demand で 1 本だけ読んで書く** (commit→`commit-message.md` / PR→`pr-description.md` / DD・RCA→`design-doc-protocol.md`・`long-form-doc.md` / Notion・短文→`external-post.md` / 一覧: `guidelines/writing/README.md`)。常時全ロード禁止
+- 深い書き直し / 全観点 self-check 時のみ `/jp-writing` (`guidelines/writing/PRINCIPLES.md`)
 
 ## References
 

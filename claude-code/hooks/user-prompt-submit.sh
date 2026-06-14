@@ -169,7 +169,7 @@ _check_session_bloat() {
   # urgent / warn 判定 (urgent が優先)
   local _LEVEL=""
   local _WARN_REASON=""
-  if (( _ELAPSED > _TH_SESSION_AGE_URGENT_S )) || (( _TOKEN_TOTAL >= _TH_TOKEN_URGENT )); then
+  if (( _ELAPSED > _TH_SESSION_AGE_URGENT_S )) || (( _TOKEN_TOTAL >= _TH_TOKEN_URGENT )) || (( _MSG_COUNT > _TH_SESSION_MSG_URGENT )); then
     _LEVEL="urgent"
   elif (( _ELAPSED > _TH_SESSION_AGE_S )) \
     || (( _MSG_COUNT > _TH_SESSION_MSG )) \
