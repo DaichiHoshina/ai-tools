@@ -1055,10 +1055,18 @@ PYEOF
       # --- git commit: -m オプション値を抽出 (commit-tree / commit-graph は除外) ---
       if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]]; then
         _commit_msg=""
-        # -m "..." 形式
+        # -m / --message "..." 形式 (space / = 区切り、long form を含む)
         if [[ "$COMMAND" =~ $_re_m_sq ]]; then
           _commit_msg="${BASH_REMATCH[1]}"
         elif [[ "$COMMAND" =~ -m[[:space:]]\"([^\"]*)\" ]]; then
+          _commit_msg="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --message[[:space:]=]\'([^\']*)\' ]]; then
+          _commit_msg="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --message[[:space:]=]\"([^\"]*)\" ]]; then
+          _commit_msg="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ -m=\'([^\']*)\' ]]; then
+          _commit_msg="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ -m=\"([^\"]*)\" ]]; then
           _commit_msg="${BASH_REMATCH[1]}"
         fi
         [[ -n "$_commit_msg" ]] && _block_if_ai_jargon "$_commit_msg" "commit message"
@@ -1094,8 +1102,11 @@ PYEOF
           fi
         fi
 
-        # --amend で -m/-F が無い場合: editor 編集で hook は本文取得不可 → warn-only
-        if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$COMMAND" =~ --amend ]] && [[ "$COMMAND" != *"-m"* ]] && [[ "$COMMAND" != *"-F"* ]] && [[ "$COMMAND" != *"--file"* ]]; then
+        # --amend で inline body オプション (-m/--message/-F/--file) が無い場合:
+        # editor 編集で hook は本文取得不可 → warn-only。
+        # substring 判定だと --message が -m に誤マッチして warn を抑止するため word-boundary で判定する。
+        if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$COMMAND" =~ --amend ]] && \
+           ! [[ "$COMMAND" =~ (^|[[:space:]])(-m|-F|--message|--file)([[:space:]=]|$) ]]; then
           _amend_warn="⚠ --amend で editor 編集する本文も NG 語を避けてください (hook は本文を検査できません)"
           if [ -n "$ADDITIONAL_CONTEXT" ]; then
             ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_amend_warn}"

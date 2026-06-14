@@ -1385,6 +1385,30 @@ _run_write_jargon() {
   [[ "$ctx" =~ "--amend" ]] || [[ "$ctx" =~ "hook は本文を検査できません" ]]
 }
 
+@test "gap2: git commit --amend --message= で NG 語 踏襲 → exit 2 block (-m substring 誤マッチ regression)" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"git commit --amend --message='"'"'既存方針を踏襲する'"'"'"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "難読漢語 block" ]]
+}
+
+@test "gap2: git commit --amend --message space 形式で NG 語 踏襲 → exit 2 block" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"git commit --amend --message '"'"'既存方針を踏襲する'"'"'"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "難読漢語 block" ]]
+}
+
+@test "gap2: git commit --amend --message= が NG 語なし → block されず warn も出ない" {
+  local result
+  result=$(run_hook "Bash" '{"command": "git commit --amend --message='"'"'直近の修正'"'"'"}')
+  local ctx
+  ctx=$(get_additional_context "$result")
+  [[ ! "$ctx" =~ "hook は本文を検査できません" ]]
+}
+
 @test "gap2: gh pr create --body-file <tmpfile> で NG 語 leverage → exit 2 block" {
   local tmpfile
   tmpfile=$(mktemp)
