@@ -88,13 +88,17 @@ overhead_team(N) = orchestration_cost + integration_cost + spawn_cost(N)
 Adopt if: LPT_makespan(T_i, N) + 180 + 20N < sum(T_i) × 0.95
 ```
 
-**Equal-size, count = N simplified guide** (`LPT_makespan = T_task`):
+**Equal-size, count = N threshold formula** (`LPT_makespan = T_task`, `sum(T_i) = N × T_task`):
 
-| N | Required T_task | Assessment |
-|---|---|---|
-| 2 | > 3780s | Threshold (time-first: adopt unless forbidden) |
-| 4 | > 1282s | Threshold (time-first: adopt unless forbidden) |
-| 8 | > 720s | **First choice** |
+```text
+T_task_threshold = overhead_team(N) / (0.95N − 1)
+```
+
+Adopt parallel if `T_task > T_task_threshold`. Representative derivations (do not maintain a static table — recalculate by substituting N into the formula above; if the `0.95` threshold is recalibrated, values shift accordingly):
+
+- N=2: `220 / (1.9 − 1) = 244.4s`
+- N=4: `260 / (3.8 − 1) =  92.9s`
+- N=8: `340 / (7.6 − 1) =  51.5s`
 
 ### Direct execution (`/dev --parallel`, with worktree)
 
@@ -104,15 +108,21 @@ overhead_direct(N) = spawn_cost(N) + integration_cost
 Adopt if: LPT_makespan(T_i, N) + 20N + 20 < sum(T_i) × 0.95
 ```
 
-**Equal-size simplified guide**:
+**Equal-size, count = N threshold formula** (`LPT_makespan = T_task`, `sum(T_i) = N × T_task`):
 
-| N | Required T_task | Assessment |
-|---|---|---|
-| 2 | > 420s | Viable |
-| 4 | > 160s | Viable |
-| 8 | > 100s | **First choice** |
+```text
+T_task_threshold = overhead_direct(N) / (0.95N − 1)
+```
+
+Adopt parallel if `T_task > T_task_threshold`. Representative derivations (do not maintain a static table — recalculate by substituting N into the formula above; if the `0.95` threshold is recalibrated, values shift accordingly):
+
+- N=2: ` 60 / (1.9 − 1) = 66.7s`
+- N=4: `100 / (3.8 − 1) = 35.7s`
+- N=8: `180 / (7.6 − 1) = 27.3s`
 
 Additional: 2+ independent tasks; edit targets fully isolated (no file-level overlap).
+
+> Same-file note: the no-file-overlap rule blocks *parallel writes* (worktree / concurrent apply). The read-only patch-generation phase is exempt — multiple subagents may draft patches for distinct regions of one file in parallel, then the parent applies them sequentially. See `references/auto-delegation-detailed.md` for that pattern.
 
 ## Worktree applicability flow
 
