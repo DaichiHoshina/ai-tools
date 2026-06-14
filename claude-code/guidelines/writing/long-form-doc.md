@@ -32,6 +32,21 @@
 
 **Web 出力 (Notion / GitHub / Confluence) 時は追加チェック 4 項目**: 1 文 60 字 / 主張型 heading / 段落 3-4 行上限 / 太字 scan 化 — 詳細 `PRINCIPLES.md` `## Web 可読性`。
 
+## 1 文 1 行 format (sentence-per-line)
+
+DesignDoc / PRD / RCA など Git 管理の長文 markdown は、段落本文を **1 文ごとに改行**して書く。
+
+| ルール | 内容 |
+|---|---|
+| 段落本文 | 「。」の直後で改行する。1 文 = 1 行 |
+| list item の継続文 | 子インデントでネストする |
+| 空行 | 段落の区切りにのみ入れる。1 文ごとには入れない |
+| 対象外 | code block / table / heading は通常どおり改行しない |
+
+**Why**: レビュー差分が文単位で出るため、修正した文だけが diff に現れて変更箇所が読み手に伝わる。textlint の行長制限違反も文単位で解消できる。markdown のレンダリング結果 (段落の見た目) は改行を入れても変わらない。
+
+**適用範囲**: Git リポジトリ管理の md (DesignDoc / PRD / RCA / ADR)。Notion など WYSIWYG 系の本文には適用しない (改行が段落分割として描画されるため)。
+
 ## 分量目安
 
 長さ・分割の基準は `PRINCIPLES.md` の「### 長文 (Design Doc / PRD / RCA / Notionページ)」を参照。
