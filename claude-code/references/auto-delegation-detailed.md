@@ -12,6 +12,8 @@ Delegate on uncertainty. Under-delegation risk > over-delegation cost. Opus pare
 
 Fastest makespan wins for all routing. Always fire in parallel except physical constraints (same-file edit / result dependency). Cap default 8 (parent + Dev×8 = 9 concurrent). Adopt if makespan improvement ≥5%. When in doubt: parallel + delegate (under-parallel risk > over-parallel cost). Details: `references/PARALLEL-PATTERNS.md`
 
+**same-file の複数独立修正を「並列不可」と早合点しない**。同一 file の別箇所を複数 agent で直列実装するのは遅い。read-only で **patch (old_string/new_string ペア) を並列生成** させ、**親が順次 apply → verify を 1 回**にまとめれば書き込み競合なしで並列化できる。worktree 分離は不要 (worktree は別 file 群を同時 mutate する時のみ)。判断を親が手動でせず迷う場合は `/flow` に委ね、Manager に並列度・分担・worktree 要否を決めさせる (`[[feedback-samefile-patch-parallel-2026-06-14]]`)。
+
 ## Bundle prohibition (split obligation)
 
 Never bundle 2+ domains (different file groups / root causes / verify systems) in 1 prompt. Fire per-domain as multiple Agent tool_use in a single message. Bundling causes sequential processing inside subagent, cumulating makespan `[[parallel-brushup-makespan-2026-05-31]]`.
