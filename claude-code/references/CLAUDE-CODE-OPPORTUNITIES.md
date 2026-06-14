@@ -17,6 +17,18 @@ On adoption: check the box. On obsolescence: strikethrough (`~~feature~~ (obsole
 
 ---
 
+## 2.1.154–2.1.177 (detected 2026-06-14, latest)
+
+Channel switched stable→latest by explicit user choice (local CLI was 2.1.177 = latest tag). Range 2.1.154–2.1.177 reviewed.
+
+- [x] **`fallbackModel` setting**: adopted. Added `fallbackModel: ["claude-sonnet-4-6", "claude-haiku-4-5"]` to `templates/settings.json.template` and registered the key in `scripts/settings-validator.sh` root-key allowlist. Auto-switches when Opus 4.8 is overloaded/unavailable, keeping the turn going.
+- **`language` setting** [2.1.177 surfaced]: already correct. `templates/settings.json.template` has had `"language": "japanese"` since 2026-01-13 (ignored as unknown key then); now an official setting (response + dictation language). Value matches docs example, aligns with the JP-response policy. No change.
+- **Sub-agents spawning sub-agents up to 5 levels** [2.1.172]: not adopted. Repo intentionally omits `Task` from developer/explore agent tools (sub-agent spec). The capability expansion does not change that safe-by-default design.
+- **`workflow`→`ultracode` trigger rename** [2.1.160]: no impact. Repo never used `workflow` as a dynamic-workflow trigger keyword (only as a generic word / file name). `ultracode` is a built-in trigger, not repo config.
+- **Stop/SubagentStop `hookSpecificOutput.additionalContext`** [2.1.163]: already applied. `hooks/subagent-stop.sh` already returns `additionalContext`.
+
+Track only (low adoption value): `enforceAvailableModels` / `disableBundledSkills` / `footerLinksRegexes` / `wheelScrollAccelerationEnabled` / `/cd` / `/goal` / `--safe-mode` / `post-session` runner hook / plugins auto-load from `.claude/skills/` / `claude plugin init` / dynamic workflows (`ultracode`). Remainder: UI / background-session / Windows / provider (Bedrock/Vertex) / bugfix — no config changes needed.
+
 ## 2.1.153 (detected 2026-06-05, stable)
 
 No new opportunities. Single-version range 2.1.153; repo impact grep confirmed (`modelPicker:setAsDefault` keybinding absent / `--strict-mcp-config` unused / `skipLfs` not applicable to current source).

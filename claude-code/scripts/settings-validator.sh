@@ -206,6 +206,7 @@ sync_settings_root_keys() {
     local root_keys=(
         "env"
         "model"
+        "fallbackModel"
         "statusLine"
         "autoUpdatesChannel"
         "preferredNotifChannel"

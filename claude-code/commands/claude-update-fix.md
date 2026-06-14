@@ -22,9 +22,9 @@ cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null
 |------|---------|--------|
 | `claude --version` == `dist-tags.stable` | `stable` | `stable` tag version |
 | `claude --version` == `dist-tags.latest` | `latest` | `latest` tag version |
-| neither matches (mid-version / manually pinned) | `stable` (conservative) | `stable` tag version |
+| neither matches (mid-version / manually pinned) | `latest` (current default) | `latest` tag version |
 
-Rationale: on stable channel, adopting renames/new hooks that only landed in `latest` would break stable CLI (command not found). Align fetch scope and bump target to the channel-appropriate target.
+Rationale: repo runs on the **latest** channel (switched 2026-06-14). Align fetch scope and bump target to the latest tag. Adopt renames/new hooks/new keys as they land; the local CLI is expected to track latest.
 
 **Decision**:
 - `VERSION > TARGET` (next channel / pre-bump / post-channel-switch downgrade) → no-op exit; display `> [WARN] VERSION (X) > TARGET (Y), below channel target. Fetch range goes backward — skip. Confirm manually aligning VERSION to TARGET`
@@ -106,11 +106,9 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 ## Notes
 
 - `claude doctor` is interactive; use `claude --version` instead
-- `npm view ... dist-tags --json` fails (network etc.) → safe fallback: treat current `VERSION` as TARGET, no-op exit, display `> [WARN] dist-tags fetch failed, cannot determine channel. Re-run after CLI reconnects`. **Auto-adopting `latest` is forbidden** (risks pulling breaking changes on stable channel, contradicting Phase 1 safe-side design)
-- On stable channel, features only in `latest` are not recorded even as `Track only` (Opportunity) — they surface naturally on next run after reaching stable. Purpose: limit Phase 2 fetch scope to TARGET
+- `npm view ... dist-tags --json` fails (network etc.) → safe fallback: treat current `VERSION` as TARGET, no-op exit, display `> [WARN] dist-tags fetch failed, cannot determine channel. Re-run after CLI reconnects`
 - If CHANGELOG fetch fails: minimal analysis via `claude --help` + npm view
 - Auto-apply must remain git-diff-reviewable (do not run sync.sh until after confirm-apply)
-- **VERSION file update aligns to stable tag** — value written in Phase 5 Step 1 is `dist-tags.stable` (do not write `latest`)
-- **CHANGELOG / feature adoption scope is `(current VERSION + 1) ~ stable tag`** — do not adopt features from versions not yet on stable; no Opportunity entry either (detected naturally on next `/claude-update-fix` after stable arrival)
-- **Switching to latest channel requires explicit user confirmation** — default is stable. Do not adopt `latest` as TARGET without explicit instruction such as "switch to latest channel"
-- Rationale: as of 2026-05-23, `dist-tags.stable = 2.1.142`, `dist-tags.latest = 2.1.150`. Pulling latest-only features (renames / new hooks / new setting keys etc.) on stable breaks CLI due to unimplemented commands
+- **VERSION file update aligns to latest tag** — value written in Phase 5 Step 1 is `dist-tags.latest`
+- **CHANGELOG / feature adoption scope is `(current VERSION + 1) ~ latest tag`**
+- **Channel is `latest` (switched from stable 2026-06-14)** — local CLI tracks the latest tag. Switching back to stable would require explicit user confirmation

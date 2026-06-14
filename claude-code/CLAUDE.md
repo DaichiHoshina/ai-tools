@@ -20,7 +20,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 - **root keys (`env` / `model` / `statusLine` / `permissions` / `sandbox` / `worktree` / `enabledPlugins` / `extraKnownMarketplaces` / `autoUpdatesChannel` and all allowlisted root keys) are template canonical**; `to-local` overwrites entirely. Live additions are wiped. Add settings via template edit → `to-local` (exceptions: `hooks` / `skillOverrides` have dedicated merge logic)
 - 🔒 PROTECTED SECTION in CLAUDE.md must not be modified. YAML frontmatter must remain valid
 - `VERSION` / `SERENA_VERSION` bumped only on CLI / Serena release intake (`/claude-update-fix` / `/serena-update-fix`)
-- Claude Code runs on **stable channel**; `/claude-update-fix` TARGET is `dist-tags.stable`; `latest` tag is forbidden (details: `commands/claude-update-fix.md`)
+- Claude Code runs on **latest channel** (switched from stable 2026-06-14); `/claude-update-fix` TARGET is `dist-tags.latest` (details: `commands/claude-update-fix.md`)
 
 ## Definition File Token Saving
 
