@@ -91,6 +91,16 @@ setup_directories() {
     mkdir -p "$CLAUDE_DIR/skills"
     mkdir -p "$CLAUDE_DIR/lib"
     mkdir -p "$CLAUDE_DIR/references"
+    mkdir -p "$CLAUDE_DIR/references-private"
+
+    if [ ! -f "$CLAUDE_DIR/references-private/private-name-list.txt" ]; then
+        cat > "$CLAUDE_DIR/references-private/private-name-list.txt" <<'EOF'
+# private-name block の term list (1 行 1 term、# は comment)
+# このファイルは git 管理外。新 PC では他 PC から手動移植してください。
+# 個人名 / 会社名 / project 固有名詞を記入すると ai-tools 配下への書込が block されます。
+EOF
+        print_warning "references-private/private-name-list.txt を placeholder 生成しました。他 PC から term を移植してください (private-name block は term 不在時 silent pass)。"
+    fi
 
     print_success "ディレクトリ構造を作成しました"
 }

@@ -56,7 +56,7 @@ generate_mcp_json() {
     local serena_path="${SERENA_PATH:-}"
     if [ -z "$serena_path" ]; then
         # Try common locations
-        for path in "$HOME/serena" "$HOME/projects/serena" "$HOME/workspace/serena"; do
+        for path in "$HOME/ghq/github.com/oraios/serena" "$HOME/serena" "$HOME/projects/serena" "$HOME/workspace/serena"; do
             if [ -d "$path" ]; then
                 serena_path="$path"
                 break

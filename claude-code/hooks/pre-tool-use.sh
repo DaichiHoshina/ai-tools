@@ -719,18 +719,19 @@ _inject_today_commits() {
 
   # Source 2: ai-tools writing 規約関連 commit (guidelines/ と CLAUDE.md 限定)
   # _project_dir が ~/ai-tools の時は重複しないよう skip
-  local _aitools_dir="$HOME/ai-tools"
+  local _aitools_repo_dir
+  _aitools_repo_dir="$(_aitools_dir)"
   local _writing_commits=""
   local _aitools_real
-  _aitools_real=$(cd "$_aitools_dir" 2>/dev/null && pwd -P 2>/dev/null || echo "")
+  _aitools_real=$(cd "$_aitools_repo_dir" 2>/dev/null && pwd -P 2>/dev/null || echo "")
   local _project_real
   _project_real=$(cd "$_project_dir" 2>/dev/null && pwd -P 2>/dev/null || echo "")
   if [[ -n "$_aitools_real" && "$_aitools_real" != "$_project_real" ]]; then
-    _writing_commits=$(git -C "$_aitools_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges \
+    _writing_commits=$(git -C "$_aitools_repo_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges \
       -- "claude-code/guidelines/" "claude-code/CLAUDE.md" 2>/dev/null | head -n "${_commit_cap}" || true)
-    if [[ -z "$_writing_commits" ]] && ! git -C "$_aitools_dir" rev-parse --git-dir >/dev/null 2>&1; then
+    if [[ -z "$_writing_commits" ]] && ! git -C "$_aitools_repo_dir" rev-parse --git-dir >/dev/null 2>&1; then
       mkdir -p "$_inject_log_dir" 2>/dev/null || true
-      printf '[%s] today-commit inject: git log failed at %s (writing path)\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_aitools_dir" >> "$_inject_log_file" 2>/dev/null || true
+      printf '[%s] today-commit inject: git log failed at %s (writing path)\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_aitools_repo_dir" >> "$_inject_log_file" 2>/dev/null || true
     fi
   fi
 
@@ -913,12 +914,7 @@ case "$TOOL_NAME" in
       _FIRST_COMP="${_REL_PATH%%/*}"
       case "$_FIRST_COMP" in
         commands|skills|hooks|agents|rules|guidelines|config|references|CLAUDE.md)
-          # ghq 実 path を canonical として使用 (~/ai-tools/ symlink は存在しない場合がある)
-          _REPO_PATH="$HOME/ghq/github.com/DaichiHoshina/ai-tools/claude-code/$_REL_PATH"
-          # symlink が存在する場合は symlink path を優先
-          if [[ -e "$HOME/ai-tools/claude-code/$_REL_PATH" ]]; then
-            _REPO_PATH="$HOME/ai-tools/claude-code/$_REL_PATH"
-          fi
+          _REPO_PATH="$(_aitools_dir)/claude-code/$_REL_PATH"
           if [ -f "$_REPO_PATH" ]; then
             _DIRECT_EDIT_WARN="⚠ 直編集警告: ${_EDIT_PATH} は sync.sh to-local で上書き消失します。代わりに repo source ${_REPO_PATH} を編集してください。"
             if [ -n "$ADDITIONAL_CONTEXT" ]; then

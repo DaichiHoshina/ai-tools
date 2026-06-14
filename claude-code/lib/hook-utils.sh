@@ -352,6 +352,21 @@ _aitools_relpath() {
   return 1
 }
 
+# 実在する ai-tools repo dir を 1 つ返す (ghq 実 path 優先、symlink fallback)。
+# どちらも存在しなければ ghq canonical path を返す (呼出側で -d チェック想定)。
+# usage: dir=$(_aitools_dir)
+_aitools_dir() {
+  local ghq="$HOME/ghq/github.com/DaichiHoshina/ai-tools"
+  local symlink="$HOME/ai-tools"
+  if [[ -d "$ghq" ]]; then
+    printf '%s' "$ghq"
+  elif [[ -d "$symlink" ]]; then
+    printf '%s' "$symlink"
+  else
+    printf '%s' "$ghq"
+  fi
+}
+
 # ====================================
 # Bash コマンド分類ヘルパー関数
 # ====================================

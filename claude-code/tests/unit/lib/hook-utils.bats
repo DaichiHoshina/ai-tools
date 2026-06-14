@@ -607,6 +607,60 @@ teardown_ensure_worktree() {
   teardown_ensure_worktree
 }
 
+# =============================================================================
+# _aitools_dir テスト
+# =============================================================================
+
+@test "_aitools_dir: ghq path が存在する → ghq path を返す" {
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  mkdir -p "${tmp_home}/ghq/github.com/DaichiHoshina/ai-tools"
+
+  run env HOME="${tmp_home}" bash -c "source '${LIB_FILE}' && _aitools_dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "${tmp_home}/ghq/github.com/DaichiHoshina/ai-tools" ]
+
+  rm -rf "${tmp_home}"
+}
+
+@test "_aitools_dir: ghq 不在・symlink のみ存在 → symlink path を返す" {
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  mkdir -p "${tmp_home}/ai-tools"
+  # ghq path は作成しない
+
+  run env HOME="${tmp_home}" bash -c "source '${LIB_FILE}' && _aitools_dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "${tmp_home}/ai-tools" ]
+
+  rm -rf "${tmp_home}"
+}
+
+@test "_aitools_dir: ghq・symlink 両方不在 → ghq canonical path を返す (フォールバック)" {
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  # どちらのディレクトリも作成しない
+
+  run env HOME="${tmp_home}" bash -c "source '${LIB_FILE}' && _aitools_dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "${tmp_home}/ghq/github.com/DaichiHoshina/ai-tools" ]
+
+  rm -rf "${tmp_home}"
+}
+
+@test "_aitools_dir: ghq・symlink 両方存在 → ghq を優先して返す" {
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  mkdir -p "${tmp_home}/ghq/github.com/DaichiHoshina/ai-tools"
+  mkdir -p "${tmp_home}/ai-tools"
+
+  run env HOME="${tmp_home}" bash -c "source '${LIB_FILE}' && _aitools_dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "${tmp_home}/ghq/github.com/DaichiHoshina/ai-tools" ]
+
+  rm -rf "${tmp_home}"
+}
+
 @test "ensure_worktree_memory_link: memory dir ソース側に既存 .md → 退避先で温存" {
   setup_ensure_worktree
   local main_repo="${TEST_WORKTREE_ROOT}/main"

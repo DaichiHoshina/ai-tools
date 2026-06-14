@@ -139,6 +139,26 @@ git clone https://github.com/DaichiHoshina/ai-tools.git
 cd ai-tools && ./claude-code/install.sh
 ```
 
+### New PC Setup (複数 PC 運用)
+
+新しい PC では、ai-tools を ghq 配下に clone する。
+
+```bash
+mkdir -p ~/ghq/github.com/DaichiHoshina
+cd ~/ghq/github.com/DaichiHoshina
+git clone https://github.com/DaichiHoshina/ai-tools.git
+cd ai-tools && ./claude-code/install.sh
+```
+
+`install.sh` を実行すると `~/.claude/references-private/private-name-list.txt` の placeholder が生成される。ただし、private-name block を正しく機能させるには、既存 PC の `~/.claude/references-private/private-name-list.txt` の中身を新 PC に手動で移植する必要がある。この file は git 管理外のため自動同期されない。
+
+移植しない場合、個人名・会社名・project 固有名詞が public repo に書き込まれても block されない (silent pass)。
+
+```bash
+# 既存 PC から新 PC へ手動コピー (例: scp)
+scp ~/.claude/references-private/private-name-list.txt new-pc:~/.claude/references-private/private-name-list.txt
+```
+
 ### MCP Servers
 
 **Serena (required)**
