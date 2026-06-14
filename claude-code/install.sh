@@ -225,7 +225,7 @@ finalize_installation() {
 
     # Generate .mcp.json for ai-tools project
     if [ -d "$SCRIPT_DIR" ]; then
-        generate_mcp_json "$SCRIPT_DIR"
+        generate_mcp_json "$SCRIPT_DIR" || print_warning ".mcp.json の生成をスキップしました（後で手動生成可能）"
     fi
 
     # ~/bin にCLIツールのシンボリックリンクを作成

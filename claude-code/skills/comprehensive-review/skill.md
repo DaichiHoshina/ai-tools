@@ -1,6 +1,6 @@
 ---
 name: comprehensive-review
-description: "12-perspective code review (arch/quality/security/test). Called from /review."
+description: "12-perspective code review (arch/quality/security/test). /review 呼び出し時に使用。"
 context: fork
 agent: reviewer-agent
 requires-guidelines:

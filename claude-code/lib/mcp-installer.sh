@@ -65,8 +65,9 @@ generate_mcp_json() {
     fi
 
     if [ -z "$serena_path" ]; then
-        print_warning "Serena のパスが見つかりません。SERENA_PATH 環境変数を設定してください。"
-        serena_path="/path/to/serena"
+        print_warning "Serena のパスが見つかりません。.mcp.json の生成をスキップします。"
+        print_warning "SERENA_PATH を設定して再実行してください: SERENA_PATH=<path> envsubst < templates/.mcp.json.template > .mcp.json"
+        return 1
     fi
 
     # Generate .mcp.json using envsubst
