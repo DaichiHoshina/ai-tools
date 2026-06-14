@@ -91,9 +91,6 @@ if [[ -n "$_DUP_WARN" ]]; then
 
 ${_DUP_WARN}"
 fi
-AC_MSG="${AC_MSG}
-
-Subagent logs: ~/.claude/logs/subagent-events.log"
 
 _SM="🚀 Subagent started: ${AGENT_TYPE}"
 if [[ -n "$_DUP_WARN" ]]; then

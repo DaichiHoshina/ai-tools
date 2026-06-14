@@ -1025,7 +1025,7 @@ PYEOF
         printf '%s' "${_DECL_FOUND:-}" > "$_TRANSCRIPT_CACHE_FLAG" 2>/dev/null || true
       fi  # end: cache hit / miss
       if [ "$_DECL_FOUND" != "found" ]; then
-        _DECL_WARN="⚠ Sonnet 委譲宣言抜け: CLAUDE.md Auto-Delegation rule 違反。Edit/Write 前に 1 行宣言してください: 'Inline exception (reason: ...) → parent inline execution' または 'Inline prohibited (reason: ...) → delegate to developer-agent'。直近 inline 実行回数 ≥2 なら次回 mandatory delegation (CLAUDE.md \"Inline exception throttle\")"
+        _DECL_WARN="⚠ Sonnet 委譲宣言抜け: Edit/Write 前に 'Inline exception (reason: ...)' か 'Inline prohibited (reason: ...)' を 1 行宣言 (throttle 等詳細: references/auto-delegation-detailed.md)"
         if [ -n "$ADDITIONAL_CONTEXT" ]; then
           ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_DECL_WARN}"
         else
@@ -1316,7 +1316,7 @@ PYEOF
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
 
     # 並列判定 self-review (全 Task 発火時に inject)
-    PARALLEL_REVIEW=$'【並列 self-review (強制 echo、default=並列/委譲)】\n0. default: 並列発火 + Sonnet 委譲。単発・inline 選択時は「なぜ並列/委譲しないか」を 1 行 echo (例: judgment: single-task because <specific reason>)。迷ったら並列・委譲側\n1. Manager 経由なら allocation 中の formula_trace を user に 2 行 echo:\n   formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / <PASS|FAIL> (basis=<T_i_basis>)\n   fan-out: N=<n>, targets=<file count>\n2. Manager 未経由の直接 Task 発火 (例: explore-agent / developer-agent 単発) は 1 行 echo:\n   judgment: N=<n> / independent_tasks=<count> / parallel=<reason or \'single-task\'>\n3. 独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1)\n4. echo 抜けは under-parallel risk (canonical: references/PARALLEL-PATTERNS.md)'
+    PARALLEL_REVIEW=$'【並列 self-review (強制 echo、default=並列/委譲)】\n0. default: 並列発火 + Sonnet 委譲。単発・inline 選択時は「なぜ並列/委譲しないか」を 1 行 echo。迷ったら並列・委譲側\n1. Manager 経由は formula_trace、直接 Task は judgment 行を echo (書式: references/PARALLEL-PATTERNS.md)\n2. 独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1)\n3. echo 抜けは under-parallel risk'
 
     # parent 事前準備 missing 検出 (warn-only、block しない)
     TASK_PROMPT=$(jq -r '.tool_input.prompt // empty' <<< "$INPUT")
