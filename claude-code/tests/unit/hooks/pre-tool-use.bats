@@ -1290,3 +1290,222 @@ _run_social_hit_write() {
   ctx=$(get_additional_context "$result")
   [[ "$ctx" =~ "block_terms" ]]
 }
+
+# =============================================================================
+# gap 1: Write/Edit .md/.txt への AI定型語 block テスト (2026-06-14)
+# =============================================================================
+
+_run_write_jargon() {
+  local file_path="$1"
+  local content="$2"
+  local input
+  input=$(jq -n --arg p "$file_path" --arg c "$content" \
+    '{tool_name:"Write", tool_input:{file_path:$p, content:$c}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+}
+
+@test "gap1: 作業 repo .md に NG 語 leverage を Write → exit 2 block" {
+  _run_write_jargon "/tmp/test-outside-repo/README.md" "leverage existing infra を使う"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "leverage" ]]
+}
+
+@test "gap1: 作業 repo .md に NG 語 踏襲 を Write → exit 2 block" {
+  _run_write_jargon "/tmp/test-outside-repo/doc.md" "既存方針を踏襲する"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "難読漢語 block" ]]
+}
+
+@test "gap1: 作業 repo .txt に NG 語 leverage を Write → exit 2 block" {
+  _run_write_jargon "/tmp/test-outside-repo/note.txt" "leverage the cache"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "leverage" ]]
+}
+
+@test "gap1: ai-tools 配下 .md に NG 語を Write → block されない (誤爆防止)" {
+  local aitools_path="${HOME}/ghq/github.com/DaichiHoshina/ai-tools/claude-code/guidelines/writing/test-ng.md"
+  _run_write_jargon "$aitools_path" "leverage existing infra"
+  # ai-tools 配下なので exit 2 にならない
+  [ "$status" -ne 2 ]
+}
+
+@test "gap1: ai-tools symlink 配下 .md に NG 語を Write → block されない" {
+  local aitools_path="${HOME}/ai-tools/claude-code/some-file.md"
+  _run_write_jargon "$aitools_path" "踏襲する方針"
+  [ "$status" -ne 2 ]
+}
+
+@test "gap1: 非 md ファイル (.sh) への Write は AI定型語 block されない" {
+  _run_write_jargon "/tmp/test.sh" "leverage existing infra"
+  # .sh は対象外
+  [ "$status" -ne 2 ]
+}
+
+# =============================================================================
+# gap 2: git commit -F / --amend / gh --body-file テスト (2026-06-14)
+# =============================================================================
+
+@test "gap2: git commit -F <tmpfile> で NG 語 leverage → exit 2 block" {
+  local tmpfile
+  tmpfile=$(mktemp)
+  printf 'leverage existing infra を使う\n' > "$tmpfile"
+  local input
+  input=$(jq -n --arg c "git commit -F ${tmpfile}" '{tool_name:"Bash", tool_input:{command:$c}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  rm -f "$tmpfile"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "leverage" ]]
+}
+
+@test "gap2: git commit --file <tmpfile> で NG 語 踏襲 → exit 2 block" {
+  local tmpfile
+  tmpfile=$(mktemp)
+  printf '既存方針を踏襲する\n' > "$tmpfile"
+  local input
+  input=$(jq -n --arg c "git commit --file ${tmpfile}" '{tool_name:"Bash", tool_input:{command:$c}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  rm -f "$tmpfile"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "難読漢語 block" ]]
+}
+
+@test "gap2: git commit -F 不存在ファイル → silent skip (block されない)" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"git commit -F /nonexistent/path/msg.txt"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  # ファイル不在なら block しない
+  [ "$status" -ne 2 ]
+}
+
+@test "gap2: git commit --amend (-m/-F なし) → warn-only が additionalContext に入る" {
+  local result
+  result=$(run_hook "Bash" '{"command": "git commit --amend --no-edit"}')
+  local ctx
+  ctx=$(get_additional_context "$result")
+  [[ "$ctx" =~ "--amend" ]] || [[ "$ctx" =~ "hook は本文を検査できません" ]]
+}
+
+@test "gap2: gh pr create --body-file <tmpfile> で NG 語 leverage → exit 2 block" {
+  local tmpfile
+  tmpfile=$(mktemp)
+  printf 'leverage existing infra の説明\n' > "$tmpfile"
+  local input
+  input=$(jq -n --arg c "gh pr create --title 'feat: test' --body-file ${tmpfile}" \
+    '{tool_name:"Bash", tool_input:{command:$c}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  rm -f "$tmpfile"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "leverage" ]]
+}
+
+@test "gap2: gh issue create --body-file 不存在ファイル → silent skip" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"gh issue create --title test --body-file /nonexistent/body.md"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -ne 2 ]
+}
+
+# =============================================================================
+# gap 3: Notion children / Slack blocks nested field block テスト (2026-06-14)
+# =============================================================================
+
+@test "gap3: Notion children paragraph に NG 語 leverage → exit 2 block" {
+  local input
+  input=$(jq -n '{
+    tool_name: "mcp__claude_ai_Notion__notion-create-pages",
+    tool_input: {
+      children: [
+        {
+          paragraph: {
+            rich_text: [
+              { text: { content: "leverage existing infra の詳細" } }
+            ]
+          }
+        }
+      ]
+    }
+  }')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "leverage" ]]
+}
+
+@test "gap3: Notion children heading_2 に NG 語 踏襲 → exit 2 block" {
+  local input
+  input=$(jq -n '{
+    tool_name: "mcp__claude_ai_Notion__notion-update-page",
+    tool_input: {
+      children: [
+        {
+          heading_2: {
+            rich_text: [
+              { text: { content: "既存方針を踏襲する" } }
+            ]
+          }
+        }
+      ]
+    }
+  }')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "難読漢語 block" ]]
+}
+
+@test "gap3: Notion children bulleted_list_item に NG 語 → exit 2 block" {
+  local input
+  input=$(jq -n '{
+    tool_name: "mcp__claude_ai_Notion__notion-create-pages",
+    tool_input: {
+      children: [
+        {
+          bulleted_list_item: {
+            rich_text: [
+              { text: { content: "利用可能なリソースを最大限に活用し utilize する" } }
+            ]
+          }
+        }
+      ]
+    }
+  }')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]]
+}
+
+@test "gap3: Slack blocks[].text.text に NG 語 leverage → exit 2 block" {
+  local input
+  input=$(jq -n '{
+    tool_name: "mcp__claude_ai_Slack__slack_send_message",
+    tool_input: {
+      blocks: [
+        {
+          type: "section",
+          text: { type: "mrkdwn", text: "leverage existing infra を使います" }
+        }
+      ]
+    }
+  }')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "leverage" ]]
+}
+
+@test "gap3: Notion children に NG 語なし → block されない" {
+  local input
+  input=$(jq -n '{
+    tool_name: "mcp__claude_ai_Notion__notion-create-pages",
+    tool_input: {
+      children: [
+        {
+          paragraph: {
+            rich_text: [
+              { text: { content: "正常なコンテンツです" } }
+            ]
+          }
+        }
+      ]
+    }
+  }')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -ne 2 ]
+}

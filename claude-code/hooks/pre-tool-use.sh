@@ -958,6 +958,18 @@ case "$TOOL_NAME" in
       fi
     fi
 
+    # AI定型語 block: 作業 repo の .md / .txt への書き込みを検査
+    # ai-tools 配下は除外 (guidelines / NG-DICTIONARY など NG 語を literal 保持する設定 md の誤爆防止)
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+      _AJ_EXT="${_EDIT_FILE_PATH##*.}"
+      if [[ "$_AJ_EXT" == "md" || "$_AJ_EXT" == "txt" ]]; then
+        if ! _is_aitools_path "$_EDIT_FILE_PATH"; then
+          _AJ_BASENAME=$(basename "${_EDIT_FILE_PATH:-file}")
+          _block_if_ai_jargon "$EDIT_CONTENT" "ファイル: ${_AJ_BASENAME}"
+        fi
+      fi
+    fi
+
     # Rename propagation detection (Edit tool only has old_string/new_string)
     if [ -n "$_OLD_STRING" ] && [ -n "$_NEW_STRING" ]; then
       detect_rename_propagation "$_OLD_STRING" "$_NEW_STRING" "$_EDIT_FILE_PATH"
@@ -1050,6 +1062,47 @@ PYEOF
           _commit_msg="${BASH_REMATCH[1]}"
         fi
         [[ -n "$_commit_msg" ]] && _block_if_ai_jargon "$_commit_msg" "commit message"
+
+        # -F / --file <file> 形式: ファイル内容を読んで block
+        if [[ "$GUARD_CLASS" != "Forbidden" ]]; then
+          _commit_file_path=""
+          _re_F_sq="-F[[:space:]]+\'([^\']*)\'"
+          _re_file_sq="--file[[:space:]]+\'([^\']*)\'"
+          if [[ "$COMMAND" =~ $_re_F_sq ]]; then
+            _commit_file_path="${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ -F[[:space:]]\"([^\"]*)\" ]]; then
+            _commit_file_path="${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ -F[[:space:]]+([^[:space:]\'\"]+) ]]; then
+            _commit_file_path="${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ $_re_file_sq ]]; then
+            _commit_file_path="${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ --file[[:space:]]\"([^\"]*)\" ]]; then
+            _commit_file_path="${BASH_REMATCH[1]}"
+          elif [[ "$COMMAND" =~ --file[[:space:]]+([^[:space:]\'\"]+) ]]; then
+            _commit_file_path="${BASH_REMATCH[1]}"
+          fi
+          if [[ -n "$_commit_file_path" ]]; then
+            # 相対パスは cwd 起点で解決
+            if [[ "$_commit_file_path" != /* ]]; then
+              _cwd=$(jq -r '.cwd // empty' <<< "$INPUT")
+              [[ -n "$_cwd" ]] && _commit_file_path="${_cwd}/${_commit_file_path}"
+            fi
+            if [[ -f "$_commit_file_path" ]]; then
+              _commit_file_content=$(cat "$_commit_file_path" 2>/dev/null || true)
+              [[ -n "$_commit_file_content" ]] && _block_if_ai_jargon "$_commit_file_content" "commit message (file)"
+            fi
+          fi
+        fi
+
+        # --amend で -m/-F が無い場合: editor 編集で hook は本文取得不可 → warn-only
+        if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$COMMAND" =~ --amend ]] && [[ "$COMMAND" != *"-m"* ]] && [[ "$COMMAND" != *"-F"* ]] && [[ "$COMMAND" != *"--file"* ]]; then
+          _amend_warn="⚠ --amend で editor 編集する本文も NG 語を避けてください (hook は本文を検査できません)"
+          if [ -n "$ADDITIONAL_CONTEXT" ]; then
+            ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_amend_warn}"
+          else
+            ADDITIONAL_CONTEXT="${_amend_warn}"
+          fi
+        fi
       fi
 
       # --- gh pr create / gh pr edit / gh pr review / gh pr merge / gh issue create / gh issue comment ---
@@ -1075,6 +1128,28 @@ PYEOF
           _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
         elif [[ "$COMMAND" =~ --notes[[:space:]]\"([^\"]*)\" ]]; then
           _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
+        fi
+        # --body-file <file> / --body-file="<file>": ファイル内容を読んで body に追加
+        _re_body_file_sq="--body-file[[:space:]]+\'([^\']*)\'"
+        _gh_body_file_path=""
+        if [[ "$COMMAND" =~ $_re_body_file_sq ]]; then
+          _gh_body_file_path="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --body-file[[:space:]]\"([^\"]*)\" ]]; then
+          _gh_body_file_path="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --body-file[[:space:]]+([^[:space:]\'\"]+) ]]; then
+          _gh_body_file_path="${BASH_REMATCH[1]}"
+        elif [[ "$COMMAND" =~ --body-file=([^[:space:]\'\"]+) ]]; then
+          _gh_body_file_path="${BASH_REMATCH[1]}"
+        fi
+        if [[ -n "$_gh_body_file_path" ]]; then
+          if [[ "$_gh_body_file_path" != /* ]]; then
+            _cwd=$(jq -r '.cwd // empty' <<< "$INPUT")
+            [[ -n "$_cwd" ]] && _gh_body_file_path="${_cwd}/${_gh_body_file_path}"
+          fi
+          if [[ -f "$_gh_body_file_path" ]]; then
+            _gh_file_content=$(cat "$_gh_body_file_path" 2>/dev/null || true)
+            [[ -n "$_gh_file_content" ]] && _gh_text="${_gh_text}"$'\n'"${_gh_file_content}"
+          fi
         fi
         if [[ -n "$_gh_text" ]]; then
           _gh_subcmd=$(printf '%s' "$COMMAND" | grep -oE 'gh (pr|issue) (create|edit|comment|review|merge)|gh release create' | head -1)
@@ -1194,8 +1269,27 @@ PYEOF
     GUARD_CLASS="Safe"
     ADDITIONAL_CONTEXT="📝 投稿前自問5点: ①「で、つまり何？」と思わせないか ②初見が途中で止まらないか ③各段落の役割（背景/理由/具体例/結論/注意点）明確か ④抽象名詞の羅列で段落が終わってないか ⑤bullet 5連続+地の文0の金太郎飴か。詳細: claude-code/guidelines/writing/PRINCIPLES.md"
 
-    # AI定型語チェック: text / content param を抽出して block
-    _mcp_text=$(jq -r '.tool_input.text // .tool_input.content // empty' <<< "$INPUT")
+    # AI定型語チェック: text / content param + nested field を全連結して block
+    # Notion children: paragraph/heading/bulleted_list_item/numbered_list_item の rich_text[].text.content
+    # Slack blocks: blocks[].text.text
+    _mcp_text=$(jq -r '
+      [
+        (.tool_input.text // empty),
+        (.tool_input.content // empty),
+        (.tool_input.children[]?
+          | (.paragraph?.rich_text[]?.text?.content // empty),
+            (.heading_1?.rich_text[]?.text?.content // empty),
+            (.heading_2?.rich_text[]?.text?.content // empty),
+            (.heading_3?.rich_text[]?.text?.content // empty),
+            (.bulleted_list_item?.rich_text[]?.text?.content // empty),
+            (.numbered_list_item?.rich_text[]?.text?.content // empty),
+            (.quote?.rich_text[]?.text?.content // empty),
+            (.callout?.rich_text[]?.text?.content // empty),
+            (.toggle?.rich_text[]?.text?.content // empty)
+        ),
+        (.tool_input.blocks[]?.text?.text // empty)
+      ] | map(select(. != null and . != "")) | join("\n")
+    ' <<< "$INPUT")
     if [[ -n "$_mcp_text" ]]; then
       _block_if_ai_jargon "$_mcp_text" "$TOOL_NAME"
     fi
