@@ -10,10 +10,10 @@ Update Serena local clone (`~/serena`), then adapt claude-code config/docs/all a
 ## Phase 1: Detect Diff
 
 ```bash
-cd ~/serena && git pull --rebase --autostash               # sync main
-git tag --sort=-v:refname | head -1                         # latest tag
-cat ~/ai-tools/claude-code/SERENA_VERSION                   # confirmed version
-cat ~/ai-tools/claude-code/references/SERENA-OPPORTUNITIES.md 2>/dev/null
+cd "$HOME/ghq/github.com/oraios/serena" && git pull --rebase --autostash   # sync main
+git tag --sort=-v:refname | head -1                                         # latest tag
+cat "$HOME/ghq/github.com/DaichiHoshina/ai-tools/claude-code/SERENA_VERSION"  # confirmed version
+cat "$HOME/ghq/github.com/DaichiHoshina/ai-tools/claude-code/references/SERENA-OPPORTUNITIES.md" 2>/dev/null
 ```
 
 No diff AND no Opportunity unsolved → "latest confirmed" → done.

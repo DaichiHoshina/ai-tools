@@ -65,7 +65,7 @@ Accept approval / rejection / alternate path proposal.
 ### Step 5: Run sync.sh (ai-tools placement only)
 
 ```bash
-cd ~/ai-tools/claude-code && ./sync.sh to-local --yes
+cd "$HOME/ghq/github.com/DaichiHoshina/ai-tools/claude-code" && ./sync.sh to-local --yes
 ```
 
 Apply to `~/.claude/` side (CLAUDE.md "Editing Rule" compliant, local-edit wipe protection).

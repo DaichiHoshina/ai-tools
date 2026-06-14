@@ -250,7 +250,7 @@ EOF
   rm -rf "${stub_dir}" "${test_home}" "${test_project_root}"
 }
 
-@test "generate_mcp_json: SERENA_PATH が見つからない場合、デフォルト値を使用" {
+@test "generate_mcp_json: SERENA_PATH が見つからない場合、生成せず skip する" {
   local stub_dir
   stub_dir=$(mktemp -d)
   export PATH="${stub_dir}:${ORIG_PATH}"
@@ -277,11 +277,12 @@ EOF
     generate_mcp_json '${test_project_root}'
   "
 
-  [ "$status" -eq 0 ]
+  # 探索失敗時は return 1 で skip
+  [ "$status" -eq 1 ]
   # warning が出力される
   [[ "$output" =~ "見つかりません" ]]
-  # デフォルト値が使用される
-  [[ "$output" =~ "/path/to/serena" ]]
+  # 壊れた値で .mcp.json を生成しない
+  [ ! -f "${test_project_root}/.mcp.json" ]
 
   rm -rf "${stub_dir}" "${test_home}" "${test_project_root}"
 }
