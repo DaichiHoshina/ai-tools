@@ -144,7 +144,13 @@ restore_private() {
     for entry in "$bak_dir"/private-* "$bak_dir"/local-*; do
         [ -e "$entry" ] || continue
         name=$(basename "$entry")
-        mv "$entry" "${dst}/${name}"
+        if [ -e "${dst}/${name}" ]; then
+            # repo 版が cp で復活済み → 退避物は不要 (repo 版を正とする)
+            rm -rf "${bak_dir:?}/${name}"
+        else
+            # repo に存在しない真の private → 復元する
+            mv "$entry" "${dst}/${name}"
+        fi
     done
     shopt -u nullglob
 }

@@ -205,3 +205,64 @@ extract_trigger_table() {
   grep -qF '"worktree 分けて"' "$TRIGGERS_FILE" || { echo "missing worktree 分けて in references"; false; }
   grep -qF '"wt 分けて"' "$TRIGGERS_FILE" || { echo "missing wt 分けて in references"; false; }
 }
+
+# =============================================================================
+# 境界 4: 検算例の数値整合テスト（+2 項目、計 12）
+# PARALLEL-PATTERNS.md の Team/Direct 各 N=2/4/8 検算例を導出式で再計算して照合する。
+# desync（式か検算例の一方だけ変更）を機械検出するための回帰テスト。
+# =============================================================================
+
+# 検算値の照合ヘルパ
+# args: $1=検索パターン(grep -F), $2=N値, $3=overhead(N)の数値
+# 式: T_task_threshold = overhead(N) / (0.95*N - 1)
+# 記載値を抽出し、式での再計算値と差 < 0.1 を確認する
+_check_threshold() {
+  local line_pattern="$1"
+  local n="$2"
+  local overhead="$3"
+
+  # ファイルから該当行を抽出して末尾の数値 (例: 244.4) を取得
+  local doc_line
+  doc_line=$(grep -F "$line_pattern" "$PATTERNS_FILE") || {
+    echo "line not found matching: $line_pattern"
+    return 1
+  }
+  local doc_val
+  doc_val=$(echo "$doc_line" | grep -oE '[0-9]+\.[0-9]+s' | tail -1 | tr -d 's')
+  [[ -n "$doc_val" ]] || { echo "cannot extract numeric value from: $doc_line"; return 1; }
+
+  # 式: overhead / (0.95 * N - 1) を awk で計算（小数第1位まで）
+  local calc_val
+  calc_val=$(awk -v oh="$overhead" -v n="$n" 'BEGIN {
+    denom = 0.95 * n - 1
+    printf "%.1f", oh / denom
+  }')
+
+  # 差が 0.1 以上なら fail
+  local ok
+  ok=$(awk -v a="$doc_val" -v b="$calc_val" 'BEGIN {
+    diff = a - b; if (diff < 0) diff = -diff
+    print (diff < 0.1) ? "ok" : "ng"
+  }')
+
+  if [[ "$ok" != "ok" ]]; then
+    echo "threshold mismatch for pattern='${line_pattern}' N=${n}: doc=${doc_val}s, calc=${calc_val}s"
+    return 1
+  fi
+}
+
+@test "formula_consistency_team: Team path 検算例が導出式と一致" {
+  # overhead_team(N) = 180 + 20N → N=2: 220, N=4: 260, N=8: 340
+  # 検算行の overhead 数値でマッチ（Direct の 60/100/180 と混在しない）
+  _check_threshold "220 / (1.9" 2 220 || false
+  _check_threshold "260 / (3.8" 4 260 || false
+  _check_threshold "340 / (7.6" 8 340 || false
+}
+
+@test "formula_consistency_direct: Direct path 検算例が導出式と一致" {
+  # overhead_direct(N) = 20N + 20
+  # Team と Direct は同一 N で同じ行パターンになるため、overhead 数値ごとに個別に検索する
+  _check_threshold "60 / (1.9" 2  60 || false
+  _check_threshold "100 / (3.8" 4 100 || false
+  _check_threshold "180 / (7.6" 8 180 || false
+}
