@@ -421,6 +421,25 @@ _inject_commit_ng_top6_if_trigger() {
   return 0
 }
 
+# === 外向き文書 trigger 判定 (外向き文書品質 + 断定語注意 の発火条件) ===
+# 永続化文書を書く意図を広めに検出。hit 時のみ [外向き文書品質] / [断定語注意] を注入し、
+# 毎-turn 固定費を削る。trigger 漏れ時も pre-tool-use.sh の hook block が最終防壁。
+_is_outward_writing_trigger() {
+  local prompt="$1"
+  local prompt_lower="${prompt,,}"
+  # 文書種別 + 動作動詞。大小文字非依存 (lower 比較)
+  local triggers=("pr" "プルリク" "commit" "コミット" "push" "issue" "slack" "notion" \
+    "design doc" "デザインドック" "設計書" "prd" "rca" "障害報告" "ポストモーテム" "postmortem" \
+    "/git-push" "/commit" "/post-comment" "/design-doc" "/prd" "/docs" \
+    "共有用" "報告用" "共有して" "報告して" "共有文" "報告文" "報告書" \
+    "ドラフト" "下書き")
+  local t
+  for t in "${triggers[@]}"; do
+    if [[ "${prompt_lower}" == *"${t,,}"* ]]; then return 0; fi
+  done
+  return 1
+}
+
 # === JP品質 inject (AI定型語 + カタカナ造語 + jargon + 略語) ===
 # PRINCIPLES.md の canonical list を動的抽出して chat 応答 / 外向き文書に注入する
 # 派生値禁止 rule 準拠: hook 内に語 list literal を持たない
@@ -454,6 +473,9 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
       _AI_TERMS_CTX="[chat応答genshijin強化] カタカナ造語禁止${_KATAKANA_HINT}。代替は説明的記述で対応。"
     fi
 
+    # 外向き文書品質 + 断定語注意: 永続化文書を書く trigger 時のみ注入 (毎-turn 固定費削減)。
+    # chat genshijin (上記) は trigger 無関係に毎-turn 維持。
+    if _is_outward_writing_trigger "$prompt"; then
     # 外向き文書向け: jargon + 略語
     _DOC_PARTS=""
     if [[ -n "${_JARGON_LINE}" ]]; then
@@ -489,6 +511,7 @@ ${_SOFTBLOCK_CTX}"
       else
         _AI_TERMS_CTX="${_SOFTBLOCK_CTX}"
       fi
+    fi
     fi
 
     # 共有/報告系 trigger 検出 → outward-mode inject
