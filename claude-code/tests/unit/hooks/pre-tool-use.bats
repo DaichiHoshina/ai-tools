@@ -85,6 +85,27 @@ _run_bash_forbidden() {
   echo "$result" | grep -q "並列 self-review"
 }
 
+@test "pre-tool-use: Task subagent_type=general-purpose は Forbidden (exit 2 block)" {
+  local input
+  input=$(jq -n '{tool_name:"Task", tool_input:{subagent_type:"general-purpose", prompt:"x"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+}
+
+@test "pre-tool-use: Task subagent_type=explore-agent は Safe (exit 0)" {
+  local input
+  input=$(jq -n '{tool_name:"Task", tool_input:{subagent_type:"explore-agent", prompt:"x"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 0 ]
+}
+
+@test "pre-tool-use: GP_BLOCK_OFF=1 で general-purpose は warn 据え置き (exit 0)" {
+  local input
+  input=$(jq -n '{tool_name:"Task", tool_input:{subagent_type:"general-purpose", prompt:"x"}}')
+  run bash -c 'echo "$1" | GP_BLOCK_OFF=1 bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 0 ]
+}
+
 @test "pre-tool-use: Skill はSafe" {
   result=$(run_hook "Skill")
   [ "$result" = "{}" ]

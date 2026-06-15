@@ -1331,10 +1331,17 @@ PYEOF
     fi
 
     if [ "${SUBAGENT_TYPE}" = "general-purpose" ]; then
-      GUARD_CLASS="Boundary"
-      MESSAGE="${ICON_WARNING} general-purpose agent（CLAUDE.md「原則使わない」、最大コスト源）"
-      ADDITIONAL_CONTEXT="代替: claude-code-guide / Explore / 直接 grep+find / serena MCP（references/performance-insights.md 参照）
+      # CLAUDE.md「absolutely banned」最大コスト源 (実測 max 501s) → hard block。
+      # GP_BLOCK_OFF=1 で従来の warn 据え置き (hook debug 用 escape hatch)。
+      if [ "${GP_BLOCK_OFF:-0}" = "1" ]; then
+        GUARD_CLASS="Boundary"
+        MESSAGE="${ICON_WARNING} general-purpose agent（CLAUDE.md「原則使わない」、最大コスト源）"
+        ADDITIONAL_CONTEXT="代替: claude-code-guide / Explore / 直接 grep+find / serena MCP（references/performance-insights.md 参照）
 ${PARALLEL_REVIEW}${PREP_WARN}"
+      else
+        GUARD_CLASS="Forbidden"
+        MESSAGE="${ICON_CRITICAL} general-purpose agent は禁止 (CLAUDE.md、最大コスト源 実測 max 501s)。代替: explore-agent (検索) / claude-code-guide (CLI/SDK) / developer-agent (実装)"
+      fi
     else
       ADDITIONAL_CONTEXT="${PARALLEL_REVIEW}${PREP_WARN}"
     fi
