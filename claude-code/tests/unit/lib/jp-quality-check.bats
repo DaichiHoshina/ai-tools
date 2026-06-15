@@ -26,6 +26,8 @@ _make_ng_dict() {
 **非日常英語 (block)**: leverage / utilize / facilitate / mitigate / comprehensive / robust / seamless / holistic / granular / rationale / paradigm
 
 **カタカナ造語禁止**: シームレス / シームレスに / ロバスト / スケーラブル / 直感的 / 直感的に / 革新的 / 革新的な / 包括的 / 包括的な / 堅牢 / 堅牢な / フレキシブル / インテリジェント / スマート / リッチ / モダン / クリーン / ハイレベル / ローレベル / クリティカル / クリティカルに / セキュア
+
+**置換候補 (頻出)**: 踏襲→引き継ぐ / 鑑みる→踏まえる / 喫緊→直近 / leverage→活かす / utilize→使う / mitigate→緩和する
 NGDICT
 }
 
@@ -297,6 +299,31 @@ teardown() {
     _check_term_list '鑑みる leverage シームレス' 'AI定型語'
     rc=\$?
     [ \"\$rc\" -eq 0 ]
+  "
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Case 8: 置換候補提示 — 踏襲を含む外向き text が block され ADDITIONAL_CONTEXT に引き継ぐ が含まれる
+# =============================================================================
+
+@test "置換候補: '踏襲' を含む text → block + ADDITIONAL_CONTEXT に '引き継ぐ' が含まれる" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '前回の設計を踏襲した。' 'commit message'
+
+    # block hit
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+
+    # ADDITIONAL_CONTEXT に置換候補 '引き継ぐ' が含まれる
+    printf '%s' \"\${ADDITIONAL_CONTEXT}\" | grep -q '引き継ぐ' || { echo \"ADDITIONAL_CONTEXT=\${ADDITIONAL_CONTEXT}\" >&2; exit 1; }
   "
   [ "$status" -eq 0 ]
 }

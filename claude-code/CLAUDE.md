@@ -127,7 +127,7 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 
 **AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。
 
-**Commit message pre-draft sweep** (`[[retrospective-2026-06-12]]` P1): avoid `鑑みる` `踏襲` `喫緊` `leverage` `utilize` `mitigate` — check before writing. Use `踏まえる` / `引き継ぐ` / `直近` / `使う` / `活かす` / `緩和する`.
+**Commit message pre-draft sweep** (`[[retrospective-2026-06-12]]` P1): NG語と置換候補は `guidelines/writing/NG-DICTIONARY.md` の `置換候補 (頻出)` key を参照。
 
 ## Default Readability (全出力 baseline、/jp-writing 不要)
 

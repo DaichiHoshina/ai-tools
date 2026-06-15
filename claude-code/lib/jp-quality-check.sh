@@ -86,6 +86,31 @@ _extract_term_list() {
   return 0
 }
 
+# 置換候補 (頻出) key から word に対応する置換先を返す
+# 引数: word (踏襲 / leverage 等)
+# 返値: 置換先文字列 (stdout)。対応なしなら空文字
+_lookup_suggestion() {
+  local word="$1"
+  local pairs
+  pairs=$(_extract_term_list "$_principles_file" "置換候補 (頻出)" 2>/dev/null || true)
+  [[ -z "$pairs" ]] && return 0
+  local pair
+  while IFS= read -r pair; do
+    [[ -z "$pair" ]] && continue
+    local src dst
+    # split on → (U+2192)
+    src="${pair%%→*}"
+    dst="${pair#*→}"
+    src="${src# }"; src="${src% }"
+    dst="${dst# }"; dst="${dst% }"
+    if [[ "$src" = "$word" ]]; then
+      printf '%s' "$dst"
+      return 0
+    fi
+  done <<< "$pairs"
+  return 0
+}
+
 # AI定型語を NG-DICTIONARY.md から抽出 (後方互換 wrapper)
 _extract_ai_jargon() {
   local file="$1"
@@ -325,7 +350,22 @@ _block_if_ai_jargon() {
         _all_terms_list="${_wl}"
       fi
       # _detail_lines に label を使う (bats テスト "難読漢語 block" 等と互換)
-      _detail_lines="${_detail_lines}  ${_cat_label}: [${_wl}] → ${_cat_guidance}"$'\n'
+      # hit 語ごとに置換候補を調べて候補があれば "語 → 候補" を列挙する
+      local _suggestion_lines=""
+      local _sw
+      while IFS= read -r _sw; do
+        [[ -z "$_sw" ]] && continue
+        local _sugg
+        _sugg=$(_lookup_suggestion "$_sw")
+        if [[ -n "$_sugg" ]]; then
+          _suggestion_lines="${_suggestion_lines}    ${_sw} → ${_sugg}"$'\n'
+        fi
+      done < <(printf '%s\n' "${_hit_by_key[${_cat_key}]}")
+      if [[ -n "$_suggestion_lines" ]]; then
+        _detail_lines="${_detail_lines}  ${_cat_label}: [${_wl}] → ${_cat_guidance}"$'\n'"${_suggestion_lines}"
+      else
+        _detail_lines="${_detail_lines}  ${_cat_label}: [${_wl}] → ${_cat_guidance}"$'\n'
+      fi
     fi
   done
 
