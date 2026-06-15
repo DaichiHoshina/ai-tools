@@ -427,8 +427,10 @@ _inject_commit_ng_top6_if_trigger() {
 _is_outward_writing_trigger() {
   local prompt="$1"
   local prompt_lower="${prompt,,}"
-  # 文書種別 + 動作動詞。大小文字非依存 (lower 比較)
-  local triggers=("pr" "プルリク" "commit" "コミット" "push" "issue" "slack" "notion" \
+  # 文書種別 + 動作動詞。大小文字非依存 (lower 比較)。
+  # 裸の "pr" は improve/express/approach/compress/spring 等の英単語に部分一致で誤爆するため
+  # 配列に入れず、語境界判定 (後述) で別扱いする。
+  local triggers=("プルリク" "commit" "コミット" "push" "issue" "slack" "notion" \
     "design doc" "デザインドック" "設計書" "prd" "rca" "障害報告" "ポストモーテム" "postmortem" \
     "/git-push" "/commit" "/post-comment" "/design-doc" "/prd" "/docs" \
     "共有用" "報告用" "共有して" "報告して" "共有文" "報告文" "報告書" \
@@ -437,6 +439,8 @@ _is_outward_writing_trigger() {
   for t in "${triggers[@]}"; do
     if [[ "${prompt_lower}" == *"${t,,}"* ]]; then return 0; fi
   done
+  # "pr" は語境界 (前後が非英数字 or 行頭行末) のときのみ hit
+  if [[ "${prompt_lower}" =~ (^|[^a-z0-9])pr([^a-z0-9]|$) ]]; then return 0; fi
   return 1
 }
 
