@@ -46,7 +46,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 *(For impl/edit tasks. Investigation phase → Discovery Routing)*
 
-**Default = delegate to `developer-agent` (Sonnet)**. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Inline execution only for exceptions listed in detailed.md.
+**Default = delegate to `developer-agent` (Sonnet)**. Inline execution only for exceptions listed in detailed.md.
 
 Details (delegate threshold / decision principle / parallel fire format / bundle prohibition / parent prep / inline exceptions / trigger table): `references/auto-delegation-detailed.md`
 
@@ -115,7 +115,7 @@ Production rollback: use the CI canonical path (revert PR → main merge → dep
 
 Misbehavior / non-obvious success → document immediately → auto-avoid next session. Misbehavior → record in CLAUDE.md / skill / hook. Append "update CLAUDE.md or related skill" to fix instructions. Details: `references/compounding-engineering-cycle.md`
 
-Memory write target: Claude Code auto-memory (`~/.claude/projects/.../memory/`) only. Writing to Serena `.serena/memories/` is forbidden (avoid dual management, decided 2026-06-10)
+Memory write target: Claude Code auto-memory only; Serena `.serena/memories/` forbidden (`references/compounding-engineering-cycle.md` §Memory write target)
 
 ## Pre-write Self-check (except chat)
 

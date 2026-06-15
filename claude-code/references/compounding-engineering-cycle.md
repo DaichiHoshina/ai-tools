@@ -89,6 +89,10 @@ In PR #11, 3 of 6 bats tests reconstructed behavior manually (mkdir/cp/ln) witho
 - Don't suppress status with `|| true`
 - Prohibit two-outcome asserts (`status -eq 0 || status -eq 1`)
 
+## Memory write target
+
+Write only to Claude Code auto-memory (`~/.claude/projects/.../memory/`). Writing to Serena `.serena/memories/` is forbidden to avoid dual management (decided 2026-06-10).
+
 ## Related
 
 - `claude-code/CLAUDE.md` §Compounding Engineering — core rule
