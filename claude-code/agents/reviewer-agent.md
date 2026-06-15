@@ -1,7 +1,7 @@
 ---
 name: reviewer-agent
 description: Reviewer Agent - Review owner for Writer/Reviewer parallel pattern
-model: claude-opus-4-8
+model: claude-sonnet-4-6
 color: blue
 permissionMode: fast
 memory: user  # Writer/Reviewer is a user-scope pattern; cross-session review style continuity is valid
