@@ -372,11 +372,22 @@ teardown_send_stop_notification() {
   unset TEST_TMPDIR
 }
 
+# send_stop_notification は terminal-notifier / curl を background (&) で fire するため、
+# log ファイル生成は非同期。固定 sleep だと並列実行時に間に合わず flaky になるので、
+# 生成をポーリング待ちする (最大 5s、10ms 刻み)。
+_wait_for_file() {
+  local f="$1" i=0
+  while [ ! -f "$f" ] && [ "$i" -lt 500 ]; do
+    sleep 0.01
+    i=$((i + 1))
+  done
+}
+
 @test "send_stop_notification: terminal-notifier に title/message を渡す" {
   setup_send_stop_notification
   local input='{"last_assistant_message":"test message","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input' '' 'Glass'" 2>/dev/null
-  sleep 0.5  # バックグラウンドプロセス完了を待つ
+  _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
   [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
   grep -q "test message" "${TEST_TMPDIR}/terminal-notifier.log"
   teardown_send_stop_notification
@@ -387,7 +398,7 @@ teardown_send_stop_notification() {
   local long_msg=$(printf 'x%.0s' {1..100})  # 100文字
   local input="{\"last_assistant_message\":\"${long_msg}\",\"cwd\":\"/tmp/project\"}"
   bash -c "source '$LIB_FILE' && send_stop_notification '$input' '' 'Glass'" 2>/dev/null
-  sleep 0.5  # バックグラウンド完了を待つ
+  _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
   [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
   # Log には最初の 80 文字 + "..." が含まれる
   grep -q "xxx..." "${TEST_TMPDIR}/terminal-notifier.log"
@@ -409,7 +420,7 @@ teardown_send_stop_notification() {
   export CLAUDE_NTFY_TOPIC="test-topic"
   local input='{"last_assistant_message":"hello","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
-  sleep 0.5  # バックグラウンド完了を待つ
+  _wait_for_file "${TEST_TMPDIR}/curl.log"
   [ -f "${TEST_TMPDIR}/curl.log" ]
   grep -q "ntfy.sh" "${TEST_TMPDIR}/curl.log"
   teardown_send_stop_notification
@@ -437,7 +448,7 @@ teardown_send_stop_notification() {
   setup_send_stop_notification
   local input='{"cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
-  sleep 0.5  # バックグラウンド完了を待つ
+  _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
   [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
   grep -q "作業が完了しました" "${TEST_TMPDIR}/terminal-notifier.log"
   teardown_send_stop_notification
@@ -447,7 +458,7 @@ teardown_send_stop_notification() {
   setup_send_stop_notification
   local input='{"last_assistant_message":"msg","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input' '[SUCCESS]'" 2>/dev/null
-  sleep 0.5  # バックグラウンド完了を待つ
+  _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
   [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
   grep -q "\[SUCCESS\]" "${TEST_TMPDIR}/terminal-notifier.log"
   teardown_send_stop_notification
