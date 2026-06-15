@@ -15,7 +15,7 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 
 ---
 
-## main pre-release (detected 2026-06-08, confirmed on next tag)
+## main pre-release (detected 2026-06-08, re-confirmed 2026-06-15, still pre-release on next tag)
 
 - [ ] **`typescript_vts` `initialization_options`**: Pass initializationOptions dict under `ls_specific_settings.typescript_vts`. Required for Yarn PnP + `typescript.tsdk` TS projects — review at: only when activating a Yarn PnP TS project (none currently)
 - [ ] **`jetbrains_launch_command`**: Auto-launch IDE on project activate — review at: JetBrains IDE not used, out of scope
@@ -23,6 +23,10 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 - `find_project_root` worktree fix [pre-release]: Fixes bug where worktree hijacks parent project's `.serena/project.yml`. No action needed (benefits CLI agent launched inside worktree, no config change)
 - CLI flag persistence bug fix [pre-release]: `start-mcp-server` transient flag saved to config. Bug fix, no action needed
 - `SvelteLanguageServer` TS/JS routing fix [pre-release]: Svelte project bug fix. Svelte not used, out of scope
+- `name_path` alias for `name_path_pattern` in `find_symbol` [pre-release]: backward-compatible param alias. No action needed (existing `find_symbol` calls keep working, repo docs use neither literal)
+- context/mode path-detection guard [pre-release]: `--context <name>` no longer mis-reads a local file of the same name. Bug fix, no config impact
+- `query_project` read-only tool relaxation [pre-release]: allows read-only tools even if excluded by current context. Behavior improvement, no config change
+- `oslex` shell-arg quoting [pre-release]: Windows arg escaping. macOS unaffected, out of scope
 
 ## v1.5.2–v1.5.3 (detected 2026-05-28)
 
