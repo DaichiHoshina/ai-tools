@@ -53,18 +53,7 @@ Run at least 2 iterations (bats anchor breakage is sometimes missed in the first
 
 ## Past incident (2026-05-23, commit `c67ade1`)
 
-An EN-ify commit renamed 3 headings:
-
-- `## critical path 短縮判定式` → `## Critical-path reduction formula`
-- 2 other headings similarly EN-ified
-
-Result:
-
-- `parallel-consistency.bats:50-52` exact-match anchor broke → 2 tests failed
-- `agent-frontmatter.bats:87` anchor broke → 2 tests failed
-- `flow.md` `#worktree-applicability-flow` slug was initially misspelled; callers not caught by bats remained in `manager-agent.md` / `po-agent.md`
-
-First detected in review iter 2. Missed in iter 1.
+An EN-ify commit renamed 3 headings, breaking 4 bats tests (`parallel-consistency.bats` / `agent-frontmatter.bats` exact-match anchors) plus stale `#worktree-applicability-flow` slug callers in `manager-agent.md` / `po-agent.md`. First detected in review iter 2, missed in iter 1 — hence the 2-iteration rule above.
 
 ## Scope
 

@@ -72,10 +72,4 @@ list に literal match しない場合でも、AI は以下カテゴリの語を
 
 ## Why
 
-2026-06-03 commit `8de6a2b` で `docs/reports/analysis-doukouiukoto-pair-20260603.html` に `snkrdunk` / `oripa` / 社内 doc 名を含む状態で public push してしまった (`[[public-repo-social-hit-incident]]`)。事後削除は git history に残るため事前 block で再発防止する。
-
-private 保管先: `~/.claude/references-private/` (sync.sh 管理外、gitignore 済)
-
-## ログ
-
-block 発生時: `~/.claude/logs/social-hit-block.log` に記録 (tool / hit_term / file_path / timestamp)
+過去に社内 product 名・社内 doc 名を含む file を public push した (`[[public-repo-social-hit-incident]]`)。事後削除は git history に残るため事前 block で再発防止する。private 保管先は `~/.claude/references-private/` (sync.sh 管理外、gitignore 済)。block 発生時は `~/.claude/logs/social-hit-block.log` に記録する。

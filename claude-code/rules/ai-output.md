@@ -17,9 +17,7 @@ Brief prohibition list only. Details: `guidelines/writing/`
 - Table-format file listings (duplicates diff)
 - Boilerplate like "changes in this PR"
 - **Body = Why only**: commit WHAT → subject line only. Body (if written): Why (motivation / constraint / problem) in 1-3 lines. No WHAT supplement bullets / file lists / function enumerations. Details: `guidelines/writing/commit-message.md` **"原則"** + **"Why を本文 1 行目に書く"** section (canonical source)
-- **Reviewer assign**: do not use `--reviewer` flag in `gh pr create` / `gh pr edit`. Do not proactively suggest "assign reviewer". Do not edit auto-assign workflows (`.github/CODEOWNERS` etc). Leave reviewer field empty when PR template includes one.
-
-**Why (reviewer)**: Team review allocation depends on member availability / domain / recent rotation — AI assignment causes inappropriate assignments.
+- **Reviewer assign**: do not use `--reviewer` flag in `gh pr create` / `gh pr edit`. Do not proactively suggest "assign reviewer". Do not edit auto-assign workflows (`.github/CODEOWNERS` etc). Leave reviewer field empty when PR template includes one (team allocation depends on availability / domain / rotation — AI assignment misfires).
 
 Details: `guidelines/writing/commit-message.md` / `pr-description.md`
 
@@ -49,4 +47,4 @@ Details: `guidelines/writing/code-comment.md` (WHY / important memo / 7 deletion
 
 ## Reference: Pre-post Self-check
 
-Former "self-check 4 questions" merged into `guidelines/writing/PRINCIPLES.md` **"4 questions before writing"** (who reads / what decides / data source / why) + **"6-item pre-output checklist"**. Verify both before posting.
+Verify `guidelines/writing/PRINCIPLES.md` **"4 questions before writing"** (who reads / what decides / data source / why) + **"6-item pre-output checklist"** before posting.

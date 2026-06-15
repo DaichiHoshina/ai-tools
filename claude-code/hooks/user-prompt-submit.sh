@@ -228,9 +228,9 @@ _check_session_bloat() {
 
   local _MSG
   if [[ "${_LEVEL}" == "urgent" ]]; then
-    _MSG="🚨 [session-bloat:URGENT] ${_WARN_REASON}、現タスク完了次第 /clear 必須 (cache_read 累積で 1 prompt あたり数 M token 浪費中)。"
+    _MSG="🚨 [session-bloat:URGENT] ${_WARN_REASON}、現タスク完了次第 /clear 必須 (cache_read 累積中)。"
   else
-    _MSG="⚠️ [session-bloat] ${_WARN_REASON}、task 境界で /clear 推奨 (token 節約のため session split)。"
+    _MSG="⚠️ [session-bloat] ${_WARN_REASON}、task 境界で /clear 推奨。"
   fi
   printf '%s' "${_MSG}" > /dev/stderr 2>/dev/null || true
   eval "${result_var}=\${_MSG}"

@@ -1243,7 +1243,7 @@ PYEOF
       if [ -n "$ADDITIONAL_CONTEXT" ]; then
         ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}; 🔍 Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols"
       else
-        ADDITIONAL_CONTEXT="🔍 Bash でコードファイル参照検出、Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols (CLAUDE.md「Tool selection」原則、analytics で Bash 51% 振替余地大)"
+        ADDITIONAL_CONTEXT="🔍 Bash でコードファイル参照検出、Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols"
       fi
     fi
 
