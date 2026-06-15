@@ -31,6 +31,8 @@ metadata:
 <body 7 field>
 ```
 
+> 連続漢字 5 字以上は助詞で開く (例: 「並列実装可能」→「並列で実装できる」)。
+
 ## Options
 
 | Arg | Description | Example |
