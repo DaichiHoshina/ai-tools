@@ -1,7 +1,7 @@
 ---
 name: root-cause-analyzer
 description: Root Cause Analyzer specialist - Deep analysis & structural fixes
-model: claude-opus-4-8
+model: claude-opus-4-7
 color: red
 permissionMode: readonly
 memory: project
