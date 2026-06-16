@@ -281,6 +281,47 @@ if [[ "${_prompt_lower_compact}" =~ (^|[[:space:]])(compact|コンパクト)([[:
   fi
 fi
 
+# === Consecutive failure notice: 直近 2 turn で失敗 keyword が連続したら /clear suggest ===
+# 失敗 keyword: エラー / error / 失敗 / 動かない / 通らない (prompt_lower で照合)
+# throttle: 同 session 同日 1 回のみ (flag file で管理)
+# 検出時: systemMessage に /clear + 書き直 を含む通知を付与
+_FAIL_REPEAT_MSG=""
+_fail_detect() {
+  local session_id="$1"
+  local date_today="$2"
+  local prompt_lc="$3"
+  local result_var="$4"
+
+  [[ -n "${session_id}" && "${session_id}" != "unknown" ]] || return 0
+
+  # 失敗 keyword を含むか判定 (bash regex, prompt_lower 前提)
+  # 現在進行形の失敗のみマッチ (技術相談の "error handling" / "エラーハンドリング" 等を誤検出しない)
+  local _fail_kw_re='(エラーになった|エラーが出た|エラーになる|errorになる|errorになった|失敗した|動かない|通らない|うまくいかない)'
+  [[ "${prompt_lc}" =~ ${_fail_kw_re} ]] || return 0
+
+  local _FAIL_FILE="/tmp/claude-fail-prompt-${session_id}-${date_today}"
+  local _FAIL_FLAG="/tmp/claude-fail-repeat-notified-${session_id}-${date_today}"
+
+  # throttle: 当日 1 回通知済みならスキップ
+  if [[ -f "${_FAIL_FLAG}" ]]; then
+    # 前回記録は残しておく (次回 turn も継続検出できるように上書き)
+    printf '%s\n' "${prompt_lc:0:200}" > "${_FAIL_FILE}" 2>/dev/null || true
+    return 0
+  fi
+
+  if [[ -f "${_FAIL_FILE}" ]]; then
+    # 前回も失敗 keyword あり → 2 回連続失敗 → 通知
+    eval "${result_var}='[連続失敗検出] 同一問題で 2 回連続して失敗しています。/clear で context を捨て、prompt を書き直してください。'"
+    # throttle flag 立て
+    printf '1\n' > "${_FAIL_FLAG}" 2>/dev/null || true
+  fi
+
+  # 今回の失敗 prompt を記録 (200 字以内で保存)
+  printf '%s\n' "${prompt_lc:0:200}" > "${_FAIL_FILE}" 2>/dev/null || true
+}
+
+_fail_detect "${_SESSION_ID}" "${_DATE_TODAY}" "${prompt,,}" "_FAIL_REPEAT_MSG"
+
 # === Duplicate prompt notice: 5秒以内に同一prompt再送を検出 ===
 # 短文 ("yes" / "続き" / "TODO" 等の rate-limit 復旧 prompt) は除外して長文のみ対象
 _DUP_NOTICE_MSG=""
@@ -306,6 +347,7 @@ if (( ${#prompt} >= 20 )); then
 fi
 
 # 通知を合成 (bloat / compact / serena / duplicate を順序固定で結合)
+# _FAIL_REPEAT_MSG は systemMessage 専用のため ここでは除外
 _COMBINED_NOTICE=""
 for _msg in "${_COMPACT_PRESAVE_MSG}" "${_BLOAT_NOTICE_MSG}" "${_COMPACT_NOTICE_MSG}" "${_SERENA_NOTICE_MSG}" "${_DUP_NOTICE_MSG}"; do
   if [[ -n "${_msg}" ]]; then
@@ -596,7 +638,12 @@ ${_early_ctx}"
       fi
     fi
   done
-  if [[ -n "${_early_ctx}" ]]; then
+  # _FAIL_REPEAT_MSG は systemMessage 専用
+  if [[ -n "${_FAIL_REPEAT_MSG}" ]] && [[ -n "${_early_ctx}" ]]; then
+    jq -n --arg msg "${_FAIL_REPEAT_MSG}" --arg ctx "${_early_ctx}" '{systemMessage: $msg, additionalContext: $ctx}'
+  elif [[ -n "${_FAIL_REPEAT_MSG}" ]]; then
+    jq -n --arg msg "${_FAIL_REPEAT_MSG}" '{systemMessage: $msg}'
+  elif [[ -n "${_early_ctx}" ]]; then
     jq -n --arg ctx "${_early_ctx}" '{"additionalContext": $ctx}'
   else
     echo '{}'
@@ -644,6 +691,16 @@ if [ -n "$technique_recommendation" ]; then
 🧪 ${technique_recommendation}"
   else
     system_message="🧪 ${technique_recommendation}"
+  fi
+fi
+
+# _FAIL_REPEAT_MSG を system_message に prepend (systemMessage 専用、必ず先頭に置く)
+if [[ -n "${_FAIL_REPEAT_MSG}" ]]; then
+  if [[ -n "${system_message}" ]]; then
+    system_message="${_FAIL_REPEAT_MSG}
+${system_message}"
+  else
+    system_message="${_FAIL_REPEAT_MSG}"
   fi
 fi
 

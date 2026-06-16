@@ -414,3 +414,35 @@ get_additional_context() {
     ! grep -q "pid=" "$log_file"
   fi
 }
+
+# =============================================================================
+# Consecutive failure detection: 直近 2 turn で失敗 keyword 連続 → /clear suggest
+# =============================================================================
+
+@test "user-prompt-submit: fail-detect 1回目エラーpromptは通知なし・2回目で/clear suggest" {
+  cd "$TEST_TMPDIR"
+  local sid="fail-detect-test-$$"
+  local today=$(date +%Y%m%d)
+  local fail_file="/tmp/claude-fail-prompt-${sid}-${today}"
+  local flag_file="/tmp/claude-fail-repeat-notified-${sid}-${today}"
+  rm -f "$fail_file" "$flag_file"
+
+  # 1回目: 失敗 keyword を含む prompt → 通知なし
+  local in1='{"prompt":"エラーになった、直して","session_id":"'"$sid"'"}'
+  local out1
+  out1=$(CLAUDE_CODE_SESSION_ID="" bash "$HOOK_FILE" <<< "$in1")
+  local sys1
+  sys1=$(echo "$out1" | jq -r '.systemMessage // empty')
+  [[ ! "$sys1" =~ "/clear" ]]
+
+  # 2回目: 同様の失敗 keyword → /clear と 書き直 を含む systemMessage が出る
+  local in2='{"prompt":"エラーになる、どうにかして","session_id":"'"$sid"'"}'
+  local out2
+  out2=$(CLAUDE_CODE_SESSION_ID="" bash "$HOOK_FILE" <<< "$in2")
+  local sys2
+  sys2=$(echo "$out2" | jq -r '.systemMessage // empty')
+  [[ "$sys2" =~ "/clear" ]]
+  [[ "$sys2" =~ "書き直" ]]
+
+  rm -f "$fail_file" "$flag_file"
+}

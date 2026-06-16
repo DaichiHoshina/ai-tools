@@ -390,6 +390,30 @@ _is_serena_replaceable() {
   return 1
 }
 
+# cat <file> の単純読み取りを検出 (Read ツールで代替可能)
+# 対象: cat <file.md/.json/.yaml/.toml/.txt/.sh/.bats> (write 系・pipe 系は除外)
+# 除外: cat > / cat >> (write), cat << (heredoc), cat ... | (pipe)
+_is_cat_simple_read() {
+  local cmd="$1"
+  # cat を含むか (先頭 or セパレータの後)
+  if ! [[ "$cmd" =~ (^|[[:space:]\;\&\(])(cat)[[:space:]] ]]; then
+    return 1
+  fi
+  # write 系は除外 (cat > / cat >> / cat <<、および後置 redirect `cat file >> out` も含む)
+  if [[ "$cmd" =~ (>>?|<<) ]]; then
+    return 1
+  fi
+  # pipe 出力は除外 (cat file | ...)
+  if [[ "$cmd" =~ \| ]]; then
+    return 1
+  fi
+  # Read ツールで代替可能な拡張子を持つファイル参照
+  if [[ "$cmd" =~ \.(md|json|yaml|yml|toml|txt|sh|bats|env)([[:space:]]|$|[\;\&\|\>2]) ]]; then
+    return 0
+  fi
+  return 1
+}
+
 classify_bash_command() {
   local cmd="$1"
   local cmd_without_msg_arg

@@ -1253,6 +1253,17 @@ PYEOF
       fi
     fi
 
+    # Read tool substitution hint: cat <doc/config file> は Read ツールで代替可能
+    # 対象: cat .md/.json/.yaml/.toml/.txt/.sh/.bats (write 系・pipe 系は除外済み)
+    if [ "$GUARD_CLASS" != "Forbidden" ] && _is_cat_simple_read "$COMMAND"; then
+      _read_hint="📖 cat でファイル読み取り検出: Read ツールを使うこと (IMPORTANT: Avoid using this tool to run \`cat\`)"
+      if [ -n "$ADDITIONAL_CONTEXT" ]; then
+        ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_read_hint}"
+      else
+        ADDITIONAL_CONTEXT="${_read_hint}"
+      fi
+    fi
+
     # 書く系 Bash コマンド: 起草前 NG-DICTIONARY inject + 今日の commit inject
     # 対象: git commit / gh pr|issue|release / glab mr|issue|release
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ -n "$COMMAND" ]]; then

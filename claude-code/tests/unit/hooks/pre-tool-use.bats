@@ -274,9 +274,12 @@ _run_bash_forbidden() {
   [ "$result" = "{}" ]
 }
 
-@test "pre-tool-use: Bash cat はSafe" {
-  result=$(run_hook "Bash" '{"command": "cat file.txt"}')
-  [ "$result" = "{}" ]
+@test "pre-tool-use: Bash cat はSafe (block されない)" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"cat file.txt"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  # exit 2 (Forbidden block) にならないことを確認
+  [ "$status" -ne 2 ]
 }
 
 # =============================================================================
@@ -1553,4 +1556,40 @@ _run_write_jargon() {
   }')
   run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
   [ "$status" -ne 2 ]
+}
+
+# =============================================================================
+# cat simple read → Read ツール振替 hint テスト
+# =============================================================================
+
+@test "cat-read-hint: cat file.md → additionalContext に Read hint が出る" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"cat /path/to/CLAUDE.md"}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
+  ctx=$(echo "$result" | jq -r '.additionalContext // empty')
+  [[ "$ctx" =~ "Read" ]]
+}
+
+@test "cat-read-hint: cat file.json → additionalContext に Read hint が出る" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"cat /path/to/settings.json"}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
+  ctx=$(echo "$result" | jq -r '.additionalContext // empty')
+  [[ "$ctx" =~ "Read" ]]
+}
+
+@test "cat-read-hint: cat > file.md (write 系) → Read hint が出ない" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"cat > /tmp/out.md"}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
+  ctx=$(echo "$result" | jq -r '.additionalContext // empty')
+  [[ ! "$ctx" =~ "cat でファイル読み取り" ]]
+}
+
+@test "cat-read-hint: cat file.md | head (pipe 系) → Read hint が出ない" {
+  local input
+  input=$(jq -n '{tool_name:"Bash", tool_input:{command:"cat /path/to/CLAUDE.md | head -20"}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
+  ctx=$(echo "$result" | jq -r '.additionalContext // empty')
+  [[ ! "$ctx" =~ "cat でファイル読み取り" ]]
 }
