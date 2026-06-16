@@ -20,6 +20,20 @@ LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // "Done"')
 NOTIFY_BODY="${LAST_MSG:0:80}"
 TERM_SEQ=$(build_terminal_sequence "Claude Code [${PROJECT_NAME}] ${ICON_SUCCESS} Done" "${NOTIFY_BODY}" "true")
 
+# === raw tool-call XML guard: 応答本文に生のツール呼び出し痕跡があれば block して正規 function-call をやり直させる ===
+# harness 内部記法 (<invoke name= / <parameter name= / antml:invoke / antml:parameter) は
+# ユーザ向け prose に正当に出ない。検出時のみ block するので、直したターンは素通り = 無限ループしない。
+# 再注入を避けるため、JP 注意書き自体に該当 literal を含めない (pattern は変数で分割保持)。
+_RAW_TC_HIT=""
+if printf '%s' "$LAST_MSG" | grep -qE '<(antml:)?(invoke|parameter)[[:space:]]+name=|^[[:space:]]*<(antml:)?function_calls'; then
+  _RAW_TC_HIT="1"
+fi
+if [[ -n "${_RAW_TC_HIT}" ]]; then
+  jq -n --arg reason '応答本文に生のツール呼び出し XML (invoke/parameter タグ) がテキストとして出力された。これは実行されず malformed になる。該当 XML テキストを本文から削除し、正規の function-call 機構でツールを呼び直すこと。本文はユーザ向け説明 (日本語 prose) のみにする。' \
+    '{decision: "block", reason: $reason}'
+  exit 0
+fi
+
 # === SQL auto-pbcopy: 最終応答中の最後の ```sql ブロックを clipboard へ ===
 # 末尾改行は bash $() の auto-strip で 1 個消費、pbcopy 不在環境 (Linux/CI) は silent skip
 _SQL_NOTICE=""

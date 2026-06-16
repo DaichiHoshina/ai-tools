@@ -50,6 +50,14 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 Details (delegate threshold / decision principle / parallel fire format / bundle prohibition / parent prep / inline exceptions / trigger table): `references/auto-delegation-detailed.md`
 
+## Tool Call Format (生テキスト呼び出し禁止)
+
+ツール呼び出しは**必ず harness の正規 function-call 機構**で行う。応答本文に `call` / `<invoke ...>` / `<parameter ...>` 等のツール呼び出し XML を**テキストとして書かない**。本文に書いても実行されず、`Your tool call was malformed` エラーになる。
+
+- 本文 = ユーザ向けの説明 (日本語 prose) のみ。tool は別チャネルで発火する
+- 同じ malformed を繰り返したら**即停止**し、次の発話で正規 tool call をやり直す (テキスト再掲しない)
+- `[[feedback-no-raw-text-tool-call]]`
+
 ## Session Efficiency
 
 **Autonomous mode ON by default**. Confirm only for: destructive ops / external sends / large design branches / flow stage changing next-stage assumptions / re-try right after Esc interrupt (`[[feedback-no-retry-after-interrupt]]`). Long output = conclusion-first + PREP. Decision request = leading `要決定:` block. Token budget: Read with `limit`/`offset` (>200-line files), Bash long output via `| head/tail -N`, code via Serena `find_symbol` over full Read, casual chat via `/btw`. Full list: `references/session-efficiency-detailed.md`.
