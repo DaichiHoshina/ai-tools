@@ -1262,6 +1262,8 @@ PYEOF
       else
         ADDITIONAL_CONTEXT="${_read_hint}"
       fi
+      # 観測 log: 1 週間の発火頻度と誤検出パターンを記録
+      printf '[%s] cat-read-hint fired | cmd=%.150s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$COMMAND" >> "$HOME/.claude/logs/cat-read-hint.log" 2>/dev/null || true
     fi
 
     # 書く系 Bash コマンド: 起草前 NG-DICTIONARY inject + 今日の commit inject

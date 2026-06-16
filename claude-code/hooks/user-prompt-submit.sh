@@ -314,6 +314,8 @@ _fail_detect() {
     eval "${result_var}='[連続失敗検出] 同一問題で 2 回連続して失敗しています。/clear で context を捨て、prompt を書き直してください。'"
     # throttle flag 立て
     printf '1\n' > "${_FAIL_FLAG}" 2>/dev/null || true
+    # 観測 log: 1 週間の発火頻度と誤検出パターンを記録
+    printf '[%s] fail-repeat fired | sid=%s | prompt=%.100s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "${session_id}" "${prompt_lc}" >> "$HOME/.claude/logs/fail-repeat-detect.log" 2>/dev/null || true
   fi
 
   # 今回の失敗 prompt を記録 (200 字以内で保存)
