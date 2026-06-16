@@ -17,11 +17,17 @@ On adoption: check the box. On obsolescence: strikethrough (`~~feature~~ (obsole
 
 ---
 
+## 2.1.178 (detected 2026-06-16, latest)
+
+- **`Tool(param:value)` permission syntax** [2.1.178]: not adopted. New permission rules can match a tool's input parameters with `*` wildcard (CHANGELOG example `Agent(model:opus)`). Candidate for declaring the `general-purpose` agent ban in `templates/settings.json.template` `permissions.deny`. Not adopted: the existing `hooks/pre-tool-use.sh` hard-block (L1333, exit 2) is strictly stronger — staged warn/critical severity, JP message with substitute-agent guidance, and a `GP_BLOCK_OFF=1` escape hatch — none expressible in a flat deny rule. Duplicating the ban in permissions would only risk desync. Hook stays canonical.
+- **Nested `.claude/skills` `<dir>:<name>` clash disambiguation** [2.1.178]: no impact. Repo ships a single flat `skills/` (24 skills), no nested `.claude/skills`. Unrelated to the existing `sync.sh` double-nest bug (`skills/<skill>/<skill>`) tracked in memory `sync-local-prefix-skill-nest` — that is a sync artifact, not the CLI nested-skill feature.
+- **`disallowedTools` `mcp__*` server-spec fix** [2.1.178]: no impact. Agents list `mcp__serena__*` on the `tools:` side, not in `disallowedTools` (which only carries `Write` / `Edit` / `MultiEdit`). The server-spec silent-ignore bug never applied.
+- Remainder (auto-mode classifier pre-eval / `/doctor` layout / `/bug` validation / OOM & OAuth & websocket crashes / vim undo / VSCode IME Esc / background-session "Working" / compaction `--fallback-model` honoring / statusline custom URI) — harness internals & bugfixes, no config changes needed.
+
 ## 2.1.154–2.1.177 (detected 2026-06-14, latest)
 
 Channel switched stable→latest by explicit user choice (local CLI was 2.1.177 = latest tag). Range 2.1.154–2.1.177 reviewed.
 
-- [x] **`fallbackModel` setting**: adopted. Added `fallbackModel: ["claude-sonnet-4-6", "claude-haiku-4-5"]` to `templates/settings.json.template` and registered the key in `scripts/settings-validator.sh` root-key allowlist. Auto-switches when Opus 4.8 is overloaded/unavailable, keeping the turn going.
 - **`language` setting** [2.1.177 surfaced]: already correct. `templates/settings.json.template` has had `"language": "japanese"` since 2026-01-13 (ignored as unknown key then); now an official setting (response + dictation language). Value matches docs example, aligns with the JP-response policy. No change.
 - **Sub-agents spawning sub-agents up to 5 levels** [2.1.172]: not adopted. Repo intentionally omits `Task` from developer/explore agent tools (sub-agent spec). The capability expansion does not change that safe-by-default design.
 - **`workflow`→`ultracode` trigger rename** [2.1.160]: no impact. Repo never used `workflow` as a dynamic-workflow trigger keyword (only as a generic word / file name). `ultracode` is a built-in trigger, not repo config.
@@ -39,10 +45,6 @@ No new opportunities. Single-version range 2.1.153; repo impact grep confirmed (
 - Remaining: bugfix only (MCP reconnect-loop / API gateway credential / subagent MCP `--strict-mcp-config` / Windows installer / background session / VSCode shutdown) — no config changes needed
 
 ## 2.1.152 (detected 2026-06-04, stable)
-
-- [x] **`MessageDisplay` hook event**: deferred (avoid hook proliferation). Will re-evaluate if jp-quality output-side blocking is needed.
-- [x] **`SessionStart` hook `hookSpecificOutput.sessionTitle`**: adopted. Added `hookSpecificOutput.sessionTitle` to `hooks/session-start.sh`. Value: `<repo> @ <branch>` (repo name only if not a git repo).
-- [x] **skill/slash command frontmatter `disallowed-tools`**: adopted. Added `disallowed-tools: [Bash, Edit, Write]` to `skills/jp-writing/skill.md` to prevent accidental edits in writing-check-only skill.
 
 Track only (low adoption value): `/reload-skills` / `SessionStart` `reloadSkills: true` / `pluginSuggestionMarketplaces` / `marketplace remove --scope` / `OTEL_METRICS_INCLUDE_ENTRYPOINT` / `fallback-model` auto-switch / Auto mode no-consent / Vim `/` reverse search / `/usage` session-files / many UI/bugfixes. `/simplify` revival (`/code-review --fix`) already decided as "not adopted, reference removed" at 2.1.148.
 
