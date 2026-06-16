@@ -712,9 +712,13 @@ _inject_today_commits() {
   # Source 1: 作業中 repo の今日の commit
   local _proj_commits=""
   _proj_commits=$(git -C "$_project_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges 2>/dev/null | head -n "${_commit_cap}" || true)
-  if [[ -z "$_proj_commits" ]] && ! git -C "$_project_dir" rev-parse --git-dir >/dev/null 2>&1; then
+  # 非 git repo は silent skip (log 書かない、975 行 noise を防ぐ)。
+  # debug 用に git repo だが today commit 0 件の case のみ log する場合は
+  # CLAUDE_HOOK_INJECT_LOG_EMPTY=1 を設定する。
+  if [[ -z "$_proj_commits" ]] && [[ "${CLAUDE_HOOK_INJECT_LOG_EMPTY:-0}" == "1" ]] \
+      && git -C "$_project_dir" rev-parse --git-dir >/dev/null 2>&1; then
     mkdir -p "$_inject_log_dir" 2>/dev/null || true
-    printf '[%s] today-commit inject: git log failed at %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_project_dir" >> "$_inject_log_file" 2>/dev/null || true
+    printf '[%s] today-commit inject: no commits today at %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_project_dir" >> "$_inject_log_file" 2>/dev/null || true
   fi
 
   # Source 2: ai-tools writing 規約関連 commit (guidelines/ と CLAUDE.md 限定)
@@ -729,9 +733,11 @@ _inject_today_commits() {
   if [[ -n "$_aitools_real" && "$_aitools_real" != "$_project_real" ]]; then
     _writing_commits=$(git -C "$_aitools_repo_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges \
       -- "claude-code/guidelines/" "claude-code/CLAUDE.md" 2>/dev/null | head -n "${_commit_cap}" || true)
-    if [[ -z "$_writing_commits" ]] && ! git -C "$_aitools_repo_dir" rev-parse --git-dir >/dev/null 2>&1; then
+    # 非 git repo は silent skip (上の Source 1 と同方針)。
+    if [[ -z "$_writing_commits" ]] && [[ "${CLAUDE_HOOK_INJECT_LOG_EMPTY:-0}" == "1" ]] \
+        && git -C "$_aitools_repo_dir" rev-parse --git-dir >/dev/null 2>&1; then
       mkdir -p "$_inject_log_dir" 2>/dev/null || true
-      printf '[%s] today-commit inject: git log failed at %s (writing path)\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_aitools_repo_dir" >> "$_inject_log_file" 2>/dev/null || true
+      printf '[%s] today-commit inject: no commits today at %s (writing path)\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_aitools_repo_dir" >> "$_inject_log_file" 2>/dev/null || true
     fi
   fi
 
