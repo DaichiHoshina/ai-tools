@@ -104,9 +104,16 @@ function displayStatusLine(data) {
   // マーカーファイルから実作業ディレクトリを取得
   let cwd = launchCwd;
   if (data.session_id) {
+    // marker 名は hook 側 (session-start.sh / post-tool-use.sh) と一致させる:
+    // /tmp/claude-wt-<session_id>-<YYYYMMDD(ローカル)>
+    const d = new Date();
+    const dateToday =
+      String(d.getFullYear()) +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      String(d.getDate()).padStart(2, "0");
     try {
       const wtPath = fs
-        .readFileSync(`/tmp/claude-wt-${data.session_id}`, "utf8")
+        .readFileSync(`/tmp/claude-wt-${data.session_id}-${dateToday}`, "utf8")
         .trim();
       if (wtPath && fs.existsSync(wtPath)) cwd = wtPath;
     } catch {
