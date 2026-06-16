@@ -16,7 +16,7 @@ hook (`hooks/pre-tool-use.sh:_extract_term_list`) が動的抽出する NG 語 l
 
 **非日常英語 (block)**: leverage / utilize / facilitate / mitigate / comprehensive / robust / seamless / holistic / granular / rationale / paradigm
 
-**置換候補 (頻出)**: 踏襲→引き継ぐ / 鑑みる→踏まえる / 喫緊→直近 / leverage→活かす / utilize→使う / mitigate→緩和する
+**置換候補 (頻出)**: 踏襲→引き継ぐ / 鑑みる→踏まえる / 喫緊→直近 / leverage→活かす / utilize→使う / mitigate→緩和する / 影響なし→該当なし or 既存挙動そのまま or repo に取り込み不要
 
 **カタカナ造語禁止**: シームレス / シームレスに / ロバスト / スケーラブル / 直感的 / 直感的に / 革新的 / 革新的な / 包括的 / 包括的な / 堅牢 / 堅牢な / フレキシブル / インテリジェント / スマート / リッチ / モダン / クリーン / ハイレベル / ローレベル / クリティカル / クリティカルに / セキュア
 
