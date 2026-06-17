@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# hook-utils.sh は Edit/Write/MultiEdit/Bash tool 時のみ lazy source（Read/Glob/Grep 等では不要）
 # writing-self-check.sh / bats-self-check.sh は md/bats case 内で lazy source
 
 # JSON入力を読み込む
@@ -18,6 +18,15 @@ eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_p
 SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
 printf -v DATE_TODAY '%(%Y%m%d)T' -1
+
+# hook-utils.sh lazy source: append_message / ensure_worktree_memory_link が必要なツールのみ
+# mcp__serena__* も relative_path 経由の shell regex check で append_message を使うため含める
+case "$TOOL_NAME" in
+  Edit|Write|MultiEdit|Bash|mcp__serena__*)
+    # shellcheck disable=SC1091
+    source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+    ;;
+esac
 
 # デフォルトメッセージ
 MESSAGE=""
@@ -212,17 +221,27 @@ if [[ "${TOOL_NAME}" == "Bash" ]]; then
   fi
 fi
 
-# --- Analytics記録 ---
+# --- Analytics記録 (async: sqlite3 fork を hook 応答パスから外す) ---
+# Read/Glob/Grep/LS 等の非アクション tool は analytics subshell を skip して即 return（fork 削減）
 _LIB_DIR="${SCRIPT_DIR}/../lib"
+case "$TOOL_NAME" in
+  Read|Glob|Grep|LS|WebSearch|WebFetch|TodoRead|TodoWrite|TaskList|TaskGet)
+    # 非アクション tool: analytics 不要 → 早期 return
+    echo "{}"
+    exit 0
+    ;;
+esac
 if [[ -f "${_LIB_DIR}/analytics-writer.sh" ]]; then
-    source "${_LIB_DIR}/analytics-writer.sh"
     _PROJECT=$(basename "$CWD")
     _INPUT_SUMMARY=""
     case "$TOOL_NAME" in
         "Skill") _INPUT_SUMMARY="$SKILL_NAME" ;;
         "Agent") _INPUT_SUMMARY="$AGENT_TYPE" ;;
     esac
-    analytics_insert_tool_event "${SESSION_ID:-unknown}" "$_PROJECT" "$TOOL_NAME" "$_INPUT_SUMMARY" "${DURATION_MS:-}" "0" 2>/dev/null || true
+    # subshell async: source + sqlite3 INSERT を応答パスから切り離す
+    # shellcheck disable=SC1091
+    ( source "${_LIB_DIR}/analytics-writer.sh" && \
+      analytics_insert_tool_event "${SESSION_ID:-unknown}" "$_PROJECT" "$TOOL_NAME" "$_INPUT_SUMMARY" "${DURATION_MS:-}" "0" ) 2>/dev/null &
 fi
 
 # JSON出力
@@ -237,7 +256,14 @@ if [[ "${SANITIZE_COUNT}" -gt 0 ]]; then
       '{hookSpecificOutput: {hookEventName: "PostToolUse", updatedToolOutput: $out, additionalContext: $ctx}}'
   fi
 elif [ -n "${MESSAGE}" ]; then
-  jq -n --arg msg "${MESSAGE}" '{systemMessage: $msg}'
+  # jq fork 削減: bash 文字列置換で JSON エスケープして printf 出力
+  _MSG="${MESSAGE}"
+  _MSG="${_MSG//\\/\\\\}"   # \ → \\
+  _MSG="${_MSG//\"/\\\"}"   # " → \"
+  _MSG="${_MSG//$'\n'/\\n}" # newline → \n
+  _MSG="${_MSG//$'\t'/\\t}" # tab → \t
+  _MSG="${_MSG//$'\r'/\\r}" # CR → \r
+  printf '{"systemMessage":"%s"}\n' "${_MSG}"
 else
   echo "{}"
 fi
