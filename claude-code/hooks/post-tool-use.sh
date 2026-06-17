@@ -192,19 +192,24 @@ esac
 # 置換ミスによる literal '\n' (バックスラッシュ + n) 行混入を検出。
 # 単純 `bash -n` では通過するが実行時 `n: command not found` で死亡するため、
 # 編集直後に grep で検出して Claude へ警告する (rules/shell.md compliant)。
-TARGET_SH=""
-if [ -n "$FILE_PATH" ] && [[ "$FILE_PATH" =~ \.(sh|bash)$ ]] && [ -f "$FILE_PATH" ]; then
-  TARGET_SH="$FILE_PATH"
-elif [ -n "$RELATIVE_PATH" ] && [[ "$RELATIVE_PATH" =~ \.(sh|bash)$ ]]; then
-  _ABS_PATH="${CWD%/}/${RELATIVE_PATH}"
-  [ -f "$_ABS_PATH" ] && TARGET_SH="$_ABS_PATH"
-fi
-if [ -n "$TARGET_SH" ]; then
-  _ESCAPE_N_LINES=$(grep -nE '^\\n$' "$TARGET_SH" 2>/dev/null || true)
-  if [ -n "$_ESCAPE_N_LINES" ]; then
-    MESSAGE=$(append_message "$MESSAGE" "⚠ Literal '\\n' line detected (likely regex replace residue): ${TARGET_SH}"$'\n'"${_ESCAPE_N_LINES}")
-  fi
-fi
+# 編集系 tool のみ対象 (Read 等の lazy-source 対象外 tool で append_message 未定義 abort 防止)
+case "$TOOL_NAME" in
+  Edit|Write|MultiEdit|mcp__serena__*)
+    TARGET_SH=""
+    if [ -n "$FILE_PATH" ] && [[ "$FILE_PATH" =~ \.(sh|bash)$ ]] && [ -f "$FILE_PATH" ]; then
+      TARGET_SH="$FILE_PATH"
+    elif [ -n "$RELATIVE_PATH" ] && [[ "$RELATIVE_PATH" =~ \.(sh|bash)$ ]]; then
+      _ABS_PATH="${CWD%/}/${RELATIVE_PATH}"
+      [ -f "$_ABS_PATH" ] && TARGET_SH="$_ABS_PATH"
+    fi
+    if [ -n "$TARGET_SH" ]; then
+      _ESCAPE_N_LINES=$(grep -nE '^\\n$' "$TARGET_SH" 2>/dev/null || true)
+      if [ -n "$_ESCAPE_N_LINES" ]; then
+        MESSAGE=$(append_message "$MESSAGE" "⚠ Literal '\\n' line detected (likely regex replace residue): ${TARGET_SH}"$'\n'"${_ESCAPE_N_LINES}")
+      fi
+    fi
+    ;;
+esac
 
 # --- Output Sanitization (Bash 出力のシークレット検出/REDACT) ---
 # rules/enterprise-security.md §2 のコード強制実装 (Phase 1: Bash のみ)
