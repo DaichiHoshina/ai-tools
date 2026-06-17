@@ -682,6 +682,51 @@ _check_worktree_cwd_guard() {
 }
 
 # ====================================
+# local-docs テンプレ準拠 block
+# local-docs 配下に新規 .html を Write する場合、_templates/{type}.html 由来 (= <style id="local-docs-style"> を含む) で
+# ない content を Forbidden で block する。Write 直書きで共通 CSS / decorate が落ちる事故の事前防止。
+# 適用範囲: Write のみ (Edit は既存 file の部分編集なので除外)
+# 除外 path: _templates/ / _index/ / root meta 5 (CLAUDE.md / AGENTS.md / STRUCTURE.md / README.md / _redirects.md)
+# ====================================
+_check_local_docs_template() {
+  local file_path="$1"
+  local content="$2"
+  [[ -z "$file_path" || -z "$content" ]] && return 0
+
+  # local-docs 配下かつ .html のみ対象
+  [[ "$file_path" != */local-docs/* ]] && return 0
+  [[ "$file_path" != *.html ]] && return 0
+
+  # 除外: _templates / _index 配下
+  [[ "$file_path" == */local-docs/_templates/* ]] && return 0
+  [[ "$file_path" == */local-docs/_index/* ]] && return 0
+
+  # 除外: root meta (5 file は .md だが念のため html 拡張子でも除外)
+  local _basename
+  _basename=$(basename "$file_path")
+  case "$_basename" in
+    CLAUDE.md|AGENTS.md|STRUCTURE.md|README.md|_redirects.md) return 0 ;;
+  esac
+
+  # テンプレ準拠マーカーが両方あれば OK
+  if [[ "$content" == *'<style id="local-docs-style">'* ]] && \
+     [[ "$content" == *'<script id="local-docs-script">'* ]]; then
+    return 0
+  fi
+
+  # local-docs repo root 推定: path 中の "/local-docs/" の手前までを root とする
+  local _ld_root="${file_path%%/local-docs/*}/local-docs"
+  GUARD_CLASS="Forbidden"
+  MESSAGE="${ICON_CRITICAL} [local-docs] テンプレ非準拠 .html の Write を block"
+  ADDITIONAL_CONTEXT="local-docs 配下の新規 .html は \`_templates/{type}.html\` 由来でなければならない。Write 直書きで <style id=\"local-docs-style\"> / <script id=\"local-docs-script\"> が欠落すると共通 CSS / decorate / _index/ build が全て効かなくなる。手順: (1) Bash \`cp ${_ld_root}/_templates/{type}.html ${file_path}\` でテンプレ複製、(2) Edit で本文 placeholder を差し替え。type 一覧は local-docs/CLAUDE.md \"Templates\" 参照。"
+
+  # block log
+  local _log="$HOME/.claude/logs/local-docs-template-block.log"
+  mkdir -p "$(dirname "$_log")" 2>/dev/null || true
+  printf '[%s] block: %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$file_path" >> "$_log" 2>/dev/null || true
+}
+
+# ====================================
 # 今日の commit inject
 # 書く系 tool (Write/Edit/Bash commit・gh・glab・Slack/Notion MCP) の直前に
 # 今日の commit log を additionalContext に append して、最新規範の反映を促す
@@ -943,6 +988,11 @@ case "$TOOL_NAME" in
       if [ -n "$_EDIT_FILE_PATH" ]; then
         _check_social_hit "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
       fi
+    fi
+
+    # local-docs テンプレ準拠 block (Write のみ、新規 .html を _templates 由来でない content で Write したら block)
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$TOOL_NAME" == "Write" ]] && [ -n "$EDIT_CONTENT" ]; then
+      _check_local_docs_template "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
     fi
 
     # private-name block: private-name-list.txt の term を ai-tools 配下 file 書込に適用
