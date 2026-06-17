@@ -1,5 +1,5 @@
 ---
-allowed-tools: Write, Read
+allowed-tools: Write, Read, Bash
 description: Quick auto-memory save — record current work state to ~/.claude/projects/.../memory/
 effort: low
 ---
@@ -39,6 +39,18 @@ metadata:
 |-----|-------------|---------|
 | (none) | auto-name (`work-context-YYYYMMDD-<topic>`) | `/memory-save` |
 | `<name>` | specify memory name | `/memory-save auth-refactor-progress` |
+| `clear` | save (auto-name) + `/clear` 直前準備: 保存後 `/reload <name>` を clip (`pbcopy`) にコピーし、次セッションへの貼り付け再開を準備する | `/memory-save clear` |
+
+## `clear` 引数の追加処理
+
+`$ARGUMENTS == "clear"` の時のみ、保存完了後に以下を実行する。
+
+1. 保存した memory name (auto-name の topic 含む slug) を変数に保持
+2. Bash で `printf '/reload %s' "<name>" | pbcopy` を実行 (改行なし、貼り付け即実行)
+3. chat に「`/reload <name>` を clip にコピー済。`/clear` 後に貼り付けて再開」と報告
+4. `/clear` 自体は user が手動実行 (自発的に発火しない)
+
+pbcopy 不在 (Linux 等) の場合は `xclip -selection clipboard` → `wl-copy` の順で fallback、いずれもなければ chat に literal を出力して user に手動コピー案内。
 
 ## When to use
 
