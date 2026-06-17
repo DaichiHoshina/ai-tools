@@ -143,6 +143,26 @@ if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
   fi
 fi
 
+# --- .mcp.json 不在自動再生成 (ai-tools repo 限定) ---
+# .gitignore 対象の .mcp.json が消えると Serena MCP が起動せず、
+# session 開始時に手動 envsubst が必要になる。template が同梱されている
+# claude-code config repo (= ai-tools) のみ自動再生成で再発防止する。
+# 他 repo は副作用を local repo に書き込む危険を回避するため何もしない。
+# (diag block の cache 後に走るため _DIAG_MSG ではなく独立 _MCP_GUARD_MSG)
+_MCP_GUARD_MSG=""
+_MCP_TEMPLATE="${_CWD}/claude-code/templates/.mcp.json.template"
+if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}/.git" ]] && [[ -f "${_MCP_TEMPLATE}" ]] && [[ ! -f "${_CWD}/.mcp.json" ]]; then
+    # shellcheck source=../lib/mcp-installer.sh
+    source "${SCRIPT_DIR}/../lib/mcp-installer.sh" 2>/dev/null || true
+    if declare -f ensure_project_mcp_json >/dev/null 2>&1; then
+        ensure_project_mcp_json "${_CWD}" "${_MCP_TEMPLATE}"
+        case $? in
+            0) _MCP_GUARD_MSG="${ICON_SUCCESS} .mcp.json 不在を検知し自動再生成 (Serena MCP は次回起動時に復元)\n" ;;
+            2) _MCP_GUARD_MSG="${ICON_WARNING} .mcp.json 不在 + Serena path 未検出 (SERENA_PATH を設定して再生成)\n" ;;
+        esac
+    fi
+fi
+
 # --- Worktree Memory Symlink（バックグラウンド実行）---
 # symlink 操作のみで出力に依存しないため非同期化
 ( ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true ) &
@@ -231,7 +251,7 @@ fi
 
 # --- 出力組み立て ---
 _SM_PREFIX="${ICON_SUCCESS}"
-if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]]; then
+if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]] || [[ "${_MCP_GUARD_MSG}" == *"${ICON_WARNING}"* ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
@@ -239,6 +259,9 @@ _AC_BASE="**自動実行（必須）**: 以下を順に実行してください\
 _AC_PREFIX=""
 if [[ -n "${_CWD_GUARD_MSG}" ]]; then
     _AC_PREFIX+="${_CWD_GUARD_MSG}"
+fi
+if [[ -n "${_MCP_GUARD_MSG}" ]]; then
+    _AC_PREFIX+="${_MCP_GUARD_MSG}"
 fi
 if [[ -n "${_DIAG_MSG}" ]]; then
     _AC_PREFIX+="${_DIAG_MSG}"

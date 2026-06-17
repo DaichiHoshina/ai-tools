@@ -80,6 +80,57 @@ generate_mcp_json() {
 }
 
 # =============================================================================
+# .mcp.json 不在検知 + 自動再生成 (session-start hook 用)
+# =============================================================================
+# generate_mcp_json は interactive install 用に print_* に依存する。
+# session hook は副作用 (stdout 汚染、confirm prompt) を避けるため、
+# 標準出力なし + 戻り値で結果を返す stateless 版を別関数で提供する。
+#
+# 引数:
+#   $1 = project_root (cwd)
+#   $2 = template path (絶対パス、ai-tools/claude-code/templates/.mcp.json.template 想定)
+# 戻り値:
+#   0 = 再生成成功
+#   1 = template 不在
+#   2 = Serena path 検出失敗
+#   3 = 既存 .mcp.json あり (no-op)
+
+ensure_project_mcp_json() {
+    local project_root="$1"
+    local template_path="$2"
+
+    if [[ -f "${project_root}/.mcp.json" ]]; then
+        return 3
+    fi
+
+    if [[ ! -f "${template_path}" ]]; then
+        return 1
+    fi
+
+    local serena_path="${SERENA_PATH:-}"
+    if [[ -z "${serena_path}" ]]; then
+        local path
+        for path in \
+            "${HOME}/ghq/github.com/oraios/serena" \
+            "${HOME}/serena" \
+            "${HOME}/projects/serena" \
+            "${HOME}/workspace/serena"; do
+            if [[ -d "${path}" ]]; then
+                serena_path="${path}"
+                break
+            fi
+        done
+    fi
+
+    if [[ -z "${serena_path}" ]]; then
+        return 2
+    fi
+
+    SERENA_PATH="${serena_path}" PROJECT_ROOT="${project_root}" \
+        envsubst < "${template_path}" > "${project_root}/.mcp.json"
+}
+
+# =============================================================================
 # MCP サーバーインストール
 # =============================================================================
 

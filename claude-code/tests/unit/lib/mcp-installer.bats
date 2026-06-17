@@ -288,6 +288,96 @@ EOF
 }
 
 # =============================================================================
+# ensure_project_mcp_json テスト (session-start hook 用 stateless 版)
+# =============================================================================
+
+@test "ensure_project_mcp_json: 既存 .mcp.json あり → rc=3 (no-op)" {
+  local proj
+  proj=$(mktemp -d)
+  echo '{}' > "${proj}/.mcp.json"
+  local template
+  template=$(mktemp)
+  echo '{}' > "${template}"
+
+  run bash -c "
+    set +e
+    source '${LIB_DIR}/common.sh'
+    source '$LIB_FILE'
+    rc=0; ensure_project_mcp_json '${proj}' '${template}' || rc=\$?
+    echo \"rc=\$rc\"
+  "
+
+  [[ "$output" =~ "rc=3" ]]
+  rm -rf "${proj}" "${template}"
+}
+
+@test "ensure_project_mcp_json: template 不在 → rc=1" {
+  local proj
+  proj=$(mktemp -d)
+
+  run bash -c "
+    set +e
+    source '${LIB_DIR}/common.sh'
+    source '$LIB_FILE'
+    rc=0; ensure_project_mcp_json '${proj}' '/nonexistent/template' || rc=\$?
+    echo \"rc=\$rc\"
+  "
+
+  [[ "$output" =~ "rc=1" ]]
+  [ ! -f "${proj}/.mcp.json" ]
+  rm -rf "${proj}"
+}
+
+@test "ensure_project_mcp_json: SERENA_PATH 設定済 → envsubst で .mcp.json 生成、rc=0" {
+  local proj
+  proj=$(mktemp -d)
+  local template
+  template=$(mktemp)
+  cat > "${template}" << 'EOF'
+{"serena_path":"${SERENA_PATH}","project_root":"${PROJECT_ROOT}"}
+EOF
+
+  run bash -c "
+    set +e
+    export SERENA_PATH='/fake/serena'
+    source '${LIB_DIR}/common.sh'
+    source '$LIB_FILE'
+    rc=0; ensure_project_mcp_json '${proj}' '${template}' || rc=\$?
+    echo \"rc=\$rc\"
+  "
+
+  [[ "$output" =~ "rc=0" ]]
+  [ -f "${proj}/.mcp.json" ]
+  grep -q '"serena_path":"/fake/serena"' "${proj}/.mcp.json"
+  grep -q "\"project_root\":\"${proj}\"" "${proj}/.mcp.json"
+  rm -rf "${proj}" "${template}"
+}
+
+@test "ensure_project_mcp_json: SERENA_PATH 未設定 + common locations 不在 → rc=2" {
+  local proj
+  proj=$(mktemp -d)
+  local template
+  template=$(mktemp)
+  echo '{}' > "${template}"
+  local fake_home
+  fake_home=$(mktemp -d)
+
+  run bash -c "
+    set +e
+    unset SERENA_PATH
+    export HOME='${fake_home}'
+    source '${LIB_DIR}/common.sh'
+    source '$LIB_FILE'
+    rc=0; ensure_project_mcp_json '${proj}' '${template}' || rc=\$?
+    echo \"rc=\$rc\"
+  "
+
+  [[ "$output" =~ "rc=2" ]]
+  [ ! -f "${proj}/.mcp.json" ]
+  rm -rf "${proj}" "${template}" "${fake_home}"
+}
+
+# =============================================================================
 # install_mcp_servers テスト
 # =============================================================================
 
