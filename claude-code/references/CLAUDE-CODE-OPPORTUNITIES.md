@@ -17,6 +17,12 @@ On adoption: check the box. On obsolescence: strikethrough (`~~feature~~ (obsole
 
 ---
 
+## 2.1.179 (detected 2026-06-17, latest)
+
+No new opportunities. Range 2.1.179 (single version); all 9 CHANGELOG entries are bugfix / perf only.
+
+- Remainder (mid-stream connection-drop preservation / WSL2 mouse-wheel scroll / sandbox `denyRead`/`allowRead` glob Bash-description bloat / feedback-survey single-digit misread / welcome-screen promo-banner stacking / Ctrl+O subagent transcript / prompt-input focus return / remote-session stuck-task display / remote plugin-load perf) — harness internals & bugfixes, no config changes needed. The sandbox glob fix is a CLI-internal Bash-description trim, not a `denyRead`/`allowRead` schema change — `templates/settings.json.template` unaffected.
+
 ## 2.1.178 (detected 2026-06-16, latest)
 
 - **`Tool(param:value)` permission syntax** [2.1.178]: not adopted. New permission rules can match a tool's input parameters with `*` wildcard (CHANGELOG example `Agent(model:opus)`). Candidate for declaring the `general-purpose` agent ban in `templates/settings.json.template` `permissions.deny`. Not adopted: the existing `hooks/pre-tool-use.sh` hard-block (L1333, exit 2) is strictly stronger — staged warn/critical severity, JP message with substitute-agent guidance, and a `GP_BLOCK_OFF=1` escape hatch — none expressible in a flat deny rule. Duplicating the ban in permissions would only risk desync. Hook stays canonical.
