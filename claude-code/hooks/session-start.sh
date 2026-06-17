@@ -143,25 +143,9 @@ if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
   fi
 fi
 
-# --- .mcp.json 不在自動再生成 (ai-tools repo 限定) ---
-# .gitignore 対象の .mcp.json が消えると Serena MCP が起動せず、
-# session 開始時に手動 envsubst が必要になる。template が同梱されている
-# claude-code config repo (= ai-tools) のみ自動再生成で再発防止する。
-# 他 repo は副作用を local repo に書き込む危険を回避するため何もしない。
-# (diag block の cache 後に走るため _DIAG_MSG ではなく独立 _MCP_GUARD_MSG)
+# NOTE: project-scope .mcp.json 自動再生成は user-scope MCP 登録に移行したため撤去
+# (2026-06-17)。Serena MCP は ~/.claude.json の mcpServers で --project-from-cwd 起動。
 _MCP_GUARD_MSG=""
-_MCP_TEMPLATE="${_CWD}/claude-code/templates/.mcp.json.template"
-if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}/.git" ]] && [[ -f "${_MCP_TEMPLATE}" ]] && [[ ! -f "${_CWD}/.mcp.json" ]]; then
-    # shellcheck source=../lib/mcp-installer.sh
-    source "${SCRIPT_DIR}/../lib/mcp-installer.sh" 2>/dev/null || true
-    if declare -f ensure_project_mcp_json >/dev/null 2>&1; then
-        ensure_project_mcp_json "${_CWD}" "${_MCP_TEMPLATE}"
-        case $? in
-            0) _MCP_GUARD_MSG="${ICON_SUCCESS} .mcp.json 不在を検知し自動再生成 (Serena MCP は次回起動時に復元)\n" ;;
-            2) _MCP_GUARD_MSG="${ICON_WARNING} .mcp.json 不在 + Serena path 未検出 (SERENA_PATH を設定して再生成)\n" ;;
-        esac
-    fi
-fi
 
 # --- Worktree Memory Symlink（バックグラウンド実行）---
 # symlink 操作のみで出力に依存しないため非同期化
@@ -255,7 +239,7 @@ if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]] || [[ "$
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
-_AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__activate_project\` を project=\"${_CWD}\" で呼び出す\n2. \`mcp__serena__list_memories\` でメモリ一覧を確認する\n3. 関連メモリがあれば読み込む\n\n**追加推奨**: コーディング作業を開始する場合、最初の編集前に \`/load-guidelines\` を実行\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否"
+_AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__list_memories\` でメモリ一覧を確認する (project は --project-from-cwd で自動 activate 済)\n2. 関連メモリがあれば読み込む\n\n**追加推奨**: コーディング作業を開始する場合、最初の編集前に \`/load-guidelines\` を実行\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否"
 _AC_PREFIX=""
 if [[ -n "${_CWD_GUARD_MSG}" ]]; then
     _AC_PREFIX+="${_CWD_GUARD_MSG}"

@@ -159,17 +159,30 @@ cd ai-tools && ./claude-code/install.sh
 scp ~/.claude/references-private/private-name-list.txt new-pc:~/.claude/references-private/private-name-list.txt
 ```
 
+MCP server (Serena 等) も PC ローカル登録のため新 PC で別途 setup する。次節「MCP Servers」参照。
+
 ### MCP Servers
 
 **Serena (required)**
 
+clone Serena 本体。
+
 ```bash
-cd ~ && git clone https://github.com/clippy-ai/serena.git
+mkdir -p ~/ghq/github.com/oraios
+cd ~/ghq/github.com/oraios
+git clone https://github.com/oraios/serena.git
 cd serena && uv sync
-echo "SERENA_PATH=$HOME/serena" >> ~/.env
 ```
 
-After running `install.sh`, `.mcp.json` is auto-generated from `templates/.mcp.json.template` (`SERENA_PATH` / `PROJECT_ROOT` expanded).
+Claude Code に user-scope で MCP 登録 (1 PC 1 回、`~/.claude.json` に書き込まれる)。
+
+```bash
+claude mcp add serena -s user -- \
+  uv run --directory ~/ghq/github.com/oraios/serena \
+  serena start-mcp-server --context claude-code --project-from-cwd
+```
+
+確認: `claude mcp list` で `serena` が出れば OK。`--project-from-cwd` で session 起動時の cwd を自動 activate するため、project ごとの `.mcp.json` 配置は不要。
 
 **Codex (required)**
 
