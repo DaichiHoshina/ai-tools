@@ -374,13 +374,9 @@ fi
 
 # 長いプロンプトは検出処理を先頭2000文字に制限（線形スキャンのコスト削減）
 # bash 5.0+ の ${var:0:N} は LC_CTYPE が UTF-8 ならマルチバイト文字数基準で切り出す。
-# C/POSIX ロケール時はバイト基準になるため、iconv で不正バイト列を除去して下流に渡す。
+# 入力上限 1MB は L32 で先行 check 済 / Claude Code 正常経路で不正バイト列混入は非現実的のため iconv 経路は撤去 (>2000chars -26ms)
 if (( ${#prompt} > 2000 )); then
   prompt_lower="${prompt:0:2000}"
-  # UTF-8 境界で不完全なバイト列が混入した場合に備えてサニタイズ（iconv 不在時はスキップ）
-  if command -v iconv &>/dev/null; then
-    prompt_lower=$(printf '%s' "$prompt_lower" | iconv -f utf-8 -t utf-8 -c 2>/dev/null || printf '%s' "$prompt_lower")
-  fi
   prompt_lower="${prompt_lower,,}"
 else
   prompt_lower="${prompt,,}"  # bash組み込みで小文字化（tr fork削減）
@@ -496,14 +492,21 @@ _AI_TERMS_CTX=""
 if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
   _PRINCIPLES_PATH="${HOME}/.claude/guidelines/writing/PRINCIPLES.md"
   if [[ -f "${_PRINCIPLES_PATH}" ]]; then
-    # AI定型語 (chat応答禁止)
-    _AI_TERMS_LINE=$(grep -m1 '^\*\*AI定型語\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
-    # カタカナ造語 (chat応答禁止)
-    _KATAKANA_LINE=$(grep -m1 '^\*\*カタカナ造語禁止\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
-    # 内部jargon (外向き初出和訳必須)
-    _JARGON_LINE=$(grep -m1 '^\*\*内部jargon初出和訳必須\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
-    # 略語 (外向き初出展開必須)
-    _ABBREV_LINE=$(grep -m1 '^\*\*略語初出展開必須\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
+    # PRINCIPLES.md から 5 key を 1-pass bash read で抽出 (旧: grep ×5 fork = -22ms)
+    _AI_TERMS_LINE=""
+    _KATAKANA_LINE=""
+    _JARGON_LINE=""
+    _ABBREV_LINE=""
+    _SOFTBLOCK_LINE=""
+    while IFS= read -r _pl; do
+      case "$_pl" in
+        '**AI定型語**:'*)               [[ -z "$_AI_TERMS_LINE" ]] && _AI_TERMS_LINE="$_pl" ;;
+        '**カタカナ造語禁止**:'*)       [[ -z "$_KATAKANA_LINE" ]] && _KATAKANA_LINE="$_pl" ;;
+        '**内部jargon初出和訳必須**:'*) [[ -z "$_JARGON_LINE" ]] && _JARGON_LINE="$_pl" ;;
+        '**略語初出展開必須**:'*)       [[ -z "$_ABBREV_LINE" ]] && _ABBREV_LINE="$_pl" ;;
+        '**断定語 (warn-only)**:'*)     [[ -z "$_SOFTBLOCK_LINE" ]] && _SOFTBLOCK_LINE="$_pl" ;;
+      esac
+    done < "${_PRINCIPLES_PATH}"
 
     # chat応答向け: AI定型語のみ全列挙 + カタカナ造語は参照形式 (token 節約)
     _CHAT_PARTS=""
@@ -549,7 +552,7 @@ ${_DOC_CTX}"
     fi
 
     # 断定語 (warn-only) hint: commit message では正当用法、chat 応答での AI 確定表現に注意喚起のみ
-    _SOFTBLOCK_LINE=$(grep -m1 '^\*\*断定語 (warn-only)\*\*:' "${_PRINCIPLES_PATH}" 2>/dev/null || true)
+    # _SOFTBLOCK_LINE は冒頭 1-pass read で取得済 (旧: grep ×5 を 1-pass 化)
     if [[ -n "${_SOFTBLOCK_LINE}" ]]; then
       _SOFTBLOCK_TERMS=$(printf '%s' "${_SOFTBLOCK_LINE}" | sed 's/^\*\*断定語 (warn-only)\*\*: //')
       _SOFTBLOCK_CTX="[断定語注意 (warn-only)] 以下は外向き prose では慎重に使用 (commit subject では許可): ${_SOFTBLOCK_TERMS}"
