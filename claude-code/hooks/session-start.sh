@@ -21,6 +21,14 @@ source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 # Nerd Fonts icons
 # ICON_* は hook-utils.sh で定義済み
 
+# stat コマンドの mtime フラグを先頭で 1 回判定（macOS: -f%m / GNU: -c%Y）
+# 各キャッシュ age チェックで dual call していた失敗 fork を排除する
+if stat -c%Y /dev/null >/dev/null 2>&1; then
+    _SS_STAT_FLAG="-c%Y"
+else
+    _SS_STAT_FLAG="-f%m"
+fi
+
 # jq前提条件チェック
 require_jq
 
@@ -31,6 +39,17 @@ _SS_PROJECT=$(basename "${_CWD:-.}")
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
 printf -v _SS_DATE_TODAY '%(%Y%m%d)T' -1
 
+# git 状態を 1 回だけ取得してキャッシュ（statusline marker + session title ブロックで再利用）
+# git fork を複数箇所で呼ぶのを防ぎ、全体で 1 回に抑える
+_SS_IS_GIT=false
+_SS_GIT_BRANCH=""
+if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]]; then
+    if git -C "${_CWD}" rev-parse --git-dir >/dev/null 2>&1; then
+        _SS_IS_GIT=true
+        _SS_GIT_BRANCH=$(git -C "${_CWD}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    fi
+fi
+
 # ====================================
 # statusline マーカー初期化
 # ====================================
@@ -40,7 +59,7 @@ printf -v _SS_DATE_TODAY '%(%Y%m%d)T' -1
 # （例: 同セッションで一時的 cd した後、cd 含まない Bash が続いてマーカーが
 # 古いままになるケースの再発防止は別途必要、ここでは session 境界のみ対処）。
 if [[ -n "${_SS_SESSION_ID}" && "${_SS_SESSION_ID}" != "unknown" && -n "${_CWD:-}" && -d "${_CWD:-}" ]]; then
-  if git -C "${_CWD}" rev-parse --git-dir >/dev/null 2>&1; then
+  if [[ "${_SS_IS_GIT}" == "true" ]]; then
     _SS_ABS=$(cd "${_CWD}" && pwd)
     echo "${_SS_ABS}" > "/tmp/claude-wt-${_SS_SESSION_ID}-${_SS_DATE_TODAY}"
   fi
@@ -57,7 +76,7 @@ _SETTINGS_FILE="${HOME}/.claude/settings.json"
 # キャッシュが24時間以内なら再利用
 _NEED_DIAG=true
 if [[ -f "${_DIAG_CACHE}" ]]; then
-  _CACHE_AGE=$(( EPOCHSECONDS - $(stat -c%Y "${_DIAG_CACHE}" 2>/dev/null || stat -f%m "${_DIAG_CACHE}" 2>/dev/null || echo 0) ))
+  _CACHE_AGE=$(( EPOCHSECONDS - $(stat ${_SS_STAT_FLAG} "${_DIAG_CACHE}" 2>/dev/null || echo 0) ))
   if [[ ${_CACHE_AGE} -lt 86400 ]]; then
     _DIAG_MSG=$(<"${_DIAG_CACHE}")
     _NEED_DIAG=false
@@ -119,7 +138,7 @@ if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
   _CWD_CACHE="${HOME}/.claude/cache/cwd-multi-repo-${_CWD_SAFE}.cache"
   _CWD_CACHE_HIT=false
   if [[ -f "${_CWD_CACHE}" ]]; then
-    _CWD_CACHE_AGE=$(( EPOCHSECONDS - $(stat -c%Y "${_CWD_CACHE}" 2>/dev/null || stat -f%m "${_CWD_CACHE}" 2>/dev/null || echo 0) ))
+    _CWD_CACHE_AGE=$(( EPOCHSECONDS - $(stat ${_SS_STAT_FLAG} "${_CWD_CACHE}" 2>/dev/null || echo 0) ))
     if [[ ${_CWD_CACHE_AGE} -lt 3600 ]]; then
       _CWD_GUARD_MSG=$(<"${_CWD_CACHE}")
       _CWD_CACHE_HIT=true
@@ -167,7 +186,7 @@ _SS_PLUGIN_CACHE="${HOME}/.claude/cache/plugin-count.cache"
 _SS_PLUGIN_COUNT=0
 _SS_PLUGIN_CACHE_HIT=false
 if [[ -f "${_SS_PLUGIN_CACHE}" ]]; then
-  _SS_PLUGIN_CACHE_AGE=$(( EPOCHSECONDS - $(stat -c%Y "${_SS_PLUGIN_CACHE}" 2>/dev/null || stat -f%m "${_SS_PLUGIN_CACHE}" 2>/dev/null || echo 0) ))
+  _SS_PLUGIN_CACHE_AGE=$(( EPOCHSECONDS - $(stat ${_SS_STAT_FLAG} "${_SS_PLUGIN_CACHE}" 2>/dev/null || echo 0) ))
   if [[ ${_SS_PLUGIN_CACHE_AGE} -lt 86400 ]]; then
     _SS_PLUGIN_COUNT=$(<"${_SS_PLUGIN_CACHE}")
     _SS_PLUGIN_CACHE_HIT=true
@@ -205,9 +224,9 @@ _COLOR_PARSED_CACHE="${HOME}/.claude/cache/dir-colors-parsed.cache"
 _SESSION_COLOR="default"
 if [[ -f "${_COLOR_CONFIG}" ]]; then
     _COLOR_DATA=""
-    _COLOR_CONFIG_MTIME=$(stat -c%Y "${_COLOR_CONFIG}" 2>/dev/null || stat -f%m "${_COLOR_CONFIG}" 2>/dev/null || echo 0)
+    _COLOR_CONFIG_MTIME=$(stat ${_SS_STAT_FLAG} "${_COLOR_CONFIG}" 2>/dev/null || echo 0)
     if [[ -f "${_COLOR_PARSED_CACHE}" ]]; then
-        _COLOR_CACHE_MTIME=$(stat -c%Y "${_COLOR_PARSED_CACHE}" 2>/dev/null || stat -f%m "${_COLOR_PARSED_CACHE}" 2>/dev/null || echo 0)
+        _COLOR_CACHE_MTIME=$(stat ${_SS_STAT_FLAG} "${_COLOR_PARSED_CACHE}" 2>/dev/null || echo 0)
         if [[ ${_COLOR_CACHE_MTIME} -ge ${_COLOR_CONFIG_MTIME} ]]; then
             _COLOR_DATA=$(<"${_COLOR_PARSED_CACHE}")
         fi
@@ -256,7 +275,9 @@ _PROMOTE_STATE_DIR="${HOME}/.claude/state"
 _MEMORY_INDEX=""
 _CWD_SLUG=""
 if [[ -n "${_CWD:-}" ]]; then
-    _CWD_SLUG=$(printf '%s' "${_CWD}" | sed 's|[/.]|-|g')
+    # sed fork 削減: bash parameter expansion で / と . を - に置換
+    _CWD_SLUG="${_CWD//\//-}"
+    _CWD_SLUG="${_CWD_SLUG//./-}"
     _MEMORY_INDEX="${HOME}/.claude/projects/${_CWD_SLUG}/memory/MEMORY.md"
     [[ -f "${_MEMORY_INDEX}" ]] || _MEMORY_INDEX=""
 fi
@@ -300,10 +321,10 @@ fi
 _SESSION_TITLE=""
 if [[ -n "${_CWD:-}" && -d "${_CWD:-}" ]]; then
     _REPO_NAME=$(basename "${_CWD}")
-    if git -C "${_CWD}" rev-parse --git-dir >/dev/null 2>&1; then
-        _GIT_BRANCH=$(git -C "${_CWD}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-        if [[ -n "${_GIT_BRANCH}" ]]; then
-            _SESSION_TITLE="${_REPO_NAME} @ ${_GIT_BRANCH}"
+    # _SS_IS_GIT / _SS_GIT_BRANCH は冒頭で取得済み（git fork 再実行なし）
+    if [[ "${_SS_IS_GIT}" == "true" ]]; then
+        if [[ -n "${_SS_GIT_BRANCH}" ]]; then
+            _SESSION_TITLE="${_REPO_NAME} @ ${_SS_GIT_BRANCH}"
         else
             _SESSION_TITLE="${_REPO_NAME}"
         fi
