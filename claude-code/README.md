@@ -80,7 +80,7 @@ Most skills are **auto-selected**. No explicit invocation needed. `UserPromptSub
 | Review | comprehensive-review / uiux-review / ui-skills |
 | Development | backend-dev / react-best-practices / api-design / clean-architecture-ddd / grpc-protobuf |
 | Infrastructure | container-ops / terraform / microservices-monorepo |
-| Utilities | load-guidelines / cleanup-enforcement / mcp-setup-guide / session-mode / context7 / data-analysis / techdebt / incident-response / root-cause / architecture-diagram |
+| Utilities | load-guidelines / cleanup-enforcement / session-mode / context7 / data-analysis / techdebt / incident-response / root-cause / architecture-diagram |
 
 ### Recommended Combinations
 
