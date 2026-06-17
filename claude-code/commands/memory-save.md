@@ -40,6 +40,7 @@ metadata:
 | (none) | auto-name (`work-context-YYYYMMDD-<topic>`) | `/memory-save` |
 | `<name>` | specify memory name | `/memory-save auth-refactor-progress` |
 | `clear` | save (auto-name) + `/clear` 直前準備: 保存後 `/reload <name>` を clip (`pbcopy`) にコピーし、次セッションへの貼り付け再開を準備する | `/memory-save clear` |
+| `exit` | save (auto-name) + タスク終了案内: 保存先 path と「次セッションで `/reload <name>` で復元可」のみ提示。clip コピー不要 (CLI を `exit` で抜けて別タスク開始想定) | `/memory-save exit` |
 
 ## `clear` 引数の追加処理
 
@@ -51,6 +52,15 @@ metadata:
 4. `/clear` 自体は user が手動実行 (自発的に発火しない)
 
 pbcopy 不在 (Linux 等) の場合は `xclip -selection clipboard` → `wl-copy` の順で fallback、いずれもなければ chat に literal を出力して user に手動コピー案内。
+
+## `exit` 引数の追加処理
+
+`$ARGUMENTS == "exit"` の時のみ、保存完了後に以下を実行する。タスク単位の clean exit (CLI を `exit` で抜ける) 想定なので、clip コピー / 続きセッション準備は行わない。
+
+1. 保存した memory file の絶対 path を chat に提示
+2. 「次セッションで復元したい場合は `/reload <name>`」とだけ案内 (実行しない)
+3. CLI の `exit` 自体は user が手動実行 (自発的に発火しない)
+4. systemMessage / additionalContext を汚さず、簡潔 1-2 行で報告完了
 
 ## When to use
 
