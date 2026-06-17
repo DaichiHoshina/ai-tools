@@ -37,17 +37,16 @@ if [ -f "${STATE_FILE}" ]; then
 fi
 
 # --- 静的 context 収集 (file system のみ、MCP 不要) -------------------
+# git diff --name-only は HEAD~3..HEAD 分析コストが高いため省略 (latency 最適化)
 _TMP_DIR=$(mktemp -d)
 PROJECT_DIR=$(pwd)
-git branch --show-current      >"${_TMP_DIR}/branch"    2>/dev/null &
-git status --short             >"${_TMP_DIR}/status"    2>/dev/null &
-git log --oneline -5           >"${_TMP_DIR}/log"       2>/dev/null &
-git diff --name-only HEAD~3..HEAD >"${_TMP_DIR}/recent" 2>/dev/null &
+git branch --show-current >"${_TMP_DIR}/branch" 2>/dev/null &
+git status --short        >"${_TMP_DIR}/status" 2>/dev/null &
+git log --oneline -5      >"${_TMP_DIR}/log"    2>/dev/null &
 wait
 GIT_BRANCH=$(cat "${_TMP_DIR}/branch"  2>/dev/null || echo "unknown")
 GIT_STATUS=$(head -20 "${_TMP_DIR}/status" 2>/dev/null || echo "")
 GIT_LOG=$(cat "${_TMP_DIR}/log"    2>/dev/null || echo "")
-RECENT_FILES=$(head -15 "${_TMP_DIR}/recent" 2>/dev/null || echo "")
 rm -rf "${_TMP_DIR}"
 
 # --- compact-restore-* の最新 file 探索 -------------------------------
@@ -59,9 +58,11 @@ if [ -d "${MEMORY_DIR}" ]; then
     [ -f "${CANDIDATE}" ] && RESTORE_FILE="${CANDIDATE}"
   fi
   if [ -z "${RESTORE_FILE}" ]; then
-    # find で最新 compact-restore-*.md を取得 (BSD/GNU 両対応の sort)
-    RESTORE_FILE=$(find "${MEMORY_DIR}" -maxdepth 1 -name 'compact-restore-*.md' -type f 2>/dev/null \
-      | sort -r | head -1)
+    # bash glob で最新 compact-restore-*.md を取得 (find fork 削減)
+    local_files=("${MEMORY_DIR}"/compact-restore-*.md)
+    if [[ -e "${local_files[0]}" ]]; then
+      RESTORE_FILE=$(printf '%s\n' "${local_files[@]}" | sort -r | head -1)
+    fi
   fi
 fi
 
@@ -84,10 +85,6 @@ ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **ブランチ**: ${GIT_BRANCH}${NL}"
 
 if [ -n "${GIT_STATUS}" ]; then
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **未コミット変更**:${NL}\`\`\`${NL}${GIT_STATUS}${NL}\`\`\`${NL}"
-fi
-
-if [ -n "${RECENT_FILES}" ]; then
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}- **直近変更 file**:${NL}\`\`\`${NL}${RECENT_FILES}${NL}\`\`\`${NL}"
 fi
 
 if [ -n "${GIT_LOG}" ]; then
