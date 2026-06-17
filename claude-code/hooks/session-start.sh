@@ -145,7 +145,6 @@ fi
 
 # NOTE: project-scope .mcp.json 自動再生成は user-scope MCP 登録に移行したため撤去
 # (2026-06-17)。Serena MCP は ~/.claude.json の mcpServers で --project-from-cwd 起動。
-_MCP_GUARD_MSG=""
 
 # --- Worktree Memory Symlink（バックグラウンド実行）---
 # symlink 操作のみで出力に依存しないため非同期化
@@ -235,7 +234,7 @@ fi
 
 # --- 出力組み立て ---
 _SM_PREFIX="${ICON_SUCCESS}"
-if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]] || [[ "${_MCP_GUARD_MSG}" == *"${ICON_WARNING}"* ]]; then
+if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
@@ -243,9 +242,6 @@ _AC_BASE="**自動実行（必須）**: 以下を順に実行してください\
 _AC_PREFIX=""
 if [[ -n "${_CWD_GUARD_MSG}" ]]; then
     _AC_PREFIX+="${_CWD_GUARD_MSG}"
-fi
-if [[ -n "${_MCP_GUARD_MSG}" ]]; then
-    _AC_PREFIX+="${_MCP_GUARD_MSG}"
 fi
 if [[ -n "${_DIAG_MSG}" ]]; then
     _AC_PREFIX+="${_DIAG_MSG}"

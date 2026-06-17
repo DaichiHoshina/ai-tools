@@ -41,7 +41,7 @@ Context management / compaction tips for Claude Code operation. Reference when s
 | `/resume` | Resume past session |
 | `/rename` | Rename session (no arg → auto-generate) |
 | `mcp__serena__onboarding` | Initialize new project (replaces deprecated `/serenaオンボーディング`) |
-| `/memory-clean` | Auto-memory 整理 + Serena symbol DB refresh |
+| `/memory-clean` | Auto-memory 整理 (default dry-run、Serena symbol DB refresh は `/serena-update-fix` で独立実行) |
 | `/reload` | Recovery after compact |
 | `/doctor` | Check environment |
 | `/status` | Check settings |
