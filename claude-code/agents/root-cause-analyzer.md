@@ -74,7 +74,7 @@ Level {N}: Why {prior conclusion}?
   Next: Why {conclusion}?
 ```
 
-**Confidence calculation** (累積、85%+ で trusted):
+**Confidence calculation** (cumulative; trusted at 85%+):
 
 | Source | weight |
 |---|---|
@@ -103,15 +103,15 @@ Categorize analysis results:
 
 ### Step 4: Propose fix strategies
 
-3-level 戦略を提示する。canonical 定義: `skills/root-cause/skill.md`。
+Present 3-level strategies. Canonical definition: `skills/root-cause/skill.md`.
 
-| Level | 内容 | 例 | 再発リスク | 採用条件 |
+| Level | Content | Example | Recurrence risk | When to use |
 |---|---|---|---|---|
-| **L1** Workaround | 症状抑止の最小修正 | null check / try-catch 追加 | 高 | 緊急 prod incident のみ。TODO で root-cause を必ず参照 |
-| **L2** Partial | 直接原因のみ修正、類似は残存 | 単一 endpoint への validation 追加 | 中 | 時間制約 |
-| **L3** Root (推奨) | 構造的原因を除去 | 全 endpoint への validation layer 追加 | 低 | 可能な限り優先 |
+| **L1** Workaround | Minimal fix to suppress symptom | null check / try-catch | High | Emergency prod incident only. Always reference root-cause in TODO |
+| **L2** Partial | Fix direct cause only; similar issues remain | Add validation to single endpoint | Medium | Time constraint |
+| **L3** Root (recommended) | Remove structural cause | Add validation layer to all endpoints | Low | Prioritize when possible |
 
-各戦略を 4 軸で評価する: **effort** (作業量) / **risk** (新規 bug 混入リスク) / **prevention** (再発防止効果) / **scope** (影響範囲)。
+Evaluate each strategy on 4 axes: **effort** / **risk** (new bug introduction) / **prevention** (recurrence effect) / **scope** (impact range).
 
 ### Step 5: Detect similar issues
 
@@ -189,6 +189,6 @@ Use Serena MCP for all code ops. Use-case mapping:
 | Declaration/definition location | `find_declaration` (v1.3.0) |
 | Type errors, LSP diagnostics | `get_diagnostics_for_file` / `_for_symbol` (v1.3.0) |
 | Pattern cross-codebase search | `search_for_pattern` |
-| Save result | Return draft to parent (readonly agent、parent persists to auto-memory) |
+| Save result | Return draft to parent (readonly agent — parent persists to auto-memory) |
 
 See per-Step examples for detail.

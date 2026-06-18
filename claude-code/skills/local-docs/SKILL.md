@@ -5,83 +5,101 @@ description: local-docs リポジトリの doc をテンプレ準拠で新規作
 
 # local-docs
 
-local-docs (AI 支援作業のローカルナレッジベース) に doc を作る / 更新する。**テンプレ準拠が必須**。固有の規約 (正規 type / 集約マッピング / 置き場) は local-docs 側の `CLAUDE.md` と `STRUCTURE.md` を**一次情報源**として読む。この skill 本体には type 一覧を複製しない (No Derived Literals)。
+Create or update docs in local-docs (AI-assisted local knowledge base).
+**Template compliance is required.**
+Read the local-docs `CLAUDE.md` and `STRUCTURE.md` as the primary source for canonical types,
+aggregation mappings, and placement rules. Do not duplicate type lists in this skill (No Derived Literals).
 
-## 起動判定 (重要)
+## Activation criteria
 
-**local-docs 配下 (`projects/` / `domain-specs/` / `tool-guides/` / `operations/` 配下) に新規 HTML を作る場合、コマンド明示の有無に関わらず本 skill の手順を必ず通す**。以下のいずれかが当てはまれば該当する:
+**When creating new HTML under local-docs (`projects/` / `domain-specs/` / `tool-guides/` / `operations/`),
+always follow this skill's procedure regardless of whether the command was explicit.**
+Applies if any of the following match:
 
-- ユーザ発話に「local-docs」「ナレッジ」「runbook」「RCA」「postmortem」「spec」「調査ログ」「監視結果」「post-release」「dashboard 確認」「5xx 分析」「インシデント記録」「試験結果」「session 跨ぎ」「試行錯誤メモ」等が含まれる
-- 出力先 path が `local-docs/` 配下 (`projects/` / `domain-specs/` / `tool-guides/` / `operations/`)
-- 拡張子が `.html` で、上記 path 配下
+- User utterance includes「local-docs」「ナレッジ」「runbook」「RCA」「postmortem」「spec」「調査ログ」「監視結果」「post-release」「dashboard 確認」「5xx 分析」「インシデント記録」「試験結果」「session 跨ぎ」「試行錯誤メモ」
+- Output path is under `local-docs/` (`projects/` / `domain-specs/` / `tool-guides/` / `operations/`)
+- Extension is `.html` under any of the above paths
 
-本 skill を起動せず `Write` でゼロから HTML を書き起こすのは**規約違反**。実例: 過去に `_templates/` を見ず scratch で `<style>` ベタ書きの doc を作り、共通 CSS / decorate / `_index/` build 全てが効かなくなった。
+Writing HTML from scratch with `Write` without invoking this skill is a **rule violation**.
+Past incident: wrote `<style>` inline without reading `_templates/`,
+breaking shared CSS / decorate / `_index/` build entirely.
 
-## 起動
+## Invocation
 
 ```
-/local-docs new {type} {topic}        # 新規作成
-/local-docs update {path}             # 既存 doc を内容更新
-/local-docs update {path} --reformat  # 既存 doc をテンプレ準拠へ整形
+/local-docs new {type} {topic}        # create new
+/local-docs update {path}             # update existing doc
+/local-docs update {path} --reformat  # reformat to template compliance
 ```
 
-サブコマンド省略時は文脈から `new` / `update` を判定する。
+When subcommand is omitted, infer `new` / `update` from context.
 
-## 前提読み込み (毎回)
+## Prerequisites (read every time)
 
-1. local-docs repo を特定する (`cd` 先 or 引数 path の repo root)。
-2. `CLAUDE.md` の「Templates」と `STRUCTURE.md` の「html 形式」「type enum」「置き場フロー」を読む。
-3. 正規 type と集約マッピングは**そこから取得**する。skill 内の記憶で代用しない。
+1. Identify the local-docs repo root (current `cd` target or the repo root derived from the argument path).
+2. Read `CLAUDE.md` section "Templates" and `STRUCTURE.md` sections "html format", "type enum", and "placement flow".
+3. Obtain canonical types and aggregation mappings from those files — do not substitute cached knowledge from this skill.
+4. Confirm the target directory exists under the correct subdirectory before copying the template.
 
-## `new {type} {topic}` — 新規作成
+## `new {type} {topic}` — create new
 
-### 1. 生成
-1. **type 判定**: topic から type を決め、揺れ呼称は CLAUDE.md のマッピングで正規 type に集約する。
-2. **置き場判定**: STRUCTURE.md の配置フローに従い保存先ディレクトリを決める。
-3. **テンプレ複製 (Bash `cp` 必須)**: `cp _templates/{type}.html {置き場}/{name}.html`。**`Write` でゼロから HTML を書かない**。テンプレを書写・転記してもダメ (style / script の改変防止)。`cp` で複製してから `Edit` / `Read` で中身だけ差し替える。
-4. **中身を埋める (Edit のみ)**: 骨格 h2・`<style id="local-docs-style">`・`<script id="local-docs-script">` は**そのまま使う**。`{...}` placeholder を `Edit` で置換し、本文を `Edit` で追記する。`Write` で上書きすると script/style が失われる。骨格 h2 は原則維持 (doc 固有の追加 h2 は可)。
-5. **metadata**: 冒頭コメント `<!-- type: ... -->` `<!-- status: ... -->` を正規値に直す。`last-updated` は書かない (廃止規約)。
-6. **title**: STRUCTURE.md の Title Rules に従い短く、親コンテキストの繰り返しを避ける。
+### 1. Generate
+1. **Type determination**: determine type from topic; normalize variant names to canonical type via `CLAUDE.md` mapping.
+2. **Placement determination**: follow `STRUCTURE.md` placement flow to decide the target directory.
+3. **Template copy (Bash `cp` required)**: `cp _templates/{type}.html {dir}/{name}.html`.
+   **Do not write HTML from scratch with `Write`.** Transcribing or copying the template text is also forbidden
+   (prevents style/script drift). Copy with `cp`, then modify only content via `Edit`.
+4. **Fill content (Edit only)**: keep the skeleton h2, `<style id="local-docs-style">`,
+   and `<script id="local-docs-script">` intact. Replace `{...}` placeholders via `Edit` and append body
+   with `Edit`. Overwriting with `Write` destroys script/style. Keep skeleton h2 (additional doc-specific h2 is allowed).
+5. **Metadata**: fix the leading comment `<!-- type: ... -->` `<!-- status: ... -->` to canonical values. Do not write `last-updated` (deprecated).
+6. **Title**: follow `STRUCTURE.md` Title Rules — keep short, avoid repeating parent context.
 
-### 1.5. self-check (生成直後に必ず実行)
-- 生成 file 冒頭 2 行に `<!-- type: ... -->` `<!-- status: ... -->` がある
-- `<style id="local-docs-style">` を含む (decorate v4.2 が効く必須条件)
-- `<script id="local-docs-script">` を含む (TOC / hero / num badge 自動生成の必須条件)
-- 上記いずれか欠落 → 失敗。`_templates/{type}.html` から `cp` し直す。
+### 1.5. Self-check (run immediately after generation)
+- First 2 lines contain `<!-- type: ... -->` and `<!-- status: ... -->`
+- Contains `<style id="local-docs-style">` (required for decorate v4.2)
+- Contains `<script id="local-docs-script">` (required for TOC / hero / num badge auto-generation)
+- If any of the above is missing → failure. Re-copy from `_templates/{type}.html`.
 
-### 2. 磨き
-- `/jp-writing` 相当の self-check で AI 臭・冗長表現を排除する。HTML 本文の日本語を読みやすく直す。
+### 2. Polish
+Run a `/jp-writing`-equivalent self-check on the HTML body. Remove AI-like phrasing, verbose expressions, and redundant content. Body text readability should match the local-docs writing standard.
 
-### 3. 検証
-- textlint (HTML 前処理が要る場合は本文抽出してから) を通す。
-- `node _index/build.mjs` で index を再生成し exit 0 を確認する。
-- ブラウザで開いて装飾崩れがないか確認するよう案内する。
+### 3. Verify
+- Run textlint against the body text (extract body first if HTML pre-processing is needed).
+- Run `node _index/build.mjs` and confirm exit 0. A non-zero exit means the index is broken; fix before proceeding.
+- Instruct the user to open the doc in a browser and confirm no style or layout breakage.
 
-## `update {path}` — 既存 doc 更新
+## `update {path}` — update existing
 
-mode を判定する: `--reformat` 明示時、または旧構造 (手書き toc / tldr / `local-docs-decorate` 不在 / 旧 style) を検出した時は reformat を提案する。それ以外はデフォルト (内容更新)。
+Determine the mode before starting: if `--reformat` is explicit, or if a legacy structure is detected (manual toc / tldr section / missing `local-docs-decorate` / old inline style), propose reformat to the user. Otherwise use the default content-update path.
 
-### デフォルト: 内容更新
-1. 既存 doc を読み、本文を追記 / 書き換える。
-2. 骨格・style・script は触らない (テンプレ準拠が崩れていなければ維持)。
-3. 磨き → 検証 (上記と同じ)。
+### Default: content update
+1. Read the existing doc; append or rewrite body content.
+2. Do not touch skeleton / style / script (preserve template compliance if intact).
+3. Polish → verify (same as above).
 
-### `--reformat`: テンプレ準拠化
-1. doc の type を判定 (冒頭 metadata or 内容から)。揺れは正規 type に集約する。
-2. 最新 `_templates/{type}.html` の骨格 h2・`<style>`・`<script>` (decorate v4.1) に揃える。
-3. 旧構造 (手書き toc / tldr / 旧 style) を撤去する。**本文は保持**する。
-4. metadata を必須セット (`type` / `status`) に直す。`last-updated` があれば削除する。
-5. 検証 (上記と同じ)。
+### `--reformat`: template compliance
+1. Determine doc type (from leading metadata or content). Normalize variants to canonical type.
+2. Align skeleton h2, `<style>`, and `<script>` (decorate v4.1) to the latest `_templates/{type}.html`.
+3. Remove legacy structure (manual toc / tldr / old style). **Preserve body content.**
+4. Fix metadata to required set (`type` / `status`). Delete `last-updated` if present.
+5. Verify (same as above).
 
-## 制約
+## Constraints
 
-- **public-repo**: この skill は public 管理。固有名 (社内サービス名 / 識別子) を skill 本体に書かない。固有情報は local-docs 側 `CLAUDE.md` を参照させる。
-- **`.md` 新規作成は禁止**。新規 doc は必ず `_templates/{type}.html` 由来の `.html`。root meta 5 ファイルと既存 `.md` はそのまま維持する。
-- **テンプレの style / script を改変しない**。doc 側は中身だけ埋める。
-- **`Write` 直書き禁止 (local-docs 配下の新規 `.html`)**。`Bash cp _templates/{type}.html ...` でテンプレ複製してから `Edit` で本文を埋める。`Write` でゼロから HTML を組み立てると共通 CSS / decorate / `_index/` build 全てが効かなくなる (実害発生済み)。
+- **public-repo**: this skill is publicly managed. Do not embed proprietary names (internal service names /
+  identifiers) in this skill file itself. Reference proprietary information via local-docs `CLAUDE.md` instead.
+- **No new `.md` files**. All new docs must be `.html` derived from `_templates/{type}.html`.
+  Leave existing root meta 5 files and existing `.md` files untouched.
+- **Do not modify template style / script**. The `<style>` and `<script>` blocks in templates are
+  shared infrastructure; only fill the doc body.
+- **No `Write` direct creation (new `.html` under local-docs)**. Always run
+  `Bash cp _templates/{type}.html ...` first, then fill body with `Edit`.
+  Writing new `.html` from scratch with `Write` breaks shared CSS, decorate,
+  and `_index/` build pipeline (confirmed past damage).
 
-## 関連
+## Related
 
-- local-docs `CLAUDE.md` — 正規 type / 集約マッピング (一次情報)
-- local-docs `STRUCTURE.md` — 置き場フロー / type enum / Title Rules
-- local-docs `_templates/README.html` — テンプレ一覧と使い方
+- local-docs `CLAUDE.md` — canonical type / aggregation mapping (primary source)
+- local-docs `STRUCTURE.md` — placement flow / type enum / Title Rules
+- local-docs `_templates/README.html` — template list and usage

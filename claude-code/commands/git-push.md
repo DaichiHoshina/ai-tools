@@ -33,7 +33,7 @@ Execute commit → push → PR/MR creation in single command.
 | `--branch <name>` | Create branch → push → MR/PR |
 | `--draft` | Draft PR/MR |
 | `-m "msg"` | Specify commit message |
-| `--auto-review` | Auto-launch `/code-review:code-review` + `coderabbit:code-review` parallel post-PR create (**opt-in, pr mode only**). CodeRabbit calls external API・billing impact |
+| `--auto-review` | Auto-launch `/code-review:code-review` + `coderabbit:code-review` parallel post-PR create (**opt-in, pr mode only**). CodeRabbit calls external API — billing impact |
 | `--no-impl-notes` | Skip IMPL_NOTES MERGED.md consumption for PR body draft (pr mode only). Default behavior: see pr mode step 4 |
 
 ## Flow
@@ -44,12 +44,12 @@ Execute commit → push → PR/MR creation in single command.
 2. **Writing memory pre-check** (required before commit msg / PR body draft): check `writing_failure_*` via `mcp__serena__list_memories`; read relevant entries to avoid anti-patterns. ai-tools project auto-memory also at `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/writing_failure_*` (link-overdose / compound-noun-stack etc.)
 3. Uncommitted changes present → analyze diff → generate Conventional Commits msg → confirm w/ user → commit
 3.5. **writing check (commit message)**: NG word check on commit msg draft **at generation time** (before confirm).
-   - grep against `guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md)
-   - Hit ≥1 → delete AI定型語 or replace with concrete expression; append 1-sentence evidence for 要根拠語; rewrite and re-check (max 3 loops)
+   - grep against `guidelines/writing/PRINCIPLES.md` banned AI phrases + assertion-required terms (source: PRINCIPLES.md)
+   - Hit ≥1 → delete banned phrase or replace with concrete expression; append 1-sentence evidence for assertion-required terms; rewrite and re-check (max 3 loops)
    - After 3 loops with remaining hits → present remaining words, ask user to confirm continuation
-   - **Note**: hook (pre-tool-use.sh) blocks AI定型語 at `git commit` with exit 2. This pre-check proactively avoids the reactive block→rewrite loop
-   - **Pre-generation recall**: recall `**難読漢語 (block)**` / `**非日常英語 (block)**` lists from PRINCIPLES.md before writing; replace with plain Japanese / plain English. E.g.: 鑑みる→踏まえる、喫緊→急ぎ、leverage→使う
-   - **Scope**: applies to **all paths generating commit messages**, regardless of `/git-push` or direct `git commit`. Today's block example: 「影響なし」(AI定型語)
+   - **Note**: hook (pre-tool-use.sh) blocks banned AI phrases at `git commit` with exit 2. This pre-check avoids the reactive block→rewrite loop
+   - **Pre-generation recall**: recall `**hard-to-read kanji (block)**` / `**uncommon English (block)**` lists from PRINCIPLES.md before writing; replace with plain alternatives
+   - **Scope**: applies to **all paths generating commit messages**, regardless of `/git-push` or direct `git commit`
 
 ### main mode
 
@@ -69,7 +69,7 @@ Execute commit → push → PR/MR creation in single command.
    - Launch `coderabbit:code-review` w/ `Bash run_in_background:true` → get bash_id_B
    - Monitor completion: sequentially get bash_id_A / bash_id_B w/ `BashOutput`
    - Success: display to user PR comment posted
-   - Fail: display tool name・exit code・stderr tail 10 lines (PR create itself success)
+   - Fail: display tool name, exit code, stderr tail 10 lines (PR create itself succeeded)
    - GitLab/`glab` env: skip even if `--auto-review` specified (plugin unsupported, warn display)
 
 ### branch mode
@@ -107,7 +107,7 @@ Conventional Commits format: `<type>(<scope>): <subject>`
 <areas to check / decisions needed from reviewer>
 ```
 
-**Short PR description (< 3 H3s or < 400 words)**: pass `ai-output.md` PREP 3 + PRINCIPLES.md "4 questions before writing" + "6-item pre-output checklist" + **Web 可読性 +4 項目** (1 文 60 字 / 主張型 heading / 段落 3-4 行 / 太字 scan 化、`PRINCIPLES.md` `## Web 可読性` 参照). Long PR description (Design Doc scale): long-form-doc.md 4 questions + 5 principles. Decision criteria: H3 count / word count / fits 1 screen scroll.
+**Short PR description (< 3 H3s or < 400 words)**: apply `ai-output.md` PREP 3 + PRINCIPLES.md "4 questions before writing" + "6-item pre-output checklist" + **web readability +4 items** (60 chars/sentence / assertion-style headings / 3-4 line paragraphs / bold for scanability — see `PRINCIPLES.md` `## Web readability`). Long PR description (Design Doc scale): long-form-doc.md 4 questions + 5 principles. Decision criteria: H3 count / word count / fits 1 screen scroll.
 
 **Testing section style**:
 
