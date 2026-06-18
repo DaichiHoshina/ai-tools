@@ -320,11 +320,84 @@ verify_to_local_sync() {
 }
 
 # =============================================================================
+# Overwrite Guard (from-local 専用)
+# ~/.claude/ → repo 方向で repo 側に未コミット差分が残っている場合に上書きをブロックする。
+# 過去 incident: from-local 誤実行で repo の guideline 4 file が古い content に上書きされた。
+# to-local 側には適用しない (~/.claude 側の直編集は元々 wipe される明示動作)。
+# 除外: private-*/local-* prefix / test-*.sh / gh skill 管理スキル
+# =============================================================================
+
+_check_overwrite_guard() {
+    # 引数: src_dir dst_dir allow_overwrite
+    # src_dir の内容を dst_dir に上書きする前に dst_dir 側の差分を検出する。
+    local src_dir="$1" dst_dir="$2" allow_overwrite="$3"
+
+    [ "$allow_overwrite" = "true" ] && return 0
+
+    local diff_files=()
+    local item
+
+    for item in "${SYNC_ITEMS[@]}"; do
+        local src="${src_dir}/${item}"
+        local dst="${dst_dir}/${item}"
+        [ -e "$src" ] && [ -e "$dst" ] || continue
+
+        local raw_diff
+        if [ -d "$src" ]; then
+            raw_diff=$(diff -rq "$src" "$dst" 2>/dev/null | \
+                grep -v -E '/(private-|local-)' | \
+                grep -v '/test-[^/]+\.sh' || true)
+            # skills: gh skill 管理ぶんを除外
+            if [ "$item" = "skills" ] && [ -n "$raw_diff" ]; then
+                raw_diff=$(echo "$raw_diff" | while IFS= read -r line; do
+                    local sname
+                    sname=$(echo "$line" | sed -E 's|.*/skills/([^/]+)/.*|\1|')
+                    if [ -n "$sname" ]; then
+                        local sm="${dst_dir}/skills/${sname}/skill.md"
+                        local sM="${dst_dir}/skills/${sname}/SKILL.md"
+                        { [ -f "$sm" ] && has_gh_skill_metadata "$sm"; } && continue
+                        { [ -f "$sM" ] && has_gh_skill_metadata "$sM"; } && continue
+                    fi
+                    echo "$line"
+                done || true)
+            fi
+            while IFS= read -r line; do
+                [ -n "$line" ] && diff_files+=("$line")
+            done <<< "$raw_diff"
+        else
+            diff -q "$src" "$dst" > /dev/null 2>&1 || diff_files+=("$item")
+        fi
+    done
+
+    if [ ${#diff_files[@]} -eq 0 ]; then
+        return 0
+    fi
+
+    print_error "上書き保護: 同期先に未反映の差分が ${#diff_files[@]} 件あります"
+    local shown=0
+    for f in "${diff_files[@]}"; do
+        if [ $shown -lt 10 ]; then
+            echo "  $f" >&2
+            shown=$((shown + 1))
+        fi
+    done
+    local remaining=$((${#diff_files[@]} - shown))
+    [ $remaining -gt 0 ] && echo "  (他 ${remaining} 件)" >&2
+    echo "" >&2
+    echo "  差分確認: ./sync.sh diff" >&2
+    echo "  強制反映: ./sync.sh from-local --allow-overwrite" >&2
+    return 1
+}
+
+# =============================================================================
 # Sync: from-local (ローカル → リポジトリ)
 # =============================================================================
 
 sync_from_local() {
     print_header "ローカル → リポジトリ 同期"
+
+    # 上書き保護: SCRIPT_DIR (repo) に未コミット変更が残っている場合にブロック
+    _check_overwrite_guard "$CLAUDE_DIR" "$SCRIPT_DIR" "${ALLOW_OVERWRITE:-false}" || return 1
 
     # 単体ファイル同期
     local files=("VERSION" "SERENA_VERSION" "CLAUDE.md")
@@ -520,7 +593,7 @@ setup_pre_push_hook() {
 # =============================================================================
 
 usage() {
-    echo "Usage: $0 [to-local|from-local|diff] [--yes|-y] [--skip-git-check]"
+    echo "Usage: $0 [to-local|from-local|diff] [--yes|-y] [--skip-git-check] [--allow-overwrite]"
     echo ""
     echo "  to-local    リポジトリ → ~/.claude/ に反映"
     echo "  from-local  ~/.claude/ → リポジトリ に反映"
@@ -529,11 +602,13 @@ usage() {
     echo "Options:"
     echo "  --yes, -y         確認プロンプトをスキップ"
     echo "  --skip-git-check  to-local 時の origin/main 未取り込みチェックを抑制"
+    echo "  --allow-overwrite 上書き警告をスキップして強制反映（差分確認は ./sync.sh diff で）"
 }
 
 main() {
     local mode=""
     local skip_confirm=false
+    ALLOW_OVERWRITE=false
 
     # 引数パース
     while [ $# -gt 0 ]; do
@@ -543,6 +618,9 @@ main() {
                 ;;
             --skip-git-check)
                 export SKIP_GIT_CHECK=true
+                ;;
+            --allow-overwrite)
+                ALLOW_OVERWRITE=true
                 ;;
             to-local|from-local|diff)
                 mode="$1"
