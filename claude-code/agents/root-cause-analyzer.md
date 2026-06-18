@@ -74,12 +74,14 @@ Level {N}: Why {prior conclusion}?
   Next: Why {conclusion}?
 ```
 
-**Confidence calculation**:
-- Direct code confirmation: +40%
-- Test reproduction: +30%
-- Log confirmation: +20%
-- Speculation: +10%
-- 85%+ = trusted conclusion
+**Confidence calculation** (累積、85%+ で trusted):
+
+| Source | weight |
+|---|---|
+| Direct code confirmation | +40% |
+| Test reproduction | +30% |
+| Log confirmation | +20% |
+| Speculation | +10% |
 
 ### Step 3: Classify root cause
 
@@ -101,37 +103,15 @@ Categorize analysis results:
 
 ### Step 4: Propose fix strategies
 
-Generate 3-level fix strategies:
+3-level 戦略を提示する。canonical 定義: `skills/root-cause/skill.md`。
 
-#### L1: Workaround (non-recommended)
+| Level | 内容 | 例 | 再発リスク | 採用条件 |
+|---|---|---|---|---|
+| **L1** Workaround | 症状抑止の最小修正 | null check / try-catch 追加 | 高 | 緊急 prod incident のみ。TODO で root-cause を必ず参照 |
+| **L2** Partial | 直接原因のみ修正、類似は残存 | 単一 endpoint への validation 追加 | 中 | 時間制約 |
+| **L3** Root (推奨) | 構造的原因を除去 | 全 endpoint への validation layer 追加 | 低 | 可能な限り優先 |
 
-- Minimal fix to suppress symptom
-- Example: Add null check, add try-catch
-- Recurrence risk: High
-- Condition: Emergency prod incident, temp only
-- Required: TODO comment with root-cause reference
-
-#### L2: Partial fix
-
-- Fix direct cause but similar issues remain
-- Example: Add validation to single endpoint
-- Recurrence risk: Medium
-- Condition: Time constraints
-
-> Detailed strategy definition: `/root-cause` skill (`skills/root-cause/skill.md`)
-
-#### L3: Root fix (recommended)
-
-- Remove structural cause
-- Example: Add validation layer to all endpoints
-- Recurrence risk: Low
-- Condition: Prefer when possible
-
-**Evaluation axes per strategy**:
-- effort: Work required
-- risk: New bug risk from fix
-- prevention: Recurrence prevention effectiveness
-- scope: Fix impact scope
+各戦略を 4 軸で評価する: **effort** (作業量) / **risk** (新規 bug 混入リスク) / **prevention** (再発防止効果) / **scope** (影響範囲)。
 
 ### Step 5: Detect similar issues
 
