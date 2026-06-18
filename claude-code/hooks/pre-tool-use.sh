@@ -205,6 +205,16 @@ detect_rename_propagation() {
     return
   fi
 
+  # skip: generated / lock / vendored path (git grep しても意味がない)
+  case "$file_path" in
+    */node_modules/*|*/dist/*|*/build/*|*/.git/*)
+      return ;;
+    *.lock|*/package-lock.json|*/yarn.lock|*/Cargo.lock|*/go.sum|*/poetry.lock)
+      return ;;
+    *.min.js|*.min.css|*.map|*.png|*.jpg|*.jpeg|*.gif|*.svg|*.ico|*.woff|*.woff2|*.ttf|*.eot)
+      return ;;
+  esac
+
   # git root を 1 回だけ解決し helper に渡す (helper 毎の重複解決を排除)
   local search_root
   search_root=$(_resolve_git_root "$file_path")
