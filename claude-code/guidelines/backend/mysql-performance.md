@@ -340,7 +340,52 @@ Detection: `bulk-insert-correctness` check in `/review` (`skills/comprehensive-r
 
 ---
 
-## 18. References
+## 18. MySQL 8 / InnoDB 8.0 feature index
+
+Cross-references the 8.0 features scattered through earlier sections, plus capabilities not yet covered.
+
+### Already covered in this guide
+
+| Feature | Section | Note |
+|---------|---------|------|
+| INSTANT ALGORITHM (instant column add) | §13 | Try INSTANT first for ALTER TABLE |
+| LOGICAL_CLOCK parallel replication | §15 | Reduces replica lag on write-heavy workloads |
+| Partition + FK incompatibility (8.4) | §14 | InnoDB partitioned tables reject FOREIGN KEY |
+| Bulk INSERT `LastInsertId() + i` safety | §17 | Depends on consecutive AUTO_INCREMENT allocation |
+
+### Not yet covered (use as needed)
+
+| Feature | Use | Caveat |
+|---------|-----|--------|
+| **Generated Invisible Primary Key (GIPK)** (8.0.30+) | Auto-add hidden PK when `sql_generate_invisible_primary_key=ON` for tables created without one | `mysqldump --skip-generated-invisible-primary-key` for replication to pre-8.0.30 |
+| **Window functions** (`OVER`, `RANK()`, `LAG()`, `LEAD()`) | Per-group ranking, running totals, prev/next row comparison | Replaces self-join / correlated subquery patterns |
+| **Common Table Expressions** (`WITH`, recursive `WITH RECURSIVE`) | Hierarchical queries, query readability | Optimizer may materialize the CTE (check `EXPLAIN`) |
+| **Lateral derived tables** (`JOIN LATERAL`) (8.0.14+) | Top-N per group, correlated derived tables | Equivalent to PostgreSQL `LATERAL` |
+| **`SKIP LOCKED` / `NOWAIT`** on `SELECT … FOR UPDATE` | Job queue dequeue (skip rows another worker holds) | Cannot replace ordering — readers see queue out of order |
+| **JSON functions** (`JSON_TABLE`, `JSON_EXTRACT`, `->`, `->>`, `JSON_OVERLAPS`) | Semi-structured data without a schema migration | No statistics on JSON paths — index a virtual generated column for predicates |
+| **Functional indexes** (`CREATE INDEX … ON t ((LOWER(col)))`) | Index a computed expression directly | Query must use the same expression verbatim |
+| **Descending indexes** (`INDEX (col DESC)`) | Avoid `filesort` on `ORDER BY col DESC` mixed with ASC | Prior to 8.0 the `DESC` keyword was parsed but ignored |
+| **Invisible indexes** (`INDEX … INVISIBLE`) | Stage index removal: optimizer ignores it, but maintained on write | Toggle visible/invisible to A/B before `DROP INDEX` |
+| **Resource groups** | Cap CPU for analytics / batch sessions to protect OLTP | Set per-session via `SET RESOURCE GROUP …` |
+| **Hash join** (8.0.18+, default 8.0.20+) | Joins without usable index now use hash join instead of block-nested-loop | Memory-bound — large joins still need an index |
+| **`EXPLAIN ANALYZE`** | Actual execution time, row counts, loop counts | Use after `EXPLAIN FORMAT=TREE` for runtime evidence |
+| **Histogram statistics** (`ANALYZE TABLE … UPDATE HISTOGRAM`) | Help the optimizer on skewed columns lacking an index | Not auto-refreshed — re-run after large data shifts |
+
+### Removed / changed since 5.7 (migration hazards)
+
+| Item | 5.7 → 8.0 change |
+|------|------------------|
+| `utf8` charset alias | Still `utf8mb3`; **always use `utf8mb4`** for new tables |
+| Default charset | `utf8mb4`, default collation `utf8mb4_0900_ai_ci` |
+| Query cache | Removed — rely on application cache (`backend/caching-strategies.md`) |
+| Implicit sorting by `GROUP BY` | Removed — add explicit `ORDER BY` if needed |
+| `mysql_native_password` default | Changed to `caching_sha2_password`; old clients need `default_authentication_plugin=mysql_native_password` or driver upgrade |
+| `SHOW SLAVE STATUS` | Use `SHOW REPLICA STATUS` |
+| Atomic DDL | DDL no longer leaves half-applied state on crash |
+
+---
+
+## 19. References
 
 - MySQL 8.4 Reference Manual — [InnoDB Locking](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking.html) / [Deadlocks](https://dev.mysql.com/doc/refman/8.4/en/innodb-deadlocks.html) / [Multi-Versioning](https://dev.mysql.com/doc/refman/8.4/en/innodb-multi-versioning.html) / [AUTO_INCREMENT Handling](https://dev.mysql.com/doc/refman/8.4/en/innodb-auto-increment-handling.html)
 - MySQL 8.4 Reference Manual — [Buffer Pool](https://dev.mysql.com/doc/refman/8.4/en/innodb-buffer-pool.html) / [Change Buffer](https://dev.mysql.com/doc/refman/8.4/en/innodb-change-buffer.html) / [Adaptive Hash Index](https://dev.mysql.com/doc/refman/8.4/en/innodb-adaptive-hash.html) / [Doublewrite Buffer](https://dev.mysql.com/doc/refman/8.4/en/innodb-doublewrite-buffer.html)
