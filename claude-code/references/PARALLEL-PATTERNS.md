@@ -49,14 +49,23 @@ N = 1 → sequential execution
 
 ### T_i estimation priority
 
-1. Historical measurements (`references/performance-insights.md`, N >= 20 samples)
-2. Manager task-breakdown (changed file count × unit time)
-3. Simple rules (impl + tests + lint + self-check):
-   - Simple edit (typo, import fix): 30s
-   - Logic addition (modify function + unit test): 60s
-   - New feature (new file + tests + lint): 120s
-   - Complex feature (cross-file + integration test): 300s
-4. Unknown: conservative maximum, or skip parallelism
+T_i は以下の優先順位で見積もる。上位 source が使える場合はそれを優先する。
+
+| 優先 | Source | 内容 |
+|---|---|---|
+| 1 | Historical measurements | `references/performance-insights.md` の実測値 (N >= 20 samples) |
+| 2 | Manager task-breakdown | 変更 file 数 × 単位時間 |
+| 3 | Simple rules | 下表 (impl + tests + lint + self-check 込み) |
+| 4 | Unknown | 保守的最大値、または並列化を見送る |
+
+Simple rules の単位時間:
+
+| Task 種別 | 見積 |
+|---|---|
+| Simple edit (typo / import fix) | 30s |
+| Logic addition (function 修正 + unit test) | 60s |
+| New feature (new file + tests + lint) | 120s |
+| Complex feature (cross-file + integration test) | 300s |
 
 ### Cost breakdown
 
@@ -198,11 +207,13 @@ references/PARALLEL-PATTERNS\.md(#[a-zA-Z0-9_-]+)?
 
 ## Related documents
 
-- `claude-code/agents/manager-agent.md` - Task assignment, Manager role
-- `claude-code/agents/po-agent.md` - Strategy decisions, worktree confirmation responsibility
-- `claude-code/agents/developer-agent.md` - Behavior during parallel execution
-- `claude-code/commands/flow.md` - `/flow --parallel` spec
-- `claude-code/commands/dev.md` - `/dev --parallel` spec
-- `claude-code/references/performance-insights.md` - Agent real-time measurements
-- `claude-code/references/session-management.md` - simultaneous sessions upper limit (3–5)
-- `claude-code/references/orchestrate-mode.md` - `/flow --orchestrate` operation spec (parent pre-delegation steps + firing protocol)
+| File | 役割 |
+|---|---|
+| `claude-code/agents/manager-agent.md` | Task assignment, Manager role |
+| `claude-code/agents/po-agent.md` | Strategy decisions, worktree confirmation responsibility |
+| `claude-code/agents/developer-agent.md` | Behavior during parallel execution |
+| `claude-code/commands/flow.md` | `/flow --parallel` spec |
+| `claude-code/commands/dev.md` | `/dev --parallel` spec |
+| `claude-code/references/performance-insights.md` | Agent real-time measurements |
+| `claude-code/references/session-management.md` | simultaneous sessions upper limit (3–5) |
+| `claude-code/references/orchestrate-mode.md` | `/flow --orchestrate` operation spec (parent pre-delegation steps + firing protocol) |
