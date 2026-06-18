@@ -122,15 +122,9 @@ Other tools: Read/Glob/Grep (info collect) / Bash read-only (git log, tree) / Ta
 - **explore3**: Note async boundaries, error propagation, and missing validations
 - **explore4**: Note env var defaults, secret exposure risks, and version pin drift
 
-## Parallel fan-out template (recommended)
+## Parallel fan-out template
 
-When parent fires 4 explore agents in parallel, apply these split principles:
-
-- **Domain isolation**: assign each agent its specialization column from the table above; no overlap
-- **Scope deduplication**: shared entry files (e.g. `index.ts`) → assign to explore1 only; others skip
-- **Confidence gate**: each agent self-discards findings < 80% before reporting; parent does not re-filter
-- **Token budget**: each agent ≤300 words in Key findings + Highlights; Details uses `path:line` refs only
-- **Background flag**: set `run_in_background: true` on all 4 Task() calls in a single message for true parallelism
+Split principles (domain isolation / scope dedup / confidence gate / token budget / background flag) は canonical 参照: `references/PARALLEL-PATTERNS.md`。
 
 ## Background execution (v2.1.49+)
 

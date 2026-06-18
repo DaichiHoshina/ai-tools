@@ -164,19 +164,7 @@ Parent context cost negates subagent savings if reports bloat.
 
 ## Delegation from parent (Opus)
 
-Parent delegation protocol → `references/developer-agent-delegation-prompt.md`.
-
-### Delegation prompt template (recommended)
-
-When delegating to developer-agent, parent must embed these items literally in the prompt:
-
-- **Working dir + branch**: absolute path of worktree + branch name (e.g. `/path/to/wt`, `feature/foo`)
-- **Task scope**: file paths to modify, forbidden files/lines (e.g. "do not change L192")
-- **Constraints**: language/framework, SOLID/type-safety rules, commit message format
-- **verify**: exact commands parent will run to accept the result (e.g. `bats tests/…`, `tsc --noEmit`)
-- **DoD**: pass/fail criteria (lint / type / test thresholds)
-- **Report budget**: 300-word max, `changed_files.path` = repo-root-relative
-- **No push**: explicitly state "do not git push"
+Parent delegation protocol & prompt template → `references/developer-agent-delegation-prompt.md` (canonical).
 
 ## Commit message rule (AI footer prohibited)
 

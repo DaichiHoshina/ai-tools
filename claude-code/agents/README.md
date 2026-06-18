@@ -8,13 +8,15 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 
 | Agent | Model | Role | Primary use |
 |-------|-------|------|-------------|
-| **reviewer-agent** | opus 4.8 | Review owner | Code quality, security, test review |
-| **root-cause-analyzer** | opus 4.8 | RCA specialist | 5Whys analysis, structural fixes |
-| **po-agent** | opus 4.8 | Strategy decider | Product strategy, worktree mgmt, decision return |
-| **manager-agent** | opus 4.8 | Task decomposition & allocation | Large task allocation, integration verify |
+| **reviewer-agent** | sonnet 4.6 | Review owner | Code quality, security, test review |
+| **root-cause-analyzer** | opus 4.7 | RCA specialist | 5Whys analysis, structural fixes |
+| **po-agent** | opus 4.7 | Strategy decider | Product strategy, worktree mgmt, decision return |
+| **manager-agent** | opus 4.7 | Task decomposition & allocation | Large task allocation, integration verify |
 | **developer-agent** | sonnet 4.6 | Implementer | Code impl, fix, add |
 | **explore-agent** | sonnet 4.6 | Explorer/analyzer | Codebase investigation, parallel search |
 | **verify-app** | sonnet 4.6 | Verifier | Build, test, lint integration check |
+
+> Judgment role (PO / Manager / RCA) は opus 4.7 強制 (`references/model-selection.md` 2026-06-16〜、opus 4.8 regression 回避)。
 
 ## Agent startup cost (highlights)
 
@@ -71,43 +73,7 @@ Claude Code sub-agent spec: sub-agents cannot spawn other sub-agents. **Parent (
 
 ## Agent characteristics
 
-### 1. developer-agent (dev1-4)
-
-- **Trigger**: `/flow` (Team use, via Manager)
-- **Role**: Implement, fix, create tests
-- **Feature**: Serena MCP required (symbol ops)
-
-### 2. reviewer-agent
-
-- **Trigger**: `/flow` Team path final step (solo `/review` calls `comprehensive-review` skill directly, no agent)
-- **Role**: Review owner for Writer/Reviewer parallel pattern. Internally invokes `comprehensive-review` skill with `--focus=quality/security/docs/root-cause`
-- **Feature**: Auto-launch after impl complete; owns P0-P3 classification (single source)
-
-### 3. explore-agent (explore1-4)
-
-- **Trigger**: Claude judgment on 3+ query broad search / ambiguous large investigation (no slash command — direct `Task(explore-agent)` parallel launch)
-- **Role**: Read-only parallel search
-- **Feature**: Serena MCP required, multi-perspective
-
-### 4. manager-agent
-
-- **Trigger**: Parent launches when PO decides Team use
-- **Role**: Task split, allocation creation, integration verify (no impl; parent starts Devs)
-- **Feature**: Return allocation format; parent spawns `Task(developer-agent)` parallel
-
-### 5. po-agent
-
-- **Trigger**: `/flow` (skip light task, else launch), `/plan`
-- **Role**: Judge exec mode, decide strategy, manage worktree, create Manager instruction (no impl)
-- **Feature**: Return decision (mode, worktree, Manager instruction). Parent launches next layer
-
-### 6. verify-app
-
-- **Trigger**: Explicit request only (no auto). Standard checks use `/lint-test`
-- **Role**: Comprehensive build/test/lint (when `/lint-test` insufficient for structural change)
-- **Feature**: On fail, return to Developer (no auto-fix)
-
----
+Per-agent Trigger / Role / Feature 詳細は各 `.md` 参照 (重複防止)。
 
 ## Agent hierarchy
 
