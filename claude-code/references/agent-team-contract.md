@@ -67,6 +67,28 @@ stages:  # staged execution only
     devs: [dev3]
 ```
 
+### 3.1. parent → Manager (Dev failure reallocation input)
+
+Sent when ≥1 Dev returns `status ∈ {failure, partial, dep_unresolved}`. Parent injects this on Manager re-spawn (skips PO, reuses `worktree` + `reviewer_qa_criteria` from initial PO output).
+
+```yaml
+reallocation_trigger: dev_failure  # dev_failure | reviewer_p0
+loop_iteration: 1  # 1 = first re-fix; 2 → forbidden (parent must escalate to user instead)
+failed_devs:
+  - dev_id: dev2
+    task_id: task-002
+    status: failure  # failure | partial | dep_unresolved
+    unresolved_errors:
+      - location: "<file:line>"
+        error: "<message>"
+        why_unresolved: "<1 line>"
+    blocker: "<root cause, 1 line; required for partial/failure>"
+    impl_notes_path: <absolute path or null>
+success_devs: [dev1, dev3]  # do not re-touch their files
+```
+
+Manager output schema unchanged from §3; `tasks[]` contains only re-fix tasks with `task.id` suffixed `-fix1`.
+
 ### 4. parent → Developer (context)
 
 parent embeds 1 task from Manager allocation into Developer prompt, firing **N tool_use in 1 message** in parallel.

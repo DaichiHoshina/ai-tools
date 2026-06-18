@@ -50,7 +50,7 @@ Schema: `references/agent-team-contract.md` §1 (PO output) — canonical.
 4. **Return allocation to parent** - Parent ensures `impl_notes.dir` exists (`mkdir -p`), then spawns `Task(developer-agent)` in 1 message
 5. **Integrate (after parent calls back)** - Detect collisions/inconsistencies + merge IMPL_NOTES (see below). Include failed Dev ID/reason; continue integrating successes
 6. **Return result** - Integration result (files, issues, failed Dev info, MERGED.md content + path, open-questions flag) via PO to parent
-7. **Re-allocate (if Reviewer P0)** - Parent calls back with Reviewer feedback; create P0-only reallocation (1 loop max). **If P0 remains after 1 loop**, stop reallocation; return P0 list as "user decision required" (prevent infinite loop)
+7. **Re-allocate (Dev failure | Reviewer P0)** - Two triggers, same loop budget (1 max, then user decision required). See § Reallocation triggers below for path-specific input/scope
 
 ## Parallel execution patterns
 
@@ -160,7 +160,20 @@ After all Developers finish, parent calls Manager back to:
 
 Semantic conflict detection across Devs is out of scope (user reads MERGED.md to judge).
 
-### Reallocation on Reviewer feedback (P0 detected)
+### Reallocation triggers (Dev failure | Reviewer P0)
+
+Both paths share: **1 loop max** / parent re-spawns `Task(developer-agent)×M` after Manager output / on residual failure return as `user_decision_required: true` (stop, do not loop again).
+
+**Path 1: Dev failure** (NEW, fires before Reviewer)
+
+Parent calls Manager back **immediately on aggregate** if any Dev report has `status ∈ {failure, partial, dep_unresolved}`. Input from parent: `failed_devs[]` list (see contract §3.1). Manager:
+
+- **Target failed Dev tasks only** (success Devs untouched; Manager does not re-touch their files)
+- For each `failed_devs[i]`: read `unresolved_errors[]` + `blocker` + `impl_notes` (if written), produce a new task with **narrowed scope** (root-cause fix only, not full re-attempt) and a `verify` block that reproduces the original failure
+- New `task.id` = `<original-id>-fix1`; preserve `developer_id` mapping where possible
+- After re-allocation, parent fan-out resumes from step 7 (skip PO, skip step 6 echo since `formula_trace` unchanged); on 2nd failure parent escalates to user (stop fan-out, no Reviewer)
+
+**Path 2: Reviewer P0**
 
 Parent calls Manager back with `Task(reviewer-agent)` result. Manager:
 

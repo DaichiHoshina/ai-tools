@@ -113,6 +113,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
    - `--auto` / `--multi-review`: Gate C (12-lens stage split). Details: `references/parallel-self-review.md` §Gate C
    Reviewer reads `diff_target` directly (MERGED.md skip) → removes `integration_cost` (~42s) from critical path. Bundle both in 1 message.
 8.5. **Gate B: parallel-implementation self-review** (required; N≥2 only). Parent Opus re-evaluates N diffs across 4 criteria (cross-diff conflict / duplicate import / naming collision / propagation incompleteness). FAIL → force into step 9 P0 loop (even with 0 P0 findings). PASS → step 9 normal flow. Cannot skip. Canonical: `references/parallel-self-review.md`
+8.7. **Dev failure gate** (required; runs immediately on step-8 Manager aggregate, before Reviewer is consumed). Any Dev report with `status ∈ {failure, partial, dep_unresolved}` → parent calls Manager back with `reallocation_trigger: dev_failure` + `failed_devs[]` (contract §3.1) → fan-out re-fix Devs from step 7 (1 loop max). 2nd failure → stop, escalate to user (`--auto`: notify `stop: dev failure 2x` + skip push). Reviewer output from step 8 is discarded on re-fix path (re-run after re-fix succeeds)
 9. **P0 re-fix loop** (after both step-8 agents return):
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
    - P0 remains / P1: report & continue (stop when `--auto`)
@@ -126,6 +127,7 @@ A/B mandatory on orchestration path (PO→Manager→Dev×N); `--sequential` exem
 
 - **Gate A** (step 6.5, before fan-out): 5 criteria — N consistency / formula PASS / file conflict / worktree applicability / T_i basis. FAIL → re-run Manager (max 1); 2nd → `--sequential` downgrade
 - **Gate B** (step 8.5, after aggregate): 4 criteria — cross-diff conflict / duplicate import / naming collision / propagation incompleteness. FAIL → force step 9 P0 loop (max 1)
+- **Dev failure gate** (step 8.7, after aggregate): 1 criterion — any Dev `status != success`. FAIL → Manager re-allocation (max 1); 2nd → stop + user escalation
 - **Gate C** (`--auto` / `--multi-review` only): 12-lens stage split (stage 1=7 agent / stage 2=6 agent; 8 Dev + 9 session limit + 1 margin). Default `/flow` keeps full-criteria + codex 2-agent mode.
 
 ## Integration rules
