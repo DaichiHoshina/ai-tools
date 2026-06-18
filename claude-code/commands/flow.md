@@ -106,18 +106,18 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
    - line 1 (formula trace): `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / PASS|FAIL (basis=<T_i_basis>)`
    - line 2 (fan-out declaration): `fan-out: N=<n>, targets=<file count>`
    If any required echo field from Manager's `formula_trace` (12 sub-fields) is missing → stop fan-out, re-request from Manager (discard allocation). Include worktree apply/skip judgment (downgrade_reason presence) in echo line 1. Run `mkdir -p <impl_notes.dir>`
-6.5. **Gate A: parallel-judgment self-review** (必須、`## Self-Review` section)。parent Opus が Manager の `N_chosen` / `formula_trace` / file 競合検知を 5 観点で再評価。FAIL → Manager 再実行 (allocation 破棄、step 4 へ戻る)。PASS → step 7。skip 不可
+6.5. **Gate A: parallel-judgment self-review** (必須、step 5 downgrade 通過後の N≥2 case のみ。N=1 sequential path は適用外)。parent Opus が Manager の `N_chosen` / `formula_trace` / file 競合検知を 5 観点で再評価。FAIL → Manager 再実行 (allocation 破棄、step 4 へ戻る)。PASS → step 7。skip 不可。Canonical: `references/parallel-self-review.md`
 7. **Parallel fan-out**: fire `Task(developer-agent)×N` in 1 message (worktree isolated; N=1 sequential path confirmed at step 5). **Bundle required** (operational spec of L50): bundle all N Tasks in the message immediately after fan-out declaration (N≥2). Splitting into 1-per-message creates sequential chain firing (parentUuid serial) — violates "repeating 1 message 1 Agent N times is sequential" (L50). N declaration : tool_use firing message = 1:1 strict
 8. **Parallel integrate + review** (fire both in 1 message): `Task(manager-agent)` integrate **and** reviewer fan-out simultaneously. Reviewer fan-out:
    - default (`/flow`): `Task(reviewer-agent, --codex)` × 1 (comprehensive 12 観点 + codex 並列、現状維持)
    - `--auto` (`/flow-auto`) または `--multi-review`: `Task(reviewer-agent, --focus=<lens>)` × 12 並列 (Gate C: 12 観点 split fan-out。各 reviewer は単一 lens 専念で深掘り、`--codex` も並列追加で計 13 agent)
    Reviewer は `diff_target` を見て MERGED.md skip (`agents/reviewer-agent.md`: "no impact on review scope") なので Manager notes integration に依存しない → overlap で critical path から `integration_cost` (~42s) 除去 (was serial 8→9)。Manager → aggregate dev reports + persist MERGED.md at `<impl_notes.dir>/MERGED.md`; Reviewer → P0/P1 judge。bundle reviewer fan-out + manager integrate を 1 message にまとめる (same 1-message rule as dev fan-out; splitting serializes)
-8.5. **Gate B: parallel-implementation self-review** (必須、`## Self-Review` section)。parent Opus が N 本の差分を 4 観点 (相互矛盾 / 同一行多重編集 / 重複 import / 命名衝突) で再評価。FAIL → step 9 P0 loop へ強制投入 (P0 0 件でも実行)。PASS → step 9 通常 flow。skip 不可
+8.5. **Gate B: parallel-implementation self-review** (必須、N≥2 case のみ)。parent Opus が N 本の差分を 4 観点 (相互矛盾 / 同一行多重編集 / 重複 import / 命名衝突) で再評価。FAIL → step 9 P0 loop へ強制投入 (P0 0 件でも実行)。PASS → step 9 通常 flow。skip 不可。Canonical: `references/parallel-self-review.md`
 9. **P0 re-fix loop** (after both step-8 agents return):
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
    - P0 remains / P1: report & continue (stop when `--auto`)
    - codex not configured: comprehensive single fallback
-10. Post-*impl* sequential steps from Task table (review done at step 8, skip)
+10. Post-*impl* sequential steps from Task table (review + Gate B done at step 8/8.5, skip)
 
 ## Self-Review (必須、3 gate)
 
@@ -127,7 +127,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 
 - **Gate A** (step 6.5、fan-out 前): N consistency / formula PASS / file conflict / worktree applicability / T_i basis の 5 観点。FAIL → Manager 再実行 (max 1)、2 回目 → `--sequential` downgrade
 - **Gate B** (step 8.5、aggregate 後): cross-diff conflict / duplicate import / naming collision / propagation incompleteness の 4 観点。FAIL → step 9 P0 loop 強制 (max 1)
-- **Gate C** (step 8 拡張): `Task(reviewer-agent, --focus=<lens>)` × 12 並列 fan-out (10min 級)。default `/flow` は comprehensive + codex 2 agent 維持
+- **Gate C** (step 8 拡張、`--auto` / `--multi-review` 時): `Task(reviewer-agent, --focus=<lens>)` × 12 並列 fan-out (10min 級)。default `/flow` は comprehensive + codex 2 agent 維持
 
 ## Integration rules
 
