@@ -116,10 +116,26 @@ verification:
   lint: ✓
   typecheck: ✓
   test: ✓
+unresolved_errors: []  # required; [] when none, else list `{location, error, why_unresolved}` literal
 impl_notes_path: <absolute path>  # Team flow only, omit otherwise
 ```
 
-On failure: add `remaining` + `manager_decision_required` fields.
+`unresolved_errors` is **required and non-omittable** (empty list `[]` allowed only when truly zero). Suppressing or silently dropping errors here is a contract violation — parent will discard report.
+
+On `status: partial` (timeout / blocker): add `remaining` + `blocker` + `progress_pct` fields (see §5.1).
+On `status: failure`: add `manager_decision_required` (trailing spec).
+
+### 5.1 Partial / failure detail fields
+
+```yaml
+status: partial
+remaining:
+  - "<work item not yet done, 1 line each>"
+blocker: "<single root cause that prevented completion, 1 line>"
+progress_pct: 60  # 0-100 integer estimate
+```
+
+`partial` is **not a free pass**: agent must have actively attempted retry within budget and report the specific blocker. `partial` without a concrete `blocker` line is rejected by parent as `failure`.
 
 ### 6. parent → Reviewer (input)
 
