@@ -40,7 +40,7 @@ FAIL → step 9 P0 loop へ強制投入 (P0 0 件でも実行)。max 1 loop。ma
 
 `--auto` / `--multi-review` 時、`Task(reviewer-agent, --focus=<lens>)` を 12 lens で fan-out。lens: `architecture / quality / readability / security / docs / test-coverage / root-cause / logging / writing / silent-failure / type-design / db-concurrency`。
 
-**並列上限**: 8 Dev limit (`manager-agent.md` L130) + 9 concurrent session limit (`references/PARALLEL-PATTERNS.md` L207) のため **stage split 必須**。**境界余裕 1 確保** (parent 他 task 発火 case の safety margin) のため stage 上限 8 agent ではなく **7 agent**:
+**並列上限**: 8 Dev limit (`manager-agent.md` L130) + 9 concurrent session limit (`references/PARALLEL-PATTERNS.md` L20) のため **stage split 必須**。**境界余裕 1 確保** (parent 他 task 発火 case の safety margin) のため stage 上限 8 agent ではなく **7 agent**:
 - stage 1: 6 lens 並列 (`architecture / quality / security / root-cause / silent-failure / type-design` の構造系) + `--codex` × 1 = 7 agent (`--codex` 未設定時は 6 agent)
 - stage 2: 6 lens 並列 (`db-concurrency / readability / docs / test-coverage / logging / writing` の品質系 + db-concurrency) = 6 agent
 
