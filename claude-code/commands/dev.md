@@ -30,7 +30,7 @@ On `/dev` launch, delegate to `Task(developer-agent)` by default (Sonnet executi
 
 ## --parallel spec
 
-Launch Developer×N worktree parallel w/o PO/Manager. Formula detail: `references/PARALLEL-PATTERNS.md`.
+Launch Developer×N worktree parallel w/o PO/Manager. Formula detail: `references/PARALLEL-PATTERNS.md`. Gate A/B (parallel self-review) は `/dev --parallel` には適用しない (`/flow --parallel` 専用)。
 
 | Item | Action |
 |------|------|

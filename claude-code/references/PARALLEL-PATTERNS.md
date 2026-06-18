@@ -204,5 +204,5 @@ references/PARALLEL-PATTERNS\.md(#[a-zA-Z0-9_-]+)?
 - `claude-code/commands/flow.md` - `/flow --parallel` spec
 - `claude-code/commands/dev.md` - `/dev --parallel` spec
 - `claude-code/references/performance-insights.md` - Agent real-time measurements
-- `claude-code/references/session-management.md` - 9 concurrent session limit
+- `claude-code/references/session-management.md` - simultaneous sessions upper limit (3–5)
 - `claude-code/references/orchestrate-mode.md` - `/flow --orchestrate` operation spec (parent pre-delegation steps + firing protocol)
