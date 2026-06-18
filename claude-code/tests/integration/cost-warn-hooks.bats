@@ -271,3 +271,72 @@ _make_session_jsonl() {
   [ "$status" -eq 0 ]
   [[ ! "$output" =~ "parallel-fire-suggest" ]]
 }
+
+# =============================================================================
+# Case S1-C: developer-agent 限定 bundle 違反 warn (work-context-20260618 F1)
+# 2 回目逐次発火 (>500ms 間隔) で bundle-violation-warn を注入する
+# =============================================================================
+@test "bundle-violation: warn injected on 2nd sequential developer-agent fire" {
+  local session_id="bundle-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter=1 (1 発目 fire 済)、lastts 1 秒前 → 次の呼出しで counter=2 = threshold 到達
+  printf '1\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "bundle-violation-warn" ]]
+}
+
+# =============================================================================
+# Case S1-D: bundle 違反 counter は 500ms 以内の並列発火でリセットされる
+# =============================================================================
+@test "bundle-violation: counter reset on 1-message bundle (parallel fire)" {
+  local session_id="bundle-parallel-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter=5、lastts は 50ms 前 (500ms 以内 → 並列 bundle 判定)
+  printf '5\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  local _recent_ns
+  _recent_ns=$(( $(date +%s%N) - 50000000 ))
+  printf '%s\n' "$_recent_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "bundle-violation-warn" ]]
+}

@@ -573,6 +573,78 @@ _check_sequential_agent_fire() {
 }
 
 # ====================================
+# developer-agent 限定 bundle 違反検出 (warn-only)
+# /flow step 7 / `flow.md` L110: Task(developer-agent)×N は 1 message bundle 必須
+# 連続発火 (>500ms 間隔) ≥2 回 = bundle 違反 = parentUuid serial chain
+# (work-context-20260618-flow-self-review-3gate.md next-action #1)
+#
+# counter: ~/.claude/logs/.dev-agent-fire-count-<session_id>
+# 最終 fire timestamp: ~/.claude/logs/.dev-agent-fire-lastts-<session_id>
+# fence: ~/.claude/logs/.bundle-violation-warned-<session_id>  (1 threshold 1 inject)
+# log: ~/.claude/logs/bundle-violation-warn.log
+# ====================================
+_check_developer_agent_bundle_violation() {
+  local session_id="$1"
+  [[ -z "$session_id" || "$session_id" == "null" ]] && return 0
+
+  local _LOG_DIR="${HOME}/.claude/logs"
+  mkdir -p "$_LOG_DIR" 2>/dev/null || true
+
+  local _COUNT_FILE="${_LOG_DIR}/.dev-agent-fire-count-${session_id}"
+  local _LASTTS_FILE="${_LOG_DIR}/.dev-agent-fire-lastts-${session_id}"
+  local _FENCE_FILE="${_LOG_DIR}/.bundle-violation-warned-${session_id}"
+
+  local _NOW_NS
+  if [[ -n "${EPOCHREALTIME:-}" ]]; then
+    _NOW_NS="${EPOCHREALTIME/./}000"
+  else
+    _NOW_NS=$(date +%s%N 2>/dev/null || printf '%s000000000' "$(date +%s)")
+  fi
+
+  local _LAST_NS=0
+  [[ -f "$_LASTTS_FILE" ]] && read -r _LAST_NS < "$_LASTTS_FILE" 2>/dev/null || _LAST_NS=0
+  [[ "$_LAST_NS" =~ ^[0-9]+$ ]] || _LAST_NS=0
+
+  printf '%s\n' "$_NOW_NS" > "$_LASTTS_FILE" 2>/dev/null || true
+
+  local _ELAPSED=$(( _NOW_NS - _LAST_NS ))
+
+  # 500ms 以内 = 1 message bundle 並列 (正常)、counter リセット
+  if (( _LAST_NS > 0 && _ELAPSED <= _TH_PARALLEL_WINDOW_NS )); then
+    printf '0\n' > "$_COUNT_FILE" 2>/dev/null || true
+    return 0
+  fi
+
+  # fence 通過済 → 同 session で再 warn しない
+  [[ -f "$_FENCE_FILE" ]] && return 0
+
+  # counter ++
+  local _CUR=0
+  [[ -f "$_COUNT_FILE" ]] && read -r _CUR < "$_COUNT_FILE" 2>/dev/null || _CUR=0
+  [[ "$_CUR" =~ ^[0-9]+$ ]] || _CUR=0
+  _CUR=$(( _CUR + 1 ))
+  printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
+
+  # threshold ≥2 で warn (1 発目は正常な単発 dev、2 発目連続発火が bundle 違反 signal)
+  if (( _CUR >= 2 )); then
+    touch "$_FENCE_FILE" 2>/dev/null || true
+
+    local _TS_LABEL
+    printf -v _TS_LABEL '%(%Y-%m-%dT%H:%M:%S)T' -1
+    printf '%s | %s | dev_count=%s | elapsed_ms=%s\n' \
+      "$_TS_LABEL" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
+      >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
+
+    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >500ms = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md L110 / N declaration : tool_use firing message = 1:1 strict)"
+    if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
+    else
+      ADDITIONAL_CONTEXT="${_SUGGEST}"
+    fi
+  fi
+}
+
+# ====================================
 # 同 session 内で直近 5 回連続 Write/Edit/MultiEdit が large-repo src に hit した場合に
 # developer-agent 委譲を促す additionalContext を注入する
 # counter: ~/.claude/logs/.large-repo-edit-count-<session_id>
@@ -1422,6 +1494,14 @@ ${PARALLEL_REVIEW}${PREP_WARN}"
 
     # 逐次 Agent fire 検出 (warn-only、既存 ADDITIONAL_CONTEXT に append)
     _check_sequential_agent_fire "$SESSION_ID"
+
+    # bundle 違反検出 (warn-only): developer-agent 限定で逐次発火を検出
+    # work-context-20260618 next-action #1 / Gate A 衰弱点補強
+    # /flow step 7 では Task(developer-agent)×N を 1 message bundle 必須
+    # 連続発火 (>500ms) ≥2 回 = bundle 違反 = parentUuid serial chain
+    if [ "${SUBAGENT_TYPE}" = "developer-agent" ]; then
+      _check_developer_agent_bundle_violation "$SESSION_ID"
+    fi
     ;;
 
   "Skill")
