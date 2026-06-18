@@ -1016,10 +1016,11 @@ case "$TOOL_NAME" in
 
     # AI定型語 block: 作業 repo の .md / .txt への書き込みを検査
     # ai-tools 配下は除外 (guidelines / NG-DICTIONARY など NG 語を literal 保持する設定 md の誤爆防止)
+    # auto-memory dir (~/.claude/projects/*/memory/) も除外 (AI 自己分析の生記録、外向き prose 規則対象外)
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
       _AJ_EXT="${_EDIT_FILE_PATH##*.}"
       if [[ "$_AJ_EXT" == "md" || "$_AJ_EXT" == "txt" ]]; then
-        if ! _is_aitools_path "$_EDIT_FILE_PATH"; then
+        if ! _is_aitools_path "$_EDIT_FILE_PATH" && ! _is_auto_memory_path "$_EDIT_FILE_PATH"; then
           _AJ_BASENAME=$(basename "${_EDIT_FILE_PATH:-file}")
           _block_if_ai_jargon "$EDIT_CONTENT" "ファイル: ${_AJ_BASENAME}"
         fi

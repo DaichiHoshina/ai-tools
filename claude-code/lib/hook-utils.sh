@@ -337,6 +337,17 @@ _is_aitools_path() {
   return 1
 }
 
+# 与えられた path が Claude Code auto-memory dir (~/.claude/projects/*/memory/) かどうかを判定する。
+# AI 自己分析の生記録 (work-context / writing_failure / pending-improvements 等) は
+# 外向き prose 規則の対象外なので、jp-quality / NG 語 / 連続漢字 hook で skip 用に使う。
+# 戻り値: 0=auto-memory 配下 / 1=配下でない
+# usage: _is_auto_memory_path "$path"
+_is_auto_memory_path() {
+  local p="$1"
+  [[ "$p" == "$HOME/.claude/projects/"*"/memory/"* ]] && return 0
+  return 1
+}
+
 # ai-tools repo 相対 path を取得する (prefix 除去後)。
 # どの prefix にも match しない場合は空文字を出力して 1 を返す。
 # usage: rel=$(_aitools_relpath "$path")
