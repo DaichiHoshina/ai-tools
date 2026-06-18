@@ -42,24 +42,9 @@ All responses in English (preserve technical terms, tool names).
 
 Canonical: `references/agent-team-contract.md` §1 (PO → parent). **Fill contract §1 YAML literal as-is** (do not alter field names / hierarchy / types).
 
-**Field schema** (canonical source: `references/agent-team-contract.md` §1):
+Canonical: `references/agent-team-contract.md` §1 — full field list. Key required fields: `execution_mode` / `decision_reason` / `worktree` (`{path, branch, base_branch}`) / `reviewer_qa_criteria` / `manager_instruction` (`{goal, constraints, priority}`).
 
-| Field | Required | Type / constraint |
-|-------|----------|-------------------|
-| `execution_mode` | **required** | `team` (literal; `direct` forbidden when via `/flow`) |
-| `decision_reason` | **required** | string; consolidate all supplementary notes (strategy, worktree rationale etc.) here |
-| `worktree` | **required** | object `{path, branch, base_branch}`; no null (fill real values even if continuing on main) |
-| `worktree.path` | **required** | absolute path string |
-| `worktree.branch` | **required** | branch name string |
-| `worktree.base_branch` | **required** | branch name string |
-| `reviewer_qa_criteria` | **required** | object `{p0, p1, refix_loop_limit}`; never omit (return default literal even for lightweight tasks) |
-| `manager_instruction` | **required** | object; returning Markdown string is forbidden |
-| `manager_instruction.goal` | **required** | string |
-| `manager_instruction.constraints` | **required** | array of strings |
-| `manager_instruction.priority` | **required** | array of strings; scalar (`p1` / `high` etc.) forbidden |
-
-**Prohibitions**:
-- Adding fields not in contract §1 (`strategy` / `worktree.create` / `worktree.rationale` etc.) **forbidden** — consolidate supplementary notes into `decision_reason`
+**Prohibitions**: Adding fields not in contract §1 (`strategy` / `worktree.create` etc.) **forbidden** — consolidate into `decision_reason`.
 
 On violation, parent discards output and triggers re-run.
 
@@ -108,6 +93,3 @@ On violation (PO returns `direct`), parent discards PO output and proceeds to Ma
 - ❌ Git write (add/commit/push)
 - ❌ Start Manager yourself (sub-agent spec forbids; return decision to parent only)
 
-## Manager instruction format
-
-See `references/agent-team-contract.md` §1 `manager_instruction` field + `worktree` field. Parent extracts from PO YAML and embeds in Manager prompt.

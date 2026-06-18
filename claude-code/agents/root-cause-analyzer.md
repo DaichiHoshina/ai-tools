@@ -60,19 +60,7 @@ At each level, ask "why?" and gather code evidence.
 
 **Early termination**: If Level N (N<5) reaches 85%+ confidence AND further digging enters org/HR/exec scope (tech cannot fix), skip Level N+1+. Mark skipped level in report table: `Level X: Skipped (reason: early termination / out of tech scope)`.
 
-**Analysis template**:
-
-```
-Level {N}: Why {prior conclusion}?
-  Hypothesis: {possible cause}
-  Evidence:
-    - Code: {file:line}
-    - Config: {config file section}
-    - Log: {related logs}
-  Conclusion: {this level conclusion}
-  Confidence: {0-100}%
-  Next: Why {conclusion}?
-```
+Analysis template: see Step 6 report format (5 whys table + Confidence column).
 
 **Confidence calculation** (cumulative; trusted at 85%+):
 
@@ -85,16 +73,7 @@ Level {N}: Why {prior conclusion}?
 
 ### Step 3: Classify root cause
 
-Categorize analysis results:
-
-| Category | Description | Typical fix |
-|----------|-------------|------------|
-| **Architecture** | Layer violation, component missing | Add validation layer, fix dependency |
-| **Logic** | Algorithm bug, condition error | Fix logic, handle edge cases |
-| **Data** | Schema mismatch, type inconsistency | Migration, type safety |
-| **Integration** | API contract breach, external dep | Fix interface, add retry |
-| **Assumption** | Wrong assumption | Verify assumption, document |
-| **Environment** | Config, infra | Fix config, infrastructure change |
+Category classification: per `skills/root-cause/skill.md` (canonical 6 category table).
 
 **Impact scope assessment**:
 - `local`: Within 1 file
@@ -104,12 +83,6 @@ Categorize analysis results:
 ### Step 4: Propose fix strategies
 
 Present 3-level strategies. Canonical definition: `skills/root-cause/skill.md`.
-
-| Level | Content | Example | Recurrence risk | When to use |
-|---|---|---|---|---|
-| **L1** Workaround | Minimal fix to suppress symptom | null check / try-catch | High | Emergency prod incident only. Always reference root-cause in TODO |
-| **L2** Partial | Fix direct cause only; similar issues remain | Add validation to single endpoint | Medium | Time constraint |
-| **L3** Root (recommended) | Remove structural cause | Add validation layer to all endpoints | Low | Prioritize when possible |
 
 Evaluate each strategy on 4 axes: **effort** / **risk** (new bug introduction) / **prevention** (recurrence effect) / **scope** (impact range).
 
@@ -126,7 +99,7 @@ Classify by impact:
 
 Return Markdown report draft to parent. Parent (Opus / orchestrator) persists it to auto-memory; this agent is `permissionMode: readonly` and does not write.
 
-- Suggested path (parent uses): `~/.claude/projects/-Users-daichi-ghq-github-com-DaichiHoshina-ai-tools/memory/rca-<topic>-<YYYY-MM-DD>.md`
+- Suggested path (parent uses): auto-memory standard (`~/.claude/projects/<project-slug>/memory/rca-<topic>-<YYYY-MM-DD>.md`)
 - Frontmatter (auto-memory standard, parent applies): `name: rca-<topic>-<YYYY-MM-DD>` / `description: <one-line summary>` / `metadata.type: project`
 
 **Report format**:
@@ -179,16 +152,4 @@ If unmet, conduct additional investigation & state low confidence to user. **Aft
 
 ## Serena MCP required
 
-Use Serena MCP for all code ops. Use-case mapping:
-
-| Purpose | Tool |
-|---------|------|
-| Structure overview | `get_symbols_overview`, `find_symbol` |
-| Reverse refs (callers, dependency direction) | `find_referencing_symbols` |
-| interface ↔ impl trace | `find_implementations` (v1.3.0) |
-| Declaration/definition location | `find_declaration` (v1.3.0) |
-| Type errors, LSP diagnostics | `get_diagnostics_for_file` / `_for_symbol` (v1.3.0) |
-| Pattern cross-codebase search | `search_for_pattern` |
-| Save result | Return draft to parent (readonly agent — parent persists to auto-memory) |
-
-See per-Step examples for detail.
+Use Serena MCP for all code ops. Serena tool priorities: `references/serena-tool-map.md`

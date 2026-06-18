@@ -77,84 +77,17 @@ Per-agent Trigger / Role / Feature 詳細は各 `.md` 参照 (重複防止)。
 
 ## Agent hierarchy
 
-Large tasks execute in hierarchy. **Parent (Claude Code) launches each layer sequentially** — parent-handling (per sub-agent spec).
-
-```
-Parent (Claude Code)
-  ├─ Task(po-agent)              # Strategy & Team decision → return
-  ├─ Task(manager-agent)         # Allocation plan → return
-  ├─ Task(developer-agent) dev1  ┐ 1 message
-  ├─ Task(developer-agent) dev2  │ parallel
-  ├─ Task(developer-agent) dev3  ┘
-  ├─ Task(manager-agent)         # Integration verify (relaunch)
-  ├─ /lint-test                  # Post-impl checks (verify-app explicit only)
-  └─ Task(reviewer-agent)        # Final review
-```
-
-**Design principles**:
-- Sub-agents cannot spawn other sub-agents (Claude Code spec)
-- PO/Manager/Explore explicitly have `disallowedTools: Write, Edit, MultiEdit` to physically prevent implementation violations
-- Parent launches multiple `Task`s in 1 message for parallelism
-- Parallel patterns, worktree apply decision, responsibility separation: `references/PARALLEL-PATTERNS.md`
-
-> **⚠️ Read before changing design**: Agent Team is parent-handled (ADR 0001) — revert to self-running violates official docs. CI guards via bats test `tests/integration/agent-frontmatter.bats`.
+Large tasks: PO → Manager → Developer×N → Reviewer (details: `/flow workflow` section above).
 
 ---
 
 ## Serena MCP tool catalog
 
-**Recommended usage patterns** available with `mcp__serena__*` wildcard in agent `tools:`. reviewer-agent only lists explicitly (`find_symbol`, `get_symbols_overview`) to narrow permissions. Final control: agent frontmatter `tools` / `disallowedTools`.
+Canonical: `references/serena-tool-map.md` (per-agent recommended Serena tools).
 
-**v1.3.0 new tools**: `find_declaration`, `find_implementations`, `get_diagnostics_for_file`, `get_diagnostics_for_symbol` (Serena CHANGELOG v1.3.0 LSP Backend section. [oraios/serena GitHub CHANGELOG](https://github.com/oraios/serena/blob/main/CHANGELOG.md))
+## Parallel execution
 
-### Symbol search (read-only)
-
-| Tool | Purpose | Recommended agent |
-|------|---------|-------------------|
-| `find_symbol` | Search by name/path/type | reviewer, explore, developer |
-| `get_symbols_overview` | File symbol overview | reviewer, explore |
-| `find_referencing_symbols` | Trace reverse refs | explore, developer |
-| `find_declaration` (v1.3.0) | Locate declaration | explore, developer |
-| `find_implementations` (v1.3.0) | Locate impl (interface→impl) | explore, developer |
-
-### Symbol edit (write)
-
-| Tool | Purpose | Recommended agent |
-|------|---------|-------------------|
-| `replace_symbol_body` | Replace function/class body | developer |
-| `insert_before_symbol` / `insert_after_symbol` | Insert adjacent | developer |
-| `rename_symbol` | Rename + bulk update refs | developer |
-| `safe_delete_symbol` | Delete with ref check | developer |
-| `replace_content` | Text replace (non-symbol) | developer |
-
-### Diagnostics
-
-| Tool | Purpose | Recommended agent |
-|------|---------|-------------------|
-| `get_diagnostics_for_file` (v1.3.0) | Get LSP diagnostics (type errors, warnings) | developer, verify-app |
-| `get_diagnostics_for_symbol` (v1.3.0) | Specific symbol diagnostics | developer |
-
-### Memory ops
-
-| Tool | Purpose | Recommended agent |
-|------|---------|-------------------|
-| `list_memories` / `read_memory` | Read existing Serena memories | All agents |
-| `write_memory` / `edit_memory` / `rename_memory` / `delete_memory` | **Forbidden** (2026-06-10) — write to Claude Code auto-memory (`~/.claude/projects/.../memory/`) via `Write` instead, avoid dual management | — |
-
-### Onboarding
-
-| Tool | Purpose |
-|------|---------|
-| `initial_instructions` | Get Serena manual (required at task start) |
-| `onboarding` | Run project onboarding (state auto-attached to activate response) |
-| `serena_info` (v1.2.0) | On-demand usage info (version/context/active project) |
-
-### Usage principles
-
-- **Symbol edit**: Prefer `replace_symbol_body` family over Edit for tighter side-effect scope
-- **Rename**: Use `rename_symbol` over grep→Edit for lower ref-miss risk
-- **Delete**: Use `safe_delete_symbol` to pre-detect dangling refs
-- **Memory write**: Serena memory writes forbidden (2026-06-10) — write to Claude Code auto-memory (`~/.claude/projects/.../memory/`) via `Write`. Serena memory is read-only (`list_memories` / `read_memory`)
+Canonical: `references/PARALLEL-PATTERNS.md` (formula / N_initial / worktree-applicability-flow).
 
 ---
 

@@ -33,25 +33,9 @@ All responses in English (preserve technical terms, tool names).
 - **Design verifier** - Confirm architecture & design principle compliance
 - **Improvement suggester** - Identify problems & propose concrete fixes
 
-> **Boris insight**: "Writer/Reviewer parallel pattern secures quality for large changes"
-
 ## Input contract
 
-Schema: `references/agent-team-contract.md` §6 (parent → Reviewer) canonical reference.
-
-**Required**: `diff_target` only
-
-**Optional defaults** (behavior when missing):
-
-| Field (contract) | Default if missing |
-|------|-------------------|
-| `change_summary` | Self-estimate from `git diff --stat` (avoid stale context in uncommitted reviews) |
-| `po_qa_criteria` | This file's P0-P3 definition |
-| `merged_md_path` | Skip read; no impact on review scope |
-| `review_mode` | `default` |
-| `is_reverify` | `false` (first time) |
-
-**MERGED.md handling**: Read-only reference for cross-check against P0/P1 findings (e.g., open questions correlate with security gaps). **Never write** to it (no Write/Edit tool available anyway; do not propose edits to MERGED.md as P0/P1 fix tasks either).
+Schema: `references/agent-team-contract.md` §6 canonical. MERGED.md は read-only cross-check のみ (write は disallowedTools で block)。
 
 **If diff unavailable**: Re-request from parent (only case cannot continue solo).
 
@@ -91,8 +75,8 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 ## Review process
 
 1. **Scope**: `git status && git diff` to identify range
-2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (table below). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
-3. **Per-viewpoint review**: Run `comprehensive-review` with `--focus=quality/architecture/security/root-cause/docs` (UI/UX only switches to `uiux-review`)
+2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (see `references/serena-tool-map.md`). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
+3. **Per-viewpoint review**: Run `comprehensive-review` skill (canonical: `skills/comprehensive-review/skill.md`)
 4. **Self-Filter Gate (moderate strictness)**: For every candidate P0/P1/P2, run the discard criteria below before emit:
    - **Evidence**: anchored to observed diff/code/docs/tests/tool output (else discard)
    - **Scope**: tied to user request / issue / design doc / code contract / changed behavior (else discard or downgrade to question)
@@ -105,16 +89,7 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
    **Pre-emission sanity check**: discard findings phrased as "cleaner / more elegant / could be simpler / better naming" without a rule violation, or "verbose text / could be shorter" prose preferences, or restated known issues. Zero findings is a valid output — do not invent replacements.
 5. **Integrate result**: Output via template below
 
-### Serena tool use
-
-| Goal | Tool |
-|---|---|
-| Impact scope, reverse refs | `find_referencing_symbols` |
-| interface ↔ impl | `find_implementations` |
-| Declaration position | `find_declaration` |
-| File structure | `get_symbols_overview` |
-| Symbol search | `find_symbol` |
-| Type errors, LSP diagnostics | `get_diagnostics_for_file` / `_for_symbol` |
+Serena tool priorities: `references/serena-tool-map.md` 参照
 
 ### Output template (common)
 
@@ -141,59 +116,15 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 
 **When to use**: Large changes (10+ files, 500+ lines) / Critical features (auth, payment, migration) / Architecture change
 
-**How to run**:
-```
-Task(subagent_type: "developer-agent", prompt: "Implement feature X")
-Task(subagent_type: "reviewer-agent", prompt: "Review post-impl")
-```
-
 **Constraints**: Read-only, flag & propose only (fixes → Developer Agent), verify via `/lint-test`
 
 ## `/flow` Team chain operation
 
-Rules when parent launches via Team path. **Parallel: comprehensive-review + codex review** (same as `/review --codex`).
+Schema/flow: `references/agent-team-contract.md` §6-7 + `references/parallel-self-review.md` canonical.
 
-### Input (parent prompt)
+**Fallback (codex unavailable)**: comprehensive-review solo, all P0 viewpoints → P0, others → P1. Prepend `> [WARN] codex unavailable → comprehensive-review solo (fallback)` to output (parent-accessible).
 
-Manager integration result / PO QA criteria / `is_reverify: true/false` flag
-
-### Integration rule (codex available)
-
-| State | Judgment |
-|---|---|
-| Both flag | **P0** (re-fix target) |
-| One only, viewpoint security/type-safety/data-integrity | **P0** (strict) |
-| One only, other viewpoint | **P1** (user report) |
-
-### Fallback mode (codex unavailable)
-
-Check order: (1) plugin runtime `ls -1d ~/.claude/plugins/cache/openai-codex/codex/* 2>/dev/null | tail -1` (2) CLI `which codex` → both fail = fallback.
-
-Behavior: fallback to comprehensive-review alone, all P0 viewpoints → P0, others → P1. Must prepend `> [WARN]` line to output (not stderr, parent-accessible).
-
-### Team output format (template + WARN if fallback)
-
-```markdown
-> [WARN] codex unavailable (plugin/CLI detect fail) → comprehensive-review solo (fallback)  ← fallback only
-
-## Team review result
-
-### P0: (N cases) — re-fix target
-- [viewpoint] Issue (file:line)
-  - Fix: Specific proposal
-
-### P1: (N cases) — user report only
-- [viewpoint] Issue (file:line)
-
-## Judgment
-- [ ] P0: 0 → pass, goto /git-push
-- [ ] P0: 1+ → Manager reallocate (1 loop only)
-```
-
-### Team constraints
-
-- **Max 1 re-fix loop** (prevent infinite loop); re-verify P0 remains → user report (`--auto` stops)
-- P1 below deferred to post-`/flow` report (not loop target)
+**Max 1 re-fix loop** (prevent infinite loop); re-verify P0 remains → user report (`--auto` stops).
 
 ## Prohibitions
 

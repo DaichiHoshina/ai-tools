@@ -88,7 +88,7 @@ Other tools: Write/Edit (file edit) / Read/Bash/Glob/Grep (info collect) / TaskC
 
 Reporting `✗` without investigation is forbidden. Any verify `✗` requires **at least 1 root-cause isolation step**: grep the error line for lint, diff expected/actual for test fail, reproduce with one level up for build fail. Write result in `unresolved_errors[].why_unresolved`.
 
-`status: partial` requires: `blocker` (1-line root cause) + `progress_pct` + `remaining[]` (`references/agent-team-contract.md` §5.1). Missing `blocker` is treated as `failure` by parent.
+`status: partial` field spec: `references/agent-team-contract.md` §5.1 参照。Missing `blocker` is treated as `failure` by parent.
 
 ## Scope guard
 
@@ -149,33 +149,15 @@ Parallel limit & N selection: `references/PARALLEL-PATTERNS.md` (canonical).
 
 ## IMPL_NOTES output (Team flow only)
 
-Triggered iff received context contains `impl_notes.dir`. Only `/flow` (Manager allocation) sets this field; `/dev`-rooted Task() invocations (e.g. `/dev --parallel`) leave it absent → notes step is skipped silently.
+Triggered iff received context contains `impl_notes.dir` (only `/flow` sets this; `/dev`-rooted Task() invocations leave it absent → skip silently).
 
-**When to write**: Once at completion (no incremental update). Skip on partial failure / timeout abort (report-only path).
+**Path**: `<impl_notes.dir>/dev-<task.id>.md`. Write once at completion; skip on partial/timeout.
 
-**Path**: `<impl_notes.dir>/dev-<task.id>.md`
+**Re-fix re-spawn**: Re-spawned with same `task.id` → Read existing file first, **append** `## Re-fix iteration <N>` block (same 4 sub-sections). Never overwrite prior iterations.
 
-**Re-fix re-spawn**: When Reviewer P0 triggers Manager reallocation and this agent is re-spawned with the same `task.id`, Read existing `dev-<task.id>.md` first and **append** a new `## Re-fix iteration <N>` block containing the same 4 sub-sections (`### Design decisions` etc.) for the re-fix scope. Never overwrite prior iterations — re-fix history is part of the audit trail.
+**Format** (4 fixed sections, "None" allowed): Design decisions / Deviations / Tradeoffs / Open questions.
 
-**Format** (4 fixed sections, "None" allowed):
-
-```markdown
-# IMPL_NOTES — <task.id> / <task.title>
-
-## Design decisions
-- Choices made where PO/Manager spec was ambiguous + reasoning
-
-## Deviations
-- Intentional departures from allocation + reasoning (none → "None")
-
-## Tradeoffs
-- Alternatives considered + why rejected (none → "None")
-
-## Open questions
-- Items needing user confirmation (none → "None")
-```
-
-Include the written path in completion report's `IMPL_NOTES` field for Manager to merge.
+Include written path in completion report's `impl_notes_path` field.
 
 ## Completion report budget
 
@@ -192,26 +174,15 @@ Parent delegation protocol & prompt template → `references/developer-agent-del
 
 ## Commit message rule (AI footer prohibited)
 
-**Absolute prohibition**: No `Co-Authored-By: Claude`, `Generated with Claude Code`, or LLM marker.
-**Format**: Plain JP + PREP structure + HEREDOC (see `references/developer-agent-delegation-prompt.md`).
+Commit rule: `references/developer-agent-delegation-prompt.md` §3 参照。
 
 ---
 
 ## Completion report format
 
-Schema: `references/agent-team-contract.md` §5 (Developer → parent) — canonical. **Fill contract §5 YAML literal as-is** (do not rename fields / change hierarchy / alter value literals).
+Schema: `references/agent-team-contract.md` §5 (Developer → parent) — canonical. **Fill contract §5 YAML literal as-is** (field 改名禁止).
 
-**Required fields** (never omit):
-- `status`: `success` / `partial` / `failure` / `dep_unresolved` literal (aliases like `completed` forbidden)
-- `task_id`
-- `changed_files[]`: each element has 2 sub-fields `{path, change}`; `change` literal = `"add"` / `"modify"` / `"delete"` (renaming to `change_type` etc. forbidden). **`path` must be repo-root-relative** (e.g. `claude-code/hooks/pre-tool-use.sh`). Partial paths like `hooks/lib/thresholds.sh` cause parent double-grep churn (`[[retrospective-2026-06-12]]` P2)
-- `verification`: `{lint, typecheck, test}` 3 sub-fields; values = `✓` (done) / `✗` (fail) / `—` (N/A) literal; `[ ]` (unchecked) forbidden; no custom sub-fields like `grep_entry`
-- `unresolved_errors[]`: empty list `[]` when none; each element `{location, error, why_unresolved}` literal. **Blank / omit is forbidden** — empty list on verify `✗` is contract violation (parent discard)
-- `impl_notes_path` (Team flow only; omit otherwise; field name must be exact)
-
-**Conditional fields**:
-- `out_of_scope_observations[]`: add only when out-of-scope findings exist (§Scope guard). Each element is 1-line string; observations only, no edits (parent decides)
-- `status: partial`: requires `blocker` (1-line root cause) + `progress_pct` (0-100 int) + `remaining[]`
+Required fields / Conditional fields: contract §5 参照。
 
 **Additional prohibitions** (recurring patterns):
 - **No custom fields like `summary`** — task result summaries go in IMPL_NOTES (`<impl_notes.dir>/<name>.md`), not in completion report YAML

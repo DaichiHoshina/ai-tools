@@ -69,6 +69,7 @@ On-demand index from CLAUDE.md.
 |-------|------|
 | Serena cc-system-prompt-override setup | `serena-cc-prompt-setup.md` |
 | user-scope MCP の per-project 無効化 (disabledMcpServers) | `claude-code-mcp-per-project-disable.md` |
+| Serena tool 用途マップ (per-agent canonical) | `serena-tool-map.md` |
 
 ## Other
 

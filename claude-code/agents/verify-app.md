@@ -60,23 +60,6 @@ Explicit launch when `/lint-test` insufficient for large structural change.
 4. **Run build** - Production build verify
 5. **Report** - Issue summary & fix proposals
 
-## Language × Stage table
-
-Cells are commands. **Base flow**: Lint/Test/Build only; **6 stages**: all.
-
-| Lang | Detect | Stage1 Lint | Stage2 Type | Stage3 Test | Stage4 Security | Stage5 Build | Stage6 Performance (opt.) |
-|------|--------|-------------|-------------|-------------|-----------------|--------------|--------------------------|
-| Node.js/TS | `package.json` | `npm run lint` | `npx --no-install tsc --noEmit` if `tsconfig.json` exists (skip if not) | `npm test -- --coverage` | `npm audit --audit-level=high` + `gitleaks detect` | `npm run build` | Lighthouse / k6 etc. |
-| Go | `go.mod` | `golangci-lint run` | `go vet ./...` | `go test ./... -cover` | `govulncheck ./...` + `gitleaks detect` | `go build ./...` | `go test -bench=. -benchmem` |
-| Python | `pyproject.toml` | `ruff check .` | `mypy .` (if adopted) | `pytest --cov` | `pip-audit` + `gitleaks detect` | `python -m build` (package) / `python -m compileall .` (syntax) | `pytest --benchmark` |
-| Docker | `Dockerfile` | `hadolint Dockerfile` | — | — | `trivy config Dockerfile` + `gitleaks detect` (if image built, add `trivy image <tag>`) | `docker build .` | image size / startup |
-
-**Build vs Performance**: Build (Stage5) fail = **Rejected** (required); Performance (Stage6) fail = Conditional (optional, not release blocker).
-
-**Python build note**: `python -m compileall .` syntax only. For artifact verify, use `python -m build`.
-
-**Docker security note**: `trivy config` static Dockerfile (no image needed). Full scan after build: add `trivy image <tag>`.
-
 ## Test coverage criteria
 
 | Result | Test | Coverage | Judgment |
@@ -102,25 +85,20 @@ List per-lang results in summary & state **reason for worst-case** (which lang/w
 
 ## 6-stage verify (pre-release)
 
-| Stage | Item | Criteria |
-|-------|------|----------|
-| 1 | Lint | 0 errors=pass, warnings only=warn, errors=fail |
-| 2 | Type | 0 errors=pass, errors=fail |
-| 3 | Test | All pass+>=70%=pass, all pass+<70%=warn, any fail=fail |
-| 4 | Security | Critical/High=0=pass, gitleaks=0=pass |
-| 5 | Build | Success=pass, fail=Rejected (required) |
-| 6 | Performance | Within baseline=pass (optional, fail→Conditional) |
+| Stage | Item | Commands | Criteria |
+|-------|------|----------|----------|
+| 1 | Lint | Node: `npm run lint` / Go: `golangci-lint run` / Python: `ruff check .` / Docker: `hadolint Dockerfile` | 0 errors=pass, warnings only=warn, errors=fail |
+| 2 | Type | Node: `npx tsc --noEmit` (if tsconfig.json) / Go: `go vet ./...` / Python: `mypy .` (if adopted) | 0 errors=pass, errors=fail |
+| 3 | Test | Node: `npm test -- --coverage` / Go: `go test ./... -cover` / Python: `pytest --cov` | All pass+>=70%=pass, all pass+<70%=warn, any fail=fail |
+| 4 | Security | Node: `npm audit --audit-level=high` / Go: `govulncheck ./...` / Python: `pip-audit` / Docker: `trivy config Dockerfile` + `gitleaks detect` (all langs) | Critical/High=0=pass, gitleaks=0=pass |
+| 5 | Build | Node: `npm run build` / Go: `go build ./...` / Python: `python -m build` or `python -m compileall .` / Docker: `docker build .` | Success=pass, fail=Rejected (required) |
+| 6 | Performance | Node: Lighthouse/k6 / Go: `go test -bench=. -benchmem` / Python: `pytest --benchmark` / Docker: image size/startup | Within baseline=pass (optional, fail→Conditional) |
 
 **Release judgment**: All pass=Approved / any warn=Conditional / Stage1-5 fail=Rejected (Stage6 stops at Conditional)
 
-## Available tools
+**Docker security note**: `trivy config` static Dockerfile (no image needed). Full scan after build: add `trivy image <tag>`.
 
-- **Bash** - Command execution (priority)
-- **Read** - Read output files
-- **Grep** - Search error patterns
-- **TaskCreate/TaskUpdate/TaskList** - Track progress
-- `mcp__serena__read_file` - Check project files
-- `mcp__serena__execute_shell_command` - Execute commands
+## Tools: see frontmatter (Bash / Read / Grep / Glob / TaskCreate / TaskUpdate / TaskList / mcp__serena__*)
 
 ## Absolute prohibitions
 

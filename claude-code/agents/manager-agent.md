@@ -95,30 +95,9 @@ Summary: Apply critical-path formula and `N_initial` algorithm per `references/P
 
 Schema: `references/agent-team-contract.md` §3 (Manager → parent) — canonical. **Fill contract §3 YAML literal as-is** (do not rename fields / change hierarchy / alter types).
 
-**Required fields** (never omit):
-- `execution_mode` (parallel | staged | sequential)
-- `parallelism` (integer)
-- `worktree_required` (boolean)
-- `impl_notes.dir` (absolute path)
-- `tasks[]` each element requires all 5 fields:
-  - `developer_id`: `dev1` / `dev2` / `dev3` / `dev4` (literal; hyphen form like `dev-1` forbidden)
-  - `task`: 5-sub-field object `{id, title, description, files, dependencies}` (free-string `task: |` forbidden)
-  - `verify`: 3-sub-field object `{lint, typecheck, test}` (empty string `""` if N/A; single string forbidden)
-  - `dod`: 1-line success criteria
+Required fields: `execution_mode` / `parallelism` / `worktree_required` / `impl_notes.dir` / `tasks[]` (each with `developer_id` / `task` / `verify` / `dod` sub-fields) — see contract §3 for full sub-field spec.
 
-**Required field**: `formula_trace`
-- `independent_task_count`: integer
-- `N_chosen`: integer (= min(count, 8) after formula evaluation)
-- `T_i_estimates`: array of seconds (one per task, ordered by tasks[].developer_id)
-- `T_i_basis`: `historical | manager-breakdown | simple-rules | unknown` (per PARALLEL-PATTERNS.md §T_i estimation priority)
-- `sum_T_i`: integer seconds
-- `LPT_makespan`: integer seconds
-- `overhead`: integer seconds (`orchestration+integration+spawn` per `references/PARALLEL-PATTERNS.md#cost-breakdown`)
-- `expected_parallel`: integer (= LPT_makespan + overhead)
-- `expected_serial`: integer (= sum_T_i)
-- `formula_result`: `PASS` | `FAIL`
-- `formula_threshold`: literal `expected_parallel < expected_serial * 0.95`
-- `downgrade_reason`: string or null (filled if N was reduced from initial min(count,8))
+`formula_trace` required (12 sub-fields per contract §3) — see contract §3 for field list. `downgrade_reason` valid values: `single-task` / `same-file-sequential` / `file-conflict` / `formula-fail` / `parent-override`.
 
 **Prohibitions**:
 - No custom fields outside contract §3
@@ -131,11 +110,11 @@ Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT 
 
 ## Developer allocation handoff
 
-Manager YAML allocation を parent が受け取り、各 task を §4 (parent → Developer) JSON context に変換、**1 message 内 N tool_use** で `Task(developer-agent)` 並列発火。
+Parent receives Manager YAML, converts each task to §4 context (see `references/agent-team-contract.md` §4), fires `Task(developer-agent)` N-parallel in 1 message.
 
 ### Staged execution
 
-Manager shows Stage split; **parent spawns per stage in parallel**. After each Stage, call Manager back for next Stage allocation.
+Manager shows Stage split; parent spawns per-stage in parallel, calls Manager back for next Stage.
 
 ### Integration after completion
 
@@ -190,9 +169,7 @@ Parent calls Manager back with `Task(reviewer-agent)` result. Manager:
 - **(b) same-file-sequential**: all tasks require sequential edits to the same file (symbol-order dependency etc.)
 - **(c) file-conflict**: physical file conflict detected (see `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`)
 
-If none of the above apply but `parallelism: 1` is returned, `formula_trace.downgrade_reason` must explicitly state one of:
-
-- `single-task` / `same-file-sequential` / `file-conflict` / `formula-fail` / `parent-override`
+If none apply but `parallelism: 1` is returned, set `formula_trace.downgrade_reason` to one of the valid literals (see Allocation plan format above).
 
 `parallelism: 1` without explicit reason → parent discards allocation and re-runs Manager (aligned with `/flow` step 5).
 

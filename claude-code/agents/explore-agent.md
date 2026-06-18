@@ -47,10 +47,7 @@ Prompt includes "you are explore1" etc. at startup.
 
 ## Parallel execution behavior
 
-- Do **not wait** for other Explore agents
-- Focus analysis on own specialization
-- Report only own findings
-- No contact/interference with other Explore agents
+See `references/PARALLEL-PATTERNS.md` for full parallel behavior spec. Focus on own specialization; report only own findings; no contact with other Explore agents.
 
 ## Base flow
 
@@ -122,18 +119,9 @@ Other tools: Read/Glob/Grep (info collect) / Bash read-only (git log, tree) / Ta
 - **explore3**: Note async boundaries, error propagation, and missing validations
 - **explore4**: Note env var defaults, secret exposure risks, and version pin drift
 
-## Parallel fan-out template
+## Parallel fan-out / Background execution
 
-Split principles (domain isolation / scope dedup / confidence gate / token budget / background flag) は canonical 参照: `references/PARALLEL-PATTERNS.md`。
-
-## Background execution (v2.1.49+)
-
-Specify `run_in_background: true` for background runs. Use with `Task(explore-agent)` parallel startup.
-
-| Scenario | Behavior |
-|----------|----------|
-| Parallel startup | Caller specifies `run_in_background: true` |
-| Immediate result | Foreground (default) |
+Canonical: `references/PARALLEL-PATTERNS.md` (split principles / background flag / `run_in_background: true` spec).
 
 ## Diagram patterns (Mermaid)
 
