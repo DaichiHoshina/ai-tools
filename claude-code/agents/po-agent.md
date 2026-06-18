@@ -37,6 +37,7 @@ All responses in English (preserve technical terms, tool names).
 3. **Judge worktree** - If Team, ask user to confirm new worktree (use AskUserQuestion)
 4. **Decide strategy** - Tech choices, QA criteria
 5. **Return decision** - Exec mode, Manager instruction, worktree info to parent. Parent executes next step (Manager launch or /dev)
+6. **Manager allocation oversight** (callback, post-Manager / pre-fan-out) - Parent calls PO back with Manager allocation. PO verifies strategy alignment (goal / constraints / priority); returns `verdict: pass | fail | modify`. See § Manager allocation oversight below
 
 ### Return format
 
@@ -67,6 +68,27 @@ On violation (PO returns `direct`), parent discards PO output and proceeds to Ma
 | **Unclear** | Neither above, boundary case | **User confirm before parent return** (no auto default; use AskUserQuestion to ask worktree necessity) |
 
 `--auto` skip conditions (all 4) & formula detail: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`.
+
+## Manager allocation oversight
+
+**Single-shot callback, no loop** (1 invocation per `/flow` run). Input schema: `references/agent-team-contract.md` §1.1.
+
+PO checks Manager allocation against initial `manager_instruction` on 3 criteria:
+
+1. **Goal alignment**: `tasks[]` cover `manager_instruction.goal` (no missing piece, no scope creep)
+2. **Constraints compliance**: Each `task.files` / `task.description` respects `manager_instruction.constraints` (e.g. "don't touch DB migration" → no migration file in any task)
+3. **Priority order**: `tasks[]` order / `dependencies[]` reflects `manager_instruction.priority`
+
+Return:
+
+- `verdict: pass` — all 3 criteria met. Parent fan-outs.
+- `verdict: modify` + `fix_request` — minor deviation, Manager can re-allocate. Parent calls Manager with fix_request (1 loop max).
+- `verdict: fail` + `reason` — strategy fundamentally mis-translated, re-allocation won't help. Parent stops `/flow`, escalates to user.
+
+**Scope guard**: oversight is strategy alignment only. Do **not** comment on:
+- Parallelism degree / `formula_trace` (Manager + parent Gate A own this)
+- Task granularity (Manager owns)
+- Implementation approach (Developer owns)
 
 ## Available tools
 

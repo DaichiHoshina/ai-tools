@@ -31,6 +31,32 @@ manager_instruction:
   priority: ["<top task>", "<next>"]
 ```
 
+### 1.1. parent → PO (Manager allocation oversight callback)
+
+Sent **once per `/flow` run**, after Manager allocation but before fan-out. Parent re-spawns PO with the initial `manager_instruction` + Manager output for strategy alignment check (single-shot, no loop).
+
+```yaml
+oversight_trigger: manager_allocation
+manager_instruction:  # echo from initial §1 PO output (verbatim)
+  goal: "<1 line>"
+  constraints: ["..."]
+  priority: ["..."]
+allocation:  # Manager §3 output, full YAML
+  execution_mode: parallel
+  tasks: [...]
+  formula_trace: {...}
+```
+
+PO returns:
+
+```yaml
+verdict: pass  # pass | fail | modify
+reason: "<1 line; required for fail/modify>"
+fix_request: "<concrete change to allocation; required for modify, omit for pass/fail>"
+```
+
+`pass` → parent proceeds to fan-out (step 7). `fail` → parent stops `/flow`, escalates to user with `reason`. `modify` → parent calls Manager back with `fix_request` (re-allocation, 1 loop max; same budget as Reviewer P0 path).
+
 ### 2. parent → Manager (input)
 
 parent embeds `manager_instruction` + `worktree` + `reviewer_qa_criteria` from PO decision directly into Manager prompt.
