@@ -14,7 +14,7 @@ description: Orchestration-first workflow — parent-led parallel fan-out (orche
 Match keywords top-down, **first hit wins**. If mixed, ask user. `*impl*` = expanded by PO decision.
 
 - **Team**: `Task(po-agent)` → `Task(manager-agent)` → `Task(developer-agent)×N` → aggregate → `Task(reviewer-agent)` → P0 re-fix 1 loop
-- **Direct**: `/dev` (review = `/review` = comprehensive-review skill). Sub-agents cannot spawn; parent launches each tier.
+- **Direct**: `/dev` (review = `/review` = `comprehensive-review` skill). Sub-agents cannot spawn; parent launches each tier.
 
 | # | Keywords | Task | Workflow |
 |---|-----------|--------|------------|
@@ -91,7 +91,7 @@ Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`. Summar
 | Push target | Always PR (no main direct push) |
 | Design decision | Recommend, priority simple |
 | lint-test fail | Auto-fix 1×, 2nd fail stop + report |
-| Multi-review | `--multi-review` auto-ON (Gate C 12 観点並列発火) |
+| Multi-review | `--multi-review` auto-ON (Gate C 12-lens parallel) |
 
 review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Warning 0** (max 3×, excess → report & continue).
 
@@ -106,45 +106,36 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
    - line 1 (formula trace): `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / PASS|FAIL (basis=<T_i_basis>)`
    - line 2 (fan-out declaration): `fan-out: N=<n>, targets=<file count>`
    If any required echo field from Manager's `formula_trace` (12 sub-fields) is missing → stop fan-out, re-request from Manager (discard allocation). Include worktree apply/skip judgment (downgrade_reason presence) in echo line 1. Run `mkdir -p <impl_notes.dir>`
-6.5. **Gate A: parallel-judgment self-review** (必須、step 5 downgrade 通過後の N≥2 case のみ。N=1 sequential path は適用外)。parent Opus が Manager の `N_chosen` / `formula_trace` / file 競合検知を 5 観点で再評価。FAIL → Manager 再実行 (allocation 破棄、step 4 へ戻る)。PASS → step 7。skip 不可。Canonical: `references/parallel-self-review.md`
-7. **Parallel fan-out**: fan-out 直前の経過説明は省略し、parallel Task 発火を最優先とする。fire `Task(developer-agent)×N` in 1 message (worktree isolated; N=1 sequential path confirmed at step 5). **Bundle required** (operational spec of L50): bundle all N Tasks in the message immediately after fan-out declaration (N≥2). Splitting into 1-per-message creates sequential chain firing (parentUuid serial) — violates "repeating 1 message 1 Agent N times is sequential" (L50). N declaration : tool_use firing message = 1:1 strict
-8. **Parallel integrate + review** (fire both in 1 message): `Task(manager-agent)` integrate **and** reviewer fan-out simultaneously. Reviewer fan-out:
-   - default (`/flow`): `Task(reviewer-agent, --codex)` × 1 (comprehensive 12 観点 + codex 並列、現状維持)
-   - `--auto` (`/flow-auto`) または `--multi-review`: Gate C 発火 (12 lens stage split)。詳細仕様: `references/parallel-self-review.md` §Gate C
-   Reviewer は `diff_target` を見て MERGED.md skip (`agents/reviewer-agent.md`: "no impact on review scope") なので Manager notes integration に依存しない → overlap で critical path から `integration_cost` (~42s) 除去 (was serial 8→9)。Manager → aggregate dev reports + persist MERGED.md at `<impl_notes.dir>/MERGED.md`; Reviewer → P0/P1 judge。bundle reviewer fan-out + manager integrate を 1 message にまとめる (same 1-message rule as dev fan-out; splitting serializes)
-8.5. **Gate B: parallel-implementation self-review** (必須、N≥2 case のみ)。parent Opus が N 本の差分を 4 観点 (相互矛盾 / 同一行多重編集 / 重複 import / 命名衝突) で再評価。FAIL → step 9 P0 loop へ強制投入 (P0 0 件でも実行)。PASS → step 9 通常 flow。skip 不可。Canonical: `references/parallel-self-review.md`
+6.5. **Gate A: parallel-judgment self-review** (required; N≥2 only after step 5 downgrade check; N=1 sequential path is exempt). Parent Opus re-evaluates Manager's `N_chosen` / `formula_trace` / file conflict detection across 5 criteria. FAIL → re-run Manager (discard allocation, return to step 4). PASS → step 7. Cannot skip. Canonical: `references/parallel-self-review.md`
+7. **Parallel fan-out**: skip pre-fan-out progress narration; prioritize parallel Task firing. Fire `Task(developer-agent)×N` in 1 message (worktree isolated; N=1 sequential path confirmed at step 5). **Bundle required** (operational spec of L50): bundle all N Tasks in the message immediately after fan-out declaration (N≥2). Splitting into 1-per-message creates sequential chain firing (parentUuid serial) — violates "repeating 1 message 1 Agent N times is sequential" (L50). N declaration : tool_use firing message = 1:1 strict
+8. **Parallel integrate + review** (fire both in 1 message): `Task(manager-agent)` integrate **and** reviewer fan-out simultaneously.
+   - default: `Task(reviewer-agent, --codex)` × 1 (full 12-criteria + codex parallel)
+   - `--auto` / `--multi-review`: Gate C (12-lens stage split). Details: `references/parallel-self-review.md` §Gate C
+   Reviewer reads `diff_target` directly (MERGED.md skip) → removes `integration_cost` (~42s) from critical path. Bundle both in 1 message.
+8.5. **Gate B: parallel-implementation self-review** (required; N≥2 only). Parent Opus re-evaluates N diffs across 4 criteria (cross-diff conflict / duplicate import / naming collision / propagation incompleteness). FAIL → force into step 9 P0 loop (even with 0 P0 findings). PASS → step 9 normal flow. Cannot skip. Canonical: `references/parallel-self-review.md`
 9. **P0 re-fix loop** (after both step-8 agents return):
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
    - P0 remains / P1: report & continue (stop when `--auto`)
-   - codex not configured: comprehensive single fallback
+   - codex not configured: full single fallback
 10. Post-*impl* sequential steps from Task table (review + Gate B done at step 8/8.5, skip)
 
-## Self-Review (必須、3 gate)
+## Self-Review (required, 3 gates)
 
-`/flow` は orchestration 中核。Manager allocation / 並列差分 / review 観点の 3 phase で parent Opus self-review gate 強制。Canonical 詳細 (観点表 / FAIL 動作 / cost 帯): `references/parallel-self-review.md`。Noise discard: `rules/review-noise-discard.md`。
+Parent Opus gates are mandatory: Manager allocation (A) / parallel diffs (B) / review criteria (C). Canonical: `references/parallel-self-review.md`. Noise discard: `rules/review-noise-discard.md`.
+A/B mandatory on orchestration path (PO→Manager→Dev×N); `--sequential` exempts A/B. C: `--auto` / `--multi-review` only.
 
-**適用範囲**: A/B は orchestration path (PO→Manager→Dev×N) で skip 不可。`--sequential` は Manager skip のため A/B 適用外。C は `--auto` / `--multi-review` 時のみ。
-
-- **Gate A** (step 6.5、fan-out 前): N consistency / formula PASS / file conflict / worktree applicability / T_i basis の 5 観点。FAIL → Manager 再実行 (max 1)、2 回目 → `--sequential` downgrade
-- **Gate B** (step 8.5、aggregate 後): cross-diff conflict / duplicate import / naming collision / propagation incompleteness の 4 観点。FAIL → step 9 P0 loop 強制 (max 1)
-- **Gate C** (step 8 拡張、`--auto` / `--multi-review` 時): `Task(reviewer-agent, --focus=<lens>)` を 12 lens で stage split (stage 1=7 agent / stage 2=6 agent、8 Dev limit + 9 concurrent session limit + 境界余裕 1 確保)。default `/flow` は comprehensive + codex 2 agent 維持
+- **Gate A** (step 6.5, before fan-out): 5 criteria — N consistency / formula PASS / file conflict / worktree applicability / T_i basis. FAIL → re-run Manager (max 1); 2nd → `--sequential` downgrade
+- **Gate B** (step 8.5, after aggregate): 4 criteria — cross-diff conflict / duplicate import / naming collision / propagation incompleteness. FAIL → force step 9 P0 loop (max 1)
+- **Gate C** (`--auto` / `--multi-review` only): 12-lens stage split (stage 1=7 agent / stage 2=6 agent; 8 Dev + 9 session limit + 1 margin). Default `/flow` keeps full-criteria + codex 2-agent mode.
 
 ## Integration rules
 
-- Required: impl → /lint-test → /review → review-fix → /git-push
-- 2× fail rule: 2× fail with same approach → `/clear` → re-organize
-
+Required: impl → /lint-test → /review → review-fix → /git-push. 2× fail with same approach → `/clear` → re-organize.
 ### Completion actions
 
-- Save to Claude Code auto-memory via `Write`: `~/.claude/projects/<project>/memory/work-context-YYYYMMDD-{topic}.md` (Serena `write_memory` forbidden — 2026-06-10)
-- `--auto`: secret check → /git-push --pr → PushNotification
+- Save to auto-memory: `~/.claude/projects/<project>/memory/work-context-YYYYMMDD-{topic}.md` (Serena `write_memory` forbidden — 2026-06-10)
+- `--auto`: secret check → /git-push --pr → notify `[flow-auto] {topic} complete → PR created` (fail: `fail: {reason}` / lint 2×: `stop: lint-test 2× fail`)
 - Normal: AskUserQuestion "push?"
-
-### PushNotification (--auto)
-
-- Success: `[flow-auto] {topic} complete → PR created`
-- Fail: `[flow-auto] {topic} fail: {reason}`
-- lint-test 2× fail: `[flow-auto] {topic} stop: lint-test 2× fail`
 
 ## Auto-apply features
 
