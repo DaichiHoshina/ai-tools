@@ -19,7 +19,7 @@ parameters:
 
 ## 12 Perspectives
 
-Details: `references/review-criteria.md` / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`.
+Details: `references/review-patterns-universal.md` / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`. Noise discard 7 観点 / P2/P3 降格: `rules/review-noise-discard.md`。Self-Review 3 gate (`/flow` 連携): `references/parallel-self-review.md` — Gate C で本 skill を `reviewer-agent` 経由 12 lens 並列発火。
 
 | Perspective | Description |
 |---|---|

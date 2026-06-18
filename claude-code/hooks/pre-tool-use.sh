@@ -1248,13 +1248,15 @@ PYEOF
       if [[ "$GUARD_CLASS" != "Forbidden" ]]; then
         _pn_cmd_text=""
         _pn_cmd_label=""
-        # git commit -m
+        # git commit -m / -F (AI 定型語 block と同様、file 経由本文も対象)
         if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]]; then
           if [[ "$COMMAND" =~ $_re_m_sq ]]; then
             _pn_cmd_text="${BASH_REMATCH[1]}"
           elif [[ "$COMMAND" =~ -m[[:space:]]\"([^\"]*)\" ]]; then
             _pn_cmd_text="${BASH_REMATCH[1]}"
           fi
+          # -F / --file 経由本文も追加 (AI 定型語 block の _commit_file_content を再利用)
+          [[ -n "${_commit_file_content:-}" ]] && _pn_cmd_text="${_pn_cmd_text}"$'\n'"${_commit_file_content}"
           _pn_cmd_label="commit message"
         fi
         # gh pr / issue / release
@@ -1271,6 +1273,8 @@ PYEOF
           elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
             _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
           fi
+          # --body-file 経由本文も追加 (AI 定型語 block の _gh_file_content を再利用)
+          [[ -n "${_gh_file_content:-}" ]] && _pn_cmd_text="${_pn_cmd_text}"$'\n'"${_gh_file_content}"
           _pn_cmd_label=$(printf '%s' "$COMMAND" | grep -oE 'gh (pr|issue) (create|edit|comment|review|merge)|gh release create' | head -1)
         fi
         # glab
