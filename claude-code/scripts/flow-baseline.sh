@@ -29,7 +29,7 @@ OPTIONS:
 
 OUTPUT:
   ~/.claude/logs/flow-baseline-YYYYMMDD.tsv
-  columns: date  session_id  topic  n_dev_agents  peak_concurrency  total_wall_sec  avg_task_sec  note
+  columns: date  session_id  topic  n_dev_agents  peak_concurrency  total_wall_sec  avg_task_sec  bundle_violations  note
 
 NOTES:
   - /flow および /flow-auto 両方を対象とする
@@ -73,7 +73,7 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
 
 # TSV ヘッダー出力
 {
-  echo -e "date\tsession_id\ttopic\tn_dev_agents\tpeak_concurrency\ttotal_wall_sec\tavg_task_sec\tnote"
+  echo -e "date\tsession_id\ttopic\tn_dev_agents\tpeak_concurrency\ttotal_wall_sec\tavg_task_sec\tbundle_violations\tnote"
 
   # 各 jsonl を jq で処理
   # 戦略:
@@ -231,6 +231,26 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
           else -1 end
         ) as $avg_task |
 
+        # bundle_violations: developer-agent 起動が 1 message に bundle されていない回数
+        # (N>=2 時に 1 message 1 Agent ずつ発火していた場合の違反数)
+        (
+          if $n_dev >= 2 then
+            [
+              $records[] |
+              select(.type == "assistant") |
+              . as $rec |
+              select($rec.timestamp >= $inv.flow_ts and $rec.timestamp < $inv.next_flow_ts) |
+              [
+                .message.content[]? |
+                select(type == "object" and .name? == "Agent" and
+                       (.input.subagent_type? // "" | test("developer-agent"; "i")))
+              ] |
+              length |
+              select(. == 1)
+            ] | length
+          else 0 end
+        ) as $bundle_violations |
+
         [
           ($inv.flow_ts | .[0:10]),
           $session_id,
@@ -239,6 +259,7 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
           $peak,
           $total_wall,
           $avg_task,
+          $bundle_violations,
           $inv.note
         ] | @tsv
       end
@@ -254,7 +275,7 @@ if [[ "$SHOW_SUMMARY" -eq 1 ]]; then
   echo "=== Summary (n=${LINE_COUNT}) ===" >&2
   if [[ "$LINE_COUNT" -gt 0 ]]; then
     # awk で total_wall_sec (col6) と avg_task_sec (col7) の stats を計算
-    # columns: date(1) session_id(2) topic(3) n_dev_agents(4) peak_concurrency(5) total_wall_sec(6) avg_task_sec(7) note(8)
+    # columns: date(1) session_id(2) topic(3) n_dev_agents(4) peak_concurrency(5) total_wall_sec(6) avg_task_sec(7) bundle_violations(8) note(9)
     awk -F'\t' '
       NR==1 { next }  # ヘッダースキップ
       $6 > 0 {
