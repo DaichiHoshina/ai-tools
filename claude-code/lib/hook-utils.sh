@@ -337,7 +337,10 @@ _is_aitools_path() {
   return 1
 }
 
-# 与えられた path が Claude Code auto-memory dir (~/.claude/projects/*/memory/) かどうかを判定する。
+# 与えられた path が Claude Code auto-memory dir かどうかを判定する。
+# 対象 dir:
+#   - ~/.claude/projects/*/memory/    (session-bound auto-memory)
+#   - ~/.claude/agent-memory/          (subagent 共通 memory 出力先)
 # AI 自己分析の生記録 (work-context / writing_failure / pending-improvements 等) は
 # 外向き prose 規則の対象外なので、jp-quality / NG 語 / 連続漢字 hook で skip 用に使う。
 # 戻り値: 0=auto-memory 配下 / 1=配下でない
@@ -345,6 +348,7 @@ _is_aitools_path() {
 _is_auto_memory_path() {
   local p="$1"
   [[ "$p" == "$HOME/.claude/projects/"*"/memory/"* ]] && return 0
+  [[ "$p" == "$HOME/.claude/agent-memory/"* ]] && return 0
   return 1
 }
 
