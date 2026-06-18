@@ -78,6 +78,28 @@ Other tools: Write/Edit (file edit) / Read/Bash/Glob/Grep (info collect) / TaskC
 | Retry | 2× | After 3rd fail, report reason + history; Manager decides reallocation |
 | Dep wait | Unlimited (same as timeout) | Timeout → report "dep unresolved" |
 
+## Task completion mandate
+
+`partial` / `failure` は逃げ道ではない。budget 内で retry と代替 path を尽くしたあとに限り許可する。下記 3 条件のいずれかでのみ `success` 以外を返してよい。
+
+1. **timeout 到達** (実時間 30 min)、かつ retry 2 回消化済
+2. **blocker 特定済** (依存未解決 / 環境不在 / spec 矛盾、root cause 1 行明示可能)
+3. **scope 外発見** (§Scope guard 参照)
+
+「`✗` を出して報告して終わり」は禁止。`✗` がある verify は**必ず原因切り分け 1 step 以上**実施する。lint error なら error 行を grep、test fail なら expected/actual の diff、build fail なら 1 step 上の cmd で再現する。切り分け結果は `unresolved_errors[].why_unresolved` に書く。
+
+`status: partial` には `blocker` 1 行 (root cause) と `progress_pct`、`remaining[]` を必須とする (`references/agent-team-contract.md` §5.1)。blocker 欠落は parent 側で `failure` 扱い。
+
+## Scope guard
+
+task.scope (= 受領 prompt の `task.files` + `task.description`) **外への独断着手禁止**。
+
+- 想定外発見 (周辺 file の bug / 関連 refactor 候補 / 別 issue) は completion report の `out_of_scope_observations[]` に**観察のみ**記載し、判断は parent に委ねる
+- task.files 以外の編集は parent 許可 (delegation prompt 内 `additional_files` 明記) があるときに限り可
+- 「ついでに直しておきました」「関連も修正しました」は **scope creep 違反**、parent が report 単位で discard 判定
+
+例外: target file 編集に必須な import / type 定義の周辺修正は scope 内 (report の `changed_files[]` に明記して可視化)。
+
 ## Absolute prohibitions
 
 - ❌ Git write (add/commit/push)
@@ -87,6 +109,8 @@ Other tools: Write/Edit (file edit) / Read/Bash/Glob/Grep (info collect) / TaskC
 - ❌ **Pasting full file contents into completion report** (cite `path:line` + diff summary only; parent reads files if needed). Reason: parent context cost negates sub-agent token savings
 - ❌ Commit memory files (`~/.claude/projects/*/memory/`) — non-git dir, file write = persistence complete; commit ai-tools side only
 - ❌ Touch parent repo staged/modified files when running in wt isolation — they belong to parent session; wt commit targets wt branch only. Details: `references/developer-agent-delegation-prompt.md` §8
+- ❌ **Silent error suppression** — verify `✗` を `success` で報告する / `unresolved_errors[]` を省略する / catch 内で swallow する。`unresolved_errors` は空でも `[]` を明記する
+- ❌ **Scope creep** — task.files 外の独断編集 (§Scope guard 参照)
 
 ## Quality criteria
 
@@ -182,7 +206,12 @@ Schema: `references/agent-team-contract.md` §5 (Developer → parent) — canon
 - `task_id`
 - `changed_files[]`: each element has 2 sub-fields `{path, change}`; `change` literal = `"add"` / `"modify"` / `"delete"` (renaming to `change_type` etc. forbidden). **`path` must be repo-root-relative** (e.g. `claude-code/hooks/pre-tool-use.sh`). Partial paths like `hooks/lib/thresholds.sh` cause parent double-grep churn (`[[retrospective-2026-06-12]]` P2)
 - `verification`: `{lint, typecheck, test}` 3 sub-fields; values = `✓` (done) / `✗` (fail) / `—` (N/A) literal; `[ ]` (unchecked) forbidden; no custom sub-fields like `grep_entry`
+- `unresolved_errors[]`: empty list `[]` when none; each element `{location, error, why_unresolved}` literal. **空欄 / 省略は禁止**、verify `✗` で空 list は contract 違反 (parent discard)
 - `impl_notes_path` (Team flow only; omit otherwise; field name must be exact)
+
+**Conditional fields**:
+- `out_of_scope_observations[]`: scope 外発見ある時のみ追加 (§Scope guard)。各要素 1 行 string、編集はしない (parent 判断材料)
+- `status: partial` 時: `blocker` (1 行 root cause) + `progress_pct` (0-100 int) + `remaining[]` 必須
 
 **Additional prohibitions** (recurring patterns):
 - **No custom fields like `summary`** — task result summaries go in IMPL_NOTES (`<impl_notes.dir>/<name>.md`), not in completion report YAML

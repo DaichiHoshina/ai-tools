@@ -9,8 +9,12 @@ Copy this template, fill all 6 sections (no placeholder left blank), paste to `T
 - [ ] verify cmd 確定済 (build / typecheck / test / bats — single runnable cmd)
 - [ ] DoD 1 行化済
 - [ ] 単 domain (no mixed file groups / root causes)
+- [ ] scope 明示 (`task.files` literal + 編集可な additional_files 併記、それ以外は scope creep 違反)
+- [ ] blocker-on-stop 方針記載 ("blocker 検出時は独断進行禁止、`unresolved_errors[]` に書いて `status: partial` で停止")
 
-All 4 must be ✓ before firing. Parent completes these; do not push exploration to subagent.
+All 6 must be ✓ before firing. Parent completes these; do not push exploration to subagent.
+
+最後 2 項目 (scope / blocker-on-stop) は **completion 力低下対策**。曖昧 scope は subagent の「ついで修正」を誘発、blocker 黙殺は「error のまま report」を誘発する。delegation prompt に literal で含める。
 
 ## 0.5 Prompt quality rules
 
