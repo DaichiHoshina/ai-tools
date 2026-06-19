@@ -15,7 +15,7 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 
 ---
 
-## main pre-release (detected 2026-06-08, re-confirmed 2026-06-15, still pre-release on next tag)
+## main pre-release (detected 2026-06-08, re-confirmed 2026-06-19, still pre-release on next tag)
 
 - [ ] **`typescript_vts` `initialization_options`**: Pass initializationOptions dict under `ls_specific_settings.typescript_vts`. Required for Yarn PnP + `typescript.tsdk` TS projects — review at: only when activating a Yarn PnP TS project (none currently)
 - [ ] **`jetbrains_launch_command`**: Auto-launch IDE on project activate — review at: JetBrains IDE not used, out of scope

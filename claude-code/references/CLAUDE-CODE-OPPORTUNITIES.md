@@ -17,6 +17,15 @@ On adoption: check the box. On obsolescence: strikethrough (`~~feature~~ (obsole
 
 ---
 
+## 2.1.181 (detected 2026-06-19, latest)
+
+Range 2.1.180–2.1.181 reviewed. 2.1.180 は内部変更のみ (user-facing なし)。
+
+- **`/config key=value` 構文** [2.1.181]: プロンプトから任意 setting を設定可能な構文追加。interactive / `-p` / Remote Control 全モード対応。`templates/settings.json.template` への変更不要 — harness 動作変更なし。Track only。
+- **`sandbox.allowAppleEvents`** [2.1.181]: macOS サンドボックス中の Apple Events 送信を opt-in 許可する新 setting。現在 Apple Events を必要とするユースケースなし。Track only。
+- **`CLAUDE_CLIENT_PRESENCE_FILE`** [2.1.181]: 指定 file が存在する間 mobile push を抑制する env var。採用はユーザ好みに依存。Track only。
+- 残余 (Bun 1.4 / line-by-line streaming / connection-drop auto-retry / subagent panel UI / bug fixes): 内部・UI 改善、config 変更不要。
+
 ## 2.1.179 (detected 2026-06-17, latest)
 
 No new opportunities. Range 2.1.179 (single version); all 9 CHANGELOG entries are bugfix / perf only.
