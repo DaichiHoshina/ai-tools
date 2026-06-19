@@ -80,8 +80,10 @@ _run_bash_forbidden() {
 }
 
 @test "pre-tool-use: Task はSafe (並列 self-review inject あり)" {
-  result=$(run_hook "Task")
-  # GUARD_CLASS=Safe だが並列 self-review を additionalContext に inject する
+  # subagent_type 必須化後は explore-agent など明示が前提
+  local input
+  input=$(jq -n '{tool_name:"Task", tool_input:{subagent_type:"explore-agent", prompt:"x"}}')
+  result=$(echo "$input" | bash "$HOOK_FILE")
   echo "$result" | grep -q "並列 self-review"
 }
 

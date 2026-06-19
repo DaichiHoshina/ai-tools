@@ -54,7 +54,7 @@ setup() {
 }
 
 @test "flow.md: Self-Review section に PO Gate 行" {
-  run grep -cF "**PO Gate** (step 6.3" "$FLOW_FILE"
+  run grep -cF "**PO Gate v2** (step 6.3" "$FLOW_FILE"
   [ "$status" -eq 0 ]
   [ "$output" -eq 1 ]
 }

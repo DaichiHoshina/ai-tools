@@ -101,8 +101,9 @@ teardown() {
 @test "hooks: handles malformed JSON gracefully" {
   local input='{"invalid": json}'
   run bash -c "echo '$input' | ${HOOKS_DIR}/session-start.sh 2>&1"
-  # エラーが発生しても終了コードが0でない、または適切なエラーメッセージ
-  [[ "$output" =~ "error" ]] || [ "$status" -ne 0 ]
+  # session-start.sh は jq // fallback で malformed 入力でも exit 0 + 有効 JSON を返す
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ systemMessage ]]
 }
 
 # =============================================================================
@@ -372,7 +373,8 @@ teardown() {
 }
 
 @test "integration: pre-tool-use injects parallel self-review reminder for Task" {
-  local input='{"tool_name": "Task", "tool_input": {}}'
+  # subagent_type 必須化後は subagent_type 明示が前提
+  local input='{"tool_name": "Task", "tool_input": {"subagent_type": "explore-agent"}}'
   run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
   [ "$status" -eq 0 ]
   echo "$output" | jq -e '.additionalContext | contains("並列 self-review")' >/dev/null

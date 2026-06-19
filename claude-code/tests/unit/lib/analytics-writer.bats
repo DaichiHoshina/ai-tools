@@ -136,13 +136,14 @@ teardown() {
   wait
 
   # cleanup_runs に今日のレコードは必ず 1 件のみ
+  # 並列書込直後で DB busy が出るため -cmd .timeout 5000 で retry させる
   local run_count
-  run_count=$(sqlite3 "$ANALYTICS_DB" "SELECT COUNT(*) FROM cleanup_runs WHERE run_date = date('now', 'utc');")
+  run_count=$(sqlite3 -cmd ".timeout 5000" "$ANALYTICS_DB" "SELECT COUNT(*) FROM cleanup_runs WHERE run_date = date('now', 'utc');")
   [ "$run_count" = "1" ]
 
   # 削除結果も正しい（古い 2 件が消えて 0 件）
   local count
-  count=$(sqlite3 "$ANALYTICS_DB" "SELECT COUNT(*) FROM tool_events;")
+  count=$(sqlite3 -cmd ".timeout 5000" "$ANALYTICS_DB" "SELECT COUNT(*) FROM tool_events;")
   [ "$count" = "0" ]
 }
 
