@@ -160,3 +160,11 @@ When the delegated task includes editing these files, the assigned dev must writ
 **Prohibit safe-side avoidance**: Using `<product-name>` notation or broad prefix match (`~/ghq/github.com/*`) when editing allowlist files makes block detection logic inaccurate. Literal writing is the correct implementation inside allowlist files.
 
 **This file is NOT in the allowlist**: `developer-agent-delegation-prompt.md` itself is not included; do not write social-hit terms literally here. Cross-ref social-hit term list from `rules/public-repo-private-data-block.md`.
+
+### Branch scope guard (wt tasks)
+
+Before committing, confirm current branch with `git branch --show-current`.
+The result must match the branch specified in this delegation prompt exactly.
+If different: **stop immediately**, do not commit, report as blocker in `unresolved_errors[]`.
+
+Commit only files listed in `task.files` (§1 target files). Committing files outside the listed scope — even if modified — is a scope violation. Stage by explicit path (`git add path/to/file`), never `git add -A` or `git add .`.

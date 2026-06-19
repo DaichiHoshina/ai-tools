@@ -26,6 +26,8 @@ For N independent tasks: **place N `Agent` tool_use calls in a single assistant 
 
 Before delegating, parent must: (a) identify target `file:line` (`find_symbol` / `grep`) (b) finalize verify command (c) condense DoD to 1 line. Do not push exploration to subagent (exploration phase dominates makespan). Prompts without explicit targets trigger full-repo scans.
 
+**Branch name per dev (mandatory for wt parallel):** When firing N≥2 developer-agents with `isolation: "worktree"`, assign each dev a unique branch name in the delegation prompt. Include `branch: feature/<name>` as a literal in §1. Without explicit branch assignment, agents may share branches and produce cross-scope commits.
+
 **Dedup before fan-out:** before firing N agents, merge query lines that target the same file group or the same symbol set into 1 agent. Parallelism = count of *distinct* domains, not raw query count. Each extra agent adds a full LLM run (explore-agent avg 123s), so a redundant launch is pure waste. Never merge genuinely independent domains and never drop below 1.
 
 ## Agent fire self-review (required before Task tool)
