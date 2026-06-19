@@ -62,11 +62,39 @@ Or direct Superpowers call:
 2. **Skeptic Agent**: counter w/ risks, alternatives, blind spots
 3. **Synthesis**: merge both, remove bias
 
+### Gate 1: subagent_type 指定必須
+
+Task fire 時は必ず `subagent_type: explore-agent` を明示する。
+`general-purpose` / 未指定は禁止 (CLAUDE.md Discovery Routing 参照)。
+debate-agent など新 agent type の新設も禁止。既存 `explore-agent` を流用する。
+
 ```
-Task("proponent", "argue merits & feasibility of this design: $ARGUMENTS")
-Task("skeptic", "counter w/ risks, alternatives, oversights: $ARGUMENTS")
+Task("proponent", subagent_type="explore-agent",
+     prompt="argue merits & feasibility of this design: $ARGUMENTS")
+Task("skeptic",   subagent_type="explore-agent",
+     prompt="counter w/ risks, alternatives, oversights: $ARGUMENTS")
 → synthesize both for final judgment
 ```
+
+### Gate 2: verdict 受取
+
+各 agent 完了後、出力末尾の trailer を読んで判定する。
+trailer literal は `references/agent-output-schema.md` を参照 (二重管理禁止)。
+読取対象フィールド: `status` / `confidence` / `issues_blocking`。
+
+### Gate 3: fallback
+
+| Scenario | Behavior |
+|----------|----------|
+| trailer 欠落 | `status: failure` と同等に扱う |
+| 片方 failure | 残り 1 件の出力で続行。一方向偏りを明示してから統合 |
+| 両方 failure | 処理を停止し、user にエスカレートする |
+
+### Constraints
+
+- `subagent_type: explore-agent` の literal 明示が必須
+- status enum は `references/agent-output-schema.md` canonical、本文に重複定義しない
+- debate-agent など新 agent type の新設禁止
 
 ## Fallback behavior
 
@@ -74,7 +102,7 @@ Task("skeptic", "counter w/ risks, alternatives, oversights: $ARGUMENTS")
 |----------|----------|
 | Superpowers plugin not installed | suggest auto-delegate to `/plan`, warn |
 | `--debate`: one agent fails | use remaining output, flag one-sided bias |
-| both agents fail | downgrade to direct dialogue, no agents |
+| both agents fail | stop + escalate to user (see Gate 3) |
 
 ## Notes
 

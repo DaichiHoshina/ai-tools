@@ -42,6 +42,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | Other genuinely broad analysis | Explore (built-in, last resort) |
 | **`general-purpose` agent** | **Forbidden** — highest cost source (measured max 501s). Always substitute with `explore-agent` / `claude-code-guide` / `developer-agent` |
 
+> explore-agent / root-cause-analyzer を発火した後は、trailer フィールド (`status` / `confidence` / `issues_blocking`) を必ず読む。詳細: `references/agent-output-schema.md`
+
 ## Auto-Delegation (parent=Opus orchestrates, subagent=Sonnet executes)
 
 *(For impl/edit tasks. Investigation phase → Discovery Routing)*

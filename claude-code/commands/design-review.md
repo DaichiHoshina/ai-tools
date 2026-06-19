@@ -87,6 +87,16 @@ Confirm preview URL (dev server) with user. If not running, start with `npm run 
 | `--viewport <px>` | desktop viewport (default 1440) |
 | `--skip-mobile` | Desktop viewport only |
 
+## Blocker gate (parent が実行)
+
+`design-review-agent` の出力 trailer を読み、以下の判定を行う。
+
+- `issues_blocking != []` → 処理を停止し、`issues_blocking` の内容をそのまま user に提示して escalate する
+- `status` が `failure` または `dep_unresolved` → 同様に停止 + escalate (次 step に進まない)
+- `issues_blocking == []` かつ `status: success` → 次 step に進む
+
+trailer field の意味と enum 定義は `references/agent-output-schema.md` を参照。
+
 ## References
 
 - Project-specific augmentation: pass `context/design-principles.md` / `context/style-guide.md` from project root to agent if present. Otherwise use Stripe/Airbnb/Linear default standards
