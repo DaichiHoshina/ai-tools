@@ -35,12 +35,39 @@ Infrastructure → `infrastructure/terraform.md`, `infrastructure/aws-eks.md`.
 
 `clean-architecture-ddd` / `api-design` / `microservices-monorepo` (on detect) auto-load guidelines. Detail: `references/command-resource-map.md`.
 
-## Agent use judgment
+## Step 1: Scope intake (required)
 
-| Type | Target |
-|------|------|
-| PO Agent use | New feature design / architecture decision / multi-component / worktree needed |
-| Direct execution | Single file fix / small improvement |
+Run before any judgment:
+
+1. **File count**: Glob / wc -l で対象 file 数と各 file 行数を把握
+2. **要件未確定箇所抽出**: 各 file の編集 scope / 削除 target / 選択肢が複数ある決定点を列挙
+3. **Sub 質問**: 未確定箇所が 1 件以上 → AskUserQuestion (max 3 件、各 2-4 選択肢)
+4. **Skip 条件**: 要件完全明確 (single typo / 1 symbol rename / explicit instruction) → sub 質問なしで Step 2 へ
+
+## Step 2: Execution mode judgment (required)
+
+`inline` / `/dev` / `/flow N=<n>` を判定。判定 table:
+
+| 条件 | 実行方式 | 理由 |
+|------|---------|------|
+| 1 file / 1 symbol / 数行 | **inline** (parent 直接 Edit) | agent overhead 不要 |
+| 1-2 file / 単一 task / file 間結合あり | **`/dev`** (developer-agent 1 体) | 委譲のみ、並列不要 |
+| 3-5 file / 独立性高 / 各 file ≥30 行変更 | **`/flow` N=3-5** | 並列短縮 benefit > overhead (60s+) |
+| 6+ file / 完全独立 | **`/flow` N=min(file数, 8)** | 8 上限 (session limit) |
+| 3+ file / file 間結合強 or 順序依存 | **`/dev` sequential** | 並列化で conflict |
+| 3+ file / 各 file 数行のみ | **inline 連続 Edit** | overhead 回収不能 |
+
+並列数 N 計算式:
+
+```text
+N_candidate = 独立 file 数 (file 間結合度 0)
+wall_clock_parallel ≈ max(T_i) + overhead(60s)
+wall_clock_sequential ≈ sum(T_i)
+採用条件: wall_clock_parallel < wall_clock_sequential
+N_final = min(N_candidate, 8)
+```
+
+T_i 見積 = file 行数 × 編集密度 (新規 ~3s/行 / 修正 ~5s/行 / 削除 ~1s/行)
 
 ## PO Agent flow
 
@@ -69,6 +96,13 @@ Run 2-stage self-review **before** any `/plan` output. Skip not allowed. Applies
 
 Investigation discard: speculative leads / hypothetical edge cases / findings unrelated to the change.
 Plan discard: compat shims / future abstractions / impossible-case error handling / non-boundary validation / scope creep / premature optimization / half-finished phases.
+
+**判定妥当性 review (Step 2 出力に適用)**:
+
+- inline で済むのに `/dev` 委譲していないか (1 file / 数行 / 規約 file の sub 質問 1 件以下)
+- `/dev` で済むのに `/flow` していないか (file 数 < 3 / 結合強 / overhead 回収不能)
+- 並列数 N 過剰でないか (N_candidate が結合度 0 を満たさない / wall_clock_parallel ≥ wall_clock_sequential)
+- 持ち越し task / 別 scope task を本 plan に混入していないか (混入 → 別 task 分離)
 
 ### Stage B: plan-specific aggregate view
 
@@ -99,6 +133,10 @@ Reference across sessions, load w/ `/reload`.
 ## Implementation plan
 Phase 1: [task]
 Phase 2: [task]
+
+## Execution mode
+- Mode: inline / `/dev` / `/flow N=<n>`
+- 根拠: [file 数 / 結合度 / T_i / overhead 比較を 1 行]
 
 ## Worktree
 - Needed: Yes/No
