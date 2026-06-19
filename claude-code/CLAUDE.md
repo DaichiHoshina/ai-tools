@@ -88,7 +88,7 @@ Do not write derived values (count / sum / list length) computable from a canoni
 ## Context Management
 
 - **>40% → suggest `/compact`**. Task boundary is the best savings point for `/clear` (5+ min idle = cache TTL expired). After 30 min → suggest `/clear` once in chat.
-- **Long session = top cost source**: measured 200-turn-plus sessions hold 88% of cache_read spend. `user-prompt-submit.sh` auto-warns at 400 msg (~200 turn) and urgent at 1000 msg (~500 turn). On warn, finish current task then `/clear` — cache_read is billed every turn at base-context size.
+- **Long session = top cost source**: measured (2026-06-19) 150-300 msg session occupies $30-$45 / session cache_read range. `user-prompt-submit.sh` auto-warns at 150 msg (~75 turn) and urgent at 350 msg (~175 turn). On warn, finish current task then `/clear` — cache_read is billed every turn at base-context size.
 - **Same problem fails twice in a row → suggest `/clear` + rewrite prompt** (accumulated failure context is the primary failure mode, independent of capacity).
 - Continue: "generate next-session mega-prompt" → paste into new session. Uncontaminated question: `/btw`
 

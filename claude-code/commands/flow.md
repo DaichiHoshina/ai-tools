@@ -140,6 +140,7 @@ Required: impl → /lint-test → /review → review-fix → /git-push. 2× fail
 - Save to auto-memory: `~/.claude/projects/<project>/memory/work-context-YYYYMMDD-{topic}.md` (Serena `write_memory` forbidden — 2026-06-10)
 - `--auto`: secret check → /git-push --pr → notify `[flow-auto] {topic} complete → PR created` (fail: `fail: {reason}` / lint 2×: `stop: lint-test 2× fail`)
 - Normal: AskUserQuestion "push?"
+- **/clear 推奨 (cache_read 累積防止)**: /flow 完遂後は task 境界。次 task に進む前に `/clear` 提案を chat 末尾に 1 行出す (実測 2026-06-19: /flow 連発 session が cache_read 60M+ で $40+/session)。`--auto` は完了通知に `→ next task は /clear 後に開始推奨` を併記
 
 ## Auto-apply features
 
