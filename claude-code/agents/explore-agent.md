@@ -126,3 +126,16 @@ Canonical: `references/PARALLEL-PATTERNS.md` (split principles / background flag
 ## Diagram patterns (Mermaid)
 
 - Dir layout → `graph TD` / Dependencies → `graph LR` / Data flow → `sequenceDiagram` / State → `stateDiagram-v2` / Class → `classDiagram`
+
+## Output schema (required)
+
+詳細は `references/agent-output-schema.md` 参照。
+
+Trailer example (explore-agent typical):
+
+```yaml
+status: success
+confidence: 87
+issues_blocking: []
+# impl_notes: hit_count=14, domains=3
+```

@@ -125,3 +125,25 @@ List per-lang results in summary & state **reason for worst-case** (which lang/w
 ## Recommended actions
 [Next steps]
 ```
+
+## Output schema (required)
+
+詳細は `references/agent-output-schema.md` 参照。
+
+内部判定 (Approved / Conditional / Rejected) から status enum へのマッピング:
+
+| 内部判定 | status |
+|---------|--------|
+| Approved | `success` |
+| Conditional | `partial` |
+| Rejected | `failure` |
+
+`dep_unresolved`: 依存 agent (build runner / test runner) の起動失敗で verify 続行不能の場合に使用。
+
+Trailer example:
+
+```yaml
+status: success
+confidence: 90
+issues_blocking: []
+```

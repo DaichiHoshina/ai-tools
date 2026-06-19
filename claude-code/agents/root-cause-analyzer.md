@@ -153,3 +153,16 @@ If unmet, conduct additional investigation & state low confidence to user. **Aft
 ## Serena MCP required
 
 Use Serena MCP for all code ops. Serena tool priorities: `references/serena-tool-map.md`
+
+## Output schema (required)
+
+詳細は `references/agent-output-schema.md` 参照。
+
+Trailer example (root-cause-analyzer typical):
+
+```yaml
+status: success
+confidence: 91
+issues_blocking: []
+# confidence reflects 4-step completion: Reproduce(+30%) Identify(+40%) Design(+11%) Verify(+10%)
+```

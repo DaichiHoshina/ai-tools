@@ -112,6 +112,20 @@ At invocation, if `context/design-principles.md` / `context/style-guide.md` exis
 
 Evaluate objectively and constructively, assuming good intent from the implementer. Balance perfectionism with practical delivery timelines.
 
+## Output schema (required)
+
+詳細は `references/agent-output-schema.md` 参照。
+
+`issues_blocking` への粒度: P0 (Blocker) finding のみ blocking 扱いで列挙。P1 (High-Priority) 以下は本文 Findings セクションに記載し `issues_blocking` には含めない。
+
+Trailer example:
+
+```yaml
+status: success
+confidence: 85
+issues_blocking: []
+```
+
 ## Source
 
 Adapted from [OneRedOak/claude-code-workflows](https://github.com/OneRedOak/claude-code-workflows/tree/main/design-review) (Patrick Ellis, 2025). Original is MIT-equivalent reference implementation, modified for ai-tools claude-code config (frontmatter / model / tone).
