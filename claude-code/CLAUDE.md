@@ -52,6 +52,13 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 Details (delegate threshold / decision principle / parallel fire format / bundle prohibition / parent prep / inline exceptions / trigger table): `references/auto-delegation-detailed.md`
 
+### Parent 監視責任 / 1 dev = 1 file 原則
+
+- **parent 監視責任**: PO / Manager は subagent に丸投げ禁止。bundle 違反は PO Gate で阻止する責任を持つ
+- **1 dev = 1 file 原則**: `bundle_justification` なき複数 file fan-out は禁止。Developer は割り当て file 以外を触らない
+- 違反パターン: 1 Task に複数 file 指定 / Manager が scope 外 commit を Dev に許可する / PO Gate 前に fan-out 確定
+- 実証記録: `references/retrospectives/2026-06-19_agent-oversight.md`
+
 ## Tool Call Format (生テキスト呼び出し禁止)
 
 ツール呼び出しは**必ず harness の正規 function-call 機構**で行う。応答本文に `call` / `<invoke ...>` / `<parameter ...>` 等のツール呼び出し XML を**テキストとして書かない**。本文に書いても実行されず、`Your tool call was malformed` エラーになる。

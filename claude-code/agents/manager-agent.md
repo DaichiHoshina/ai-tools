@@ -97,6 +97,11 @@ Schema: `references/agent-team-contract.md` §3 (Manager → parent) — canonic
 
 Required fields: `execution_mode` / `parallelism` / `worktree_required` / `impl_notes.dir` / `tasks[]` (each with `developer_id` / `task` / `verify` / `dod` sub-fields) — see contract §3 for full sub-field spec.
 
+**Allocation mandatory fields per task** (PO Gate v2 8 観点準拠、canonical: `references/retrospectives/2026-06-19_agent-oversight.md`):
+- `file_count: int` — 各 task が編集するファイル数。必須、省略不可
+- `bundle_justification: string | null` — `file_count > 1` のとき必須。理由を 1 行で記載する。`file_count == 1` のとき `null` を明示する
+- `file_count > 1` かつ `bundle_justification` が `null` または未指定の場合、parent は allocation を reject して Manager を再実行する
+
 `formula_trace` required (12 sub-fields per contract §3) — see contract §3 for field list. `downgrade_reason` valid values: `single-task` / `same-file-sequential` / `file-conflict` / `formula-fail` / `parent-override`.
 
 **Prohibitions**:
