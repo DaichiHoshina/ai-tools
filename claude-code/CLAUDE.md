@@ -135,7 +135,10 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 
 **AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。
 
-**Commit message pre-draft sweep** (`[[retrospective-2026-06-12]]` P1): NG語と置換候補は `guidelines/writing/NG-DICTIONARY.md` の `置換候補 (頻出)` key を参照。
+**Commit message pre-draft sweep** (`[[retrospective-2026-06-12]]` P1): draft 生成前に以下を self-check してから出力する。hook block で retry になると 2〜3 往復のトークン損失が発生する。
+- 頻出 block 語を含まないか: `leverage` / `utilize` / `mitigate` / `踏襲` / `鑑みる` / `喫緊` / `影響なし`
+- 連続漢字≥5 を含まないか (例: `整合性担保` → `整合性を保つ` / `変更対象外` → `変更しない`)
+- 置換候補は `guidelines/writing/NG-DICTIONARY.md` の `置換候補 (頻出)` key を参照
 
 ## Default Readability (全出力 baseline、/jp-writing 不要)
 

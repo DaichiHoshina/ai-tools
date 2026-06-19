@@ -352,6 +352,19 @@ _is_auto_memory_path() {
   return 1
 }
 
+# 与えられた path が /plan コマンドの plan 保存 dir かどうかを判定する。
+# 対象 dir:
+#   - ~/.claude/plans/   (`/plan` コマンドの設計書出力先)
+# plan は AI 自身の作業計画 (要件・Architecture・Phase 分解) であり、
+# 外向き prose ではないため jp-quality / NG 語 hook の skip 対象にする。
+# 戻り値: 0=plans 配下 / 1=配下でない
+# usage: _is_plans_path "$path"
+_is_plans_path() {
+  local p="$1"
+  [[ "$p" == "$HOME/.claude/plans/"* ]] && return 0
+  return 1
+}
+
 # ai-tools repo 相対 path を取得する (prefix 除去後)。
 # どの prefix にも match しない場合は空文字を出力して 1 を返す。
 # usage: rel=$(_aitools_relpath "$path")

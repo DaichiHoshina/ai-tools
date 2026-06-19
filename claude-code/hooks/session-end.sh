@@ -16,22 +16,50 @@ source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 INPUT=$(cat)
 
 # セッション情報を取得（jq 1回で全フィールド抽出）
-IFS=$'\t' read -r SESSION_ID PROJECT_DIR TOTAL_TOKENS TOTAL_MESSAGES DURATION _MODEL _GIT_BRANCH _INPUT_TOKENS _CACHE_READ _CACHE_WRITE _OUTPUT_TOKENS < <(
+# SessionEnd hook 入力には token フィールドが含まれないため transcript_path を取得して後で集計する
+IFS=$'\t' read -r SESSION_ID PROJECT_DIR TOTAL_TOKENS TOTAL_MESSAGES DURATION _MODEL _GIT_BRANCH < <(
   extract_json_fields "$INPUT" \
     '.session_id // "unknown"' \
-    '.workspace.current_dir // "."' \
+    '.cwd // "."' \
     '.total_tokens // 0' \
     '.total_messages // 0' \
     '.duration // 0' \
     '.model // "unknown"' \
-    '.git_branch // ""' \
-    '.input_tokens // 0' \
-    '.cache_read_tokens // 0' \
-    '.cache_write_tokens // 0' \
-    '.output_tokens // 0'
+    '.git_branch // ""'
 )
+# transcript_path は空フィールドとの IFS read 混在を避けるため単独取得
+_TRANSCRIPT_PATH=$(jq -r '.transcript_path // ""' <<< "$INPUT" 2>/dev/null || true)
 SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
 PROJECT_NAME=$(basename "$PROJECT_DIR")
+
+# token 集計: transcript_path の JSONL から assistant message の usage を合計する
+# SessionEnd hook 入力 JSON には token 情報が含まれないため JSONL から直接集計する
+_INPUT_TOKENS=0; _OUTPUT_TOKENS=0; _CACHE_READ=0; _CACHE_WRITE=0
+_JSONL_PATH=""
+if [[ -n "${_TRANSCRIPT_PATH}" && -f "${_TRANSCRIPT_PATH}" ]]; then
+  _JSONL_PATH="${_TRANSCRIPT_PATH}"
+else
+  # fallback: cwd + session_id から JSONL パスを導出
+  _SLUG="${PROJECT_DIR//\//-}"
+  _SLUG="${_SLUG//\./-}"
+  _JSONL_PATH="${HOME}/.claude/projects/${_SLUG}/${SESSION_ID}.jsonl"
+fi
+if [[ -f "${_JSONL_PATH}" ]]; then
+  # process substitution 内の jq/echo が EPIPE で失敗しても set -e に引っかからないよう
+  # read コマンド全体を || true で保護する（SIGPIPE は trap '' PIPE で無視済みだが
+  # EPIPE errno による exit 非ゼロは set -e を発動させるため）
+  IFS=$'\t' read -r _INPUT_TOKENS _OUTPUT_TOKENS _CACHE_WRITE _CACHE_READ < <(
+    jq -sr '
+      [.[] | select(.type == "assistant" and .message.usage != null) | .message.usage] |
+      [
+        (map(.input_tokens // 0) | add // 0),
+        (map(.output_tokens // 0) | add // 0),
+        (map(.cache_creation_input_tokens // 0) | add // 0),
+        (map(.cache_read_input_tokens // 0) | add // 0)
+      ] | @tsv
+    ' "${_JSONL_PATH}" 2>/dev/null || printf '0\t0\t0\t0\n'
+  ) 2>/dev/null || true
+fi
 
 # ログ保存
 LOG_DIR="$HOME/.claude/session-logs"
