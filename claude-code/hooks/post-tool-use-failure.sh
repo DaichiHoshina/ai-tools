@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PostToolUseFailure Hook - ツール実行失敗時のログ記録
+# PostToolUseFailure Hook - ツール実行失敗時のログ記録 + 親への additionalContext inject
 # 失敗したツール呼び出しをログに記録し、デバッグを支援
 
 set -euo pipefail
@@ -7,36 +7,60 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 LOG_DIR="${HOME}/.claude/logs"
-LOG_FILE="${LOG_DIR}/tool-failures.log"
-mkdir -p "${LOG_DIR}"
+LOG_FILE="${TOOL_FAILURE_LOG_FILE:-${LOG_DIR}/tool-failures.log}"
+mkdir -p "$(dirname "${LOG_FILE}")"
 
 # JSON入力を読み取り（1回のみ）
 INPUT=$(cat)
 
 printf -v TIMESTAMP '%(%Y-%m-%d %H:%M:%S)T' -1
 
-# フィールド一括抽出（jq 1回）
-IFS=$'\t' read -r TOOL_NAME _SESSION_ID_JSON CWD DURATION_MS < <(
-  jq -r '[
+# フィールド一括抽出（jq 1回）: tool_name / session_id / cwd / duration_ms / error を同時取得
+# @tsv は空フィールド前後で IFS=$'\t' read が正しく分割できないため改行区切り + mapfile を使用
+mapfile -t _FIELDS < <(
+  jq -r '
     .tool_name // "unknown",
-    .session_id // "unknown",
-    .cwd // ".",
-    (.duration_ms // .tool_response.duration_ms // "")
-  ] | @tsv' <<< "$INPUT" 2>/dev/null || printf '%s\t%s\t%s\t%s\n' "unknown" "unknown" "." ""
+    (.session_id // "unknown"),
+    (.cwd // "."),
+    (.duration_ms // .tool_response.duration_ms // "" | tostring),
+    (.error // "" | gsub("\n"; " "))
+  ' <<< "$INPUT" 2>/dev/null || printf '%s\n%s\n%s\n%s\n%s\n' "unknown" "unknown" "." "" ""
 )
+TOOL_NAME="${_FIELDS[0]:-unknown}"
+_SESSION_ID_JSON="${_FIELDS[1]:-unknown}"
+CWD="${_FIELDS[2]:-.}"
+DURATION_MS="${_FIELDS[3]:-}"
+RAW_ERROR="${_FIELDS[4]:-}"
 SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SESSION_ID_JSON}}"
 
-# ERROR は改行→スペース変換 + 500文字切り詰めが必要なため個別 jq
-ERROR=$(jq -r '.error // (.tool_input | tojson) // "no details"' <<< "$INPUT" 2>/dev/null | tr '\n' ' ' || echo "no details")
-ERROR="${ERROR:0:500}"
+# ERROR: raw が空なら fallback（jq 追加呼び出し不要）
+if [[ -z "${RAW_ERROR}" ]]; then
+  ERROR="no details"
+else
+  ERROR="${RAW_ERROR}"
+fi
+
+# ログ用は 500 文字切り詰め
+LOG_ERROR="${ERROR:0:500}"
 
 # ログ記録（500文字で切り詰め）
-echo "[${TIMESTAMP}] FAIL: ${TOOL_NAME} | ${ERROR}" >> "${LOG_FILE}"
+echo "[${TIMESTAMP}] FAIL: ${TOOL_NAME} | ${LOG_ERROR}" >> "${LOG_FILE}"
 
 # ログファイルが1000行超えたら古い行を削除
 if [ "$(wc -l < "${LOG_FILE}")" -gt 1000 ]; then
   tail -500 "${LOG_FILE}" > "${LOG_FILE}.tmp"
   mv "${LOG_FILE}.tmp" "${LOG_FILE}"
+fi
+
+# --- additionalContext inject: error 200 chars 切り捨て + tool name 付与 ---
+# format: "tool <tool_name> failed: <error[:200]>" (200超は末尾に " ..." 付与)
+_INJECT_CTX=""
+if [[ -n "${ERROR}" && "${ERROR}" != "no details" ]] || [[ -n "${TOOL_NAME}" && "${TOOL_NAME}" != "unknown" ]]; then
+  _ERR_TRUNCATED="${ERROR:0:200}"
+  if [[ "${#ERROR}" -gt 200 ]]; then
+    _ERR_TRUNCATED="${_ERR_TRUNCATED} ..."
+  fi
+  _INJECT_CTX="tool ${TOOL_NAME} failed: ${_ERR_TRUNCATED}"
 fi
 
 # Serena MCP 失敗のセッション内カウンタ
@@ -58,3 +82,10 @@ fi
     analytics_insert_tool_event "${SESSION_ID}" "${_PROJECT}" "${TOOL_NAME}" "" "${DURATION_MS}" "1" 2>/dev/null || true
   fi
 ) 2>/dev/null &
+
+# --- 親への additionalContext 出力 ---
+if [[ -n "${_INJECT_CTX}" ]]; then
+  jq -n --arg ctx "${_INJECT_CTX}" '{"additionalContext": $ctx}'
+else
+  echo "{}"
+fi
