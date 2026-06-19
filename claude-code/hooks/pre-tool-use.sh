@@ -1499,6 +1499,18 @@ ${PARALLEL_REVIEW}${PREP_WARN}"
         GUARD_CLASS="Forbidden"
         MESSAGE="${ICON_CRITICAL} general-purpose agent は禁止 (CLAUDE.md、最大コスト源 実測 max 501s)。代替: explore-agent (検索) / claude-code-guide (CLI/SDK) / developer-agent (実装)"
       fi
+    elif [ -z "${SUBAGENT_TYPE}" ]; then
+      # subagent_type 未指定は general-purpose bypass と同等 → hard block。
+      # SUBTYPE_EMPTY_BLOCK_OFF=1 で warn-only に降格 (hook debug 用 escape hatch)。
+      if [ "${SUBTYPE_EMPTY_BLOCK_OFF:-0}" = "1" ]; then
+        GUARD_CLASS="Boundary"
+        MESSAGE="${ICON_WARNING} subagent_type 未指定の Task (CLAUDE.md「subagent_type must be explicit」)"
+        ADDITIONAL_CONTEXT="代替: explore-agent (検索) / claude-code-guide (CLI/SDK) / developer-agent (実装)
+${PARALLEL_REVIEW}${PREP_WARN}"
+      else
+        GUARD_CLASS="Forbidden"
+        MESSAGE="${ICON_CRITICAL} subagent_type 未指定の Task は禁止 (CLAUDE.md「subagent_type must be explicit on every Task call」)。代替: explore-agent (検索) / claude-code-guide (CLI/SDK) / developer-agent (実装)"
+      fi
     else
       ADDITIONAL_CONTEXT="${PARALLEL_REVIEW}${PREP_WARN}"
     fi
