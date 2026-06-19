@@ -1103,7 +1103,7 @@ case "$TOOL_NAME" in
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
       _AJ_EXT="${_EDIT_FILE_PATH##*.}"
       if [[ "$_AJ_EXT" == "md" || "$_AJ_EXT" == "txt" ]]; then
-        if ! _is_aitools_path "$_EDIT_FILE_PATH" && ! _is_auto_memory_path "$_EDIT_FILE_PATH" && ! _is_plans_path "$_EDIT_FILE_PATH"; then
+        if ! _is_aitools_path "$_EDIT_FILE_PATH" && ! _is_auto_memory_path "$_EDIT_FILE_PATH" && ! _is_plans_path "$_EDIT_FILE_PATH" && ! _is_references_private_path "$_EDIT_FILE_PATH"; then
           _AJ_BASENAME=$(basename "${_EDIT_FILE_PATH:-file}")
           _block_if_ai_jargon "$EDIT_CONTENT" "ファイル: ${_AJ_BASENAME}"
         fi

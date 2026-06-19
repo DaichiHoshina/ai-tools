@@ -365,6 +365,16 @@ _is_plans_path() {
   return 1
 }
 
+# 与えられた path が ~/.claude/references-private/ 配下かどうかを判定する。
+# references-private は user 管理の private メモ dir。外向き prose 規則の対象外とする。
+# 戻り値: 0=references-private 配下 / 1=配下でない
+# usage: _is_references_private_path "$path"
+_is_references_private_path() {
+  local p="$1"
+  [[ "$p" == "$HOME/.claude/references-private/"* ]] && return 0
+  return 1
+}
+
 # ai-tools repo 相対 path を取得する (prefix 除去後)。
 # どの prefix にも match しない場合は空文字を出力して 1 を返す。
 # usage: rel=$(_aitools_relpath "$path")
