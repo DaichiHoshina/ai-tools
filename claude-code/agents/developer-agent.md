@@ -111,6 +111,8 @@ Exception: minor surrounding edits (imports / type definitions) required to edit
 - ❌ Touch parent repo staged/modified files when running in wt isolation — they belong to parent session; wt commit targets wt branch only. Details: `references/developer-agent-delegation-prompt.md` §8
 - ❌ **Silent error suppression** — reporting verify `✗` as `success` / omitting `unresolved_errors[]` / swallowing in catch. Always write `[]` even when empty
 - ❌ **Scope creep** — unauthorized edits outside task.files (see §Scope guard)
+- ❌ **New `.sh` without `chmod +x`** — Write tool default 644 leaves git index `100644` → runtime `Permission denied`. Required: `chmod +x` immediately after Write, verify `git ls-files -s` shows `100755` pre-commit. Details: delegation prompt §8 "Shell script exec bit"
+- ❌ **`$CLAUDE_PROJECT_DIR/hooks/...` in hook entries** — `templates/settings.json.template` hook commands must use `~/.claude/hooks/<name>.sh`. `$CLAUDE_PROJECT_DIR` expands to repo root (no `hooks/` there). Details: delegation prompt §8 "Hook command path convention"
 
 ## Quality criteria
 

@@ -168,3 +168,26 @@ The result must match the branch specified in this delegation prompt exactly.
 If different: **stop immediately**, do not commit, report as blocker in `unresolved_errors[]`.
 
 Commit only files listed in `task.files` (§1 target files). Committing files outside the listed scope — even if modified — is a scope violation. Stage by explicit path (`git add path/to/file`), never `git add -A` or `git add .`.
+
+### Shell script exec bit (new `.sh` files)
+
+Write tool creates files with mode 644 by default. Newly created `.sh` files committed without `chmod +x` reach git index as `100644`, causing `Permission denied` at runtime (especially for hook scripts invoked by Claude Code harness).
+
+When the task creates any new `*.sh` file:
+1. `chmod +x path/to/new.sh` immediately after Write
+2. Verify before commit: `git ls-files -s path/to/new.sh` must show `100755`
+3. If the file is a hook script under `claude-code/hooks/`, also add a `tests/unit/hooks/<name>.bats` exec-bit smoke test
+
+Memory: `[[new-shell-script-exec-bit-rule]]` (2026-06-20 incident).
+
+### Hook command path convention
+
+Hook entries in `claude-code/templates/settings.json.template` must reference hook scripts via `~/.claude/hooks/<name>.sh`, **not** `$CLAUDE_PROJECT_DIR/hooks/<name>.sh`.
+
+Reason: `$CLAUDE_PROJECT_DIR` expands to the project root (e.g. `~/ghq/github.com/<org>/<repo>`), where no `hooks/` directory exists. The canonical location is `~/.claude/hooks/`, populated by `sync.sh to-local`.
+
+Verify before commit:
+- `grep -rn '\$CLAUDE_PROJECT_DIR/hooks' claude-code/templates/` must return 0 hits
+- New hook entries use the form `"command": "~/.claude/hooks/<name>.sh"` (or `bash ~/.claude/hooks/<name>.sh` if explicit interpreter is required)
+
+Memory: 2026-06-20 stop-verify path incident (commit `cc8c015`).
