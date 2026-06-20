@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# mock pytest: fails with pytest output
+echo "FAILED tests/test_foo.py::test_bar"
+exit 1

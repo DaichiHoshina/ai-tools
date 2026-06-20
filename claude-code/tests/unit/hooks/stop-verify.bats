@@ -209,3 +209,203 @@ _commit_file() {
   decision=$(printf '%s' "${out}" | jq -r '.decision // "PASS"')
   [[ "${decision}" != "block" ]]
 }
+
+# =============================================================================
+# 9. env=0 + .go 変更 → 即 exit 0 (early guard)
+# =============================================================================
+
+@test "stop-verify: STOP_VERIFY_ENFORCE=0 + .go 変更でも即 exit 0" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  out=$(STOP_VERIFY_ENFORCE=0 _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 10. .go 変更 + go runner 不在 → graceful skip
+# =============================================================================
+
+@test "stop-verify: .go 変更 + go 不在 → graceful skip (block JSON 無し)" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "main.go" "package main\nfunc main(){}"
+
+  # 非実行可能パスを override として指定 → _resolve_runner が skip 扱いにする
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="go=/nonexistent/go" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 11. .go 変更 + go-pass mock → exit 0
+# =============================================================================
+
+@test "stop-verify: .go 変更 + go-pass mock → exit 0、block JSON 無し" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "main.go" "package main"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="go=${FIXTURE_DIR}/go-pass" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 12. .go 変更 + go-fail mock → block JSON、reason に "(go):"
+# =============================================================================
+
+@test "stop-verify: .go 変更 + go-fail mock → block JSON を出力" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "main.go" "package main"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="go=${FIXTURE_DIR}/go-fail" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  decision=$(printf '%s' "${out}" | jq -r '.decision // ""')
+  [[ "${decision}" == "block" ]]
+}
+
+@test "stop-verify: go-fail block JSON の reason に (go): が含まれる" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "main.go" "package main"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="go=${FIXTURE_DIR}/go-fail" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  reason=$(printf '%s' "${out}" | jq -r '.reason // ""')
+  [[ "${reason}" == *"(go):"* ]]
+}
+
+# =============================================================================
+# 13. .ts 変更 + tsc 不在 → graceful skip
+# =============================================================================
+
+@test "stop-verify: .ts 変更 + tsc 不在 → graceful skip" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "app.ts" "const x = 1"
+
+  # 非実行可能パスを override として指定 → _resolve_runner が skip 扱いにする
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="tsc=/nonexistent/tsc" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 14. .ts 変更 + tsc-pass mock → exit 0
+# =============================================================================
+
+@test "stop-verify: .ts 変更 + tsc-pass mock → exit 0" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "app.ts" "const x = 1"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="tsc=${FIXTURE_DIR}/tsc-pass" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 15. .tsx 変更 + tsc-pass mock → exit 0
+# =============================================================================
+
+@test "stop-verify: .tsx 変更 + tsc-pass mock → exit 0" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "App.tsx" "export default function App() { return null; }"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="tsc=${FIXTURE_DIR}/tsc-pass" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 16. .py 変更 + pytest 不在 → graceful skip
+# =============================================================================
+
+@test "stop-verify: .py 変更 + pytest 不在 → graceful skip" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "app.py" "x = 1"
+
+  local no_pytest_bin="${TEST_TMPDIR}/no_pytest_bin"
+  mkdir -p "${no_pytest_bin}/pytest"
+
+  out=$(PATH="${no_pytest_bin}:${PATH}" STOP_VERIFY_ENFORCE=1 \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 17. .py 変更 + pytest-pass mock → exit 0
+# =============================================================================
+
+@test "stop-verify: .py 変更 + pytest-pass mock → exit 0" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "app.py" "x = 1"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="pytest=${FIXTURE_DIR}/pytest-pass" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 18. .py 変更 + pytest-fail mock → block JSON、reason に "(py):"
+# =============================================================================
+
+@test "stop-verify: .py 変更 + pytest-fail mock → block JSON を出力" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "app.py" "x = 1"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="pytest=${FIXTURE_DIR}/pytest-fail" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  decision=$(printf '%s' "${out}" | jq -r '.decision // ""')
+  [[ "${decision}" == "block" ]]
+}
+
+@test "stop-verify: pytest-fail block JSON の reason に (py): が含まれる" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "app.py" "x = 1"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="pytest=${FIXTURE_DIR}/pytest-fail" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  reason=$(printf '%s' "${out}" | jq -r '.reason // ""')
+  [[ "${reason}" == *"(py):"* ]]
+}
+
+# =============================================================================
+# 19. .sh + .go 混在 + bats-pass + go-pass → exit 0 (両方通過)
+# =============================================================================
+
+@test "stop-verify: .sh + .go 混在 + bats-pass + go-pass → exit 0" {
+  _commit_file "${FAKE_REPO}" "init.sh" "#!/bin/bash"
+  _commit_file "${FAKE_REPO}" "main.go" "package main"
+
+  local mock_bin="${TEST_TMPDIR}/bin"
+  local fake_test_dir="${TEST_TMPDIR}/bats_tests"
+  mkdir -p "${mock_bin}" "${fake_test_dir}"
+  cp "${FIXTURE_DIR}/bats-pass" "${mock_bin}/bats"
+
+  # .sh が検出されると bats block で exit するため go は呼ばれない
+  # bats-pass なので exit 0 になることを確認
+  out=$(PATH="${mock_bin}:${PATH}" STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_TEST_DIRS="${fake_test_dir}" \
+    STOP_VERIFY_LANG_RUNNERS="go=${FIXTURE_DIR}/go-pass" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}
+
+# =============================================================================
+# 20. .md のみ変更 → skip (regression)
+# =============================================================================
+
+@test "stop-verify: .md のみ変更 → skip exit 0 (regression)" {
+  _commit_file "${FAKE_REPO}" "init.go" "package main"
+  _commit_file "${FAKE_REPO}" "README.md" "# doc"
+
+  out=$(STOP_VERIFY_ENFORCE=1 \
+    STOP_VERIFY_LANG_RUNNERS="go=${FIXTURE_DIR}/go-fail" \
+    _run_hook "{\"cwd\":\"${FAKE_REPO}\"}")
+  [[ -z "${out}" ]]
+}

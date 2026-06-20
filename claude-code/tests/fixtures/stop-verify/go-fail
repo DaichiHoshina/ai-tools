@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# mock go: fails with go test output
+echo "--- FAIL: TestFoo (0.01s)"
+echo "FAIL	example/pkg"
+exit 1

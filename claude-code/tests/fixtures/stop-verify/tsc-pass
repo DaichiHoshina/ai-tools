@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# mock tsc: always succeeds (no emit, no errors)
+exit 0

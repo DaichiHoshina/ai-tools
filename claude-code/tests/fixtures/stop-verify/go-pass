@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# mock go: always succeeds
+echo "ok"
+exit 0

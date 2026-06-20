@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# mock tsc: fails with TypeScript error output
+echo "src/foo.ts(10,5): error TS2304: Cannot find name 'bar'."
+exit 1
