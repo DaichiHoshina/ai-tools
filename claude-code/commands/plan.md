@@ -46,18 +46,31 @@ Run before any judgment:
 
 ## Step 2: Execution mode judgment (required)
 
-`inline` / `/dev` / `/flow N=<n>` を判定。判定 table:
+`inline` / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` の 5 択を判定。判定 table:
 
 | 条件 | 実行方式 | 理由 |
 |------|---------|------|
 | 1 file / 1 symbol / 数行 | **inline** (parent 直接 Edit) | agent overhead 不要 |
 | 1-2 file / 単一 task / file 間結合あり | **`/dev`** (developer-agent 1 体) | 委譲のみ、並列不要 |
-| 3-5 file / 独立性高 / 各 file ≥30 行変更 | **`/flow` N=3-5** | 並列短縮 benefit > overhead (60s+) |
-| 6+ file / 完全独立 | **`/flow` N=min(file数, 8)** | 8 上限 (session limit) |
+| 構造化 fan-out (review N lens / migrate N file / research multi-modal / understand / judge-panel) | **`/workflow <template>`** | deterministic script、resume 可、Gate なし、≤500 行 diff 向け |
+| 3-5 file / 独立性高 / 各 file ≥30 行 / 機能実装 | **`/flow` N=3-5** | PO/Manager/Dev 階層 + 3 Gate、並列短縮 benefit > overhead (60s+) |
+| 6+ file / 完全独立 / 機能実装 | **`/flow` N=min(file数, 8)** | 8 上限 (session limit) |
+| 上記 /flow 条件 + 全自動 (PR 作成まで) | **`/flow --auto`** | AskUserQuestion auto-adopt、PR 作成自動、lint-test 自動 fix 1× |
 | 3+ file / file 間結合強 or 順序依存 | **`/dev` sequential** | 並列化で conflict |
 | 3+ file / 各 file 数行のみ | **inline 連続 Edit** | overhead 回収不能 |
 
-並列数 N 計算式:
+### /workflow vs /flow (直交軸)
+
+| 軸 | /workflow | /flow |
+|---|---|---|
+| 用途 | review / migrate / research / understand / judge-panel の構造化 fan-out | 機能実装の PO/Manager/Dev 階層 orchestration |
+| Gate | なし (script で自前) | 3 Gate 必須 (PO/A/B、--auto で C) |
+| resume | ⭕ journal cache hit | ❌ fresh fire |
+| best fit | small〜medium (≤500 行)、review / migration | medium〜large、impl 主体 (PRD→Plan→impl→test→review→push) |
+
+判定例: review **だけ** → `/workflow review` / review→修正→push 全自動 → `/flow --auto` / migration を N file → `/workflow migrate` / 新機能実装 (PO 必要) → `/flow` / 多数決 design 案 → `/workflow judge-panel`
+
+並列数 N 計算式 (/flow 用):
 
 ```text
 N_candidate = 独立 file 数 (file 間結合度 0)
@@ -101,7 +114,10 @@ Plan discard: compat shims / future abstractions / impossible-case error handlin
 
 - inline で済むのに `/dev` 委譲していないか (1 file / 数行 / 規約 file の sub 質問 1 件以下)
 - `/dev` で済むのに `/flow` していないか (file 数 < 3 / 結合強 / overhead 回収不能)
+- `/flow` で組んだが実は `/workflow` で十分でないか (構造化 fan-out / PO 不要 / resume 欲しい / 小規模)
+- `/workflow` で組んだが実は機能実装で `/flow` 必須でないか (impl 主体 / PRD 必要 / Gate 必須)
 - 並列数 N 過剰でないか (N_candidate が結合度 0 を満たさない / wall_clock_parallel ≥ wall_clock_sequential)
+- `--auto` 提案時に user 確認すべき branch point が plan に残っていないか (大規模 design 分岐 / 破壊的操作 / external 送信は `--auto` 不可)
 - 持ち越し task / 別 scope task を本 plan に混入していないか (混入 → 別 task 分離)
 
 ### Stage B: plan-specific aggregate view
@@ -135,8 +151,8 @@ Phase 1: [task]
 Phase 2: [task]
 
 ## Execution mode
-- Mode: inline / `/dev` / `/flow N=<n>`
-- 根拠: [file 数 / 結合度 / T_i / overhead 比較を 1 行]
+- Mode: inline / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto`
+- 根拠: [file 数 / 結合度 / T_i / overhead 比較 + /workflow vs /flow 直交判定を 1 行]
 
 ## Worktree
 - Needed: Yes/No
