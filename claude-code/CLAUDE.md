@@ -107,6 +107,7 @@ Do not write derived values (count / sum / list length) computable from a canoni
 | "API 設計" / "API 設計して" | `/api-design` |
 | "バックエンド" / "バックエンド実装" | `/backend-dev` |
 | "ブレスト" / "アイデア出し" | `/brainstorm` |
+| "workflow で" / "pipeline で" / "多数決で" | `/workflow` |
 
 No other natural-language interpretation. Full list: `references/natural-language-triggers.md`
 
@@ -176,9 +177,10 @@ Boris Cherny 流 (howborisusesclaudecode.com) と公式 best practice (code.clau
 | Stop hook で verify を確実に実行 (bash + Go / TS / Py) | `hooks/stop-verify.sh` (opt-in、`STOP_VERIFY_ENFORCE=1`、言語別 runner 自動判定 + 不在は graceful skip) | opt-in |
 | perspective-diverse verifier panel | `/review --verifier-panel=N` (default OFF、N=3 で 3 lens correctness / consistency / boundary fan-out + 多数決) | opt-in、token N 倍 cost |
 | institutional memory (訂正→CLAUDE.md) | auto-memory + `@path` import + retrospective | 同方針 |
+| fan-out workflow orchestration | `/workflow` (Workflow tool で deterministic pipeline / parallel / 多数決を script 化、5 テンプレ提供) | `/flow` (PO/Manager/Dev) と直交。review / migrate / research / understand / judge-panel の軽量 fan-out 用 |
 | `/goal` / `/loop` / `/schedule` | **未取り込み** (CC native でない、third-party 命名) | 必要時に future task |
 
-future 候補 (未取り込み): fan-out workflow orchestration の native /workflow 対応。
+future 候補 (未取り込み): なし (Boris 流 12/12 + 公式 best practice 主要 tip 反映済)。
 
 ## References
 

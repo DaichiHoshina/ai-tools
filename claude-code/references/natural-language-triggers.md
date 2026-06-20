@@ -30,6 +30,7 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "wt 分けて" | `/flow --parallel` (same) |
 | "team で", "agent team で" | `/flow` (force PO/Manager/Dev hierarchy) |
 | "分担で", "本格的に" | `/flow` (same, skip lightweight task pre-check) |
+| "workflow で", "pipeline で", "多数決で" | `/workflow` (deterministic fan-out via Workflow tool; 5 templates: review / migrate / research / understand / judge-panel) |
 | "Slack に投げて", "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message` (confirm channel/DM first) |
 | "Notion に書いて", "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages` (confirm parent page first) |
 | "PR コメント残して", "レビューコメント残して" | `/post-comment` (PR number/URL required) |
