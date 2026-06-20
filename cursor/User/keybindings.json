@@ -1,0 +1,7 @@
+[
+  {
+    "key": "cmd+k v",
+    "command": "-markdown.extension.closePreviewToSide",
+    "when": "markdownPreviewFocus"
+  }
+]
