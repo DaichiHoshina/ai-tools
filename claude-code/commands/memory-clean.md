@@ -12,7 +12,7 @@ Cleans up Claude Code auto-memory at `~/.claude/projects/-Users-daichi-hoshina-g
 >
 > **No rm**: Use `mv` to `.trash-YYYYMMDD-HHMM/` (retain 3 generations) to preserve rollback path.
 >
-> **Out of scope**: Serena symbol DB refresh → `/serena-update-fix`. `serena/.serena/memories/` is off-limits per CLAUDE.md.
+> **Out of scope**: Serena symbol DB refresh → `/serena-update-fix`. Serena `.serena/memories/` is off-limits per CLAUDE.md.
 
 ## Arguments
 

@@ -110,7 +110,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 6.5. **Gate A: parallel-judgment self-review** (required; N≥2 only after step 5 downgrade check; N=1 sequential path is exempt). Parent Opus re-evaluates Manager's `N_chosen` / `formula_trace` / file conflict detection across 6 criteria. FAIL → re-run Manager (discard allocation, return to step 4). PASS → step 7. Cannot skip. Canonical: `references/parallel-self-review.md`
 7. **Parallel fan-out**: skip pre-fan-out progress narration; prioritize parallel Task firing. Fire `Task(developer-agent)×N` in 1 message (worktree isolated; N=1 sequential path confirmed at step 5). **Bundle required** (operational spec of L50): bundle all N Tasks in the message immediately after fan-out declaration (N≥2). Splitting into 1-per-message creates sequential chain firing (parentUuid serial) — violates "repeating 1 message 1 Agent N times is sequential" (L50). N declaration : tool_use firing message = 1:1 strict
 8. **Parallel integrate + review** (fire both in 1 message): `Task(manager-agent)` integrate **and** reviewer fan-out simultaneously.
-   - default: `Task(reviewer-agent, --codex)` × 1 (full 12-criteria + codex parallel)
+   - default: `Task(reviewer-agent, --codex)` × 1 (`comprehensive-review` 12-criteria + codex parallel)
    - `--auto` / `--multi-review`: Gate C (12-lens stage split). Details: `references/parallel-self-review.md` §Gate C
    Reviewer reads `diff_target` directly (MERGED.md skip) → removes `integration_cost` (~42s) from critical path. Bundle both in 1 message.
 8.5. **Gate B: parallel-implementation self-review** (required; N≥2 only). Parent Opus re-evaluates N diffs across 4 criteria (cross-diff conflict / duplicate import / naming collision / propagation incompleteness). FAIL → force into step 9 P0 loop (even with 0 P0 findings). PASS → step 9 normal flow. Cannot skip. Canonical: `references/parallel-self-review.md`
@@ -118,7 +118,7 @@ review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Wa
 9. **P0 re-fix loop** (after both step-8 agents return):
    - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
    - P0 remains / P1: report & continue (stop when `--auto`)
-   - codex not configured: full single fallback
+   - codex not configured: `comprehensive-review` single fallback
 10. Post-*impl* sequential steps from Task table (review + Gate B done at step 8/8.5, skip)
 
 ## Self-Review (required, 3 gates)
@@ -130,7 +130,7 @@ A/B mandatory on orchestration path (PO→Manager→Dev×N); `--sequential` exem
 - **Gate A** (step 6.5, before fan-out): 6 criteria — N consistency / formula PASS / file conflict / worktree applicability / T_i basis / bundle fire format. FAIL → re-run Manager (max 1); 2nd → `--sequential` downgrade
 - **Gate B** (step 8.5, after aggregate): 4 criteria — cross-diff conflict / duplicate import / naming collision / propagation incompleteness. FAIL → force step 9 P0 loop (max 1)
 - **Dev failure gate** (step 8.7, after aggregate): 1 criterion — any Dev `status != success`. FAIL → Manager re-allocation (max 1); 2nd → stop + user escalation
-- **Gate C** (`--auto` / `--multi-review` only): 12-lens stage split (stage 1=7 agent / stage 2=6 agent; 8 Dev + 9 session limit + 1 margin). Default `/flow` keeps full-criteria + codex 2-agent mode.
+- **Gate C** (`--auto` / `--multi-review` only): 12-lens stage split (stage 1=7 agent / stage 2=6 agent; 8 Dev + 9 session limit + 1 margin). Default `/flow` keeps `comprehensive-review` + codex 2-agent mode.
 
 ## Integration rules
 

@@ -31,6 +31,8 @@ metadata:
 <body 7 field>
 ```
 
+> Open consecutive kanji of 5+ chars with a particle (e.g. 「並列実装可能」→「並列で実装できる」).
+
 ## Options
 
 | Arg | Description | Example |

@@ -39,7 +39,6 @@ When subcommand is omitted, infer `new` / `update` from context.
 1. Identify the local-docs repo root (current `cd` target or the repo root derived from the argument path).
 2. Read `CLAUDE.md` section "Templates" and `STRUCTURE.md` sections "html format", "type enum", and "placement flow".
 3. Obtain canonical types and aggregation mappings from those files — do not substitute cached knowledge from this skill.
-4. Confirm the target directory exists under the correct subdirectory before copying the template.
 
 ## `new {type} {topic}` — create new
 
@@ -62,7 +61,7 @@ When subcommand is omitted, infer `new` / `update` from context.
 - If any of the above is missing → failure. Re-copy from `_templates/{type}.html`.
 
 ### 2. Polish
-Run a `/jp-writing`-equivalent self-check on the HTML body. Remove AI-like phrasing, verbose expressions, and redundant content. Body text readability should match the local-docs writing standard.
+Run a `/jp-writing`-equivalent self-check on the HTML body. Remove AI-like phrasing and verbose expressions. Improve Japanese readability of the HTML body.
 
 ### 3. Verify
 - Run textlint against the body text (extract body first if HTML pre-processing is needed).

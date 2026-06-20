@@ -44,11 +44,11 @@ Execute commit → push → PR/MR creation in single command.
 2. **Writing memory pre-check** (required before commit msg / PR body draft): check `writing_failure_*` via `mcp__serena__list_memories`; read relevant entries to avoid anti-patterns. ai-tools project auto-memory also at `~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/writing_failure_*` (link-overdose / compound-noun-stack etc.)
 3. Uncommitted changes present → analyze diff → generate Conventional Commits msg → confirm w/ user → commit
 3.5. **writing check (commit message)**: NG word check on commit msg draft **at generation time** (before confirm).
-   - grep against `guidelines/writing/PRINCIPLES.md` banned AI phrases + assertion-required terms (source: PRINCIPLES.md)
-   - Hit ≥1 → delete banned phrase or replace with concrete expression; append 1-sentence evidence for assertion-required terms; rewrite and re-check (max 3 loops)
+   - grep against `guidelines/writing/PRINCIPLES.md` for `AI定型語` + `要根拠語` keys (canonical JP literals from NG-DICTIONARY.md)
+   - Hit ≥1 → delete `AI定型語` or replace with concrete expression; append 1-sentence evidence for `要根拠語`; rewrite and re-check (max 3 loops)
    - After 3 loops with remaining hits → present remaining words, ask user to confirm continuation
-   - **Note**: hook (pre-tool-use.sh) blocks banned AI phrases at `git commit` with exit 2. This pre-check avoids the reactive block→rewrite loop
-   - **Pre-generation recall**: recall `**hard-to-read kanji (block)**` / `**uncommon English (block)**` lists from PRINCIPLES.md before writing; replace with plain alternatives
+   - **Note**: hook (pre-tool-use.sh) blocks `AI定型語` at `git commit` with exit 2. This pre-check avoids the reactive block→rewrite loop
+   - **Pre-generation recall**: recall `**難読漢語 (block)**` / `**非日常英語 (block)**` lists from PRINCIPLES.md before writing; replace with plain alternatives
    - **Scope**: applies to **all paths generating commit messages**, regardless of `/git-push` or direct `git commit`
 
 ### main mode
