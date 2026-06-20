@@ -124,6 +124,20 @@ Schema/flow: `references/agent-team-contract.md` §6-7 + `references/parallel-se
 
 **Fallback (codex unavailable)**: comprehensive-review solo, all P0 viewpoints → P0, others → P1. Prepend `> [WARN] codex unavailable → comprehensive-review solo (fallback)` to output (parent-accessible).
 
+## Lens-specific mode (verifier panel)
+
+`/review --verifier-panel=N` で呼ばれた時の動作。env `LENS=correctness|consistency|boundary` で focus を切り替える。lens 未指定 = 既存の 12 観点 (後方互換)。
+
+| lens | report する対象 | 無視する対象 |
+|---|---|---|
+| correctness | logic の正当性 / 仕様一致 / 想定外の入力 / 競合状態 | style / 命名 / typo |
+| consistency | 既存 convention / cross-file naming / propagation / import 順 | logic / 新規発見 |
+| boundary | input validation / edge case / error path / secrets / data 境界 | logic 全般 / style |
+
+output schema: `{"lens": "correctness|consistency|boundary", "findings": [{"file": "<path>", "line": <int>, "severity": "P0|P1|P2|P3", "msg": "<1-line>", "confidence": <0-100>}]}`
+
+parent 側の集計: file:line key で N lens の結果を集約し、2/N 以上の一致を confirmed とする。1/N のみは Info 降格。
+
 **Max 1 re-fix loop** (prevent infinite loop); re-verify P0 remains → user report (`--auto` stops).
 
 ## Prohibitions

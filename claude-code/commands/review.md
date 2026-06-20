@@ -111,3 +111,33 @@ Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / 
 - **difit**: local only, background after review (require `npm i -g difit`, suppress: `--no-difit`)
 
 Details: see review-related files under `references/`.
+
+## Verifier panel (--verifier-panel)
+
+`/review --verifier-panel=N` (N=3 推奨、default OFF) で reviewer-agent を N 体 fan-out する。同 engine だが各エージェントが fresh context で異なる lens を担当し、多数決で confirmed finding のみ昇格する。Claude Code 公式 best practices の perspective-diverse verify を実装する。既存 `--multi` (engine 別 = comprehensive / codex / coderabbit / code-review 並列) とは直交の軸。
+
+### lens 仕様 (N=3 default)
+
+| lens | focus | 無視するもの |
+|---|---|---|
+| correctness | logic の正当性 / 仕様との一致 / 想定外の入力での挙動 / 競合状態 | style / typo / 命名 |
+| consistency | 既存の convention / cross-file naming / propagation の完全性 / import 順 | logic / 新規発見 |
+| boundary | input validation / edge case / error path / secrets handling / data 境界 | logic 全般 / style |
+
+各 lens に渡す delegation prompt の雛形は `agents/reviewer-agent.md` `## Lens-specific mode` 参照。
+
+### 集計 rule
+
+parent 側で N 個の lens 結果を file:line key で集約する。
+
+- 2/N 以上の lens で hit → P0 (Critical) or P1 (Warning)、severity は最大値を採用
+- 1/N のみ hit → P3 (Info) に降格、最終 report からは silent (verbose mode で表示)
+- 全 lens が miss → 真の clean (high confidence)
+
+**token cost**: panel は **N 倍の token** を消費する。default OFF を維持し、大規模 PR の pre-merge 最終確認に限定して使う。短時間 / 小 diff には `/review` 標準で十分。
+
+**既存 flag との直交**: `--multi --verifier-panel=3` で 4 engine × 3 lens = 12 並列も可能。token が 12 倍になるため推奨せず、どちらか一方に絞ること。
+
+### fan-out 制約
+
+CLAUDE.md の `1 dev = 1 file 原則` / parent 監視責任は panel にも適用する。`Task(reviewer-agent)` ×N は 1 message に bundle して並列発火する (peak_concurrency=N、逐次での発火禁止)。
