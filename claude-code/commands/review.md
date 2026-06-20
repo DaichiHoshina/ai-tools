@@ -10,7 +10,7 @@ description: Comprehensive code review (comprehensive-review skill + optional ex
 
 ## Delegation & Self-Review (required, 2 stages)
 
-**Delegation**: Delegate `comprehensive-review` skill to `reviewer-agent` (Sonnet) via Task. Delegation prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus handles Stage B filter only.
+**Delegation**: Delegate `comprehensive-review` skill to `reviewer-agent` (Sonnet) via Task. Delegation prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus runs Stage A (per-finding); Stage B aggregate は reviewer-agent に再委譲する。
 
 **Always** run the following 2-stage self-review before outputting `/review` results. Applied uniformly to all modes (`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial`) — cannot skip.
 
@@ -20,12 +20,14 @@ Skill Step 4.5 has already done primary eval on 7 angles: Evidence / Scope / Ove
 
 Adversarial mode: relax Evidence/Scope criteria (design-challenge nature); Stage B dedup proceeds as normal.
 
-### Stage B: Result Self-Review Pass (overall)
+### Stage B: Result Self-Review Pass (overall) — reviewer-agent 委譲
 
-1. **Dedup**: multiple lenses producing separate findings from same root cause → consolidate to 1
-2. **Tone consistency**: many Criticals → watch for false alarms, re-evaluate
-3. **Project convention**: check against CLAUDE.md / guidelines; discard preference-based findings outside conventions
-4. **Zero-finding**: 0 is valid — no padding
+Stage A を通過した finding を JSON list として渡し、`reviewer-agent --stage-b` に委譲する。fresh context での集約判定で、実装直後のバイアスを抑止する。
+
+- 委譲先: `Task(subagent_type: "reviewer-agent")`
+- prompt 雛形: `"Stage B aggregate review. Input: Stage A filtered findings (JSON list, below). Apply: (1) phase consolidation (same root cause → 1 finding), (2) granularity alignment, (3) convention alignment, (4) Zero-phase valid (no padding). Return: confirmed findings as JSON {p0: [...], p1: [...], p2: [...]}. Do NOT add new findings — filter only. Noise discard policy: rules/review-noise-discard.md (confidence <80 / style nitpick / hypothetical edge case / scope-out suggestions are discard targets)."`
+- parent 側の責務: Stage A (per-finding) のみ。Stage B の出力をそのまま `/review-fix-push` Step 3 に渡す
+- 判定ログは plan file / chat に出さない。Stage B 結果のみを表示する
 
 ## Step 0: Auto-infer Mode (no flags)
 
