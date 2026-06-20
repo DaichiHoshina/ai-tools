@@ -336,7 +336,7 @@
           },
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/hooks/stop-verify.sh"
+            "command": "~/.claude/hooks/stop-verify.sh"
           }
         ]
       },
