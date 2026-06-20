@@ -19,7 +19,8 @@ _SETTINGS_VALIDATOR_LOADED=1
 # =============================================================================
 # sync_settings_hooks
 # settings.json の hooks セクションを template からマージする。
-# template entries を先頭、live 独自 entries を末尾に配置する deep merge。
+# matcher 単位で dedup: template entries が canonical、live 独自 matcher のみ末尾保持。
+# 同 matcher の live entry は template 値で上書きされる (古い command の残留を防ぐ)。
 # =============================================================================
 
 sync_settings_hooks() {
@@ -47,7 +48,9 @@ sync_settings_hooks() {
     local template_hooks
     template_hooks=$(jq '.hooks // {}' "$template" 2>/dev/null)
 
-    # テンプレートのhooksをevent単位でdeep merge（template entries先頭 + live独自entries末尾、live独自eventはそのまま保持）
+    # matcher 単位 dedup: template entry が canonical、live 独自 matcher のみ末尾保持。
+    # 同 matcher の live entry は template 値で上書き (古い command の残留 = 2026-06-20 Stop hook 3 重複事故の根治)。
+    # matcher 欠落 entry は matcher == null として扱い、null 同士も dedup される。
     local tmpfile
     tmpfile=$(mktemp)
     if jq --argjson th "$template_hooks" '
@@ -56,8 +59,9 @@ sync_settings_hooks() {
         | reduce ($th | to_entries[]) as $ev (
             $live_hooks;
             .[$ev.key] = (
-              $ev.value
-              + [($live_hooks[$ev.key] // [])[] | select(. as $e | $ev.value | any(. == $e) | not)]
+              ($ev.value | map(.matcher)) as $tpl_matchers
+              | $ev.value
+              + [($live_hooks[$ev.key] // [])[] | select(.matcher as $m | $tpl_matchers | index($m) | not)]
             )
           )
       )

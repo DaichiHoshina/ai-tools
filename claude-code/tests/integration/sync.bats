@@ -513,3 +513,75 @@ teardown() {
   live_count=$(jq '.hooks.PreToolUse | length' "$live")
   [ "$live_count" -eq "$tpl_count" ]
 }
+
+# =============================================================================
+# regression: 2026-06-20 Stop hook 3 重複事故
+# 同 matcher で command だけ異なる live entry が、template canonical で上書きされる
+# =============================================================================
+
+@test "sync_settings_hooks (regression): 同 matcher で古い command を持つ live entry は template 値で上書きされる" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-hooks-regression"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # template に Stop hook event が存在する前提を確認
+  local tpl_has_stop
+  tpl_has_stop=$(jq 'if .hooks.Stop then 1 else 0 end' "$template")
+  [ "$tpl_has_stop" -eq 1 ] || skip "template に Stop が存在しない"
+
+  # live: template の Stop entry を「古い command 値」で重複追加した状態を捏造
+  # (matcher は同じ "*"、command だけ古い path)
+  jq '.hooks.Stop = [
+        {"matcher": "*", "hooks": [{"type": "command", "command": "OLD_PATH/stop-old.sh"}]},
+        {"matcher": "*", "hooks": [{"type": "command", "command": "ANOTHER_OLD/stop-older.sh"}]}
+      ] + .hooks.Stop' "$template" > "$live"
+
+  # sync 前に 3 重複状態であることを確認 (template 1 + 古い 2 = 3)
+  local before_count
+  before_count=$(jq '.hooks.Stop | length' "$live")
+  [ "$before_count" -ge 3 ]
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # sync 後: matcher="*" の entry は template と同じ数だけ残る (古い command 消滅)
+  local tpl_star_count live_star_count
+  tpl_star_count=$(jq '[.hooks.Stop[] | select(.matcher == "*")] | length' "$template")
+  live_star_count=$(jq '[.hooks.Stop[] | select(.matcher == "*")] | length' "$live")
+  [ "$live_star_count" -eq "$tpl_star_count" ]
+
+  # 古い command が残っていないことを確認
+  local has_old
+  has_old=$(jq '[.hooks.Stop[] | .hooks[]? | select(.command | test("OLD_PATH|ANOTHER_OLD"))] | length' "$live")
+  [ "$has_old" -eq 0 ]
+}
+
+@test "sync_settings_hooks: live 独自 matcher は template と並存して保持される" {
+  command -v jq >/dev/null 2>&1 || skip "jq not available"
+
+  local fake_home="${TEST_HOME}/fake-home-hooks-coexist"
+  mkdir -p "${fake_home}/.claude"
+
+  local template="${PROJECT_ROOT}/claude-code/templates/settings.json.template"
+  local live="${fake_home}/.claude/settings.json"
+
+  # live: template + 独自 matcher (template に存在しない matcher 名)
+  jq '.hooks.PreToolUse += [{"matcher": "user-private-matcher-xyz", "hooks": [{"type": "command", "command": "user-script.sh"}]}]' \
+    "$template" > "$live"
+
+  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  # 独自 matcher が保持されている + template entry も保持されている
+  local user_count tpl_count
+  user_count=$(jq '[.hooks.PreToolUse[] | select(.matcher == "user-private-matcher-xyz")] | length' "$live")
+  tpl_count=$(jq '.hooks.PreToolUse | length' "$live")
+  local tpl_orig_count
+  tpl_orig_count=$(jq '.hooks.PreToolUse | length' "$template")
+  [ "$user_count" -eq 1 ]
+  [ "$tpl_count" -eq $((tpl_orig_count + 1)) ]
+}
