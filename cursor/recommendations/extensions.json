@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "golang.go",
+    "rust-lang.rust-analyzer",
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "editorconfig.editorconfig",
+    "mikestead.dotenv",
+    "redhat.vscode-yaml"
+  ]
+}

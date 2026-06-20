@@ -1,0 +1,33 @@
+---
+description: ai-tools 開発ワークフローの共通 Agent ルール
+alwaysApply: true
+---
+
+# ai-tools Agent ルール
+
+## 言語・コミュニケーション
+
+- ユーザー向け返信は日本語
+- コード引用は `startLine:endLine:filepath` 形式
+
+## Git・安全
+
+- コミット / push / PR はユーザーの明示指示まで行わない
+- 破壊的操作（force push, hard reset）は明示指示なしでは拒否
+
+## コード品質
+
+- `any` 禁止、`as` は最小限
+- 既存の命名・型・import スタイルに合わせる
+- 依頼範囲外のリファクタはしない
+
+## ai-tools 連携
+
+- ガイドライン: `~/ai-tools/claude-code/guidelines/` または load-guidelines スキル
+- セッション跨ぎメモ: プロジェクトの `.cursor/memories/` を確認
+- Cursor 設定の正本: `~/ai-tools/cursor/User/`
+
+## 複雑度
+
+- 小変更（1–2 ファイル）: 直接実装
+- 大変更（5 ファイル以上 / 独立機能 3 以上）: Plan モードで設計してから実装
