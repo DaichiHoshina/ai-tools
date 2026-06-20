@@ -59,6 +59,10 @@ Extract all keys from `guidelines/writing/NG-DICTIONARY.md` → enumerate hits.
 - (b) 評価語 (低 / 中 / 高 / 重要 / 必須) → 根拠 1 文を加える
 - (c) 難語 → 削除でなく定義を併記する
 - (d) 英単語 → 平易表現
+- (e) **書き手不在チェック** (canonical: PRINCIPLES.md `## AI臭の根本: 書き手不在`)
+  - L1 主体: 「多くの〜」「一般に〜」「よく〜される」等の主体不明断定 → 特定主体 + 根拠 1 文。語源 `NG-DICTIONARY.md` `主体不明断定 (skill-only)`
+  - L2 見出し: 主観形容詞 (重要 / 効率的 / 強力 / シンプル) 入り heading → 事実 / 数値 / 対象を含む中立名詞句
+  - L4 リズム: 段落長 / 文長 / 文末が均質化していないか。1 段落 1 文段や短中長交互配置で書き手の呼吸を出す
 - 初出 jargon は和訳併記 / 初出略語はフルスペル (list: PRINCIPLES.md `### NG辞書`)
 
 ### D. Structure (PRINCIPLES.md `## PREP 法 + 5W1H` / `## 避けるパターン`)
