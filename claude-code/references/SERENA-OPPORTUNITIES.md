@@ -15,7 +15,7 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 
 ---
 
-## main pre-release (detected 2026-06-08, re-confirmed 2026-06-19, still pre-release on next tag)
+## main pre-release (detected 2026-06-08, re-confirmed 2026-06-20, still pre-release on next tag)
 
 - [ ] **`typescript_vts` `initialization_options`**: Pass initializationOptions dict under `ls_specific_settings.typescript_vts`. Required for Yarn PnP + `typescript.tsdk` TS projects — review at: only when activating a Yarn PnP TS project (none currently)
 - [ ] **`jetbrains_launch_command`**: Auto-launch IDE on project activate — review at: JetBrains IDE not used, out of scope
@@ -27,6 +27,9 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 - context/mode path-detection guard [pre-release]: `--context <name>` no longer mis-reads a local file of the same name. Bug fix, no config impact
 - `query_project` read-only tool relaxation [pre-release]: allows read-only tools even if excluded by current context. Behavior improvement, no config change
 - `oslex` shell-arg quoting [pre-release]: Windows arg escaping. macOS unaffected, out of scope
+- `tool_names` mapping in prompt generation [pre-release]: prompts use language-backend-matched tool names directly, removing extra name-difference prompts — review at: only if using cc-system-prompt-override; regenerate `~/.claude/serena-cc-prompt.txt` when this reaches a tag-release (Phase 5 step 5)
+- MCP-level explicit error surfacing [pre-release]: tool call errors now raised as MCP protocol errors. Behavior improvement, no config change
+- `JuliaLanguageServer` stdio fix [pre-release]: Julia LS exiting after initialize. Julia not used, out of scope
 
 ## v1.5.2–v1.5.3 (detected 2026-05-28)
 
