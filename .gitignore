@@ -64,3 +64,9 @@ temp/
 
 # Claude Code agent isolation worktree dir (一時)
 .claude/worktrees/
+
+# Claude Code session 一時生成物 / sync 先 (個人作業領域、canonical は claude-code/ 配下)
+.claude/commands/
+.claude/plans/
+.claire/
+.playwright-mcp/
