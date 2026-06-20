@@ -173,11 +173,12 @@ Boris Cherny 流 (howborisusesclaudecode.com) と公式 best practice (code.clau
 | `/clear` 推奨 (2 回失敗時) | `hooks/user-prompt-submit.sh` 150 / 350 msg warn | msg count + 連続失敗の検出を加えた二段構成 |
 | Plan → Implement 分離 | `/plan` → `/dev` / `/flow` | 同方針 |
 | Adversarial review (fresh context) | `/review` Stage B = reviewer-agent 委譲 | 同方針 |
-| Stop hook で verify を確実に実行 | `hooks/stop-verify.sh` (opt-in、`STOP_VERIFY_ENFORCE=1`) | opt-in |
+| Stop hook で verify を確実に実行 (bash + Go / TS / Py) | `hooks/stop-verify.sh` (opt-in、`STOP_VERIFY_ENFORCE=1`、言語別 runner 自動判定 + 不在は graceful skip) | opt-in |
+| perspective-diverse verifier panel | `/review --verifier-panel=N` (default OFF、N=3 で 3 lens correctness / consistency / boundary fan-out + 多数決) | opt-in、token N 倍 cost |
 | institutional memory (訂正→CLAUDE.md) | auto-memory + `@path` import + retrospective | 同方針 |
 | `/goal` / `/loop` / `/schedule` | **未取り込み** (CC native でない、third-party 命名) | 必要時に future task |
 
-future 候補 (未取り込み): 言語別 Stop hook 拡張、verifier subagent panel、fan-out workflow orchestration。
+future 候補 (未取り込み): fan-out workflow orchestration の native /workflow 対応。
 
 ## References
 
