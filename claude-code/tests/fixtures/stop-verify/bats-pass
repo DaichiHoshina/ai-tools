@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# mock bats: always succeeds (exit 0, no output)
+exit 0

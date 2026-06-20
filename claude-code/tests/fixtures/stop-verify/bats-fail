@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# mock bats: always fails with TAP-style output
+printf 'not ok 1 stop-verify: .sh syntax check\n'
+exit 1
