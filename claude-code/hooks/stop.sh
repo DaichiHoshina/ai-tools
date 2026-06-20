@@ -12,13 +12,12 @@ source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 require_jq
 
 INPUT=$(cat)
-send_stop_notification "$INPUT" "" "Glass" "robot" "default"
+send_stop_notification "$INPUT" "" "" "robot" "default"
 
 CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 PROJECT_NAME=$(basename "${CWD:-unknown}")
 LAST_MSG=$(echo "$INPUT" | jq -r '.last_assistant_message // "Done"')
-NOTIFY_BODY="${LAST_MSG:0:80}"
-TERM_SEQ=$(build_terminal_sequence "Claude Code [${PROJECT_NAME}] ${ICON_SUCCESS} Done" "${NOTIFY_BODY}" "true")
+TERM_SEQ=$(build_terminal_sequence "Claude Code [${PROJECT_NAME}] ${ICON_SUCCESS} Done" "" "false")
 
 # === raw tool-call XML guard: 応答本文に生のツール呼び出し痕跡があれば block して正規 function-call をやり直させる ===
 # harness 内部記法 (<invoke name= / <parameter name= / antml:invoke / antml:parameter) は
