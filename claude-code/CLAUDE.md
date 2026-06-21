@@ -164,7 +164,7 @@ Production rollback: use the CI canonical path (revert PR → main merge → dep
 
 Misbehavior / non-obvious success → document immediately → auto-avoid next session. Misbehavior → record in CLAUDE.md / skill / hook. Append "update CLAUDE.md or related skill" to fix instructions. Details: `references/compounding-engineering-cycle.md`
 
-Memory write target: Claude Code auto-memory only; Serena `.serena/memories/` forbidden (`references/compounding-engineering-cycle.md` §Memory write target)
+Memory write target: Claude Code auto-memory only; Serena `.serena/memories/` forbidden — `pre-tool-use.sh` が hard block (`references/compounding-engineering-cycle.md` §Memory write target)
 
 ## Pre-write Self-check (except chat)
 
