@@ -46,22 +46,11 @@ Boundary: "fix from error log"=1.5 / "bug root cause"=2 / "feature improvement"=
 
 ## Orchestration (forced)
 
-Always force parent-direction mode. Pre-delegation 4 steps (N calc / target / verify / DoD) are **internal**; user sees 2 lines only (formula trace + fan-out declaration, see step 6). Detailed echo goes into subagent prompt literals — no chat output.
+Always force parent-direction mode. Pre-delegation 4 steps (N calc / target / verify / DoD) are **internal**; user sees 2 lines only (formula trace + fan-out declaration). Detailed echo goes into subagent prompt literals — no chat output.
 
 After completion, **fire N tool_use in 1 message** (repeating 1 message 1 Agent N times causes sequential chaining — forbidden). Spec details: `references/orchestrate-mode.md` / `references/PARALLEL-PATTERNS.md`.
 
-### Formula trace echo (mandatory)
-
-Parent must echo Manager-returned `formula_trace` to chat (makes decision basis visible to user). Echo format:
-
-```text
-formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / <PASS|FAIL> (basis=<T_i_basis>)
-fan-out: N=<n>, targets=<file count>
-```
-
-`formula_trace` field missing / `formula_result=FAIL` with `N>=2` → parent stops fan-out, re-runs Manager (discards allocation). `N_chosen=1` → sequential downgrade proceeds (via Manager / consistent with step 5).
-
-Schema details: see `agents/manager-agent.md` Allocation plan format `formula_trace` field definition.
+Formula trace echo: `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / PASS|FAIL (basis=<T_i_basis>)` / `fan-out: N=<n>, targets=<file count>`. 詳細: `references/flow-orchestration.md`
 
 ## Parallel (forced)
 
@@ -74,57 +63,37 @@ Physically parallelizes via worktree isolation.
 | worktree creation | `--auto`: auto under 4 skip conditions; otherwise user confirm |
 | Sequential downgrade | On file conflict / physical conflict detected, or `--sequential` |
 
-### `--auto` skip conditions
+**`--auto` skip conditions**: Parallel formula PASS + clean worktree + no branch/worktree collision + Creation fail → sequential downgrade + notify. Details: `references/PARALLEL-PATTERNS.md` `### /flow --parallel --auto skip-confirmation 4 conditions`.
 
-Details: `references/PARALLEL-PATTERNS.md` `` ### `/flow --parallel --auto` skip-confirmation 4 conditions ``. Summary: Parallel formula PASS + clean worktree + no branch/worktree collision + Creation fail → sequential downgrade + notify.
+**worktree cleanup**: Changes present → return branch + merge + delete / no changes → auto-delete / Collision → sequential downgrade + leave in place. Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`.
 
-### worktree cleanup
+## --auto mode
 
-Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`. Summary: Changes present → return branch + merge + delete / no changes → auto-delete / Collision → sequential downgrade + leave in place.
-
-## --auto fully autonomous mode (opt-in)
-
-| Decision | Action |
-|------|------|
-| AskUserQuestion | Don't call, auto-adopt recommendation |
-| Agent launch | `mode: "bypassPermissions"` |
-| Push target | Always PR (no main direct push) |
-| Design decision | Recommend, priority simple |
-| lint-test fail | Auto-fix 1×, 2nd fail stop + report |
-| Multi-review | `--multi-review` auto-ON (Gate C 12-lens parallel) |
-
-review-fix loop: post-impl `/review` → auto-fix repeat **until Critical 0 + Warning 0** (max 3×, excess → report & continue).
+`--auto`: skip AskUserQuestion + auto-adopt / `bypassPermissions` / always PR push / auto-fix lint 1× / `--multi-review` auto-ON. review-fix loop: post-impl `/review` → auto-fix repeat until Critical 0 + Warning 0 (max 3×). 詳細: `references/flow-orchestration.md`
 
 ## Execution logic
 
-1. **git status check**: changes found → confirm WIP then step 2 (continue orchestration, do not redirect to `/dev`)
-2. **Pre-Manager downgrade check** (static): immediate downgrade only when `--sequential` explicit — delegate single `/dev` + skip PO/Manager. Otherwise → step 3
-3. **PO Agent (required)**: design judgment / scope split. Cannot skip (legacy `--no-po` removed)
-4. **Manager Agent (required)**: task split / file dedup / N calc + formula_trace computation
-5. **Post-Manager downgrade check** (dynamic): Manager allocation `parallelism: 1` *and* `worktree_required: false` *or* physical file conflict (same file concurrent edit) → Dev×1 sequential (skip worktree isolation = downgrade in `Auto-apply features`; Manager integrate skips aggregation for 1 dev; Team review still runs)
-6. **Orchestration pre-delegation** (internal + judgment trace echo): embed target / verify / DoD in subagent prompt; user sees **2 lines**:
-   - line 1 (formula trace): `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_parallel>s / PASS|FAIL (basis=<T_i_basis>)`
-   - line 2 (fan-out declaration): `fan-out: N=<n>, targets=<file count>`
-   If any required echo field from Manager's `formula_trace` (12 sub-fields) is missing → stop fan-out, re-request from Manager (discard allocation). Include worktree apply/skip judgment (downgrade_reason presence) in echo line 1. Run `mkdir -p <impl_notes.dir>`
+1. **git status check** → WIP confirm → step 2
+2. **Pre-Manager downgrade check**: `--sequential` explicit → single `/dev` (skip PO/Manager). Otherwise → step 3
+3. **PO Agent (required)**: design judgment / scope split. Cannot skip
+4. **Manager Agent (required)**: task split / file dedup / N calc + `formula_trace`
+5. **Post-Manager downgrade check**: `parallelism: 1` + `worktree_required: false` or file conflict → Dev×1 sequential
+6. **Orchestration pre-delegation** (internal + echo 2 lines); `mkdir -p <impl_notes.dir>`
 6.3. **PO Gate (Manager allocation oversight)** (required; single-shot per `/flow`). Parent re-spawns PO with Manager allocation + initial `manager_instruction` (contract §1.1). PO returns `verdict: pass | fail | modify`. `pass` → step 6.5. `modify` → Manager re-allocation with `fix_request` (1 loop max, then escalate). `fail` → stop `/flow` + user escalation. Cannot skip. Canonical: `agents/po-agent.md` § Manager allocation oversight
-6.5. **Gate A: parallel-judgment self-review** (required; N≥2 only after step 5 downgrade check; N=1 sequential path is exempt). Parent Opus re-evaluates Manager's `N_chosen` / `formula_trace` / file conflict detection across 6 criteria. FAIL → re-run Manager (discard allocation, return to step 4). PASS → step 7. Cannot skip. Canonical: `references/parallel-self-review.md`
-7. **Parallel fan-out**: skip pre-fan-out progress narration; prioritize parallel Task firing. Fire `Task(developer-agent)×N` in 1 message (worktree isolated; N=1 sequential path confirmed at step 5). **Bundle required** (operational spec of L50): bundle all N Tasks in the message immediately after fan-out declaration (N≥2). Splitting into 1-per-message creates sequential chain firing (parentUuid serial) — violates "repeating 1 message 1 Agent N times is sequential" (L50). N declaration : tool_use firing message = 1:1 strict
-8. **Parallel integrate + review** (fire both in 1 message): `Task(manager-agent)` integrate **and** reviewer fan-out simultaneously.
-   - default: `Task(reviewer-agent, --codex)` × 1 (`comprehensive-review` 12-criteria + codex parallel)
-   - `--auto` / `--multi-review`: Gate C (12-lens stage split). Details: `references/parallel-self-review.md` §Gate C
-   Reviewer reads `diff_target` directly (MERGED.md skip) → removes `integration_cost` (~42s) from critical path. Bundle both in 1 message.
-8.5. **Gate B: parallel-implementation self-review** (required; N≥2 only). Parent Opus re-evaluates N diffs across 4 criteria (cross-diff conflict / duplicate import / naming collision / propagation incompleteness). FAIL → force into step 9 P0 loop (even with 0 P0 findings). PASS → step 9 normal flow. Cannot skip. Canonical: `references/parallel-self-review.md`
-8.7. **Dev failure gate** (required; runs immediately on step-8 Manager aggregate, before Reviewer is consumed). Any Dev report with `status ∈ {failure, partial, dep_unresolved}` → parent calls Manager back with `reallocation_trigger: dev_failure` + `failed_devs[]` (contract §3.1) → fan-out re-fix Devs from step 7 (1 loop max). 2nd failure → stop, escalate to user (`--auto`: notify `stop: dev failure 2x` + skip push). Reviewer output from step 8 is discarded on re-fix path (re-run after re-fix succeeds)
-9. **P0 re-fix loop** (after both step-8 agents return):
-   - P0: manager realloc → developer×M fix → reviewer re-verify (**max 1 loop**)
-   - P0 remains / P1: report & continue (stop when `--auto`)
-   - codex not configured: `comprehensive-review` single fallback
-10. Post-*impl* sequential steps from Task table (review + Gate B done at step 8/8.5, skip)
+6.5. **Gate A: parallel-judgment self-review** (required; N≥2 only). Parent Opus re-evaluates across 6 criteria. FAIL → re-run Manager. PASS → step 7. Cannot skip. Canonical: `references/parallel-self-review.md`
+7. **Parallel fan-out**: Fire `Task(developer-agent)×N` in 1 message (bundle required; N=1 sequential confirmed at step 5)
+8. **Parallel integrate + review** (fire both in 1 message): Manager integrate + `Task(reviewer-agent, --codex)`×1 (or Gate C on `--auto`/`--multi-review`). Canonical: `references/parallel-self-review.md` §Gate C
+8.5. **Gate B: parallel-implementation self-review** (required; N≥2 only). 4 criteria. FAIL → force step 9. Canonical: `references/parallel-self-review.md`
+8.7. **Dev failure gate** (required; after step-8 aggregate). `status ∈ {failure, partial, dep_unresolved}` → Manager realloc (`reallocation_trigger: dev_failure` + `failed_devs[]`, contract §3.1) → re-fix (1 loop max). 2nd fail → stop + escalate (`--auto`: `stop: dev failure 2x` + skip push)
+9. **P0 re-fix loop**: P0 → manager realloc → dev×M fix → reviewer re-verify (max 1 loop). P0 remains/P1 → report & continue
+
+詳細 step prose: `references/flow-orchestration.md`
 
 ## Self-Review (required, 3 gates)
 
-Parent Opus gates are mandatory: Manager allocation (A) / parallel diffs (B) / review criteria (C). Canonical: `references/parallel-self-review.md`. Noise discard: `rules/review-noise-discard.md`. **Parent 責任**: PO/Manager に丸投げ禁止。PO Gate v2 は fan-out 前に parent が必ず実行する (skip 不可)。Canonical: `references/retrospectives/2026-06-19_agent-oversight.md`
-A/B mandatory on orchestration path (PO→Manager→Dev×N); `--sequential` exempts A/B. C: `--auto` / `--multi-review` only.
+Parent Opus gates mandatory. Canonical: `references/parallel-self-review.md`. Noise discard: `rules/review-noise-discard.md`. **Parent 責任**: PO/Manager に丸投げ禁止。PO Gate v2 は fan-out 前に parent が必ず実行 (skip 不可)。Canonical: `references/retrospectives/2026-06-19_agent-oversight.md`
+
+A/B mandatory on orchestration path; `--sequential` exempts A/B. C: `--auto`/`--multi-review` only.
 
 - **PO Gate v2** (step 6.3, post-Manager / pre-Gate A): 8 観点 — goal/constraints/priority/file_count/bundle_justification/scope/subagent_type/branch_cwd literal. `modify` → Manager re-allocation (max 1); `fail` → stop + user escalation
 - **Gate A** (step 6.5, before fan-out): 6 criteria — N consistency / formula PASS / file conflict / worktree applicability / T_i basis / bundle fire format. FAIL → re-run Manager (max 1); 2nd → `--sequential` downgrade
@@ -135,12 +104,13 @@ A/B mandatory on orchestration path (PO→Manager→Dev×N); `--sequential` exem
 ## Integration rules
 
 Required: impl → /lint-test → /review → review-fix → /git-push. 2× fail with same approach → `/clear` → re-organize.
+
 ### Completion actions
 
 - Save to auto-memory: `~/.claude/projects/<project>/memory/work-context-YYYYMMDD-{topic}.md` (Serena `write_memory` forbidden — 2026-06-10)
 - `--auto`: secret check → /git-push --pr → notify `[flow-auto] {topic} complete → PR created` (fail: `fail: {reason}` / lint 2×: `stop: lint-test 2× fail`)
 - Normal: AskUserQuestion "push?"
-- **/clear 推奨 (cache_read 累積防止)**: /flow 完遂後は task 境界。次 task に進む前に `/clear` 提案を chat 末尾に 1 行出す (実測 2026-06-19: /flow 連発 session が cache_read 60M+ で $40+/session)。`--auto` は完了通知に `→ next task は /clear 後に開始推奨` を併記
+- **/clear 推奨 (cache_read 累積防止)**: /flow 完遂後は task 境界。次 task に進む前に `/clear` を chat 末尾に 1 行提案 (`--auto` は完了通知に `→ next task は /clear 後に開始推奨` を併記)
 
 ## Auto-apply features
 

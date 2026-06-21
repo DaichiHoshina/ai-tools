@@ -40,6 +40,7 @@ On-demand index from CLAUDE.md.
 | Incident response flow | `incident-flow.md` |
 | Compounding Engineering | `compounding-engineering-cycle.md` |
 | Parallel execution patterns (worktree decisions) | `PARALLEL-PATTERNS.md` |
+| /flow 詳細 orchestration 仕様 (pre-delegation / 3 Gate 詳細) | `flow-orchestration.md` |
 | Large-scale refactor N-parallel split strategies | `parallel-refactor-split-strategies.md` |
 | Agent Team interface schema (canonical) | `agent-team-contract.md` |
 | bats editing canonical rules (for Developer agents) | `bats-test-writing.md` |
