@@ -16,6 +16,10 @@ OUT_DIR="$HOME/.claude/logs"
 SINCE_DAYS=30
 SHOW_SUMMARY=0
 
+# Pricing: Anthropic claude-opus-4-7 as of 2026-06
+INPUT_USD_PER_MTOK=15
+OUTPUT_USD_PER_MTOK=75
+
 usage() {
   cat <<'EOF'
 Usage: flow-baseline.sh [OPTIONS]
@@ -29,7 +33,7 @@ OPTIONS:
 
 OUTPUT:
   ~/.claude/logs/flow-baseline-YYYYMMDD.tsv
-  columns: date  session_id  topic  n_dev_agents  peak_concurrency  total_wall_sec  avg_task_sec  bundle_violations  note
+  columns: date  session_id  topic  n_dev_agents  peak_concurrency  total_wall_sec  avg_task_sec  bundle_violations  note  cost_usd  msg_count  token_used  review_iter
 
 NOTES:
   - /flow および /flow-auto 両方を対象とする
@@ -73,7 +77,7 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
 
 # TSV ヘッダー出力
 {
-  echo -e "date\tsession_id\ttopic\tn_dev_agents\tpeak_concurrency\ttotal_wall_sec\tavg_task_sec\tbundle_violations\tnote"
+  echo -e "date\tsession_id\ttopic\tn_dev_agents\tpeak_concurrency\ttotal_wall_sec\tavg_task_sec\tbundle_violations\tnote\tcost_usd\tmsg_count\ttoken_used\treview_iter"
 
   # 各 jsonl を jq で処理
   # 戦略:
@@ -84,7 +88,9 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
   for log_file in "${LOGS[@]}"; do
     session_id="$(basename "$log_file" .jsonl)"
 
-    jq -r --arg session_id "$session_id" '
+    jq -r --arg session_id "$session_id" \
+       --argjson in_price "$INPUT_USD_PER_MTOK" \
+       --argjson out_price "$OUTPUT_USD_PER_MTOK" '
       # 全レコードを配列として処理するため slurp モード
       . as $records |
 
@@ -251,6 +257,43 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
           else 0 end
         ) as $bundle_violations |
 
+        # msg_count: session 全体の行数 (record 数)
+        ($records | length) as $msg_count |
+
+        # token_used: 全行の input_tokens + output_tokens 合算
+        (
+          $records |
+          map(
+            (.message.usage.input_tokens // 0) +
+            (.message.usage.output_tokens // 0)
+          ) |
+          add // 0
+        ) as $token_used |
+
+        # cost_usd: token_used × 単価 (input/output 別合算)
+        # input と output の token を別々に取得して個別に単価適用
+        (
+          (
+            $records | map(.message.usage.input_tokens // 0) | add // 0
+          ) as $in_tok |
+          (
+            $records | map(.message.usage.output_tokens // 0) | add // 0
+          ) as $out_tok |
+          (($in_tok * $in_price + $out_tok * $out_price) / 1000000)
+        ) as $cost_usd |
+
+        # review_iter: comprehensive-review skill 起動回数
+        (
+          [
+            $records[] |
+            select(.type == "assistant") |
+            .message.content[]? |
+            select(type == "object" and .type? == "tool_use" and
+                   .name? == "Skill" and
+                   (.input.name? // "" | test("comprehensive-review"; "i")))
+          ] | length
+        ) as $review_iter |
+
         [
           ($inv.flow_ts | .[0:10]),
           $session_id,
@@ -260,7 +303,11 @@ echo "INFO: scanning ${#LOGS[@]} jsonl files (since ${SINCE_DAYS}d)..." >&2
           $total_wall,
           $avg_task,
           $bundle_violations,
-          $inv.note
+          $inv.note,
+          ($cost_usd | . * 10000 | round / 10000 | tostring),
+          $msg_count,
+          $token_used,
+          $review_iter
         ] | @tsv
       end
     ' - < <(jq -s '.' "$log_file" 2>/dev/null) 2>/dev/null || true
@@ -275,7 +322,7 @@ if [[ "$SHOW_SUMMARY" -eq 1 ]]; then
   echo "=== Summary (n=${LINE_COUNT}) ===" >&2
   if [[ "$LINE_COUNT" -gt 0 ]]; then
     # awk で total_wall_sec (col6) と avg_task_sec (col7) の stats を計算
-    # columns: date(1) session_id(2) topic(3) n_dev_agents(4) peak_concurrency(5) total_wall_sec(6) avg_task_sec(7) bundle_violations(8) note(9)
+    # columns: date(1) session_id(2) topic(3) n_dev_agents(4) peak_concurrency(5) total_wall_sec(6) avg_task_sec(7) bundle_violations(8) note(9) cost_usd(10) msg_count(11) token_used(12) review_iter(13)
     awk -F'\t' '
       NR==1 { next }  # ヘッダースキップ
       $6 > 0 {
