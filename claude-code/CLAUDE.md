@@ -85,6 +85,7 @@ Details (delegate threshold / decision principle / parallel fire format / bundle
 
 - **parent 監視責任**: PO / Manager は subagent に丸投げ禁止。bundle 違反は PO Gate で阻止する責任を持つ
 - **1 dev = 1 file 原則**: `bundle_justification` なき複数 file fan-out は禁止。Developer は割り当て file 以外を触らない
+- **1 Task scope 上限**: 1 Task call の prompt は file 3-5 / 観点 1-2 まで。超えたら単一 message に N Agent 並列発火に分割する。self-check: "1 pass で全部書ききれる量か" No → 分割 (`[[feedback-no-single-agent-overload]]`)
 - 違反パターン: 1 Task に複数 file 指定 / Manager が scope 外 commit を Dev に許可する / PO Gate 前に fan-out 確定
 - 実証記録: `references/retrospectives/2026-06-19_agent-oversight.md`
 
