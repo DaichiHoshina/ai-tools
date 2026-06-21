@@ -17,6 +17,15 @@ On adoption: check the box. On obsolescence: strikethrough (`~~feature~~ (obsole
 
 ---
 
+## 2.1.182–2.1.185 (detected 2026-06-21, latest)
+
+Range 2.1.182–2.1.185 reviewed。2.1.182 / 2.1.184 は CHANGELOG 記載なし (内部 release)。2.1.185 は stream-stall hint の文言・タイミング変更のみ (UI)。実質 2.1.183 のみ user-facing。
+
+- **`attribution.sessionUrl` setting** [2.1.183]: web / Remote Control session の commit・PR から claude.ai session link を省く opt-in setting。ローカル CLI 主体運用で web session 未使用のため adoption value 低い。`templates/settings.json.template` 変更不要。Track only。
+- **auto-mode destructive git block** [2.1.183]: `git reset --hard` / `git checkout -- .` / `git clean -fd` / `git stash drop` を auto-mode で block (discard 明示なき場合)、`git commit --amend` を agent 非作成 commit で block、`terraform/pulumi/cdk destroy` を stack 未指定時 block。harness 内蔵動作で config 変更不要。既存 deny-rule no-escalation 方針 + memory `ai-cannot-run-git-stash-drop` と整合。
+- **deprecated model warning が agent frontmatter もカバー** [2.1.183]: deprecated / auto-updated model を stderr 警告 (`-p` mode + agent frontmatter)。現 agent frontmatter の model ID (sonnet-4-6 / opus-4-7) は全て valid のため警告対象外。opus-4-7 は Opus 4.8 regression 回避の意図的 pin (`[[work-context-20260616-opus-4-8-regression-and-full-audit]]`)、変更しない。
+- 残余 (`/config --help` / `/config` toggle 挙動 / setup-issues 行削除 / thinking.disabled 400 fix / WebSearch subagent fix / vim cursor / Windows TUI / 各種 bugfix): UI・harness 内部・bugfix、config 変更不要。
+
 ## 2.1.181 (detected 2026-06-19, latest)
 
 Range 2.1.180–2.1.181 reviewed. 2.1.180 は内部変更のみ (user-facing なし)。
