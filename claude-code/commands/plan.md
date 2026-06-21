@@ -59,6 +59,14 @@ Run before any judgment:
 | 3+ file / file 間結合強 or 順序依存 | **`/dev` sequential** | 並列化で conflict |
 | 3+ file / 各 file 数行のみ | **inline 連続 Edit** | overhead 回収不能 |
 
+**不向き (誤判定回避、過去 churn から導出)**:
+
+- **inline**: 3+ file / 各 30 行以上 → context 圧迫、Sonnet 委譲が cost 効率良い
+- **/dev**: 完全独立な 3+ file → 並列短縮 benefit を捨てる、`/flow` か `/workflow migrate` 検討
+- **/workflow**: PRD→Plan→impl→review→push 全工程 → Gate なしで進捗管理崩れる、`/flow` 使う
+- **/flow**: ≤2 file / 単一 task → 60s+ overhead 回収不能、`/dev` で十分
+- **/flow --auto**: design 分岐ある / large refactor → AskUserQuestion auto-adopt が誤判定を素通り、`/flow` (手動 Gate) 使う
+
 ### /workflow vs /flow (直交軸)
 
 | 軸 | /workflow | /flow |
