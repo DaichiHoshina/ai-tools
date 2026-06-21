@@ -37,6 +37,8 @@ All responses in English (preserve technical terms, tool names).
 
 Schema: `references/agent-team-contract.md` §6 canonical. MERGED.md は read-only cross-check のみ (write は disallowedTools で block)。
 
+`task_type` は PO decision から parent 経由で渡される場合がある (enum 6 選は agent-team-contract.md §1 参照)。受け取った場合は review focus の参考情報として使用する。
+
 **If diff unavailable**: Re-request from parent (only case cannot continue solo).
 
 ## Base flow

@@ -43,7 +43,7 @@ All responses in English (preserve technical terms, tool names).
 
 Canonical: `references/agent-team-contract.md` §1 (PO → parent). **Fill contract §1 YAML literal as-is** (do not alter field names / hierarchy / types).
 
-Canonical: `references/agent-team-contract.md` §1 — full field list. Key required fields: `execution_mode` / `decision_reason` / `worktree` (`{path, branch, base_branch}`) / `reviewer_qa_criteria` / `manager_instruction` (`{goal, constraints, priority}`).
+Canonical: `references/agent-team-contract.md` §1 — full field list. Key required fields: `execution_mode` / `task_type` (enum 6 選は agent-team-contract.md §1 参照) / `decision_reason` / `worktree` (`{path, branch, base_branch}`) / `reviewer_qa_criteria` / `manager_instruction` (`{goal, constraints, priority}`).
 
 **Prohibitions**: Adding fields not in contract §1 (`strategy` / `worktree.create` etc.) **forbidden** — consolidate into `decision_reason`.
 

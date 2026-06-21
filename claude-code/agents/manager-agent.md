@@ -39,6 +39,7 @@ Schema: `references/agent-team-contract.md` §1 (PO output) — canonical.
 |------|----------|
 | `manager_instruction.goal` | Re-request from parent (stop) |
 | `manager_instruction.constraints` | Default to reviewer-agent § P0-P3; log warning |
+| `task_type` | Default `impl` (see agent-team-contract.md §1 for enum) |
 | `worktree` | Continue on current branch (no main assumption) |
 | `reviewer_qa_criteria` | Default `p0: [type-safety, security, data-integrity]` |
 

@@ -16,6 +16,7 @@ PO returns a decision to parent. Return as **structured fields**, not Markdown.
 
 ```yaml
 execution_mode: team  # /flow always team; direct is legacy schema only (unused)
+task_type: impl  # enum: impl | refactor | fix | test | docs | investigation
 decision_reason: "<1 line>"
 worktree:
   path: <absolute path>
