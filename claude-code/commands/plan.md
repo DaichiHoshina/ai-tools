@@ -3,8 +3,6 @@ allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*, mc
 description: Design & planning — strategy formulation via PO Agent (read-only)
 ---
 
-## /plan - Design & planning mode
-
 ## Boundary w/ `/design-doc`
 
 | Aspect | `/design-doc` | `/plan` |
@@ -18,23 +16,7 @@ Large feature: both (design-doc → plan). Small fix: plan only. Detail: `refere
 
 ## Step 0: Auto-load guidelines (required)
 
-### A. Design guidelines (required)
-
-- `~/.claude/guidelines/design/clean-architecture.md`
-- `~/.claude/guidelines/design/domain-driven-design.md`
-
-### B. Language guidelines (auto-detect via `load-guidelines`)
-
-TypeScript → `typescript.md`, `eslint.md` / Next.js → `nextjs-react.md`, `tailwind.md`, `shadcn.md` / Go → `golang.md`.
-
-### C. Project type
-
-Infrastructure → `infrastructure/terraform.md`, `infrastructure/aws-eks.md`.
-
-### D. Skill coordination
-
-`clean-architecture-ddd` / `api-design` / `microservices-monorepo` (on detect) auto-load guidelines. Detail: `references/command-resource-map.md`.
-
+Design + language (auto-detect) + project type guidelines を自動ロード。Detail: `references/command-resource-map.md`.
 ## Step 1: Scope intake (required)
 
 Run before any judgment:
@@ -90,24 +72,13 @@ N_final = min(N_candidate, 8)
 
 T_i 見積 = file 行数 × 編集密度 (新規 ~3s/行 / 修正 ~5s/行 / 削除 ~1s/行)
 
-## PO Agent flow
+## Execution flow
 
 ```
-Launch Task(subagent_type: "po-agent")
-  → requirement analysis → architecture design → worktree necessary? (confirm) → implementation approach
-  → draft design document
-  → **Self-Review (required, 2-stage)** (→ `## Self-Review` section)
-  → output filtered design document
-  → propose next actions (to `/dev`)
+[PO Agent] Launch Task(subagent_type: "po-agent") → req analysis → arch design → worktree? → draft
+[Direct]   Load guidelines → Serena MCP analyze → Draft design document
+Both       → Self-Review (required, 2-stage) → output filtered doc → propose next actions (to `/dev`)
 ```
-
-## Direct execution flow
-
-1. Load guidelines (Step 0)
-2. Analyze codebase w/ Serena MCP
-3. Draft design document
-4. **Apply Self-Review 2-stage gate** (→ `## Self-Review` section)
-5. Output filtered design document + propose implementation plan for `/dev`
 
 ## Self-Review (required, 2-stage)
 
@@ -117,7 +88,6 @@ Run 2-stage self-review **before** any `/plan` output. Skip not allowed. Applies
 
 Investigation discard: speculative leads / hypothetical edge cases / findings unrelated to the change.
 Plan discard: compat shims / future abstractions / impossible-case error handling / non-boundary validation / scope creep / premature optimization / half-finished phases.
-
 **判定妥当性 review (Step 2 出力に適用)**:
 
 - inline で済むのに `/dev` 委譲していないか (1 file / 数行 / 規約 file の sub 質問 1 件以下)
@@ -131,16 +101,6 @@ Plan discard: compat shims / future abstractions / impossible-case error handlin
 ### Stage B: plan-specific aggregate view
 
 Phase consolidation (same root cause → 1 Phase) / granularity alignment / convention alignment / Zero-phase valid (no padding). Do not include judgment log in plan file. Only results passing both stages proceed to Output Format.
-
-## Plan storage
-
-Stored in `plansDirectory` (default `~/.claude/plans`).
-
-```
-~/.claude/plans/YYYY-MM-DD_[project]_[feature].md
-```
-
-Reference across sessions, load w/ `/reload`.
 
 ## Output format
 
@@ -167,12 +127,16 @@ Phase 2: [task]
 - Branch name: [propose]
 ```
 
+## Plan storage
+
+`plansDirectory` (default `~/.claude/plans`) に `YYYY-MM-DD_[project]_[feature].md` で保存。`/reload` でロード可。
+
 ## Priority
 
-1. Requirement clarity
-2. Architecture fit
-3. Extensibility・maintainability
-4. Testability
+- Requirement clarity
+- Architecture fit
+- Extensibility / maintainability
+- Testability
 
 ## Fail behavior
 
