@@ -120,6 +120,28 @@ Do not write derived values (count / sum / list length) computable from a canoni
 - **Same problem fails twice in a row → suggest `/clear` + rewrite prompt** (accumulated failure context is the primary failure mode, independent of capacity).
 - Continue: "generate next-session mega-prompt" → paste into new session. Uncontaminated question: `/btw`
 
+## Work output routing
+
+進捗 / 永続知識 / session 内 plan の出力先を分離する。
+
+| 種別 | 出力先 | 起動 |
+|---|---|---|
+| 進捗報告 (status / 着手 / 完了 / blocker / 観測中の事象) | GitHub issue comment | `/post-comment gh-issue-comment` |
+| 調査ログ / 手順書 / 計画書 / RCA / postmortem / 監視ログ | local-docs HTML (`projects/` `domain-specs/` `tool-guides/` `operations/`) | `local-docs` skill (trigger 語で auto-fire) |
+| session 内一時 plan (phase 分割 / next-action) | `~/.claude/plans/` md | `/plan` (既存) |
+
+**判定 trigger**:
+
+- 「issue に進捗書いて」「ステータス更新」「コメント書いて」「進捗まとめて」 → `/post-comment gh-issue-comment`
+- 「調査結果まとめて」「手順書作って」「計画書 doc に」「RCA 書いて」「postmortem 書いて」「監視ログ残して」 → `local-docs` skill (HTML 作成、template 準拠)
+- 「impl の phase 分割」「次やること整理」「実装方針」 → `/plan` (md → `~/.claude/plans/`)
+
+**重複回避ルール**:
+
+- `/plan` 出力は session 内 working memo。チーム共有が必要になったら local-docs `plan.html` に昇格する
+- issue comment は短文 PREP 3pts (永続知識ではない)。深い調査結果は local-docs に書き、issue から URL link する
+- 同じ内容を issue comment と local-docs の両方に書かない (issue = 進捗 + link / local-docs = 知識本体)
+
 ## Natural Language Triggers (top 5)
 
 | Input | Action |
