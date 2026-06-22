@@ -75,20 +75,11 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 ## Auto-Delegation (parent=Opus orchestrates, subagent=Sonnet executes)
 
-*(For impl/edit tasks. Investigation phase → Discovery Routing)*
+*(Impl/edit task。Investigation phase → Discovery Routing)*
 
-**Default = delegate to `developer-agent` (Sonnet)**. Inline execution only for exceptions listed in detailed.md.
+**Default = delegate to `developer-agent` (Sonnet)**。inline は detailed.md 列挙 exception のみ。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止) + **1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列分割) + **parent 監視責任** (PO/Manager は subagent に丸投げ禁止、bundle 違反は PO Gate で阻止)。直列 chain でも各 step 内に複数 file/観点あるなら step 内 fan-out する (`[[feedback-no-single-agent-overload]]`)。
 
-Details (delegate threshold / decision principle / parallel fire format / bundle prohibition / parent prep / inline exceptions / trigger table): `references/auto-delegation-detailed.md`
-
-### Parent 監視責任 / 1 dev = 1 file 原則
-
-- **parent 監視責任**: PO / Manager は subagent に丸投げ禁止。bundle 違反は PO Gate で阻止する責任を持つ
-- **1 dev = 1 file 原則**: `bundle_justification` なき複数 file fan-out は禁止。Developer は割り当て file 以外を触らない
-- **1 Task scope 上限**: 1 Task call の prompt は file 3-5 / 観点 1-2 まで。超えたら単一 message に N Agent 並列発火に分割する。self-check: "1 pass で全部書ききれる量か" No → 分割 (`[[feedback-no-single-agent-overload]]`)
-- **直列 chain でも各 step 内は並列可**: PO→Manager→Dev のように直列に流す場合でも、各 step 内に複数 file / 観点があるなら step 内で fan-out する。直列 = 単発 1 体丸投げと誤判定しない。実現手段: pipeline ネスト (`/workflow` review template) / `/flow` Phase 内 N Dev / parent inline orchestration (PO 単発 → Manager 単発 → Dev N 並列)
-- 違反パターン: 1 Task に複数 file 指定 / Manager が scope 外 commit を Dev に許可する / PO Gate 前に fan-out 確定
-- 実証記録: `references/retrospectives/2026-06-19_agent-oversight.md`
+詳細 (delegate threshold / parallel fire format / inline exceptions / trigger table / 違反パターン): `references/auto-delegation-detailed.md`
 
 ## Tool Call Format (生テキスト呼び出し禁止)
 
@@ -127,24 +118,17 @@ Do not write derived values (count / sum / list length) computable from a canoni
 - **Same problem fails twice in a row → suggest `/clear` + rewrite prompt** (accumulated failure context is the primary failure mode, independent of capacity).
 - Continue: "generate next-session mega-prompt" → paste into new session. Uncontaminated question: `/btw`
 
-## Natural Language Triggers (major only)
+## Natural Language Triggers (top 5)
 
 | Input | Action |
 |---|---|
 | "push" / "pushして" | `/git-push --pr` |
 | "全自動で" / "autoで" / "おまかせ" | `/flow-auto` |
 | "レビュー" / "レビューして" | `/review` |
-| "{strict\|fast\|normal} mode" | `/session-mode {strength}` |
-| "並列実行で" / "wt 分けて" | `/flow --parallel` |
 | "team で" / "agent team で" / "分担で" / "本格的に" | `/flow` (PO/Manager/Dev hierarchy, forced) |
-| "Slack に投げて" / "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message` |
-| "Notion に書いて" / "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages` |
-| "API 設計" / "API 設計して" | `/api-design` |
-| "バックエンド" / "バックエンド実装" | `/backend-dev` |
-| "ブレスト" / "アイデア出し" | `/brainstorm` |
 | "workflow で" / "pipeline で" / "多数決で" | `/workflow` |
 
-No other natural-language interpretation. Full list: `references/natural-language-triggers.md`
+これ以外の natural-language 解釈はしない。全 list (Slack / Notion / `/api-design` / `/backend-dev` / `/brainstorm` / `/flow --parallel` / `/session-mode` 等): `references/natural-language-triggers.md`
 
 ## Git Merge Prohibition
 
