@@ -76,6 +76,8 @@ Read → Replica (lag ~100ms)
 
 **Cost**: sync delay, double implementation, eventual consistency required.
 
+> Detail: `design/cqrs.md` (maturity levels, sync strategies, anti-patterns, migration path)
+
 ---
 
 ## 5. Event Sourcing

@@ -197,6 +197,8 @@ Value access: `.V` field or after `.Valid` check.
 
 ## CQRS
 
+> Pattern detail (maturity levels, sync strategies, anti-patterns): `../design/cqrs.md`
+
 - Separate layers for Command (write) and Query (read)
 - Command: transaction management via Unit of Work pattern
 - Command usecase signature: `Do(ctx, in *Input) (*Output, *Result)` (`*Result` = operation success/failure, replaces `error`)
