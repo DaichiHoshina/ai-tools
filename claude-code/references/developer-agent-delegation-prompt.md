@@ -2,6 +2,17 @@
 
 Copy this template, fill all 6 sections (no placeholder left blank), paste to `Task(developer-agent)`.
 
+## Prompt assembly order (cache hit 最適化)
+
+Anthropic 公式記事 [Harnessing Claude's Intelligence](https://www.anthropic.com/engineering/) は **"Static first, dynamic last"** = 静的 section を先、動的データを末尾に置くと prompt cache hit 率が上がり、cached tokens の課金が base input の 10% に下がる、と説く。
+
+Parent が Task call の prompt を組み立てる際は section 番号 (§0 → §8) でなく、以下の順で **連結する**。番号は cross-ref 用、組み立て順は cache 最適化用で目的が違う。
+
+1. **静的 prefix** (task ごとに不変、cache hit 対象): §0 / §0.5 / §2 / §3 / §4 / §5 / §6 / §7 / §8
+2. **動的 suffix** (task ごとに差替、cache miss 対象): §1 (Target files & edits)
+
+§1 を**末尾**に置くと、共通の静的 prefix 部分 (~150 行) が複数 dev 並列発火時に cache 共有される。中央に §1 を挟むと §1 以降が全部 cache miss になり token cost 増。
+
 
 ## 0. Parent pre-delegation checklist
 

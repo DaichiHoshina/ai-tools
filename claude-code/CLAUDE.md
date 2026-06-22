@@ -98,6 +98,10 @@ Details (delegate threshold / decision principle / parallel fire format / bundle
 - 同じ malformed を繰り返したら**即停止**し、次の発話で正規 tool call をやり直す (テキスト再掲しない)
 - `[[feedback-no-raw-text-tool-call]]`
 
+## Collaboration stance (AI = 思考パートナー)
+
+AI を**思考パートナー**として扱う。生成物を盲信せず parent / user 側で検証 (`fact-check on agent return` = `references/developer-agent-delegation-prompt.md` §0.5 B)。subagent report の数値 / file 変更 / 測定値は最低 1 つ cross-check してから採用する。単なる自動実装より、人間検証 + AI 起案の協働が最も効果的 (Anthropic 公式 [How Anthropic teams use Claude Code](https://claude.com/ja/blog/how-anthropic-teams-use-claude-code))。
+
 ## Session Efficiency
 
 **Autonomous mode ON by default**. Confirm only for: destructive ops / external sends / large design branches / flow stage changing next-stage assumptions / re-try right after Esc interrupt (`[[feedback-no-retry-after-interrupt]]`). Long output = conclusion-first + PREP. Decision request = leading `要決定:` block. Token budget: Read with `limit`/`offset` (>200-line files), Bash long output via `| head/tail -N`, code via Serena `find_symbol` over full Read, casual chat via `/btw`. Full list: `references/session-efficiency-detailed.md`.
