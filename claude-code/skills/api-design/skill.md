@@ -58,7 +58,7 @@ Always decide before adding endpoint.
 - ❌ `/createUser`, `/updateUser`, `/deleteUser` verb-based → ⭕ `/users` + HTTP method
 - ❌ 1 use-case 1 endpoint spam → ⭕ Extend existing (data op granularity, not UI action)
 
-**Details**: Follow `~/.claude/rules/api-design.md` (no UI aggregate values embedded, etc)
+**Details**: Follow `~/.claude/references/on-demand-rules/api-design.md` (no UI aggregate values embedded, etc)
 
 ### Status Code Decision Table
 

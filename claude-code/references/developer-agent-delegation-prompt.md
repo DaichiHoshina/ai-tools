@@ -142,7 +142,7 @@ Parent observes via completion report + `git diff` + push log.
 
 ## 7. Markdown heading rename guard (when applicable)
 
-When rename / EN conversion / wording change of markdown headings is included → follow `~/.claude/rules/markdown-anchor-sync.md`.
+When rename / EN conversion / wording change of markdown headings is included → follow `~/.claude/references/on-demand-rules/markdown-anchor-sync.md`.
 
 ## 8. Implicit constraints (task-independent fixed rules)
 

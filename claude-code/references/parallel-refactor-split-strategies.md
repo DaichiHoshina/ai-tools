@@ -125,4 +125,4 @@ Reduction: (1680 - 520) / 1680 ≈ 69%
 
 - `references/PARALLEL-PATTERNS.md` — parallelism formula, N selection rule, worktree flow (canonical)
 - `CLAUDE.md` "bundle prohibition" — basis for split obligation
-- `rules/markdown-anchor-sync.md` — bats / cross-ref sync on anchor changes
+- `references/on-demand-rules/markdown-anchor-sync.md` — bats / cross-ref sync on anchor changes

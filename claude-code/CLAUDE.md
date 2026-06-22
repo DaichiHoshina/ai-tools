@@ -55,7 +55,9 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 `.md` in commands/, skills/, agents/ consume tokens every session. Keep: decision tables, workflow defs, operation guards, prohibitions, 1 example. Remove: sample impl, duplicate explanations, detailed usage. Target: agent ≤300 / command ≤150 / skill 100-130 lines.
 
-**EN-conversion-protected files/sections**: see `rules/en-conversion-protected.md` (mistranslation breaks rules, bats tests, JP trigger matching).
+**EN-conversion-protected files/sections**: see `references/on-demand-rules/en-conversion-protected.md` (mistranslation breaks rules, bats tests, JP trigger matching).
+
+**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下 (markdown-anchor-sync / en-conversion-protected / api-design)。session-start auto-inject から外して token 節約。trigger: md heading rename → `markdown-anchor-sync.md` / EN refactor・`/claude-update-fix` → `en-conversion-protected.md` / handler・controller・resolver・api・endpoint 触る → `api-design.md`。
 
 ## Discovery / Investigation Routing (anti-overuse)
 
