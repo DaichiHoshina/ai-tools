@@ -176,19 +176,15 @@ genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き pr
 
 **AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。
 
-**Commit message pre-draft sweep** (`[[retrospective-2026-06-12]]` P1): draft 生成前に以下を self-check してから出力する。hook block で retry になると 2〜3 往復のトークン損失が発生する。
-- 頻出 block 語を含まないか: `leverage` / `utilize` / `mitigate` / `踏襲` / `鑑みる` / `喫緊` / `影響なし`
-- 連続漢字≥5 を含まないか (例: `整合性担保` → `整合性を保つ` / `変更対象外` → `変更しない`)
-- 置換候補は `guidelines/writing/NG-DICTIONARY.md` の `置換候補 (頻出)` key を参照
+**Commit message pre-draft sweep** (`[[retrospective-2026-06-12]]` P1): draft 生成前に NG 語 self-check してから出力する。hook block で retry になると 2〜3 往復のトークン損失が発生する。canonical 語彙 list (頻出 block 語 / 連続漢字 / 置換候補) は `guidelines/writing/NG-DICTIONARY.md` 参照。
 
 ## Default Readability (全出力 baseline、/jp-writing 不要)
 
-prose 出力に proactive 適用 (hook block 待ち retry を減らす = token 節約)。
-- 結論冒頭 / 抽象語は数値・具体例に開く / 1 文短く (読点 3 個まで) / 連続漢字 4 字まで (助詞で開く) / 冗長圧縮 (〜できる) / 弱い表現は断定 or「未確認」明示 / 形式名詞・副詞はひらがな
-- AI定型語・カタカナ造語・難読漢語を使わない (`guidelines/writing/NG-DICTIONARY.md`)
+prose 出力に proactive 適用 (hook block 待ち retry を減らす = token 節約)。文体規範 (結論冒頭 / 1 文短く / 連続漢字制限 / 冗長圧縮 / NG 語回避) の canonical は `guidelines/writing/PRINCIPLES.md` + `NG-DICTIONARY.md`。
+
 - 外向き prose・docs は 1 文 100 字 (短文 60 字) 上限、chat は genshijin 継続
-- 外向き doc は**種別 guideline を on-demand で 1 本だけ読んで書く** (commit→`commit-message.md` / PR→`pr-description.md` / DD・RCA→`design-doc-protocol.md`・`long-form-doc.md` / Notion・短文→`external-post.md` / 一覧: `guidelines/writing/README.md`)。常時全ロード禁止
-- 深い書き直し / 全観点 self-check 時のみ `/jp-writing` (`guidelines/writing/PRINCIPLES.md`)
+- 外向き doc は**種別 guideline を on-demand で 1 本だけ読んで書く** (一覧: `guidelines/writing/README.md`)。常時全ロード禁止
+- 深い書き直し / 全観点 self-check 時のみ `/jp-writing`
 
 ## Boris-style mapping
 

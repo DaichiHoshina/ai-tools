@@ -1,7 +1,7 @@
 ---
 name: AI Tools Format
 description: ai-tools リポジトリの標準返信フォーマット
-enabled: true
+keep-coding-instructions: true
 ---
 
 # AI Tools Standard Format
