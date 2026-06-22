@@ -1,6 +1,6 @@
 # Type Safety Principles
 
-Type safety is the most important principle for early bug detection and improved maintainability.
+> **Purpose**: Type safety is the most important principle for early bug detection and improved maintainability.
 
 ---
 

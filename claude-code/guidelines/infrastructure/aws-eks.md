@@ -1,6 +1,6 @@
 # AWS EKS Guidelines
 
-**Purpose**: Safe and efficient Kubernetes cluster operation
+> **Purpose**: Safe and efficient Kubernetes cluster operation
 
 ---
 

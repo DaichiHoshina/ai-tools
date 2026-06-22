@@ -1,6 +1,6 @@
 # Async Job Design Patterns
 
-Selection criteria for messaging (SQS / SNS / Kafka) and async job design patterns. Reference when designing fan-out / ordering guarantees / high-throughput backend workloads.
+> **Purpose**: Selection criteria for messaging (SQS / SNS / Kafka) and async job design patterns. Reference when designing fan-out / ordering guarantees / high-throughput backend workloads.
 
 ## Queue/Messaging Selection Criteria
 

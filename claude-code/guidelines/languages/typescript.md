@@ -140,7 +140,7 @@ Check `tsconfig.json` `target` and `package.json` TypeScript version before flag
 | `@decorator` (legacy/experimental) | Stage 3 Decorators | TS5.0 |
 | Repeated `typeof x === 'string'` | `satisfies` for type assurance | TS4.9 |
 
-### Info (suggestion level)
+### Info
 
 | Item | Detail | Since |
 |------|--------|-------|

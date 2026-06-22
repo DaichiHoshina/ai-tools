@@ -1,6 +1,6 @@
 # Guardrails
 
-Classify operations into 3 layers (Safe/Boundary/Forbidden) to guarantee safety.
+> **Purpose**: Classify operations into 3 layers (Safe/Boundary/Forbidden) to guarantee safety.
 
 ## Operation Guard
 

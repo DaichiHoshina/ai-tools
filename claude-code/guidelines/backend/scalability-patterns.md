@@ -1,6 +1,6 @@
 # Scalability Patterns Guidelines
 
-Reference for throughput limits, single point of failure, and horizontal/vertical scale decisions.
+> **Purpose**: Reference for throughput limits, single point of failure, and horizontal/vertical scale decisions.
 
 ## Tier classification
 

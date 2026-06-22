@@ -1,6 +1,6 @@
 # Observability Design Guidelines
 
-Reference for building SLI/SLO, distributed tracing, and metric/log/trace correlation. Follows OpenTelemetry semconv 2025.
+> **Purpose**: Reference for building SLI/SLO, distributed tracing, and metric/log/trace correlation. Follows OpenTelemetry semconv 2025.
 
 ## Tier classification
 

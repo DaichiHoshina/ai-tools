@@ -1,6 +1,6 @@
 # Development Process
 
-Checklists for before / during / before review of implementation. Reference when starting a new task or before creating a PR.
+> **Purpose**: Checklists for before / during / before review of implementation. Reference when starting a new task or before creating a PR.
 
 ## Pre-implementation Checklist
 

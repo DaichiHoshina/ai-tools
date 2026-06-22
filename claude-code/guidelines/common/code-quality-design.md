@@ -1,6 +1,6 @@
 # Code Quality and Design Philosophy
 
-Quality criteria and review perspectives for consistency, readability, and testability. Reference during code reviews and design decisions.
+> **Purpose**: Quality criteria and review perspectives for consistency, readability, and testability. Reference during code reviews and design decisions.
 
 ## Quick Reference
 

@@ -1,6 +1,6 @@
 # Notionデータベース設計
 
-Notionプロパティタイプ (Select / Multi-select / Date / Number等) の使い分け基準。Notion DB新設 / プロパティ再設計時に参照。
+> **Purpose**: Notionプロパティタイプ (Select / Multi-select / Date / Number等) の使い分け基準。Notion DB新設 / プロパティ再設計時に参照。
 
 ## プロパティタイプの使い分け
 

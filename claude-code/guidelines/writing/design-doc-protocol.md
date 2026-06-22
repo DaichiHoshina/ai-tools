@@ -27,7 +27,7 @@ DD = DesignDoc。共通文章原則は [PRINCIPLES.md](PRINCIPLES.md) 参照。
 | 5 | **失敗ケース** | 在庫不足・API失敗・二重実行・冪等性など本番で死ぬ点 |
 | 6 | **移行戦略** | DB変更はExpand → Migrate → Contractの3段 |
 
-レベル高い書き方: 数字で語る (O(n)→O(1)) / 図で説明 (シーケンス・ER・アーキ) / 制約明示 (MySQL 8.0、READ COMMITTED)。
+レベル高い書き方: 数字で語る (O(n)→O(1)) / 図で説明 (シーケンス・ER・アーキ) / 制約明示 (MySQL 8.4 LTS、READ COMMITTED)。
 
 ## DD と runbook / 実装 docs の役割分担
 

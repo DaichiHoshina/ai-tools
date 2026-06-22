@@ -134,7 +134,7 @@ Check `package.json` `eslint` version and project config format before flagging.
 | `eslint-plugin-react` `prop-types` rule | TypeScript Props types | when using TS |
 | `@typescript-eslint/` pre-v7 config | v8+ `tseslint.config()` format | v8 |
 
-### Info (suggestion level)
+### Info
 
 | Item | Detail | Since |
 |------|--------|-------|

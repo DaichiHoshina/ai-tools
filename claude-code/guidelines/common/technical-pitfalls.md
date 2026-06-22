@@ -1,6 +1,6 @@
 # Technical Pitfalls
 
-Collection of implementation patterns to avoid: implementation without design, regression-inducing changes, etc. Reference as a self-check before starting new features or during code review.
+> **Purpose**: Collection of implementation patterns to avoid: implementation without design, regression-inducing changes, etc. Reference as a self-check before starting new features or during code review.
 
 ## Absolutely Forbidden Patterns
 

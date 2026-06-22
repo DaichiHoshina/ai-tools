@@ -1,6 +1,6 @@
 # Logging Standards
 
-Standards for log level usage and structured field design. Reference when adding new logs or reviewing existing ones.
+> **Purpose**: Standards for log level usage and structured field design. Reference when adding new logs or reviewing existing ones.
 
 ## Principles
 

@@ -1,6 +1,6 @@
 # Multi-tenancy Guidelines
 
-Data isolation, performance isolation, and compliance design when serving multiple tenants (customers) in a single system (SaaS etc.).
+> **Purpose**: Data isolation, performance isolation, and compliance design when serving multiple tenants (customers) in a single system (SaaS etc.).
 
 ## Tier classification
 

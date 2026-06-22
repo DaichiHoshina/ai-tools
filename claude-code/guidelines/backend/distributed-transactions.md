@@ -1,6 +1,6 @@
 # Distributed Transactions Guidelines
 
-Reference for consistency guarantees across multiple services/DBs, deadlock handling, and optimistic/pessimistic lock decisions.
+> **Purpose**: Reference for consistency guarantees across multiple services/DBs, deadlock handling, and optimistic/pessimistic lock decisions.
 
 ## Tier classification
 

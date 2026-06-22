@@ -1,6 +1,6 @@
 # AWS Lambda Guidelines
 
-**Purpose**: Efficient serverless function development and secure deployment
+> **Purpose**: Efficient serverless function development and secure deployment
 
 ---
 

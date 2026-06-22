@@ -1,6 +1,6 @@
 # AWS EC2 Guidelines
 
-**Purpose**: Safe and efficient configuration management for EC2 instances
+> **Purpose**: Safe and efficient configuration management for EC2 instances
 
 ---
 

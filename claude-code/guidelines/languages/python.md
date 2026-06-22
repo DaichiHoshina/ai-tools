@@ -122,7 +122,7 @@ Check `pyproject.toml` `requires-python` or runtime version before flagging.
 | `dict` for typed dict | `TypedDict` | 3.8 |
 | Manual `__init__` without dataclass | `@dataclass` or `pydantic.BaseModel` | 3.7 |
 
-### Info (suggestion level)
+### Info
 
 | Item | Detail | Since |
 |------|--------|-------|

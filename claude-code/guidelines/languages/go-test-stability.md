@@ -1,6 +1,6 @@
 # Go Test Stability Guidelines
 
-Patterns to prevent flaky tests.
+> **Purpose**: Patterns to prevent flaky tests.
 
 ## Dynamic Data Validation
 

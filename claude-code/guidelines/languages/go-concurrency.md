@@ -1,6 +1,6 @@
 # Go Concurrency (Goroutine/Channel/sync) Guidelines
 
-Reference when scheduler behavior, channel sizing, leak detection, or mutex contention analysis is needed. Basics: `languages/golang.md`.
+> **Purpose**: Reference when scheduler behavior, channel sizing, leak detection, or mutex contention analysis is needed. Basics: `languages/golang.md`.
 
 ## Tiers
 

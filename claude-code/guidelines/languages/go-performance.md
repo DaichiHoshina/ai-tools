@@ -1,6 +1,6 @@
 # Go Performance Guidelines
 
-Reference for CPU/memory optimization, allocation reduction, and PGO. Basics: `languages/golang.md`.
+> **Purpose**: Reference for CPU/memory optimization, allocation reduction, and PGO. Basics: `languages/golang.md`.
 
 ## Tiers
 

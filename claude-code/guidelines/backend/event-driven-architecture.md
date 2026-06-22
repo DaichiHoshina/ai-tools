@@ -1,6 +1,6 @@
 # Event-Driven Architecture Guidelines
 
-Reference for async messaging design with Kafka/RabbitMQ/SQS/PubSub etc. For simple batch jobs, see `design/async-job-patterns.md`. For TX consistency, see `backend/distributed-transactions.md`.
+> **Purpose**: Reference for async messaging design with Kafka/RabbitMQ/SQS/PubSub etc. For simple batch jobs, see `design/async-job-patterns.md`. For TX consistency, see `backend/distributed-transactions.md`.
 
 ## Tier classification
 

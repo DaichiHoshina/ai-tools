@@ -1,6 +1,6 @@
 # DB Performance Guidelines
 
-Reference for query latency, throughput limits, and production DB investigation. **PostgreSQL 16-18 only** (PG-specific: pg_stat_statements / EXPLAIN BUFFERS). For MySQL/InnoDB, see `backend/mysql-performance.md`.
+> **Purpose**: Reference for query latency, throughput limits, and production DB investigation. **PostgreSQL 16-18 only** (PG-specific: pg_stat_statements / EXPLAIN BUFFERS). For MySQL/InnoDB, see `backend/mysql-performance.md`.
 
 ## Tier classification
 

@@ -1,6 +1,6 @@
 # Async Messaging Guidelines
 
-AWS SQS (primary) + Google Cloud Pub/Sub v2 (secondary, when GCP-native services already exist). Common guidelines: `~/.claude/guidelines/common/`. Related: `languages/go-concurrency.md` (goroutine + ctx lifecycle).
+> **Purpose**: AWS SQS (primary) + Google Cloud Pub/Sub v2 (secondary, when GCP-native services already exist). Common guidelines: `~/.claude/guidelines/common/`. Related: `languages/go-concurrency.md` (goroutine + ctx lifecycle).
 
 ## Core Principles
 

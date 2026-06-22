@@ -129,7 +129,7 @@ Check `Cargo.toml` `edition` and `rust-version` before flagging.
 | `println!` debugging | `tracing::debug!` / `dbg!` | recommended |
 | Manual `#[derive(Clone, Debug)]` enumeration | use `#[diagnostic]` attribute for improved error messages | 1.80 |
 
-### Info (suggestion level)
+### Info
 
 | Item | Detail | Since |
 |------|--------|-------|

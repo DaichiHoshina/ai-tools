@@ -1,6 +1,6 @@
 # Caching Strategies Guidelines
 
-Reference for reducing DB load, improving latency, and increasing throughput. Applies to Redis/Memcached/in-process caching.
+> **Purpose**: Reference for reducing DB load, improving latency, and increasing throughput. Applies to Redis/Memcached/in-process caching.
 
 ## Tier classification
 

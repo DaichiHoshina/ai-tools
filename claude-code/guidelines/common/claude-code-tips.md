@@ -1,6 +1,6 @@
 # Claude Code Practical Tips
 
-Context management / compaction tips for Claude Code operation. Reference when session length or token consumption is a concern.
+> **Purpose**: Context management / compaction tips for Claude Code operation. Reference when session length or token consumption is a concern.
 
 ## Context Management
 

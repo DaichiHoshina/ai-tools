@@ -1,6 +1,6 @@
 # Testing Guidelines
 
-Basic principles of test design for early bug detection, safe refactoring, etc. Reference when adding tests or reviewing existing ones.
+> **Purpose**: Basic principles of test design for early bug detection, safe refactoring, etc. Reference when adding tests or reviewing existing ones.
 
 ## Core Principles
 

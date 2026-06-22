@@ -1,6 +1,6 @@
 # AWS ECS / Fargate Guidelines
 
-**Purpose**: Efficient operation and security for container workloads
+> **Purpose**: Efficient operation and security for container workloads
 
 ---
 

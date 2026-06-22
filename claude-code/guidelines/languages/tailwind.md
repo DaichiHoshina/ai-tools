@@ -85,7 +85,7 @@ Apply styles only when no other variant/selector/media query matches:
 ## Next.js Integration
 
 ```bash
-npm install tailwindcss@next @tailwindcss/vite@next
+npm install tailwindcss@latest @tailwindcss/vite@latest
 ```
 
 `app/globals.css`: `@import "tailwindcss";`

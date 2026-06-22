@@ -1,6 +1,6 @@
 # Release Management Guidelines
 
-Responsibility split between PR author and release owner, and the release flow. Reference after PR merge / when executing a production release.
+> **Purpose**: Responsibility split between PR author and release owner, and the release flow. Reference after PR merge / when executing a production release.
 
 ## Roles
 

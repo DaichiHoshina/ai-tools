@@ -1,6 +1,6 @@
 # Terraform Guidelines
 
-**Purpose**: Infrastructure as Code best practices and consistent configuration management
+> **Purpose**: Infrastructure as Code best practices and consistent configuration management
 
 ---
 

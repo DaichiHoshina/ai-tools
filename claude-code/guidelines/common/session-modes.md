@@ -1,6 +1,6 @@
 # Session Modes
 
-Defines the operation mode for the entire session. Confirmation flow and constraint level change based on mode.
+> **Purpose**: Defines the operation mode for the entire session. Confirmation flow and constraint level change based on mode.
 
 ---
 

@@ -1,6 +1,6 @@
 # MySQL/InnoDB Performance Guidelines
 
-Reference for query latency, throughput limits, and production MySQL investigation. Assumes **MySQL 8.4 LTS / InnoDB**. For PostgreSQL, see `backend/database-performance.md`.
+> **Purpose**: Reference for query latency, throughput limits, and production MySQL investigation. Assumes **MySQL 8.4 LTS / InnoDB**. For PostgreSQL, see `backend/database-performance.md`.
 
 ## Tier classification
 

@@ -1,6 +1,6 @@
 # Monitoring / Runbook Guidelines
 
-SLO burn rate thresholds and response urgency on alert. Reference on production incidents or SLO violation detection.
+> **Purpose**: SLO burn rate thresholds and response urgency on alert. Reference on production incidents or SLO violation detection.
 
 ## SLO Burn Rate Alert Response
 

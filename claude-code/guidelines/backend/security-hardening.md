@@ -1,6 +1,6 @@
 # Security Hardening Guidelines
 
-Reference for building authentication/authorization, rate limiting, secret management, and OWASP mitigations in production. For foundations, see `rules/enterprise-security.md`.
+> **Purpose**: Reference for building authentication/authorization, rate limiting, secret management, and OWASP mitigations in production. For foundations, see `rules/enterprise-security.md`.
 
 ## Tier classification
 
