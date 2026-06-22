@@ -44,7 +44,7 @@ Technical Spec (現時点の仕様スナップショット)
 - **PRDとADRは独立**: PRDは「何を作るか」、ADRは「技術判断の記録」。PRD内で技術判断を書かない
 - **Design DocはPRDにリンク**: 必ずPRD/Issueリンクを貼る。WhyがPRD側にあるため
 - **Product Specはリリース後にPRDから派生**: PRD時点の想定vs実装結果の差分を埋める
-- **改定時の追従 (orphan 防止)**: PRD / ADR を改定したら、参照する Design Doc / Technical Spec / runbook のリンク・前提条件を確認し、乖離があれば即座に追従させる。古い設計が残ると新メンバーが混乱する。突合観点: [long-form-doc.md](long-form-doc.md) 参照
+- **改定時の追従 (orphan 防止)**: PRD / ADRを改定したら、参照する Design Doc / Technical Spec / runbookのリンク・前提条件を確認し、乖離があれば即座に追従させる。古い設計が残ると新メンバーが混乱する。突合観点: [long-form-doc.md](long-form-doc.md) 参照
 
 ## 保存先
 
@@ -106,7 +106,7 @@ docs/
 
 ## AI対応ルール (RAG精度)
 
-- 1ナレッジ=1ドキュメント、800-1500字目安 (2000字超は分割)、見出し H1-H3 まで
+- 1ナレッジ=1ドキュメント、800-1500字目安 (2000字超は分割)、見出し H1-H3まで
 - 文体: 主語明示 / 指示語禁止 (「これ」「上記」→具体名) / 略語初出フル / 「適宜」禁止 (IF-THEN明文化) / 日付 YYYY-MM-DD
 - 構造: 画像はテキスト併記、テーブルはセル結合禁止 (空欄=「なし」)、色識別禁止、臨時運用は【臨時運用】+解除条件冒頭
 - 詳細文体ルール: [PRINCIPLES.md](PRINCIPLES.md) + [long-form-doc.md](long-form-doc.md)、Notion固有: `guidelines/common/notion-writing.md`

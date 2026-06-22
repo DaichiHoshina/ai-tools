@@ -32,16 +32,16 @@
 
 ## GitHub auto-link 衝突を避ける
 
-PR コメント / Issue / Slack で `#1234` 形式の番号を本文中に書くと、GitHub が同 repo の issue / PR への auto-link を貼る。意図しない link 接続を防ぐため:
+PRコメント / Issue / Slackで `#1234` 形式の番号を本文中に書くと、GitHubが同repoの issue / PRへの auto-linkを貼る。意図しない link 接続を防ぐため:
 
 | 場面 | 書き方 |
 |---|---|
-| 同 repo の issue / PR を参照 | `#1234` (auto-link 期待) |
-| 他 repo の issue / PR | `owner/repo#1234` (cross-repo auto-link、repo 名明示) |
-| DD 内部の section 参照 (例: §9-2 #5) | `` `#5` `` (バッククォート escape、auto-link 抑止) |
+| 同repoの issue / PRを参照 | `#1234` (auto-link 期待) |
+| 他 repoの issue / PR | `owner/repo#1234` (cross-repo auto-link、repo 名明示) |
+| DD 内部の section 参照 (例: §9-2 #5) | `` `#5` `` (バッククォートescape、auto-link 抑止) |
 | 番号だけの参照 (例: 「項 #3」) | `` `#3` `` (escape) |
 
-**判断**: 番号 literal を書く前に「これは GitHub issue / PR の番号か、本文内の項番号か」を判定し、項番号なら必ず escape する。
+**判断**: 番号 literalを書く前に「これは GitHub issue / PRの番号か、本文内の項番号か」を判定し、項番号なら必ず escapeする。
 
 ## 文長・記号
 
