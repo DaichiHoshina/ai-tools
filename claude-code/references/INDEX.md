@@ -52,6 +52,15 @@ On-demand index from CLAUDE.md.
 | AI thinking essentials | `AI-THINKING-ESSENTIALS.md` |
 | Design decision quality checklist | `decision-quality-checklist.md` |
 
+## Architecture & Design Patterns
+
+| Topic | File |
+|-------|------|
+| Clean Architecture (layer / dependency direction) | `../guidelines/design/clean-architecture.md` |
+| Domain-Driven Design (aggregate / bounded context) | `../guidelines/design/domain-driven-design.md` |
+| CQRS (read/write split / sync strategies / maturity levels) | `../guidelines/design/cqrs.md` |
+| Async job patterns (queue selection / fan-out) | `../guidelines/design/async-job-patterns.md` |
+
 ## Documentation Writing
 
 | Topic | File |

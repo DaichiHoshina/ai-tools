@@ -1,6 +1,6 @@
 # Next.js / React Guidelines
 
-Next.js 16.2 + React 19.2 (May 2026). Common: `~/.claude/guidelines/common/`.
+Next.js 16.2 + React 19.2 (May 2026). Common guidelines: `~/.claude/guidelines/common/`.
 
 16.2 features: React Compiler stable (auto-memoization), Turbopack Server Fast Refresh, Web Worker Origin for WASM, Subresource Integrity.
 
