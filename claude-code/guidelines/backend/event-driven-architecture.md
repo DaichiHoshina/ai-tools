@@ -159,4 +159,4 @@ Convert DB changes to events and propagate to other systems.
 - "Designing Data-Intensive Applications" (Martin Kleppmann)
 - "Enterprise Integration Patterns" (Hohpe & Woolf)
 - Debezium official, AWS SQS/SNS official
-- Related: `backend/distributed-transactions.md` (Saga/Outbox consistency), `design/async-job-patterns.md` (task queue), `backend/observability-design.md` (consumer lag monitoring)
+- Related: `backend/distributed-transactions.md` (Saga/Outbox consistency), `design/async-job-patterns.md` (task queue), `backend/observability-design.md` (consumer lag monitoring), `design/cqrs.md` (read/write split + event projection)

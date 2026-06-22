@@ -138,4 +138,4 @@ Distributed consistency needed?
 - Saga: ByteByteGo
 - Outbox: AWS Prescriptive Guidance
 - Idempotency Key RFC: IETF draft
-- Related: `design/async-job-patterns.md` (DLQ), `backend/observability-design.md` (trace correlation), `backend/event-driven-architecture.md` (Outbox/Kafka impl)
+- Related: `design/async-job-patterns.md` (DLQ), `backend/observability-design.md` (trace correlation), `backend/event-driven-architecture.md` (Outbox/Kafka impl), `design/cqrs.md` (consistency model selection)
