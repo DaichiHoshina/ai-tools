@@ -12,6 +12,6 @@
     "test:bats": "npm run test:bats:unit && npm run test:bats:integration"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^30.4.2"
   }
 }
