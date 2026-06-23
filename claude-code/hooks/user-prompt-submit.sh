@@ -443,9 +443,13 @@ _inject_delegation_checklist_if_trigger() {
   local _FLAG="/tmp/claude-deleg-checklist-${session_id}-${date_today}"
   if [[ -f "${_FLAG}" ]]; then
     local _LAST_TS _NOW _SINCE
-    read -r _LAST_TS < "${_FLAG}" 2>/dev/null || _LAST_TS=0
+    read -r _LAST_TS < "${_FLAG}" 2>/dev/null || _LAST_TS=""
+    # flag は存在するが TS が空 / 非数値 / 0 = 直前 write が壊れた / 競合 → throttle 継続
+    if [[ ! "${_LAST_TS}" =~ ^[0-9]+$ ]] || (( _LAST_TS == 0 )); then
+      return 1
+    fi
     printf -v _NOW '%(%s)T' -1
-    _SINCE=$(( _NOW - ${_LAST_TS:-0} ))
+    _SINCE=$(( _NOW - _LAST_TS ))
     if (( _SINCE >= 0 && _SINCE < 300 )); then
       return 1
     fi
