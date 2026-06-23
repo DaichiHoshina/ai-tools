@@ -420,6 +420,45 @@ _inject_outward_mode_if_trigger() {
   return 1
 }
 
+# === delegation trigger → developer-agent §0 checklist + scope allowlist inject ===
+# 委譲意図 keyword 検出時に parent 向け checklist を additionalContext として注入する。
+# 目的: scope creep / 直列 chain / verify 省略 / Gate 素通り の構造的予防。
+# throttle: session 内 5min に 1 回 (flag: /tmp/claude-deleg-checklist-<sid>-<date>)。
+_inject_delegation_checklist_if_trigger() {
+  local prompt="$1"
+  local session_id="$2"
+  local date_today="$3"
+  local prompt_lower="${prompt,,}"
+
+  # 委譲意図 keyword (実装 / 修正 / 編集 / refactor / dev 委譲 / Task(developer 等)
+  # 質問形 (どう / 教えて / なぜ) は skip、調査 / explore は別 agent 経路
+  local question_re='(どう思う|どう考え|教えて|なぜ|どうやって|どうすれ|意見|相談)'
+  [[ "${prompt_lower}" =~ ${question_re} ]] && return 1
+
+  local trigger_re='(実装|修正|編集|リファクタ|refactor|impl|fix bug|developer-agent|task\(developer|/dev |/flow|並列で|並列に|分担で|分担して)'
+  [[ "${prompt_lower}" =~ ${trigger_re} ]] || return 1
+
+  # throttle: 5min 以内に 1 回 inject 済ならスキップ
+  [[ -n "${session_id}" && "${session_id}" != "unknown" ]] || return 1
+  local _FLAG="/tmp/claude-deleg-checklist-${session_id}-${date_today}"
+  if [[ -f "${_FLAG}" ]]; then
+    local _LAST_TS _NOW _SINCE
+    read -r _LAST_TS < "${_FLAG}" 2>/dev/null || _LAST_TS=0
+    printf -v _NOW '%(%s)T' -1
+    _SINCE=$(( _NOW - ${_LAST_TS:-0} ))
+    if (( _SINCE >= 0 && _SINCE < 300 )); then
+      return 1
+    fi
+  fi
+
+  # flag 更新
+  printf -v _NOW '%(%s)T' -1
+  printf '%s\n' "${_NOW}" > "${_FLAG}" 2>/dev/null || true
+
+  printf '%s\n' "[delegation-checklist] developer-agent 委譲意図検出。発火前に §0 checklist 6 項目を満たすこと: (1) target file:line 特定済 (2) verify cmd bash literal 確定 (3) DoD 1 行化 (4) 単 domain (5) touchable_files: YAML block を delegation prompt §1 に literal 記載 (6) blocker-on-stop 方針記載。touchable_files 欠落で発火 = subagent 側 partial 停止。Return 時は §0.5 B fact-check (数値 formula 確認 / 測定値 1 sample 再現 / file 変更 git diff --stat) を最低 1 つ実行。source: references/developer-agent-delegation-prompt.md §0, §0.5, §1"
+  return 0
+}
+
 # === commit/push trigger → NG top-6 term inject ===
 # commit message 生成前に block top-6 term を注入して retry loop を事前回避する
 # 派生値禁止 rule 準拠: top-6 は log から動的抽出 (literal 埋め込み禁止)
@@ -584,6 +623,17 @@ ${_OUTWARD_MODE_CTX}"
 ${_COMMIT_NG_CTX}"
       else
         _AI_TERMS_CTX="${_COMMIT_NG_CTX}"
+      fi
+    fi
+
+    # delegation trigger 検出 → developer-agent §0 checklist + scope allowlist inject
+    _DELEG_CHECKLIST_CTX=""
+    if _DELEG_CHECKLIST_CTX=$(_inject_delegation_checklist_if_trigger "$prompt" "${_SESSION_ID}" "${_DATE_TODAY}" 2>/dev/null); then
+      if [[ -n "${_AI_TERMS_CTX}" ]]; then
+        _AI_TERMS_CTX="${_AI_TERMS_CTX}
+${_DELEG_CHECKLIST_CTX}"
+      else
+        _AI_TERMS_CTX="${_DELEG_CHECKLIST_CTX}"
       fi
     fi
 

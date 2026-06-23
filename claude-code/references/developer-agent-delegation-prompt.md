@@ -20,7 +20,7 @@ Parent が Task call の prompt を組み立てる際は section 番号 (§0 →
 - [ ] verify cmd 確定済 (build / typecheck / test / bats — single runnable cmd)
 - [ ] DoD 1 行化済
 - [ ] 単 domain (no mixed file groups / root causes)
-- [ ] scope 明示 (`task.files` literal + 編集可な additional_files 併記、それ以外は scope creep 違反)
+- [ ] scope 明示 (`touchable_files:` YAML block + 任意の `additional_files:`、それ以外は scope creep 違反 — §1 参照)
 - [ ] blocker-on-stop 方針記載 ("blocker 検出時は独断進行禁止、`unresolved_errors[]` に書いて `status: partial` で停止")
 
 All 6 must be ✓ before firing. Parent completes these; do not push exploration to subagent.
@@ -50,10 +50,29 @@ Do not accept agent report immediately — perform at least 1 cross-check parent
 
 ## 1. Target files & edits
 
-Absolute paths + exact changes (no inference):
-- `/path/to/file-A.md`: Add section "Inline exceptions" after L34 (rules table, 2 sub-rules)
-- `/path/to/file-B.md`: Rename `oldFunc` → `newFunc` (L50-80), update 3 calls in file
-- (new) `/path/to/file-C.md`: Create reference guide, 80-120 lines, 6 sections
+### touchable_files (MUST — scope allowlist)
+
+Parent must include `touchable_files:` block as literal YAML in delegation prompt. Absolute paths only. Subagent rejects prompt with empty / missing block as `status: partial` blocker (`unresolved_errors[].blocker = "touchable_files missing"`).
+
+```yaml
+touchable_files:
+  - /abs/path/to/file-A.md
+  - /abs/path/to/file-B.md
+additional_files:           # optional, read-only or commit-excluded ref files
+  - /abs/path/to/ref-C.md
+```
+
+Subagent rule:
+- Edit / Write / Bash mutation against any path **not in `touchable_files`** → stop immediately, report scope creep blocker
+- Read on `additional_files` is allowed; Edit / Write is forbidden
+- No "discovered another file that needs fixing" — record under `out_of_scope_observations[]` and stop
+
+### Edits per file
+
+Exact changes (no inference):
+- `/abs/path/to/file-A.md`: Add section "Inline exceptions" after L34 (rules table, 2 sub-rules)
+- `/abs/path/to/file-B.md`: Rename `oldFunc` → `newFunc` (L50-80), update 3 calls in file
+- (new) `/abs/path/to/file-C.md`: Create reference guide, 80-120 lines, 6 sections
 
 Complex edits (>5 changes): list separately for sequential execution.
 
@@ -178,7 +197,7 @@ Before committing, confirm current branch with `git branch --show-current`.
 The result must match the branch specified in this delegation prompt exactly.
 If different: **stop immediately**, do not commit, report as blocker in `unresolved_errors[]`.
 
-Commit only files listed in `task.files` (§1 target files). Committing files outside the listed scope — even if modified — is a scope violation. Stage by explicit path (`git add path/to/file`), never `git add -A` or `git add .`.
+Commit only files listed in `touchable_files` (§1 target files). Committing files outside the listed scope — even if modified — is a scope violation. Stage by explicit path (`git add path/to/file`), never `git add -A` or `git add .`.
 
 ### Shell script exec bit (new `.sh` files)
 

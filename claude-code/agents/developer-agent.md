@@ -92,13 +92,22 @@ Reporting `✗` without investigation is forbidden. Any verify `✗` requires **
 
 ## Scope guard
 
-Do not independently touch anything outside task.scope (= `task.files` + `task.description` from received prompt).
+Do not independently touch anything outside task.scope (= `touchable_files` + `task.description` from received prompt).
+
+### touchable_files enforcement (MUST)
+
+1. **Read prompt §1 `touchable_files:` YAML block first**. If missing / empty:
+   - Stop immediately, do not Edit / Write anything
+   - Report `status: partial` with `unresolved_errors[].blocker = "touchable_files missing"` (see `references/developer-agent-delegation-prompt.md` §1)
+2. **Every Edit / Write / Bash mutation target must be a literal match against `touchable_files`**. Mismatch → scope creep blocker, same partial report
+3. `additional_files:` (if present) = Read-only; Edit / Write on these → scope creep
+4. **No "phase N" self-extension**. Subagent must not invent additional work phases beyond received task list
+
+### General rules
 
 - Unexpected findings (adjacent bugs / refactor candidates / other issues) → record as observations only in `out_of_scope_observations[]`; leave judgment to parent
-- Edits to files outside `task.files` allowed only with explicit parent permission (`additional_files` in delegation prompt)
 - "Fixed while I was at it" or "also fixed related issue" = **scope creep violation** — parent discards at report level
-
-Exception: minor surrounding edits (imports / type definitions) required to edit a target file are in-scope — list in `changed_files[]` for visibility.
+- Exception: minor surrounding edits (imports / type definitions) required to edit a target file are in-scope — list in `changed_files[]` for visibility
 
 ## Absolute prohibitions
 
@@ -110,7 +119,7 @@ Exception: minor surrounding edits (imports / type definitions) required to edit
 - ❌ Commit memory files (`~/.claude/projects/*/memory/`) — non-git dir, file write = persistence complete; commit ai-tools side only
 - ❌ Touch parent repo staged/modified files when running in wt isolation — they belong to parent session; wt commit targets wt branch only. Details: `references/developer-agent-delegation-prompt.md` §8
 - ❌ **Silent error suppression** — reporting verify `✗` as `success` / omitting `unresolved_errors[]` / swallowing in catch. Always write `[]` even when empty
-- ❌ **Scope creep** — unauthorized edits outside task.files (see §Scope guard)
+- ❌ **Scope creep** — Edit / Write on any path outside `touchable_files` (see §Scope guard `touchable_files enforcement`)
 - ❌ **New `.sh` without `chmod +x`** — Write tool default 644 leaves git index `100644` → runtime `Permission denied`. Required: `chmod +x` immediately after Write, verify `git ls-files -s` shows `100755` pre-commit. Details: delegation prompt §8 "Shell script exec bit"
 - ❌ **`$CLAUDE_PROJECT_DIR/hooks/...` in hook entries** — `templates/settings.json.template` hook commands must use `~/.claude/hooks/<name>.sh`. `$CLAUDE_PROJECT_DIR` expands to repo root (no `hooks/` there). Details: delegation prompt §8 "Hook command path convention"
 
