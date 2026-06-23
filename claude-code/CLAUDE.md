@@ -11,7 +11,7 @@ cd ~/ai-tools/claude-code
 npm test                    # jest (statusline 等 JS test)
 bats -r tests/              # bash hook / lib / scripts の bats 全実行
 ./sync.sh to-local --yes    # repo → ~/.claude 反映 (非対話)
-./scripts/hook-bench.sh     # hook latency 計測 (warmup=5 / runs=15)
+./scripts/hook-bench.sh     # hook latency 計測 (warmup=5 / runs=15、--log で ~/.claude/logs/ 保存)
 ```
 
 **Golden workflow (頻出 3 種)**

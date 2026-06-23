@@ -8,6 +8,7 @@
 #   ./scripts/hook-bench.sh --include-risky  # skip 対象も含む (要注意)
 #   ./scripts/hook-bench.sh --hook NAME      # 単一 hook のみ
 #   ./scripts/hook-bench.sh --runs 20        # 計測回数 (default 15, warmup 5 + 計測 10)
+#   ./scripts/hook-bench.sh --log            # ~/.claude/logs/hook-bench-<ts>.log に tee 保存
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -16,6 +17,7 @@ RUNS=15
 WARMUP=5
 INCLUDE_RISKY=0
 ONLY_HOOK=""
+LOG_ENABLED=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -23,9 +25,21 @@ while [[ $# -gt 0 ]]; do
     --hook) ONLY_HOOK="$2"; shift 2 ;;
     --runs) RUNS="$2"; shift 2 ;;
     --warmup) WARMUP="$2"; shift 2 ;;
+    --log) LOG_ENABLED=1; shift ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
+
+if [[ "$LOG_ENABLED" -eq 1 ]]; then
+  LOG_DIR="${HOME}/.claude/logs"
+  mkdir -p "$LOG_DIR"
+  LOG_FILE="${LOG_DIR}/hook-bench-$(date +%Y%m%d-%H%M%S).log"
+  exec > >(tee -a "$LOG_FILE") 2>&1
+  echo "# hook-bench log: $LOG_FILE"
+  echo "# args: runs=$RUNS warmup=$WARMUP include_risky=$INCLUDE_RISKY only=${ONLY_HOOK:-all}"
+  echo "# date: $(date '+%Y-%m-%d %H:%M:%S')"
+  echo ""
+fi
 
 # skip 対象: 外部プロセス spawn / 通知発火 / worktree 操作
 SKIP_HOOKS=(pre-compact.sh stop.sh stop-failure.sh worktree-remove.sh serena-hook.sh)
