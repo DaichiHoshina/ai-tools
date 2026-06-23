@@ -9,15 +9,20 @@
 #   ./scripts/hook-bench.sh --hook NAME      # 単一 hook のみ
 #   ./scripts/hook-bench.sh --runs 20        # 計測回数 (default 15, warmup 5 + 計測 10)
 #   ./scripts/hook-bench.sh --log            # ~/.claude/logs/hook-bench-<ts>.log に tee 保存
+#   ./scripts/hook-bench.sh --diff           # 直前 log と median 比較 (±20% 超で WARN 表示)
+#   ./scripts/hook-bench.sh --diff-threshold 30  # WARN 閾値 (%、default 20)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOOK_DIR="$REPO_ROOT/hooks"
+LOG_DIR="${HOME}/.claude/logs"
 RUNS=15
 WARMUP=5
 INCLUDE_RISKY=0
 ONLY_HOOK=""
 LOG_ENABLED=0
+DIFF_ENABLED=0
+DIFF_THRESHOLD=20
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,18 +31,39 @@ while [[ $# -gt 0 ]]; do
     --runs) RUNS="$2"; shift 2 ;;
     --warmup) WARMUP="$2"; shift 2 ;;
     --log) LOG_ENABLED=1; shift ;;
+    --diff) DIFF_ENABLED=1; shift ;;
+    --diff-threshold) DIFF_THRESHOLD="$2"; shift 2 ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
 
+# --diff: 今 run の log 生成より前に prev log の median を読み込む
+declare -A PREV_MEDIAN=()
+PREV_LOG=""
+if [[ "$DIFF_ENABLED" -eq 1 ]]; then
+  if [[ -d "$LOG_DIR" ]]; then
+    # mtime 降順で 1 件、ls -t は read-time も含むため stat ベース
+    PREV_LOG=$(find "$LOG_DIR" -maxdepth 1 -name 'hook-bench-*.log' -type f -print0 2>/dev/null \
+      | xargs -0 ls -t 2>/dev/null | head -1 || true)
+  fi
+  if [[ -n "$PREV_LOG" && -f "$PREV_LOG" ]]; then
+    # "hook-name  median= NNms  p95= ..." 行から median 抽出
+    while IFS= read -r line; do
+      name=$(awk '{print $1}' <<<"$line")
+      med=$(sed -E 's/.*median=[[:space:]]*([0-9]+)ms.*/\1/' <<<"$line")
+      [[ -n "$name" && "$med" =~ ^[0-9]+$ ]] && PREV_MEDIAN["$name"]="$med"
+    done < <(grep -E 'median=[[:space:]]*[0-9]+ms' "$PREV_LOG" || true)
+  fi
+fi
+
 if [[ "$LOG_ENABLED" -eq 1 ]]; then
-  LOG_DIR="${HOME}/.claude/logs"
   mkdir -p "$LOG_DIR"
   LOG_FILE="${LOG_DIR}/hook-bench-$(date +%Y%m%d-%H%M%S).log"
   exec > >(tee -a "$LOG_FILE") 2>&1
   echo "# hook-bench log: $LOG_FILE"
-  echo "# args: runs=$RUNS warmup=$WARMUP include_risky=$INCLUDE_RISKY only=${ONLY_HOOK:-all}"
+  echo "# args: runs=$RUNS warmup=$WARMUP include_risky=$INCLUDE_RISKY only=${ONLY_HOOK:-all} diff=$DIFF_ENABLED"
   echo "# date: $(date '+%Y-%m-%d %H:%M:%S')"
+  [[ -n "$PREV_LOG" ]] && echo "# diff prev: $PREV_LOG"
   echo ""
 fi
 
@@ -132,7 +158,23 @@ bench_one() {
   local median p95
   median=$(echo "$sorted" | awk -v n="$n" 'NR==int((n+1)/2)')
   p95=$(echo "$sorted" | awk -v n="$n" 'NR==int(n*0.95+0.5)')
-  printf "%-30s  median=%4sms  p95=%4sms  last=%s\n" "$hook_name" "$median" "$p95" "$status"
+
+  local diff_suffix=""
+  if [[ "$DIFF_ENABLED" -eq 1 && -n "${PREV_MEDIAN[$hook_name]:-}" ]]; then
+    local prev="${PREV_MEDIAN[$hook_name]}"
+    if [[ "$prev" -gt 0 ]]; then
+      local delta_pct
+      delta_pct=$(awk -v c="$median" -v p="$prev" 'BEGIN{printf "%+d", (c-p)*100/p}')
+      local abs_pct=${delta_pct#+}; abs_pct=${abs_pct#-}
+      if [[ "$abs_pct" -ge "$DIFF_THRESHOLD" ]]; then
+        diff_suffix=" [WARN ${delta_pct}% vs prev=${prev}ms]"
+      else
+        diff_suffix=" [diff ${delta_pct}% vs prev=${prev}ms]"
+      fi
+    fi
+  fi
+
+  printf "%-30s  median=%4sms  p95=%4sms  last=%s%s\n" "$hook_name" "$median" "$p95" "$status" "$diff_suffix"
 }
 
 # ベースライン: 空プロセス起動コスト

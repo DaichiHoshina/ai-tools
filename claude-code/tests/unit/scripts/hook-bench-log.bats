@@ -35,3 +35,20 @@ teardown() {
   local logs=("$TEST_HOME"/.claude/logs/hook-bench-*.log)
   [ "${#logs[@]}" -eq 0 ]
 }
+
+@test "--diff は prev log の median と比較して WARN を出す" {
+  mkdir -p "$TEST_HOME/.claude/logs"
+  # prev median=10ms を artificial に設定、現在値は数十 ms なので大幅 +%
+  cat > "$TEST_HOME/.claude/logs/hook-bench-20260101-000000.log" <<EOF
+session-start.sh                median=  10ms  p95=  12ms  last=ok
+EOF
+  run bash "$SCRIPT_FILE" --hook session-start.sh --diff --runs 3 --warmup 1
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -E '\[WARN \+[0-9]+% vs prev=10ms\]'
+}
+
+@test "--diff で prev log なしは diff suffix なしで通常表示" {
+  run bash "$SCRIPT_FILE" --hook session-start.sh --diff --runs 3 --warmup 1
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -E 'session-start.sh\s+median=' | grep -v '\[WARN\|\[diff'
+}
