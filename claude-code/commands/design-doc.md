@@ -82,6 +82,9 @@ If Q1-Q5 already settled in `/prd`, Design Doc **inherits without re-evaluation*
 | arch | arch, structure, foundation | thick on 4/6/7/11 |
 | adr | adr, decision | center on 3/6/7, skip 5/9/11 optional |
 | db-migration | migration, DB change | thick on 5.1/9/10 |
+| requirements | requirements, why, goal | center on 1/2/3/12, skip 5-11 |
+| basic | basic design, architecture | center on 4/6/7/11, skip 5/8/9 |
+| detailed | detailed design, data model, sequence | center on 5/8/9, skip 2/3/4/6/7 |
 
 Type-specific section detail & quality gate apply conditions: `references/design-doc-template.md`.
 
@@ -91,7 +94,7 @@ Type-specific section detail & quality gate apply conditions: `references/design
 |-----------|------|
 | `--prd <path>` | Derive design from existing PRD md |
 | `--out <path>` | Output directory |
-| `--type <feature\|refactor\|arch\|adr\|db-migration>` | Template granularity adjust |
+| `--type <feature\|refactor\|arch\|adr\|db-migration\|requirements\|basic\|detailed>` | Template scope adjust (phase split: requirements→basic→detailed) |
 | `--update <path>` | Update existing md (Read existing Q1-Q5 → Edit diffs only) |
 | `--scope Q1,Q3` | Re-evaluate specified Q only from Q1-Q5 (partial fix, auto-infer from natural language) |
 | `--dry` | Preview only, no file write |
