@@ -2,6 +2,10 @@
 name: comprehensive-review
 description: "12-perspective code review (arch/quality/security/test). /review 呼び出し時に使用。"
 context: fork
+disallowed-tools:
+  - Write
+  - Edit
+  - MultiEdit
 agent: reviewer-agent
 requires-guidelines:
   - common
