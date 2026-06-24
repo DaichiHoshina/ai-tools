@@ -1,6 +1,6 @@
 ---
 name: context7
-description: Fetch latest docs via Context7 API. Use when checking API specs.
+description: Fetch latest docs via Context7 API. Required before writing any library API method (see CLAUDE.md § Library API Live Doc Required). Use when checking API specs or adopting a new library.
 ---
 
 # context7 - Library Documentation Search

@@ -229,6 +229,74 @@ detect_rename_propagation() {
 }
 
 # ====================================
+# Live Doc Required (warn-only)
+# Edit/Write content に主要 library API method が含まれる場合に
+# context7 / WebFetch での docs 取得を促す warn を注入する
+# 誤検知対策: .sh / .bats / hook 自身は除外
+# ====================================
+
+# よく使われる library API method の keyword list (false positive を抑えるため絞り込む)
+_LIVE_DOC_KEYWORDS=(
+  "useState"
+  "useEffect"
+  "useCallback"
+  "useMemo"
+  "useRef"
+  "useContext"
+  "axios\.create"
+  "axios\.get"
+  "axios\.post"
+  "fastapi\.Depends"
+  "FastAPI\("
+  "app\.include_router"
+  "prisma\.connect"
+  "prisma\.\w*\.findMany"
+  "prisma\.\w*\.create"
+  "supabase\.from"
+  "createClient\("
+  "getServerSession\("
+  "NextResponse\.json"
+  "OpenAI\("
+  "anthropic\.messages\.create"
+  "langchain\."
+  "vite\.defineConfig"
+  "defineConfig\("
+  "nuxt\.config"
+)
+
+_check_live_doc_required() {
+  local file_path="$1"
+  local content="$2"
+
+  # 空 content はスキップ
+  [ -z "$content" ] && return 0
+
+  # .sh / .bats / hook 自身 / tests/ は除外 (実装例を含む設定 file での誤爆防止)
+  case "$file_path" in
+    *.sh|*.bats) return 0 ;;
+    */tests/*|*/hooks/*) return 0 ;;
+    */skills/context7/*) return 0 ;;
+  esac
+
+  local matched_keyword=""
+  for kw in "${_LIVE_DOC_KEYWORDS[@]}"; do
+    if echo "$content" | grep -qE "$kw" 2>/dev/null; then
+      matched_keyword="$kw"
+      break
+    fi
+  done
+
+  [ -z "$matched_keyword" ] && return 0
+
+  local warn_msg="${ICON_WARNING} [live-doc] library API method「${matched_keyword}」を直書き検出。training cutoff (Jan 2026) 後の API 変更がある可能性があります。context7 skill か WebFetch で最新 docs を確認してください (CLAUDE.md § Library API Live Doc Required)"
+  if [ -n "$ADDITIONAL_CONTEXT" ]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${warn_msg}"
+  else
+    ADDITIONAL_CONTEXT="${warn_msg}"
+  fi
+}
+
+# ====================================
 # social-hit block
 # ~/ai-tools/ public repo への社内 product 名 / 社内識別子の書き込みを hard block
 # term list は ~/.claude/rules/public-repo-private-data-block.md の
@@ -1110,6 +1178,11 @@ case "$TOOL_NAME" in
       if [ -n "$_EDIT_FILE_PATH" ]; then
         _check_social_hit "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
       fi
+    fi
+
+    # live-doc warn: library API method 直書き検出 → context7 / WebFetch 確認を促す (warn-only)
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+      _check_live_doc_required "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
     fi
 
     # local-docs テンプレ準拠 block (Write のみ、新規 .html を _templates 由来でない content で Write したら block)

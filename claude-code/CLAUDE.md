@@ -75,6 +75,14 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 > explore-agent / root-cause-analyzer を発火した後は、trailer フィールド (`status` / `confidence` / `issues_blocking`) を必ず読む。詳細: `references/agent-output-schema.md`
 
+## Library API Live Doc Required
+
+外部 library / framework の API method / hook / config を直書きする前に **context7 skill か WebFetch で最新 docs を取得すること**。training cutoff (Jan 2026) 以降の API 変更は推測で書かない。
+
+trigger: library method を直書きする場合 (`useState` / `axios.create` / `fastapi.Depends` 等) / 新 library 採用 / API spec が 6 か月超の場合。
+
+hook が warn-only で検出 (`hooks/pre-tool-use.sh`)。skill: `skills/context7/skill.md`。
+
 ## Auto-Delegation (parent=Opus orchestrates, subagent=Sonnet executes)
 
 *(Impl/edit task。Investigation phase → Discovery Routing)*
@@ -101,7 +109,7 @@ AI を**思考パートナー**として扱う。生成物を盲信せず parent
 
 ## Session Efficiency
 
-**Autonomous mode ON by default**. Confirm only for: destructive ops / external sends / large design branches / flow stage changing next-stage assumptions / re-try right after Esc interrupt (`[[feedback-no-retry-after-interrupt]]`). Long output = conclusion-first + PREP. Decision request = leading `要決定:` block. Token budget: Read with `limit`/`offset` (>200-line files), Bash long output via `| head/tail -N`, code via Serena `find_symbol` over full Read, casual chat via `/btw`. Full list: `references/session-efficiency-detailed.md`.
+**Autonomous mode ON by default**. Confirm only for: destructive ops / external sends / large design branches / flow stage changing next-stage assumptions / re-try right after Esc interrupt (`[[feedback-no-retry-after-interrupt]]`). Long output = conclusion-first + PREP. Decision request = leading `要決定:` block. Token budget: Read with `limit`/`offset` (>200-line files), Bash long output via `| head/tail -N`, code via Serena `find_symbol` over full Read, casual chat via `/btw`. Full list: `references/session-efficiency-detailed.md`. Prompt caching 設計指針: `guidelines/operations/prompt-caching.md`。
 
 ## No Derived Literals
 
