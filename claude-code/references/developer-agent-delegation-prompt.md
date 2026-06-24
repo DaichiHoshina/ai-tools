@@ -22,10 +22,22 @@ Parent が Task call の prompt を組み立てる際は section 番号 (§0 →
 - [ ] 単 domain (no mixed file groups / root causes)
 - [ ] scope 明示 (`touchable_files:` YAML block + 任意の `additional_files:`、それ以外は scope creep 違反 — §1 参照)
 - [ ] blocker-on-stop 方針記載 ("blocker 検出時は独断進行禁止、`unresolved_errors[]` に書いて `status: partial` で停止")
+- [ ] Self-Review Gate 明示 ("完了報告前に `agents/developer-agent.md` §Self-Review Gate 4 項目を literal 実行、`self_review:` block を report YAML に含める。欠落時 parent reject")
 
-All 6 must be ✓ before firing. Parent completes these; do not push exploration to subagent.
+All 7 must be ✓ before firing. Parent completes these; do not push exploration to subagent.
 
-最後 2 項目 (scope / blocker-on-stop) は **completion 力低下対策**。曖昧 scope は subagent の「ついで修正」を誘発、blocker 黙殺は「error のまま report」を誘発する。delegation prompt に literal で含める。
+最後 3 項目 (scope / blocker-on-stop / Self-Review) は **completion 力低下対策**。曖昧 scope は subagent の「ついで修正」を誘発、blocker 黙殺は「error のまま report」を誘発、Self-Review 抜けは「diagnostics 未実行 success 報告」を誘発する。delegation prompt に literal で含める。
+
+## Parent reject criteria (report 受領時)
+
+報告受領後、parent は以下を **literal 確認**してから採用判定する。1 つでも欠落 → parent 側で `status: failure` 扱い、re-run か別 agent への振り直し。
+
+1. `self_review:` block 存在 (4 項目全 ✓ または ✗ 理由付き)
+2. `unresolved_errors:` field 存在 (空でも `[]` literal、欠落は failure 同等)
+3. `changed_files[]` の各 path が `touchable_files` literal 含有
+4. verify cmd 結果が report に literal 反映 (`agent_verify_output` or `parent_verify_planned`)
+
+これら 4 chunk が無ければ「report は受け取らず再投入」を default 挙動とする。fact-check (§0.5 B) は 4 chunk 通過後の最終 layer。
 
 ## 0.5 Prompt quality rules
 

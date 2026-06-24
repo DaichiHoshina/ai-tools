@@ -165,11 +165,19 @@ verification:
   lint: ✓
   typecheck: ✓
   test: ✓
+self_review:                              # required (agents/developer-agent.md §Self-Review Gate canonical)
+  diagnostics_clean: ✓                    # get_diagnostics_for_file 全 edited file で error 0
+  diagnostics_lines: 0                    # LSP 出力 line 数 literal
+  scope_match: ✓                          # changed_files[] ⊆ touchable_files literal
+  verify_cmd: "<literal cmd or 'N/A (none provided)'>"
+  report_schema: ✓                        # §5 schema 準拠 (no custom keys, no prose after YAML)
 unresolved_errors: []  # required; [] when none, else list `{location, error, why_unresolved}` literal
 impl_notes_path: <absolute path>  # Team flow only, omit otherwise
 ```
 
 `unresolved_errors` is **required and non-omittable** (empty list `[]` allowed only when truly zero). Suppressing or silently dropping errors here is a contract violation — parent will discard report.
+
+`self_review` is **required and non-omittable**. Missing block → parent treats report as `failure` and re-runs. Any ✗ inside → cannot return `status: success` (downgrade to `partial`).
 
 On `status: partial` (timeout / blocker): add `remaining` + `blocker` + `progress_pct` fields (see §5.1).
 On `status: failure`: add `manager_decision_required` (trailing spec).

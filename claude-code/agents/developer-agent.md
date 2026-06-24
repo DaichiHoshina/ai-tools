@@ -141,6 +141,21 @@ Source: claudefa.st "delegated edit silently fails" / CLAUDE.md `Auto-Delegation
 - **SOLID**: Single responsibility, DI
 - **Tests**: AAA pattern, coverage awareness
 
+## Self-Review Gate (required before completion report)
+
+Run literal self-check before writing report YAML. Each item answered ✓/✗ in `self_review:` block of report. Any ✗ → cannot return `status: success`; must downgrade to `partial` with reason in `unresolved_errors[]`.
+
+| # | Check | Method |
+|---|-------|--------|
+| 1 | `get_diagnostics_for_file` clean on **every** edited file | Run for each path in `changed_files[]`; paste literal LSP output line count in `self_review.diagnostics_lines` |
+| 2 | `changed_files[]` ⊆ `touchable_files` (literal match, no parent path expansion) | Print `diff <(echo touchable) <(echo changed)`; ✗ if any line outside |
+| 3 | Verify cmd from parent prompt actually executed | `self_review.verify_cmd` field = literal cmd string; if absent in prompt → "N/A (none provided)" |
+| 4 | Report format = `references/agent-team-contract.md` §5 YAML schema | No custom keys, no prose after YAML, no full-file paste, `unresolved_errors: []` written even when empty |
+
+If you "feel" the task is done but cannot literally evidence all 4 → escalate as `status: partial` with `self_review.skipped: <reason>`. **Inferring success without running diagnostics is the #1 quality failure mode** — measured pattern across past sessions where agent reported ✓ but lint / type errors remained.
+
+`self_review` field is **mandatory in report YAML**; parent rejects report missing this block (treats as `failure`, re-runs).
+
 ## bats test writing standard (required)
 
 Prohibited patterns / required patterns / self-verify / report format: see `references/bats-test-writing.md` (canonical).
