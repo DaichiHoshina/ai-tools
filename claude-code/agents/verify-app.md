@@ -27,6 +27,15 @@ disallowedTools:
 
 Quality verifier: identify build, test, lint issues and suggest fixes.
 
+## Pattern: Generator-Verifier (Anthropic official pattern)
+
+This agent operates as the **Verifier** in the Generator-Verifier pattern.
+
+- **Verifier** (this agent): validates Generator (developer-agent / build process) output via build / test / lint / smoke checks
+- **accept** (gate=green): all required stages pass → status=success
+- **reject** (gate=red): any required stage fails → status=failure + failure reason with stage, command, and exit code
+- Canonical reference: https://claude.com/blog/multi-agent-coordination-patterns
+
 ## Launch condition
 
 Permitted paths only. Other (`/dev`, `/review`, `/review-fix-push`, `/flow`, `/flow --auto`, `/git-push --pr`) do not auto-launch (use `/lint-test` for routine checks).

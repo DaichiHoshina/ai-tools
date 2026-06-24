@@ -126,3 +126,13 @@ Zero findings → `### Critical: 0`. Skipped → `### skipped: <perspective> (<r
 
 writing 系 diff が含まれる場合、Step 4.5 の自己確認で追加 check する。
 Canonicals: `guidelines/writing/PRINCIPLES.md` (通常文章) / `code-comment.md` / `prompt-engineering.md` / `long-form-doc.md`。confidence-80 filter 遵守。
+
+### Multi-lens panel mode (`/review --panel` 時のみ)
+
+`--panel` flag で起動した場合、`reviewer-agent` × 3 (style / security / test-coverage lens) の verdict が input として渡される。本 skill はその verdict を Step 1 の前処理として受け取り、12 観点 review と統合する。
+
+- lens 数は `commands/review.md` §Multi-lens panel が canonical (派生値 literal 禁止)
+- 各 lens の verdict は trailer field 形式 (`severity / file:line / confidence / fix_path`) で受け渡す
+- lens verdict は Stage A (per-finding self-review gate) と同一 7 観点 filter を通す
+- 重複 finding (同一 file:line、異なる lens 由来) は root cause が同じなら 1 件に統合する
+- panel 統合後の finding list を通常の Step 4.5 → Stage A → Stage B flow に流す

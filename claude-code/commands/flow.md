@@ -68,6 +68,8 @@ Physically parallelizes via worktree isolation.
 
 **worktree cleanup**: Changes present → return branch + merge + delete / no changes → auto-delete / Collision → sequential downgrade + leave in place. Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`.
 
+Sweet spot / hard rules (concurrency limit, write partition, dependency chain): `references/PARALLEL-PATTERNS.md#fan-out-hard-rules`.
+
 ## --auto mode
 
 `--auto`: skip AskUserQuestion + auto-adopt / `bypassPermissions` / always PR push / auto-fix lint 1× / `--multi-review` auto-ON. review-fix loop: post-impl `/review` → auto-fix repeat until Critical 0 + Warning 0 (max 3×). 詳細: `references/flow-orchestration.md`

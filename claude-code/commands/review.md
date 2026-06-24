@@ -54,6 +54,7 @@ material: `git diff --shortstat` / `gh pr diff <PR>` / `gh pr view <PR> --json b
 | Mode | Delegate | PR | Cost |
 |--------|--------|----|--------|
 | (default) | `comprehensive-review` skill | any | mid |
+| `--panel` | 3-lens parallel fan-out (style/security/test-coverage) → integrated by comprehensive-review | any | mid×3 |
 | `--codex` | comprehensive + codex plugin parallel, common findings = Critical | any | mid |
 | `--adversarial` | codex plugin `adversarial-review` (plugin required) | any | mid |
 | `--deep` | pr-review-toolkit 6 agents parallel (5-10min) | any | large |
@@ -111,6 +112,39 @@ Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / 
 - **difit**: local only, background after review (require `npm i -g difit`, suppress: `--no-difit`)
 
 Details: see review-related files under `references/`.
+
+## Multi-lens panel (--panel)
+
+`/review --panel` で 3 つの lens を `reviewer-agent` × 3 並列で fan-out する。各 lens は他 lens の出力を見ない (blind diversity)。Source: [claudefa.st — Multi-Lens Panel Review](https://claudefa.st/blog/guide/agents/sub-agent-best-practices)
+
+### lens 構成
+
+| lens | focus | 無視するもの |
+|---|---|---|
+| style | naming / readability / convention / cognitive complexity | logic / security |
+| security | authn/authz / injection / secrets / data boundary / unsafe logging | style / coverage |
+| test-coverage | test adequacy / missing edge cases / silent-failure paths | style / security |
+
+- 各 lens には diff + 担当 focus のみを渡す (他 lens の出力は含めない)
+- 3 lens を **1 message に bundle して並列発火** (`Task(reviewer-agent)` × 3、peak_concurrency=3)
+
+### 関係表
+
+| component | 役割 |
+|---|---|
+| `--panel` lens × 3 | blind diversity → 各 lens が独立 verdict を返す |
+| `comprehensive-review` skill | lens 3 verdict を input に取り、12 観点 review と統合 (詳細: `skills/comprehensive-review/SKILL.md` §Multi-lens panel mode) |
+| Stage A self-review | panel 統合後の finding に適用 (既存挙動変化なし) |
+
+### 集計 rule
+
+parent が 3 lens の verdict を file:line key で集約する。
+
+- 2/3 以上で hit → severity 最大値を採用して Stage A へ渡す
+- 1/3 のみ hit → P3 (Info) に降格、verbose mode でのみ表示
+- 全 lens が miss → clean (high confidence)
+
+**default は panel なし** (`--panel` opt-in)。通常 diff には `/review` 標準で十分。大規模 PR の pre-merge 最終確認に限定を推奨。
 
 ## Verifier panel (--verifier-panel)
 

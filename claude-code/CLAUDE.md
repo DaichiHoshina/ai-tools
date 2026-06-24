@@ -81,6 +81,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **Default = delegate to `developer-agent` (Sonnet)**。inline は detailed.md 列挙 exception のみ。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止) + **1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列分割) + **parent 監視責任** (PO/Manager は subagent に丸投げ禁止、bundle 違反は PO Gate で阻止)。直列 chain でも各 step 内に複数 file/観点あるなら step 内 fan-out する (`[[feedback-no-single-agent-overload]]`)。
 
+**Subagent silent-fail guard**: subagent context では `AskUserQuestion` 不可 + permission prompt 系 tool (Edit / Write / Bash 一部) が auto-deny で**silent fail** する (web search 2026-06-24 出典: [claudefa.st](https://claudefa.st/blog/guide/agents/sub-agent-best-practices))。approval-gated edit / 判断 fork は parent に escalate (`status: blocked` + `issues_blocking[]`)。subagent 側仕様は `agents/developer-agent.md` § Silent-fail guard canonical。
+
 詳細 (delegate threshold / parallel fire format / inline exceptions / trigger table / 違反パターン): `references/auto-delegation-detailed.md`
 
 ## Tool Call Format (生テキスト呼び出し禁止)
@@ -94,6 +96,8 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 ## Collaboration stance (AI = 思考パートナー)
 
 AI を**思考パートナー**として扱う。生成物を盲信せず parent / user 側で検証 (`fact-check on agent return` = `references/developer-agent-delegation-prompt.md` §0.5 B)。subagent report の数値 / file 変更 / 測定値は最低 1 つ cross-check してから採用する。単なる自動実装より、人間検証 + AI 起案の協働が最も効果的 (Anthropic 公式 [How Anthropic teams use Claude Code](https://claude.com/ja/blog/how-anthropic-teams-use-claude-code))。
+
+**Pattern**: developer-agent (Generator) → reviewer-agent / verify-app (Verifier) は Anthropic 公式 [Generator-Verifier pattern](https://claude.com/blog/multi-agent-coordination-patterns) を実装する。Verifier は `status: accept` または `status: reject` + 具体 feedback (file:line / severity / suggested fix) を return、reject feedback を受けた Generator が再生成する 1 round loop を採用する。
 
 ## Session Efficiency
 

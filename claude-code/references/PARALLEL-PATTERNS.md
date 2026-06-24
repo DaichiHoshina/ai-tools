@@ -133,6 +133,32 @@ Additional: 2+ independent tasks; edit targets fully isolated (no file-level ove
 
 > Same-file note: the no-file-overlap rule blocks *parallel writes* (worktree / concurrent apply). The read-only patch-generation phase is exempt — multiple subagents may draft patches for distinct regions of one file in parallel, then the parent applies them sequentially. See `references/auto-delegation-detailed.md` for that pattern.
 
+## Fan-out hard rules
+
+> Sources: [Tembo — Claude Code Subagents](https://www.tembo.io/blog/claude-code-subagents) / [Nimbalyst — Subagents Guide](https://nimbalyst.com/blog/claude-code-subagents-guide/) / [Claudify — Parallel Agents](https://claudify.tech/blog/claude-code-parallel-agents)
+
+### Concurrency sweet spot
+
+| Range | Guidance |
+|---|---|
+| **3–5 concurrent** | Sweet spot. Merge overhead stays low; critical-path reduction is maximized |
+| **6–8 concurrent** | Acceptable when task count warrants it; merge/integration cost rises |
+| **> 8 concurrent** | Forbidden (session limit: parent + N ≤ 9). Exception: Dynamic Workflows (`Workflow` tool) allow tens–hundreds |
+
+### Parallelizability pre-check (required before any fan-out)
+
+Before firing N ≥ 2 agents, verify all three conditions:
+
+1. **No shared write targets** — two agents must never write the same file concurrently (race condition; data loss risk)
+2. **No dependency chain** — if subtask B needs the output of subtask A, run them sequentially
+3. **Read-only tasks** — unlimited parallelism allowed (no write conflict possible)
+
+If any condition fails → downgrade to sequential or split into sequential phases.
+
+### Write partition rule
+
+Each Developer owns a **disjoint file set**. Files needed by multiple Developers must be reserved for the parent (Manager) to handle after fan-out completes. Partition assignment is Manager's responsibility; PO Gate v2 enforces `file_count` + `bundle_justification` checks.
+
 ## Worktree applicability flow
 
 ```text

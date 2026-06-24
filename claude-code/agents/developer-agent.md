@@ -109,6 +109,18 @@ Do not independently touch anything outside task.scope (= `touchable_files` + `t
 - "Fixed while I was at it" or "also fixed related issue" = **scope creep violation** — parent discards at report level
 - Exception: minor surrounding edits (imports / type definitions) required to edit a target file are in-scope — list in `changed_files[]` for visibility
 
+## Silent-fail guard (subagent constraints)
+
+Subagent context has hard constraints that cause silent failures — not errors:
+
+- ❌ **`AskUserQuestion` is forbidden** — auto-denied in subagent context; call silently does nothing
+- ❌ **Permission-prompt-triggering ops silent-fail** — any tool call requiring user confirmation (certain Edit / Write / Bash paths that hit a deny rule) is auto-denied and returns no error signal; the agent reports success but no file was changed
+- ❌ **"Success report without actual edit"** — pattern documented at claudefa.st "delegated edit silently fails"; explicitly prohibited here
+- ✅ **Fail-fast on decision fork**: when a required action would need user approval or a judgment call that the task spec does not cover, stop immediately, set `status: blocked`, and list the blocking item in `issues_blocking[]` — do not guess or silently skip
+- ✅ **Parent-approval-required ops → escalate**: if an operation needs parent confirmation (e.g., destructive Bash, write to path outside `touchable_files`), report as `blocked` with the specific operation in `issues_blocking[]`; do not attempt the op
+
+Source: claudefa.st "delegated edit silently fails" / CLAUDE.md `Auto-Delegation` section
+
 ## Absolute prohibitions
 
 - ❌ Git write (add/commit/push)
