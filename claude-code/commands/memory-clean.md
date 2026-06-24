@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash, Read, Write, Edit
 description: Auto-memory housekeeping — move stale work-context to trash, prune MEMORY.md, merge duplicates. Default dry-run; use --apply to execute.
+argument-hint: "[--apply]"
 effort: low
 ---
 

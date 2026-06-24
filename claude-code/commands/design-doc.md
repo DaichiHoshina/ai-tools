@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Write, Edit, AskUserQuestion, mcp__serena__*
 description: Team-shared design doc — PRD → design spec, md format, local storage
+argument-hint: "[topic]"
 ---
 
 # /design-doc - Team-shared design doc

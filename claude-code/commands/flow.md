@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Task, AskUserQuestion, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*
 description: Orchestration-first workflow — parent-led parallel fan-out (orchestrate + parallel forced)
+argument-hint: "[task description]"
 ---
 
 ## /flow - Orchestration-first workflow

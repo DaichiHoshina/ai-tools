@@ -1,6 +1,7 @@
 ---
 allowed-tools: Write, Read, Bash
 description: Quick auto-memory save — record current work state to ~/.claude/projects/.../memory/
+argument-hint: "[clear|exit]"
 effort: low
 ---
 

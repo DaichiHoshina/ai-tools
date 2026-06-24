@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Edit, Write, mcp__serena__*
 description: Human-facing prose quality mode (JP 規範統合)
+argument-hint: "[file or text]"
 ---
 
 ## /jp-writing - Writing Quality Command

@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Bash
 description: Restore context - reload CLAUDE.md + auto-memory after compaction
+argument-hint: "[topic]"
 effort: low
 ---
 

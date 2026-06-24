@@ -1,6 +1,7 @@
 ---
 allowed-tools: Workflow, Read, Glob, Grep, Bash, AskUserQuestion, TaskCreate, TaskUpdate, TaskList
 description: Workflow tool で deterministic な fan-out / pipeline / 多数決を 1 発火する軽量 orchestrator
+argument-hint: "[task description]"
 ---
 
 ## /workflow - Workflow-tool deterministic orchestration

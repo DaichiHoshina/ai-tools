@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash, Read, Glob, Grep, mcp__serena__*
 description: Dependency security audit — detect manifests, scan CVE (CVSS), aggregate, suggest fixes
+argument-hint: "[scope]"
 ---
 
 # /audit - Security audit

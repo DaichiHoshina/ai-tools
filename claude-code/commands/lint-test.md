@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash, Read, Glob, Grep, mcp__serena__*
 description: Run CI-equivalent checks locally in batch (build, lint, test, typecheck etc)
+argument-hint: "[scope]"
 ---
 
 # /lint-test - CI in batch

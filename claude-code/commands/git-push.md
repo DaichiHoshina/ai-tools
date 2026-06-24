@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash, Read, Grep, Glob, mcp__serena__*
 description: Git integration — commit → push → PR/MR creation in one command. Auto-detect mode.
+argument-hint: "[--pr]"
 ---
 
 # /git-push - Git integration

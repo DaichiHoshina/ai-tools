@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, mcp__serena__*, mcp__claude_ai_Notion__*
 description: Knowledge archival — code analysis → create/update Notion pages
+argument-hint: "[topic]"
 ---
 
 ## /docs - Knowledge archival

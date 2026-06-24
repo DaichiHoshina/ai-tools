@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Write
 description: Load Protection Mode - apply operation checker and safety classification to session
+argument-hint: "[on|off]"
 ---
 
 ## /protection-mode - Operation Protection Mode

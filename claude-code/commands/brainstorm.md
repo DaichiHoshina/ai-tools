@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*, Skill
 description: Interactive design refinement (Superpowers integration)
+argument-hint: "[topic]"
 ---
 
 ## /brainstorm - Interactive design refinement

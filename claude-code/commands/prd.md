@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestion, Task, mcp__serena__*, mcp__context7__*, mcp__confluence__*, mcp__jira__*
 description: Create PRD - interactive requirements gathering, optional mathematical formalization, strict expert review from 11 angles
+argument-hint: "[topic]"
 ---
 
 # /prd - Requirements Definition & PRD Creation

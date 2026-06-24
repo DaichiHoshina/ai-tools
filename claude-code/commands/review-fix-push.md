@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Skill, AskUserQuestion, mcp__serena__*, mcp__context7__*
 description: Review→fix→regression check→push in 1 command. /review + /dev all fixes + re-review + /git-push --pr
+argument-hint: "[scope]"
 ---
 
 ## /review-fix-push - Review, Fix, Regression, Push

@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash, Read, Glob, Grep, mcp__serena__*
 description: Verify hook/agent changes 1-shot - syntax → unit → integration → invariants → behavior → install
+argument-hint: "[scope]"
 ---
 
 # /verify-once - 1-shot Final Verify

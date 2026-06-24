@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Skill, Agent, AskUserQuestion, mcp__serena__*
 description: Comprehensive code review (comprehensive-review skill + optional external reviewers)
+argument-hint: "[scope]"
 ---
 
 # /review - Comprehensive Code Review

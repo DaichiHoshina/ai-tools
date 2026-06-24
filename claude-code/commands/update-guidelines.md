@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, mcp__context7__*, WebSearch, WebFetch
 description: Guideline staleness/redundancy/AI-readability check & auto-fix via 3-axis
+argument-hint: "[scope]"
 ---
 
 Inspect `guidelines/` via **3 axes**, auto-apply safe fixes.

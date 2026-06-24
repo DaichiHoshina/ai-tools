@@ -1,6 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Task, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*
 description: Fully autonomous workflow — shortcut for /flow --auto. No questions, skip approvals, auto-push.
+argument-hint: "[task description]"
 ---
 
 ## /flow-auto - `/flow --auto` shortcut
