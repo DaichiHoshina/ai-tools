@@ -55,7 +55,7 @@ Parallel branches without collision. In ai-tools, `[[ai-tools-worktree-workflow]
 
 ### Skill
 
-Project knowledge as a compounding asset. A `SKILL.md` (or equivalent) is re-read at loop start each run, eliminating repeated context re-derivation. In ai-tools: `skills/` holds 19 skills; the `/flow` hierarchy reloads them per-session via session-start hook. Skill files are the primary defense against goal drift across sessions.
+Project knowledge as a compounding asset. A `SKILL.md` (or equivalent) is re-read at loop start each run, eliminating repeated context re-derivation. In ai-tools: `skills/` is the canonical skill registry (run `ls skills/` for current count); the `/flow` hierarchy reloads them per-session via session-start hook. Skill files are the primary defense against goal drift across sessions.
 
 ### Connector (MCP)
 
@@ -158,7 +158,7 @@ Objective gate (§Minimum viable loop, §Failure modes) catches *whether each ou
 | **Atomic** | Single property of one output (test green, lint exit 0, type 0 errors) | Property interactions, layer violations, accumulated coupling | Per-iteration gate (every loop pass) |
 | **Holistic** | Cross-cutting fitness across N outputs (perf × security, arch boundary, dependency direction) | Slow signal — not gate-grade per iteration | Periodic sweep (per N iterations / per merge / per session boundary) |
 
-A production loop needs both. Atomic gate per iteration (cheap, blocks bad single outputs); holistic sweep at coarser cadence (catches what atomic gate cannot see, but too slow to run every loop). Run holistic via `/review` (12 dimensions, `[[comprehensive-review]]` skill) or layer-direction checks (e.g. CQRS guideline read-vs-write boundary).
+A production loop needs both. Atomic gate per iteration (cheap, blocks bad single outputs); holistic sweep at coarser cadence (catches what atomic gate cannot see, but too slow to run every loop). Run holistic via `/review` (12 dimensions, `skills/comprehensive-review/SKILL.md`) or layer-direction checks (e.g. CQRS guideline read-vs-write boundary).
 
 **Holistic checks ai-tools ships**:
 
