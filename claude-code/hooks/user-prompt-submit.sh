@@ -463,13 +463,17 @@ _inject_delegation_checklist_if_trigger() {
   return 0
 }
 
-# === commit/push trigger → NG top-6 term inject ===
-# commit message 生成前に block top-6 term を注入して retry loop を事前回避する
-# 派生値禁止 rule 準拠: top-6 は log から動的抽出 (literal 埋め込み禁止)
+# === 外向き text trigger → NG top-N term inject ===
+# commit / PR / Notion / Slack 等の外向き text 生成前に block top-N term を注入して retry loop を事前回避する
+# 派生値禁止 rule 準拠: top-N は log から動的抽出 (literal 埋め込み禁止)
 _inject_commit_ng_top6_if_trigger() {
   local prompt="$1"
   local prompt_lower="${prompt,,}"
-  local triggers=("push" "pushして" "commit" "/git-push" "/commit" "pr 作" "pr を作" "プルリク")
+  # commit/PR 系 + Notion/Slack 等の外向き投稿系 (2026-06-24: NG block 30+ 件/日対応で拡大)
+  local triggers=(
+    "push" "pushして" "commit" "/git-push" "/commit" "pr 作" "pr を作" "プルリク"
+    "notion" "slack" "投稿" "送って" "送信" "share" "シェア" "/post-comment"
+  )
   local hit=0
   local t
   for t in "${triggers[@]}"; do
@@ -486,6 +490,7 @@ _inject_commit_ng_top6_if_trigger() {
   printf -v _NOW '%(%s)T' -1
   printf -v _CUTOFF_STR '%(%Y-%m-%dT%H:%M:%S)T' "$(( _NOW - 604800 ))"
 
+  # top-N (拡大: 6 → 12) で日々の block 多様性をカバー
   local _TOP
   _TOP=$(awk -F'|' -v cutoff="${_CUTOFF_STR}" '
     $4 ~ /block/ {
@@ -497,10 +502,10 @@ _inject_commit_ng_top6_if_trigger() {
     }
     END {
       for (k in count) print count[k], k
-    }' "${_LOG}" 2>/dev/null | sort -rn | head -6 | awk '{$1=""; sub(/^ /,""); print}' | paste -sd "," -)
+    }' "${_LOG}" 2>/dev/null | sort -rn | head -12 | awk '{$1=""; sub(/^ /,""); print}' | paste -sd "," -)
 
   [[ -n "${_TOP}" ]] || return 1
-  printf '%s\n' "[commit-ng-pre-sweep] commit/push trigger 検出。直近7日 block top-6: ${_TOP}。commit message 生成前に必ず回避。代替: 鑑みる→踏まえる / 踏襲→引き継ぐ / 喫緊→直近 / leverage→使う / utilize→活かす / mitigate→緩和する。source: ~/.claude/logs/jp-quality-block.log"
+  printf '%s\n' "[outward-text-ng-pre-sweep] 外向き text (commit/PR/Notion/Slack 等) trigger 検出。直近7日 block top-12: ${_TOP}。draft 生成前に必ず self-check + 回避。代替例: 鑑みる→踏まえる / 踏襲→引き継ぐ / 喫緊→直近 / leverage→使う / utilize→活かす / mitigate→緩和する。source: ~/.claude/logs/jp-quality-block.log"
   return 0
 }
 
