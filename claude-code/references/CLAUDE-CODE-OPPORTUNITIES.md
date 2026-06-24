@@ -17,6 +17,12 @@ On adoption: check the box. On obsolescence: strikethrough (`~~feature~~ (obsole
 
 ---
 
+## Channel switch back: latest → stable (2026-06-23)
+
+User 明示判断で channel を `latest` (2026-06-14 切替) から `stable` に戻した。local CLI = 2.1.177 = `dist-tags.stable` に揃え、VERSION も 2.1.177 へ downgrade。
+
+**deferred entries (stable 範囲外、latest 復帰時に再評価)**: 下記 2.1.178 / 2.1.179 / 2.1.181 / 2.1.182–2.1.185 section は latest channel 時の調査結果。stable channel では fetch range 対象外のため新規 adopt は行わない。section 自体は再評価用に保持する (latest 復帰時に該当 entry のみ再活性化)。
+
 ## 2.1.182–2.1.185 (detected 2026-06-21, latest)
 
 Range 2.1.182–2.1.185 reviewed。2.1.182 / 2.1.184 は CHANGELOG 記載なし (内部 release)。2.1.185 は stream-stall hint の文言・タイミング変更のみ (UI)。実質 2.1.183 のみ user-facing。

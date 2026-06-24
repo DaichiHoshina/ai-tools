@@ -24,7 +24,7 @@ cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null
 | `claude --version` == `dist-tags.latest` | `latest` | `latest` tag version |
 | neither matches (mid-version / manually pinned) | `latest` (current default) | `latest` tag version |
 
-Rationale: repo runs on the **latest** channel (switched 2026-06-14). Align fetch scope and bump target to the latest tag. Adopt renames/new hooks/new keys as they land; the local CLI is expected to track latest.
+Rationale: repo runs on the **stable** channel (switched back from latest 2026-06-23). Align fetch scope and bump target to the stable tag. Adopt renames/new hooks/new keys as they land; the local CLI is expected to track stable.
 
 **Decision**:
 - `VERSION > TARGET` (next channel / pre-bump / post-channel-switch downgrade) → no-op exit; display `> [WARN] VERSION (X) > TARGET (Y), below channel target. Fetch range goes backward — skip. Confirm manually aligning VERSION to TARGET`
@@ -109,6 +109,6 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 - `npm view ... dist-tags --json` fails (network etc.) → safe fallback: treat current `VERSION` as TARGET, no-op exit, display `> [WARN] dist-tags fetch failed, cannot determine channel. Re-run after CLI reconnects`
 - If CHANGELOG fetch fails: minimal analysis via `claude --help` + npm view
 - Auto-apply must remain git-diff-reviewable (do not run sync.sh until after confirm-apply)
-- **VERSION file update aligns to latest tag** — value written in Phase 5 Step 1 is `dist-tags.latest`
-- **CHANGELOG / feature adoption scope is `(current VERSION + 1) ~ latest tag`**
-- **Channel is `latest` (switched from stable 2026-06-14)** — local CLI tracks the latest tag. Switching back to stable would require explicit user confirmation
+- **VERSION file update aligns to stable tag** — value written in Phase 5 Step 1 is `dist-tags.stable`
+- **CHANGELOG / feature adoption scope is `(current VERSION + 1) ~ stable tag`**
+- **Channel is `stable` (switched back from latest 2026-06-23)** — local CLI tracks the stable tag. Switching to latest would require explicit user confirmation
