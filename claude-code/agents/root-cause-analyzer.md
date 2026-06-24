@@ -73,7 +73,7 @@ Analysis template: see Step 6 report format (5 whys table + Confidence column).
 
 ### Step 3: Classify root cause
 
-Category classification: per `skills/root-cause/skill.md` (canonical 6 category table).
+Category classification: per `skills/root-cause/SKILL.md` (canonical 6 category table).
 
 **Impact scope assessment**:
 - `local`: Within 1 file
@@ -82,7 +82,7 @@ Category classification: per `skills/root-cause/skill.md` (canonical 6 category 
 
 ### Step 4: Propose fix strategies
 
-Present 3-level strategies. Canonical definition: `skills/root-cause/skill.md`.
+Present 3-level strategies. Canonical definition: `skills/root-cause/SKILL.md`.
 
 Evaluate each strategy on 4 axes: **effort** / **risk** (new bug introduction) / **prevention** (recurrence effect) / **scope** (impact range).
 

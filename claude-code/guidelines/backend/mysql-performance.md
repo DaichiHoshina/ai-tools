@@ -336,7 +336,7 @@ Warning comment template for bulk insert functions relying on `LastInsertId() + 
 // Ref: https://dev.mysql.com/doc/refman/8.4/en/innodb-auto-increment-handling.html
 ```
 
-Detection: `bulk-insert-correctness` check in `/review` (`skills/comprehensive-review/skill.md`).
+Detection: `bulk-insert-correctness` check in `/review` (`skills/comprehensive-review/SKILL.md`).
 
 ---
 

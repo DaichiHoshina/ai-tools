@@ -94,7 +94,7 @@ Critical (must fix) / Warning (recommended) / Info (consider)
 
 `/prd` is chat output, not persisted, so not in `/review` diff scope. AI self-checks draft before output against:
 
-- `skills/comprehensive-review/skill.md` writing NG table (conclusion-first, unsupported praise, vague words, undefined jargon, omitted subject, missing 5W1H, repetitive bullets, AI boilerplate, unclear call-to-action)
+- `skills/comprehensive-review/SKILL.md` writing NG table (conclusion-first, unsupported praise, vague words, undefined jargon, omitted subject, missing 5W1H, repetitive bullets, AI boilerplate, unclear call-to-action)
 - `guidelines/writing/long-form-doc.md` NG dictionary
 
 1+ Critical or 4+ Warning hit → fix before Phase 5 (max 2 loop). Fix by embedding answers to 4 questions (reader, call-to-action, numbers, why) in prose.

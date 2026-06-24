@@ -113,7 +113,7 @@ mdl claude-code/references/command-resource-map.md
 ```bash
 # command ≤150 lines, skill ≤300 lines
 wc -l claude-code/commands/{dev,flow,plan,review}.md
-wc -l claude-code/skills/load-guidelines/skill.md
+wc -l claude-code/skills/load-guidelines/SKILL.md
 ```
 
 ---

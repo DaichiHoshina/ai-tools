@@ -38,7 +38,7 @@ check_size "claude-code/CLAUDE.md" 200         || failed=1
 check_size "claude-code/README.md" 300         || failed=1
 
 # 3. skill body 行数 (CLAUDE.md目安: 100-130、150を超えたら fail)
-for f in claude-code/skills/*/skill.md; do
+for f in claude-code/skills/*/SKILL.md; do
   check_size "$f" 150 || failed=1
 done
 

@@ -5,9 +5,9 @@ description: Add new skill - run skill-creator → validate with skill-lint → 
 
 ## /skill-add - New Skill Addition
 
-Create `claude-code/skills/<name>/skill.md`, validate via `scripts/skill-lint.sh`, then sync to `~/.claude/`.
+Create `claude-code/skills/<name>/SKILL.md`, validate via `scripts/skill-lint.sh`, then sync to `~/.claude/`.
 
-**Source of truth**: lowercase `skill.md` (per `commands/claude-update-fix.md` convention).
+**Source of truth**: `SKILL.md` (uppercase, per file naming convention).
 
 > **skill-creator note**: expect external plugin (Anthropic Superpowers etc). This repo doesn't bundle it. On missing, auto-fallback to minimal template. To use skill-creator, install plugin separately. For template-only, pass `--skip-creator`.
 
@@ -44,7 +44,7 @@ steps:
   - id: minimal-template
     when: --skip-creator OR skill-creator absent
     action: |
-      write `claude-code/skills/<name>/skill.md` with minimal frontmatter + skeleton
+      write `claude-code/skills/<name>/SKILL.md` with minimal frontmatter + skeleton
 
   - id: lint
     action: |
@@ -63,15 +63,15 @@ steps:
 
 If lint fails 3x consecutive, try:
 
-- **retry**: manual edit `skills/<name>/skill.md`, re-run `skill-lint --skill <name>`
+- **retry**: manual edit `skills/<name>/SKILL.md`, re-run `skill-lint --skill <name>`
 - **restart**: `rm -rf claude-code/skills/<name>`, run `/skill-add <name>` again
-- **defer**: WIP note in `skill.md` header, push for later completion
+- **defer**: WIP note in `SKILL.md` header, push for later completion
 
 If skill-creator fails after create-dir, cleanup: `rm -rf claude-code/skills/<name>`.
 
 ## Minimal Template
 
-Lint-passing minimum. Trigger words required (see below). New `claude-code/skills/<name>/skill.md`:
+Lint-passing minimum. Trigger words required (see below). New `claude-code/skills/<name>/SKILL.md`:
 
 ```markdown
 ---

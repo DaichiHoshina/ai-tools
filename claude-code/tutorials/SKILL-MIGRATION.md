@@ -294,9 +294,9 @@ rm -rf ~/.claude/cache/
 ## 参照
 
 - [`../README.md`](../README.md): 統合後のスキル一覧
-- [skills/comprehensive-review/skill.md](skills/comprehensive-review/skill.md): パラメータ詳細
-- [skills/backend-dev/skill.md](skills/backend-dev/skill.md): 言語別ベストプラクティス
-- [skills/container-ops/skill.md](skills/container-ops/skill.md): プラットフォーム別運用
+- [skills/comprehensive-review/SKILL.md](skills/comprehensive-review/SKILL.md): パラメータ詳細
+- [skills/backend-dev/SKILL.md](skills/backend-dev/SKILL.md): 言語別ベストプラクティス
+- [skills/container-ops/SKILL.md](skills/container-ops/SKILL.md): プラットフォーム別運用
 
 ---
 

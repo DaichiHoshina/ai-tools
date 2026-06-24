@@ -6,7 +6,7 @@ description: Comprehensive code review (comprehensive-review skill + optional ex
 # /review - Comprehensive Code Review
 
 > Runs 12-angle review via `comprehensive-review` skill. `--deep`/`--multi` parallelizes external reviewers.
-> Noise filter policy: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/skill.md` Step -1
+> Noise filter policy: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/SKILL.md` Step -1
 
 ## Delegation & Self-Review (required, 2 stages)
 

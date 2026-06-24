@@ -97,6 +97,6 @@ Write only to Claude Code auto-memory (`~/.claude/projects/.../memory/`). Writin
 
 - `claude-code/CLAUDE.md` §Compounding Engineering — core rule
 - `claude-code/lib/writing-self-check.sh` — implementation SoT
-- `claude-code/skills/comprehensive-review/skill.md` — `🔁 recurring finding` detection logic
+- `claude-code/skills/comprehensive-review/SKILL.md` — `🔁 recurring finding` detection logic
 - `claude-code/references/memory-usage.md` §Recording targets — success pattern storage
 - Reference: [howborisusesclaudecode.com](https://howborisusesclaudecode.com/)

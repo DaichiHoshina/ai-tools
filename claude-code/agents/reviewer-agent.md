@@ -89,7 +89,7 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 
 1. **Scope**: `git status && git diff` to identify range
 2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (see `references/serena-tool-map.md`). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
-3. **Per-viewpoint review**: Run `comprehensive-review` skill (canonical: `skills/comprehensive-review/skill.md`)
+3. **Per-viewpoint review**: Run `comprehensive-review` skill (canonical: `skills/comprehensive-review/SKILL.md`)
 4. **Self-Filter Gate (moderate strictness)**: For every candidate P0/P1/P2, run the discard criteria below before emit:
    - **Evidence**: anchored to observed diff/code/docs/tests/tool output (else discard)
    - **Scope**: tied to user request / issue / design doc / code contract / changed behavior (else discard or downgrade to question)

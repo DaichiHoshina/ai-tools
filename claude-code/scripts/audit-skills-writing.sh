@@ -84,9 +84,9 @@ while IFS= read -r skill_file; do
   # ヒット行がある場合、<skill_path>: プレフィックス付与
   if [[ -n "$check_output" ]]; then
     while IFS= read -r line; do
-      # skill ディレクトリ名 + /skill.md で出力
+      # skill ディレクトリ名 + /SKILL.md で出力
       skill_dir=$(basename "$(dirname "$skill_file")")
-      echo "${skill_dir}/skill.md:${line}"
+      echo "${skill_dir}/SKILL.md:${line}"
     done <<< "$check_output"
 
     # ヒット件数をカウント
@@ -94,7 +94,7 @@ while IFS= read -r skill_file; do
     ((total_hits += hit_count))
     ((skills_with_hits += 1))
   fi
-done < <(find "$SKILLS_DIR" -name "skill.md" -type f | sort)
+done < <(find "$SKILLS_DIR" -name "SKILL.md" -type f | sort)
 
 # サマリ出力
 echo ""

@@ -77,7 +77,7 @@ lint_skill() {
     fi
 
     if [[ -z "$skill_md" ]]; then
-        printf 'error\t[%s] skill.md not found\n' "$skill_name"
+        printf 'error\t[%s] SKILL.md not found\n' "$skill_name"
         return 2
     fi
 

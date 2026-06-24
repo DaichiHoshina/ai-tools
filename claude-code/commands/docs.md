@@ -72,7 +72,7 @@ Search existing related pages w/ `notion-search`.
 
 Before `notion-create-pages` runs, AI self-checks draft body text. Target is md-form draft, not yet sent to Notion.
 
-Check items: writing axis NG table from `skills/comprehensive-review/skill.md` + NG dict from `guidelines/writing/long-form-doc.md`.
+Check items: writing axis NG table from `skills/comprehensive-review/SKILL.md` + NG dict from `guidelines/writing/long-form-doc.md`.
 
 - Critical ≥1, or Warning ≥4 hits → rewrite draft → re-check (max 2 loops)
 - After pass, proceed to Step 5

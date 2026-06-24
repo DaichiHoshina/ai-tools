@@ -81,7 +81,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 trigger: library method を直書きする場合 (`useState` / `axios.create` / `fastapi.Depends` 等) / 新 library 採用 / API spec が 6 か月超の場合。
 
-hook が warn-only で検出 (`hooks/pre-tool-use.sh`)。skill: `skills/context7/skill.md`。
+hook が warn-only で検出 (`hooks/pre-tool-use.sh`)。skill: `skills/context7/SKILL.md`。
 
 ## Auto-Delegation (parent=Opus orchestrates, subagent=Sonnet executes)
 
@@ -109,7 +109,9 @@ AI を**思考パートナー**として扱う。生成物を盲信せず parent
 
 ## Session Efficiency
 
-**Autonomous mode ON by default**. Confirm only for: destructive ops / external sends / large design branches / flow stage changing next-stage assumptions / re-try right after Esc interrupt (`[[feedback-no-retry-after-interrupt]]`). Long output = conclusion-first + PREP. Decision request = leading `要決定:` block. Token budget: Read with `limit`/`offset` (>200-line files), Bash long output via `| head/tail -N`, code via Serena `find_symbol` over full Read, casual chat via `/btw`. Full list: `references/session-efficiency-detailed.md`. Prompt caching 設計指針: `guidelines/operations/prompt-caching.md`。
+**Autonomous mode ON by default + 質問抑制 default**。AskUserQuestion / 確認は exception only。推奨が context から 1 つに絞れるなら質問せず即決、根拠 1 行のみ chat 出力する。質問許可は 4 条件 (破壊的操作 / scope 完全欠落 / 推奨拮抗 / 既存方針競合) のみ。canonical: `rules/minimize-questions.md`。
+
+Confirm only for: destructive ops / external sends / large design branches / flow stage changing next-stage assumptions / re-try right after Esc interrupt (`[[feedback-no-retry-after-interrupt]]`). Long output = conclusion-first + PREP. Decision request = leading `要決定:` block. Token budget: Read with `limit`/`offset` (>200-line files), Bash long output via `| head/tail -N`, code via Serena `find_symbol` over full Read, casual chat via `/btw`. Full list: `references/session-efficiency-detailed.md`. Prompt caching 設計指針: `guidelines/operations/prompt-caching.md`。
 
 ## No Derived Literals
 
