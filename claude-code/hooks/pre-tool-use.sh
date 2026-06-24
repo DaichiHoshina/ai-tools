@@ -1609,7 +1609,9 @@ PYEOF
     _inject_today_commits
     ;;
 
-  "Task")
+  "Task"|"Agent")
+    # Claude Code 2.1.152+ で Task tool は Agent に rename された (両 name で発火)
+    # hook が "Task" のみ listen していた間 bundle-violation 検出が全 session で空振りしていた
     GUARD_CLASS="Safe"
     # エージェント起動はSafe（実際の操作は各エージェント内で判定）
     # ただし general-purpose は CLAUDE.md「原則使わない」最大コスト源 → Boundary 警告

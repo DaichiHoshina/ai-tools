@@ -89,6 +89,8 @@ hook が warn-only で検出 (`hooks/pre-tool-use.sh`)。skill: `skills/context7
 
 **Default = delegate to `developer-agent` (Sonnet)**。inline は detailed.md 列挙 exception のみ。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止) + **1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列分割) + **parent 監視責任** (PO/Manager は subagent に丸投げ禁止、bundle 違反は PO Gate で阻止)。直列 chain でも各 step 内に複数 file/観点あるなら step 内 fan-out する (`[[feedback-no-single-agent-overload]]`)。
 
+**Parallel fan-out 自己強制 (hard rule)**: N≥2 dev を発火するときは**必ず単一 assistant message に N 個の Agent tool_use を含める**。連続する assistant message に Agent を 1 体ずつ並べる直列発火は禁止 (`[[parallel-fire-format-peak-concurrency]]` で実測検証済、flow-baseline.sh が `bundle_violations` として記録)。発火直前 self-check:「これから発火する N は何件か / 単一 message 内で N tool_use ブロックを並べているか」を chat 内で 1 行宣言してから発火。N=1 は単発 dev (違反なし)、N=2+ で別 msg に分けたら自己訂正必須。違反検出 hook: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。
+
 **Subagent silent-fail guard**: subagent context では `AskUserQuestion` 不可 + permission prompt 系 tool (Edit / Write / Bash 一部) が auto-deny で**silent fail** する (web search 2026-06-24 出典: [claudefa.st](https://claudefa.st/blog/guide/agents/sub-agent-best-practices))。approval-gated edit / 判断 fork は parent に escalate (`status: blocked` + `issues_blocking[]`)。subagent 側仕様は `agents/developer-agent.md` § Silent-fail guard canonical。
 
 詳細 (delegate threshold / parallel fire format / inline exceptions / trigger table / 違反パターン): `references/auto-delegation-detailed.md`

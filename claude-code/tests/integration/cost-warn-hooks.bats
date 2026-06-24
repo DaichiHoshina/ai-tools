@@ -308,9 +308,45 @@ _make_session_jsonl() {
 }
 
 # =============================================================================
-# Case S1-D: bundle 違反 counter は 500ms 以内の並列発火でリセットされる
+# Case S1-C2: tool_name="Agent" (2.1.152+ rename) でも同じ bundle warn が発火する
+# 旧 hook は "Task" のみ listen して "Agent" を空振りしていた (全 session 検出漏れ)
 # =============================================================================
-@test "bundle-violation: counter reset on 1-message bundle (parallel fire)" {
+@test "bundle-violation: warn injected for tool_name='Agent' (rename of Task)" {
+  local session_id="bundle-agent-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  printf '1\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Agent","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "bundle-violation-warn" ]]
+}
+
+# =============================================================================
+# Case S1-D: 500ms 以内の並列発火は warn を抑止 (counter は維持して累積保持)
+# 旧実装は counter=0 リセットだったが「並列を 1 回挟むと sequential 検出永久リセット」
+# bug があり、混合パターンを見逃していた。修正後は counter 維持 + warn 抑止のみ。
+# =============================================================================
+@test "bundle-violation: warn suppressed on 1-message bundle (parallel fire)" {
   local session_id="bundle-parallel-$(date +%s%N | tail -c 8)"
   local log_dir="${HOME}/.claude/logs"
   mkdir -p "${log_dir}"
@@ -339,4 +375,8 @@ _make_session_jsonl() {
 
   [ "$status" -eq 0 ]
   [[ ! "$output" =~ "bundle-violation-warn" ]]
+  # counter は維持 (リセットされない) — 累積 sequential 検出のため
+  local _post_count
+  _post_count=$(cat "${log_dir}/.dev-agent-fire-count-${session_id}")
+  [ "${_post_count}" = "5" ]
 }
