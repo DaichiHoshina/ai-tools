@@ -19,12 +19,18 @@ Large feature: both (design-doc → plan). Small fix: plan only. Detail: `refere
 Design + language (auto-detect) + project type guidelines を自動ロード。Detail: `references/command-resource-map.md`.
 ## Step 1: Scope intake (required)
 
+**質問抑制 default** (`rules/minimize-questions.md` canonical)。推奨即決を優先、質問は exception only。
+
 Run before any judgment:
 
 1. **File count**: Glob / wc -l で対象 file 数と各 file 行数を把握
 2. **要件未確定箇所抽出**: 各 file の編集 scope / 削除 target / 選択肢が複数ある決定点を列挙
-3. **Sub 質問**: 未確定箇所が 1 件以上 → AskUserQuestion (max 3 件、各 2-4 選択肢)
-4. **Skip 条件**: 要件完全明確 (single typo / 1 symbol rename / explicit instruction) → sub 質問なしで Step 2 へ
+3. **推奨即決 (default)**: 各未確定箇所に対し context (CLAUDE.md / memory / repo 慣習) から推奨を 1 つ選び、chat に 1 行根拠を出して Step 2 へ進む
+4. **Sub 質問 (exception only)**: 下記いずれかを満たす場合のみ AskUserQuestion (**max 1 問**、選択肢 2-4)。それ以外は推奨即決
+   - scope の input が完全欠落 (対象 file / 機能名 / 症状が一切ない)
+   - 2 つの推奨が拮抗し context から 1 つに絞れない (拮抗時は simple 側を default 推奨にして避けるのが先)
+   - 破壊的操作 / user 既存方針との明確な競合
+5. **Skip 条件 (即 Step 2 へ)**: 要件明確 (typo / 1 symbol rename / 1-2 file 編集 / explicit instruction / 推奨 1 つに絞れる) → 質問なし
 
 ## Step 2: Execution mode judgment (required)
 
