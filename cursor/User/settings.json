@@ -1,12 +1,12 @@
 {
   "editor.fontFamily": "'SF Mono', 'JetBrains Mono', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Menlo, monospace",
   "editor.fontLigatures": true,
-  "editor.fontSize": 16,
+  "editor.fontSize": 12,
   "editor.fontWeight": "450",
-  "editor.lineHeight": 1.75,
-  "editor.letterSpacing": 1.3,
+  "editor.lineHeight": 1.5,
+  "editor.letterSpacing": 0.8,
   "workbench.fontAliasing": "antialiased",
-  "editor.tabSize": 2,
+  "editor.tabSize": 4,
   "editor.wordWrap": "on",
   "editor.renderWhitespace": "all",
   "editor.autoClosingBrackets": "never",
@@ -37,7 +37,7 @@
   "files.trimTrailingWhitespace": true,
   "javascript.updateImportsOnFileMove.enabled": "always",
   "typescript.updateImportsOnFileMove.enabled": "always",
-  "workbench.colorTheme": "Darcula",
+  "workbench.colorTheme": "One Monokai",
   "workbench.startupEditor": "none",
   "workbench.secondarySideBar.defaultVisibility": false,
   "workbench.preferredDarkColorTheme": "Darcula",
@@ -175,7 +175,7 @@
     "commandCenter.background": "#101014",
     "commandCenter.foreground": "#c0caf5",
     "commandCenter.activeBackground": "#24283b",
-    "commandCenter.activeForeground": "#7aa2f7"
+    "commandCenter.activeForeground": "#7aa2f7",
   },
   "editor.semanticHighlighting.enabled": true,
   "editor.semanticTokenColorCustomizations": {
@@ -184,17 +184,17 @@
       "namespace": "#7dcfff",
       "class": {
         "foreground": "#9ece6a",
-        "bold": true
+        "bold": true,
       },
       "interface": {
         "foreground": "#2ac3de",
-        "italic": true
+        "italic": true,
       },
       "enum": "#2ac3de",
       "type": "#2ac3de",
       "typeParameter": {
         "foreground": "#bb9af7",
-        "italic": true
+        "italic": true,
       },
       "function": "#7aa2f7",
       "method": "#7aa2f7",
@@ -202,21 +202,21 @@
       "variable": "#c0caf5",
       "variable.readonly": {
         "foreground": "#bb9af7",
-        "italic": true
+        "italic": true,
       },
       "parameter": {
         "foreground": "#e0af68",
-        "italic": true
+        "italic": true,
       },
       "enumMember": "#bb9af7",
       "*.static": {
-        "italic": true
+        "italic": true,
       },
       "*.deprecated": {
         "strikethrough": true,
-        "foreground": "#565f89"
-      }
-    }
+        "foreground": "#565f89",
+      },
+    },
   },
   "editor.tokenColorCustomizations": {
     "textMateRules": [
@@ -226,151 +226,151 @@
           "keyword.control",
           "storage.type",
           "storage.modifier",
-          "keyword.operator.new"
+          "keyword.operator.new",
         ],
         "settings": {
           "foreground": "#bb9af7",
-          "fontStyle": ""
-        }
+          "fontStyle": "",
+        },
       },
       {
         "scope": ["string", "string.quoted", "string.template"],
         "settings": {
-          "foreground": "#9ece6a"
-        }
+          "foreground": "#9ece6a",
+        },
       },
       {
         "scope": ["string.regexp"],
         "settings": {
-          "foreground": "#b4f9f8"
-        }
+          "foreground": "#b4f9f8",
+        },
       },
       {
         "scope": ["constant.numeric", "constant.language"],
         "settings": {
-          "foreground": "#ff9e64"
-        }
+          "foreground": "#ff9e64",
+        },
       },
       {
         "scope": [
           "constant.language.boolean",
           "constant.language.null",
-          "constant.language.undefined"
+          "constant.language.undefined",
         ],
         "settings": {
           "foreground": "#ff9e64",
-          "fontStyle": ""
-        }
+          "fontStyle": "",
+        },
       },
       {
         "scope": ["comment", "punctuation.definition.comment"],
         "settings": {
           "foreground": "#565f89",
-          "fontStyle": "italic"
-        }
+          "fontStyle": "italic",
+        },
       },
       {
         "scope": ["comment.block.documentation", "comment.line.documentation"],
         "settings": {
           "foreground": "#565f89",
-          "fontStyle": "italic"
-        }
+          "fontStyle": "italic",
+        },
       },
       {
         "scope": [
           "entity.name.function",
           "support.function",
-          "meta.function-call"
+          "meta.function-call",
         ],
         "settings": {
-          "foreground": "#7aa2f7"
-        }
+          "foreground": "#7aa2f7",
+        },
       },
       {
         "scope": [
           "entity.name.class",
           "entity.name.type",
           "support.class",
-          "support.type"
+          "support.type",
         ],
         "settings": {
           "foreground": "#2ac3de",
-          "fontStyle": "bold"
-        }
+          "fontStyle": "bold",
+        },
       },
       {
         "scope": ["entity.name.tag"],
         "settings": {
-          "foreground": "#f7768e"
-        }
+          "foreground": "#f7768e",
+        },
       },
       {
         "scope": ["entity.other.attribute-name"],
         "settings": {
-          "foreground": "#bb9af7"
-        }
+          "foreground": "#bb9af7",
+        },
       },
       {
         "scope": ["variable.parameter"],
         "settings": {
           "foreground": "#e0af68",
-          "fontStyle": "italic"
-        }
+          "fontStyle": "italic",
+        },
       },
       {
         "scope": ["variable.other.constant", "variable.other.enummember"],
         "settings": {
-          "foreground": "#bb9af7"
-        }
+          "foreground": "#bb9af7",
+        },
       },
       {
         "scope": ["variable.language.this", "variable.language.self"],
         "settings": {
           "foreground": "#f7768e",
-          "fontStyle": "italic"
-        }
+          "fontStyle": "italic",
+        },
       },
       {
         "scope": ["meta.object-literal.key", "support.type.property-name"],
         "settings": {
-          "foreground": "#73daca"
-        }
+          "foreground": "#73daca",
+        },
       },
       {
         "scope": [
           "punctuation.definition.template-expression",
-          "string.template variable"
+          "string.template variable",
         ],
         "settings": {
-          "foreground": "#7dcfff"
-        }
+          "foreground": "#7dcfff",
+        },
       },
       {
         "scope": ["markup.heading"],
         "settings": {
           "foreground": "#7aa2f7",
-          "fontStyle": "bold"
-        }
+          "fontStyle": "bold",
+        },
       },
       {
         "scope": ["markup.bold"],
         "settings": {
-          "fontStyle": "bold"
-        }
+          "fontStyle": "bold",
+        },
       },
       {
         "scope": ["markup.italic"],
         "settings": {
-          "fontStyle": "italic"
-        }
+          "fontStyle": "italic",
+        },
       },
       {
         "scope": ["markup.inline.raw", "markup.fenced_code"],
         "settings": {
-          "foreground": "#9ece6a"
-        }
-      }
-    ]
+          "foreground": "#9ece6a",
+        },
+      },
+    ],
   },
   "security.workspace.trust.untrustedFiles": "open",
   "accessibility.signalOptions.volume": 0,
@@ -421,43 +421,43 @@
     "**/.git/objects/**": true,
     "**/node_modules/**": true,
     "**/.next/**": true,
-    "**/dist/**": true
+    "**/dist/**": true,
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[markdown]": {
     "editor.wordWrap": "on",
     "editor.quickSuggestions": {
       "comments": "off",
       "strings": "off",
-      "other": "off"
-    }
+      "other": "off",
+    },
   },
   "[go]": {
     "editor.defaultFormatter": "golang.go",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
-    }
+      "source.organizeImports": "explicit",
+    },
   },
   "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.tabSize": 2
-  }
+    "editor.tabSize": 2,
+  },
 }
