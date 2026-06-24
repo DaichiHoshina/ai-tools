@@ -134,7 +134,7 @@ In ai-tools: `hooks/pre-tool-use.sh` blocks private-name leakage (see `rules/pub
 |---|---|---|
 | Automation (`/loop` `/goal`) | `commands/workflow.md` (deterministic fan-out) + `commands/goal.md` (`/goal` single-task gate) + `commands/flow.md --until-gate-green` (P0 loop を objective gate に切替) | `/loop` (cadence) not yet implemented; cron-based scheduling fills the gap for now |
 | Worktree parallel | `[[ai-tools-worktree-workflow]]` + EnterWorktree | OK |
-| Skills as compounding | `skills/` 19 skills deployed | OK |
+| Skills as compounding | `skills/` registry deployed (count via `ls skills/`) | OK |
 | MCP connectors | Serena / context7 / playwright + `gh` CLI | GitHub MCP not configured; `gh` CLI fills gap for most cases |
 | Maker/checker separation | `developer-agent` + `reviewer-agent` (Stage A 7-observation) | Both default to same model (Opus 4.7); checker separate-model enforcement is weak |
 | State file | `local-docs/` (HTML) + auto-memory (`~/.claude/projects/.../memory/`) | Loop-dedicated `STATE.md` template not yet available (M-scope, separate session) |
