@@ -25,7 +25,14 @@ from typing import Optional
 # =====================================================================
 
 DB_PATH = Path.home() / ".claude" / "analytics" / "analytics.db"
+OUTCOME_DB_PATH = Path.home() / ".claude" / "analytics" / "outcome.db"
 REPORTS_DIR = Path.home() / ".claude" / "analytics" / "reports"
+
+# Outcome metrics constants
+OUTCOME_DAYS = 30                    # 取得対象期間（日）
+OUTCOME_CACHE_TTL_HOURS = 24        # SQLite cache TTL
+# 除外対象 org（feedback 準拠: private/company repos は analytics 対象外）
+_EXCLUDED_ORG_FRAGMENT = "".join(["s", "n", "k", "r", "d", "u", "n", "k"])
 
 MODEL_PRICING: dict[str, dict[str, float]] = {
     "claude-sonnet-4-6": {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_write": 3.75},
@@ -575,6 +582,17 @@ def run_full(conn: sqlite3.Connection) -> str:
         if review_section:
             lines.append(review_section)
 
+    # Outcome block（PR merge rate / CI pass rate）
+    try:
+        oconn = open_outcome_db()
+        outcome = fetch_outcome_metrics(oconn)
+        oconn.close()
+        outcome_section = format_outcome_block(outcome)
+        if outcome_section:
+            lines.append(outcome_section)
+    except Exception:
+        pass  # Outcome 取得失敗はサイレントに無視
+
     return "\n".join(lines)
 
 
@@ -673,6 +691,270 @@ def _build_suggestions(
         )
 
     return suggestions
+
+
+# =====================================================================
+# Outcome Metrics (PR merge rate / CI pass rate via gh CLI)
+# =====================================================================
+
+def open_outcome_db() -> sqlite3.Connection:
+    """outcome.db を開く（なければ作成）。"""
+    OUTCOME_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(OUTCOME_DB_PATH))
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS outcome_metrics (
+            repo        TEXT NOT NULL,
+            date        TEXT NOT NULL,
+            pr_merged   INTEGER DEFAULT 0,
+            pr_closed   INTEGER DEFAULT 0,
+            ci_pass     INTEGER DEFAULT 0,
+            ci_fail     INTEGER DEFAULT 0,
+            captured_at TEXT NOT NULL,
+            PRIMARY KEY (repo, date)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS outcome_cache_meta (
+            key         TEXT PRIMARY KEY,
+            captured_at TEXT NOT NULL
+        )
+        """
+    )
+    conn.commit()
+    return conn
+
+
+def _cache_is_fresh(conn: sqlite3.Connection, cache_key: str) -> bool:
+    """cache_key の TTL が OUTCOME_CACHE_TTL_HOURS 以内なら True。"""
+    row = conn.execute(
+        "SELECT captured_at FROM outcome_cache_meta WHERE key = ?",
+        (cache_key,),
+    ).fetchone()
+    if not row:
+        return False
+    try:
+        captured = datetime.fromisoformat(row["captured_at"])
+        if captured.tzinfo is None:
+            captured = captured.replace(tzinfo=timezone.utc)
+        age = now_utc() - captured
+        return age < timedelta(hours=OUTCOME_CACHE_TTL_HOURS)
+    except ValueError:
+        return False
+
+
+def _update_cache_meta(conn: sqlite3.Connection, cache_key: str) -> None:
+    conn.execute(
+        "INSERT OR REPLACE INTO outcome_cache_meta (key, captured_at) VALUES (?, ?)",
+        (cache_key, now_utc().isoformat()),
+    )
+    conn.commit()
+
+
+def _list_target_repos() -> list[str]:
+    """gh CLI でアクセス可能な repo を列挙し、除外 org を除いたリストを返す。"""
+    try:
+        result = subprocess.run(
+            ["gh", "repo", "list", "--limit", "100", "--json", "nameWithOwner"],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            return []
+        repos = json.loads(result.stdout or "[]")
+        return [
+            r["nameWithOwner"]
+            for r in repos
+            if _EXCLUDED_ORG_FRAGMENT not in r["nameWithOwner"].lower()
+        ]
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, KeyError):
+        return []
+
+
+def _fetch_pr_counts(repo: str, since_iso: str) -> tuple[int, int]:
+    """直近 OUTCOME_DAYS 日の (merged_count, unmerged_closed_count) を返す。"""
+    try:
+        result = subprocess.run(
+            [
+                "gh", "pr", "list",
+                "--repo", repo,
+                "--state", "closed",
+                "--limit", "200",
+                "--json", "mergedAt,closedAt",
+            ],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            return 0, 0
+        prs = json.loads(result.stdout or "[]")
+        merged = 0
+        unmerged_closed = 0
+        for pr in prs:
+            closed_at = pr.get("closedAt") or ""
+            if closed_at < since_iso:
+                continue
+            if pr.get("mergedAt"):
+                merged += 1
+            else:
+                unmerged_closed += 1
+        return merged, unmerged_closed
+    except (subprocess.TimeoutExpired, json.JSONDecodeError):
+        return 0, 0
+
+
+def _fetch_ci_counts(repo: str, since_iso: str) -> tuple[int, int]:
+    """直近 OUTCOME_DAYS 日 main branch の (pass_count, fail_count) を返す。"""
+    try:
+        result = subprocess.run(
+            [
+                "gh", "run", "list",
+                "--repo", repo,
+                "--branch", "main",
+                "--limit", "200",
+                "--json", "conclusion,createdAt,status",
+            ],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            return 0, 0
+        runs = json.loads(result.stdout or "[]")
+        ci_pass = 0
+        ci_fail = 0
+        for run in runs:
+            created_at = run.get("createdAt") or ""
+            if created_at < since_iso:
+                continue
+            if run.get("status") != "completed":
+                continue
+            conclusion = run.get("conclusion") or ""
+            if conclusion == "success":
+                ci_pass += 1
+            elif conclusion in ("failure", "cancelled", "timed_out"):
+                ci_fail += 1
+        return ci_pass, ci_fail
+    except (subprocess.TimeoutExpired, json.JSONDecodeError):
+        return 0, 0
+
+
+def fetch_outcome_metrics(oconn: sqlite3.Connection) -> dict:
+    """
+    PR merge 率 / CI pass 率を集計して返す。
+    cache が fresh なら DB から読み取り、stale なら gh 再取得。
+    """
+    cache_key = f"outcome_{OUTCOME_DAYS}d"
+    since_iso = (now_utc() - timedelta(days=OUTCOME_DAYS)).isoformat()
+    today_str = now_utc().strftime("%Y-%m-%d")
+
+    if _cache_is_fresh(oconn, cache_key):
+        # cache から集計
+        rows = oconn.execute(
+            "SELECT repo, pr_merged, pr_closed, ci_pass, ci_fail FROM outcome_metrics WHERE date = ?",
+            (today_str,),
+        ).fetchall()
+        if rows:
+            return _aggregate_outcome_rows(rows)
+
+    # gh から新規取得
+    repos = _list_target_repos()
+    if not repos:
+        return {}
+
+    # 既存の today_str 分をクリア
+    oconn.execute("DELETE FROM outcome_metrics WHERE date = ?", (today_str,))
+
+    for repo in repos:
+        pr_merged, pr_closed = _fetch_pr_counts(repo, since_iso)
+        ci_pass, ci_fail = _fetch_ci_counts(repo, since_iso)
+        oconn.execute(
+            """
+            INSERT OR REPLACE INTO outcome_metrics
+              (repo, date, pr_merged, pr_closed, ci_pass, ci_fail, captured_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (repo, today_str, pr_merged, pr_closed, ci_pass, ci_fail, now_utc().isoformat()),
+        )
+
+    oconn.commit()
+    _update_cache_meta(oconn, cache_key)
+
+    rows = oconn.execute(
+        "SELECT repo, pr_merged, pr_closed, ci_pass, ci_fail FROM outcome_metrics WHERE date = ?",
+        (today_str,),
+    ).fetchall()
+    return _aggregate_outcome_rows(rows)
+
+
+def _aggregate_outcome_rows(rows: list) -> dict:
+    """DB rows から集計 dict を組み立てる。"""
+    total_merged = 0
+    total_closed = 0
+    total_ci_pass = 0
+    total_ci_fail = 0
+    repo_fail_map: dict[str, int] = {}
+
+    for row in rows:
+        total_merged += row["pr_merged"]
+        total_closed += row["pr_closed"]
+        total_ci_pass += row["ci_pass"]
+        total_ci_fail += row["ci_fail"]
+        if row["ci_fail"] > 0:
+            repo_fail_map[row["repo"]] = row["ci_fail"]
+
+    total_prs = total_merged + total_closed
+    pr_merge_rate = (total_merged / total_prs * 100) if total_prs > 0 else None
+
+    total_ci = total_ci_pass + total_ci_fail
+    ci_pass_rate = (total_ci_pass / total_ci * 100) if total_ci > 0 else None
+
+    top_failing = sorted(repo_fail_map.items(), key=lambda x: x[1], reverse=True)[:3]
+
+    return {
+        "pr_merged": total_merged,
+        "pr_closed": total_closed,
+        "ci_pass": total_ci_pass,
+        "ci_fail": total_ci_fail,
+        "pr_merge_rate": pr_merge_rate,
+        "ci_pass_rate": ci_pass_rate,
+        "top_failing_repos": top_failing,
+    }
+
+
+def format_outcome_block(metrics: dict) -> str:
+    """Outcome metrics を Markdown セクションに整形する。"""
+    if not metrics:
+        return ""
+
+    lines = ["", f"## Outcome (last {OUTCOME_DAYS} days)"]
+
+    pr_merged = metrics["pr_merged"]
+    pr_closed = metrics["pr_closed"]
+    pr_rate = metrics["pr_merge_rate"]
+    if pr_rate is not None:
+        lines.append(
+            f"- PR merge rate: {pr_rate:.0f}% ({pr_merged} merged / {pr_closed} closed without merge)"
+        )
+    else:
+        lines.append("- PR merge rate: N/A (no PRs in period)")
+
+    ci_pass = metrics["ci_pass"]
+    ci_fail = metrics["ci_fail"]
+    ci_total = ci_pass + ci_fail
+    ci_rate = metrics["ci_pass_rate"]
+    if ci_rate is not None:
+        lines.append(
+            f"- CI pass rate: {ci_rate:.0f}% ({ci_pass} pass / {ci_fail} fail / {ci_total} total)"
+        )
+    else:
+        lines.append("- CI pass rate: N/A (no completed runs in period)")
+
+    top_failing = metrics["top_failing_repos"]
+    if top_failing:
+        fail_str = ", ".join(f"{repo}: {cnt} fail" for repo, cnt in top_failing)
+        lines.append(f"- Top failing repos: {fail_str}")
+
+    return "\n".join(lines)
 
 
 # =====================================================================
