@@ -147,6 +147,34 @@ Single well-aimed prompt wins for: architecture rewrites / auth / payments (`[[f
 
 Rule of thumb: if a human would need to think deeply about each output before accepting it, don't loop it.
 
+## Atomic vs holistic verification
+
+> **Source**: syu-m-5151 "Loop engineering is rediscovery of cybernetics" (hatenablog, 2026-06-23). Maps loop verification to *Building Evolutionary Architectures* 2nd ed. (Ford et al., 2022) "fitness function" concept and Donella Meadows leverage-point ladder.
+
+Objective gate (§Minimum viable loop, §Failure modes) catches *whether each output passes*. It does not catch *whether properties interact safely across outputs*. Atomic-only verification lets cross-cutting coupling (security × scalability, layer violation, side-effect drift) accumulate silently across loop iterations.
+
+| Verification mode | What it measures | What it misses | When to use |
+|---|---|---|---|
+| **Atomic** | Single property of one output (test green, lint exit 0, type 0 errors) | Property interactions, layer violations, accumulated coupling | Per-iteration gate (every loop pass) |
+| **Holistic** | Cross-cutting fitness across N outputs (perf × security, arch boundary, dependency direction) | Slow signal — not gate-grade per iteration | Periodic sweep (per N iterations / per merge / per session boundary) |
+
+A production loop needs both. Atomic gate per iteration (cheap, blocks bad single outputs); holistic sweep at coarser cadence (catches what atomic gate cannot see, but too slow to run every loop). Run holistic via `/review` (12 dimensions, `[[comprehensive-review]]` skill) or layer-direction checks (e.g. CQRS guideline read-vs-write boundary).
+
+**Holistic checks ai-tools ships**:
+
+- `skills/comprehensive-review/` — 12-dimension review covering arch / quality / security / test cross-cuts
+- `guidelines/design/cqrs.md` — read / write boundary, prevents silent inversion
+- `guidelines/design/clean-architecture.md` — dependency direction (outer → inner)
+- `references/PARALLEL-PATTERNS.md` — coupling-degree threshold for parallel safety
+
+**When to run holistic sweep inside a loop**:
+
+- After every N iterations (recommend N=5-10 for fast loops, N=1 for irreversible-action loops)
+- Before any merge / push / deploy gate
+- On `/compact` or session boundary (catches drift hidden by summarization)
+
+Cross-ref: `[[feedback-db-change-review-blind-spot]]` (DB change 4-path holistic check), `[[feedback-no-derived-literals]]` (cross-file consistency = holistic property).
+
 ## Related
 
 | File | Role |
