@@ -89,6 +89,15 @@ step 8 両 agent 完了後:
 - P0 残存 / P1: 報告して継続 (`--auto` 時は停止)
 - codex 未設定: `comprehensive-review` single fallback
 
+**`--until-gate-green "<check-cmd>"` 拡張 (`/goal` 統合)**: flag 指定時、停止条件を reviewer-agent subjective 判定 (Stage A 7 観点) ではなく bash `<check-cmd>` の exit code に切替。
+
+- 例: `/flow --until-gate-green "npm test && npm run lint" <task>` / `/flow --until-gate-green "bats tests/" <task>`
+- iteration upper: `--max-iter <n>` (default 3、`/goal` default 5 より厳しめ。`/flow` は PO/Manager overhead 大なので token 節約)
+- hard stops: token budget 100k / wall-clock 30m (内 default、`/goal` と同)
+- maker/checker 分離: 既存 `developer-agent` (maker) + bash check (objective checker) の組み合わせで Ralph Wiggum guard を default 充足。reviewer-agent は flag 無し時の subjective gate のまま、flag 有り時は bash check に置換
+- 互換性: flag 無し時は現行挙動 (reviewer-agent P0=0 で停止、max 1 loop) 維持
+- 詳細: `references/loop-engineering.md` § Failure modes / Minimum viable loop
+
 ## --auto skip conditions (detail)
 
 `references/PARALLEL-PATTERNS.md` `### /flow --parallel --auto skip-confirmation 4 conditions` 参照。

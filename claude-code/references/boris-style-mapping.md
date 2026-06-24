@@ -2,7 +2,7 @@
 
 Boris Cherny 流 ([howborisusesclaudecode.com](https://howborisusesclaudecode.com/)) と公式 best practice ([code.claude.com/docs/en/best-practices](https://code.claude.com/docs/en/best-practices)) の主要 tip を ai-tools 既存機能に照合する。実装方針が異なる箇所は「方針差」列に明記する。
 
-## 取り込み対応表 (12/12 反映済)
+## 取り込み対応表 (13/13 反映済)
 
 | Boris / 公式 tip | ai-tools 既存機能 | 方針差 |
 |---|---|---|
@@ -19,12 +19,13 @@ Boris Cherny 流 ([howborisusesclaudecode.com](https://howborisusesclaudecode.co
 | perspective-diverse verifier panel | `/review --verifier-panel=N` (default OFF、N=3 で 3 lens correctness / consistency / boundary fan-out + 多数決) | opt-in、token N 倍 cost |
 | institutional memory (訂正→CLAUDE.md) | auto-memory + `@path` import + retrospective | 同方針 |
 | fan-out workflow orchestration | `/workflow` (Workflow tool で deterministic pipeline / parallel / 多数決を script 化、5 テンプレ提供) | `/flow` (PO/Manager/Dev) と直交。review / migrate / research / understand / judge-panel の軽量 fan-out 用 |
+| objective stop-condition loop (`/goal`, Ralph Wiggum guard) | `commands/goal.md` (maker-checker 分離 + objective gate 必須 + hard stop 3 種) | Loop engineering 14-step canonical は `references/loop-engineering.md` |
 
 ## 未取り込み (CC native でない third-party 命名)
 
 | Tip | 判断 |
 |---|---|
-| `/goal` / `/loop` / `/schedule` | **未取り込み** (CC native でない、third-party 命名)。必要時に future task |
+| `/loop` / `/schedule` | **未取り込み** (CC native でない、third-party 命名)。cadence 系は user の cron 設定で代替可能、必要時に future task |
 
 ## 関連 memory
 

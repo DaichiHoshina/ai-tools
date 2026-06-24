@@ -40,6 +40,7 @@ Boundary: "fix from error log"=1.5 / "bug root cause"=2 / "feature improvement"=
 --skip-prd / --skip-test / --skip-review / --auto
 --sequential  (opt-out: only when parent judges parallelism physically impossible; PO/Manager always required)
 --multi-review  (step 8 で 12 観点 split fan-out を強制。`--auto` は自動 ON)
+--until-gate-green "<check-cmd>" [--max-iter <n>]  (step 9 P0 loop の停止条件を objective gate に切替。default max-iter=3。Ralph Wiggum guard、`references/loop-engineering.md` 参照)
 ```
 
 **Default = orchestrate + parallel forced ON**. Plain `/flow` invocation fires parent pre-delegation (N calc / target echo / verify echo / DoD echo) + worktree parallel fan-out simultaneously. Add `--auto` for fully autonomous mode (skip confirmations + auto push). `--sequential` is an emergency fallback only when file conflicts make parallelism physically impossible.
@@ -85,7 +86,7 @@ Physically parallelizes via worktree isolation.
 8. **Parallel integrate + review** (fire both in 1 message): Manager integrate + `Task(reviewer-agent, --codex)`×1 (or Gate C on `--auto`/`--multi-review`). Canonical: `references/parallel-self-review.md` §Gate C
 8.5. **Gate B: parallel-implementation self-review** (required; N≥2 only). 4 criteria. FAIL → force step 9. Canonical: `references/parallel-self-review.md`
 8.7. **Dev failure gate** (required; after step-8 aggregate). `status ∈ {failure, partial, dep_unresolved}` → Manager realloc (`reallocation_trigger: dev_failure` + `failed_devs[]`, contract §3.1) → re-fix (1 loop max). 2nd fail → stop + escalate (`--auto`: `stop: dev failure 2x` + skip push)
-9. **P0 re-fix loop**: P0 → manager realloc → dev×M fix → reviewer re-verify (max 1 loop). P0 remains/P1 → report & continue
+9. **P0 re-fix loop**: P0 → manager realloc → dev×M fix → reviewer re-verify (max 1 loop). P0 remains/P1 → report & continue. **`--until-gate-green "<cmd>"`**: 停止条件を reviewer P0=0 ではなく bash `<cmd>` exit 0 に切替 (max-iter default 3、token/timeout は `/goal` と同 default)。objective gate 強制 = Ralph Wiggum guard。Canonical: `references/loop-engineering.md`
 
 詳細 step prose: `references/flow-orchestration.md`
 

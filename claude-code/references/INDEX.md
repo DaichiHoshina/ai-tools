@@ -29,6 +29,7 @@ On-demand index from CLAUDE.md.
 | skillOverrides design guide | `skill-overrides-guide.md` |
 | Guideline auto-trigger list | `guideline-triggers.md` |
 | Skill tool invocation patterns (forked exec) | `skill-tool-invocation.md` |
+| Loop engineering (14-step roadmap, 4-condition test, Ralph Wiggum guard) | `loop-engineering.md` |
 
 ## Workflows
 
