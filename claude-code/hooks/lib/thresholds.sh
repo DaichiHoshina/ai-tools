@@ -11,6 +11,7 @@ fi
 _THRESHOLDS_LOADED=1
 
 readonly _TH_PARALLEL_SEQ=2               # 並列 warn: sequential agent fire
+readonly _TH_BUNDLE_HARD_BLOCK_SEQ=3      # bundle 違反 hard block: warn 後の更なる sequential fire (PO Gate v2 enforcement)
 readonly _TH_DELEGATE_SEQ=3               # 委譲 warn: large-repo 連続 edit
 readonly _TH_PARALLEL_WINDOW_NS=500000000 # 500ms 並列判定 window (nanosec)
 readonly _TH_SESSION_AGE_S=10800          # 3h (sec) warn

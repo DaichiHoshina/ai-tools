@@ -711,6 +711,7 @@ _check_developer_agent_bundle_violation() {
   local _COUNT_FILE="${_LOG_DIR}/.dev-agent-fire-count-${session_id}"
   local _LASTTS_FILE="${_LOG_DIR}/.dev-agent-fire-lastts-${session_id}"
   local _FENCE_FILE="${_LOG_DIR}/.bundle-violation-warned-${session_id}"
+  local _BLOCK_FENCE_FILE="${_LOG_DIR}/.bundle-violation-blocked-${session_id}"
 
   local _NOW_NS
   if [[ -n "${EPOCHREALTIME:-}" ]]; then
@@ -727,24 +728,41 @@ _check_developer_agent_bundle_violation() {
 
   local _ELAPSED=$(( _NOW_NS - _LAST_NS ))
 
-  # 500ms 以内 = 1 message bundle 並列 (正常)、counter リセット
+  # 500ms 以内 = 1 message bundle 並列 (正常)、counter 維持 (リセットしない)
+  # 旧実装は counter=0 リセットだったため「並列を 1 回挟むと sequential 検出が永久に再起動」
+  # する bug があり、混合パターン (並列 → 直列 → 直列) を見逃していた。
+  # 累積 sequential 発火数を維持して直列 chain を必ず検出する。
   if (( _LAST_NS > 0 && _ELAPSED <= _TH_PARALLEL_WINDOW_NS )); then
-    printf '0\n' > "$_COUNT_FILE" 2>/dev/null || true
     return 0
   fi
 
   # fence 通過済 → 同 session で再 warn しない
   [[ -f "$_FENCE_FILE" ]] && return 0
 
-  # counter ++
+  # counter ++ (sequential 発火 = elapsed > _TH_PARALLEL_WINDOW_NS の累積)
   local _CUR=0
   [[ -f "$_COUNT_FILE" ]] && read -r _CUR < "$_COUNT_FILE" 2>/dev/null || _CUR=0
   [[ "$_CUR" =~ ^[0-9]+$ ]] || _CUR=0
   _CUR=$(( _CUR + 1 ))
   printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
 
+  # threshold ≥3 で hard block (PO Gate v2 enforcement、warn 後の更なる sequential fire は明確な違反)
+  # CLAUDE_BUNDLE_HARD_BLOCK=0 で opt-out (debug / 一時的 escape hatch)
+  if (( _CUR >= _TH_BUNDLE_HARD_BLOCK_SEQ )) && [[ "${CLAUDE_BUNDLE_HARD_BLOCK:-1}" != "0" ]]; then
+    if [[ ! -f "$_BLOCK_FENCE_FILE" ]]; then
+      touch "$_BLOCK_FENCE_FILE" 2>/dev/null || true
+      local _TS_BLOCK
+      printf -v _TS_BLOCK '%(%Y-%m-%dT%H:%M:%S)T' -1
+      printf '%s | %s | dev_count=%s | elapsed_ms=%s\n' \
+        "$_TS_BLOCK" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
+        >> "${_LOG_DIR}/bundle-violation-block.log" 2>/dev/null || true
+    fi
+    echo "[bundle-violation-block] Task(developer-agent) ${_CUR} 回逐次発火 = PO Gate v2 違反。1 message bundle で並列 fan-out するか、bundle_justification を明示せよ。opt-out: env CLAUDE_BUNDLE_HARD_BLOCK=0" >&2
+    exit 2
+  fi
+
   # threshold ≥2 で warn (1 発目は正常な単発 dev、2 発目連続発火が bundle 違反 signal)
-  if (( _CUR >= 2 )); then
+  if (( _CUR >= _TH_PARALLEL_SEQ )); then
     touch "$_FENCE_FILE" 2>/dev/null || true
 
     local _TS_LABEL
@@ -753,7 +771,7 @@ _check_developer_agent_bundle_violation() {
       "$_TS_LABEL" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
       >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
 
-    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >500ms = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md L110 / N declaration : tool_use firing message = 1:1 strict)"
+    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >500ms = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md L110 / N declaration : tool_use firing message = 1:1 strict)。${_TH_BUNDLE_HARD_BLOCK_SEQ} 回目で hard block する"
     if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
       ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
     else

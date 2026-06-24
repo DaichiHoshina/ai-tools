@@ -84,6 +84,7 @@ Return:
 - `verdict: pass` — all 3 criteria met. Parent fan-outs.
 - `verdict: modify` + `fix_request` — minor deviation, Manager can re-allocate. Parent calls Manager with fix_request (1 loop max).
 - `verdict: fail` + `reason` — strategy fundamentally mis-translated, re-allocation won't help. Parent stops `/flow`, escalates to user.
+- `verdict: fail` + `reason: bundle_violation` — **Manager allocation で `1 dev = 1 file` 原則違反 (bundle_justification なき複数 file fan-out) を検出した場合**。Parent は即 `/flow` 停止、user に escalate。`hooks/pre-tool-use.sh` の `_check_developer_agent_bundle_violation` が逐次発火 `_TH_BUNDLE_HARD_BLOCK_SEQ` 回目で hard block (exit 2) するため、PO 側でも事前検出する。
 
 **Scope guard**: oversight is strategy alignment only. Do **not** comment on:
 - Parallelism degree / `formula_trace` (Manager + parent Gate A own this)
