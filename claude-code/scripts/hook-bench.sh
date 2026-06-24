@@ -53,6 +53,8 @@ if [[ "$DIFF_ENABLED" -eq 1 ]]; then
       med=$(sed -E 's/.*median=[[:space:]]*([0-9]+)ms.*/\1/' <<<"$line")
       [[ -n "$name" && "$med" =~ ^[0-9]+$ ]] && PREV_MEDIAN["$name"]="$med"
     done < <(grep -E 'median=[[:space:]]*[0-9]+ms' "$PREV_LOG" || true)
+  else
+    echo "[hook-bench] --diff: prev log 不在 (${LOG_DIR}/hook-bench-*.log なし)、--log で baseline 作成してから再実行" >&2
   fi
 fi
 

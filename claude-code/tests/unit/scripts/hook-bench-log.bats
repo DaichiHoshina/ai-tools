@@ -47,8 +47,13 @@ EOF
   echo "$output" | grep -E '\[WARN \+[0-9]+% vs prev=10ms\]'
 }
 
-@test "--diff で prev log なしは diff suffix なしで通常表示" {
+@test "--diff で prev log なしは stderr に warn 出力 + 通常表示は維持 (exit 0)" {
   run bash "$SCRIPT_FILE" --hook session-start.sh --diff --runs 3 --warmup 1
   [ "$status" -eq 0 ]
-  echo "$output" | grep -E 'session-start.sh\s+median=' | grep -v '\[WARN\|\[diff'
+  # 通常出力 (median 行) は出る
+  echo "$output" | grep -E 'session-start.sh\s+median='
+  # diff suffix は付かない
+  ! echo "$output" | grep -E '\[WARN|\[diff'
+  # warn が stderr (=run 統合 output) に出る
+  echo "$output" | grep -F '[hook-bench] --diff: prev log 不在'
 }
