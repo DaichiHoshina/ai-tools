@@ -34,7 +34,7 @@ Run before any judgment:
 
 ## Step 2: Execution mode judgment (required)
 
-`inline` / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` の 5 択を判定。判定 table:
+`inline` / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"` の 6 択を判定。`/goal` は loop 系 (objective stop-condition 反復) で他 5 択と直交軸 — 反復で gate を緑化する task に限定、組み合わせ可 (inner mode 指定で `/goal --inner /dev` 等)。判定 table:
 
 | 条件 | 実行方式 | 理由 |
 |------|---------|------|
@@ -46,6 +46,14 @@ Run before any judgment:
 | 上記 /flow 条件 + 全自動 (PR 作成まで) | **`/flow --auto`** | AskUserQuestion auto-adopt、PR 作成自動、lint-test 自動 fix 1× |
 | 3+ file / file 間結合強 or 順序依存 | **`/dev` sequential** | 並列化で conflict |
 | 3+ file / 各 file 数行のみ | **inline 連続 Edit** | overhead 回収不能 |
+| 反復が必要 + objective gate (test / lint / build exit code) で done 判定可 | **`/goal "<stop>"`** | maker-checker 分離 + 反復、Ralph Wiggum guard |
+
+**`/goal` 適用 4 条件 (全 ✓ 必須、`commands/goal.md` canonical)**:
+
+1. Task が反復的 / iterative (one-shot でない)
+2. Stop-condition が完全自動 (exit code、human judgment 不可)
+3. Token budget が N iter waste を吸収可
+4. Agent が senior tools (Bash / Edit / Task / file access) 保持
 
 **不向き (誤判定回避、過去 churn から導出)**:
 
@@ -54,6 +62,7 @@ Run before any judgment:
 - **/workflow**: PRD→Plan→impl→review→push 全工程 → Gate なしで進捗管理崩れる、`/flow` 使う
 - **/flow**: ≤2 file / 単一 task → 60s+ overhead 回収不能、`/dev` で十分
 - **/flow --auto**: design 分岐ある / large refactor → AskUserQuestion auto-adopt が誤判定を素通り、`/flow` (手動 Gate) 使う
+- **/goal**: one-shot task / subjective verifier ("look correct?") / hard stop 未設定 / maker=checker 同 agent → Ralph Wiggum 失敗 mode、loop 無限化 (`commands/goal.md` Forbidden patterns canonical)
 
 ### /workflow vs /flow (直交軸)
 
@@ -100,6 +109,8 @@ Plan discard: compat shims / future abstractions / impossible-case error handlin
 - `/dev` で済むのに `/flow` していないか (file 数 < 3 / 結合強 / overhead 回収不能)
 - `/flow` で組んだが実は `/workflow` で十分でないか (構造化 fan-out / PO 不要 / resume 欲しい / 小規模)
 - `/workflow` で組んだが実は機能実装で `/flow` 必須でないか (impl 主体 / PRD 必要 / Gate 必須)
+- `/goal` を選んだが 4 条件を満たさないか (one-shot / subjective verifier / hard stop 未設定 / maker=checker)
+- 反復 + objective gate task なのに `/dev` 単発で済ませて gate 緑化を verify ループに任せていないか (→ `/goal` に切替)
 - 並列数 N 過剰でないか (N_candidate が結合度 0 を満たさない / wall_clock_parallel ≥ wall_clock_sequential)
 - `--auto` 提案時に user 確認すべき branch point が plan に残っていないか (大規模 design 分岐 / 破壊的操作 / external 送信は `--auto` 不可)
 - 持ち越し task / 別 scope task を本 plan に混入していないか (混入 → 別 task 分離)
@@ -125,8 +136,9 @@ Phase 1: [task]
 Phase 2: [task]
 
 ## Execution mode
-- Mode: inline / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto`
-- 根拠: [file 数 / 結合度 / T_i / overhead 比較 + /workflow vs /flow 直交判定を 1 行]
+- Mode: inline / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"`
+- 根拠: [file 数 / 結合度 / T_i / overhead 比較 + /workflow vs /flow 直交判定 + (`/goal` 採用時) 4 条件 ✓ と stop-condition cmd を 1 行]
+- (`/goal` 採用時のみ) Stop-condition: [`bats tests/foo` / `npm run lint` 等の exit code が verdict となる cmd]、Hard stops: max-iter=5 / max-token=100000 / timeout=30m (default、override 時のみ記載)
 
 ## Worktree
 - Needed: Yes/No

@@ -16,7 +16,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 **Golden workflow (頻出 3 種)**
 
-- 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto の 5 択を Step 2 で判定)
+- 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal の 6 択を Step 2 で判定、/goal は loop 系 objective gate task に限定)
 - worktree 隔離 + commit + ff-merge + push (`[[ai-tools-worktree-workflow]]` canonical):
   ```bash
   git stash push -u -m wip && git worktree add ../ai-tools-wt-<topic> -b <branch>
@@ -49,7 +49,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 - **root keys (`env` / `model` / `statusLine` / `permissions` / `sandbox` / `worktree` / `enabledPlugins` / `extraKnownMarketplaces` / `autoUpdatesChannel` and all allowlisted root keys) are template canonical**; `to-local` overwrites entirely. Live additions are wiped. Add settings via template edit → `to-local` (exceptions: `hooks` / `skillOverrides` have dedicated merge logic)
 - 🔒 PROTECTED SECTION in CLAUDE.md must not be modified. YAML frontmatter must remain valid
 - `VERSION` / `SERENA_VERSION` bumped only on CLI / Serena release intake (`/claude-update-fix` / `/serena-update-fix`)
-- Claude Code runs on **latest channel** (switched from stable 2026-06-14); `/claude-update-fix` TARGET is `dist-tags.latest` (details: `commands/claude-update-fix.md`)
+- Claude Code runs on **stable channel** (switched back from latest 2026-06-23); `/claude-update-fix` TARGET is `dist-tags.stable` (details: `commands/claude-update-fix.md`)
 
 ## Definition File Token Saving
 
