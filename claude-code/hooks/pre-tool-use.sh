@@ -1105,6 +1105,15 @@ ${_replace_hint}
   else
     ADDITIONAL_CONTEXT="${_inject_msg}"
   fi
+
+  # inject 効果計測用 log (trigger tool / block_terms 数)
+  local _SWEEP_LOG="${HOME}/.claude/logs/ng-pre-sweep-inject.log"
+  local _TS_INJ _NTERMS
+  printf -v _TS_INJ '%(%Y-%m-%dT%H:%M:%S)T' -1
+  _NTERMS=$(awk -F' / ' '{print NF}' <<< "$_block_terms" 2>/dev/null || echo 0)
+  printf '%s | pre-tool-use | trigger=%s | n_terms=%s\n' \
+    "$_TS_INJ" "${TOOL_NAME:-unknown}" "${_NTERMS}" \
+    >> "$_SWEEP_LOG" 2>/dev/null || true
 }
 
 # ====================================
@@ -1630,7 +1639,11 @@ PYEOF
       _block_if_ai_jargon "$_mcp_text" "$TOOL_NAME"
     fi
 
-    # 書く系 MCP: 今日の commit inject
+    # 書く系 MCP: NG-DICTIONARY pre-sweep + 今日の commit inject
+    # (2026-06-25 V 改善: MCP Notion/Slack でも commit 系と同様に起草前 NG list を inject、
+    #  retrospective 2026-06-24 で「単日 30+ 件 block、同じ語 leverage / 踏襲 / utilize が repeat」
+    #  の root cause = MCP 分岐に commit_compose inject が配線されていなかったため対応)
+    _inject_ng_dict_on_commit_compose
     _inject_today_commits
     ;;
 

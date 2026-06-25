@@ -506,6 +506,13 @@ _inject_commit_ng_top6_if_trigger() {
 
   [[ -n "${_TOP}" ]] || return 1
   printf '%s\n' "[outward-text-ng-pre-sweep] 外向き text (commit/PR/Notion/Slack 等) trigger 検出。直近7日 block top-12: ${_TOP}。draft 生成前に必ず self-check + 回避。代替例: 鑑みる→踏まえる / 踏襲→引き継ぐ / 喫緊→直近 / leverage→使う / utilize→活かす / mitigate→緩和する。source: ~/.claude/logs/jp-quality-block.log"
+
+  # inject 効果計測用 log (誰 trigger / どの hit term / top-N)
+  local _SWEEP_LOG="${HOME}/.claude/logs/ng-pre-sweep-inject.log"
+  local _TS_INJ
+  printf -v _TS_INJ '%(%Y-%m-%dT%H:%M:%S)T' -1
+  printf '%s | user-prompt | trigger=%s | top12=%s\n' "$_TS_INJ" "${t}" "${_TOP}" \
+    >> "$_SWEEP_LOG" 2>/dev/null || true
   return 0
 }
 
