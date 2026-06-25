@@ -6,7 +6,7 @@ description: Retrospective - analyze past sessions, auto-propose skill/config im
 
 # /retrospective - Session Review & Self-improvement
 
-Analyze past session history and work records, auto-generate improvement proposals.
+Analyze past session history and work records; auto-generate improvement proposals.
 
 ## Execution Flow
 
@@ -19,7 +19,7 @@ Ask user via AskUserQuestion.
   1. `private` (default): `~/.claude/references-private/retrospective/YYYY-MM-DD_<slug>.md`
   2. `public`: `docs/reports/retrospective/YYYY-MM-DD_<slug>.md`
 
-**default = private**. Select `public` only when explicitly chosen (prevent private data leak).
+**Default = private**. Select `public` only when explicitly chosen (prevents private data leak).
 
 **On public selection**:
 - Echo `rules/public-repo-private-data-block.md` reference at top of doc
@@ -53,11 +53,11 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 | inefficiency patterns | churn keywords hit, each-session config explain |
 | success patterns | efficient workflows, what-worked approaches |
 
-For each Serena memory name that matches a detected signal: `mcp__serena__read_memory(name)` on-demand only.
+For each Serena memory name matching a detected signal: `mcp__serena__read_memory(name)` on-demand only.
 
 ### Phase 3: Generate Improvements (parallel delegation)
 
-Group signals by domain. For each domain with ≥2 signals → `developer-agent` parallel delegation. Domains with <2 signals → skip.
+Group signals by domain. ≥2 signals in a domain → `developer-agent` parallel delegation. <2 signals → skip.
 
 | Domain | Content |
 |--------|---------|
@@ -84,9 +84,9 @@ AskUserQuestion → select proposals → implement (new skill / edit existing / 
 
 ### Phase 5: pending-improvements memory auto-update
 
-Read then re-write `~/.claude/projects/{project}/memory/pending-improvements.md` via `Write` (Serena `write_memory` forbidden — 2026-06-10 decision, avoid dual management; read-modify-write the auto-memory file):
+Read then re-write `~/.claude/projects/{project}/memory/pending-improvements.md` via `Write` (Serena `write_memory` forbidden — 2026-06-10 decision; avoid dual management; use read-modify-write on auto-memory file):
 - Append today's session results to completed list
-- Remove consumed items from pending, record unadopted proposals under "remaining"
+- Remove consumed items from pending; record unadopted proposals under "remaining"
 - Retain on-hold items (tech barrier / trigger unmet)
 - Add today's learnings to knowledge section
 
@@ -107,7 +107,7 @@ Report for Notion/md for others. Apply `guidelines/writing/long-form-doc.md` pri
 
 - conclusion (main learnings) first
 - "improved" / "efficient" → numbers: frequency / count / time
-- "recommend" + 1-line rationale
+- "recommend" + 1-line reason
 - end with next action (when/who/what)
 
 ## Failure Handling
@@ -125,4 +125,4 @@ Report for Notion/md for others. Apply `guidelines/writing/long-form-doc.md` pri
 
 - History may contain sensitive data. Never send externally
 - Always get user approval before applying improvements
-- weekly execution recommended
+- Weekly execution recommended

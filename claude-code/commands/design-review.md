@@ -88,15 +88,15 @@ Confirm preview URL (dev server) with user. If not running, start with `npm run 
 | `--viewport <px>` | desktop viewport (default 1440) |
 | `--skip-mobile` | Desktop viewport only |
 
-## Blocker gate (parent が実行)
+## Blocker gate (parent executes)
 
-`design-review-agent` の出力 trailer を読み、以下の判定を行う。
+Read `design-review-agent` output trailer and apply:
 
-- `issues_blocking != []` → 処理を停止し、`issues_blocking` の内容をそのまま user に提示して escalate する
-- `status` が `failure` または `dep_unresolved` → 同様に停止 + escalate (次 step に進まない)
-- `issues_blocking == []` かつ `status: success` → 次 step に進む
+- `issues_blocking != []` → stop; surface `issues_blocking` content to user and escalate
+- `status: failure` or `dep_unresolved` → stop + escalate (do not proceed)
+- `issues_blocking == []` and `status: success` → proceed to next step
 
-trailer field の意味と enum 定義は `references/agent-output-schema.md` を参照。
+Trailer field meanings: `references/agent-output-schema.md`.
 
 ## References
 

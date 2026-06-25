@@ -1,17 +1,17 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Skill, Agent, AskUserQuestion, mcp__serena__*
-description: Comprehensive code review (comprehensive-review skill + optional external reviewers)
+description: Full code review (`comprehensive-review` skill + optional external reviewers)
 argument-hint: "[scope]"
 ---
 
-# /review - Comprehensive Code Review
+# /review - Full Code Review
 
 > Runs 12-angle review via `comprehensive-review` skill. `--deep`/`--multi` parallelizes external reviewers.
 > Noise filter policy: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/SKILL.md` Step -1
 
 ## Delegation & Self-Review (required, 2 stages)
 
-**Delegation**: Delegate `comprehensive-review` skill to `reviewer-agent` (Sonnet) via Task. Delegation prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus runs Stage A (per-finding); Stage B aggregate は reviewer-agent に再委譲する。
+**Delegation**: Delegate `comprehensive-review` skill to `reviewer-agent` (Sonnet) via Task. Delegation prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus runs Stage A (per-finding); Stage B aggregate delegates back to reviewer-agent.
 
 **Always** run the following 2-stage self-review before outputting `/review` results. Applied uniformly to all modes (`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial`) — cannot skip.
 
@@ -21,14 +21,14 @@ Skill Step 4.5 has already done primary eval on 7 angles: Evidence / Scope / Ove
 
 Adversarial mode: relax Evidence/Scope criteria (design-challenge nature); Stage B dedup proceeds as normal.
 
-### Stage B: Result Self-Review Pass (overall) — reviewer-agent 委譲
+### Stage B: Result Self-Review Pass (overall) — delegate to reviewer-agent
 
-Stage A を通過した finding を JSON list として渡し、`reviewer-agent --stage-b` に委譲する。fresh context での集約判定で、実装直後のバイアスを抑止する。
+Pass Stage A findings as JSON list to `reviewer-agent --stage-b`. Fresh context aggregate suppresses post-impl bias.
 
-- 委譲先: `Task(subagent_type: "reviewer-agent")`
-- prompt 雛形: `"Stage B aggregate review. Input: Stage A filtered findings (JSON list, below). Apply: (1) phase consolidation (same root cause → 1 finding), (2) granularity alignment, (3) convention alignment, (4) Zero-phase valid (no padding). Return: confirmed findings as JSON {p0: [...], p1: [...], p2: [...]}. Do NOT add new findings — filter only. Noise discard policy: rules/review-noise-discard.md (confidence <80 / style nitpick / hypothetical edge case / scope-out suggestions are discard targets)."`
-- parent 側の責務: Stage A (per-finding) のみ。Stage B の出力をそのまま `/review-fix-push` Step 3 に渡す
-- 判定ログは plan file / chat に出さない。Stage B 結果のみを表示する
+- Delegate to: `Task(subagent_type: "reviewer-agent")`
+- Prompt template: `"Stage B aggregate review. Input: Stage A filtered findings (JSON list, below). Apply: (1) phase consolidation (same root cause → 1 finding), (2) detail-level alignment, (3) convention alignment, (4) Zero-phase valid (no padding). Return: confirmed findings as JSON {p0: [...], p1: [...], p2: [...]}. Do NOT add new findings — filter only. Noise discard policy: rules/review-noise-discard.md (confidence <80 / style nitpick / hypothetical edge case / scope-out suggestions are discard targets)."`
+- Parent responsibility: Stage A (per-finding) only. Pass Stage B output directly to `/review-fix-push` Step 3
+- Do not include judgment log in plan file / chat. Display Stage B results only
 
 ## Step 0: Auto-infer Mode (no flags)
 
@@ -55,11 +55,11 @@ material: `git diff --shortstat` / `gh pr diff <PR>` / `gh pr view <PR> --json b
 | Mode | Delegate | PR | Cost |
 |--------|--------|----|--------|
 | (default) | `comprehensive-review` skill | any | mid |
-| `--panel` | 3-lens parallel fan-out (style/security/test-coverage) → integrated by comprehensive-review | any | mid×3 |
-| `--codex` | comprehensive + codex plugin parallel, common findings = Critical | any | mid |
+| `--panel` | 3-lens parallel fan-out (style/security/test-coverage) → integrated by `comprehensive-review` | any | mid×3 |
+| `--codex` | `comprehensive-review` + codex plugin parallel, common findings = Critical | any | mid |
 | `--adversarial` | codex plugin `adversarial-review` (plugin required) | any | mid |
 | `--deep` | pr-review-toolkit 6 agents parallel (5-10min) | any | large |
-| `--multi` | comprehensive + codex + code-review + coderabbit parallel → auto-post to PR | required | max |
+| `--multi` | `comprehensive-review` + codex + code-review + coderabbit parallel → auto-post to PR | required | max |
 
 cloud large: see `/ultrareview`.
 
@@ -81,26 +81,11 @@ Run `pr-review-toolkit` 6 agents in parallel. **Cost warning**: tens of seconds 
 
 ## Multi Flow
 
-PR required. Run 4 methods in parallel:
-
-1. Fetch PR diff to `/tmp/review-multi-<PR>.diff`
-2. Parallel: (a) `comprehensive-review` skill / (b) codex plugin / (c) `/code-review:code-review` / (d) `coderabbit:code-review`
-3. Merge 4 outputs, deduplicate
-4. Auto-post via `gh pr comment <PR> --body-file -`
-
-Aggregation (3+ agree = Critical confirmed etc.). Use: pre-merge / release-critical / security patch. Not recommended daily.
+PR required. 4 methods parallel: (a) `comprehensive-review` skill / (b) codex plugin / (c) `/code-review:code-review` / (d) `coderabbit:code-review` → merge + deduplicate → auto-post `gh pr comment`. Aggregation: 3+ agree = Critical confirmed. Use: pre-merge / security patch. Not recommended daily.
 
 ## Output Format
 
-Same format as skill.md. Additional labels:
-
-```markdown
-### 🔴 Critical (fix required, confidence ≥80)
-### 🟡 Warning (improve, confidence 25-79)
-Total: Critical N / Warning N
-```
-
-Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / Multi/Deep partial fail → `### Degrade factors`.
+Same format as skill.md. Labels: `🔴 Critical (fix required, confidence ≥80)` / `🟡 Warning (improve, confidence 25-79)` / `Total: Critical N / Warning N`. Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / Multi/Deep partial fail → `### Degrade factors`.
 
 ## Critical/Warning ↔ P0/P1
 
@@ -112,67 +97,43 @@ Fallback: zero findings → `Critical/Warning 0, Total no findings (N files)` / 
 - **scope**: changed files (git diff). exclude: auto-gen / vendor / node_modules / lock
 - **difit**: local only, background after review (require `npm i -g difit`, suppress: `--no-difit`)
 
-Details: see review-related files under `references/`.
-
 ## Multi-lens panel (--panel)
 
-`/review --panel` で 3 つの lens を `reviewer-agent` × 3 並列で fan-out する。各 lens は他 lens の出力を見ない (blind diversity)。Source: [claudefa.st — Multi-Lens Panel Review](https://claudefa.st/blog/guide/agents/sub-agent-best-practices)
+Fan-out `reviewer-agent` × 3 in parallel; each lens is blind to others. Source: [claudefa.st — Multi-Lens Panel Review](https://claudefa.st/blog/guide/agents/sub-agent-best-practices)
 
-### lens 構成
+### Lens config
 
-| lens | focus | 無視するもの |
+| lens | focus | ignores |
 |---|---|---|
 | style | naming / readability / convention / cognitive complexity | logic / security |
 | security | authn/authz / injection / secrets / data boundary / unsafe logging | style / coverage |
 | test-coverage | test adequacy / missing edge cases / silent-failure paths | style / security |
 
-- 各 lens には diff + 担当 focus のみを渡す (他 lens の出力は含めない)
-- 3 lens を **1 message に bundle して並列発火** (`Task(reviewer-agent)` × 3、peak_concurrency=3)
+- Pass diff + assigned focus only to each lens (no other lens output)
+- Fire 3 lens in **1 message bundle** (`Task(reviewer-agent)` × 3, peak_concurrency=3)
 
-### 関係表
+Components: `--panel` lens ×3 (blind diversity) → integrated by `comp-review` skill (`skills/comprehensive-review/SKILL.md` §Multi-lens) → Stage A self-review.
 
-| component | 役割 |
-|---|---|
-| `--panel` lens × 3 | blind diversity → 各 lens が独立 verdict を返す |
-| `comprehensive-review` skill | lens 3 verdict を input に取り、12 観点 review と統合 (詳細: `skills/comprehensive-review/SKILL.md` §Multi-lens panel mode) |
-| Stage A self-review | panel 統合後の finding に適用 (既存挙動変化なし) |
+Aggregation by file:line key: 2/3+ hit → max severity → Stage A / 1/3 only → P3 / all miss → clean.
 
-### 集計 rule
-
-parent が 3 lens の verdict を file:line key で集約する。
-
-- 2/3 以上で hit → severity 最大値を採用して Stage A へ渡す
-- 1/3 のみ hit → P3 (Info) に降格、verbose mode でのみ表示
-- 全 lens が miss → clean (high confidence)
-
-**default は panel なし** (`--panel` opt-in)。通常 diff には `/review` 標準で十分。大規模 PR の pre-merge 最終確認に限定を推奨。
+**Default: panel off** (`--panel` opt-in). Limit to large PR pre-merge final check.
 
 ## Verifier panel (--verifier-panel)
 
-`/review --verifier-panel=N` (N=3 推奨、default OFF) で reviewer-agent を N 体 fan-out する。同 engine だが各エージェントが fresh context で異なる lens を担当し、多数決で confirmed finding のみ昇格する。Claude Code 公式 best practices の perspective-diverse verify を実装する。既存 `--multi` (engine 別 = comprehensive / codex / coderabbit / code-review 並列) とは直交の軸。
+`/review --verifier-panel=N` (N=3 recommended, default OFF): fan-out reviewer-agent × N. Same engine, each agent handles a different lens in fresh context; only majority-confirmed findings are promoted. Implements perspective-diverse verify from Claude Code official best practices. Orthogonal to `--multi` (engine-diverse: comp-review / codex / coderabbit / code-review parallel).
 
-### lens 仕様 (N=3 default)
+### Lens spec (N=3 default)
 
-| lens | focus | 無視するもの |
+| lens | focus | ignores |
 |---|---|---|
-| correctness | logic の正当性 / 仕様との一致 / 想定外の入力での挙動 / 競合状態 | style / typo / 命名 |
-| consistency | 既存の convention / cross-file naming / propagation の完全性 / import 順 | logic / 新規発見 |
-| boundary | input validation / edge case / error path / secrets handling / data 境界 | logic 全般 / style |
+| correctness | logic validity / spec conformance / unexpected input behavior / race conditions | style / typo / naming |
+| consistency | existing convention / cross-file naming / propagation completeness / import order | logic / new findings |
+| boundary | input validation / edge case / error path / secrets handling / data boundary | general logic / style |
 
-各 lens に渡す delegation prompt の雛形は `agents/reviewer-agent.md` `## Lens-specific mode` 参照。
+Delegation prompt template per lens: `agents/reviewer-agent.md` `## Lens-specific mode`.
 
-### 集計 rule
+Aggregation by file:line key: 2/N+ hit → P0/P1 (max severity) / 1/N → P3 silent / all miss → true clean.
 
-parent 側で N 個の lens 結果を file:line key で集約する。
+**Token cost**: N× tokens. Keep default OFF; limit to large PR pre-merge final check. `--multi --verifier-panel=3` = 12× cost — pick one.
 
-- 2/N 以上の lens で hit → P0 (Critical) or P1 (Warning)、severity は最大値を採用
-- 1/N のみ hit → P3 (Info) に降格、最終 report からは silent (verbose mode で表示)
-- 全 lens が miss → 真の clean (high confidence)
-
-**token cost**: panel は **N 倍の token** を消費する。default OFF を維持し、大規模 PR の pre-merge 最終確認に限定して使う。短時間 / 小 diff には `/review` 標準で十分。
-
-**既存 flag との直交**: `--multi --verifier-panel=3` で 4 engine × 3 lens = 12 並列も可能。token が 12 倍になるため推奨せず、どちらか一方に絞ること。
-
-### fan-out 制約
-
-CLAUDE.md の `1 dev = 1 file 原則` / parent 監視責任は panel にも適用する。`Task(reviewer-agent)` ×N は 1 message に bundle して並列発火する (peak_concurrency=N、逐次での発火禁止)。
+**Fan-out**: fire `Task(reviewer-agent)` ×N in 1 message bundle (peak_concurrency=N; sequential fire forbidden). CLAUDE.md `1 dev = 1 file` / parent oversight applies.

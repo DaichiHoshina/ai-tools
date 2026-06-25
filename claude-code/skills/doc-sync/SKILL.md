@@ -6,59 +6,56 @@ description: DD / PRD / local-docs の整合性チェックと差分吸収。「
 
 # doc-sync
 
-DD / PRD / local-docs 間の整合性チェックと差分吸収を行う。
+Cross-check consistency between DD / PRD / local-docs and absorb discrepancies.
 
-## 起動条件
+## Activation
 
-以下のいずれかで自動発動する。
+Auto-fires on any of:
 
-- 「再度DD読み込んで」「PRDと整合性チェック」「local-docsに反映」「DDとPRDが合っているか」
-- `/flow` の中間確認で「前回チェック後に変更があった可能性がある」と判断した場合
+- 「再度DD読み込んで」「PRDとの整合性チェック」「local-docsに反映」「DDとPRDが合っているか確認」「整合性を取れているか」
+- Mid-`/flow` check when changes since last sync are suspected
 
-## Phase 1: 対象ドキュメントの特定
+## Phase 1: Identify targets
 
 ```bash
-# 最近変更のある DD / PRD / local-docs を列挙
 git log --since=7.days --name-only --format="" | grep -E "\.(md|html)$" | sort -u
 ```
 
-ユーザが明示した場合はそのパスを優先する。
+User-specified paths take priority.
 
-## Phase 2: 差分チェック (parallel)
+## Phase 2: Diff check (parallel)
 
-対象が 3 ファイル以上の場合は `explore-agent` を並列投入する。1〜2 ファイルは inline で読み込む。
+3+ files → dispatch `explore-agent` in parallel. 1-2 files → inline read.
 
-チェック観点:
-
-| 観点 | 確認内容 |
+| Check | Criteria |
 |------|---------|
-| 数値整合 | 件数 / 日時 / 件数上限が全ドキュメント間で一致しているか |
-| 用語統一 | 同一概念を異なる名称で呼んでいないか |
-| ステータス | DD / PRD のフェーズが local-docs の最終更新と対応しているか |
-| 欠落セクション | DD にあって local-docs の該当 doc に反映されていない調査結果がないか |
+| Numeric alignment | Counts / dates / limits match across all docs |
+| Term consistency | Same concept uses same name everywhere |
+| Status alignment | DD/PRD phase matches local-docs last update |
+| Missing sections | DD findings not reflected in local-docs |
 
-## Phase 3: 差分の吸収
+## Phase 3: Absorb discrepancies
 
-不整合を発見した場合:
+On finding discrepancies:
 
-1. 差分リストを提示 (ファイル名 / 行番号 / 内容)
-2. 修正対象と修正方法を確認してから実行する
-3. `local-docs` 更新は `/local-docs update {path}` skill 経由で行う
+1. Present diff list (filename / line / content)
+2. Confirm fix targets and method before executing
+3. Update local-docs via `/local-docs update {path}` skill
 
-差分がない場合は「整合性 OK: {確認ファイル数} ファイル間で不整合なし」と 1 行報告して終了する。
+No discrepancies → report `整合性 OK: {N} ファイル間で不整合なし` and stop.
 
-## 出力フォーマット
+## Output format
 
 ```
 ## 整合性チェック結果 (YYYY-MM-DD)
 
-確認対象: {ファイルリスト}
+確認対象: {file list}
 
-### 不整合 ({件数}件)
-- {ファイルA} ↔ {ファイルB}: {内容}
+### 不整合 ({N}件)
+- {fileA} ↔ {fileB}: {detail}
 
 ### 対応済み
-- なし / {件数}件修正
+- なし / {N}件修正
 
-次のアクション: {あれば記述 / なければ「対応不要」}
+次のアクション: {action or 「対応不要」}
 ```

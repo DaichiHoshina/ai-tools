@@ -20,11 +20,11 @@ parameters:
     description: Review focus perspective
 ---
 
-# comprehensive-review - Comprehensive Code Review
+# comprehensive-review — 12-Perspective Code Review
 
-## 12 Perspectives
+## Perspectives
 
-Details: `references/review-patterns-universal.md` / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`. Noise discard 7 観点 / P2/P3 降格: `rules/review-noise-discard.md`。Self-Review 3 gate (`/flow` 連携): `references/parallel-self-review.md` — Gate C で本 skill を `reviewer-agent` 経由 12 lens 並列発火。
+Details: `references/review-patterns-universal.md` / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`. Noise discard / P2/P3 downgrade: `rules/review-noise-discard.md`. Self-Review Gate C (`/flow`): `references/parallel-self-review.md` — fires via `reviewer-agent` 12-lens parallel.
 
 | Perspective | Description |
 |---|---|
@@ -52,52 +52,39 @@ Details: `references/review-patterns-universal.md` / `writing-docs.md` / `silent
 
 > Steps 1-4: `reviewer-agent` (Sonnet). Step 4.5 output → parent Opus for Stage B aggregation.
 
-### Step -1: Noise Suppression
+**Step -1 (Noise)**: diff/code/docs only. Unverified → "hypothesis:". No nitpicks, no unsolicited TODO creation.
 
-Read diff/code/docs only. Unverified → "hypothesis:". No nitpicks. "could be better" / "might be useful" → note/question only. No unsolicited TODO/issue creation.
-
-### Step 0: Load History (Detect Repeats)
-
-Read `.claude/review-history.jsonl`. Same `file:line±3` + same `focus` 3+ times → prefix `🔁 Repeated Finding (Nth time)`. History absent → skip, mark `history: unavailable`.
+**Step 0 (History)**: Read `.claude/review-history.jsonl`. Same `file:line±3` + `focus` 3+ times → prefix `🔁 Repeated Finding (Nth time)`. Absent → `history: unavailable`.
 
 ### Step 1: Changed File Analysis
 
-`git diff --name-only` to determine scope. **Serena priority**: impact → `find_referencing_symbols` / interface↔impl → `find_implementations` / type check → `get_diagnostics_for_file` / structure → `get_symbols_overview`. Non-code → Grep/Read.
-
-Default lenses: `quality` / `architecture` / `root-cause` / `security`.
+`git diff --name-only`. **Serena**: impact → `find_referencing_symbols` / impl → `find_implementations` / types → `get_diagnostics_for_file` / structure → `get_symbols_overview`. Default lenses: `quality` / `architecture` / `root-cause` / `security`.
 
 | Condition | Add Perspective |
 |------|---------|
-| All files ∈ {`.md`, `.json`, `.yaml`, `.yml`, `.txt`, `.toml`, VERSION-like} | Limit to `docs` / `writing` / `readability` / `root-cause`; skip others (note: "docs-only mode") |
+| All files ∈ {`.md`, `.json`, `.yaml`, `.yml`, `.txt`, `.toml`, VERSION-like} | Limit to `docs` / `writing` / `readability` / `root-cause`; skip others ("docs-only mode") |
 | Test file (`*_test.*`, `*.spec.*`) | `docs` |
 | Logic change (non-test) | `test-coverage` + `silent-failure` |
 | Type def change (`*.d.ts`, `types/*`, struct/interface added) | `type-design` |
 | SQL/ORM change | `db-concurrency` |
 | Mixed / uncertain | Full 12 perspectives |
 
-### Step 2: Run Static Analysis Tools
+### Step 2: Static Analysis
 
 ```bash
-# TypeScript
-npm run lint && npx tsc --noEmit
-
-# Go
-golangci-lint run && go vet ./...
+npm run lint && npx tsc --noEmit   # TypeScript
+golangci-lint run && go vet ./...  # Go
 ```
 
-Judge by execution result. `command not found` / exit 127 → `static-analysis: skipped`. exit 0/1 with output → incorporate. other non-zero → Warning.
+exit 127 → `static-analysis: skipped`. exit 0/1 → incorporate. other non-zero → Warning.
 
 ### Step 3: Cleanup Enforcement
 
-Verify unused imports/vars/functions, backward compat remnants, progress comments. Bash/shell: detect `cmd || true` + `$? -ne 0` (always 0), duplicate `[[ -z "$x" ]]` after assignment, `&&` chains under `set -e` with unreachable failure-path.
+Unused imports/vars/functions, backward compat remnants, progress comments. Bash: `cmd || true` + `$? -ne 0`, duplicate `[[ -z "$x" ]]` after assign, `&&` chains under `set -e` with unreachable failure-path.
 
-### Step 4: Confidence Scoring (medium default)
+### Step 4 + 4.5: Scoring & Self-Filter
 
-Score 0-100 per finding: **80+** (low 90+, high 70+) → Critical / **50-79** → Warning / **25-49** → Warning / **<25** → Discard.
-
-### Step 4.5: Self-Filter Gate (moderate strictness)
-
-Validate each candidate — fail → discard; severity mismatch → downgrade:
+Score 0-100: **80+** (low 90+, high 70+) → Critical / **50-79** → Warning / **<25** → Discard. Validate each candidate:
 
 | Check | Pass condition |
 |---|---|
@@ -106,16 +93,14 @@ Validate each candidate — fail → discard; severity mismatch → downgrade:
 | Actionability | Author can fix in this change |
 | Severity | Matches real impact and confidence; style backed by documented guideline |
 
-Discard: "cleaner / more elegant" / "verbose / shorter" / restating existing TODO / "consider X" without concrete defect. Zero findings is valid — never invent.
+Discard: "cleaner / more elegant" / "consider X" without defect. Zero findings valid — never invent.
 
-### Step 5-6: Aggregate & Record History
-
-Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.jsonl` (fields: date/severity/focus/file/line/finding/confidence/branch/commit).
+**Step 5-6**: Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.jsonl`.
 
 ## Output Format
 
 ```
-## Comprehensive Review Results
+## Review Results
 ### Perspectives Checked: architecture / quality / ...
 ### Critical (Confidence 80+)
 - [security] SQL injection (src/api/user.ts:120) confidence 95
@@ -125,19 +110,12 @@ Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.
 Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 ```
 
-Zero findings → `### Critical: 0`. Skipped → `### skipped: <perspective> (<reason>)`. Tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question.
+Zero findings → `### Critical: 0`. Tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question.
 
-## writing 規約 enforcement (writing / docs / comment / prompt diff 検出時のみ)
+## Writing Enforcement (writing/docs/comment/prompt diff only)
 
-writing 系 diff が含まれる場合、Step 4.5 の自己確認で追加 check する。
-Canonicals: `guidelines/writing/PRINCIPLES.md` (通常文章) / `code-comment.md` / `prompt-engineering.md` / `long-form-doc.md`。confidence-80 filter 遵守。
+Additional Step 4.5 checks via `guidelines/writing/PRINCIPLES.md` / `code-comment.md` / `prompt-engineering.md` / `long-form-doc.md`. confidence-80 filter applies.
 
-### Multi-lens panel mode (`/review --panel` 時のみ)
+## Multi-lens panel (`/review --panel` only)
 
-`--panel` flag で起動した場合、`reviewer-agent` × 3 (style / security / test-coverage lens) の verdict が input として渡される。本 skill はその verdict を Step 1 の前処理として受け取り、12 観点 review と統合する。
-
-- lens 数は `commands/review.md` §Multi-lens panel が canonical (派生値 literal 禁止)
-- 各 lens の verdict は trailer field 形式 (`severity / file:line / confidence / fix_path`) で受け渡す
-- lens verdict は Stage A (per-finding self-review gate) と同一 7 観点 filter を通す
-- 重複 finding (同一 file:line、異なる lens 由来) は root cause が同じなら 1 件に統合する
-- panel 統合後の finding list を通常の Step 4.5 → Stage A → Stage B flow に流す
+`--panel` passes `reviewer-agent` × 3 (style / security / test-coverage) verdicts as pre-Step-1 input. Lens count canonical: `commands/review.md` §Multi-lens panel. Each verdict passes Stage A 7-point filter. Duplicates (same file:line, different lens, same root cause) → merge to 1. Merged list flows through Step 4.5 → Stage A → Stage B.

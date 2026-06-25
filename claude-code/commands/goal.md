@@ -6,7 +6,7 @@ description: Run agent until objective stop-condition holds, with maker-checker 
 
 ## /goal - Objective stop-condition loop
 
-**Core**: Shifts leverage from prompt quality to loop design — the agent iterates until an objective gate (test/lint/build exit code) passes, not until it *thinks* it's done. Maker and checker run as separate agents to prevent the Ralph Wiggum failure mode (self-evaluation on partial output declares done, burning tokens on a quiet fail; documented by Geoffrey Huntley). Orthogonal to `/workflow` (deterministic fan-out) and `/flow` (PO/Manager/Dev hierarchy).
+**Core**: Shifts focus from prompt quality to loop design — the agent iterates until an objective gate (test/lint/build exit code) passes, not until it *thinks* it's done. Maker and checker run as separate agents to prevent the Ralph Wiggum failure mode (self-evaluation on partial output declares done, burning tokens on a quiet fail; documented by Geoffrey Huntley). Orthogonal to `/workflow` (deterministic fan-out) and `/flow` (PO/Manager/Dev hierarchy).
 
 ## Syntax
 

@@ -13,90 +13,66 @@ aggregation mappings, and placement rules. Do not duplicate type lists in this s
 
 ## Activation criteria
 
-**When creating new HTML under local-docs (`projects/` / `domain-specs/` / `tool-guides/` / `operations/`),
-always follow this skill's procedure regardless of whether the command was explicit.**
-Applies if any of the following match:
+Fire when creating new HTML under local-docs (`projects/` / `domain-specs/` / `tool-guides/` / `operations/`), regardless of whether invoked explicitly. Triggers:
 
 - User utterance includes「local-docs」「ナレッジ」「runbook」「RCA」「postmortem」「spec」「調査ログ」「監視結果」「post-release」「dashboard 確認」「5xx 分析」「インシデント記録」「試験結果」「session 跨ぎ」「試行錯誤メモ」
 - Output path is under `local-docs/` (`projects/` / `domain-specs/` / `tool-guides/` / `operations/`)
 - Extension is `.html` under any of the above paths
 
 Writing HTML from scratch with `Write` without invoking this skill is a **rule violation**.
-Past incident: wrote `<style>` inline without reading `_templates/`,
-breaking shared CSS / decorate / `_index/` build entirely.
+Past incident: wrote `<style>` inline without reading `_templates/`, breaking shared CSS / decorate / `_index/` build.
 
 ## Invocation
 
 ```
 /local-docs new {type} {topic}        # create new
-/local-docs update {path}             # update existing doc
+/local-docs update {path}             # update existing
 /local-docs update {path} --reformat  # reformat to template compliance
 ```
 
-When subcommand is omitted, infer `new` / `update` from context.
+Omit subcommand → infer `new` / `update` from context.
 
 ## Prerequisites (read every time)
 
-1. Identify the local-docs repo root (current `cd` target or the repo root derived from the argument path).
-2. Read `CLAUDE.md` section "Templates" and `STRUCTURE.md` sections "html format", "type enum", and "placement flow".
-3. Obtain canonical types and aggregation mappings from those files — do not substitute cached knowledge from this skill.
+1. Identify local-docs repo root from `cd` target or argument path.
+2. Read `CLAUDE.md` §Templates and `STRUCTURE.md` §html-format, §type-enum, §placement-flow.
+3. Obtain canonical types and aggregation mappings from those files — do not use cached knowledge.
 
-## `new {type} {topic}` — create new
+## `new {type} {topic}` — create
 
-### 1. Generate
-1. **Type determination**: determine type from topic; normalize variant names to canonical type via `CLAUDE.md` mapping.
-2. **Placement determination**: follow `STRUCTURE.md` placement flow to decide the target directory.
-3. **Template copy (Bash `cp` required)**: `cp _templates/{type}.html {dir}/{name}.html`.
-   **Do not write HTML from scratch with `Write`.** Transcribing or copying the template text is also forbidden
-   (prevents style/script drift). Copy with `cp`, then modify only content via `Edit`.
-4. **Fill content (Edit only)**: keep the skeleton h2, `<style id="local-docs-style">`,
-   and `<script id="local-docs-script">` intact. Replace `{...}` placeholders via `Edit` and append body
-   with `Edit`. Overwriting with `Write` destroys script/style. Keep skeleton h2 (additional doc-specific h2 is allowed).
-5. **Metadata**: fix the leading comment `<!-- type: ... -->` `<!-- status: ... -->` to canonical values. Do not write `last-updated` (deprecated).
-6. **Title**: follow `STRUCTURE.md` Title Rules — keep short, avoid repeating parent context.
+1. **Type**: determine from topic; normalize variants to canonical type via `CLAUDE.md` mapping.
+2. **Placement**: follow `STRUCTURE.md` placement flow.
+3. **Template copy (required)**: `cp _templates/{type}.html {dir}/{name}.html`. Never write HTML from scratch with `Write` — copy with `cp`, then fill via `Edit` only.
+4. **Fill content (Edit only)**: keep skeleton h2, `<style id="local-docs-style">`, `<script id="local-docs-script">` intact. Replace `{...}` placeholders via `Edit`. Overwriting with `Write` destroys script/style.
+5. **Metadata**: fix `<!-- type: ... -->` `<!-- status: ... -->` to canonical values. Do not write `last-updated` (deprecated).
+6. **Title**: follow `STRUCTURE.md` Title Rules — short, no repeating parent context.
 
-### 1.5. Self-check (run immediately after generation)
-- First 2 lines contain `<!-- type: ... -->` and `<!-- status: ... -->`
+### Self-check (immediately after generation)
+- First 2 lines: `<!-- type: ... -->` and `<!-- status: ... -->`
 - Contains `<style id="local-docs-style">` (required for decorate v4.2)
-- Contains `<script id="local-docs-script">` (required for TOC / hero / num badge auto-generation)
-- If any of the above is missing → failure. Re-copy from `_templates/{type}.html`.
+- Contains `<script id="local-docs-script">` (required for TOC / hero / num badge)
+- Any missing → failure. Re-copy from `_templates/{type}.html`.
 
-### 2. Polish
-Run a `/jp-writing`-equivalent self-check on the HTML body. Remove AI-like phrasing and verbose expressions. Improve Japanese readability of the HTML body.
-
-### 3. Verify
-- Run textlint against the body text (extract body first if HTML pre-processing is needed).
-- Run `node _index/build.mjs` and confirm exit 0. A non-zero exit means the index is broken; fix before proceeding.
-- Instruct the user to open the doc in a browser and confirm no style or layout breakage.
+### Polish & Verify
+- `/jp-writing`-equivalent self-check on HTML body.
+- Run textlint against body text.
+- Run `node _index/build.mjs` and confirm exit 0. Non-zero → fix before proceeding.
+- Instruct user to open doc in browser and confirm no layout breakage.
 
 ## `update {path}` — update existing
 
-Determine the mode before starting: if `--reformat` is explicit, or if a legacy structure is detected (manual toc / tldr section / missing `local-docs-decorate` / old inline style), propose reformat to the user. Otherwise use the default content-update path.
+Determine mode first: if `--reformat` is explicit, or legacy structure detected (manual toc / tldr / missing `local-docs-decorate` / old inline style), propose reformat. Otherwise use default content-update path.
 
-### Default: content update
-1. Read the existing doc; append or rewrite body content.
-2. Do not touch skeleton / style / script (preserve template compliance if intact).
-3. Polish → verify (same as above).
+**Default**: read existing doc; append or rewrite body. Do not touch skeleton/style/script. Polish → verify.
 
-### `--reformat`: template compliance
-1. Determine doc type (from leading metadata or content). Normalize variants to canonical type.
-2. Align skeleton h2, `<style>`, and `<script>` (decorate v4.1) to the latest `_templates/{type}.html`.
-3. Remove legacy structure (manual toc / tldr / old style). **Preserve body content.**
-4. Fix metadata to required set (`type` / `status`). Delete `last-updated` if present.
-5. Verify (same as above).
+**`--reformat`**: align skeleton h2, `<style>`, `<script>` to latest `_templates/{type}.html`. Remove legacy structure. Preserve body content. Fix metadata (`type` / `status`). Delete `last-updated` if present. Verify.
 
 ## Constraints
 
-- **public-repo**: this skill is publicly managed. Do not embed proprietary names (internal service names /
-  identifiers) in this skill file itself. Reference proprietary information via local-docs `CLAUDE.md` instead.
-- **No new `.md` files**. All new docs must be `.html` derived from `_templates/{type}.html`.
-  Leave existing root meta 5 files and existing `.md` files untouched.
-- **Do not modify template style / script**. The `<style>` and `<script>` blocks in templates are
-  shared infrastructure; only fill the doc body.
-- **No `Write` direct creation (new `.html` under local-docs)**. Always run
-  `Bash cp _templates/{type}.html ...` first, then fill body with `Edit`.
-  Writing new `.html` from scratch with `Write` breaks shared CSS, decorate,
-  and `_index/` build pipeline (confirmed past damage).
+- **public-repo**: no proprietary names in this skill file. Use local-docs `CLAUDE.md` for proprietary info.
+- **No new `.md` files**. All new docs must be `.html` from `_templates/{type}.html`.
+- **Do not modify template style/script**. `<style>` and `<script>` blocks are shared infrastructure.
+- **No `Write` direct creation**. Always `Bash cp _templates/{type}.html ...` first, then fill with `Edit`.
 
 ## Related
 

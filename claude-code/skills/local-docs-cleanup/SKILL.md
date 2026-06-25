@@ -27,7 +27,7 @@ Do not rely on skill memory for "keep" / "archive" criteria — always derive fr
 
 ### 2. Identify targets
 
-With argument: use the specified directory. With `--all`: detect README.html files containing `<!-- status: released -->` under `projects/`.
+With argument: use specified directory. With `--all`: detect `<!-- status: released -->` under `projects/`.
 
 ```bash
 grep -rl "status: released" {local-docs-root}/projects/*/README.html 2>/dev/null
@@ -35,25 +35,11 @@ grep -rl "status: released" {local-docs-root}/projects/*/README.html 2>/dev/null
 
 ### 3. Scan and classify
 
-Classify all HTML files under target projects using STRUCTURE.md cleanup rules.
+**Keep**: RCA / postmortem / lessons-learned / active runbooks or specs / decision-basis docs / domain-specs candidates.
 
-**Keep (maintain in repo)**:
-- RCA / postmortem / lessons-learned
-- Runbooks / specs still in active use
-- Docs likely referenced as decision basis in future
-- Specs already extracted or candidates for domain-specs/
+**Archive candidates**: `planning/` intermediate notes / individual `verification/rehearsal/` logs (skip if series summary exists) / `inbox/` remnants / `notion-drafts/` / duplicate summaries (keep newer) / files duplicating README.
 
-**Archive candidates**:
-- Intermediate plans / design notes under `planning/`
-- Individual `verification/rehearsal/` logs (skip if series summary exists)
-- `inbox/` remnants
-- `notion-drafts/` (presumed migrated)
-- Duplicate summaries / drafts (keep newer, archive older)
-- Files duplicating README (e.g. `active-readme.html`)
-
-**Needs review (user judgment)**:
-- Files requiring content read to decide
-- Files potentially referenced by other projects
+**Needs review**: content-dependent files / files potentially referenced by other projects.
 
 ### 4. Present confirmation list
 
@@ -87,9 +73,7 @@ mkdir -p "$ARCHIVE_DIR/{元のサブパス}"
 mv "{local-docs-root}/projects/{target}" "$ARCHIVE_DIR/{target}"
 ```
 
-After move:
-1. Run `node {local-docs-root}/_index/build.mjs` to rebuild index
-2. Report move count and remaining count
+After move: run `node {local-docs-root}/_index/build.mjs` and report move/remaining count.
 
 ### 6. Update README
 
@@ -105,4 +89,4 @@ Append 1 line to the project's `README.html` recording cleanup date and move cou
 ## Related
 
 - `mem:local-docs` — local-docs skill (new doc creation)
-- local-docs `STRUCTURE.md` — primary source for cleanup rules (`## PJ released 後の cleanup レビュー` section)
+- local-docs `STRUCTURE.md` — primary source (`## PJ released 後の cleanup レビュー` section)

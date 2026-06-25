@@ -17,108 +17,93 @@ Large feature: both (design-doc → plan). Small fix: plan only. Detail: `refere
 
 ## Step 0: Auto-load guidelines (required)
 
-Design + language (auto-detect) + project type guidelines を自動ロード。Detail: `references/command-resource-map.md`.
+Design + language (auto-detect) + project type guidelines. Detail: `references/command-resource-map.md`.
+
 ## Step 1: Scope intake (required)
 
-**質問抑制 default** (`rules/minimize-questions.md` canonical)。推奨即決を優先、質問は exception only。
+**Question-suppression default** (`rules/minimize-questions.md` canonical). Prefer immediate decision; ask only on exception.
 
-Run before any judgment:
-
-1. **File count**: Glob / wc -l で対象 file 数と各 file 行数を把握
-2. **要件未確定箇所抽出**: 各 file の編集 scope / 削除 target / 選択肢が複数ある決定点を列挙
-3. **推奨即決 (default)**: 各未確定箇所に対し context (CLAUDE.md / memory / repo 慣習) から推奨を 1 つ選び、chat に 1 行根拠を出して Step 2 へ進む
-4. **Sub 質問 (exception only)**: 下記いずれかを満たす場合のみ AskUserQuestion (**max 1 問**、選択肢 2-4)。それ以外は推奨即決
-   - scope の input が完全欠落 (対象 file / 機能名 / 症状が一切ない)
-   - 2 つの推奨が拮抗し context から 1 つに絞れない (拮抗時は simple 側を default 推奨にして避けるのが先)
-   - 破壊的操作 / user 既存方針との明確な競合
-5. **Skip 条件 (即 Step 2 へ)**: 要件明確 (typo / 1 symbol rename / 1-2 file 編集 / explicit instruction / 推奨 1 つに絞れる) → 質問なし
+1. **File count**: Glob / wc -l to get file count and line counts
+2. **Undecided points**: list edit scope / delete targets / decision forks
+3. **Immediate decision (default)**: for each undecided point, pick 1 recommendation from context (CLAUDE.md / memory / repo convention) with 1-line basis, then proceed to Step 2
+4. **Sub question (exception only)**: AskUserQuestion (**max 1**) only if:
+   - scope input completely missing (no file / feature name / symptom)
+   - 2 recommendations are tied and cannot be narrowed to 1
+   - destructive operation / clear conflict with existing policy
+5. **Skip condition (go directly to Step 2)**: clear requirement (typo / 1 symbol rename / 1-2 file edit / explicit instruction / 1 recommendation) → no question
 
 ## Step 2: Execution mode judgment (required)
 
-`inline` / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"` の 6 択を判定。`/goal` は loop 系 (objective stop-condition 反復) で他 5 択と直交軸 — 反復で gate を緑化する task に限定、組み合わせ可 (inner mode 指定で `/goal --inner /dev` 等)。判定 table:
+Choose from 6 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"`. `/goal` is orthogonal (iterative objective-gate tasks only; combinable as `/goal --inner /dev` etc.).
 
-| 条件 | 実行方式 | 理由 |
+| Condition | Mode | Why |
 |------|---------|------|
-| 1 file / 1 symbol / 数行 | **inline** (parent 直接 Edit) | agent overhead 不要 |
-| 1-2 file / 単一 task / file 間結合あり | **`/dev`** (developer-agent 1 体) | 委譲のみ、並列不要 |
-| 構造化 fan-out (review N lens / migrate N file / research multi-modal / understand / judge-panel) | **`/workflow <template>`** | deterministic script、resume 可、Gate なし、≤500 行 diff 向け |
-| 3-5 file / 独立性高 / 各 file ≥30 行 / 機能実装 | **`/flow` N=3-5** | PO/Manager/Dev 階層 + 3 Gate、並列短縮 benefit > overhead (60s+) |
-| 6+ file / 完全独立 / 機能実装 | **`/flow` N=min(file数, 8)** | 8 上限 (session limit) |
-| 上記 /flow 条件 + 全自動 (PR 作成まで) | **`/flow --auto`** | AskUserQuestion auto-adopt、PR 作成自動、lint-test 自動 fix 1× |
-| 3+ file / file 間結合強 or 順序依存 | **`/dev` sequential** | 並列化で conflict |
-| 3+ file / 各 file 数行のみ | **inline 連続 Edit** | overhead 回収不能 |
-| 反復が必要 + objective gate (test / lint / build exit code) で done 判定可 | **`/goal "<stop>"`** | maker-checker 分離 + 反復、Ralph Wiggum guard |
+| 1 file / 1 symbol / few lines | **inline** (parent Edit direct) | no agent overhead |
+| 1-2 files / single task / cross-file coupling | **`/dev`** (1 developer-agent) | delegate only, no parallel |
+| structured fan-out (review N lens / migrate N files / research / judge-panel) | **`/workflow <template>`** | deterministic script, resumable, no Gate, ≤500 line diff |
+| 3-5 files / high independence / ≥30 lines each / feature impl | **`/flow` N=3-5** | PO/Manager/Dev + 3 Gates, parallel benefit > overhead (60s+) |
+| 6+ files / fully independent / feature impl | **`/flow` N=min(file count, 8)** | cap at 8 (session limit) |
+| above /flow conditions + fully auto (through PR) | **`/flow --auto`** | AskUserQuestion auto-adopt, auto PR, auto lint-test fix 1× |
+| 3+ files / strong cross-file coupling or order dependency | **`/dev` sequential** | parallelism causes conflict |
+| 3+ files / only few lines each | **inline consecutive Edit** | overhead unrecoverable |
+| iterative + objective gate (test / lint / build exit code) for done | **`/goal "<stop>"`** | maker-checker separation + iteration, Ralph Wiggum guard |
 
-**`/goal` 適用 4 条件 (全 ✓ 必須、`commands/goal.md` canonical)**:
+**`/goal` 4 conditions** (all required; canonical: `commands/goal.md`): iterative task / automated stop-condition (exit code) / token budget absorbs N iter waste / agent holds senior tools (Bash/Edit/Task)
 
-1. Task が反復的 / iterative (one-shot でない)
-2. Stop-condition が完全自動 (exit code、human judgment 不可)
-3. Token budget が N iter waste を吸収可
-4. Agent が senior tools (Bash / Edit / Task / file access) 保持
+**Anti-patterns (avoid past churn)**:
+- **inline**: 3+ files / 30+ lines each → context pressure; Sonnet delegation is cost-efficient
+- **/dev**: fully independent 3+ files → wastes parallel benefit; consider `/flow` or `/workflow migrate`
+- **/workflow**: full PRD→Plan→impl→review→push → no Gate, progress collapses; use `/flow`
+- **/flow**: ≤2 files / single task → 60s+ overhead unrecoverable; `/dev` is sufficient
+- **/flow --auto**: design branch / large refactor → auto-adopt passes wrong judgment; use `/flow` (manual Gate)
+- **/goal**: one-shot / subjective verifier / no hard stop / maker=checker same agent → Ralph Wiggum failure, infinite loop
 
-**不向き (誤判定回避、過去 churn から導出)**:
+### /workflow vs /flow
 
-- **inline**: 3+ file / 各 30 行以上 → context 圧迫、Sonnet 委譲が cost 効率良い
-- **/dev**: 完全独立な 3+ file → 並列短縮 benefit を捨てる、`/flow` か `/workflow migrate` 検討
-- **/workflow**: PRD→Plan→impl→review→push 全工程 → Gate なしで進捗管理崩れる、`/flow` 使う
-- **/flow**: ≤2 file / 単一 task → 60s+ overhead 回収不能、`/dev` で十分
-- **/flow --auto**: design 分岐ある / large refactor → AskUserQuestion auto-adopt が誤判定を素通り、`/flow` (手動 Gate) 使う
-- **/goal**: one-shot task / subjective verifier ("look correct?") / hard stop 未設定 / maker=checker 同 agent → Ralph Wiggum 失敗 mode、loop 無限化 (`commands/goal.md` Forbidden patterns canonical)
-
-### /workflow vs /flow (直交軸)
-
-| 軸 | /workflow | /flow |
+| Axis | /workflow | /flow |
 |---|---|---|
-| 用途 | review / migrate / research / understand / judge-panel の構造化 fan-out | 機能実装の PO/Manager/Dev 階層 orchestration |
-| Gate | なし (script で自前) | 3 Gate 必須 (PO/A/B、--auto で C) |
-| resume | ⭕ journal cache hit | ❌ fresh fire |
-| best fit | small〜medium (≤500 行)、review / migration | medium〜large、impl 主体 (PRD→Plan→impl→test→review→push) |
+| Use | structured fan-out (review / migrate / research / judge-panel) | feature impl PO/Manager/Dev orchestration |
+| Gate | none (script self-manages) | 3 Gates required (PO/A/B; C on --auto) |
+| Resume | yes (journal cache) | no (fresh fire) |
+| Best fit | small–medium (≤500 lines), review / migration | medium–large, impl primary (PRD→Plan→impl→test→review→push) |
 
-判定例: review **だけ** → `/workflow review` / review→修正→push 全自動 → `/flow --auto` / migration を N file → `/workflow migrate` / 新機能実装 (PO 必要) → `/flow` / 多数決 design 案 → `/workflow judge-panel`
+Decision examples: review **only** → `/workflow review` / review→fix→push auto → `/flow --auto` / migrate N files → `/workflow migrate` / new feature (PO needed) → `/flow` / design majority-vote → `/workflow judge-panel`
 
-並列数 N 計算式 (/flow 用):
+N formula (/flow):
 
 ```text
-N_candidate = 独立 file 数 (file 間結合度 0)
+N_candidate = independent file count (cross-file coupling = 0)
 wall_clock_parallel ≈ max(T_i) + overhead(60s)
 wall_clock_sequential ≈ sum(T_i)
-採用条件: wall_clock_parallel < wall_clock_sequential
+adopt if: wall_clock_parallel < wall_clock_sequential
 N_final = min(N_candidate, 8)
 ```
 
-T_i 見積 = file 行数 × 編集密度 (新規 ~3s/行 / 修正 ~5s/行 / 削除 ~1s/行)
-
-## Execution flow
-
-```
-[PO Agent] Launch Task(subagent_type: "po-agent") → req analysis → arch design → worktree? → draft
-[Direct]   Load guidelines → Serena MCP analyze → Draft design document
-Both       → Self-Review (required, 2-stage) → output filtered doc → propose next actions (to `/dev`)
-```
+T_i estimate = file lines × edit density (new ~3s/line / modify ~5s/line / delete ~1s/line)
 
 ## Self-Review (required, 2-stage)
 
-Run 2-stage self-review **before** any `/plan` output. Skip not allowed. Applies uniformly across PO Agent / Direct execution / `--update` / `--scope` modes. Stage common definition: `commands/review.md` `## Delegation & Self-Review` section. Noise discard policy: `rules/review-noise-discard.md`.
+Run before any `/plan` output. Cannot skip. Applies uniformly across PO Agent / Direct / `--update` / `--scope` modes. Stage common definition: `commands/review.md` `## Delegation & Self-Review`. Noise discard: `rules/review-noise-discard.md`.
 
 ### Stage A: plan-specific filter
 
-Investigation discard: speculative leads / hypothetical edge cases / findings unrelated to the change.
-Plan discard: compat shims / future abstractions / impossible-case error handling / non-boundary validation / scope creep / premature optimization / half-finished phases.
-**判定妥当性 review (Step 2 出力に適用)**:
+Investigation discard: speculative leads / hypothetical edge cases / unrelated findings.
+Plan discard: compat shims / future abstractions / impossible-case error handling / scope creep / premature optimization.
 
-- inline で済むのに `/dev` 委譲していないか (1 file / 数行 / 規約 file の sub 質問 1 件以下)
-- `/dev` で済むのに `/flow` していないか (file 数 < 3 / 結合強 / overhead 回収不能)
-- `/flow` で組んだが実は `/workflow` で十分でないか (構造化 fan-out / PO 不要 / resume 欲しい / 小規模)
-- `/workflow` で組んだが実は機能実装で `/flow` 必須でないか (impl 主体 / PRD 必要 / Gate 必須)
-- `/goal` を選んだが 4 条件を満たさないか (one-shot / subjective verifier / hard stop 未設定 / maker=checker)
-- 反復 + objective gate task なのに `/dev` 単発で済ませて gate 緑化を verify ループに任せていないか (→ `/goal` に切替)
-- 並列数 N 過剰でないか (N_candidate が結合度 0 を満たさない / wall_clock_parallel ≥ wall_clock_sequential)
-- `--auto` 提案時に user 確認すべき branch point が plan に残っていないか (大規模 design 分岐 / 破壊的操作 / external 送信は `--auto` 不可)
-- 持ち越し task / 別 scope task を本 plan に混入していないか (混入 → 別 task 分離)
+**Step 2 judgment validity review**:
+- inline when `/dev` delegation needed (1 file / few lines / ≤1 sub question)?
+- `/dev` when `/flow` needed (file count < 3 / strong coupling / overhead unrecoverable)?
+- `/flow` when `/workflow` is sufficient (structured fan-out / no PO needed / resume wanted / small scale)?
+- `/workflow` when `/flow` is required (impl primary / PRD needed / Gate required)?
+- `/goal` chosen but 4 conditions not met (one-shot / subjective verifier / no hard stop / maker=checker)?
+- iterative + objective gate task but using single `/dev` without gate verification loop (→ switch to `/goal`)?
+- N too high (N_candidate doesn't satisfy coupling=0 / wall_clock_parallel ≥ wall_clock_sequential)?
+- `--auto` proposed but user confirmation branch points remain (large design branch / destructive op / external send)?
+- carry-over / out-of-scope tasks mixed into this plan?
 
-### Stage B: plan-specific aggregate view
+### Stage B: aggregate view
 
-Phase consolidation (same root cause → 1 Phase) / granularity alignment / convention alignment / Zero-phase valid (no padding). Do not include judgment log in plan file. Only results passing both stages proceed to Output Format.
+Phase consolidation (same root cause → 1 Phase) / detail-level alignment / convention alignment / Zero-phase valid (no padding). Do not include judgment log in plan file.
 
 ## Output format
 
@@ -138,8 +123,8 @@ Phase 2: [task]
 
 ## Execution mode
 - Mode: inline / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"`
-- 根拠: [file 数 / 結合度 / T_i / overhead 比較 + /workflow vs /flow 直交判定 + (`/goal` 採用時) 4 条件 ✓ と stop-condition cmd を 1 行]
-- (`/goal` 採用時のみ) Stop-condition: [`bats tests/foo` / `npm run lint` 等の exit code が verdict となる cmd]、Hard stops: max-iter=5 / max-token=100000 / timeout=30m (default、override 時のみ記載)
+- Basis: [file count / coupling / T_i / overhead comparison + /workflow vs /flow orthogonal judgment + (if /goal) 4 conditions and stop-condition cmd in 1 line]
+- (if /goal only) Stop-condition: [`bats tests/foo` / `npm run lint` etc. exit code as verdict cmd], Hard stops: max-iter=5 / max-token=100000 / timeout=30m
 
 ## Worktree
 - Needed: Yes/No
@@ -148,14 +133,7 @@ Phase 2: [task]
 
 ## Plan storage
 
-`plansDirectory` (default `~/.claude/plans`) に `YYYY-MM-DD_[project]_[feature].md` で保存。`/reload` でロード可。
-
-## Priority
-
-- Requirement clarity
-- Architecture fit
-- Extensibility / maintainability
-- Testability
+Save to `plansDirectory` (default `~/.claude/plans`) as `YYYY-MM-DD_[project]_[feature].md`. Loadable via `/reload`.
 
 ## Fail behavior
 

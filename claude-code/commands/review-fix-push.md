@@ -6,7 +6,7 @@ argument-hint: "[scope]"
 
 ## /review-fix-push - Review, Fix, Regression, Push
 
-Find issues via review → fix → **verify no regression via re-review** → push → create PR. Fix doesn't introduce new Critical issues.
+Find issues via review → fix → **verify no regression via re-review** → push → create PR. Fix must not introduce new Critical issues.
 
 > **vs `/flow`**: `/flow` owns the full path from task description to new implementation → PR. `/review-fix-push` is dedicated to "review-loop guarantee for already-written code → PR". New implementation uses `/flow`'s tail (`/review` + review-fix loop + `/git-push`), which subsumes `/review-fix-push` — no double invocation needed. Use `/review-fix-push` only to finish existing changes after the fact.
 
@@ -20,21 +20,21 @@ Skill("comprehensive-review")
 
 12 angles + confidence-80 filter. Categorize by Critical/Warning. On finish, show diff in browser (`--no-difit` suppresses).
 
-### Step 1.5: Self-Review Pass (必須)
+### Step 1.5: Self-Review Pass (required)
 
-Never feed Step 1 output directly to fix. Always apply 2-stage Self-Review. Details: `commands/review.md` `## Delegation & Self-Review (必須、2 段階)`. Noise discard policy: `rules/review-noise-discard.md`. Critical 0 + Warning 0 → skip to Step 2 (push). Judgment log: do not surface to user.
+Never feed Step 1 output directly to fix. Always apply 2-stage Self-Review. Details: `commands/review.md` `## Delegation & Self-Review (required, 2 stages)`. Noise discard policy: `rules/review-noise-discard.md`. Critical 0 + Warning 0 → skip to Step 2 (push). Judgment log: do not surface to user.
 
 ### Step 2: Decide
 
 | State | Behavior |
-|------|------|
+|-------|----------|
 | Critical 0 & Warning 0 | skip to Step 5 (push only) |
 | any findings | proceed to Step 3 |
 
 ### Step 3: Fix
 
 | Type | Policy |
-|------|------|
+|------|--------|
 | Critical | fix all (required) |
 | Warning | fix all (`--critical-only` skips) |
 
@@ -42,7 +42,7 @@ Delegate Critical/Warning fixes to `Task(developer-agent)` (per `CLAUDE.md` "Aut
 
 ### Step 4: Regression Check (loop)
 
-Verify fix didn't create new issues **via re-review**. From iteration 2 onward, narrow scope for efficiency (same detection range for new findings; skip prior-iteration areas).
+Verify fix did not create new issues **via re-review**. From iteration 2 onward, narrow scope for efficiency (same detection range for new findings; skip prior-iteration areas).
 
 ```text
 initial_base = git rev-parse HEAD  # Step 1 review 対象の base
@@ -116,6 +116,6 @@ push aborted, Critical list:
 - Show review results to user before fixing, get confirm
 - force push forbidden
 - auto-run lint/type-check after fix
-- regression loop **guarantees fix doesn't create new issues**. if it doesn't stop, manual intervention
+- regression loop **guarantees fix does not create new issues**; if it does not stop, manual intervention required
 
 ARGUMENTS: $ARGUMENTS
