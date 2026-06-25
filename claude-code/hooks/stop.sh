@@ -80,7 +80,7 @@ _FLOW_BASELINE="$HOME/.claude/scripts/flow-baseline.sh"
 printf -v _STOP_DATE '%(%Y%m%d)T' -1
 _TODAY_TSV="$HOME/.claude/logs/flow-baseline-${_STOP_DATE}.tsv"
 if [[ -x "${_FLOW_BASELINE}" ]] && [[ ! -f "${_TODAY_TSV}" ]]; then
-  bash "${_FLOW_BASELINE}" --since 7d >>"$HOME/.claude/logs/hook-errors.log" 2>&1 &
+  bash "${_FLOW_BASELINE}" --since 7d >>"$HOME/.claude/logs/hook-info.log" 2>&1 &
 fi
 
 # === 出力: SQL notice と memory notice を連結 ===

@@ -120,7 +120,7 @@ echo "[${_SE_TS}] $SESSION_ID | $PROJECT_NAME | msg:$TOTAL_MESSAGES | tok:$TOTAL
   done
   if [[ "${_purged}" -gt 0 ]]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] session-end: purged ${_purged} stale state file(s)" \
-      >> "${_LOGS_DIR}/hook-errors.log" 2>/dev/null || true
+      >> "${_LOGS_DIR}/hook-info.log" 2>/dev/null || true
   fi
 ) 2>/dev/null || true
 
