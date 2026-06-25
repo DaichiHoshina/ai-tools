@@ -13,7 +13,7 @@ _THRESHOLDS_LOADED=1
 readonly _TH_PARALLEL_SEQ=2               # 並列 warn: sequential agent fire
 readonly _TH_BUNDLE_HARD_BLOCK_SEQ=3      # bundle 違反 hard block: warn 後の更なる sequential fire (PO Gate v2 enforcement)
 readonly _TH_DELEGATE_SEQ=3               # 委譲 warn: large-repo 連続 edit
-readonly _TH_PARALLEL_WINDOW_NS=500000000 # 500ms 並列判定 window (nanosec)
+readonly _TH_PARALLEL_WINDOW_NS=30000000000 # 30 sec 並列判定 window (nanosec)。Claude Code は 1 message N tool_use を発火するとき subagent spawn の overhead で各 Agent 起動が 5-25 秒間隔になる実測あり (2026-06-25 bundle-violation-block.log elapsed_ms=23647)。500ms では並列を逐次扱いで誤 block。人間は 30 sec 以内に同じ command を連発しないため別 message 逐次の誤判定リスクは低い。
 readonly _TH_SESSION_AGE_S=10800          # 3h (sec) warn
 readonly _TH_SESSION_AGE_URGENT_S=21600   # 6h (sec) urgent
 readonly _TH_SESSION_MSG=150              # 150 msg (~75 opus turn)。実測 (2026-06-19): 278 msg で $41/session、149 msg で $46/session。中規模 session が cost driver

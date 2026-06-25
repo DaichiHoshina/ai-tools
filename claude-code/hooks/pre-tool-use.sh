@@ -41,9 +41,11 @@ ICON_WARNING=$'\u25b2'    # exclamation-triangle (boundary)
 INPUT=$(cat)
 
 # ツール名 + セッションID を jq 1 回で取得 (fork 削減、@tsv + read。他 hook と同方式)
-# CLAUDE_CODE_SESSION_ID env は Claude Code v2.1.90+ で export される場合があるため fallback で参照
+# stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は前 session 値が leak することがあり
+# (Claude Code が session 切替時に reset しない silent bug)、stdin が空のときのみ fallback として使う。
+# canonical memory: feedback-hook-session-id-via-stdin (2026-06-22)、再発 incident: 2026-06-25
 IFS=$'\t' read -r TOOL_NAME SESSION_ID < <(jq -r '[.tool_name // "", .session_id // ""] | @tsv' <<< "$INPUT")
-SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
+SESSION_ID="${SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-}}"
 
 # protection-mode判定変数
 GUARD_CLASS=""  # Safe, Boundary, Forbidden
@@ -774,7 +776,7 @@ _check_developer_agent_bundle_violation() {
       "$_TS_LABEL" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
       >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
 
-    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >500ms = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md L110 / N declaration : tool_use firing message = 1:1 strict)。${_TH_BUNDLE_HARD_BLOCK_SEQ} 回目で hard block する"
+    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >30s = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md L110 / N declaration : tool_use firing message = 1:1 strict)。${_TH_BUNDLE_HARD_BLOCK_SEQ} 回目で hard block する"
     if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
       ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
     else

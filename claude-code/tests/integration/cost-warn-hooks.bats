@@ -216,7 +216,7 @@ _make_session_jsonl() {
   # counter=threshold-1、lastts を 1 秒前 (十分 > 100ms) に偽装 → 次の呼出しで threshold 到達
   printf '%s\n' "$(( _TH_PARALLEL_SEQ - 1 ))" > "${log_dir}/.agent-fire-count-${session_id}"
   local _past_ns
-  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
   printf '%s\n' "$_past_ns" > "${log_dir}/.agent-fire-lastts-${session_id}"
 
   local input_file
@@ -252,7 +252,7 @@ _make_session_jsonl() {
   # counter=5、lastts を 1 秒前に偽装 (sequential 条件を満たす)
   printf '5\n' > "${log_dir}/.agent-fire-count-${session_id}"
   local _past_ns
-  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
   printf '%s\n' "$_past_ns" > "${log_dir}/.agent-fire-lastts-${session_id}"
 
   local input_file
@@ -274,7 +274,7 @@ _make_session_jsonl() {
 
 # =============================================================================
 # Case S1-C: developer-agent 限定 bundle 違反 warn (work-context-20260618 F1)
-# 2 回目逐次発火 (>500ms 間隔) で bundle-violation-warn を注入する
+# 2 回目逐次発火 (>30s 間隔 = window 外) で bundle-violation-warn を注入する
 # =============================================================================
 @test "bundle-violation: warn injected on 2nd sequential developer-agent fire" {
   local session_id="bundle-$(date +%s%N | tail -c 8)"
@@ -284,10 +284,10 @@ _make_session_jsonl() {
   local hook="${HOOKS_DIR}/pre-tool-use.sh"
   local home_dir="${HOME}"
 
-  # counter=1 (1 発目 fire 済)、lastts 1 秒前 → 次の呼出しで counter=2 = threshold 到達
+  # counter=1 (1 発目 fire 済)、lastts 35 秒前 (>30s window) → 次の呼出しで counter=2 = threshold 到達
   printf '1\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
   local _past_ns
-  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
   printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
 
   local input_file
@@ -321,7 +321,7 @@ _make_session_jsonl() {
 
   printf '1\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
   local _past_ns
-  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
   printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
 
   local input_file
@@ -342,9 +342,11 @@ _make_session_jsonl() {
 }
 
 # =============================================================================
-# Case S1-D: 500ms 以内の並列発火は warn を抑止 (counter は維持して累積保持)
+# Case S1-D: 30 sec 以内の並列発火は warn を抑止 (counter は維持して累積保持)
 # 旧実装は counter=0 リセットだったが「並列を 1 回挟むと sequential 検出永久リセット」
 # bug があり、混合パターンを見逃していた。修正後は counter 維持 + warn 抑止のみ。
+# window は 500ms から 30 sec に拡大 (2026-06-25 incident: Claude Code subagent spawn
+# の overhead で 1 message 並列でも各 Agent 発火が 5-25 sec 間隔になる実測)。
 # =============================================================================
 @test "bundle-violation: warn suppressed on 1-message bundle (parallel fire)" {
   local session_id="bundle-parallel-$(date +%s%N | tail -c 8)"
@@ -354,7 +356,7 @@ _make_session_jsonl() {
   local hook="${HOOKS_DIR}/pre-tool-use.sh"
   local home_dir="${HOME}"
 
-  # counter=5、lastts は 50ms 前 (500ms 以内 → 並列 bundle 判定)
+  # counter=5、lastts は 50ms 前 (30 sec 以内 → 並列 bundle 判定)
   printf '5\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
   local _recent_ns
   _recent_ns=$(( $(date +%s%N) - 50000000 ))
@@ -399,7 +401,7 @@ _make_session_jsonl() {
   printf '2\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
   touch "${log_dir}/.bundle-violation-warned-${session_id}"
   local _past_ns
-  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
   printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
 
   local input_file
@@ -443,7 +445,7 @@ _make_session_jsonl() {
   printf '2\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
   touch "${log_dir}/.bundle-violation-warned-${session_id}"
   local _past_ns
-  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
   printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
 
   local input_file
