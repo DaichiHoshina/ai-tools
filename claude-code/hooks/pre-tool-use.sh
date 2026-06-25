@@ -32,6 +32,7 @@ fi
 
 # shellcheck source=lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
+source "${BASH_SOURCE[0]%/*}/lib/touchable-files-state.sh"
 
 # Nerd Fonts icons
 ICON_CRITICAL=$'\u25c9'   # exclamation-circle (critical/forbidden)
@@ -1146,6 +1147,25 @@ case "$TOOL_NAME" in
     GUARD_CLASS="Boundary"
     MESSAGE="🔶 要確認: ファイル編集"
 
+    # touchable_files allowlist guard (subagent context)
+    # parent (user-prompt-submit hook) が developer-agent fire 時に
+    # ~/.claude/state/touchable-<session>.txt へ allowlist を write。
+    # state file が存在する間は Edit/Write/MultiEdit/NotebookEdit の
+    # file_path を literal match で照合し、違反は exit 2 で block。
+    # state file 不在 (= 通常 parent context) は noop。
+    while IFS= read -r _TF_PATH; do
+      [[ -z "$_TF_PATH" ]] && continue
+      if ! _touchable_check "$SESSION_ID" "$_TF_PATH"; then
+        _TS_TF=$(date '+%Y-%m-%dT%H:%M:%S')
+        mkdir -p "${HOME}/.claude/logs" 2>/dev/null || true
+        printf '%s | %s | %s | target=%s\n' \
+          "$_TS_TF" "$SESSION_ID" "$TOOL_NAME" "$_TF_PATH" \
+          >> "${HOME}/.claude/logs/touchable-files-block.log" 2>/dev/null || true
+        echo "[touchable-files-block] ${TOOL_NAME} target '${_TF_PATH}' は touchable_files allowlist 外 (scope creep)。parent から受領した prompt §1 touchable_files を確認するか、allowlist 拡張を parent に escalate (status: partial + scope creep blocker)。opt-out: env CLAUDE_TOUCHABLE_ENFORCE=0" >&2
+        exit 2
+      fi
+    done < <(jq -r '[.tool_input.file_path, (.tool_input.edits[]?.file_path)] | .[] | select(. != null and . != "")' <<< "$INPUT")
+
     # worktree session 内 main repo 直接 Edit guard
     # MultiEdit は top-level file_path に加え edits[].file_path も持つため両方検査する
     while IFS= read -r _CWD_GUARD_PATH; do
@@ -1627,6 +1647,21 @@ PYEOF
 
     # parent 事前準備 missing 検出 (warn-only、block しない)
     TASK_PROMPT=$(jq -r '.tool_input.prompt // empty' <<< "$INPUT")
+
+    # developer-agent fire 時、prompt §1 touchable_files YAML から allowlist 抽出 →
+    # state file に write。subagent 内 Edit/Write の literal match check に使う。
+    if [ "${SUBAGENT_TYPE}" = "developer-agent" ] && [ -n "$TASK_PROMPT" ]; then
+      _TF_LIST=$(_touchable_extract_from_prompt "$TASK_PROMPT")
+      if [ -n "$_TF_LIST" ]; then
+        # mapfile alternative for old bash: read into array
+        _TF_PATHS=()
+        while IFS= read -r _line; do
+          [ -n "$_line" ] && _TF_PATHS+=("$_line")
+        done <<< "$_TF_LIST"
+        _touchable_write "$SESSION_ID" "${_TF_PATHS[@]}"
+      fi
+    fi
+
     PREP_WARN=""
     if _check_parent_prep_missing "$TASK_PROMPT"; then
       PREP_WARN="
