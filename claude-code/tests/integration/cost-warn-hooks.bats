@@ -380,3 +380,92 @@ _make_session_jsonl() {
   _post_count=$(cat "${log_dir}/.dev-agent-fire-count-${session_id}")
   [ "${_post_count}" = "5" ]
 }
+
+# =============================================================================
+# Case S1-E: 3 回目逐次発火で hard block (exit 2) する
+# 旧実装は warn fence (bundle-violation-warned-<id>) を先に check していたため
+# 2 回目 warn 後の 3 回目が early return し threshold に到達しない bug があった。
+# fix: counter++ / block check を fence check より前に移動。
+# =============================================================================
+@test "bundle-violation: hard block on 3rd sequential developer-agent fire (exit 2)" {
+  local session_id="bundle-block-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter=2 (warn 発火済)、warn fence 存在、lastts 2 秒前 → 次呼出しで counter=3 = hard block
+  printf '2\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  touch "${log_dir}/.bundle-violation-warned-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  # hard block = exit 2
+  [ "$status" -eq 2 ]
+  # block log が生成されている (log 内容は "<timestamp> | <session_id> | dev_count=N | elapsed_ms=N" 形式)
+  [ -f "${log_dir}/bundle-violation-block.log" ]
+  grep -q "dev_count=3" "${log_dir}/bundle-violation-block.log"
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}" \
+        "${log_dir}/.bundle-violation-warned-${session_id}" \
+        "${log_dir}/.bundle-violation-blocked-${session_id}"
+}
+
+# =============================================================================
+# Case S1-F: CLAUDE_BUNDLE_HARD_BLOCK=0 で hard block を opt-out できる
+# =============================================================================
+@test "bundle-violation: hard block opt-out via CLAUDE_BUNDLE_HARD_BLOCK=0" {
+  local session_id="bundle-optout-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter=2 (warn 発火済)、warn fence 存在
+  printf '2\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  touch "${log_dir}/.bundle-violation-warned-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 2000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_BUNDLE_HARD_BLOCK=0 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  # opt-out → exit 0 (block しない)
+  [ "$status" -eq 0 ]
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}" \
+        "${log_dir}/.bundle-violation-warned-${session_id}" \
+        "${log_dir}/.bundle-violation-blocked-${session_id}"
+}

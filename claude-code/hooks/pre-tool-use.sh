@@ -736,10 +736,10 @@ _check_developer_agent_bundle_violation() {
     return 0
   fi
 
-  # fence 通過済 → 同 session で再 warn しない
-  [[ -f "$_FENCE_FILE" ]] && return 0
-
   # counter ++ (sequential 発火 = elapsed > _TH_PARALLEL_WINDOW_NS の累積)
+  # NOTE: fence check はカウンタ更新・block 判定の後に置く。
+  # 旧実装は fence check を先に置いていたため「warn 発火後の 3 回目以降が early return」
+  # し、hard block threshold (_TH_BUNDLE_HARD_BLOCK_SEQ=3) に永遠に到達しない bug があった。
   local _CUR=0
   [[ -f "$_COUNT_FILE" ]] && read -r _CUR < "$_COUNT_FILE" 2>/dev/null || _CUR=0
   [[ "$_CUR" =~ ^[0-9]+$ ]] || _CUR=0
@@ -760,6 +760,9 @@ _check_developer_agent_bundle_violation() {
     echo "[bundle-violation-block] Task(developer-agent) ${_CUR} 回逐次発火 = PO Gate v2 違反。1 message bundle で並列 fan-out するか、bundle_justification を明示せよ。opt-out: env CLAUDE_BUNDLE_HARD_BLOCK=0" >&2
     exit 2
   fi
+
+  # fence 通過済 → warn は 1 回のみ (重複抑制)
+  [[ -f "$_FENCE_FILE" ]] && return 0
 
   # threshold ≥2 で warn (1 発目は正常な単発 dev、2 発目連続発火が bundle 違反 signal)
   if (( _CUR >= _TH_PARALLEL_SEQ )); then
