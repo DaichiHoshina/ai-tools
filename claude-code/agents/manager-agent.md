@@ -96,6 +96,8 @@ Summary: Apply critical-path formula and `N_initial` algorithm per `references/P
 
 Schema: `references/agent-team-contract.md` §3 (Manager → parent) — canonical. **Fill contract §3 YAML literal as-is** (do not rename fields / change hierarchy / alter types).
 
+Trailer schema (`status` / `confidence` / `issues_blocking`): `references/agent-output-schema.md` — canonical, mandatory. Missing trailer → parent treats output as `failure`.
+
 Required fields: `execution_mode` / `parallelism` / `worktree_required` / `impl_notes.dir` / `tasks[]` (each with `developer_id` / `task` / `verify` / `dod` sub-fields) — see contract §3 for full sub-field spec.
 
 **Allocation mandatory fields per task** (PO Gate v2 8 観点準拠、canonical: `references/retrospectives/2026-06-19_agent-oversight.md`):

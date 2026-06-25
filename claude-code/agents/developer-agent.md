@@ -220,6 +220,8 @@ Commit rule: `references/developer-agent-delegation-prompt.md` §3 参照。
 
 Schema: `references/agent-team-contract.md` §5 (Developer → parent) — canonical. **Fill contract §5 YAML literal as-is** (field 改名禁止).
 
+Trailer schema (`status` / `confidence` / `issues_blocking`): `references/agent-output-schema.md` — canonical, mandatory. Missing trailer → parent treats report as `failure`.
+
 Required fields / Conditional fields: contract §5 参照。
 
 **Additional prohibitions** (recurring patterns):
