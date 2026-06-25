@@ -21,7 +21,19 @@ On adoption: check the box. On obsolescence: strikethrough (`~~feature~~ (obsole
 
 User 明示判断で channel を `latest` (2026-06-14 切替) から `stable` に戻した。local CLI = 2.1.177 = `dist-tags.stable` に揃え、VERSION も 2.1.177 へ downgrade。
 
-**deferred entries (stable 範囲外、latest 復帰時に再評価)**: 下記 2.1.178 / 2.1.179 / 2.1.181 / 2.1.182–2.1.185 section は latest channel 時の調査結果。stable channel では fetch range 対象外のため新規 adopt は行わない。section 自体は再評価用に保持する (latest 復帰時に該当 entry のみ再活性化)。
+**deferred entries (stable 範囲外、latest 復帰時に再評価)**: 下記 2.1.181 / 2.1.182–2.1.185 section は latest channel 時の調査結果。stable channel では fetch range 対象外のため新規 adopt は行わない。section 自体は再評価用に保持する (latest 復帰時に該当 entry のみ再活性化)。
+
+## 2.1.178–2.1.179 (detected 2026-06-25, stable)
+
+Range 2.1.178–2.1.179 が新 stable tag として確定 (2.1.179 = `dist-tags.stable`)。CLI 既に 2.1.179 一致、VERSION のみ 2.1.177 → 2.1.179 bump。
+
+- **`TeamCreate` / `TeamDelete` tool 削除** [2.1.178]: Agent tool の `name` parameter で直接 teammate spawn する方式に統一。`team_name` parameter は accepted but ignored (後方互換)。現 hooks (`task-completed.sh` / `teammate-idle.sh`) は `.team_name // "unknown"` で受けており影響なし。Track only (将来 `team_name` 完全削除に備え 3 か月後に hook field 削除候補)。
+- **`Tool(param:value)` permission syntax** [2.1.178]: permission rule で tool 入力 parameter を match 可能 (`*` wildcard 対応)。例 `Agent(model:opus)` で Opus subagent を block。`templates/settings.json.template` への新規追加は不要 (現状の permission rule で十分)。Track only。
+- **Nested `.claude/skills` load + `<dir>:<name>` collision rule** [2.1.178]: 作業 directory に近い skill が勝つ。現 repo は root `~/.claude/skills/` 1 階層のみ、影響なし。Info。
+- **Auto-mode subagent classifier 強化** [2.1.178]: subagent spawn が classifier 評価対象に。auto-mode で blocked action 要求の subagent を pre-launch block。harness 内蔵動作で config 変更不要。Info。
+- **compaction fallback-model 反映 fix** [2.1.178]: 既設定 `fallbackModel` が compaction にも適用される。`templates/settings.json.template` 既設定済、変更不要。fix の恩恵のみ受ける。Info。
+- **mid-stream connection drop preserved partial response** [2.1.179]: harness 内蔵 fix、config 変更不要。Info。
+- その他 bugfix (vim undo / VSCode IME / WSL2 scroll / `/bug` description require / Linux sandbox symlink 等): config 変更不要。
 
 ## 2.1.182–2.1.185 (detected 2026-06-21, latest)
 
