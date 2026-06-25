@@ -1,5 +1,6 @@
 ---
 allowed-tools: Read, Write, Glob, Grep, Bash, mcp__serena__*
+argument-hint: "[--days N] [--scope <topic>]"
 description: Retrospective - analyze past sessions, auto-propose skill/config improvements
 ---
 

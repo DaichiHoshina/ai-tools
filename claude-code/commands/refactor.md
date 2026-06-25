@@ -1,5 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
+argument-hint: "<target-or-scope>"
 description: Refactoring mode (auto-load language guidelines)
 ---
 

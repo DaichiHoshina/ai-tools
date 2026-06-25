@@ -1,5 +1,6 @@
 ---
 allowed-tools: Task, Bash, Read, Edit, Write, AskUserQuestion, TaskCreate, TaskUpdate, TaskList
+argument-hint: "[--check <cmd>] [--max-iter N] [--timeout DUR] \"<stop-condition>\" <task>"
 description: Run agent until objective stop-condition holds, with maker-checker separation (Ralph Wiggum loop guard).
 ---
 

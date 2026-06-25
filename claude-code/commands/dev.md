@@ -1,5 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
+argument-hint: "[--inline|--quick] <task-description>"
 description: Default = developer-agent delegation (Sonnet). Inline for 1-symbol fix only. --inline forces inline, --quick for short prompts, Team via /flow
 ---
 

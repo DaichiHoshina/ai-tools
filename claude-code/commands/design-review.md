@@ -1,5 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Skill, Agent, AskUserQuestion, mcp__playwright__*, mcp__context7__*
+argument-hint: "[url-or-pr-number]"
 description: Live UI/UX design review via Playwright (Stripe/Airbnb/Linear standards)
 ---
 

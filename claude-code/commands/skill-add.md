@@ -1,5 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, Skill, TaskCreate, TaskUpdate
+argument-hint: "<skill-name> [--skip-creator]"
 description: Add new skill - run skill-creator → validate with skill-lint → sync
 ---
 

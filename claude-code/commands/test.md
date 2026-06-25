@@ -1,5 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
+argument-hint: "<target-file-or-symbol>"
 description: Test creation mode - write tests for existing code
 ---
 

@@ -1,5 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*, mcp__context7__*
+argument-hint: "<task-or-scope>"
 description: Design & planning — strategy formulation via PO Agent (read-only)
 ---
 

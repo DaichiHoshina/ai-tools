@@ -1,5 +1,6 @@
 ---
 allowed-tools: Bash, Read, Edit, Grep, Glob, AskUserQuestion
+argument-hint: "<memory-file> | --topic <name> | --scan"
 description: Semi-automated flow to promote memory knowledge to CLAUDE.md / ai-tools skill / command
 effort: medium
 ---

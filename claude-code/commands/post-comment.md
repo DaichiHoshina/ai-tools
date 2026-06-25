@@ -1,4 +1,5 @@
 ---
+argument-hint: "<target> [topic-or-context]"
 description: Short-form post to issue/PR/Jira/Notion/Slack — draft w/ PREP 3pts → self-check → display. Post after confirm.
 allowed-tools: Bash, Read, Write
 ---

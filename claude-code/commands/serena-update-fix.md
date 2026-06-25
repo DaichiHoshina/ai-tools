@@ -1,5 +1,6 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, mcp__serena__*
+argument-hint: "[--dry-run]"
 description: Serena MCP update - detect diff, auto-apply, track unused features
 ---
 
