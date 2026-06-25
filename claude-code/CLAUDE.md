@@ -196,6 +196,8 @@ Misbehavior / non-obvious success → document immediately → auto-avoid next s
 
 Memory write target: Claude Code auto-memory only; Serena `.serena/memories/` forbidden — `pre-tool-use.sh` が hard block (`references/compounding-engineering-cycle.md` §Memory write target)
 
+block / warn 系 hook 投入前は latency + flow baseline を必ず記録する (`rules/measure-before-hook-change.md`)
+
 ## Pre-write Self-check (except chat)
 
 Before writing any outward-facing text, **read today's commits** (`git log --since=midnight --pretty=format:'%h %s'`). Hook auto-injects before write-type tools (2 sources: working repo + `~/ai-tools` guidelines). Code comments: see `guidelines/writing/code-comment.md`.
