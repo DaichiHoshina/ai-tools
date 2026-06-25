@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read
 name: load-guidelines
 description: Auto-load guidelines by tech stack, save tokens. Use when loading guidelines.
 ---

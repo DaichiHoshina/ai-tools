@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Grep, Glob
 name: baseline-ui
 description: Validates animation durations, typography scale, accessibility, and layout anti-patterns in Tailwind CSS. Use when building UI components, reviewing CSS utilities, or enforcing design consistency.
 disallowed-tools:

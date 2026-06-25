@@ -1,4 +1,5 @@
 ---
+allowed-tools: Bash, Read, Grep, Glob, mcp__serena__*
 name: doc-sync
 description: DD / PRD / local-docs の整合性チェックと差分吸収。「再度DD読み込んで」「PRDとの整合性チェック」「local-docsに反映」「DDとPRDが合っているか確認」「整合性を取れているか」等で使用する。
 ---

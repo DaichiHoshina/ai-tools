@@ -1,4 +1,5 @@
 ---
+allowed-tools: Bash, Glob, Grep, Read, mcp__serena__*
 name: comprehensive-review
 description: "12-perspective code review (arch/quality/security/test). /review 呼び出し時に使用。"
 context: fork

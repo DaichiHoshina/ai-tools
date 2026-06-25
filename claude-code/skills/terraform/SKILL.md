@@ -1,4 +1,5 @@
 ---
+allowed-tools: Bash, Read, Glob, Grep
 name: terraform
 description: Terraform IaC: module design, state, security BP. Use for plan/apply & IaC.
 requires-guidelines:

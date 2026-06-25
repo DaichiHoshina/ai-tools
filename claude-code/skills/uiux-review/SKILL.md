@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Grep, Glob
 name: uiux-review
 description: UI/UX review (MD3/WCAG2.2/Nielsen). Use during screen implementation.
 disallowed-tools:

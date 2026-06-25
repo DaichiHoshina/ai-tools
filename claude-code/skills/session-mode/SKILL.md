@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read
 name: session-mode
 description: "Switch modes (strict/normal/fast): guard strength for prod/dev/proto. mode 切替時に使用。"
 ---

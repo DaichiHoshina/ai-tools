@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Glob, Grep, Bash, Edit, Write, MultiEdit
 name: backend-dev
 description: Backend dev (Go/TS/Python/Rust). Auto-detect lang. Use for backend impl.
 requires-guidelines:

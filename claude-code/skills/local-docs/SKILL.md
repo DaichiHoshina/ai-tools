@@ -1,4 +1,5 @@
 ---
+allowed-tools: Bash, Read, Edit
 name: local-docs
 description: local-docs リポジトリの doc をテンプレ準拠で新規作成・更新する。「local-docs に doc 作って」「ナレッジ書いて」「runbook/RCA を local-docs に」「調査ログ」「監視結果まとめ」「post-release 分析」「dashboard 確認」「5xx 分析」「インシデント記録」「試験結果ログ」「session 跨ぎメモ」「試行錯誤メモ」等、local-docs 配下に新規 HTML を作る指示全般で使用する。Use when creating or updating HTML docs in the local-docs knowledge base.
 ---

@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Glob, Grep
 name: microservices-monorepo
 description: Microservices & monorepo: service split, comms, structure. Use for arch design.
 requires-guidelines:

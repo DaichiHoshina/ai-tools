@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Glob, Grep
 name: api-design
 description: API design (REST/GraphQL): versioning, errors, docs. Use when designing APIs.
 requires-guidelines:

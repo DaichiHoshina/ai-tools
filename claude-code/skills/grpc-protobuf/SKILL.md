@@ -1,4 +1,5 @@
 ---
+allowed-tools: Bash, Read, Edit
 name: grpc-protobuf
 description: gRPC/Protobuf: proto design, codegen, backend impl. Use for gRPC services.
 requires-guidelines:

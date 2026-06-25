@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Grep
 name: jp-writing
 description: "Japanese output readability check & rewrite. Evaluates NG terms, sentence-level quality, and structure using PRINCIPLES.md canonical. Used when /jp-writing is invoked."
 context: fork

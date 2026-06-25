@@ -1,4 +1,5 @@
 ---
+allowed-tools: Bash, Edit, MultiEdit, Read, Grep, mcp__serena__*
 name: cleanup-enforcement
 description: Cleanup enforcement: remove compat remnants, unused code. Use for cleanup.
 requires-guidelines:

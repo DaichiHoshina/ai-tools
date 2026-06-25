@@ -1,4 +1,5 @@
 ---
+allowed-tools: Bash, Read, Write
 name: incident-response
 description: Incident response: error→impact→cause→ticket→doc. Use when responding.
 requires-guidelines:
