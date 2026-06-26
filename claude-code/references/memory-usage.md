@@ -34,3 +34,7 @@ Config side (CLAUDE.md / skill / hook) is primary; auto-memory is supplementary.
 - **Serena memory**: Explicit save via `/memory-save`. Only for 3+ file changes / non-obvious decisions / incident response
 
 Prioritize skill over memory for anything reproducible via config (skill is the right place). Memory is a "supplementary rule" / "pattern" store that Claude auto-references.
+
+## Relocation pattern (optional)
+
+auto-memory dir が encoded path で人間に辜りづらい / project 跨ぎで散逸する問題への対処として、auto-memory dir をやめて project / org / user の scope 別に repo 配下や user 私物 dir に集約する pattern がある。auto-load は失うが、user-readable / git 管理可能 / 横断検索容易の利得を取る。詳細: `memory-relocation-pattern.md`。

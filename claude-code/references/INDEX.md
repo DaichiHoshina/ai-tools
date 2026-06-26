@@ -87,6 +87,7 @@ On-demand index from CLAUDE.md.
 | Topic | File |
 |-------|------|
 | Memory usage guide | `memory-usage.md` |
+| Memory relocation pattern (auto-memory → project-scoped path) | `memory-relocation-pattern.md` |
 | Memory → CLAUDE.md / ai-tools promotion flow | `~/.claude/references-private/memory-promotion-flow.md` |
 | UI default settings | `ui-defaults.md` |
 | Private config storage convention | `private-config-convention.md` |

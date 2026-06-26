@@ -70,3 +70,4 @@ temp/
 .claude/plans/
 .claire/
 .playwright-mcp/
+/memory/
