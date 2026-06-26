@@ -60,8 +60,13 @@ repo / org / user の scope 別に 3 typed:
 - **旧 auto-memory dir は空にする** — file が残ってると Claude が auto-load して**新旧両方**読み込む二重状態になる。MEMORY.md も「移行済み」stub に置換
 - **復元可能性確保** — `.trash-<date>-migration/` に旧 file を mv 退避、即削除しない
 
+## 適用実績
+
+- **ai-tools repo** (2026-06-26): `~/.claude/projects/.../ai-tools/memory/` → `~/ai-tools/memory/` (`.gitignore` 済) に migration 済。CLAUDE.md `## Compounding Engineering` § Memory write target で `~/ai-tools/memory/` 固定を宣言、旧 path への write を禁止
+
 ## 関連
 
+- `../CLAUDE.md` `## Compounding Engineering` § Memory write target — ai-tools repo 固有の write 先固定宣言 (本 pattern の機械強制 step)
 - `memory-usage.md` — auto-memory / Serena memory の使い分け原則 (本 pattern の前提)
 - `compounding-engineering-cycle.md` — 知識を config 側に昇格する原則 (memory より skill / hook / rule 優先)
-- `rules/public-repo-private-data-block.md` — public repo に private 情報を置かない原則 (本 pattern で gitignore が必須な理由)
+- `../rules/public-repo-private-data-block.md` — public repo に private 情報を置かない原則 (本 pattern で gitignore が必須な理由)

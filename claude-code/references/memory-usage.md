@@ -2,8 +2,11 @@
 
 | Memory | Purpose | Auto-loaded |
 |--------|---------|------------|
-| auto-memory (`~/.claude/projects/{project}/memory/`) | Stable patterns / conventions / user preferences | Every session (200-line limit) |
+| auto-memory (default: `~/.claude/projects/{project}/memory/`) | Stable patterns / conventions / user preferences | Every session (200-line limit) |
+| auto-memory (ai-tools repo: `~/ai-tools/memory/`、`.gitignore` 済) | Same as above; relocated for user-readable + git-managed path | Not auto-loaded — `MEMORY.md` 経由で明示 Read |
 | Serena memory | Work context / retrospectives / transient investigation results | Manual `read_memory` |
+
+ai-tools repo 固有の path 切替経緯は `memory-relocation-pattern.md` § 適用実績 + `CLAUDE.md` § Memory write target 参照。
 
 ## Rules
 
@@ -30,7 +33,7 @@ Config side (CLAUDE.md / skill / hook) is primary; auto-memory is supplementary.
 **Write path notes:**
 
 - **CLAUDE.md / skill / hook**: User edits directly, or Claude appends in same conversation if prompted "update CLAUDE.md or relevant skill"
-- **auto-memory**: Claude auto-writes to `~/.claude/projects/{project}/memory/` from conversation context. Prone to duplication and staleness — config side takes priority
+- **auto-memory**: Claude auto-writes to `~/.claude/projects/{project}/memory/` (default) or `~/ai-tools/memory/` (ai-tools repo, hook-enforced) from conversation context. Prone to duplication and staleness — config side takes priority
 - **Serena memory**: Explicit save via `/memory-save`. Only for 3+ file changes / non-obvious decisions / incident response
 
 Prioritize skill over memory for anything reproducible via config (skill is the right place). Memory is a "supplementary rule" / "pattern" store that Claude auto-references.

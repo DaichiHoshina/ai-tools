@@ -496,6 +496,37 @@ _check_serena_memory_path() {
 }
 
 # ====================================
+# ~/.claude/projects/*/ai-tools*/memory/ 書き込み block
+# CLAUDE.md § Memory write target: ai-tools repo の memory write 先は ~/ai-tools/memory/ 固定。
+# system prompt default が ~/.claude/projects/.../memory/ を指示するが、ai-tools repo では禁止。
+# 引数: file_path (Write/Edit/MultiEdit の tool_input.file_path)
+# 副作用: 該当 path なら GUARD_CLASS=Forbidden をセットして exit 2 相当の block を発生させる
+# ====================================
+_check_legacy_auto_memory_path() {
+  local file_path="$1"
+  [[ -z "$file_path" ]] && return 0
+
+  # ~/.claude/projects/ 配下の ai-tools 系 project ディレクトリへの memory/ write を block
+  # POSIX bash [[ =~ ]] 互換 regex、HOME 展開済み path で比較
+  local re="^${HOME}/\\.claude/projects/[^/]*ai-tools[^/]*/memory/"
+  if [[ "$file_path" =~ $re ]]; then
+    # allowlist: .trash- プレフィックスの dir 内は除外 (migration 中の安全策)
+    if [[ "$file_path" =~ /memory/\.trash- ]]; then
+      return 0
+    fi
+
+    GUARD_CLASS="Forbidden"
+    MESSAGE="${ICON_CRITICAL} legacy memory path への書き込みは禁止"
+    ADDITIONAL_CONTEXT="[block] memory write to legacy path: ${file_path}
+        ai-tools repo の memory write 先は ~/ai-tools/memory/ 固定 (CLAUDE.md § Memory write target)
+        正しい path: ~/ai-tools/memory/<filename>
+        log: ~/.claude/logs/legacy-memory-path-block.log"
+    printf '[legacy-memory-block] tool=%s file=%s\n' "$TOOL_NAME" "$file_path" >&2
+    _append_block_log "${HOME}/.claude/logs/legacy-memory-path-block.log" "$TOOL_NAME" "legacy-memory-path" "$file_path"
+  fi
+}
+
+# ====================================
 # parent 事前準備 missing 検出 (warn-only)
 # Task tool 発火 prompt が ≥500 word かつ file:line pattern / label 付き keyword
 # (verify cmd: / DoD: / target file:) のいずれも未出現の場合に warn を返す (block はしない)
@@ -1264,6 +1295,11 @@ case "$TOOL_NAME" in
     # .serena/memories/ block: CLAUDE.md 規約違反パスへの書き込みを block
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ]; then
       _check_serena_memory_path "$_EDIT_FILE_PATH"
+    fi
+
+    # ~/.claude/projects/*/ai-tools*/memory/ block: ai-tools repo の legacy auto-memory path を block
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ]; then
+      _check_legacy_auto_memory_path "$_EDIT_FILE_PATH"
     fi
 
     # AI定型語 block: 作業 repo の .md / .txt への書き込みを検査

@@ -1595,3 +1595,51 @@ _run_write_jargon() {
   ctx=$(echo "$result" | jq -r '.additionalContext // empty')
   [[ ! "$ctx" =~ "cat でファイル読み取り" ]]
 }
+
+# =============================================================================
+# _check_legacy_auto_memory_path: ~/.claude/projects/*/ai-tools*/memory/ block テスト
+# CLAUDE.md § Memory write target: ai-tools repo の memory write 先は ~/ai-tools/memory/ 固定
+# =============================================================================
+
+_run_legacy_memory_write() {
+  local file_path="$1"
+  local tool_name="${2:-Write}"
+  local input
+  input=$(jq -n \
+    --arg name "$tool_name" \
+    --arg fp "$file_path" \
+    '{tool_name: $name, tool_input: {file_path: $fp, content: "test content"}}')
+  # stdout と stderr を両方取得するため 2>&1 でマージ
+  run bash -c 'echo "$1" | bash "$2" 2>&1' _ "$input" "$HOOK_FILE"
+}
+
+@test "legacy-memory-block: ~/.claude/projects/*ai-tools*/memory/ への Write は exit 2 で block される" {
+  local legacy_path
+  legacy_path="${HOME}/.claude/projects/-Users-daichi-hoshina-ghq-github-com-DaichiHoshina-ai-tools/memory/foo.md"
+  _run_legacy_memory_write "$legacy_path"
+  [[ "$status" -eq 2 ]]
+}
+
+@test "legacy-memory-block: 正規 path ~/ai-tools/memory/foo.md への Write は通過する" {
+  local valid_path
+  valid_path="${HOME}/ai-tools/memory/foo.md"
+  _run_legacy_memory_write "$valid_path"
+  # block されない (exit 2 にならない)
+  [[ "$status" -ne 2 ]]
+}
+
+@test "legacy-memory-block: block 発火時に legacy-memory-path-block.log に追記される" {
+  local log_file="${HOME}/.claude/logs/legacy-memory-path-block.log"
+  local before_lines=0
+  [[ -f "$log_file" ]] && before_lines=$(wc -l < "$log_file")
+
+  local legacy_path
+  legacy_path="${HOME}/.claude/projects/-Users-daichi-hoshina-ghq-github-com-DaichiHoshina-ai-tools/memory/bar.md"
+  _run_legacy_memory_write "$legacy_path"
+  # exit 2 (block) を期待するが、log 書き込みを確認するために status は問わない
+
+  [[ -f "$log_file" ]]
+  local after_lines
+  after_lines=$(wc -l < "$log_file")
+  [[ "$after_lines" -gt "$before_lines" ]]
+}
