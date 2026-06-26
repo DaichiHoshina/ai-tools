@@ -23,7 +23,7 @@
 - **長さは内容に従う**: 自明な変更は数行、設計判断を含む変更は原因や代替案も記述
 - **Web 可読性**: GitHub / GitLab PRは scan 前提。1 文 60 字 / 主張型 heading / 太字 scan 化 — 詳細 `PRINCIPLES.md` `## Web 可読性`
 
-## テンプレ (プロジェクトで指定があればそちら優先)
+## テンプレ (ai-tools canonical、全 repo 優先)
 
 ```
 ## 背景
@@ -35,8 +35,10 @@
 ## 備考
 ```
 
+- ai-tools canonical を全 repo で project template (`.github/pull_request_template.md` 等) より優先する
 - 関連Issueは必ず紐付け (`Closes #XXX`)
 - 別repoのIssueは `org/repo#XXX` 形式
+- project template に label / checkbox 等の固有要素 (例: `operation check` label / `- [ ] マニュアルテスト実施可否`) があれば該当 section に転記する
 
 ## 禁止
 
