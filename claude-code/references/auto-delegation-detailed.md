@@ -60,3 +60,30 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 | multi-stage task (investigate→design→impl→verify) | `/flow` hierarchy (PO→Manager→Dev→Reviewer) |
 | 10+ file bulk processing | `claude -p` fan-out (`references/fanout-recipes.md`) |
 | **bulk / exhaustive / large-scale readonly** | `explore-agent` (read-only) or `developer-agent` (edit) — mandatory Sonnet delegate, parent Opus sample reduction prohibited |
+
+## Model default 切替経緯 (2026-06-29)
+
+- 切替前: Opus 4.7 default
+- 切替後: Sonnet 4.6 default
+- 目的: cost 削減 (Opus cache_read $1.50/M → Sonnet $0.30/M、1/5)
+- Opus 4.7 を使うべき task:
+  - deep design (architecture 判断 / trade-off 整理)
+  - 多 file 横断 review (10+ file)
+  - `/flow` PO/Manager orchestration (judgment hierarchy)
+  - Manager hallucination 防止が要る case
+- 切替方法: `/model opus` で session 単位
+
+## Subagent silent-fail guard 詳細
+
+subagent context での tool 制約:
+
+- `AskUserQuestion` は use 不可 (parent context のみ可)
+- permission prompt 系 tool (Edit / Write / Bash 一部) は auto-deny で **silent fail** する
+  - error なし、status success の見た目で実際は何も書き込まれない
+  - 出典: [claudefa.st sub-agent-best-practices (2026-06-24 web search)](https://claudefa.st/blog/guide/agents/sub-agent-best-practices)
+
+### 対処
+
+- approval-gated edit / 判断 fork は parent に escalate する
+- escalate 形式: `status: blocked` + `issues_blocking[]` (具体的な block 理由 / 必要な user 判断)
+- subagent 側 canonical: `agents/developer-agent.md` § Silent-fail guard

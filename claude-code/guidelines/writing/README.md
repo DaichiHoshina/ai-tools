@@ -72,3 +72,32 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 
 Notion固有仕様 > 長文doc原則 > 短文向け原則 > 共通PRINCIPLES。
 プロジェクト固有CLAUDE.md > global guidelines/writing/。
+
+## ai-tools Writing Canonical Priority 詳細
+
+CLAUDE.md `## ai-tools Writing Canonical Priority` の詳細委譲先。
+
+### 優先順位 (high → low)
+
+1. `~/ai-tools/claude-code/guidelines/writing/` canonical (PR / commit / external-post / long-form-doc / code-comment / PRINCIPLES / NG-DICTIONARY)
+2. `~/ai-tools/claude-code/rules/` (genshijin / ai-output / public-repo-private-data-block 等)
+3. project 側 template / convention (`.github/pull_request_template.md` / `.gitlab/merge_request_templates/` / `CONTRIBUTING.md` / project CLAUDE.md / project commit hook 等)
+
+### 適用範囲 (ai-tools 優先)
+
+PR / MR body 構成 / commit message format / Issue 投稿 / comment 書式 / Notion / Slack / Design Doc / PRD / RCA / 動作確認 section 構成 / 文体規約 (genshijin / readability / NG 語)
+
+### project 優先で残す (ai-tools 介入しない)
+
+- 機械 enforce 系: `.editorconfig` / `.eslintrc` / `.prettierrc` / lint config / format hook / CI workflow / Makefile
+- 構造 enforce 系: branch 命名規約 / tag 規約 / file 配置 / directory 構造
+- license / copyright header
+- 法務 / security 必須 footer (DCO sign-off / CLA 等)
+
+### project template の固有要素の扱い
+
+project template 内に label / checkbox / 自動化 trigger (例: `operation check` label / `- [ ] マニュアルテスト実施可否` / `resolve: <Issue URL>`) があれば ai-tools 7 section の該当 section に転記する。捨てない。
+
+### competing rule の解決
+
+project の CLAUDE.md / writing convention が ai-tools と衝突したら ai-tools 側を採用。project 固有事情 (regulated 業界 / 法務必須 wording) があれば user に escalate して例外 allowlist 化を提案する。

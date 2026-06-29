@@ -73,3 +73,27 @@ list に literal match しない場合でも、AI は以下カテゴリの語を
 ## Why
 
 過去に社内 product 名・社内 doc 名を含む file を public push した (`[[public-repo-social-hit-incident]]`)。事後削除は git history に残るため事前 block で再発防止する。private 保管先は `~/.claude/references-private/` (sync.sh 管理外、gitignore 済)。block 発生時は `~/.claude/logs/social-hit-block.log` に記録する。
+
+## NG-DICTIONARY.md canonical key 変更禁止
+
+`guidelines/writing/NG-DICTIONARY.md` の既存 key を rename / 削除すると、`hooks/pre-tool-use.sh` の exact match 参照が壊れる。
+
+### 保護対象 key (rename 禁止)
+
+- `AI定型語` (block)
+- `カタカナ造語禁止` (block)
+- `断定語 (warn-only)` (warn-only)
+
+### canonical format
+
+```
+**<name> (block|warn-only)**: <terms>
+```
+
+key 名は hook が literal で grep するため、`AI定型語` を `AI 定型語` (空白挿入) や `AI-template` (英訳) に変えると block が機能しなくなる。
+
+### 既存 key 削減 / category 追加が必要な case
+
+- 既存 key 削減: hook 側 (`pre-tool-use.sh`) の grep pattern を同時に削除
+- 新 category 追加: hook 側に新 key の grep pattern を追加 + bats test 追記
+- いずれも CLAUDE.md `## Compounding Engineering` の「sync-canonical-with-bats」rule に従う

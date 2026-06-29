@@ -147,3 +147,34 @@ Infrastructure for continuous session startup time measurement. Used to accumula
 ```bash
 sqlite3 ~/.claude/logs/analytics.db 'SELECT AVG(init_duration_ms) FROM sessions GROUP BY DATE(start_ts)'
 ```
+
+## Context Management 実測 metadata (2026-06-19 測定)
+
+CLAUDE.md `## Context Management` の実測値委譲先。
+
+### 実測 cost
+
+- **150-300 msg session**: $30-$45 / session の cache_read 範囲
+- cache_read は **base-context size で毎 turn 課金** (turn 数に比例)
+- 長 session の cache_read accumulation が単一 session 最大 cost 要因
+
+### `user-prompt-submit.sh` auto-warn 閾値
+
+- **warn**: 150 msg (~75 turn) で初回 warn
+- **urgent**: 350 msg (~175 turn) で urgent warn
+- warn 出力時の動作: 現 task を区切りまで完了 → `/clear` で context reset
+- `/clear` のタイミング: task 完了直後 (中断中の clear は context loss を招く)
+
+### `/clear` vs `/compact` 判断
+
+| 状況 | 推奨 |
+|---|---|
+| context 40% 超、task 継続中 | `/compact` (summary 化、context 継承) |
+| context 40% 超、task 区切り | `/clear` (full reset、cache 新規) |
+| 5 分以上 idle (cache TTL 切れ) | `/clear` (cache 失効しているので継承不要) |
+| 同問題 2 連続失敗 | `/clear` + rewrite prompt (accumulated failure context が主因、capacity 不足ではない) |
+
+### Continue pattern
+
+- 中断 task の継承: chat で「generate next-session mega-prompt」 → 出力を新 session に paste
+- 汚染なし単発質問: `/btw` (現 context を保持したまま別 question)
