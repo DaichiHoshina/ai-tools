@@ -199,6 +199,8 @@ Memory write target (ai-tools repo): **`~/ai-tools/memory/` 固定** (= `/Users/
 
 block / warn 系 hook 投入前は latency + flow baseline を必ず記録する (`rules/measure-before-hook-change.md`)
 
+canonical file (`commands/` `agents/` `references/`) の heading / YAML key / step 番号を改変するときは同 commit で対応 bats literal も同期する (`rules/sync-canonical-with-bats.md`)
+
 ## Pre-write Self-check (except chat)
 
 Before writing any outward-facing text, **read today's commits** (`git log --since=midnight --pretty=format:'%h %s'`). Hook auto-injects before write-type tools (2 sources: working repo + `~/ai-tools` guidelines). Code comments: see `guidelines/writing/code-comment.md`.
