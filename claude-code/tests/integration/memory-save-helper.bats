@@ -1,0 +1,98 @@
+#!/usr/bin/env bats
+# =============================================================================
+# memory-save-helper.sh — deterministic helper for /memory-save command
+# =============================================================================
+# 背景: AI による MEMORY.md 編集の format ズレ / 日付 typo / dedup 漏れを
+# 排除するための shell helper。本 test は subcommand 4 種の契約を固定する。
+# =============================================================================
+
+setup() {
+  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
+  export HELPER="${PROJECT_ROOT}/scripts/memory-save-helper.sh"
+  export MEMORY_SAVE_DIR="$(mktemp -d)"
+}
+
+teardown() {
+  [ -d "$MEMORY_SAVE_DIR" ] && rm -rf "$MEMORY_SAVE_DIR"
+}
+
+@test "resolve-dir respects MEMORY_SAVE_DIR env" {
+  run "$HELPER" resolve-dir
+  [ "$status" -eq 0 ]
+  [ "$output" = "$MEMORY_SAVE_DIR" ]
+}
+
+@test "list-today returns empty when no files" {
+  run "$HELPER" list-today
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "list-today lists only today's work-context files" {
+  local today; today=$(date +%Y%m%d)
+  touch "${MEMORY_SAVE_DIR}/work-context-${today}-foo.md"
+  touch "${MEMORY_SAVE_DIR}/work-context-${today}-bar.md"
+  touch "${MEMORY_SAVE_DIR}/work-context-20200101-old.md"
+  touch "${MEMORY_SAVE_DIR}/feedback_unrelated.md"
+  run "$HELPER" list-today
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"work-context-${today}-foo.md"* ]]
+  [[ "$output" == *"work-context-${today}-bar.md"* ]]
+  [[ "$output" != *"work-context-20200101-old.md"* ]]
+  [[ "$output" != *"feedback_unrelated.md"* ]]
+}
+
+@test "resolve-name returns base when no collision" {
+  run "$HELPER" resolve-name work-context-20990101-fresh
+  [ "$status" -eq 0 ]
+  [ "$output" = "work-context-20990101-fresh" ]
+}
+
+@test "resolve-name adds -2 -3 suffix on collision" {
+  touch "${MEMORY_SAVE_DIR}/work-context-20990101-dup.md"
+  run "$HELPER" resolve-name work-context-20990101-dup
+  [ "$status" -eq 0 ]
+  [ "$output" = "work-context-20990101-dup-2" ]
+  touch "${MEMORY_SAVE_DIR}/work-context-20990101-dup-2.md"
+  run "$HELPER" resolve-name work-context-20990101-dup
+  [ "$output" = "work-context-20990101-dup-3" ]
+}
+
+@test "update-index creates MEMORY.md when absent" {
+  run "$HELPER" update-index work-context-20990101-foo "Foo work" "hook line"
+  [ "$status" -eq 0 ]
+  [ -f "${MEMORY_SAVE_DIR}/MEMORY.md" ]
+  local content; content=$(cat "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [[ "$content" == *"[Foo work](work-context-20990101-foo.md)"* ]]
+  [[ "$content" == *"— hook line"* ]]
+}
+
+@test "update-index prepends new entries (newest on top)" {
+  "$HELPER" update-index work-context-20990101-foo "Foo" "first"
+  "$HELPER" update-index work-context-20990101-bar "Bar" "second"
+  local first_line; first_line=$(head -1 "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [[ "$first_line" == *"[Bar]"* ]]
+}
+
+@test "update-index dedups when same file re-registered" {
+  "$HELPER" update-index work-context-20990101-foo "Foo v1" "hook1"
+  "$HELPER" update-index work-context-20990101-foo "Foo v2" "hook2"
+  local count; count=$(grep -c "](work-context-20990101-foo.md)" "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [ "$count" -eq 1 ]
+  local first_line; first_line=$(head -1 "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [[ "$first_line" == *"Foo v2"* ]]
+  [[ "$first_line" == *"hook2"* ]]
+}
+
+@test "update-index works without hook arg" {
+  run "$HELPER" update-index work-context-20990101-foo "No hook"
+  [ "$status" -eq 0 ]
+  local line; line=$(head -1 "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [[ "$line" == *"[No hook](work-context-20990101-foo.md)"* ]]
+  [[ "$line" != *"—"* ]]
+}
+
+@test "unknown subcommand exits non-zero" {
+  run "$HELPER" bogus
+  [ "$status" -ne 0 ]
+}
