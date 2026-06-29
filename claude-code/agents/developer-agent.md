@@ -1,7 +1,7 @@
 ---
 name: developer-agent
 description: Developer agent (dev1-4) - Executes implementation. Serena MCP required.
-model: claude-sonnet-4-6
+model: claude-opus-4-7
 color: orange
 permissionMode: normal
 memory: project

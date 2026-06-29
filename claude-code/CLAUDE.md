@@ -83,6 +83,13 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 **Default = `developer-agent` (Opus 4.7)**。inline は exception only。Model 切替は `/model sonnet` (session 単位)。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止)、**1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列)、**parent 監視責任**。直列 chain でも step 内 fan-out (`[[feedback-no-single-agent-overload]]`)。
 
+**Inline default の正当 exception (delegate 禁止)**: 以下は parent 直編集を推奨。dev 連投 → bundle-violation hard block の罠を踏まない:
+- **CI fail 修正 / fixture 修正 / test 連鎖修正**: 周辺 file 把握必須、iteration 多発、bundle hook と相性最悪。parent context の方が cheap (`[[feedback-ci-fix-inline-default]]`)
+- **review feedback 反映**: 既 file の局所修正 1-3 箇所、context 既保持
+- **shellcheck / lint warn 1 箇所修正**: 1 line 編集
+
+→ これらに該当する task は `/dev` / `/flow` ではなく inline で直編集。delegate するなら明示理由 (>5 file / 30+ line each) を 1 行宣言してから。
+
 **Parallel fan-out 自己強制 (hard rule)**: N≥2 dev は**単一 assistant message に N tool_use**。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。
 
 **Subagent silent-fail guard**: subagent では `AskUserQuestion` 不可 + permission prompt 系 tool auto-deny で **silent fail**。approval-gated edit / 判断 fork は parent escalate (`status: blocked` + `issues_blocking[]`)。canonical: `agents/developer-agent.md` § Silent-fail guard。
