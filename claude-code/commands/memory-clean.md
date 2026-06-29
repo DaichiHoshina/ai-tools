@@ -1,144 +1,175 @@
 ---
 allowed-tools: Bash, Read, Write, Edit
-description: Auto-memory housekeeping — move stale work-context to trash, prune MEMORY.md, merge duplicates. Default dry-run; use --apply to execute.
-argument-hint: "[--apply]"
+description: Auto-memory housekeeping — move stale work-context to trash, prune MEMORY.md, suggest topic clusters & small-file merge. Default dry-run; --apply to execute.
+argument-hint: "[--apply] [--days=N] [--cluster] [--small=N]"
 effort: low
 ---
 
 # /memory-clean - Memory housekeeping (auto-memory)
 
-Cleans up Claude Code auto-memory at `~/.claude/projects/-Users-daichi-hoshina-ghq-github-com-DaichiHoshina-ai-tools/memory/`.
+Cleans up auto-memory. **Memory dir auto-detect**: `~/ai-tools/memory/` (CLAUDE.md canonical) を優先、無ければ `~/.claude/projects/-Users-daichi-hoshina-ghq-github-com-DaichiHoshina-ai-tools/memory/` を fallback。
 
-> **Policy**: Do not use `mtime` as a proxy for value. Delete only work-context entries (explicitly short-lived with date prefix) and user-confirmed duplicates. Stale auto-delete is disabled.
+> **Policy**: `mtime` を value proxy にしない。auto delete は work-context (date prefix で短命明示) と name/description exact dup のみ。topic cluster / small file は**提案のみ** (user 判断)。
 >
-> **No rm**: Use `mv` to `.trash-YYYYMMDD-HHMM/` (retain 3 generations) to preserve rollback path.
+> **No rm**: `.trash-YYYYMMDD-HHMM/` に `mv` (3 世代 retain) で rollback path 確保。
 >
-> **Out of scope**: Serena symbol DB refresh → `/serena-update-fix`. Serena `.serena/memories/` is off-limits per CLAUDE.md.
+> **Out of scope**: Serena symbol DB → `/serena-update-fix`。Serena `.serena/memories/` 触禁止。
 
 ## Arguments
 
-- `(none)` / `--dry-run`: Print candidates to chat only, no file changes (default)
-- `--apply`: Execute dry-run results (trash move + MEMORY.md prune)
+- `(none)` / `--dry-run`: 候補表示のみ、変更なし (default)
+- `--apply`: dry-run 結果実行 (work-context trash + duplicate trash + MEMORY.md prune)
+- `--days=N`: work-context expiry 閾値 (default 14)。`--days=7` で aggressive、`--days=30` で conservative
+- `--cluster`: `feedback_<topic>_*` / `knowledge_<topic>_*` 等の topic group 表示 (3 個以上集まった cluster のみ、merge は user 判断)
+- `--small=N`: N 行未満の file を merge 候補として list 表示 (default off、`--small=20` 推奨)
 
-> Default is dry-run because this is destructive. `--apply` uses `mv` not `rm`, so rollback is possible.
+> Default は dry-run (destructive のため)。`--apply` は `mv` で rollback 可。
 
 ## Flow
 
 ### Stage 1: dry-run (default)
 
-1. **Enumerate targets**
-   - `work-context-YYYYMMDD-*.md` with `YYYYMMDD` **14+ days ago** → trash candidate
-   - All `*.md` with identical description or matching **first 3 name-slug tokens** → duplicate candidate (keep newer mtime)
-   - Files missing `description` frontmatter → rescue candidate (show extracted proposal)
-2. **Print to chat**
-   - Trash candidate list (filename + days elapsed)
-   - Duplicate pairs (keep / move)
-   - Rescue candidates (file + proposed description)
-   - Prompt: "Run `/memory-clean --apply` to execute"
-3. Exit with no file changes.
+1. **Memory dir 検出** (前述 auto-detect)
+2. **Auto-delete 候補列挙**
+   - `work-context-YYYYMMDD-*.md` で `YYYYMMDD` が **N+ 日経過** (`--days=N`、default 14) → trash candidate
+   - `description` exact match / name prefix 3 tokens 一致 (work-context 除く) → duplicate candidate (新 mtime keep)
+   - frontmatter `description` 欠落 → rescue candidate
+3. **提案候補列挙** (`--cluster` / `--small=N` 指定時のみ)
+   - `--cluster`: `feedback_<topic>_*` `knowledge_<topic>_*` `writing_failure_*` の topic prefix で group、**3 file 以上** の cluster を merge 候補として表示 (auto merge しない、ファイル名のみ列挙)
+   - `--small=N`: N 行未満の `*.md` を list 表示 (MEMORY.md / pending-improvements 系除外、merge は user 判断)
+4. **chat 出力**
+   - auto-delete 候補数 + 抜粋
+   - cluster 候補 (指定時)
+   - small file 候補 (指定時)
+   - prompt: "`--apply` で実行 / `--cluster` `--small=20` で提案追加"
+5. exit、変更なし。
 
-### Stage 2: --apply (execute dry-run results)
+### Stage 2: --apply
 
-When run standalone, re-run Stage 1 enumeration first and print results before proceeding (for trace on mis-move).
+dry-run 列挙再実行 → 表示 → 実行 (mis-move trace 用)。
 
-1. **Prepare trash dir**: `mkdir memory/.trash-YYYYMMDD-HHMM/`
-2. **Move expired work-context**: `mv` expired files to trash
-3. **Move duplicate**: `mv` older file to trash
-4. **Rescue description**: Write proposed description into frontmatter (1 line from body head); do not touch body
-5. **Prune MEMORY.md** (existing entries only; respect free format):
-   - Remove links to trashed files
-   - If a remaining file has no link, append `- [<name>](<file>.md) — <description>` at end
-   - Keep index-only entries (e.g., "(file archived, summary only)") as manual — do not auto-delete
-6. **Trash rotation**: If `.trash-*` count exceeds 3, delete oldest by mtime
+1. trash dir `mkdir memory/.trash-YYYYMMDD-HHMM/`
+2. expired work-context → `mv`
+3. duplicate older → `mv`
+4. description rescue: 本体 line 1 から 80 字 → frontmatter 書込 (body 不変)
+5. MEMORY.md prune (既存 entry のみ、free format 尊重):
+   - trashed file への link 行削除
+   - rescue 済 file が無 link なら `- [<name>](<file>.md) — <description>` 末尾追加
+   - index-only entry は manual 保持
+6. trash rotation: `.trash-*` 3 超なら最古削除
 
-## Out of scope
+> **cluster / small は --apply 対象外**。提案表示のみで、merge は user が手動 (skill 安全性のため auto merge 禁止)。
 
-- `MEMORY.md` itself (only prune-type edits allowed)
-- `compact-restore-*.md` (generated by PostCompact hook)
-- `.trash-*/` contents
-- Memories with `metadata.protect: true`
-- **mtime 30-day stale auto-delete is disabled** — untouched ≠ valueless
+## Out of scope (auto-delete しない)
+
+- `MEMORY.md` 本体 (prune-type edit のみ)
+- `compact-restore-*.md` (PostCompact hook 生成)
+- `.trash-*/` 中身
+- `metadata.protect: true` の memory
+- **mtime 30 日 stale auto-delete 禁止** (`untouched ≠ valueless`)
+- cluster / small file (提案のみ)
 
 ## Detection details
 
 ### work-context expiry
 
-- Filename regex: `^work-context-(\d{8})-.*\.md$`
-- Parse `YYYYMMDD` with `date -j -f %Y%m%d` to Unix time
-- If older than `today - 14 days`, move to trash (not delete)
+- regex: `^work-context-(\d{8})-.*\.md$`
+- `date -j -f %Y%m%d` で Unix time 化
+- `today - N*86400` より古ければ trash 行き (N は `--days=N` arg、default 14)
 
 ### Duplicate detection
 
-1. **Name prefix match**: First 3 tokens of name slug (`-` split) are identical
-   - Exception: `work-context-YYYYMMDD-*` is excluded from prefix matching (multiple same-day entries would all false-positive — see `[[memory-clean-design-gaps]]`). Apply description-exact match only.
-2. **Description exact match**: Identical string after stripping punctuation/whitespace
-3. Compare mtime of pair; move older to trash
+1. **Name prefix match**: name slug `-` split の最初 3 tokens 一致
+   - 例外: `work-context-YYYYMMDD-*` は prefix match 除外 (同日複数で false positive、`[[memory-clean-design-gaps]]`)。description exact match のみ適用
+2. **Description exact match**: punctuation/whitespace strip 後の同一 string
+3. pair の mtime 比較、古い方を trash
 
-> Fuzzy matching (Jaccard 0.6 etc.) is disabled — too many false positives. Exact match / explicit prefix only.
+> Fuzzy match (Jaccard 0.6 等) 禁止 (false positive 過多)。exact / explicit prefix のみ。
+
+### Topic cluster (--cluster)
+
+`feedback_<topic>_*` / `knowledge_<topic>_*` / `writing_failure_*` の **topic part (1st underscore-separated token)** で group。3 file 以上を merge 候補として列挙。例:
+
+```
+[cluster] feedback_no_* (6): feedback_no_derived_literals.md, feedback_no_env_output.md, ...
+[cluster] feedback_hook_* (3): feedback_hook_ng_list_pitfalls.md, ...
+```
+
+merge は user 手動 (例: `feedback_no_*.md` を 1 file に統合 → 旧 file `mv` で trash)。skill は実行しない。
+
+### Small file (--small=N)
+
+`wc -l < <file>` が N 未満の `*.md` を list 表示 (MEMORY.md / `pending-improvements*` / `compact-restore-*` 除外)。merge は user 判断。
 
 ### Description rescue
 
-For files missing `description` frontmatter:
+frontmatter `description` 欠落 file:
 
-1. Propose first 80 chars of body line 1, stripped of `#` / `-` / `*`
-2. On `--apply`, write into frontmatter (body untouched)
-3. Reflect in MEMORY.md
+1. body line 1 先頭 80 字 (`#` `-` `*` strip)
+2. `--apply` で frontmatter 書込 (body 不変)
+3. MEMORY.md 反映
 
 ## MEMORY.md edit policy
 
-**Prune only**: Respect existing free format (emoji, multi-line, index-only entries etc.) — do not regenerate.
+**Prune only**: 既存 free format (emoji / multi-line / index-only) 尊重、regenerate 禁止。
 
-- Delete link lines for trashed files
-- Append 1 line for newly rescued files
-- Keep index-only entries as manual
-- Preserve emoji / decorations
+- trashed file link 行削除
+- rescue 済 file 無 link なら 1 行 append
+- index-only entry は manual 保持
+- emoji / 装飾 保持
 
-## Example output
+## Example
 
 ```text
-$ /memory-clean
+$ /memory-clean --days=7 --cluster --small=20
+[memory-dir] ~/ai-tools/memory/
 [dry-run] enumerate only, no file changes
-[work-context-expired] 2 files (work-context-20260520-foo.md and 1 more)
-[duplicate] 0 / [description-missing] 1 (proposed description shown)
-Run: /memory-clean --apply
+[work-context-expired] 5 files (>7d)
+[duplicate] 0 / [description-missing] 2
+[cluster] feedback_no_* (6) / feedback_hook_* (3) / feedback_pr_* (2)
+[small <20] 18 files (merge 候補、user 判断)
+Run: /memory-clean --apply で auto-delete 実行 / cluster・small は手動 merge
 
 $ /memory-clean --apply
-[enumerate] same as dry-run → [trash] .trash-20260617-1145/ created
-[moved] work-context 2 / duplicate 0 / [rescued] 1 / [memory.md] -2 +1
-[trash-retain] 2 generations (limit 3) done
+[memory-dir] ~/ai-tools/memory/
+[enumerate] auto-delete のみ → [trash] .trash-20260629-1418/ 作成
+[moved] work-context 5 / duplicate 0 / [rescued] 2 / [memory.md] -5 +2
+[trash-retain] 2 世代 (limit 3) done
 ```
 
 ## Fallback
 
 | Scenario | Action |
-|----------|--------|
-| memory dir missing | Report "memory dir not found" to chat and exit |
-| trash dir creation fails | Abort and report error to chat |
-| frontmatter parse fails | Skip that file, add to warnings |
-| mv permission denied | Skip that file, add to warnings |
-| All candidates 0 | Print "nothing to clean" and exit |
+|---|---|
+| memory dir 両方 missing | "memory dir not found" 報告して exit |
+| trash dir 作成失敗 | abort + chat 報告 |
+| frontmatter parse 失敗 | file skip、warnings 追加 |
+| mv permission denied | file skip、warnings 追加 |
+| 全候補 0 | "nothing to clean" exit |
 
 ## Rollback
 
 ```bash
-ls -t ~/.claude/projects/-Users-daichi-hoshina-ghq-github-com-DaichiHoshina-ai-tools/memory/.trash-*/
-mv ~/.claude/projects/.../memory/.trash-YYYYMMDD-HHMM/foo.md \
-   ~/.claude/projects/.../memory/
+MEM=~/ai-tools/memory  # または ~/.claude/projects/.../memory
+ls -t $MEM/.trash-*/
+mv $MEM/.trash-YYYYMMDD-HHMM/foo.md $MEM/
 ```
 
-Up to 3 generations of `.trash-*` are retained, so the last 3 batches can be restored.
+3 世代 retain で直近 3 batch 復元可。
 
 ## When to use
 
-- Monthly cleanup
-- When MEMORY.md exceeds ~20 entries and session start feels heavy
-- After `/retrospective`
+- 月次 cleanup
+- MEMORY.md 100 行超 + session start 重い時
+- `/retrospective` 後
+- `--cluster` で feedback topic 重複疑い時
+- `--small=20` で merge 候補 audit 時
 
-## Related commands
+## Related
 
-- `/memory-save` — add a memory
-- `/reload` — reload memories
-- `/retrospective` — retrospective (also references memories)
-- `/serena-update-fix` — update Serena MCP (independent of memory)
+- `/memory-save` — memory 追加
+- `/reload` — memory reload
+- `/retrospective` — retrospective
+- `/serena-update-fix` — Serena MCP update (memory 独立)
 
 ARGUMENTS: $ARGUMENTS
