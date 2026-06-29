@@ -15,7 +15,10 @@ fi
 
 exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# dirname + cd + pwd の 2 fork → bash parameter expansion に削減
+_ss_src="${BASH_SOURCE[0]}"
+[[ "${_ss_src}" == /* ]] || _ss_src="${PWD}/${_ss_src}"
+SCRIPT_DIR="${_ss_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 
 # Nerd Fonts icons
@@ -40,13 +43,13 @@ _SS_PROJECT=$(basename "${_CWD:-.}")
 printf -v _SS_DATE_TODAY '%(%Y%m%d)T' -1
 
 # git 状態を 1 回だけ取得してキャッシュ（statusline marker + session title ブロックで再利用）
-# git fork を複数箇所で呼ぶのを防ぎ、全体で 1 回に抑える
+# git fork を 2 回 → 1 回に削減:
+# rev-parse --abbrev-ref HEAD は git repo 外で失敗するため --git-dir チェックを兼ねる
 _SS_IS_GIT=false
 _SS_GIT_BRANCH=""
 if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]]; then
-    if git -C "${_CWD}" rev-parse --git-dir >/dev/null 2>&1; then
+    if _SS_GIT_BRANCH=$(git -C "${_CWD}" rev-parse --abbrev-ref HEAD 2>/dev/null); then
         _SS_IS_GIT=true
-        _SS_GIT_BRANCH=$(git -C "${_CWD}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
     fi
 fi
 
@@ -284,19 +287,44 @@ fi
 # state file は project 別 (memory も project 別、reminder も project 単位で 1 日 1 回)
 _PROMOTE_STATE_FILE="${_PROMOTE_STATE_DIR}/promote-prompted-${_CWD_SLUG:-default}-${_SS_DATE_TODAY}"
 if [[ -f "${_MEMORY_INDEX}" ]] && [[ ! -f "${_PROMOTE_STATE_FILE}" ]]; then
-    _MEMORY_DIR=$(dirname "${_MEMORY_INDEX}")
-    _MEMORY_LINES=$(wc -l < "${_MEMORY_INDEX}" 2>/dev/null || echo 0)
+    # dirname fork 削減: bash parameter expansion で親ディレクトリを取得
+    _MEMORY_DIR="${_MEMORY_INDEX%/*}"
+    # wc -l fork 削減: bash builtin read でカウント (先頭51行で打ち切り)
+    _MEMORY_LINES=0
+    while IFS= read -r _ && (( _MEMORY_LINES < 51 )); do
+        _MEMORY_LINES=$(( _MEMORY_LINES + 1 ))
+    done < "${_MEMORY_INDEX}" 2>/dev/null || true
     _PROMOTE_HITS=()
     # trigger A
     if (( _MEMORY_LINES > 50 )); then
-        _PROMOTE_HITS+=("MEMORY.md ${_MEMORY_LINES} 行 (>50, trigger A)")
+        _PROMOTE_HITS+=("MEMORY.md ${_MEMORY_LINES}+ 行 (>50, trigger A)")
     fi
     # trigger B: 同 prefix 3 file 以上 (feedback_xxx_*, reference_xxx_*, project_xxx_*, work-context-xxx_*)
     # prefix = 先頭 2 token (例: feedback_design_doc → feedback_design)
-    _TOPIC_COUNTS=$(find "${_MEMORY_DIR}" -maxdepth 1 -name '*.md' -exec basename {} \; 2>/dev/null \
-        | grep -v "^MEMORY.md$" \
-        | sed -E 's/^([a-z]+([_-][a-z0-9]+)?).*\.md$/\1/' \
-        | sort | uniq -c | awk '$1 >= 3 {print $2"("$1")"}' | tr '\n' ' ')
+    # find|grep|sed|sort|uniq -c|awk の 6-fork chain → bash glob + 連想配列に置換
+    declare -A _TOPIC_MAP=()
+    for _mf in "${_MEMORY_DIR}"/*.md; do
+        [[ -f "${_mf}" ]] || continue
+        _bn="${_mf##*/}"          # basename 相当 (fork なし)
+        _bn="${_bn%.md}"          # .md 除去
+        [[ "${_bn}" == "MEMORY" ]] && continue
+        # prefix 抽出: sed -E 's/^([a-z]+([_-][a-z0-9]+)?).*$/\1/' と同等
+        # bash regex で先頭 2 token マッチ (lower は sed 前に実施済み相当)
+        _bnl="${_bn,,}"
+        if [[ "${_bnl}" =~ ^([a-z]+([_-][a-z0-9]+)?) ]]; then
+            _pfx="${BASH_REMATCH[1]}"
+        else
+            _pfx="${_bnl:0:20}"
+        fi
+        _TOPIC_MAP["${_pfx}"]=$(( ${_TOPIC_MAP["${_pfx}"]:-0} + 1 ))
+    done
+    _TOPIC_COUNTS=""
+    for _pfx in "${!_TOPIC_MAP[@]}"; do
+        if (( _TOPIC_MAP["${_pfx}"] >= 3 )); then
+            _TOPIC_COUNTS+="${_pfx}(${_TOPIC_MAP["${_pfx}"]}) "
+        fi
+    done
+    unset _TOPIC_MAP _mf _bn _bnl _pfx
     if [[ -n "${_TOPIC_COUNTS}" ]]; then
         _PROMOTE_HITS+=("同 topic 3 file 以上: ${_TOPIC_COUNTS} (trigger B)")
     fi

@@ -4,7 +4,10 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# dirname + cd + pwd の 2 fork → bash parameter expansion に削減
+_sa_src="${BASH_SOURCE[0]}"
+[[ "${_sa_src}" == /* ]] || _sa_src="${PWD}/${_sa_src}"
+SCRIPT_DIR="${_sa_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 # shellcheck source=lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
@@ -30,8 +33,16 @@ mkdir -p "$LOG_DIR"
 
 # ログファイルに記録（_TH_LOG_ROTATION_LINES 超でローテーション）
 LOG_FILE="${LOG_DIR}/subagent-events.log"
-if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE") -gt "${_TH_LOG_ROTATION_LINES}" ]]; then
-  tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
+# wc -l fork 削減: bash builtin で行数カウント (rotation 閾値 +1 行で打ち切り)
+if [[ -f "$LOG_FILE" ]]; then
+  _LOG_LINES=0
+  _LOG_LIMIT=$(( _TH_LOG_ROTATION_LINES + 1 ))
+  while IFS= read -r _ && (( _LOG_LINES < _LOG_LIMIT )); do
+    _LOG_LINES=$(( _LOG_LINES + 1 ))
+  done < "$LOG_FILE" 2>/dev/null || true
+  if (( _LOG_LINES > _TH_LOG_ROTATION_LINES )); then
+    tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
+  fi
 fi
 
 # 重複起動検知: 直近60秒以内に同一 agent_type が起動済みなら警告

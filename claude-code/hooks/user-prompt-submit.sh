@@ -6,7 +6,10 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# dirname + cd + pwd の 2 fork → bash parameter expansion に削減
+_ups_src="${BASH_SOURCE[0]}"
+[[ "${_ups_src}" == /* ]] || _ups_src="${PWD}/${_ups_src}"
+SCRIPT_DIR="${_ups_src%/*}"
 LIB_DIR="${SCRIPT_DIR}/../lib"
 
 # === ライブラリ読み込み ===
@@ -20,7 +23,7 @@ load_lib "detect-from-keywords.sh" || exit 1
 load_lib "detect-technique.sh" || exit 1
 
 # shellcheck source=lib/thresholds.sh
-source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
+source "${SCRIPT_DIR}/lib/thresholds.sh"
 
 # === 前提条件チェック ===
 require_jq
@@ -566,7 +569,8 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
     # chat応答向け: AI定型語のみ全列挙 + カタカナ造語は参照形式 (token 節約)
     _CHAT_PARTS=""
     if [[ -n "${_AI_TERMS_LINE}" ]]; then
-      _AI_TERMS=$(printf '%s' "${_AI_TERMS_LINE}" | sed 's/^\*\*AI定型語\*\*: //')
+      # sed fork 削減: bash parameter expansion で prefix 除去
+      _AI_TERMS="${_AI_TERMS_LINE#\*\*AI定型語\*\*: }"
       _CHAT_PARTS="AI定型語: ${_AI_TERMS}"
     fi
     _KATAKANA_HINT=""
@@ -585,11 +589,12 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
     # 外向き文書向け: jargon + 略語
     _DOC_PARTS=""
     if [[ -n "${_JARGON_LINE}" ]]; then
-      _JARGON=$(printf '%s' "${_JARGON_LINE}" | sed 's/^\*\*内部jargon初出和訳必須\*\*: //')
+      # sed fork 削減: bash parameter expansion で prefix 除去
+      _JARGON="${_JARGON_LINE#\*\*内部jargon初出和訳必須\*\*: }"
       _DOC_PARTS="jargon: ${_JARGON}"
     fi
     if [[ -n "${_ABBREV_LINE}" ]]; then
-      _ABBREV=$(printf '%s' "${_ABBREV_LINE}" | sed 's/^\*\*略語初出展開必須\*\*: //')
+      _ABBREV="${_ABBREV_LINE#\*\*略語初出展開必須\*\*: }"
       if [[ -n "${_DOC_PARTS}" ]]; then
         _DOC_PARTS="${_DOC_PARTS} / 略語: ${_ABBREV}"
       else
@@ -609,7 +614,8 @@ ${_DOC_CTX}"
     # 断定語 (warn-only) hint: commit message では正当用法、chat 応答での AI 確定表現に注意喚起のみ
     # _SOFTBLOCK_LINE は冒頭 1-pass read で取得済 (旧: grep ×5 を 1-pass 化)
     if [[ -n "${_SOFTBLOCK_LINE}" ]]; then
-      _SOFTBLOCK_TERMS=$(printf '%s' "${_SOFTBLOCK_LINE}" | sed 's/^\*\*断定語 (warn-only)\*\*: //')
+      # sed fork 削減: bash parameter expansion で prefix 除去
+      _SOFTBLOCK_TERMS="${_SOFTBLOCK_LINE#\*\*断定語 (warn-only)\*\*: }"
       _SOFTBLOCK_CTX="[断定語注意 (warn-only)] 以下は外向き prose では慎重に使用 (commit subject では許可): ${_SOFTBLOCK_TERMS}"
       if [[ -n "${_AI_TERMS_CTX}" ]]; then
         _AI_TERMS_CTX="${_AI_TERMS_CTX}
