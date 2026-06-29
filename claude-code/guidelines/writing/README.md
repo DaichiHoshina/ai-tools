@@ -33,7 +33,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 | [long-form-doc.md](long-form-doc.md) | 長文doc (DD / PRD / RCA / Notionページ) + ADR/PRD/EARSテンプレ | 長文doc執筆時 |
 | [design-doc-protocol.md](design-doc-protocol.md) | DesignDoc 4 Step + 10パターン + アンチパターン + セルフチェック18 | DD着手・レビュー対応時 |
 | [strategy.md](strategy.md) | ドキュメント戦略 (6種別役割分担 / 保存先 / 命名規則 / Bounded Context) | 「どこに何を書くか」判断時 |
-| [code-comment.md](code-comment.md) | コード内コメント規約 (WHY / 重要 memo / godoc / 削除 7 カテゴリ) | コメント追加・レビュー時 |
+| [code-comment.md](code-comment.md) | コード内コメント規約 (WHY / 重要 memo / godoc / 削除 9 カテゴリ / AI marker 禁止 / Comment Traps 回避) | コメント追加・レビュー時 |
 | [prompt-engineering.md](prompt-engineering.md) | AI / LLM 向け prompt writing (ヒト向けと目的逆) | Claude / GPT 等への instruction 作成時 |
 
 ### 関連 (他層)
