@@ -158,7 +158,7 @@ Do not write derived values (count / sum / list length) computable from a canoni
 - issue comment は短文 PREP 3pts (永続知識ではない)。深い調査結果は local-docs に書き、issue から URL link する
 - 同じ内容を issue comment と local-docs の両方に書かない (issue = 進捗 + link / local-docs = 知識本体)
 
-## Natural Language Triggers (top 7)
+## Natural Language Triggers (top 8)
 
 | Input | Action |
 |---|---|
@@ -169,6 +169,7 @@ Do not write derived values (count / sum / list length) computable from a canoni
 | "workflow で" / "pipeline で" / "多数決で" | `/workflow` |
 | "並列実行で" / "wt 分けて" / "worktree 分けて" / "Developer 並列で" | `/flow --parallel` |
 | "test が通るまで" / "lint clean まで" / "build 通るまで loop" | `/goal` (objective stop-condition, Ralph Wiggum guard) |
+| "再度DD" / "整合性チェック" / "DDとPRDが合っているか" / "再度コメント読み込み" | `doc-sync` skill (DD / PRD / local-docs / comment 再 sync) |
 
 これ以外の natural-language 解釈はしない。全 list (Slack / Notion / `/api-design` / `/backend-dev` / `/brainstorm` / `/flow --parallel` / `/session-mode` 等): `references/natural-language-triggers.md`
 

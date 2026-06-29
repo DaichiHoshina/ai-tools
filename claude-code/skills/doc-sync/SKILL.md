@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash, Read, Grep, Glob, mcp__serena__*
 name: doc-sync
-description: DD / PRD / local-docs の整合性チェックと差分吸収。「再度DD読み込んで」「PRDとの整合性チェック」「local-docsに反映」「DDとPRDが合っているか確認」「整合性を取れているか」等で使用する。
+description: DD / PRD / local-docs の整合性チェックと差分吸収。「再度DD読んで」「再度DDと比較して」「整合性チェックして」「整合性大丈夫か」「DDとPRDが合っているか」「local-docsに反映」「再度コメント読み込み」等で使用する。
 ---
 
 # doc-sync
@@ -12,8 +12,13 @@ Cross-check consistency between DD / PRD / local-docs and absorb discrepancies.
 
 Auto-fires on any of:
 
-- 「再度DD読み込んで」「PRDとの整合性チェック」「local-docsに反映」「DDとPRDが合っているか確認」「整合性を取れているか」
+- 「再度DD読んで」「再度DD読み込んで」「再度DDと比較して」「再度DDとの整合性チェック」「DDと比較して整合性大丈夫か」「DDとPRDが合っているか」
+- 「PRDとの整合性チェック」「整合性チェックして」「整合性取れているか」「local-docsに反映」
+- 「再度コメント読み込み」「再度コメント読んで」(PR/Issue comment 再読込)
 - Mid-`/flow` check when changes since last sync are suspected
+- correction prefix 「違う、」「再度」を受けた場合は直前 task 結果と現状の diff を 1 行 echo してから着手 (差分明示で再認識ループ短縮)
+
+> 「PR最新化」「最新 main を取り込んで」は git rebase / merge 系で doc-sync 対象外。`git merge --ff-only main` 等を案内する。
 
 ## Phase 1: Identify targets
 
