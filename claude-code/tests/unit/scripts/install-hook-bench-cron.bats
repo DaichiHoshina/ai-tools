@@ -47,6 +47,44 @@ teardown() {
   run bash "$SCRIPT_FILE" --repo "$PROJECT_ROOT"
   [ "$status" -eq 0 ]
   [ -f "$TEST_HOME/Library/LaunchAgents/com.daichi.hook-bench.weekly.plist" ]
-  echo "$output" | grep -q "launchctl load"
+  echo "$output" | grep -q "launchctl bootstrap"
   echo "$output" | grep -q "uninstall:"
+}
+
+@test "--enable で plist 配置 + launchctl bootstrap まで走る (mock launchctl)" {
+  MOCK_BIN="$TEST_HOME/bin"
+  mkdir -p "$MOCK_BIN"
+  cat > "$MOCK_BIN/launchctl" <<'MOCK'
+#!/usr/bin/env bash
+echo "MOCK_LAUNCHCTL: $*" >> "$HOME/.mock-launchctl.log"
+case "$1" in
+  bootout)   exit 0 ;;
+  bootstrap) exit 0 ;;
+  print)     echo "state = running"; exit 0 ;;
+  *)         exit 0 ;;
+esac
+MOCK
+  chmod +x "$MOCK_BIN/launchctl"
+  PATH="$MOCK_BIN:$PATH" run bash "$SCRIPT_FILE" --enable --repo "$PROJECT_ROOT"
+  [ "$status" -eq 0 ]
+  [ -f "$TEST_HOME/Library/LaunchAgents/com.daichi.hook-bench.weekly.plist" ]
+  echo "$output" | grep -q "launchctl bootstrap 完了"
+  grep -q "bootstrap gui/" "$TEST_HOME/.mock-launchctl.log"
+}
+
+@test "--enable で launchctl bootstrap 失敗時は exit 1" {
+  MOCK_BIN="$TEST_HOME/bin"
+  mkdir -p "$MOCK_BIN"
+  cat > "$MOCK_BIN/launchctl" <<'MOCK'
+#!/usr/bin/env bash
+case "$1" in
+  bootout)   exit 0 ;;
+  bootstrap) echo "bootstrap failed" >&2; exit 5 ;;
+  *)         exit 0 ;;
+esac
+MOCK
+  chmod +x "$MOCK_BIN/launchctl"
+  PATH="$MOCK_BIN:$PATH" run bash "$SCRIPT_FILE" --enable --repo "$PROJECT_ROOT"
+  [ "$status" -eq 1 ]
+  echo "$output" | grep -q "launchctl bootstrap 失敗"
 }

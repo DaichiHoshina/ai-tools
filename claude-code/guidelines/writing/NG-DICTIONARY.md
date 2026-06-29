@@ -27,3 +27,20 @@ hook (`hooks/pre-tool-use.sh:_extract_term_list`) が動的抽出する NG 語 l
 **カタカナ造語禁止**: シームレス / シームレスに / ロバスト / スケーラブル / 直感的 / 直感的に / 革新的 / 革新的な / 包括的 / 包括的な / 堅牢 / 堅牢な / フレキシブル / インテリジェント / スマート / リッチ / モダン / クリーン / ハイレベル / ローレベル / クリティカル / クリティカルに / セキュア
 
 > 中間漢語 (網羅 / 整合 / 妥当 / 逐次 / 担保 / 起因 / 是正 等) は block 対象外。「中学生が辞書なしで読める」基準で都度判断、難読 list 拡大は incident ベースのみ。
+
+## 偶然一致 (false positive) 回避
+
+hook の match logic は `grep -ioFf` (substring・case-insensitive)。技術用語 / skill 名 / library 名が NG 語を内包すると hit する (例: skill 名「robust-XX」が `robust` に hit、prose 内の `leverage` を含む製品名 / API 用語等)。
+
+### 回避優先順位
+
+1. **inline code 化 (default)**: 技術用語 / 固有名詞は backtick で囲む。`_strip_code_blocks` が ` `code` ` / ` ```block``` ` を除去するため hook をすり抜ける。commit message / PR / Slack / Notion / DD / RCA すべて適用。
+   - 例: `leverage を使う` → ✗ block / `` `leverage` ライブラリを使う `` → ○ pass
+2. **書き換え**: 自然言語の prose 内に bare 出現する場合は plain JP / EN に置換する (`leverage → 活かす`、`robust → 堅実な`)。NG-DICT 末尾の置換候補表を参照。
+3. **whitelist 追加 (incident base 限定)**: 1, 2 で吸収できず**かつ同じ語で 3 回以上 false positive 実害**が出た時のみ、本 file に whitelist section を新設して exact match 除外する。先回り whitelist 化禁止 (hook 機能後退の温床)。
+
+### canonical 運用
+
+- skill 名 / agent 名 / library 名 / API method 名 を**外向き prose に bare 出現させない**。code fence 内に閉じ込めるか日本語説明に置換する
+- block 発生時の retry は本 section の優先順位に従う (whitelist 提案を先に出さない)
+- `~/.claude/logs/jp-quality-block.log` に hit 履歴が残る。同語 3 回到達後に whitelist 化を再評価する

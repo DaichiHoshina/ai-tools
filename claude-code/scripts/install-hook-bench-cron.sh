@@ -4,11 +4,12 @@
 # 目的: hook latency 退化を継続検出するため、毎週月曜 09:00 に
 #   `./scripts/hook-bench.sh --log --diff` を実行する launchd plist を配置する。
 #
-# 安全性: plist 配置のみ自動、`launchctl load` は user が手動実行する。
-#   誤起動回避のため、本 script は自動 enable しない。
+# 安全性: default では plist 配置のみ、`launchctl bootstrap` は user 手動実行。
+#   --enable で opt-in 自動 bootstrap (idempotent、bootout → bootstrap で再 load)。
 #
 # Usage:
 #   ./scripts/install-hook-bench-cron.sh                 # plist を生成して手順を表示
+#   ./scripts/install-hook-bench-cron.sh --enable        # plist 配置 + launchctl bootstrap まで自動
 #   ./scripts/install-hook-bench-cron.sh --dry-run       # plist 内容のみ表示
 #   ./scripts/install-hook-bench-cron.sh --repo /path    # repo root を明示指定 (worktree から install するとき必須)
 set -euo pipefail
@@ -20,10 +21,12 @@ PLIST_DIR="${HOME}/Library/LaunchAgents"
 PLIST_PATH="${PLIST_DIR}/${LABEL}.plist"
 LOG_DIR="${HOME}/.claude/logs"
 DRY_RUN=0
+ENABLE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dry-run) DRY_RUN=1; shift ;;
+    --enable) ENABLE=1; shift ;;
     --repo) REPO_ROOT="$2"; shift 2 ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
@@ -93,20 +96,38 @@ fi
 mkdir -p "$PLIST_DIR" "$LOG_DIR"
 plist_body > "$PLIST_PATH"
 
+echo "✓ plist を配置しました: ${PLIST_PATH}"
+
+if [[ "$ENABLE" -eq 1 ]]; then
+  GUI_DOMAIN="gui/$(id -u)"
+  # idempotent: 既 load なら bootout してから bootstrap (失敗は無視、未 load 時の bootout は exit 非 0)
+  launchctl bootout "${GUI_DOMAIN}/${LABEL}" 2>/dev/null || true
+  if launchctl bootstrap "$GUI_DOMAIN" "$PLIST_PATH"; then
+    echo "✓ launchctl bootstrap 完了 (${GUI_DOMAIN}/${LABEL})"
+    launchctl print "${GUI_DOMAIN}/${LABEL}" 2>/dev/null | grep -E '^\s*(state|last exit code)' || true
+  else
+    echo "ERROR: launchctl bootstrap 失敗。手動で実行してください:" >&2
+    echo "  launchctl bootstrap ${GUI_DOMAIN} \"${PLIST_PATH}\"" >&2
+    exit 1
+  fi
+else
+  cat <<EOF
+
+次のコマンドで enable してください (--enable で自動化可):
+
+  launchctl bootout  gui/\$(id -u)/${LABEL} 2>/dev/null || true
+  launchctl bootstrap gui/\$(id -u) "${PLIST_PATH}"
+  launchctl print    gui/\$(id -u)/${LABEL} | grep state
+EOF
+fi
+
 cat <<EOF
-✓ plist を配置しました: ${PLIST_PATH}
-
-次のコマンドで enable してください (自動実行しません):
-
-  launchctl unload "${PLIST_PATH}" 2>/dev/null || true
-  launchctl load   "${PLIST_PATH}"
-  launchctl list | grep ${LABEL}      # Status 0 = OK
 
 スケジュール: 毎週月曜 09:00 / cd ${REPO_ROOT} && ./scripts/hook-bench.sh --log --diff
 log: ${LOG_DIR}/hook-bench-<ts>.log
 cron stdout/stderr: ${LOG_DIR}/hook-bench-cron.{stdout,stderr}.log
 
 uninstall:
-  launchctl unload "${PLIST_PATH}"
+  launchctl bootout gui/\$(id -u)/${LABEL}
   rm "${PLIST_PATH}"
 EOF
