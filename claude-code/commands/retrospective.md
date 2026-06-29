@@ -41,9 +41,11 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 | Source | Command |
 |--------|---------|
 | usage stats | `ccusage daily --since 7` |
-| JP quality blocks | `tail -n 50 ~/.claude/logs/jp-quality-block.log` |
+| JP quality blocks | `awk -F' \| ' '$1 >= "2026-06-29T11:21:24" { print }' ~/.claude/logs/jp-quality-block.log \| tail -n 50` |
 | hook bench logs | `tail -n 20 ~/.claude/logs/bench-*.log` (glob) |
 | /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (generates `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
+
+> log は a9ebeb5 (2026-06-29) 以降のみ集計する (それ以前は bats test 由来の汚染あり)。
 
 ### Phase 2: Signal Extraction (≤500 token output, parent inline only)
 
