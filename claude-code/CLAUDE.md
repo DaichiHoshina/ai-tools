@@ -179,6 +179,8 @@ Production rollback: use the CI canonical path (revert PR → main merge → dep
 
 Misbehavior / non-obvious success → document immediately → auto-avoid next session。Memory write target (ai-tools repo): **`~/ai-tools/memory/` 固定** (`.gitignore` 済)。`~/.claude/projects/.../memory/` と Serena `.serena/memories/` への write 禁止。詳細: `references/compounding-engineering-cycle.md` / `references/memory-relocation-pattern.md`
 
+**Hook 編集 baseline rule**: `hooks/*.sh` の block / warn 系編集前に **on-demand rule `references/on-demand-rules/measure-before-hook-change.md` を Read + `./scripts/hook-bench.sh --log` で baseline 計測**。skip すると latency regression が 24-48h 後に判明する (`[[2026-06-24 cd70e4e]]`)。
+
 ## Pre-write Self-check (except chat)
 
 Before writing any outward-facing text, **read today's commits** (`git log --since=midnight --pretty=format:'%h %s'`). Hook auto-injects before write-type tools (2 sources: working repo + `~/ai-tools` guidelines). Code comments: see `guidelines/writing/code-comment.md`.
