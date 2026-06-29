@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash, Read, Write, Edit
-description: Auto-memory housekeeping — move stale work-context to trash, prune MEMORY.md, suggest topic clusters & small-file merge. Default dry-run; --apply to execute.
-argument-hint: "[--apply] [--days=N] [--cluster] [--small=N]"
+description: Auto-memory housekeeping — move stale work-context to trash, prune MEMORY.md, suggest topic clusters / small-file merge / orphan / graduate (ai-tools 切り出し). Default dry-run; --apply to execute.
+argument-hint: "[--apply] [--days=N] [--cluster] [--small=N] [--orphan] [--graduate]"
 effort: low
 ---
 
@@ -22,6 +22,8 @@ Cleans up auto-memory. **Memory dir auto-detect**: `~/ai-tools/memory/` (CLAUDE.
 - `--days=N`: work-context expiry 閾値 (default 14)。`--days=7` で aggressive、`--days=30` で conservative
 - `--cluster`: `feedback_<topic>_*` / `knowledge_<topic>_*` 等の topic group 表示 (3 個以上集まった cluster のみ、merge は user 判断)
 - `--small=N`: N 行未満の file を merge 候補として list 表示 (default off、`--small=20` 推奨)
+- `--orphan`: MEMORY.md にも他 memory file にも参照 (`[[name]]`) されない孤立 file 検出。orphan は **trash 候補ではなく、index 追加 or 削除判断の対象**
+- `--graduate`: memory 内容を ai-tools 配下 (`rules/` `guidelines/` `references/`) に切り出すべき候補を heuristic で提案。memory は短期 / project / feedback、ai-tools は恒久 rule / guideline / reference という分離原則 (詳細は Graduate heuristic section)
 
 > Default は dry-run (destructive のため)。`--apply` は `mv` で rollback 可。
 
@@ -100,6 +102,41 @@ merge は user 手動 (例: `feedback_no_*.md` を 1 file に統合 → 旧 file
 ### Small file (--small=N)
 
 `wc -l < <file>` が N 未満の `*.md` を list 表示 (MEMORY.md / `pending-improvements*` / `compact-restore-*` 除外)。merge は user 判断。
+
+### Orphan (--orphan)
+
+MEMORY.md 内の link にも他 memory file の `[[name]]` 参照にも現れない file を list。**判断軸**:
+
+- 参照 0 + 内容 active rule → MEMORY.md に index 追加すべき
+- 参照 0 + 内容 obsolete → 手動 trash
+- 単発 reference 系 (user_*) で MEMORY.md 構造上意図的に未 link → keep (false positive)
+
+### Graduate (--graduate) — memory → ai-tools 切り出し
+
+memory が抱えるべきは **(a) 短期 work-context** / **(b) project-specific feedback** / **(c) 個人 user 設定** のみ。以下は ai-tools 配下に切り出し対象:
+
+| memory パターン | 切り出し先 |
+|---|---|
+| 汎用 rule (secret / writing / git / db / security) | `rules/<topic>.md` に統合 |
+| writing guideline / 文体規範 | `guidelines/writing/` に統合 |
+| design / architecture knowledge | `guidelines/<area>/` に統合 |
+| ツール仕様 / 参照資料 / 履歴 | `references/<topic>.md` に move |
+| Serena onboarding artifact (`codebase_structure.md` / `task_completion_checklist.md` / `suggested_commands.md` / `style_and_conventions.md`) | `.serena/memories/` 復元 or archive |
+
+**heuristic 検出**:
+
+- file 名 prefix `knowledge_` → references 候補
+- file 名 prefix `writing_failure_` → guidelines/writing 候補
+- file 名 prefix `feedback_no_*` で「禁止 rule」性質 → rules/ 候補
+- description / body に「rule」「禁止」「常に」「必ず」キーワード含 → rules 候補
+- Serena 標準 file 名 (codebase_structure / suggested_commands / style_and_conventions / task_completion_checklist) → Serena memories 候補
+
+**実行**:
+
+- dry-run: 候補 list + 提案先 path
+- `--apply`: **自動 move しない** (内容 merge / 構造調整が必要なため)。trash dir に「graduation-candidates.md」manifest 書出のみ → user 手動 merge
+
+> graduate は memory 設計の根本治療。継続して回せば memory は短期 context のみになる。
 
 ### Description rescue
 
