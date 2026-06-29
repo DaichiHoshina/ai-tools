@@ -21,7 +21,16 @@ On adoption: check the box. On obsolescence: strikethrough (`~~feature~~ (obsole
 
 User 明示判断で channel を `latest` (2026-06-14 切替) から `stable` に戻した。local CLI = 2.1.177 = `dist-tags.stable` に揃え、VERSION も 2.1.177 へ downgrade。
 
-**deferred entries (stable 範囲外、latest 復帰時に再評価)**: 下記 2.1.181 / 2.1.182–2.1.185 section は latest channel 時の調査結果。stable channel では fetch range 対象外のため新規 adopt は行わない。section 自体は再評価用に保持する (latest 復帰時に該当 entry のみ再活性化)。
+**deferred entries (stable 範囲外、latest 復帰時に再評価)**: 下記 2.1.182–2.1.185 section は latest channel 時の調査結果。stable channel では fetch range 対象外のため新規 adopt は行わない。section 自体は再評価用に保持する (latest 復帰時に該当 entry のみ再活性化)。2.1.181 entry は本 run で stable section へ昇格 (`dist-tags.stable` が 2.1.181 に到達)。
+
+## 2.1.180–2.1.181 (detected 2026-06-29, stable)
+
+Range 2.1.180–2.1.181 が新 stable tag として確定 (2.1.181 = `dist-tags.stable`)。CLI 既に 2.1.181 一致、VERSION のみ 2.1.179 → 2.1.181 bump。2.1.180 は bugfix only。2.1.181 内容は下記 latest 時 (2026-06-19) 調査と同一だが、stable 昇格に伴い正式 track 化。
+
+- **`/config key=value` 構文** [2.1.181]: プロンプトから任意 setting を設定可能な構文。harness 内蔵で `templates/settings.json.template` 変更不要。Track only。
+- **`sandbox.allowAppleEvents`** [2.1.181]: macOS サンドボックス中の Apple Events 送信を opt-in 許可する新 setting。現在 Apple Events を必要とするユースケースなし。Track only。
+- **`CLAUDE_CLIENT_PRESENCE_FILE`** [2.1.181]: 指定 file が存在する間 mobile push を抑制する env var。採用はユーザ好みに依存。Track only。
+- 残余 (Bun 1.4 / line-by-line streaming / connection-drop auto-retry / subagent panel UI / MCP OAuth UI / bug fixes 各種): 内部・UI 改善、config 変更不要。Info。
 
 ## 2.1.178–2.1.179 (detected 2026-06-25, stable)
 
@@ -44,14 +53,7 @@ Range 2.1.182–2.1.185 reviewed。2.1.182 / 2.1.184 は CHANGELOG 記載なし 
 - **deprecated model warning が agent frontmatter もカバー** [2.1.183]: deprecated / auto-updated model を stderr 警告 (`-p` mode + agent frontmatter)。現 agent frontmatter の model ID (sonnet-4-6 / opus-4-7) は全て valid のため警告対象外。opus-4-7 は Opus 4.8 regression 回避の意図的 pin (`[[work-context-20260616-opus-4-8-regression-and-full-audit]]`)、変更しない。
 - 残余 (`/config --help` / `/config` toggle 挙動 / setup-issues 行削除 / thinking.disabled 400 fix / WebSearch subagent fix / vim cursor / Windows TUI / 各種 bugfix): UI・harness 内部・bugfix、config 変更不要。
 
-## 2.1.181 (detected 2026-06-19, latest)
-
-Range 2.1.180–2.1.181 reviewed. 2.1.180 は内部変更のみ (user-facing なし)。
-
-- **`/config key=value` 構文** [2.1.181]: プロンプトから任意 setting を設定可能な構文追加。interactive / `-p` / Remote Control 全モード対応。`templates/settings.json.template` への変更不要 — harness 動作変更なし。Track only。
-- **`sandbox.allowAppleEvents`** [2.1.181]: macOS サンドボックス中の Apple Events 送信を opt-in 許可する新 setting。現在 Apple Events を必要とするユースケースなし。Track only。
-- **`CLAUDE_CLIENT_PRESENCE_FILE`** [2.1.181]: 指定 file が存在する間 mobile push を抑制する env var。採用はユーザ好みに依存。Track only。
-- 残余 (Bun 1.4 / line-by-line streaming / connection-drop auto-retry / subagent panel UI / bug fixes): 内部・UI 改善、config 変更不要。
+## ~~2.1.181 (detected 2026-06-19, latest)~~ (obsolete 2026-06-29): 上位 stable section 2.1.180-2.1.181 へ昇格・統合済み
 
 ## 2.1.179 (detected 2026-06-17, latest)
 
