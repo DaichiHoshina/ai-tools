@@ -55,7 +55,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 **EN-conversion-protected files/sections**: see `references/on-demand-rules/en-conversion-protected.md` (mistranslation breaks rules, bats tests, JP trigger matching).
 
-**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下 (markdown-anchor-sync / en-conversion-protected / api-design / review-noise-discard / measure-before-hook-change / sync-canonical-with-bats)。session-start auto-inject から外して token 節約。trigger: md heading rename → `markdown-anchor-sync.md` / EN refactor・`/claude-update-fix` → `en-conversion-protected.md` / handler・controller・resolver・api・endpoint 触る → `api-design.md` / `/review`・`/review-fix-push`・`comprehensive-review` skill 発火時 → `review-noise-discard.md` / `hooks/` block・warn 系編集時 → `measure-before-hook-change.md` / `commands/`・`agents/`・`references/` の heading・YAML key・step 番号改変時 → `sync-canonical-with-bats.md`。
+**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下 (markdown-anchor-sync / en-conversion-protected / api-design / review-noise-discard / measure-before-hook-change / sync-canonical-with-bats)。trigger: md heading rename → `markdown-anchor-sync.md` / EN refactor・`/claude-update-fix` → `en-conversion-protected.md` / handler・controller・resolver・api・endpoint → `api-design.md` / `/review`・`/review-fix-push`・`comprehensive-review` skill 発火時 → `review-noise-discard.md` / `hooks/` block・warn 系編集時 → `measure-before-hook-change.md` / `commands/`・`agents/`・`references/` の heading・YAML key・step 番号改変時 → `sync-canonical-with-bats.md`。
 
 ## Discovery / Investigation Routing (anti-overuse)
 
@@ -66,7 +66,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 | Scope | Tool |
 |---|---|
 | 1-2 files / specific symbol | Bash grep/find or `mcp__serena__find_symbol` |
-| 3+ query / broad search | `Task(explore-agent)` parallel fan-out by default (parallelism = domain count, max 8); no ambiguity check needed |
+| 3+ query / broad search | `Task(explore-agent)` parallel fan-out by default (parallelism = domain count, max 8) |
 | Claude Code CLI/SDK/API spec | `claude-code-guide` agent |
 | Other genuinely broad analysis | Explore (built-in, last resort) |
 | **`general-purpose` agent** | **Forbidden** — highest cost source (measured max 501s). Always substitute with `explore-agent` / `claude-code-guide` / `developer-agent` |
@@ -91,27 +91,15 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 ## Tool Call Format (生テキスト呼び出し禁止)
 
-ツール呼び出しは**必ず harness の正規 function-call 機構**で行う。応答本文に `call` / `<invoke ...>` / `<parameter ...>` 等のツール呼び出し XML を**テキストとして書かない**。本文に書いても実行されず、`Your tool call was malformed` エラーになる。
-
-- 本文 = ユーザ向けの説明 (日本語 prose) のみ。tool は別チャネルで発火する
-- 同じ malformed を繰り返したら**即停止**し、次の発話で正規 tool call をやり直す (テキスト再掲しない)
-- `[[feedback-no-raw-text-tool-call]]`
+ツール呼び出しは**必ず harness の正規 function-call 機構**で行う。応答本文に `call` / `<invoke ...>` / `<parameter ...>` 等の XML をテキストとして書かない → 実行されず `Your tool call was malformed` エラー。同じ malformed を繰り返したら**即停止**して正規 tool call をやり直す。`[[feedback-no-raw-text-tool-call]]`
 
 ## Collaboration stance (AI = 思考パートナー)
 
-AI を**思考パートナー**として扱う。生成物を盲信せず parent / user 側で検証 (`fact-check on agent return` = `references/developer-agent-delegation-prompt.md` §0.5 B)。subagent report の数値 / file 変更 / 測定値は最低 1 つ cross-check してから採用する。単なる自動実装より、人間検証 + AI 起案の協働が最も効果的 (Anthropic 公式 [How Anthropic teams use Claude Code](https://claude.com/ja/blog/how-anthropic-teams-use-claude-code))。
-
-**Pattern**: developer-agent (Generator) → reviewer-agent / verify-app (Verifier) は Anthropic 公式 [Generator-Verifier pattern](https://claude.com/blog/multi-agent-coordination-patterns) を実装する。Verifier は `status: accept` または `status: reject` + 具体 feedback (file:line / severity / suggested fix) を return、reject feedback を受けた Generator が再生成する 1 round loop を採用する。
+AI を**思考パートナー**として扱う。subagent report の数値 / file 変更 / 測定値は最低 1 つ cross-check してから採用する (`fact-check` = `references/developer-agent-delegation-prompt.md` §0.5 B)。**Pattern**: developer-agent (Generator) → reviewer-agent / verify-app (Verifier)。Verifier は `status: accept` / `status: reject` + 具体 feedback を return し、reject 後に Generator が再生成する 1 round loop。
 
 ## Session Efficiency
 
-**Autonomous mode ON by default + 質問抑制 default**。AskUserQuestion / 確認は exception only。推奨が context から 1 つに絞れるなら質問せず即決、根拠 1 行のみ chat 出力する。質問許可は 4 条件 (破壊的操作 / scope 完全欠落 / 推奨拮抗 / 既存方針競合) のみ。canonical: `rules/minimize-questions.md`。
-
-Confirm only for: destructive ops / external sends / large design branches / flow stage changing next-stage assumptions / re-try right after Esc interrupt (`[[feedback-no-retry-after-interrupt]]`). Long output = conclusion-first + PREP. Decision request = leading `要決定:` block. Token budget: Read with `limit`/`offset` (>200-line files), Bash long output via `| head/tail -N`, code via Serena `find_symbol` over full Read, casual chat via `/btw`. Full list: `references/session-efficiency-detailed.md`. Prompt caching 設計指針: `guidelines/operations/prompt-caching.md`。
-
-## No Derived Literals
-
-Do not write derived values (count / sum / list length) computable from a canonical source as literals in separate files. Reference only. Exceptions: immutable magic numbers / test fixture expected counts. (`[[feedback-no-derived-literals]]`)
+**Autonomous mode ON by default + 質問抑制 default**。質問許可は 4 条件 (破壊的操作 / scope 完全欠落 / 推奨拮抗 / 既存方針競合) のみ。canonical: `rules/minimize-questions.md`。Long output = conclusion-first + PREP。Decision request = leading `要決定:` block。Token budget: Read with `limit`/`offset` (>200-line files)、Bash long output via `| head/tail -N`、code via Serena `find_symbol`。Full list: `references/session-efficiency-detailed.md`。
 
 ## Public-repo private-data block
 
@@ -119,20 +107,13 @@ Do not write derived values (count / sum / list length) computable from a canoni
 
 **Hook block / NG-DICTIONARY.md**: AI定型語 / カタカナ造語禁止 / 難読漢語 / 非日常英語を hook block。**既存 key の name 変更禁止** (hook が exact match 参照)。詳細: `guidelines/writing/NG-DICTIONARY.md`
 
-## Rewind
+## Rewind / Context Management
 
 **Esc**: pause / **Esc ×2** or `/rewind`: restore to checkpoint. Details: `references/checkpoint-rewind.md`
 
-## Context Management
-
-- **>40% → `/compact`**。30 分 idle → `/clear` (cache TTL 切れ)。task 境界が `/clear` 最適点
-- **Long session = top cost source**。`user-prompt-submit.sh` 150/350 msg auto-warn。warn 時は task 完了後 `/clear`。実測 / 課金構造: `references/performance-insights.md`
-- **同問題 2 連続失敗 → `/clear` + rewrite prompt** (accumulated failure context が主因)
-- Continue: "generate next-session mega-prompt" → 新 session paste。汚染なし質問: `/btw`
+**>40% → `/compact`**。30 分 idle → `/clear`。同問題 2 連続失敗 → `/clear` + rewrite prompt。`user-prompt-submit.sh` 150/350 msg auto-warn。詳細: `references/performance-insights.md`
 
 ## Work output routing
-
-進捗 / 永続知識 / session 内 plan の出力先を分離する。
 
 | 種別 | 出力先 | 起動 trigger |
 |---|---|---|
@@ -140,9 +121,9 @@ Do not write derived values (count / sum / list length) computable from a canoni
 | 調査ログ / 手順書 / 計画書 / RCA / postmortem | local-docs HTML | `local-docs` skill (「調査まとめて」「手順書」「RCA 書いて」) |
 | session 内一時 plan (phase 分割 / next-action) | `~/.claude/plans/` md | `/plan` (「impl の phase 分割」「実装方針」) |
 
-詳細 trigger 語 + 重複回避ルール: `references/work-output-routing.md`
+詳細: `references/work-output-routing.md`
 
-## Natural Language Triggers (top 8)
+## Natural Language Triggers (top 5)
 
 | Input | Action |
 |---|---|
@@ -150,12 +131,9 @@ Do not write derived values (count / sum / list length) computable from a canoni
 | "全自動で" / "autoで" / "おまかせ" | `/flow-auto` |
 | "レビュー" / "レビューして" | `/review` |
 | "team で" / "agent team で" / "分担で" / "本格的に" | `/flow` (PO/Manager/Dev hierarchy, forced) |
-| "workflow で" / "pipeline で" / "多数決で" | `/workflow` |
 | "並列実行で" / "wt 分けて" / "worktree 分けて" / "Developer 並列で" | `/flow --parallel` |
-| "test が通るまで" / "lint clean まで" / "build 通るまで loop" | `/goal` (objective stop-condition, Ralph Wiggum guard) |
-| "再度DD" / "整合性チェック" / "DDとPRDが合っているか" / "再度コメント読み込み" | `doc-sync` skill (DD / PRD / local-docs / comment 再 sync) |
 
-これ以外の natural-language 解釈はしない。全 list (Slack / Notion / `/api-design` / `/backend-dev` / `/brainstorm` / `/flow --parallel` / `/session-mode` 等): `references/natural-language-triggers.md`
+これ以外 ("workflow で" / "test が通るまで" / "再度DD" 等) を含む全 list: `references/natural-language-triggers.md`
 
 ## Git Merge Prohibition
 
@@ -171,9 +149,7 @@ Apply relevant items only. Scale by change size (typo → #6 / new feature → a
 
 ## Root Cause Analysis
 
-Structural fix over symptomatic. **Reproduce → identify → design → verify** 4 steps required. Details: `/root-cause` skill.
-
-Production rollback: use the CI canonical path (revert PR → main merge → deploy) as the primary approach. Direct platform operations (ECS task def rollback etc.) are emergency measures; they will be overwritten on the next deploy, so always run them in parallel with a revert PR (`[[feedback-rollback-via-revert-pr]]`).
+Structural fix over symptomatic. **Reproduce → identify → design → verify** 4 steps required. Details: `/root-cause` skill。Production rollback: revert PR → main merge → deploy が CI canonical path。直接 platform 操作 (ECS task def rollback 等) は上書きされるため revert PR と並行実施 (`[[feedback-rollback-via-revert-pr]]`)。
 
 ## Compounding Engineering
 
@@ -183,31 +159,20 @@ Misbehavior / non-obvious success → document immediately → auto-avoid next s
 
 ## Pre-write Self-check (except chat)
 
-Before writing any outward-facing text, **read today's commits** (`git log --since=midnight --pretty=format:'%h %s'`). Hook auto-injects before write-type tools (2 sources: working repo + `~/ai-tools` guidelines). Code comments: see `guidelines/writing/code-comment.md`.
+外向き text を書く前に **today's commits を確認** (`git log --since=midnight --pretty=format:'%h %s'`)。hook が write-type tool 前に auto-inject (2 source: working repo + `~/ai-tools` guidelines)。code comment: `guidelines/writing/code-comment.md`。
 
 ## Genshijin Boundary
 
 genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き prose (PR / commit / Issue / Slack / Notion / DD / PRD / RCA / comments) と `/plan` `/design-doc` `/prd` `/post-comment` `/git-push --pr` `/docs` ドラフトは plain JP (〜する / 〜した、主語明示、指示語禁止: 「これ」「それ」「上記」→具体名)。Details: `rules/genshijin.md` + `guidelines/writing/PRINCIPLES.md`
 
-**AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。
+**AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。Commit message draft 前に NG 語 self-check 必須 (hook block retry = 2〜3 往復のトークン損失)。canonical: `guidelines/writing/NG-DICTIONARY.md`
 
-**Commit message pre-draft sweep** (`[[retrospective-2026-06-12]]` P1): draft 生成前に NG 語 self-check してから出力する。hook block で retry になると 2〜3 往復のトークン損失が発生する。canonical 語彙 list (頻出 block 語 / 連続漢字 / 置換候補) は `guidelines/writing/NG-DICTIONARY.md` 参照。
+## Default Readability + Writing Priority
 
-## Default Readability (全出力 baseline、/jp-writing 不要)
+prose 出力に先手で適用 (hook block 待ち retry を減らす = token 節約)。文体規範 canonical: `guidelines/writing/PRINCIPLES.md` + `NG-DICTIONARY.md`。外向き prose・docs は 1 文 100 字 (短文 60 字) 上限。外向き doc は**種別 guideline を on-demand で 1 本だけ読んで書く** (一覧: `guidelines/writing/README.md`)。深い書き直し / 全項目 self-check 時のみ `/jp-writing`。
 
-prose 出力に proactive 適用 (hook block 待ち retry を減らす = token 節約)。文体規範 (結論冒頭 / 1 文短く / 連続漢字制限 / 冗長圧縮 / NG 語回避) の canonical は `guidelines/writing/PRINCIPLES.md` + `NG-DICTIONARY.md`。
-
-- 外向き prose・docs は 1 文 100 字 (短文 60 字) 上限、chat は genshijin 継続
-- 外向き doc は**種別 guideline を on-demand で 1 本だけ読んで書く** (一覧: `guidelines/writing/README.md`)。常時全ロード禁止
-- 深い書き直し / 全観点 self-check 時のみ `/jp-writing`
-
-## ai-tools Writing Canonical Priority (全 repo)
-
-外向き text (PR / commit / Issue / Slack / Notion / DD / PRD / RCA / comment) は **ai-tools guidelines を project 設定より優先**。優先順: (1) `guidelines/writing/` canonical → (2) `rules/` → (3) project template / convention。
-
-例外 (project 優先): 機械 enforce 系 (lint / format / CI / Makefile) / 構造 enforce (branch / tag / 配置) / license / 法務必須 footer (DCO / CLA)。詳細 (template 固有要素 / 競合解決): `guidelines/writing/README.md`
+外向き text は **ai-tools guidelines を project 設定より優先**。優先順: (1) `guidelines/writing/` canonical → (2) `rules/` → (3) project template。例外 (project 優先): lint / format / CI / license / 法務必須 footer。詳細: `guidelines/writing/README.md`
 
 ## References
 
-High-freq: `references/model-selection.md` / `memory-usage.md` / `performance-insights.md` / `multi-repo-workflow.md` / `references/developer-agent-delegation-prompt.md`
-Index: `references/INDEX.md` / Writing: `guidelines/writing/README.md` / Tools: `scripts/health-check.sh` / `usage-stats.sh`
+`references/INDEX.md` / `references/model-selection.md` / `references/performance-insights.md` / `references/developer-agent-delegation-prompt.md` / `guidelines/writing/README.md`
