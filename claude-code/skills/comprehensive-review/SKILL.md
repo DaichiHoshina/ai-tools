@@ -116,6 +116,32 @@ Zero findings → `### Critical: 0`. Tags: `must`=Critical / `imo`,`nits`=Warnin
 
 Additional Step 4.5 checks via `guidelines/writing/PRINCIPLES.md` / `code-comment.md` / `prompt-engineering.md` / `long-form-doc.md`. confidence-80 filter applies.
 
+## Conditional Reference Loading
+
+**Default (`--type` absent or `all`)**: Read all 5 reference files before Step 1.
+
+```
+skills/comprehensive-review/references/review-criteria.md
+skills/comprehensive-review/references/silent-failure.md
+skills/comprehensive-review/references/type-design.md
+skills/comprehensive-review/references/db-concurrency.md
+skills/comprehensive-review/references/writing-docs.md
+```
+
+**`--type` specified**: Load only the files mapped below. Reduces token cost for single-focus runs.
+
+| `--type` value | Files to Read |
+|---|---|
+| `security` | `silent-failure.md` + `review-criteria.md` |
+| `silent-failure` | `silent-failure.md` + `review-criteria.md` |
+| `type-design` | `type-design.md` + `review-criteria.md` |
+| `db-concurrency` | `db-concurrency.md` + `silent-failure.md` |
+| `writing` / `docs` | `writing-docs.md` + `review-criteria.md` |
+| `architecture` / `quality` / `readability` / `root-cause` / `logging` / `test-coverage` | `review-criteria.md` only |
+| `all` (explicit) | All 5 files (same as default) |
+
+All paths are relative to `skills/comprehensive-review/references/`. Read selected files immediately after this step, before Step 1.
+
 ## Multi-lens panel (`/review --panel` only)
 
 `--panel` passes `reviewer-agent` × 3 (style / security / test-coverage) verdicts as pre-Step-1 input. Lens count canonical: `commands/review.md` §Multi-lens panel. Each verdict passes Stage A 7-point filter. Duplicates (same file:line, different lens, same root cause) → merge to 1. Merged list flows through Step 4.5 → Stage A → Stage B.
