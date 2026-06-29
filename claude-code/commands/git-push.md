@@ -90,33 +90,11 @@ git remote get-url origin | grep -q "gitlab"   # GitLab → glab, else gh
 
 Conventional Commits format: `<type>(<scope>): <subject>`
 
-## PR description template
+## PR description
 
-4 sections corresponding to `guidelines/writing/long-form-doc.md` questions:
+**Canonical**: `guidelines/writing/pr-description.md` (ai-tools, all-repo priority). 7-section JP template (`## 背景 / ## Related Issue / ## 実装概要 / ## 影響範囲 / ## 動作確認エビデンス / ## 動作確認手順 / ## 備考`), bullet-first / `Closes #XXX` linking / anti-patterns / 動作確認手順 ≤3 項目 / review-response 規約 を 1 ヶ所に集約。本 command の writing check (step 5.5) は canonical の `## 禁止` を参照する。
 
-```markdown
-## Why
-<why needed. 1-2 sentences w/ supporting numbers/requirements>
-
-## What changed
-<what changed. specific names>
-
-## Testing
-<verification run. if not run, state honestly>
-
-## Review focus
-<areas to check / decisions needed from reviewer>
-```
-
-**Short PR description (< 3 H3s or < 400 words)**: apply `ai-output.md` PREP 3 + PRINCIPLES.md "4 questions before writing" + "6-item pre-output checklist" + **Web 可読性 +4 items** (60 chars/sentence / assertion-style headings / 3-4 line paragraphs / bold for scanability — see `PRINCIPLES.md` `## Web 可読性`). Long PR description (Design Doc scale): long-form-doc.md 4 questions + 5 principles. Decision criteria: H3 count / word count / fits 1 screen scroll.
-
-**Testing section style**:
-
-Verified → specific commands, env, results (e.g. `go test ./... pass, staging p99: 320ms`).
-
-Unverified → state honestly, no fabrication: `Not run — docs-only` / `Not run — WIP` / `Manual only — ...` / `N/A — build config only`.
-
-Avoid: "implemented X", "improved Y" (no numbers), false test claims.
+**Testing section honesty (canonical 補足)**: Verified → specific commands + results (`go test ./... pass, staging p99: 320ms`). Unverified → no fabrication, state explicitly (`Not run — docs-only` / `Manual only — ...` / `N/A — build config only`).
 
 ## Jira ticket link
 
