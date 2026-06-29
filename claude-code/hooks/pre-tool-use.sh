@@ -300,6 +300,58 @@ _check_live_doc_required() {
 }
 
 # ====================================
+# hook-edit baseline 鮮度 warn
+# claude-code/hooks/*.sh を Edit / Write / MultiEdit する直前に
+# 24h 以内の hook-bench baseline log が存在しない場合 warn する
+# 例外 (log 出力のみ / 読み取り専用 hook 変更) は user 判定に委ねるため block ではなく warn
+# 参照: references/on-demand-rules/measure-before-hook-change.md
+# ====================================
+_HOOK_BENCH_LOG_DIR="${HOME}/.claude/logs"
+_HOOK_BENCH_FRESH_SEC=$((24 * 60 * 60))
+
+_check_hook_edit_baseline_missing() {
+  local file_path="$1"
+  [[ -z "$file_path" ]] && return 0
+
+  # claude-code/hooks/*.sh 以外は対象外
+  case "$file_path" in
+    */claude-code/hooks/*.sh) ;;
+    *) return 0 ;;
+  esac
+
+  # baseline log の最新 mtime を取得 (なければ 0)
+  local latest_mtime=0
+  if [ -d "$_HOOK_BENCH_LOG_DIR" ]; then
+    local f
+    for f in "$_HOOK_BENCH_LOG_DIR"/hook-bench-*.log; do
+      [ -e "$f" ] || continue
+      local m
+      m=$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)
+      [ "$m" -gt "$latest_mtime" ] && latest_mtime=$m
+    done
+  fi
+
+  local now
+  now=$(date +%s)
+  local age=$((now - latest_mtime))
+
+  if [ "$latest_mtime" -eq 0 ] || [ "$age" -gt "$_HOOK_BENCH_FRESH_SEC" ]; then
+    local warn_msg
+    if [ "$latest_mtime" -eq 0 ]; then
+      warn_msg="${ICON_WARNING} [hook-bench] hook 編集前 baseline 未取得。\`./scripts/hook-bench.sh --log\` で latency baseline を採取してから rollout してください (references/on-demand-rules/measure-before-hook-change.md)。log のみ / 読み取り専用 hook 変更ならスキップ可"
+    else
+      local age_hours=$((age / 3600))
+      warn_msg="${ICON_WARNING} [hook-bench] 最新 baseline が ${age_hours}h 前 (>24h)。\`./scripts/hook-bench.sh --log\` で再採取してから rollout してください (references/on-demand-rules/measure-before-hook-change.md)。log のみ / 読み取り専用変更ならスキップ可"
+    fi
+    if [ -n "$ADDITIONAL_CONTEXT" ]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${warn_msg}"
+    else
+      ADDITIONAL_CONTEXT="${warn_msg}"
+    fi
+  fi
+}
+
+# ====================================
 # social-hit block
 # ~/ai-tools/ public repo への社内 product 名 / 社内識別子の書き込みを hard block
 # term list は ~/.claude/rules/public-repo-private-data-block.md の
@@ -1266,6 +1318,11 @@ case "$TOOL_NAME" in
     # live-doc warn: library API method 直書き検出 → context7 / WebFetch 確認を促す (warn-only)
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
       _check_live_doc_required "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
+    fi
+
+    # hook-bench warn: hooks/*.sh 編集前 baseline 鮮度確認 (warn-only)
+    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ]; then
+      _check_hook_edit_baseline_missing "$_EDIT_FILE_PATH"
     fi
 
     # local-docs テンプレ準拠 block (Write のみ、新規 .html を _templates 由来でない content で Write したら block)
