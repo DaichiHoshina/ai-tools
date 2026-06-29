@@ -95,7 +95,7 @@ Detail step prose: `references/flow-orchestration.md`
 
 ## Self-Review (required, 3 gates)
 
-Parent Opus gates mandatory. Canonical: `references/parallel-self-review.md`. Noise discard: `rules/review-noise-discard.md`. **Parent responsibility**: no outsourcing to PO/Manager. PO Gate v2 fires pre-fan-out (cannot skip). Canonical: `references/retrospectives/2026-06-19_agent-oversight.md`
+Parent Opus gates mandatory. Canonical: `references/parallel-self-review.md`. Noise discard: `references/on-demand-rules/review-noise-discard.md`. **Parent responsibility**: no outsourcing to PO/Manager. PO Gate v2 fires pre-fan-out (cannot skip). Canonical: `references/retrospectives/2026-06-19_agent-oversight.md`
 
 A/B mandatory on orchestration path; `--sequential` exempts A/B. C: `--auto`/`--multi-review` only.
 

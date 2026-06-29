@@ -83,7 +83,7 @@ T_i estimate = file lines × edit density (new ~3s/line / modify ~5s/line / dele
 
 ## Self-Review (required, 2-stage)
 
-Run before any `/plan` output. Cannot skip. Applies uniformly across PO Agent / Direct / `--update` / `--scope` modes. Stage common definition: `commands/review.md` `## Delegation & Self-Review`. Noise discard: `rules/review-noise-discard.md`.
+Run before any `/plan` output. Cannot skip. Applies uniformly across PO Agent / Direct / `--update` / `--scope` modes. Stage common definition: `commands/review.md` `## Delegation & Self-Review`. Noise discard: `references/on-demand-rules/review-noise-discard.md`.
 
 ### Stage A: plan-specific filter
 

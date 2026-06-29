@@ -24,7 +24,7 @@ parameters:
 
 ## Perspectives
 
-Details: `references/review-patterns-universal.md` / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`. Noise discard / P2/P3 downgrade: `rules/review-noise-discard.md`. Self-Review Gate C (`/flow`): `references/parallel-self-review.md` — fires via `reviewer-agent` 12-lens parallel.
+Details: `references/review-patterns-universal.md` / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`. Noise discard / P2/P3 downgrade: `references/on-demand-rules/review-noise-discard.md`. Self-Review Gate C (`/flow`): `references/parallel-self-review.md` — fires via `reviewer-agent` 12-lens parallel.
 
 | Perspective | Description |
 |---|---|

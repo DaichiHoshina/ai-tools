@@ -1,6 +1,6 @@
 # /flow Self-Review (3 gate canonical)
 
-`/flow` の Self-Review 3 gate 詳細仕様。`commands/flow.md` `## Self-Review` section が summary 参照元、本 file が canonical。Noise discard policy: `rules/review-noise-discard.md`。
+`/flow` の Self-Review 3 gate 詳細仕様。`commands/flow.md` `## Self-Review` section が summary 参照元、本 file が canonical。Noise discard policy: `references/on-demand-rules/review-noise-discard.md`。
 
 **適用範囲**: Gate A / B は orchestration path (PO → Manager → Dev×N) で必須・skip 不可。`--sequential` 時は `flow.md` step 2 で Manager skip → 直接 `/dev` 委譲のため Gate A・B は適用外 (Manager allocation も parallel diff も存在しない)。Gate C は `--auto` / `--multi-review` 時のみ発火、default `/flow` は従来 reviewer 構成維持。
 
@@ -49,4 +49,4 @@ FAIL → step 9 P0 loop へ強制投入 (P0 0 件でも実行)。max 1 loop。ma
 
 cost 帯: 12 lens stage split (10-12min 級、stage 1 = 7 agent / stage 2 = 6 agent)。default `/flow` は従来通り comprehensive + codex 並列 2 agent 維持。
 
-判定: 各 lens reviewer が Critical / Warning を返却 → parent Opus が `rules/review-noise-discard.md` filter 後に dedup → step 9 P0 loop へ。
+判定: 各 lens reviewer が Critical / Warning を返却 → parent Opus が `references/on-demand-rules/review-noise-discard.md` filter 後に dedup → step 9 P0 loop へ。

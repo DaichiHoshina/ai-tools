@@ -57,7 +57,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 **EN-conversion-protected files/sections**: see `references/on-demand-rules/en-conversion-protected.md` (mistranslation breaks rules, bats tests, JP trigger matching).
 
-**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下 (markdown-anchor-sync / en-conversion-protected / api-design)。session-start auto-inject から外して token 節約。trigger: md heading rename → `markdown-anchor-sync.md` / EN refactor・`/claude-update-fix` → `en-conversion-protected.md` / handler・controller・resolver・api・endpoint 触る → `api-design.md`。
+**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下 (markdown-anchor-sync / en-conversion-protected / api-design / review-noise-discard / measure-before-hook-change / sync-canonical-with-bats)。session-start auto-inject から外して token 節約。trigger: md heading rename → `markdown-anchor-sync.md` / EN refactor・`/claude-update-fix` → `en-conversion-protected.md` / handler・controller・resolver・api・endpoint 触る → `api-design.md` / `/review`・`/review-fix-push`・`comprehensive-review` skill 発火時 → `review-noise-discard.md` / `hooks/` block・warn 系編集時 → `measure-before-hook-change.md` / `commands/`・`agents/`・`references/` の heading・YAML key・step 番号改変時 → `sync-canonical-with-bats.md`。
 
 ## Discovery / Investigation Routing (anti-overuse)
 
@@ -83,9 +83,11 @@ trigger: library method を直書きする場合 (`useState` / `axios.create` / 
 
 hook が warn-only で検出 (`hooks/pre-tool-use.sh`)。skill: `skills/context7/SKILL.md`。
 
-## Auto-Delegation (parent=Opus orchestrates, subagent=Sonnet executes)
+## Auto-Delegation (parent=Sonnet default, subagent=Sonnet executes)
 
 *(Impl/edit task。Investigation phase → Discovery Routing)*
+
+**Model default は Sonnet 4.6** (2026-06-29 切替、cost 削減目的)。Opus 4.7 が必要な task (deep design / 多 file 横断 review / `/flow` PO/Manager orchestration / Manager hallucination 防止が要る case) は user が `/model opus` で session 単位切替する。
 
 **Default = delegate to `developer-agent` (Sonnet)**。inline は detailed.md 列挙 exception のみ。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止) + **1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列分割) + **parent 監視責任** (PO/Manager は subagent に丸投げ禁止、bundle 違反は PO Gate で阻止)。直列 chain でも各 step 内に複数 file/観点あるなら step 内 fan-out する (`[[feedback-no-single-agent-overload]]`)。
 
@@ -197,9 +199,9 @@ Misbehavior / non-obvious success → document immediately → auto-avoid next s
 
 Memory write target (ai-tools repo): **`~/ai-tools/memory/` 固定** (= `/Users/daichi.hoshina/ghq/github.com/DaichiHoshina/ai-tools/memory/`、`.gitignore` 済)。`~/.claude/projects/.../memory/` への write 禁止 (system prompt default を override)。Serena `.serena/memories/` も禁止 — 三重管理回避。MEMORY.md index も同 dir。詳細 / 他 repo 仕様: `references/compounding-engineering-cycle.md` §Memory write target / `references/memory-relocation-pattern.md`
 
-block / warn 系 hook 投入前は latency + flow baseline を必ず記録する (`rules/measure-before-hook-change.md`)
+block / warn 系 hook 投入前は latency + flow baseline を必ず記録する (`references/on-demand-rules/measure-before-hook-change.md`)
 
-canonical file (`commands/` `agents/` `references/`) の heading / YAML key / step 番号を改変するときは同 commit で対応 bats literal も同期する (`rules/sync-canonical-with-bats.md`)
+canonical file (`commands/` `agents/` `references/`) の heading / YAML key / step 番号を改変するときは同 commit で対応 bats literal も同期する (`references/on-demand-rules/sync-canonical-with-bats.md`)
 
 ## Pre-write Self-check (except chat)
 

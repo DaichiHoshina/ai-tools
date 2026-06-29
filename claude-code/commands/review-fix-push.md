@@ -22,7 +22,7 @@ Skill("comprehensive-review")
 
 ### Step 1.5: Self-Review Pass (required)
 
-Never feed Step 1 output directly to fix. Always apply 2-stage Self-Review. Details: `commands/review.md` `## Delegation & Self-Review (required, 2 stages)`. Noise discard policy: `rules/review-noise-discard.md`. Critical 0 + Warning 0 → skip to Step 2 (push). Judgment log: do not surface to user.
+Never feed Step 1 output directly to fix. Always apply 2-stage Self-Review. Details: `commands/review.md` `## Delegation & Self-Review (required, 2 stages)`. Noise discard policy: `references/on-demand-rules/review-noise-discard.md`. Critical 0 + Warning 0 → skip to Step 2 (push). Judgment log: do not surface to user.
 
 ### Step 2: Decide
 

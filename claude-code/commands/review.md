@@ -7,7 +7,7 @@ argument-hint: "[scope]"
 # /review - Full Code Review
 
 > Runs 12-angle review via `comprehensive-review` skill. `--deep`/`--multi` parallelizes external reviewers.
-> Noise filter policy: `rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/SKILL.md` Step -1
+> Noise filter policy: `references/on-demand-rules/review-noise-discard.md` / Finding constraints: `skills/comprehensive-review/SKILL.md` Step -1
 
 ## Delegation & Self-Review (required, 2 stages)
 
@@ -26,7 +26,7 @@ Adversarial mode: relax Evidence/Scope criteria (design-challenge nature); Stage
 Pass Stage A findings as JSON list to `reviewer-agent --stage-b`. Fresh context aggregate suppresses post-impl bias.
 
 - Delegate to: `Task(subagent_type: "reviewer-agent")`
-- Prompt template: `"Stage B aggregate review. Input: Stage A filtered findings (JSON list, below). Apply: (1) phase consolidation (same root cause → 1 finding), (2) detail-level alignment, (3) convention alignment, (4) Zero-phase valid (no padding). Return: confirmed findings as JSON {p0: [...], p1: [...], p2: [...]}. Do NOT add new findings — filter only. Noise discard policy: rules/review-noise-discard.md (confidence <80 / style nitpick / hypothetical edge case / scope-out suggestions are discard targets)."`
+- Prompt template: `"Stage B aggregate review. Input: Stage A filtered findings (JSON list, below). Apply: (1) phase consolidation (same root cause → 1 finding), (2) detail-level alignment, (3) convention alignment, (4) Zero-phase valid (no padding). Return: confirmed findings as JSON {p0: [...], p1: [...], p2: [...]}. Do NOT add new findings — filter only. Noise discard policy: references/on-demand-rules/review-noise-discard.md (confidence <80 / style nitpick / hypothetical edge case / scope-out suggestions are discard targets)."`
 - Parent responsibility: Stage A (per-finding) only. Pass Stage B output directly to `/review-fix-push` Step 3
 - Do not include judgment log in plan file / chat. Display Stage B results only
 

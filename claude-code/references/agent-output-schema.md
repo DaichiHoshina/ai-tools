@@ -41,7 +41,7 @@ issues_blocking: [<string>, ...]
 
 `partial` は free pass ではない。具体的 blocker 行が `issues_blocking` に必須。blocker なしの `partial` は parent が `failure` 扱いで reject する。
 
-**confidence** — `0`〜`100` の整数。運用閾値は **80** (`rules/review-noise-discard.md` の confidence-80 filter と整合)。80 未満の場合は `issues_blocking` に不確実要素を記載する。
+**confidence** — `0`〜`100` の整数。運用閾値は **80** (`references/on-demand-rules/review-noise-discard.md` の confidence-80 filter と整合)。80 未満の場合は `issues_blocking` に不確実要素を記載する。
 
 **issues_blocking** — 未解決 blocker を string 配列で列挙。解決済みなら `[]`。粒度: 1 要素 = 1 blocker (root cause 1 行)。推測は書かず、確認済み事実のみ記載。
 
