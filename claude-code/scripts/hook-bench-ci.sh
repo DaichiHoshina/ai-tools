@@ -255,8 +255,15 @@ do_check() {
         # 3 軸判定
         local verdict="pass"
 
-        # regression: delta > 10ms
-        if [[ ${delta} -gt 10 ]]; then
+        # regression: delta > 10ms かつ baseline range × 2 を超える
+        # variance 大きい hook では 10ms 程度の variation は計測誤差。
+        # 旧実装は固定 +10ms 閾値で CPU 低負荷時 baseline → 通常負荷時 check で
+        # false regression が頻発した (feedback-bench-baseline-false-regression)。
+        local variance_threshold=$(( baseline_range * 2 ))
+        if [[ ${variance_threshold} -lt 10 ]]; then
+            variance_threshold=10
+        fi
+        if [[ ${delta} -gt 10 ]] && [[ ${delta} -gt ${variance_threshold} ]]; then
             verdict="REGRESSION"
             has_regression=1
         else
