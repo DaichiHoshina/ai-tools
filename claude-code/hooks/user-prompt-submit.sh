@@ -29,7 +29,7 @@ require_jq
 input=$(cat)
 
 # 入力サイズ制限（1MB）
-if [ ${#input} -ge ${_TH_LOG_MAX_BYTES} ]; then
+if [ ${#input} -ge "${_TH_LOG_MAX_BYTES}" ]; then
   echo '{"error":"Input too large (max 1MB)"}' >&2
   exit 1
 fi
@@ -154,7 +154,7 @@ _check_session_bloat() {
     printf '%s\t%s\t%s\n' "${_MSG_COUNT}" "${_TOKEN_TOTAL}" "${_LAST_EPOCH}" > "${_SCAN_CACHE}" 2>/dev/null || true
     # 同 session の stale cache (旧署名) を掃除
     local _f
-    for _f in /tmp/claude-session-scan-${session_id}-*; do
+    for _f in "/tmp/claude-session-scan-${session_id}"-*; do
       [[ "${_f}" == "${_SCAN_CACHE}" ]] || rm -f "${_f}" 2>/dev/null || true
     done
   fi

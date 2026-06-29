@@ -25,6 +25,7 @@ ANALYTICS_DB="${ANALYTICS_DB_DIR}/analytics.db"
 
 # --- 重複読み込み防止 ---
 if [[ "${_ANALYTICS_WRITER_LOADED:-}" = "true" ]]; then
+    # shellcheck disable=SC2317  # multi-source guard: 以降の関数定義は実際に呼ばれる
     return 0 2>/dev/null || true
 fi
 _ANALYTICS_WRITER_LOADED=true

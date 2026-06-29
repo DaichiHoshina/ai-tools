@@ -15,6 +15,7 @@
 
 # 重複読み込みガード
 if [[ -n "${_OUTPUT_SANITIZER_LOADED:-}" ]]; then
+  # shellcheck disable=SC2317  # multi-source guard: 以降の関数定義は実際に呼ばれる
   return 0 2>/dev/null || true
 fi
 _OUTPUT_SANITIZER_LOADED=1

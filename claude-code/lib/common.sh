@@ -35,6 +35,7 @@ _COMMON_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- 重複読み込み防止 ---
 if [[ "${_COMMON_LOADED:-}" = "true" ]]; then
+    # shellcheck disable=SC2317  # multi-source guard: 以降の関数定義は実際に呼ばれる
     return 0 2>/dev/null || true
 fi
 _COMMON_LOADED=true
