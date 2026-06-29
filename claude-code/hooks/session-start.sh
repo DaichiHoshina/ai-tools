@@ -167,7 +167,7 @@ fi
 
 # --- Worktree Memory Symlink（バックグラウンド実行）---
 # symlink 操作のみで出力に依存しないため非同期化
-( ensure_worktree_memory_link "${_CWD}" 2>/dev/null || true ) &
+( ensure_worktree_memory_link "${_CWD:-}" 2>/dev/null || true ) &
 
 # --- Analytics: セッション開始記録 ---
 # init_duration_ms は analytics_start_session 呼び出し直前で確定する
