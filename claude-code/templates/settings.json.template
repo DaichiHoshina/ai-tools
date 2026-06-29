@@ -1,5 +1,5 @@
 {
-  "model": "claude-sonnet-4-6",
+  "model": "claude-opus-4-7",
   "fallbackModel": ["claude-opus-4-7", "claude-haiku-4-5"],
   "alwaysThinkingEnabled": false,
   "env": {
@@ -472,7 +472,7 @@
       "熟考中"
     ]
   },
-  "effortLevel": "high",
+  "effortLevel": "medium",
   "autoUpdatesChannel": "stable",
   "showThinkingSummaries": false,
   "verbose": true,

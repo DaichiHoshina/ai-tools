@@ -77,11 +77,11 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 外部 library の API method / hook / config 直書き前に **context7 skill / WebFetch で最新 docs 取得**。trigger: library method 直書き (`useState` / `axios.create` 等) / 新 library 採用 / API spec 6 か月超。hook warn-only 検出 (`hooks/pre-tool-use.sh`)、skill: `skills/context7/SKILL.md`。
 
-## Auto-Delegation (parent=Sonnet default, subagent=Sonnet executes)
+## Auto-Delegation (parent=Opus 4.7 default, subagent=Opus 4.7 executes)
 
 *(Impl/edit task。Investigation phase → Discovery Routing)*
 
-**Default = `developer-agent` (Sonnet)**。inline は exception only。Model 切替は `/model opus` (session 単位)。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止)、**1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列)、**parent 監視責任**。直列 chain でも step 内 fan-out (`[[feedback-no-single-agent-overload]]`)。
+**Default = `developer-agent` (Opus 4.7)**。inline は exception only。Model 切替は `/model sonnet` (session 単位)。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止)、**1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列)、**parent 監視責任**。直列 chain でも step 内 fan-out (`[[feedback-no-single-agent-overload]]`)。
 
 **Parallel fan-out 自己強制 (hard rule)**: N≥2 dev は**単一 assistant message に N tool_use**。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。
 
