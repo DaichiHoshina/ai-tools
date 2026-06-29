@@ -28,6 +28,8 @@ _append_jp_quality_log() {
   local tool_name="$1"
   local hit_term="$2"
   local action="$3"
+  # bats unit test 実行中はログ汚染を防ぐため skip
+  [[ -n "${BATS_TEST_FILENAME:-}" ]] && return 0
   local log_dir="$HOME/.claude/logs"
   local log_file="${log_dir}/jp-quality-block.log"
   # mkdir は -p で安全に
@@ -166,6 +168,7 @@ _append_jp_quality_inject_log() {
   local tool_name="$1"
   local bytes="$2"
   local status_str="$3"
+  [[ -n "${BATS_TEST_FILENAME:-}" ]] && return 0
   local log_dir="$HOME/.claude/logs"
   local log_file="${log_dir}/jp-quality-inject.log"
   mkdir -p "$log_dir" 2>/dev/null || true
