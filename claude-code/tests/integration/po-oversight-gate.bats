@@ -48,7 +48,7 @@ setup() {
 # ---------------------------------------------------------------------------
 @test "flow.md: step 6.3 PO Gate" {
   [ -f "$FLOW_FILE" ]
-  run grep -cF "6.3. **PO Gate (Manager allocation oversight)**" "$FLOW_FILE"
+  run grep -cF "6.3. **PO Gate**" "$FLOW_FILE"
   [ "$status" -eq 0 ]
   [ "$output" -eq 1 ]
 }
@@ -79,4 +79,38 @@ setup() {
   run grep -cF "single-shot, no loop" "$CONTRACT_FILE"
   [ "$status" -eq 0 ]
   [ "$output" -eq 1 ]
+}
+
+# ---------------------------------------------------------------------------
+# Manager hallucination guard (canonical: retrospectives/2026-06-22_manager-hallucination.md)
+# 案 1 (PO modify contract に narrow-scope field 強制) + 案 2 (Manager literal echo
+# 強制 + parent grep -F validation) のセット実装を 3 file で検証する。
+# ---------------------------------------------------------------------------
+@test "contract §1.1: fix_request narrow-scope 3 field 明記 (案 1)" {
+  run grep -cF "modify_target_task_ids:" "$CONTRACT_FILE"
+  [ "$status" -eq 0 ]
+  [ "$output" -eq 1 ]
+  run grep -cF "unchanged_task_ids:" "$CONTRACT_FILE"
+  [ "$status" -eq 0 ]
+  [ "$output" -eq 1 ]
+  run grep -cF "modify_reason:" "$CONTRACT_FILE"
+  [ "$status" -eq 0 ]
+  [ "$output" -eq 1 ]
+}
+
+@test "manager-agent: PO literal echo 強制段落 (案 2)" {
+  MANAGER_FILE="${PROJECT_ROOT}/agents/manager-agent.md"
+  [ -f "$MANAGER_FILE" ]
+  run grep -cF "**PO literal echo (mandatory)**" "$MANAGER_FILE"
+  [ "$status" -eq 0 ]
+  [ "$output" -eq 1 ]
+  run grep -cF "Path 0: PO modify" "$MANAGER_FILE"
+  [ "$status" -eq 0 ]
+  [ "$output" -eq 1 ]
+}
+
+@test "flow.md: step 6.3 grep -F validation 明記 (案 2)" {
+  run grep -cF "grep -F" "$FLOW_FILE"
+  [ "$status" -eq 0 ]
+  [ "$output" -ge 1 ]
 }

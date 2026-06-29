@@ -53,10 +53,14 @@ PO returns:
 ```yaml
 verdict: pass  # pass | fail | modify
 reason: "<1 line; required for fail/modify>"
-fix_request: "<concrete change to allocation; required for modify, omit for pass/fail>"
+fix_request:  # required for modify, omit for pass/fail
+  modify_target_task_ids: ["<task.id>", ...]   # tasks Manager MUST modify; required, non-empty
+  unchanged_task_ids: ["<task.id>", ...]       # tasks Manager MUST literal-preserve (developer_id / files / scope unchanged); required, may be empty list
+  modify_reason: "<1 line>"                    # why fix is needed; required
+  concrete_change: "<concrete change to allocation, 1-3 lines>"  # required
 ```
 
-`pass` → parent proceeds to fan-out (step 7). `fail` → parent stops `/flow`, escalates to user with `reason`. `modify` → parent calls Manager back with `fix_request` (re-allocation, 1 loop max; same budget as Reviewer P0 path).
+`pass` → parent proceeds to fan-out (step 7). `fail` → parent stops `/flow`, escalates to user with `reason`. `modify` → parent calls Manager back with `fix_request` (re-allocation, 1 loop max; same budget as Reviewer P0 path). On `modify`, Manager MUST touch only `modify_target_task_ids[]` and literal-preserve `unchanged_task_ids[]` (no `developer_id` shuffle, no scope shrink, no file path rename). Missing `modify_target_task_ids` → parent re-requests PO output (fail-fast).
 
 ### 2. parent → Manager (input)
 

@@ -83,7 +83,7 @@ Sweet spot / hard rules: `references/PARALLEL-PATTERNS.md#fan-out-hard-rules`.
 4. **Manager Agent (required)**: task split / file dedup / N calc + `formula_trace`
 5. **Post-Manager downgrade**: `parallelism: 1` + `worktree_required: false` or file conflict → Dev×1 sequential
 6. **Orchestration pre-delegation** (internal + echo 2 lines); `mkdir -p <impl_notes.dir>`
-6.3. **PO Gate** (required). Parent re-spawns PO with Manager allocation. Returns `verdict: pass | fail | modify`. `pass` → 6.5. `modify` → Manager re-allocation (1 loop max, then escalate). `fail` → stop + user escalation. Canonical: `agents/po-agent.md`
+6.3. **PO Gate** (required). Parent re-spawns PO with Manager allocation. Returns `verdict: pass | fail | modify`. `pass` → 6.5. `modify` → Manager re-allocation (1 loop max, then escalate); parent MUST `grep -F` each `task.files[]` literal against PO `manager_instruction` priority/constraints — mismatch → discard Manager output. `fail` → stop + user escalation. Canonical: `agents/po-agent.md`. PO `fix_request` schema (contract §1.1): `modify_target_task_ids[]` + `unchanged_task_ids[]` + `modify_reason` + `concrete_change` 必須 (canonical: `references/retrospectives/2026-06-22_manager-hallucination.md` 案 1)。
 6.5. **Gate A: parallel-judgment self-review** (required; N≥2 only). 6 criteria. FAIL → re-run Manager. PASS → step 7. Canonical: `references/parallel-self-review.md`
 7. **Parallel fan-out**: Fire `Task(developer-agent)×N` in 1 message (bundle required)
 8. **Parallel integrate + review** (1 message): Manager integrate + `Task(reviewer-agent, --codex)`×1 (or Gate C on `--auto`/`--multi-review`). Canonical: `references/parallel-self-review.md` §Gate C
@@ -99,7 +99,7 @@ Parent Opus gates mandatory. Canonical: `references/parallel-self-review.md`. No
 
 A/B mandatory on orchestration path; `--sequential` exempts A/B. C: `--auto`/`--multi-review` only.
 
-- **PO Gate v2** (step 6.3): 8 criteria — goal/constraints/priority/file_count/bundle_justification/scope/subagent_type/branch_cwd literal. `modify` → Manager re-allocation (max 1); `fail` → stop + user escalation
+- **PO Gate v2** (step 6.3): 8 criteria — goal/constraints/priority/file_count/bundle_justification/scope/subagent_type/branch_cwd literal. `modify` → Manager re-allocation (max 1) with `fix_request` 3+1 field (modify_target / unchanged / reason / concrete_change); parent post-validation: `grep -F task.files[]` vs PO instruction literal; `fail` → stop + user escalation
 - **Gate A** (step 6.5): 6 criteria — N consistency / formula PASS / file conflict / worktree applicability / T_i basis / bundle fire format. FAIL → re-run Manager (max 1); 2nd → `--sequential` downgrade
 - **Gate B** (step 8.5): 4 criteria — cross-diff conflict / duplicate import / naming collision / propagation incompleteness. FAIL → force step 9 P0 loop (max 1)
 - **Dev failure gate** (step 8.7): 1 criterion — any Dev `status != success`. FAIL → Manager re-allocation (max 1); 2nd → stop + user escalation

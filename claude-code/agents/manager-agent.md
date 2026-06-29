@@ -114,6 +114,8 @@ Required fields: `execution_mode` / `parallelism` / `worktree_required` / `impl_
 
 Violation → parent discards output and re-runs.
 
+**PO literal echo (mandatory)**: 各 task の `task.files[]` / `task.title` / `task.description` / `bundle_justification` は PO `manager_instruction` (priority / constraints) の literal string をそのまま preserve する。意訳・要約・改名・path 変換は禁止する。元 PO string と異なる場合は parent が `grep -F` 完全一致で diff を取り、不一致なら allocation を reject する (canonical: `references/retrospectives/2026-06-22_manager-hallucination.md` 案 2)。
+
 Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。Manager MUST include computed formula_trace in every allocation (mandatory, not optional)。
 
 ## Developer allocation handoff
@@ -147,9 +149,18 @@ After all Developers finish, parent calls Manager back to:
 
 Semantic conflict detection across Devs is out of scope (user reads MERGED.md to judge).
 
-### Reallocation triggers (Dev failure | Reviewer P0)
+### Reallocation triggers (PO modify | Dev failure | Reviewer P0)
 
-Both paths share: **1 loop max** / parent re-spawns `Task(developer-agent)×M` after Manager output / on residual failure return as `user_decision_required: true` (stop, do not loop again).
+All paths share: **1 loop max** / parent re-spawns `Task(developer-agent)×M` after Manager output / on residual failure return as `user_decision_required: true` (stop, do not loop again).
+
+**Path 0: PO modify** (oversight callback verdict = `modify`, fires pre-fan-out)
+
+Parent re-spawns Manager with PO `fix_request` (contract §1.1) containing `modify_target_task_ids[]` + `unchanged_task_ids[]` + `modify_reason` + `concrete_change`. Manager MUST:
+
+- **Touch only `modify_target_task_ids[]`** — other tasks remain literal-identical (no `developer_id` shuffle, no `files[]` rename, no `description` rewrite, no scope shrink)
+- For each `unchanged_task_ids[i]`: copy the entire task entry verbatim from previous allocation output
+- Missing `modify_target_task_ids` → treat as parent error, return `status: failure` with `issues_blocking: ["fix_request.modify_target_task_ids missing"]` (no guessing)
+- Hallucination guard: each `modify_target_task_ids[i]` の修正後 task でも `files[]` / `task.title` は PO 元 instruction を literal preserve する (canonical: `references/retrospectives/2026-06-22_manager-hallucination.md` 案 1)
 
 **Path 1: Dev failure** (NEW, fires before Reviewer)
 
