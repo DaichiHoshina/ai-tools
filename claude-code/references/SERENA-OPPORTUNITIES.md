@@ -15,8 +15,12 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 
 ---
 
-## main pre-release (detected 2026-06-08, re-confirmed 2026-06-20, still pre-release on next tag)
+## main pre-release (detected 2026-06-08, re-confirmed 2026-06-29, still pre-release on next tag)
 
+- [ ] **`trusted_project_path_patterns` global setting** (added post-v1.5.3): `.serena/project.yml` の `ls_specific_settings` を trusted project path でのみ適用 — review at: activated 全 10 project の `ls_specific_settings: {}` (empty)、impact 実質ゼロ。将来 ls_specific_settings に値を入れる際に trusted list へ project root 追加要
+- [ ] **structured tool output per-context (claude-code: disable)** (added post-v1.5.3, #1042): structured output を per-context で disable 化、claude-code は unpack 不可のため自動 disable — review at: harness fix の恩恵のみ受ける、config 変更不要 (Info)
+- `activate_project FileNotFoundError fix` (added post-v1.5.3): registered project root 削除済 case で `RegisteredProject.matches_root_path` が FileNotFoundError raise していた bug fix。harness 内蔵 fix、no action
+- LaTeX (texlab) / PHPantom (PHP alt) / pyrefly (Python alt) / Arduino `.ino`→C++ / Unreal Engine 5 (clangd) 強化 / C# Omnisharp Windows startup fix / Java JDTLS workspace cache invalidation (#1576) / CodeBuddy agent integration (added post-v1.5.3): 該当言語 / 環境 unused または harness 内蔵、out of scope
 - [ ] **`typescript_vts` `initialization_options`**: Pass initializationOptions dict under `ls_specific_settings.typescript_vts`. Required for Yarn PnP + `typescript.tsdk` TS projects — review at: only when activating a Yarn PnP TS project (none currently)
 - [ ] **`jetbrains_launch_command`**: Auto-launch IDE on project activate — review at: JetBrains IDE not used, out of scope
 - [ ] **Dashboard `trusted_hosts` configurable**: Relax host validation from v1.5.2, allow remote connections — review at: only if connecting dashboard remotely (currently local default)
