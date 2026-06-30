@@ -1335,9 +1335,10 @@ case "$TOOL_NAME" in
     fi
 
     # private-name block: private-name-list.txt の term を ai-tools 配下 file 書込に適用
+    # memory file は除外 (user 指示 2026-06-30: memory save 時に NG word 検出を skip)
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
       _PN_PATH="$_EDIT_FILE_PATH"
-      if _is_aitools_path "$_PN_PATH"; then
+      if _is_aitools_path "$_PN_PATH" && ! _is_memory_path "$_PN_PATH"; then
         # 自己除外: rule 説明文として term を保持する file は判定対象外
         _PN_REL=$(_aitools_relpath "$_PN_PATH")
         case "$_PN_REL" in
@@ -1370,7 +1371,7 @@ case "$TOOL_NAME" in
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
       _AJ_EXT="${_EDIT_FILE_PATH##*.}"
       if [[ "$_AJ_EXT" == "md" || "$_AJ_EXT" == "txt" ]]; then
-        if ! _is_aitools_path "$_EDIT_FILE_PATH" && ! _is_auto_memory_path "$_EDIT_FILE_PATH" && ! _is_plans_path "$_EDIT_FILE_PATH" && ! _is_references_private_path "$_EDIT_FILE_PATH"; then
+        if ! _is_aitools_path "$_EDIT_FILE_PATH" && ! _is_auto_memory_path "$_EDIT_FILE_PATH" && ! _is_plans_path "$_EDIT_FILE_PATH" && ! _is_references_private_path "$_EDIT_FILE_PATH" && ! _is_memory_path "$_EDIT_FILE_PATH"; then
           _AJ_BASENAME=$(basename "${_EDIT_FILE_PATH:-file}")
           _block_if_ai_jargon "$EDIT_CONTENT" "ファイル: ${_AJ_BASENAME}"
         fi

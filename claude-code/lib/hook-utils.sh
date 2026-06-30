@@ -365,6 +365,23 @@ _is_plans_path() {
   return 1
 }
 
+# memory file 判定: NG-DICTIONARY / private-name 等の文体 block を skip する対象 path
+# canonical: CLAUDE.md § Memory write target + user 指示 (2026-06-30): memory save 時に NG word 検出を skip する
+# 対象:
+#   - ~/ai-tools/memory/         (ai-tools repo の memory write 先)
+#   - ~/.claude/projects/*/memory/  (Claude Code auto-memory)
+#   - ~/.claude/agent-memory/    (agent 共有 memory)
+#   - */.serena/memories/        (Serena 旧 memory、書込自体は別 hook で block)
+# usage: _is_memory_path "$path"
+_is_memory_path() {
+  local p="$1"
+  [[ "$p" == "$HOME/ai-tools/memory/"* ]] && return 0
+  [[ "$p" == "$HOME/.claude/projects/"*"/memory/"* ]] && return 0
+  [[ "$p" == "$HOME/.claude/agent-memory/"* ]] && return 0
+  [[ "$p" == *"/.serena/memories/"* ]] && return 0
+  return 1
+}
+
 # 与えられた path が ~/.claude/references-private/ 配下かどうかを判定する。
 # references-private は user 管理の private メモ dir。外向き prose 規則の対象外とする。
 # 戻り値: 0=references-private 配下 / 1=配下でない
