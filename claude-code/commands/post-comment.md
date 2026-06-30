@@ -62,38 +62,11 @@ Detailed logs, stack traces → `<details>` folding.
 
 ### Step 2.5: writing check (NG 語チェック)
 
-draft 生成後、`guidelines/writing/PRINCIPLES.md` AI定型語 + 要根拠語 (source: PRINCIPLES.md) に対して grep 突き合わせ。Web 出力 (PR / Slack / Notion) 時は **`## Web 可読性` 追加 check 4 項目** (1 文 60 字 / 主張型 heading / 段落 3-4 行 / 太字 scan 化) も確認。
-
-- Hit ≥1 → AI定型語は削除または具体表現に置換、要根拠語は直後に根拠1文追記して rewrite、再チェック (max 3 loop)
-- 3 loop 後も hit 残存 → 残存語を提示して user に続行確認
-- **注**: hook (pre-tool-use.sh) が Bash/MCP 投稿時に AI定型語を exit 2 でブロックするため、このステップは事前 self-check として機能する
-- channel (Slack / Notion / Issue / PR comment) によらず同一 NG 強度を適用
-- target に issue/PR URL を含む場合、貼る前に `gh issue view` / `gh pr view` で番号実在と title 一致を検証する (`rules/ai-output.md` `## URL / Issue & PR Number Validation` 参照)
+draft を `guidelines/writing/NG-DICTIONARY.md` の AI定型語 + 要根拠語に grep 突き合わせ、hit があれば置換 / 根拠追記して rewrite (max 3 loop、残存は user 確認)。channel 共通強度。target に issue/PR URL を含む場合、貼る前に `gh issue view` / `gh pr view` で番号実在と title 一致を検証する (`rules/ai-output.md`)。
 
 ### Step 3: Display as post candidate
 
-```
-## 📝 Post candidate (target: gh-pr-comment)
-
-### Title / Summary
-<generated title or "N/A (comment only)">
-
-### Body (XXX chars)
-<generated body>
-
-### self-check
-[1] ✓ conclusion first
-[2] ✓ N H3s / ~XXX chars
-[3] ✓ conclusion/rationale/next action all present
-[4] ✓ rationale for evaluative words
-
-### Post command (copy-paste)
-gh issue comment <number> --body-file /tmp/post-XXXXX.md
-# or
-mcp__jira__jira_post ...
-```
-
-User copy-pastes post command or says "post this" → AI executes (recommend `--dry-run` for confirmation).
+候補は `## 📝 Post candidate (target)` + `### Title/Summary` + `### Body (chars)` + `### self-check` ([1]-[4] ✓/✗) + `### Post command` (`gh issue comment <n> --body-file ...` 等) の section で構成する。user が "post this" と言えば AI が実行 (`--dry-run` 推奨)。
 
 ## Options
 
@@ -105,18 +78,7 @@ User copy-pastes post command or says "post this" → AI executes (recommend `--
 
 ## Fallback
 
-2 consecutive self-check ✗ → show remaining violations, ask user for approach:
-
-```
-⚠️ self-check violations (2 consecutive):
-- [3] next action missing (pure info-share comment?)
-- [2] 4 H3s (too long signal)
-
-Options:
-a) allow "no next action" & post (pure info-share)
-b) user directly edits draft
-c) abort
-```
+2 consecutive self-check ✗ → 残存 violations を提示し、user に 3 択 (a: allow & post / b: user 直接編集 / c: abort) を選ばせる。
 
 ## Guards
 

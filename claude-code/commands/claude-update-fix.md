@@ -10,12 +10,7 @@ Proactively align repo w/ CLI updates. Auto-apply low-risk fixes, track unimplem
 
 ## Phase 1: Channel detection & diff
 
-```bash
-claude --version                                                 # local CLI
-npm view @anthropic-ai/claude-code dist-tags --json              # { stable, latest, next }
-cat claude-code/VERSION                                          # last confirmed
-cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null
-```
+Run: `claude --version` (local CLI) / `npm view @anthropic-ai/claude-code dist-tags --json` ({ stable, latest, next }) / `cat claude-code/VERSION` / `cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null`.
 
 **Channel judgment** (track per release channel):
 
@@ -25,22 +20,17 @@ cat claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md 2>/dev/null
 | `claude --version` == `dist-tags.latest` | `latest` | `latest` tag version |
 | neither matches (mid-version / manually pinned) | `latest` (current default) | `latest` tag version |
 
-Rationale: repo runs on the **stable** channel (switched back from latest 2026-06-23). Align fetch scope and bump target to the stable tag. Adopt renames/new hooks/new keys as they land; the local CLI is expected to track stable.
+Repo runs on the **stable** channel (switched back from latest 2026-06-23); fetch scope and bump target align to stable tag.
 
 **Decision**:
-- `VERSION > TARGET` (next channel / pre-bump / post-channel-switch downgrade) → no-op exit; display `> [WARN] VERSION (X) > TARGET (Y), below channel target. Fetch range goes backward — skip. Confirm manually aligning VERSION to TARGET`
+- `VERSION > TARGET` → no-op exit; display `> [WARN] VERSION (X) > TARGET (Y)` (fetch range backward — skip)
 - `TARGET == VERSION` + opportunities resolved → "already up to date" & exit
 - `TARGET == VERSION` + opportunities exist → Phase 3-B only
 - `TARGET > VERSION` → Phase 2 (CHANGELOG fetch range: `VERSION+1` ~ `TARGET`)
 
 ## Phase 2: CHANGELOG structured extraction
 
-Fetch (priority order):
-1. `WebFetch`: `https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md`
-2. `npm view @anthropic-ai/claude-code time` → version ↔ date map
-3. `WebSearch`: "claude code changelog {version}"
-
-Extract confirmed-to-current range, tag each entry (multi-tag OK):
+Fetch priority: (1) `WebFetch` `raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md` → (2) `npm view @anthropic-ai/claude-code time` → (3) `WebSearch "claude code changelog {version}"`. Extract confirmed-to-current range, tag each entry (multi-tag OK):
 
 | Tag | Keywords (case-insensitive) | Next action |
 |-----|------------------------------|-------------|
@@ -86,30 +76,18 @@ After auto-apply, output all diffs then proceed to confirm-apply.
 
 ## Phase 5: Cleanup (after Phase 4 confirm-apply)
 
-1. Update `claude-code/VERSION` to **TARGET** (channel-matched version confirmed in Phase 1; write channel target, not `latest`)
+1. Update `claude-code/VERSION` to **TARGET** (Phase 1 channel-matched version)
 2. Run `./claude-code/sync.sh to-local --yes` (at this step only)
 3. Update opportunity file (reflect Phase 3-B diffs)
-4. If major changes (3+ files or non-obvious decisions), save to Claude Code auto-memory (`~/.claude/projects/<project>/memory/claude-update-YYYYMMDD.md` via `Write`) — Serena `write_memory` forbidden (2026-06-10)
+4. Major changes (3+ files / non-obvious decisions) → save via `Write` to `~/.claude/projects/<project>/memory/claude-update-YYYYMMDD.md` (Serena `write_memory` forbidden 2026-06-10)
 
 ## Opportunity tracking format
 
-`claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md`:
-
-```markdown
-## <version> (detected YYYY-MM-DD, <channel>)
-- [ ] **<feature name>**: <summary> — review target: <file/agent>
-```
-
-- `<channel>` = `stable` or `latest` (as determined in Phase 1). Recording channel lets you scope past history correctly after a channel switch
-- when adopted: check & reference in commit msg
-- when stale: strike out as `~~<feature name>~~ (obsolete YYYY-MM-DD)`
+`claude-code/references/CLAUDE-CODE-OPPORTUNITIES.md` に `## <version> (detected YYYY-MM-DD, <channel>)` + `- [ ] **<feature>**: <summary> — review target: <file>` 形式で append。`<channel>` は Phase 1 判定値 (stable / latest)。採用時は check + commit msg 参照、陳腐化時は `~~<feature>~~ (obsolete YYYY-MM-DD)` で打消す。
 
 ## Notes
 
 - `claude doctor` is interactive; use `claude --version` instead
-- `npm view ... dist-tags --json` fails (network etc.) → safe fallback: treat current `VERSION` as TARGET, no-op exit, display `> [WARN] dist-tags fetch failed, cannot determine channel. Re-run after CLI reconnects`
-- If CHANGELOG fetch fails: minimal analysis via `claude --help` + npm view
+- `npm view ... dist-tags --json` fails → safe fallback: treat current `VERSION` as TARGET, no-op exit, display `> [WARN] dist-tags fetch failed`
+- CHANGELOG fetch fails → minimal analysis via `claude --help` + npm view
 - Auto-apply must remain git-diff-reviewable (do not run sync.sh until after confirm-apply)
-- **VERSION file update aligns to stable tag** — value written in Phase 5 Step 1 is `dist-tags.stable`
-- **CHANGELOG / feature adoption scope is `(current VERSION + 1) ~ stable tag`**
-- **Channel is `stable` (switched back from latest 2026-06-23)** — local CLI tracks the stable tag. Switching to latest would require explicit user confirmation
