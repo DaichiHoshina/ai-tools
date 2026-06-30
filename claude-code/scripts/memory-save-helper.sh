@@ -12,7 +12,42 @@
 #       memory file 本体の write は /memory-save command (AI 側) が担当する。
 set -euo pipefail
 
-MEMORY_DIR="${MEMORY_SAVE_DIR:-${HOME}/ai-tools/memory}"
+# save 先 dir 解決ルール (canonical: commands/memory-save.md § "Save target dir"):
+#   1. $MEMORY_SAVE_DIR が set されていればそれを使う (override)
+#   2. cwd の git toplevel が ai-tools repo → ${HOME}/ai-tools/memory
+#   3. cwd の git toplevel が他 repo で `<repo-parent>/memory/` dir が存在 → repo-local memory
+#      sub-project 識別子は basename($(git rev-parse --show-toplevel)) で 1 段ネスト
+#      (例: ~/ghq/github.com/<org>/<repo> 配下なら ~/ghq/github.com/<org>/memory/<repo>)
+#   4. 上記いずれも該当しない → fallback ${HOME}/ai-tools/memory
+_resolve_memory_dir() {
+  if [ -n "${MEMORY_SAVE_DIR:-}" ]; then
+    printf '%s\n' "$MEMORY_SAVE_DIR"
+    return 0
+  fi
+  local toplevel
+  toplevel=$(git -C "$(pwd)" rev-parse --show-toplevel 2>/dev/null || echo "")
+  if [ -z "$toplevel" ]; then
+    printf '%s\n' "${HOME}/ai-tools/memory"
+    return 0
+  fi
+  case "$toplevel" in
+    "${HOME}/ai-tools"|"${HOME}/ai-tools/"*)
+      printf '%s\n' "${HOME}/ai-tools/memory"
+      return 0
+      ;;
+  esac
+  # repo-local memory dir: <repo-parent>/memory/<repo-basename>
+  local parent repo_base
+  parent=$(dirname "$toplevel")
+  repo_base=$(basename "$toplevel")
+  if [ -d "${parent}/memory" ]; then
+    printf '%s\n' "${parent}/memory/${repo_base}"
+    return 0
+  fi
+  printf '%s\n' "${HOME}/ai-tools/memory"
+}
+
+MEMORY_DIR=$(_resolve_memory_dir)
 INDEX_FILE="${MEMORY_DIR}/MEMORY.md"
 
 _today() { date +%Y%m%d; }

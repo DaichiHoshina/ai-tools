@@ -7,7 +7,17 @@ effort: low
 
 # /memory-save - Quick auto-memory save
 
-Save current work state to `~/ai-tools/memory/` in 1 command. CLAUDE.md 固定 dir (Serena `.serena/memories/` と `~/.claude/projects/.../memory/` への write は禁止)。
+Save current work state in 1 command. CLAUDE.md 規約 (Serena `.serena/memories/` と `~/.claude/projects/.../memory/` への write は禁止)。
+
+## Save target dir (cwd 自動分岐、2026-06-30 改訂)
+
+| cwd の git toplevel | save 先 |
+|---|---|
+| `${HOME}/ai-tools` (ai-tools repo) | `${HOME}/ai-tools/memory/` |
+| 他 repo (`~/ghq/<host>/<org>/<repo>` 等) で `<repo-parent>/memory/` dir が存在 | `<repo-parent>/memory/<repo-basename>/` (例: `~/ghq/github.com/<org>/<repo>` → `~/ghq/github.com/<org>/memory/<repo>`) |
+| 上記いずれも該当しない | fallback `${HOME}/ai-tools/memory/` |
+
+override: 環境変数 `MEMORY_SAVE_DIR` が set されていればそれを最優先する。canonical: `scripts/memory-save-helper.sh:_resolve_memory_dir`。
 
 > **Helper script 必須**: MEMORY.md 更新 / collision 回避 / 同日 list 取得は `scripts/memory-save-helper.sh` 経由で実行する (AI の Write/Edit ばらつき排除)。本体 body の Write のみ AI 側担当。
 
