@@ -15,8 +15,11 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 
 ---
 
-## main pre-release (detected 2026-06-08, re-confirmed 2026-06-29, still pre-release on next tag)
+## main pre-release (detected 2026-06-08, re-confirmed 2026-06-30, still pre-release on next tag)
 
+- [ ] **`replace_in_files` 新 tool** (added 2026-06-10, `4dc0cd14`): 複数 file 横断の literal/regex 置換 tool 新設、`src/serena/tools/file_tools.py` で実装 — review at: wildcard `mcp__serena__*` 採用済 agent (explore / manager / developer / po / commands) は自動有効。explicit list の reviewer / root-cause-analyzer / verify-app は read-only 用途のため追加不要。実装で `replace_content` 既存使い方と比較推奨
+- [ ] **`get_symbols_overview depth=-1` default** (added 2026-06-12, `75410c78`): overview tools の `depth` default が language-specific になり `-1` 指定で有効化 — review at: repo 内で `depth=` 明示指定なし (grep ゼロ) のため影響なし、新規 caller で `depth=-1` を使う場面で活用
+- [ ] **`benchmark` mode** (added 2026-06-29, `3d9b953a`): one-shot 自律完遂用 mode、memory tool 全 disable、auto-approval 前提 — review at: claude-code repo は serena mode 未使用 (CLI / IDE 専用)、track-only
 - [ ] **`trusted_project_path_patterns` global setting** (added post-v1.5.3): `.serena/project.yml` の `ls_specific_settings` を trusted project path でのみ適用 — review at: activated 全 10 project の `ls_specific_settings: {}` (empty)、impact 実質ゼロ。将来 ls_specific_settings に値を入れる際に trusted list へ project root 追加要
 - [ ] **structured tool output per-context (claude-code: disable)** (added post-v1.5.3, #1042): structured output を per-context で disable 化、claude-code は unpack 不可のため自動 disable — review at: harness fix の恩恵のみ受ける、config 変更不要 (Info)
 - `activate_project FileNotFoundError fix` (added post-v1.5.3): registered project root 削除済 case で `RegisteredProject.matches_root_path` が FileNotFoundError raise していた bug fix。harness 内蔵 fix、no action
