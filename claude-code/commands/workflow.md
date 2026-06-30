@@ -127,7 +127,7 @@ If user specifies `+500k` etc., use `budget.remaining()` for dynamic scale (e.g.
 
 ### Isolation decision
 
-Use worktree isolation (`isolation: 'worktree'`) **only for parallel edits to the same file**. Read-only or separate-file writes do not need it (Workflow tool setup overhead 200-500ms/agent + disk cost; `git worktree add` 単体は 90ms だが Workflow tool は env init を含むため重い。`/flow --parallel` 系の wt 費用とは別計上、canonical: `references/PARALLEL-PATTERNS.md` cost breakdown)。Default ON in `migrate` template only.
+Use worktree isolation (`isolation: 'worktree'`) **only for parallel edits to the same file**. Read-only or separate-file writes do not need it (Workflow tool setup overhead 200-500ms/agent + disk cost)。`git worktree add` 単体は 90ms だが、Workflow tool は env init を含むため重い。`/flow --parallel` 系の wt 費用とは別計上する (canonical: `references/PARALLEL-PATTERNS.md` cost breakdown)。Default ON in `migrate` template only.
 
 ## Constraints
 

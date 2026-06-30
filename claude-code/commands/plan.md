@@ -69,7 +69,7 @@ Choose from 6 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>
 
 Decision examples: review **only** → `/workflow review` / review→fix→push auto → `/flow --auto` / migrate N files → `/workflow migrate` / new feature (PO needed) → `/flow` / design majority-vote → `/workflow judge-panel`
 
-N formula (/flow): canonical = `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula` (LPT_makespan + overhead(N) と T_i 見積 4 段優先順を参照する。旧 `max(T_i) + 60s` 簡略式は overhead(N) と桁が異なるため使わない)。
+N formula (/flow): canonical = `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula`。LPT_makespan + overhead(N) と T_i 見積 4 段優先順を canonical 参照する。旧 `max(T_i) + 60s` 簡略式は overhead(N) と桁が異なるため使わない。
 
 ## Self-Review (required, 2-stage)
 
