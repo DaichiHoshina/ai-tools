@@ -13,7 +13,7 @@ _make_ng_dict() {
   cat > "${dir}/.claude/guidelines/writing/NG-DICTIONARY.md" <<'NGDICT'
 # NG 辞書 (test fixture)
 
-**AI定型語**: 効果的に / シームレスに / 革新的な / 素晴らしい / 強力な / より良い / 〜を実現します / 〜を提供します / 〜を可能にします / 〜することができます / ご紹介します / ご覧ください / 〜いただけます / まず〜しましょう / 重要なポイント / 注目すべき点 / 本機能は / 本ドキュメントは / 本記事では / 本稿では〜について述べる / 包括的な / 堅牢な / 柔軟な / スケーラブルな / 最適化 / 影響なし / 収まる / 外挿 / 余裕大 / 無視可 / 無視可能 / 懸念解消 / 全観点 / 判定確定 / 漸近
+**AI定型語**: 効果的に / シームレスに / 革新的な / 素晴らしい / 強力な / より良い / 〜を実現します / 〜を提供します / 〜を可能にします / 〜することができます / ご紹介します / ご覧ください / 〜いただけます / 重要なポイント / 注目すべき点 / 本機能は / 本ドキュメントは / 本記事では / 本稿では〜について述べる / 包括的な / 堅牢な / 柔軟な / スケーラブルな / 最適化 / 影響なし / 収まる / 外挿 / 余裕大 / 無視可 / 無視可能 / 懸念解消 / 全観点 / 判定確定 / 漸近
 
 **断定語 (warn-only)**: 完了 / 解消 / 見込み / クリア / 問題なし
 
@@ -25,7 +25,7 @@ _make_ng_dict() {
 
 **非日常英語 (block)**: leverage / utilize / facilitate / mitigate / comprehensive / robust / seamless / holistic / granular / rationale / paradigm
 
-**AI段取り定型 (block)**: まず〜しましょう / 次に〜します / 最後に〜します / 続いて〜します / 加えて〜します / さらに〜します / それでは〜していきましょう / では〜していきます
+**AI段取り定型 (block)**: まず / まずは / 次に / 最後に / 続いて / 加えて / さらに / それでは / では〜していきます / まず〜しましょう / 次に〜します / 最後に〜します / 続いて〜します / 加えて〜します / さらに〜します / それでは〜していきましょう
 
 **ヘッジ濫用 (block)**: 念のため / 一応 / 改めて確認 / 念のために / 改めまして / なお念のため / 一応念のため
 
@@ -352,6 +352,28 @@ teardown() {
 
     [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
     printf '%s' \"\${MESSAGE}\" | grep -q 'まず〜しましょう' || { echo \"MESSAGE=\${MESSAGE}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Case 9b: AI 段取り定型 block — prefix 単体 'まず' を含む text は block される
+# =============================================================================
+
+@test "block: AI段取り定型 prefix 単体 'まず' を含む text → GUARD_CLASS=Forbidden" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'まず確認する。次に編集する。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+    printf '%s' \"\${MESSAGE}\" | grep -q 'まず' || { echo \"MESSAGE=\${MESSAGE}\" >&2; exit 1; }
   "
   [ "$status" -eq 0 ]
 }
