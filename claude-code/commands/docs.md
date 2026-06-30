@@ -12,12 +12,7 @@ Archive completed work knowledge in Notion. Project-agnostic.
 >
 > Full flow: `references/design-phase-flow.md`
 
-**Must-read**: When posting to Notion, follow these guidelines:
-- `guidelines/common/notion-writing.md` — structure, headings, tone, notation rules (core)
-- `guidelines/writing/long-form-doc.md` — user tone guide + interactive check dict
-- `guidelines/common/notion-design.md` — design patterns
-- `guidelines/common/notion-database.md` — DB design, templates
-- `guidelines/common/notion-operations.md` — AI use, permissions, external integration
+**Must-read before Notion post**: `guidelines/common/notion-writing.md` (core: structure / headings / tone / notation) / `guidelines/writing/long-form-doc.md` (tone + interactive dict) / `guidelines/common/notion-design.md` (patterns) / `guidelines/common/notion-database.md` (DB / templates) / `guidelines/common/notion-operations.md` (AI use / permissions / integration).
 
 ## Document types & linked resources
 
@@ -50,35 +45,15 @@ Load type-matched coordinating guidelines/skills.
 
 ### Step 3: Analyze code
 
-```
-git log / git diff → understand changes
-Grep / Read → read related code
-```
-
-Extract:
-- **What**: what changed (diff summary)
-- **Why**: why changed (commit msg, PR desc)
-- **How**: how implemented (main logic)
-- **Impact**: impact scope (dependents, usage)
-- **Caveat**: notes, known constraints
+`git log` / `git diff` for changes, `Grep` / `Read` for related code. Extract 5 axes: **What** (diff summary) / **Why** (commit msg, PR desc) / **How** (main logic) / **Impact** (dependents, usage) / **Caveat** (notes, constraints).
 
 ### Step 4: Search Notion
 
-Search existing related pages w/ `notion-search`.
-
-- Related page found → confirm update or new
-- None → create new
+`notion-search` 既存関連 page を検索する。見つかれば update / new を確認し、無ければ新規作成する。
 
 ### Step 4.8: writing check (pre-Notion post, required)
 
-Before `notion-create-pages` runs, AI self-checks draft body text. Target is md-form draft, not yet sent to Notion.
-
-Check items: writing axis NG table from `skills/comprehensive-review/SKILL.md` + NG dict from `guidelines/writing/long-form-doc.md`.
-
-- Critical ≥1, or Warning ≥4 hits → rewrite draft → re-check (max 2 loops)
-- After pass, proceed to Step 5
-
-Post-edit cost high, so **always check pre-post**.
+`notion-create-pages` 発火前に AI が md 草稿を self-check する。Check items: writing axis NG table (`skills/comprehensive-review/SKILL.md`) + NG dict (`guidelines/writing/long-form-doc.md`)。Critical ≥1 / Warning ≥4 → rewrite → re-check (max 2 loops)。Post-edit cost が高いので必ず pre-post で check する。
 
 ### Step 5: Create/update Notion page
 
@@ -115,16 +90,9 @@ Type-specific templates:
 
 ### Step 5.5: Interactive rewrite (required)
 
-Detail, dict, template: see `guidelines/writing/long-form-doc.md`.
+Detail / dict / template: `guidelines/writing/long-form-doc.md`。Pre-load `~/.claude/projects/{project}/memory/user_vocabulary.md` (既知語 skip)。3 layer (Intent / Understanding / Expression) を順次実行、合計 ≤9 item。Layer 2 の user 応答 text は AI 換言せず draft にそのまま織込み、`user_vocabulary.md` へ追記する。
 
-- Pre-load: `~/.claude/projects/{project}/memory/user_vocabulary.md` (skip known terms)
-- Execute 3 layers (Intent / Understanding / Expression) sequentially, ≤9 items total
-- Layer 2 user response text weave as-is into draft (no AI rephrasing)
-- Append responses to `user_vocabulary.md`
-
-### Step 6: Output URL
-
-Display created/updated Notion page URL.
+### Step 6: Output URL — created/updated Notion page URL を表示する。
 
 ## Options
 
@@ -137,9 +105,6 @@ Display created/updated Notion page URL.
 
 ## Quality guards
 
-- **Secret-free**: API keys, passwords, real URLs → placeholders (`guidelines/writing/strategy.md` security section)
-- **Code examples**: ≤5 lines (strategy.md rule)
-- **Pre-post confirm**: show user preview, get approval
-- **Mermaid diagrams**: Notion code block (mermaid specified)
+**Secret-free** (API keys / passwords / real URL → placeholder、`guidelines/writing/strategy.md` security 節) / **Code examples** ≤5 行 (strategy.md) / **Pre-post confirm** (preview を user に出して承認を取る) / **Mermaid** は Notion code block (mermaid 指定)。
 
 ARGUMENTS: $ARGUMENTS
