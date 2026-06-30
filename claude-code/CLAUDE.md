@@ -88,7 +88,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 - **review feedback 反映**: 既 file の局所修正 1-3 箇所、context 既保持
 - **shellcheck / lint warn 1 箇所修正**: 1 line 編集
 
-→ これらに該当する task は `/dev` / `/flow` ではなく inline で直編集。delegate するなら明示理由 (>5 file / 30+ line each) を 1 行宣言してから。
+→ 上記 3 種 (CI fail 修正 / review feedback 反映 / shellcheck / lint warn 1 箇所修正) に該当する task は `/dev` / `/flow` ではなく inline で直編集する。delegate するなら明示理由 (>5 file / 30+ line each) を 1 行宣言してから。
 
 **Parallel fan-out 自己強制 (hard rule)**: N≥2 dev は**単一 assistant message に N tool_use**。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。
 
@@ -140,7 +140,7 @@ AI を**思考パートナー**として扱う。subagent report の数値 / fil
 | "team で" / "agent team で" / "分担で" / "本格的に" | `/flow` (PO/Manager/Dev hierarchy, forced) |
 | "並列実行で" / "wt 分けて" / "worktree 分けて" / "Developer 並列で" | `/flow --parallel` |
 
-これ以外 ("workflow で" / "test が通るまで" / "再度DD" 等) を含む全 list: `references/natural-language-triggers.md`
+上記 5 entry 以外 ("workflow で" / "test が通るまで" / "再度DD" 等) を含む全 list: `references/natural-language-triggers.md`
 
 ## Git Merge Prohibition
 

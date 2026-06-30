@@ -18,7 +18,7 @@
 - `CLAUDE.md` 冒頭注 (現在 L3) — genshijin mode 説明
 - `references/PARALLEL-PATTERNS.md` `forbidden_phrases` section (現在 L162-166 付近) — bats test が exact-match で検証する JP literal
 
-> 上記 line 番号は参考値。CLAUDE.md は頻繁更新されるため section heading 名で grep して位置確認すること。
+> 前述の line 番号は参考値。CLAUDE.md は頻繁更新されるため section heading 名で grep して位置確認すること。
 
 ## Literal 維持 (技術的理由)
 

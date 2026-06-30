@@ -2,7 +2,7 @@
 
 Copy this template, fill all 6 sections (no placeholder left blank), paste to `Task(developer-agent)`.
 
-## Prompt assembly order (cache hit 最適化)
+## Prompt assembly order (cache hit 率改善)
 
 Anthropic 公式記事 [Harnessing Claude's Intelligence](https://www.anthropic.com/engineering/) は **"Static first, dynamic last"** = 静的 section を先、動的データを末尾に置くと prompt cache hit 率が上がり、cached tokens の課金が base input の 10% に下がる、と説く。
 
@@ -20,7 +20,7 @@ Parent が Task call の prompt を組み立てる際は section 番号 (§0 →
 - [ ] verify cmd 確定済 (build / typecheck / test / bats — single runnable cmd)
 - [ ] DoD 1 行化済
 - [ ] 単 domain (no mixed file groups / root causes)
-- [ ] scope 明示 (`touchable_files:` YAML block + 任意の `additional_files:`、それ以外は scope creep 違反 — §1 参照)
+- [ ] scope 明示 (`touchable_files:` YAML block + 任意の `additional_files:`、`touchable_files` / `additional_files` に記載のない path は scope creep 違反 — §1 参照)
 - [ ] blocker-on-stop 方針記載 ("blocker 検出時は独断進行禁止、`unresolved_errors[]` に書いて `status: partial` で停止")
 - [ ] Self-Review Gate 明示 ("完了報告前に `agents/developer-agent.md` §Self-Review Gate 4 項目を literal 実行、`self_review:` block を report YAML に含める。欠落時 parent reject")
 
@@ -37,7 +37,7 @@ All 7 must be ✓ before firing. Parent completes these; do not push exploration
 3. `changed_files[]` の各 path が `touchable_files` literal 含有
 4. verify cmd 結果が report に literal 反映 (`agent_verify_output` or `parent_verify_planned`)
 
-これら 4 chunk が無ければ「report は受け取らず再投入」を default 挙動とする。fact-check (§0.5 B) は 4 chunk 通過後の最終 layer。
+上記 self_review / unresolved_errors / changed_files / verify cmd の 4 field が無ければ「report は受け取らず再投入」を default 挙動とする。fact-check (§0.5 B) は 4 chunk 通過後の最終 layer。
 
 ## 0.5 Prompt quality rules
 

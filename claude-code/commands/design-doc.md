@@ -52,12 +52,12 @@ If Q1-Q5 already settled in `/prd`, Design Doc **inherits without re-evaluation*
 
 | Launch pattern | Q1-Q5 handling |
 |----------------|---|
-| `/design-doc --prd <path>` | Read PRD "1.5 decision rationale" → **transcribe, skip re-eval**. Append only if design changes premises |
+| `/design-doc --prd <path>` | Read PRD `1.5 decision rationale` → **transcribe, skip re-eval**. Append only if design changes premises |
 | `/design-doc` (no PRD, new) | conduct Q1-Q5 at Step 4 (mandatory section) |
 | `/design-doc --update <path>` | Read existing doc Q1-Q5 → edit diffs only |
 | explicit `--scope Q1,Q3` | override inheritance, re-eval only specified Q |
 
-**Inheritance note**: Mark "1.5 decision rationale" section `Source: <PRD path>`, inline-append only Q needing re-eval. Step 6 quality gate trusts inherited source, confirms transcription only.
+**Inheritance note**: Mark `1.5 decision rationale` section `Source: <PRD path>`, inline-append only Q needing re-eval. Step 6 quality gate trusts inherited source, confirms transcription only.
 
 ## Flow
 

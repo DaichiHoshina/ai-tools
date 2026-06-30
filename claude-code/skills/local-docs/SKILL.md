@@ -44,7 +44,7 @@ Omit subcommand → infer `new` / `update` from context.
 2. **Placement**: follow `STRUCTURE.md` placement flow.
 3. **Template copy (required)**: `cp _templates/{type}.html {dir}/{name}.html`. Never write HTML from scratch with `Write` — copy with `cp`, then fill via `Edit` only.
 4. **Load writing guideline (required, before filling)**: 本文を書く前に `guidelines/writing/long-form-doc.md` を 1 本だけ Read する (canonical: `guidelines/writing/README.md`)。これを読まずに本文 prose を書くのは禁止。読みづらい文の主因は「guideline 未読で書き出す」こと。
-5. **Fill content (Edit only)**: keep skeleton h2, `<style id="local-docs-style">`, `<script id="local-docs-script">` intact. Replace `{...}` placeholders via `Edit`. Overwriting with `Write` destroys script/style. 本文は **1 文 100 字以内 / 結論先行 / 段落 3-4 行上限 / 指示語禁止 (「これ」「上記」→ 具体名) / NG 語回避** を書き出し時点で守る (後段 retry を減らす)。
+5. **Fill content (Edit only)**: keep skeleton h2, `<style id="local-docs-style">`, `<script id="local-docs-script">` intact. Replace `{...}` placeholders via `Edit`. Overwriting with `Write` destroys script/style. skill は本文を書き出した時点で次の規範を守る。1 文を 100 字以内に収める。結論を先行させる。段落を 3〜4 行に抑える。指示語 (「これ」「上記」) は具体名に置き換える。NG 語を回避する。書き出し時点で守ることで後段 retry を減らす。
 6. **Metadata**: fix `<!-- type: ... -->` `<!-- status: ... -->` to canonical values. Do not write `last-updated` (deprecated).
 7. **Title**: follow `STRUCTURE.md` Title Rules — short, no repeating parent context.
 
@@ -55,7 +55,7 @@ Omit subcommand → infer `new` / `update` from context.
 - Any missing → failure. Re-copy from `_templates/{type}.html`.
 
 ### Polish & Verify (writing quality は必須、skip 禁止)
-1. §Type-specific authoring の type 別品質チェックを本文に適用 (時系列粒度 / 影響定量化 / 結論先行 / action 検証可能性)。
+1. §Type-specific authoring の type 別品質チェックを本文に適用する。時系列の粒度を保つ。影響を定量化する。結論を先行させる。action の検証可能性を確保する。
 2. **`jp-writing` skill を実行**して本文 prose を検査する (`-equivalent` の自己判断で済ませない、skill 本体を起動)。対象は HTML body の本文テキストのみ (h2 骨格 / style / script 除外)。
 3. **書き直し loop**: Critical 1 件以上 or Warning 4 件以上で `Edit` 書き直し (最大 2 loop)。3 loop 残存はユーザー報告。合格ライン canonical は `guidelines/writing/long-form-doc.md` §品質検証タイミング。
 4. Run textlint against body text。
@@ -75,7 +75,7 @@ Determine mode first: if `--reformat` is explicit, or legacy structure detected 
 Template が骨格 h2 を与える。各 h2 を**何の粒度で埋めるか**が doc の価値を決める。
 type enum / 集約呼称 / h2 の列挙は local-docs `CLAUDE.md` / `_templates/{type}.html` が canonical (No Derived Literals)。ここでは埋め方の質のみ規定する。
 
-共通: 各 doc 冒頭リードは**結論先行**で 1-3 文。読者が「何が起きたか / 何が分かったか」を最初の段落で把握できること。
+共通: 各 doc の冒頭リードは結論を先行させて 1〜3 文で書く。段落を 3〜4 行に抑える。指示語は具体名に置き換える。読者が「何が起きたか / 何が分かったか」を最初の段落で把握できる状態にする。
 
 - **postmortem / rca** (障害系)
   - 時系列は**絶対時刻 (HH:MM) + 主語 + 観測事実**で書く。「しばらくして」「その後」等の相対表現を避ける

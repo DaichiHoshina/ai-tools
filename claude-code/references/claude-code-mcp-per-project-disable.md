@@ -4,7 +4,7 @@
 
 ## 背景
 
-CLI の `claude mcp remove` や `.mcp.json` / `disabledMcpjsonServers` では、user-scope MCP server (例: datadog, claude.ai 系) を**プロジェクト単位では無効化できない**。これらはグローバル設定なので、消すと全プロジェクトから消える。
+CLI の `claude mcp remove` や `.mcp.json` / `disabledMcpjsonServers` では、user-scope MCP server (例: datadog, claude.ai 系) を**プロジェクト単位では無効化できない**。user-scope MCP server はグローバル設定なので、消すと全プロジェクトから消える。
 
 `~/.claude.json` の `projects[<絶対パス>].disabledMcpServers` 配列を使うとプロジェクト単位で止められる。公式ドキュメント未記載だが実在する。
 

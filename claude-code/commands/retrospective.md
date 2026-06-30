@@ -45,7 +45,7 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 | hook bench logs | `tail -n 20 ~/.claude/logs/bench-*.log` (glob) |
 | /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (generates `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
 
-> log は a9ebeb5 (2026-06-29) 以降のみ集計する (それ以前は bats test 由来の汚染あり)。
+> log は a9ebeb5 (2026-06-29) 以降のみ集計する (a9ebeb5 (2026-06-29) 以前は bats test 由来の汚染あり)。
 
 ### Phase 2: Signal Extraction (≤500 token output, parent inline only)
 

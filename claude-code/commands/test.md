@@ -87,7 +87,7 @@ RED (write failing test) → GREEN (min implementation) → REFACTOR (improve) �
 
 - test-first enforced: no impl code before test
 - min impl: only code to pass test
-- post-complete: `/lint-test` for comprehensive check
+- post-complete: `/lint-test` for end-to-end check
 
 ## Related Commands
 

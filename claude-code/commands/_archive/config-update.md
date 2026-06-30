@@ -95,7 +95,7 @@ git log --since=midnight --pretty=format:'%h %s'
 
 ## ステップ 6 — post-commit
 
-- live `~/.claude/settings.json` は次回 `sync.sh to-local` で template から自動上書き、明示 sync 不要
+- live `~/.claude/settings.json` は次回 `sync.sh to-local` で template から自動上書きするため、明示的な sync は不要になる
 - worktree は auto-merge で完了: `ExitWorktree action=keep`
 - push する場合: `gh pr create` または `/git-push --pr`
 

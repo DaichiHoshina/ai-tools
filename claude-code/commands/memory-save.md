@@ -16,7 +16,7 @@ Save current work state to `~/ai-tools/memory/` in 1 command. CLAUDE.md 固定 d
 1. **同日 file 確認** (auto): `bash ~/ai-tools/claude-code/scripts/memory-save-helper.sh list-today`
    - 既存ありかつ user が `--merge` or `name` 未指定 → 「同日 N 件あり: <slug list>。merge する? 新規 (n)?」を 1 問 (`--merge` ありなら無条件 merge、`--preview` なら skip)
    - merge 採択 → 既存 file を Read して body 統合、name は最古 file 名を継承
-2. **Body 生成** (3 必須 + 4 optional): 下記 "File format" 参照、optional は空なら省略
+2. **Body 生成** (3 必須 + 4 optional): 後述の `File format` 節を参照し、optional は空なら省略する
 3. **Name 解決**: `bash ... resolve-name <base>` で collision 時 `-2/-3` suffix 自動付与 (base = arg or `work-context-YYYYMMDD-<topic>`)
 4. **Preview mode** (`--preview`): body を chat に出力して終了、write しない
 5. **Write**: `~/ai-tools/memory/<name>.md` に Write

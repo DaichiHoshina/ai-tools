@@ -14,7 +14,7 @@ Trailer が欠落した場合は `status: failure` と同等に扱う (`hook-pay
 ## Trailer format
 
 Markdown 本文の末尾、**区切り行 `---` の後に** YAML-like block を置く。
-field 順序は下記で固定 (変更禁止)。
+field 順序は以下のとおり固定する (変更禁止)。
 
 ```
 ---

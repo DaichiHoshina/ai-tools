@@ -35,7 +35,7 @@ Read `$HOME/.claude/CLAUDE.md` and internalize instructions.
 
 ### 2. Restore auto-memory
 
-`$ARGUMENTS` (topic / name) が指定された場合は**それを最優先 Read**、未指定時のみ fallback chain。
+`$ARGUMENTS` (topic / name) が指定された場合は **`$ARGUMENTS` を最優先で Read** し、未指定時のみ fallback chain に降りる。
 
 ```text
 If $ARGUMENTS non-empty:

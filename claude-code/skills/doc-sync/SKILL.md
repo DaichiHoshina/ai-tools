@@ -16,7 +16,7 @@ Auto-fires on any of:
 - 「PRDとの整合性チェック」「整合性チェックして」「整合性取れているか」「local-docsに反映」
 - 「再度コメント読み込み」「再度コメント読んで」(PR/Issue comment 再読込)
 - Mid-`/flow` check when changes since last sync are suspected
-- correction prefix 「違う、」「再度」を受けた場合は直前 task 結果と現状の diff を 1 行 echo してから着手 (差分明示で再認識ループ短縮)
+- correction prefix 「違う、」「再度」を受けた場合は、直前 task 結果と現状の diff を 1 行 echo してから着手する (差分を明示することで再認識ループを短縮する)
 
 > 「PR最新化」「最新 main を取り込んで」は git rebase / merge 系で doc-sync 対象外。`git merge --ff-only main` 等を案内する。
 

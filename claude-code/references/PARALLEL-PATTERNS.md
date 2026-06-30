@@ -49,7 +49,7 @@ N = 1 → sequential execution
 
 ### T_i estimation priority
 
-T_i は以下の優先順位で見積もる。上位 source が使える場合はそれを優先する。
+T_i は以下の優先順位で見積もる。上位 source が使える場合はその source を優先する。
 
 | 優先 | Source | 内容 |
 |---|---|---|

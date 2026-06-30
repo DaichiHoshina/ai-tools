@@ -1,6 +1,6 @@
 # ドキュメント戦略 (種別・保存先・体系)
 
-ドキュメント種別の役割分担・関係性・保存先・体系原則。`/docs` / `/design-doc` / `/prd` 等の保存先判断時に参照。
+ドキュメント種別の役割分担・関係性・保存先・体系原則。`/docs` / `/design-doc` / `/prd` 等の保存先判断時に参照する。
 
 > **どう書くか** (執筆原則) は [PRINCIPLES.md](PRINCIPLES.md) / [long-form-doc.md](long-form-doc.md) / [design-doc-protocol.md](design-doc-protocol.md) 参照。
 
@@ -55,7 +55,7 @@ Technical Spec (現時点の仕様スナップショット)
 
 ## Bounded Contextによる分割
 
-DDDのドメイン境界でディレクトリを切る。混ぜると保守性が崩れる。
+DDD のドメイン境界でディレクトリを切る。種類を混在させると保守性が崩れる。
 
 ```text
 docs/

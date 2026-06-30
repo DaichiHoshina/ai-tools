@@ -9,7 +9,7 @@
 - **AI Summary**: ページ内容から自動要約を生成（DBスキャン時に便利）
 - **Custom AI Autofill**: プロンプト指定で自動分類・タグ付け・翻訳
 
-### 効果的な使い方
+### 推奨する使い方
 
 | 用途 | AIプロパティ設定 | 例 |
 |------|----------------|-----|
@@ -70,4 +70,4 @@
 
 ### Notion AI Connect
 
-Slack、Google Drive、GitHub、Jira等の外部ソースをNotion AI検索に接続。ワークスペース横断で自然言語検索が可能。
+Notion AI が Slack、Google Drive、GitHub、Jira 等の外部ソースをワークスペース横断で自然言語検索できるようになる。

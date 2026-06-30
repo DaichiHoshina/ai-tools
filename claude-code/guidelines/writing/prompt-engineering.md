@@ -94,7 +94,7 @@
 
 ### P7: agentic prompt は「最小化原則」を明示
 
-agent 系モデルは過剰なファイル作成・不要な抽象化・test を通すだけの hard-code を行う傾向がある。system prompt に以下を明示する。
+agent 系モデルは過剰なファイル作成・不要な抽象化・test を通すだけの hard-code をする傾向がある。書き手は system prompt に以下を明示する。
 
 出典: Anthropic Claude best practice
 

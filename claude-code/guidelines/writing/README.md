@@ -10,7 +10,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 | `guidelines/writing/` | **原則・手順** (中粒度、汎用化済) | 表 + 箇条書き | 30-300 |
 | `references/` | **補足事例・パターン詳細** (必要時のみload) | 段落 + 詳細例 | 100-600 |
 
-迷ったとき: rulesで禁止リスト確認 → guidelines/writing/ で原則と適用先確認 → references/ で詳細パターン参照。
+迷ったときは rules で禁止リストを確認し、guidelines/writing/ で原則と適用先を確認し、references/ で詳細パターンを参照する。
 
 **機械検出**: 出力前に `scripts/jp-textlint.sh <file>` で 連続漢字≥5 / 読点≥4 / 文長>100 / NG辞書 hit を一括チェックできる。外向き書込時は `pre-tool-use.sh` が連続漢字・読点を warn-only で自動検出する (block はしない)。NG辞書 canonical: [NG-DICTIONARY.md](NG-DICTIONARY.md)、置換例: [PRINCIPLES-word-replace.md](PRINCIPLES-word-replace.md)。
 
@@ -70,7 +70,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 
 ## 衝突時優先順位
 
-Notion固有仕様 > 長文doc原則 > 短文向け原則 > 共通PRINCIPLES。
+優先順は Notion 固有仕様 > 長文 doc 原則 > 短文向け原則 > 共通 PRINCIPLES の順となる。
 プロジェクト固有CLAUDE.md > global guidelines/writing/。
 
 ## ai-tools Writing Canonical Priority 詳細

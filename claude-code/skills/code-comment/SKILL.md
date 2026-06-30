@@ -10,7 +10,7 @@ disallowed-tools:
 
 # code-comment — コードコメント品質チェック & リライト
 
-Goal: code に対するコメントを 「WHY と重要 memo に限定」「コードから読める内容を残さない」「AI 時代の Comment Traps を避ける」 という業界 consensus に揃える。判定基準は `guidelines/writing/code-comment.md` canonical を唯一の source of truth として参照する (本 skill は list を持たない)。
+Goal: code に対するコメントを 「WHY と重要 memo に限定」「コードから読める内容を残さない」「AI 時代の Comment Traps を避ける」 という業界 consensus に揃える。本 skill は判定基準を `guidelines/writing/code-comment.md` canonical を唯一の source of truth として参照する (本 skill は list を持たない)。
 
 ## Activation criteria
 
@@ -33,7 +33,7 @@ trigger 語 (skill auto-fire):
    - ARGUMENTS 空 → 直前 assistant turn の code block 内コメント
    - どちらもなし → 「対象 file 指定 or コメント貼り付け」と 1 行返す
 3. 抽出後、canonical の 12 カテゴリ table で **1 コメントずつ分類**
-4. 削除 / 書き直し対象に **Before / After ペア** を出力 (列挙で止めない)
+4. 削除・書き直しの対象には **Before / After ペア** を出力する (列挙で止めない)
 
 ## Decision flow (canonical 3 分類 + 9 削除)
 
@@ -90,7 +90,7 @@ result := newCalc(input)
 After: (削除)
 ````
 
-confidence < 80% は **discard** (この行が何カテゴリか不明確な場合は指摘しない)。canonical L345 と整合。
+信頼度が 80% 未満の判定は **discard** する (この行が何カテゴリか不明確な場合は指摘しない)。canonical L345 と整合する。
 
 ## 非対象 (誤発火を避ける)
 
