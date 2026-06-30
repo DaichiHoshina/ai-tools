@@ -148,7 +148,7 @@ _assert_required_keys() {
   _assert_required_keys_done=1
   # NG-DICTIONARY.md 不在時は別経路で既に silent pass → この検査はスキップ
   [[ -f "$_principles_file" ]] || return 0
-  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)" "冗長表現 (block)")
+  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)" "冗長表現 (block)" "AI段取り定型 (block)" "ヘッジ濫用 (block)" "過剰丁寧 (block)")
   local key
   for key in "${required_keys[@]}"; do
     local result
@@ -265,7 +265,7 @@ _block_if_ai_jargon() {
   _assert_required_keys
 
   # inject byte size 計測: 全 block list の合計抽出 byte 数を計算してログ出力
-  local _inject_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)" "冗長表現 (block)")
+  local _inject_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)" "冗長表現 (block)" "AI段取り定型 (block)" "ヘッジ濫用 (block)" "過剰丁寧 (block)")
   local _inject_total=0
   local _inject_key
   for _inject_key in "${_inject_keys[@]}"; do
@@ -287,6 +287,9 @@ _block_if_ai_jargon() {
     "非日常英語 (block)|非日常英語 block|日常で使う英語または日本語に置換してください"
     "弱い表現 (block)|弱い表現 block|弱い表現を断定または「検証が必要」に置換してください"
     "冗長表現 (block)|冗長表現 block|冗長表現を短縮形に置換してください (例: することができる → できる、を行う → する)"
+    "AI段取り定型 (block)|AI段取り定型 block|段取り定型を削除して内容を直接書いてください (まず/次に/最後に は番号 list で代替)"
+    "ヘッジ濫用 (block)|ヘッジ濫用 block|ヘッジ語を削除して断定で書いてください (念のため/一応 は不要)"
+    "過剰丁寧 (block)|過剰丁寧 block|過剰丁寧を削除して直接的に書いてください (ご確認ください → 確認する)"
   )
 
   # block hit: key → hit_words の連想配列

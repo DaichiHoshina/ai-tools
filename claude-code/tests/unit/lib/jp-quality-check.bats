@@ -25,6 +25,12 @@ _make_ng_dict() {
 
 **非日常英語 (block)**: leverage / utilize / facilitate / mitigate / comprehensive / robust / seamless / holistic / granular / rationale / paradigm
 
+**AI段取り定型 (block)**: まず〜しましょう / 次に〜します / 最後に〜します / 続いて〜します / 加えて〜します / さらに〜します / それでは〜していきましょう / では〜していきます
+
+**ヘッジ濫用 (block)**: 念のため / 一応 / 改めて確認 / 念のために / 改めまして / なお念のため / 一応念のため
+
+**過剰丁寧 (block)**: ご確認ください / ご確認をお願いします / お手数ですが / 恐れ入りますが / お気軽に / ご不明な点 / お気軽にご相談 / ご一読いただけますと
+
 **カタカナ造語禁止**: シームレス / シームレスに / ロバスト / スケーラブル / 直感的 / 直感的に / 革新的 / 革新的な / 包括的 / 包括的な / 堅牢 / 堅牢な / フレキシブル / インテリジェント / スマート / リッチ / モダン / クリーン / ハイレベル / ローレベル / クリティカル / クリティカルに / セキュア
 
 **置換候補 (頻出)**: 踏襲→引き継ぐ / 鑑みる→踏まえる / 喫緊→直近 / leverage→活かす / utilize→使う / mitigate→緩和する
@@ -324,6 +330,72 @@ teardown() {
 
     # ADDITIONAL_CONTEXT に置換候補 '引き継ぐ' が含まれる
     printf '%s' \"\${ADDITIONAL_CONTEXT}\" | grep -q '引き継ぐ' || { echo \"ADDITIONAL_CONTEXT=\${ADDITIONAL_CONTEXT}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Case 9: AI 段取り定型 block — まず〜しましょう を含む text は block される
+# =============================================================================
+
+@test "block: AI段取り定型 'まず〜しましょう' を含む text → GUARD_CLASS=Forbidden" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'まず〜しましょう、次の手順に進む。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+    printf '%s' \"\${MESSAGE}\" | grep -q 'まず〜しましょう' || { echo \"MESSAGE=\${MESSAGE}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Case 10: ヘッジ濫用 block — 念のため を含む text は block される
+# =============================================================================
+
+@test "block: ヘッジ濫用 '念のため' を含む text → GUARD_CLASS=Forbidden" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '念のため確認した。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+    printf '%s' \"\${MESSAGE}\" | grep -q '念のため' || { echo \"MESSAGE=\${MESSAGE}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
+# Case 11: 過剰丁寧 block — ご確認ください を含む text は block される
+# =============================================================================
+
+@test "block: 過剰丁寧 'ご確認ください' を含む text → GUARD_CLASS=Forbidden" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '修正済み、ご確認ください。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+    printf '%s' \"\${MESSAGE}\" | grep -q 'ご確認ください' || { echo \"MESSAGE=\${MESSAGE}\" >&2; exit 1; }
   "
   [ "$status" -eq 0 ]
 }

@@ -1175,7 +1175,11 @@ _inject_ng_dict_on_commit_compose() {
   fi
 
   local _inject_msg="【起草前 NG 語回避】以下の用語を commit message / PR 本文に使わないでください。source: guidelines/writing/NG-DICTIONARY.md
-block_terms: ${_block_terms}"
+block_terms: ${_block_terms}
+【閉じてない文章 NG】常体 plain JP の開いた文章で書く (rules/genshijin.md)。
+  - 体言止め羅列 NG: 「sync 完了。push 済。」 → 「sync した。push した。」
+  - 助詞省略 NG: 「file 編集 → sync 必要」 → 「file を編集したら sync が必要になる」
+  - 名詞ぶつ切り NG: 「修正 3 件、commit 1 個」 → 「修正を 3 件加えて 1 commit にまとめた」"
   if [[ -n "$_replace_hint" ]]; then
     _inject_msg="${_inject_msg}
 置換例 (非日常英語 → 平易な日本語):
