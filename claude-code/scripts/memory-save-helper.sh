@@ -6,6 +6,7 @@
 #   2. list-today          — 同日 work-context-YYYYMMDD-*.md を改行区切りで列挙
 #   3. resolve-name        — name collision 回避 (-2/-3 suffix 付与)
 #   4. update-index        — MEMORY.md 先頭に `- YYYY-MM-DD [desc](file.md) — hook` を追記 (重複 dedup)
+#   5. append-clear-line   — /memory-save clear 用、個別 file なしで MEMORY.md に `- YYYY-MM-DD [clear] <topic> — <summary> (commit: <hash>)` を prepend (dedup なし)
 #
 # 注意: 本 script は AI 経由の Write/Edit ばらつきを排除するための deterministic helper。
 #       memory file 本体の write は /memory-save command (AI 側) が担当する。
@@ -68,6 +69,31 @@ cmd_update_index() {
   fi
 }
 
+# /memory-save clear 専用: 個別 file を作らず MEMORY.md に 1 行 entry を prepend する。
+# canonical: commands/memory-save.md § "clear" post-processing (2026-06-30 改訂: 肥大化対策で file なしに変更)
+# format: - `YYYY-MM-DD` [clear] <topic> — <1 行 summary> (commit: <hash>)
+cmd_append_clear_line() {
+  local topic="${1:?topic required}" summary="${2:?summary required}" commit="${3:-}"
+  mkdir -p "$MEMORY_DIR"
+  local date_iso; date_iso=$(_today_iso)
+  local line
+  if [ -n "$commit" ]; then
+    line="- \`${date_iso}\` [clear] ${topic} — ${summary} (commit: ${commit})"
+  else
+    line="- \`${date_iso}\` [clear] ${topic} — ${summary}"
+  fi
+
+  if [ ! -f "$INDEX_FILE" ]; then
+    printf '%s\n' "$line" > "$INDEX_FILE"
+    return 0
+  fi
+
+  # clear entry は dedup しない (同日複数 clear save を残す)。先頭 prepend。
+  local tmp; tmp=$(mktemp)
+  { printf '%s\n' "$line"; cat "$INDEX_FILE"; } > "$tmp"
+  mv "$tmp" "$INDEX_FILE"
+}
+
 usage() {
   sed -n '2,15p' "$0"
   exit "${1:-0}"
@@ -80,6 +106,7 @@ main() {
     list-today)    cmd_list_today "$@" ;;
     resolve-name)  cmd_resolve_name "$@" ;;
     update-index)  cmd_update_index "$@" ;;
+    append-clear-line) cmd_append_clear_line "$@" ;;
     -h|--help|help|"") usage 0 ;;
     *) printf 'unknown subcommand: %s\n' "$sub" >&2; usage 1 ;;
   esac

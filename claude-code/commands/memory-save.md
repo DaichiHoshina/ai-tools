@@ -13,6 +13,8 @@ Save current work state to `~/ai-tools/memory/` in 1 command. CLAUDE.md 固定 d
 
 ## Flow
 
+> **`clear` arg がある場合は step 1-6 を skip** し、後述 `clear post-processing` の専用 path に進む (個別 file を作らず MEMORY.md に 1 行 prepend のみ、memory 肥大化対策)。
+
 1. **同日 file 確認** (auto): `bash ~/ai-tools/claude-code/scripts/memory-save-helper.sh list-today`
    - 既存ありかつ user が `--merge` or `name` 未指定 → 「同日 N 件あり: <slug list>。merge する? 新規 (n)?」を 1 問 (`--merge` ありなら無条件 merge、`--preview` なら skip)
    - merge 採択 → 既存 file を Read して body 統合、name は最古 file 名を継承
@@ -52,20 +54,26 @@ metadata:
 | `<name>` | name 指定 (helper が collision 回避 suffix 付与) |
 | `--preview` | dry-run、body を chat 出力のみ。write も MEMORY.md 更新もしない |
 | `--merge` | 同日 work-context 最古 file に統合追記 (確認 skip) |
-| `clear` | save 後 `/reload <name>` を pbcopy、`/clear` 案内 |
+| `clear` | **個別 file を作らず** MEMORY.md に 1 行 entry を prepend、`/clear` 案内 (memory 肥大化対策、2026-06-30 改訂) |
 | `exit` | save 後 path + restore 手順を 1-2 行で chat 出力 (clipboard なし) |
 
 `--preview` `--merge` は他 arg と併用可 (`/memory-save foo --preview`)。
 
 ## `clear` post-processing
 
-`$ARGUMENTS` に `clear` 含む時のみ save 後実行:
+`$ARGUMENTS` に `clear` 含む時の動作 (2026-06-30 改訂、memory 肥大化対策):
 
-1. `printf '/reload %s' "<name>" | pbcopy` (no newline)
-2. 「`/reload <name>` copied. paste after `/clear`」を 1 行 chat
-3. User が `/clear` 手動実行
+1. **個別 file (`work-context-*.md`) を作らない**。通常 Flow の step 2-5 (Body 生成 / Name 解決 / Preview / Write) を skip する。
+2. 現 session の `<topic>` と 1 行 `<summary>` を決定 (AI 側、最後の commit hash も任意で添える)
+3. `bash ~/ai-tools/claude-code/scripts/memory-save-helper.sh append-clear-line <topic> <summary> [<commit>]` を実行 (helper が MEMORY.md 先頭に 1 行 prepend)
+4. format: `- \`YYYY-MM-DD\` [clear] <topic> — <summary> (commit: <hash>)`
+5. 「memory index に 1 行追記済。次 session は MEMORY.md を Read して再開する。`/clear` 可」を 1 行 chat
+6. 旧仕様 (`/reload <name>` pbcopy) は **廃止** — 個別 file がないので reload 対象がない
 
-Fallback (Linux): `xclip -selection clipboard` → `wl-copy` → literal chat 出力。
+### 復元方法 (次 session)
+
+- 次 session は session-start hook が MEMORY.md を auto-load (`~/ai-tools/memory/MEMORY.md` は 200 行まで context 注入される)
+- 詳細復元したい場合: 関連 git commit を `git show <hash>` で確認、または個別 memory file (`feedback-*.md` 等) を Read
 
 ## `exit` post-processing
 

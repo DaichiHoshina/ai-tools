@@ -96,3 +96,61 @@ teardown() {
   run "$HELPER" bogus
   [ "$status" -ne 0 ]
 }
+
+# =============================================================================
+# append-clear-line: /memory-save clear 用、個別 file なしで MEMORY.md に 1 行 prepend
+# canonical: commands/memory-save.md § "clear" post-processing (2026-06-30 改訂)
+# =============================================================================
+
+@test "append-clear-line: 新規 MEMORY.md に 1 行 entry を書き込む" {
+  rm -f "${MEMORY_SAVE_DIR}/MEMORY.md"
+  run "$HELPER" append-clear-line "test-topic" "test summary" "abc1234"
+  [ "$status" -eq 0 ]
+  [ -f "${MEMORY_SAVE_DIR}/MEMORY.md" ]
+  local line; line=$(head -1 "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [[ "$line" == *"[clear] test-topic"* ]]
+  [[ "$line" == *"test summary"* ]]
+  [[ "$line" == *"(commit: abc1234)"* ]]
+}
+
+@test "append-clear-line: commit hash 省略時は (commit: …) を付けない" {
+  rm -f "${MEMORY_SAVE_DIR}/MEMORY.md"
+  run "$HELPER" append-clear-line "no-commit-topic" "no commit summary" ""
+  [ "$status" -eq 0 ]
+  local line; line=$(head -1 "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [[ "$line" == *"[clear] no-commit-topic"* ]]
+  [[ "$line" == *"no commit summary"* ]]
+  [[ "$line" != *"(commit:"* ]]
+}
+
+@test "append-clear-line: 既存 MEMORY.md の先頭に prepend する" {
+  printf '%s\n' "- old entry 1" "- old entry 2" > "${MEMORY_SAVE_DIR}/MEMORY.md"
+  run "$HELPER" append-clear-line "new-topic" "new summary" "def5678"
+  [ "$status" -eq 0 ]
+  local first_line; first_line=$(head -1 "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [[ "$first_line" == *"[clear] new-topic"* ]]
+  local total_lines; total_lines=$(wc -l < "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [ "$total_lines" -eq 3 ]
+  # 旧 entry が残存していること
+  grep -q "old entry 1" "${MEMORY_SAVE_DIR}/MEMORY.md"
+  grep -q "old entry 2" "${MEMORY_SAVE_DIR}/MEMORY.md"
+}
+
+@test "append-clear-line: 同日複数 clear save は dedup せず重複保存する" {
+  rm -f "${MEMORY_SAVE_DIR}/MEMORY.md"
+  "$HELPER" append-clear-line "same-topic" "first save" "aaa1111"
+  "$HELPER" append-clear-line "same-topic" "second save" "bbb2222"
+  local count; count=$(grep -c "same-topic" "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [ "$count" -eq 2 ]
+  # 新しい (second) が先頭、古い (first) が後
+  local first_line; first_line=$(head -1 "${MEMORY_SAVE_DIR}/MEMORY.md")
+  [[ "$first_line" == *"second save"* ]]
+}
+
+@test "append-clear-line: 個別 file (work-context-*.md) は作らない" {
+  rm -f "${MEMORY_SAVE_DIR}/MEMORY.md"
+  rm -f "${MEMORY_SAVE_DIR}"/work-context-*.md
+  "$HELPER" append-clear-line "no-file-topic" "summary" ""
+  local file_count; file_count=$(find "${MEMORY_SAVE_DIR}" -maxdepth 1 -name 'work-context-*.md' 2>/dev/null | wc -l | tr -d ' ')
+  [ "$file_count" -eq 0 ]
+}
