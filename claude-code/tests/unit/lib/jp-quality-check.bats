@@ -133,7 +133,7 @@ teardown() {
 # Case 3: warn-only 正例 — 断定語は exit 0 + warning ログが書き込まれる
 # =============================================================================
 
-@test "warn-only: '完了' を含む text → GUARD_CLASS は空 + ログに warn が記録される" {
+@test "warn-only: '完了' を含む text → GUARD_CLASS は空 + _check_term_list で hit 語が返る" {
   _make_ng_dict "$TEST_TMPDIR"
 
   run bash -c "
@@ -148,10 +148,10 @@ teardown() {
     # warn-only → block しない (GUARD_CLASS 空のまま)
     [ -z \"\${GUARD_CLASS}\" ] || exit 1
 
-    # warn ログが書き込まれている
-    log_file=\"\${HOME}/.claude/logs/jp-quality-block.log\"
-    [ -f \"\${log_file}\" ] || exit 1
-    grep -q 'warn' \"\${log_file}\"
+    # warn-only 検出は _check_term_list が hit 語を stdout に返すこと自体で確認する
+    # (_append_jp_quality_log は bats 実行中 log 汚染回避のため skip 設計、log 不在で正)
+    hit=\$(_check_term_list 'デプロイ完了。' '断定語 (warn-only)') || true
+    [[ \"\$hit\" = '完了' ]]
   "
   [ "$status" -eq 0 ]
 }
