@@ -83,6 +83,7 @@ metadata:
 ### 復元方法 (次 session)
 
 - 次 session は session-start hook が MEMORY.md を auto-load (`~/ai-tools/memory/MEMORY.md` は 200 行まで context 注入される)
+- compaction 後の明示復元は `/reload` を使う。`/reload` の fallback chain は MEMORY.md 先頭の [clear] entry → 直近 work-context 本文 → pending-improvements の順で Read する (canonical: `commands/reload.md`)
 - 詳細復元したい場合: 関連 git commit を `git show <hash>` で確認、または個別 memory file (`feedback-*.md` 等) を Read
 
 ## `exit` post-processing

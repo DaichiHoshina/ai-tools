@@ -92,13 +92,15 @@ if [ -n "${GIT_LOG}" ]; then
 fi
 
 if [ -n "${RESTORE_FILE}" ]; then
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}${NL}## auto-memory 復元（自動実行）${NL}${NL}"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}1. **Read tool** で以下 file を読込:${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}${NL}## auto-memory 復元（自動実行、/reload Step 2 と同期）${NL}${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}1. **Read tool** で compact-restore を読込:${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}   - \`${RESTORE_FILE}\`${NL}"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. 当日の \`work-context-*\` memory があれば追加 Read (任意)${NL}"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. 読込後、復元情報の summary を user に報告${NL}"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}4. 読込済 \`compact-restore-*\` file を削除（蓄積防止、\`rm\` via Bash）${NL}${NL}"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}user の操作なしで自動実行する。"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. \`~/ai-tools/memory/MEMORY.md\` を Read (先頭 1-3 行で当日 [clear] entry 確認)${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. 当日 \`work-context-YYYYMMDD-*.md\` 全件 Read、無ければ直近 1 件まで遡る${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}4. \`~/ai-tools/memory/pending-improvements.md\` を Read (未消化 item surface)${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}5. 読込後、Loaded / 直近 state / 未消化 item / Next action の 4 block で summary 報告${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}6. 読込済 \`compact-restore-*\` file を削除（蓄積防止、\`rm\` via Bash）${NL}${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}user の操作なしで自動実行する。canonical: \`commands/reload.md\`。"
 else
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}${NL}## ${ICON_WARN} compact-restore file 不在${NL}${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}pre-compact の保存指示が失敗した可能性あり。git 情報のみで作業継続し、失われた文脈は user に確認する。"

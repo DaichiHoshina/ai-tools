@@ -505,7 +505,7 @@ _clear_markers() {
   [ "$status" -eq 0 ]
   # Read tool 分岐固有の文字列を assert (file 不在 fallback の文言と区別)
   [[ "$output" == *"Read tool"* ]]
-  [[ "$output" == *"復元（自動実行）"* ]]
+  [[ "$output" == *"復元（自動実行"* ]]
   [ ! -f "${HOME}/.claude/.compact-memory-state" ]
 }
 
