@@ -23,7 +23,7 @@ Run: `claude --version` (local CLI) / `npm view @anthropic-ai/claude-code dist-t
 Repo runs on the **stable** channel (switched back from latest 2026-06-23); fetch scope and bump target align to stable tag.
 
 **Decision**:
-- `VERSION > TARGET` → no-op exit; display `> [WARN] VERSION (X) > TARGET (Y)` (fetch range backward — skip)
+- `VERSION > TARGET` → no-op exit; display `> [WARN] VERSION (X) > TARGET (Y): fetch range backward — skip. Confirm manually aligning VERSION to TARGET.`
 - `TARGET == VERSION` + opportunities resolved → "already up to date" & exit
 - `TARGET == VERSION` + opportunities exist → Phase 3-B only
 - `TARGET > VERSION` → Phase 2 (CHANGELOG fetch range: `VERSION+1` ~ `TARGET`)

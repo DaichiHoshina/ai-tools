@@ -28,7 +28,7 @@ Execute commit → push → PR/MR creation in single command.
 ### Common
 
 1. Check state (`git status --short` / `branch --show-current` / `diff --stat` / `log --oneline -5`)
-2. **Writing pre-check** (commit msg / PR body 生成前): `guidelines/writing/NG-DICTIONARY.md` + `PRINCIPLES.md` (AI定型語 / 要根拠語 / 難読漢語 / 非日常英語) を self-check し plain 表現に置換する。Hook (`pre-tool-use.sh`) が `git commit` で block する前に潰す。Scope: 全 commit message 生成経路 (`/git-push` / 直接 `git commit` 共通)。
+2. **Writing pre-check** (commit msg / PR body 生成前): `guidelines/writing/NG-DICTIONARY.md` + `PRINCIPLES.md` (AI定型語 / 要根拠語 / 難読漢語 / 非日常英語) を self-check し plain 表現に置換する (max 3 loops、3 回で hit 残存時は user に提示して続行確認)。Hook (`pre-tool-use.sh`) が `git commit` で block する前に潰す。Scope: 全 commit message 生成経路 (`/git-push` / 直接 `git commit` 共通)。
 3. Uncommitted changes present → analyze diff → generate Conventional Commits msg → confirm w/ user → commit
 
 ### main mode
@@ -42,7 +42,7 @@ Execute commit → push → PR/MR creation in single command.
 3. `git push -u origin <branch>`
 4. **IMPL_NOTES detection** (skip on `--no-impl-notes`): `~/.claude/plans/impl-notes/` 配下で current branch (kebab-case 正規化) に一致する `<feature-slug>` dir を探索。複数なら timestamp prefix 最新を選び、`MERGED.md` があれば **Design decisions** + **Open questions** を PR body draft 候補として user confirm step に提示する (auto-insert はしない)。No match は silent skip。
 5. `gh pr create` / `glab mr create` (auto-detect remote)
-5.5. **writing check (PR body)**: step 2 と同じ NG word check (max 3 loops) を PR body draft に適用する。PR body の issue/PR URL は `gh issue view` / `gh pr view` で番号存在を事前検証する (`rules/ai-output.md` `## URL / Issue & PR Number Validation`)。
+5.5. **writing check (PR body)**: PR body draft にも step 2 の writing pre-check (NG-DICTIONARY.md / PRINCIPLES.md、max 3 loops、残存時 user 確認) を適用する。PR body の issue/PR URL は `gh issue view` / `gh pr view` で番号存在を事前検証する (`rules/ai-output.md` `## URL / Issue & PR Number Validation`)。
 6. Display PR/MR URL
 7. **Auto-review** (`--auto-review` only, GitHub only, default OFF): `/code-review:code-review <PR#>` と `coderabbit:code-review` を `Bash run_in_background:true` で並列起動 → `BashOutput` で順次完了確認。成功は PR comment 投稿を user に表示、失敗は tool 名 / exit code / stderr tail 10 行を表示 (PR 作成自体は成功扱い)。GitLab/`glab` 環境は skip + warn 表示。
 

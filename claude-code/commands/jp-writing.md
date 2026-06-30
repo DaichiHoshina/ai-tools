@@ -21,7 +21,7 @@ Code body, code comments, docstrings out of scope.
 
 ### NG 辞書 (独自部分)
 
-NG 辞書の詳細 (体言止め擬人化 / 連用形否定 / 口語動詞 / 英動詞化 / 専門用語 / 社内造語) は `guidelines/writing/NG-DICTIONARY.md` 参照。
+NG 辞書の詳細 (体言止め擬人化 / 連用形否定 / 口語動詞 / 英動詞化 / 専門用語 / 社内造語) は `guidelines/writing/NG-DICTIONARY.md` § `jp-writing 固有 NG (skill-only)` 参照。
 
 ### 「変に略さない」原則
 
