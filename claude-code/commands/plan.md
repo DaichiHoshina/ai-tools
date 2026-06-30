@@ -69,17 +69,7 @@ Choose from 6 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>
 
 Decision examples: review **only** → `/workflow review` / review→fix→push auto → `/flow --auto` / migrate N files → `/workflow migrate` / new feature (PO needed) → `/flow` / design majority-vote → `/workflow judge-panel`
 
-N formula (/flow):
-
-```text
-N_candidate = independent file count (cross-file coupling = 0)
-wall_clock_parallel ≈ max(T_i) + overhead(60s)
-wall_clock_sequential ≈ sum(T_i)
-adopt if: wall_clock_parallel < wall_clock_sequential
-N_final = min(N_candidate, 8)
-```
-
-T_i estimate = file lines × edit density (new ~3s/line / modify ~5s/line / delete ~1s/line)
+N formula (/flow): canonical = `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula` (LPT_makespan + overhead(N) と T_i 見積 4 段優先順を参照する。旧 `max(T_i) + 60s` 簡略式は overhead(N) と桁が異なるため使わない)。
 
 ## Self-Review (required, 2-stage)
 

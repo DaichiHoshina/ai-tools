@@ -67,7 +67,7 @@ Physically parallelizes via worktree isolation.
 
 **`--auto` skip conditions**: Parallel formula PASS + clean worktree + no branch/worktree collision + creation fail → sequential downgrade + notify. Details: `references/PARALLEL-PATTERNS.md` `### /flow --parallel --auto skip-confirmation 4 conditions`.
 
-**worktree cleanup**: Changes → return branch + merge + delete / no changes → auto-delete / Collision → sequential downgrade + leave. Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`.
+**worktree cleanup**: Changes present → return branch + merge + delete / no changes → auto-delete / collision → sequential downgrade + leave. Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`.
 
 Sweet spot / hard rules: `references/PARALLEL-PATTERNS.md#fan-out-hard-rules`.
 
@@ -97,7 +97,7 @@ Detail step prose: `references/flow-orchestration.md`
 
 Parent Opus gates mandatory. Canonical: `references/parallel-self-review.md`. Noise discard: `references/on-demand-rules/review-noise-discard.md`. **Parent responsibility**: no outsourcing to PO/Manager. PO Gate v2 fires pre-fan-out (cannot skip). Canonical: `references/retrospectives/2026-06-19_agent-oversight.md`
 
-A/B mandatory on orchestration path; `--sequential` exempts A/B. C: `--auto`/`--multi-review` only.
+A/B mandatory on orchestration path; `--sequential` exempts A/B. `/dev --parallel` also exempts A/B (no PO/Manager orchestration). C: `--auto`/`--multi-review` only.
 
 - **PO Gate v2** (step 6.3): 8 criteria — goal/constraints/priority/file_count/bundle_justification/scope/subagent_type/branch_cwd literal. `modify` → Manager re-allocation (max 1) with `fix_request` 3+1 field (modify_target / unchanged / reason / concrete_change); parent post-validation: `grep -F task.files[]` vs PO instruction literal; `fail` → stop + user escalation
 - **Gate A** (step 6.5): 6 criteria — N consistency / formula PASS / file conflict / worktree applicability / T_i basis / bundle fire format. FAIL → re-run Manager (max 1); 2nd → `--sequential` downgrade
