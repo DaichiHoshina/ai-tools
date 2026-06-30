@@ -49,6 +49,17 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 - **root keys (env / model / statusLine / permissions / sandbox / worktree / enabledPlugins / extraKnownMarketplaces / autoUpdatesChannel ほか allowlist) は template canonical**。例外: `hooks` / `skillOverrides` は merge logic あり
 - 🔒 PROTECTED SECTION / YAML frontmatter は改変禁止。詳細 (VERSION / SERENA_VERSION / stable channel 経緯): `references/editing-rule-detailed.md`
 
+## Definition File SoT (ai-tools 一元)
+
+**command / skill / agent / rule / guideline / hook / reference 等の定義 file は `~/ai-tools/claude-code/` を SoT として一元参照する**。`~/ghq/<repo>/.claude/` や `~/ghq/<repo>/CLAUDE.md` 等に同名定義があっても **AI は読み込まない**。
+
+| 種別 | 取り扱い |
+|---|---|
+| memory file (`~/ghq/<repo>/memory/`、`~/ai-tools/memory/`) | **Read OK** (work-context / feedback 個別 file 含む) |
+| 定義 file (command / skill / agent / rule / guideline / hook / reference) | **ai-tools 配下のみ Read**。repo 配下の同名 file は無視する |
+| repo 配下 CLAUDE.md (`~/ghq/<repo>/CLAUDE.md`) | repo 固有 lint / format / CI / license / 法務 footer 等の **project 必須情報のみ** 参照、それ以外は ai-tools 側を優先 |
+| repo 配下 code / config edit | repo の方針に従う (ai-tools SoT 適用外) |
+
 ## Definition File Token Saving
 
 `.md` in commands/, skills/, agents/ consume tokens every session. Keep: decision tables, workflow defs, operation guards, prohibitions, 1 example. Remove: sample impl, duplicate explanations, detailed usage. Target: agent ≤300 / command ≤150 / skill 100-130 lines.

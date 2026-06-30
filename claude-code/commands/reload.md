@@ -41,12 +41,14 @@ Read `$HOME/.claude/CLAUDE.md` and internalize instructions.
 If $ARGUMENTS non-empty:
   1. Read ~/ai-tools/memory/<arg>.md (拡張子なし指定でも .md 補完)
   2. file 不在なら ~/ai-tools/memory/ から prefix match で 1 件 Read
-  3. それでも不在なら fallback chain に降りる
+  3. cwd が ai-tools repo 外なら `<repo-root>/memory/**/<arg>.md` も prefix match で探索 (memory file は SoT 適用外、Read OK)
+  4. それでも不在なら fallback chain に降りる
 Else (fallback chain):
-  1. ls ~/.claude/projects/-Users-daichi-hoshina-ai-tools/memory/compact-restore-*.md
+  1. PROJECT_SLUG=$(pwd | sed 's|/|-|g')  # cwd を Claude Code project slug 形に変換
+     ls ~/.claude/projects/${PROJECT_SLUG}/memory/compact-restore-*.md
      → Read the latest mtime (top priority)
-  2. Read ~/ai-tools/memory/work-context-$(date +%Y%m%d)-*.md (today 分全件)
-  3. Read project-specific memory (style_and_conventions.md etc.) if present
+  2. Read ~/ai-tools/memory/work-context-$(date +%Y%m%d)-*.md (today 分全件、ai-tools 共有 memory)
+  3. cwd が ai-tools repo 外の場合は `<repo-root>/memory/<sub-project>/work-context-$(date +%Y%m%d)-*.md` も Read 対象 (memory file は SoT 適用外、Read OK)
   4. rm loaded compact-restore-* (prevent accumulation)
 ```
 
