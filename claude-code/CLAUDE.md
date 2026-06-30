@@ -121,6 +121,8 @@ AI を**思考パートナー**として扱う。subagent report の数値 / fil
 
 ## Public-repo private-data block
 
+**全 repo 共通 (public / private 問わず)**: commit message 本文 / trailer / footer、PR title / body、issue / MR comment に**具体的な人名 / GitHub handle (`@<handle>`) / Slack display name / 社員 alias を書かない**。Co-Authored-By trailer の AI marker (`Claude Opus 4.7` 等) は人物ではないため対象外。レビュー指摘の引用が必要なら handle を伏せて「レビュー指摘」と総称する。canonical: `~/ai-tools/memory/feedback_no_personal_name_in_commit.md`
+
 **ai-tools repo は public**。社内 product 名 / 社内識別子 / 個人名 / 会社名 / project 固有名詞を `~/ai-tools/` 配下 file・commit message に書込禁止。`pre-tool-use.sh` hard block、canonical list: `~/.claude/references-private/private-name-list.txt`。詳細: `rules/public-repo-private-data-block.md` (`[[public-repo-social-hit-incident]]`)
 
 **Hook block / NG-DICTIONARY.md**: AI定型語 / カタカナ造語禁止 / 難読漢語 / 非日常英語を hook block。**既存 key の name 変更禁止** (hook が exact match 参照)。詳細: `guidelines/writing/NG-DICTIONARY.md`
