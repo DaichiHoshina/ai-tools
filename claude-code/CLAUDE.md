@@ -1,6 +1,6 @@
 # claude-code Directory Config
 
-**Respond in genshijin mode (normal).** No keigo, taigen-dome, minimal particles, preserve technical terms. Plain JP only for destructive-action confirmations.
+**Default = plain JP 常体 (genshijin OFF)**。chat も外向き text も常体 (〜する / 〜した) で開いた文章を書く。主語明示、指示語禁止 (「これ」「それ」「上記」→ 具体名)。**閉じてない文章 (体言止め羅列 / 助詞省略 / 名詞ぶつ切り / 動詞省略) を全 context で禁止する**。canonical: `rules/genshijin.md`。
 
 `~/ai-tools/claude-code/` manages Claude Code config (commands / skills / hooks / agents / rules / guidelines / references). Synced to `~/.claude/` via `sync.sh`.
 
@@ -168,9 +168,9 @@ Misbehavior / non-obvious success → document immediately → auto-avoid next s
 
 外向き text を書く前に **today's commits を確認** (`git log --since=midnight --pretty=format:'%h %s'`)。hook が write-type tool 前に auto-inject (2 source: working repo + `~/ai-tools` guidelines)。code comment: `guidelines/writing/code-comment.md`。
 
-## Genshijin Boundary
+## Writing Style (genshijin OFF default)
 
-genshijin (体言止め / 助詞最小) は **chat 応答のみ**。外向き prose (PR / commit / Issue / Slack / Notion / DD / PRD / RCA / comments) と `/plan` `/design-doc` `/prd` `/post-comment` `/git-push --pr` `/docs` ドラフトは plain JP (〜する / 〜した、主語明示、指示語禁止: 「これ」「それ」「上記」→具体名)。Details: `rules/genshijin.md` + `guidelines/writing/PRINCIPLES.md`
+chat も外向き text も **常体 plain JP の開いた文章** (〜する / 〜した、主語明示、指示語禁止) で書く。**閉じてない文章を全 context で禁止する**: 体言止め羅列 / 助詞省略 / 名詞ぶつ切り / 動詞省略 / 主語省略の連発。bullet 内も文として完結させる。canonical: `rules/genshijin.md` + `guidelines/writing/PRINCIPLES.md` + `guidelines/writing/NG-DICTIONARY.md`
 
 **AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。Commit message draft 前に NG 語 self-check 必須 (hook block retry = 2〜3 往復のトークン損失)。canonical: `guidelines/writing/NG-DICTIONARY.md`
 
