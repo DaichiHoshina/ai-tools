@@ -6,14 +6,7 @@ description: Design & planning — strategy formulation via PO Agent (read-only)
 
 ## Boundary w/ `/design-doc`
 
-| Aspect | `/design-doc` | `/plan` |
-|--------|--------------|---------|
-| Primary goal | communicate **design decisions** to team | decide impl **phase breakdown** |
-| Output | 12-section md (Why/comparison/failure/migration) | Phase 1/2/... + worktree needed? |
-| Input | PRD or natural language | Design Doc or settled design |
-| Agent | none (direct Edit) | PO Agent (for complexity) |
-
-Large feature: both (design-doc → plan). Small fix: plan only. Detail: `references/design-phase-flow.md`.
+`/design-doc` = design decisions の team 共有 (12-section md / input: PRD or NL / 直 Edit) vs `/plan` = impl phase breakdown 決定 (Phase 1/2/... + worktree / input: Design Doc or settled design / PO Agent)。Large feature は両方 (design-doc → plan)、small fix は plan のみ。Detail: `references/design-phase-flow.md`.
 
 ## Step 0: Auto-load guidelines (required)
 
@@ -21,16 +14,13 @@ Design + language (auto-detect) + project type guidelines. Detail: `references/c
 
 ## Step 1: Scope intake (required)
 
-**Question-suppression default** (`rules/minimize-questions.md` canonical). Prefer immediate decision; ask only on exception.
+**Question-suppression default** (`rules/minimize-questions.md` canonical) — 推奨即決を優先し、exception 時のみ問う。
 
-1. **File count**: Glob / wc -l to get file count and line counts
-2. **Undecided points**: list edit scope / delete targets / decision forks
-3. **Immediate decision (default)**: for each undecided point, pick 1 recommendation from context (CLAUDE.md / memory / repo convention) with 1-line basis, then proceed to Step 2
-4. **Sub question (exception only)**: AskUserQuestion (**max 1**) only if:
-   - scope input completely missing (no file / feature name / symptom)
-   - 2 recommendations are tied and cannot be narrowed to 1
-   - destructive operation / clear conflict with existing policy
-5. **Skip condition (go directly to Step 2)**: clear requirement (typo / 1 symbol rename / 1-2 file edit / explicit instruction / 1 recommendation) → no question
+1. **File count**: Glob / wc -l で file 数と line 数を取得
+2. **Undecided points**: edit scope / delete target / decision fork を列挙
+3. **Immediate decision (default)**: 各 undecided point に対し context (CLAUDE.md / memory / repo convention) から推奨を 1 件選び、1-line basis を添えて Step 2 へ進める
+4. **Sub question (exception only)**: AskUserQuestion (**max 1**) は scope input 完全欠落 / 2 推奨拮抗 / 破壊的操作・既存方針との明確衝突、のいずれかでのみ発火する
+5. **Skip condition (→ Step 2 直行)**: typo / 1 symbol rename / 1-2 file edit / 明示指示 / 推奨 1 件確定 → no question
 
 ## Step 2: Execution mode judgment (required)
 
@@ -50,22 +40,11 @@ Choose from 6 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>
 
 **`/goal` 4 conditions** (all required; canonical: `commands/goal.md`): iterative task / automated stop-condition (exit code) / token budget absorbs N iter waste / agent holds senior tools (Bash/Edit/Task)
 
-**Anti-patterns (avoid past churn)**:
-- **inline**: 3+ files / 30+ lines each → context pressure; Sonnet delegation is cost-efficient
-- **/dev**: fully independent 3+ files → wastes parallel benefit; consider `/flow` or `/workflow migrate`
-- **/workflow**: full PRD→Plan→impl→review→push → no Gate, progress collapses; use `/flow`
-- **/flow**: ≤2 files / single task → 60s+ overhead unrecoverable; `/dev` is sufficient
-- **/flow --auto**: design branch / large refactor → auto-adopt passes wrong judgment; use `/flow` (manual Gate)
-- **/goal**: one-shot / subjective verifier / no hard stop / maker=checker same agent → Ralph Wiggum failure, infinite loop
+**Anti-patterns (avoid past churn)**: inline 3+ files / 30+ lines each (context pressure) ・ /dev fully independent 3+ files (parallel benefit を捨てる) ・ /workflow full PRD→Plan→impl→review→push (no Gate で progress 崩壊) ・ /flow ≤2 files (overhead unrecoverable) ・ /flow --auto design branch / large refactor (auto-adopt が誤判定通過) ・ /goal one-shot / subjective verifier / no hard stop / maker=checker (Ralph Wiggum infinite loop)
 
 ### /workflow vs /flow
 
-| Axis | /workflow | /flow |
-|---|---|---|
-| Use | structured fan-out (review / migrate / research / judge-panel) | feature impl PO/Manager/Dev orchestration |
-| Gate | none (script self-manages) | 3 Gates required (PO/A/B; C on --auto) |
-| Resume | yes (journal cache) | no (fresh fire) |
-| Best fit | small–medium (≤500 lines), review / migration | medium–large, impl primary (PRD→Plan→impl→test→review→push) |
+Comparison table canonical: `commands/workflow.md` § /workflow vs /flow.
 
 Decision examples: review **only** → `/workflow review` / review→fix→push auto → `/flow --auto` / migrate N files → `/workflow migrate` / new feature (PO needed) → `/flow` / design majority-vote → `/workflow judge-panel`
 
@@ -77,19 +56,14 @@ Run before any `/plan` output. Cannot skip. Applies uniformly across PO Agent / 
 
 ### Stage A: plan-specific filter
 
-Investigation discard: speculative leads / hypothetical edge cases / unrelated findings.
-Plan discard: compat shims / future abstractions / impossible-case error handling / scope creep / premature optimization.
+Anti-pattern filter (investigation / plan discard): `references/on-demand-rules/review-noise-discard.md`.
 
-**Step 2 judgment validity review**:
-- inline when `/dev` delegation needed (1 file / few lines / ≤1 sub question)?
-- `/dev` when `/flow` needed (file count < 3 / strong coupling / overhead unrecoverable)?
-- `/flow` when `/workflow` is sufficient (structured fan-out / no PO needed / resume wanted / small scale)?
-- `/workflow` when `/flow` is required (impl primary / PRD needed / Gate required)?
-- `/goal` chosen but 4 conditions not met (one-shot / subjective verifier / no hard stop / maker=checker)?
-- iterative + objective gate task but using single `/dev` without gate verification loop (→ switch to `/goal`)?
-- N too high (N_candidate doesn't satisfy coupling=0 / wall_clock_parallel ≥ wall_clock_sequential)?
-- `--auto` proposed but user confirmation branch points remain (large design branch / destructive op / external send)?
-- carry-over / out-of-scope tasks mixed into this plan?
+**Step 2 judgment validity review** (mode mismatch check):
+- mode overshoot/undershoot: inline ↔ `/dev` ↔ `/flow` ↔ `/workflow` ↔ `/goal` の境界条件 (Step 2 table / Anti-patterns) を 1 件ずつ反証する
+- `/goal` 4 conditions 不成立 / iterative + objective gate task で単一 `/dev` (no gate loop)
+- N over-allocation (coupling=0 不成立 / wall_clock_parallel ≥ sequential)
+- `--auto` 提案下に user confirm 分岐 (design branch / destructive op / external send) が残存
+- carry-over / out-of-scope task の混入
 
 ### Stage B: aggregate view
 
@@ -127,11 +101,6 @@ Save to `plansDirectory` (default `~/.claude/plans`) as `YYYY-MM-DD_[project]_[f
 
 ## Fail behavior
 
-| Scenario | Action |
-|------|------|
-| PO Agent launch fail | Downgrade to direct, warn. Complex tasks propose requirement split |
-| Guideline load fail | Continue w/ common only, design decision on maintainer |
-| Serena MCP fail | Substitute w/ grep/Glob, warn precision drop |
-| `plansDirectory` write fail | Chat output only, guide manual save |
+PO Agent launch fail → direct downgrade + warn (complex 時は requirement split 提案) / Guideline load fail → common のみで継続、maintainer 判断 / Serena MCP fail → grep/Glob 代替 + 精度低下 warn / `plansDirectory` write fail → chat 出力のみ + manual save 誘導
 
 **Read-only** - Implementation via `/dev`.

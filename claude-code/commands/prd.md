@@ -20,15 +20,7 @@ Infer mode from natural language beyond explicit options (`--update <path>` `--s
 | scope limit | search keyword dict in ARGUMENTS | re-evaluate only target Q in Phase 1.7 |
 | new mode | none of above | start from Phase 1 interview |
 
-**Scope keyword dictionary**:
-
-| Q | Keywords |
-|---|----------|
-| Q1 | purpose / true purpose / why / Why / XY problem |
-| Q2 | don't build / build nothing / Null / opportunity cost |
-| Q3 | alternatives / other options / OSS / SaaS / comparison / selection |
-| Q4 | failure / premortem / risks / failure scenarios |
-| Q5 | assumptions / break / assumption / if / vulnerability |
+**Scope keyword dictionary**: Q1=purpose/why/XY problem, Q2=don't build/Null/opportunity cost, Q3=alternatives/OSS/SaaS/comparison, Q4=failure/premortem/risks, Q5=assumptions/break/vulnerability.
 
 **When ambiguous**:
 - fix keyword present, path absent → `Glob "**/*prd*.md"` show candidates, AskUserQuestion
@@ -56,17 +48,7 @@ AskUserQuestion → if "yes": glossary, entities, state transition table (state�
 
 ### Phase 1.7: Decision Quality Check (required, no skip)
 
-Apply 5 questions from `references/decision-quality-checklist.md`. Ensure **goal-means consistency** before Phase 2 draft.
-
-| Q | Question | Complement if missing |
-|---|----------|------------|
-| Q1 | True goal? (dig 2 levels) | AskUserQuestion confirm parent goal |
-| Q2 | Include "build nothing" in comparison? | AI draft: do nothing / manual / existing alternative → user confirm |
-| Q3 | Explored 3+ alternatives? | AI draft: 3 options from build/OSS/SaaS/redesign/ops workaround |
-| Q4 | Three premortems written? | AI draft: 1 each from tech/ops/unexpected usage |
-| Q5 | Conditions where assumptions break? | AI candidate: user count / auth / external API / compliance |
-
-Each output baked into Phase 2 PRD **"1.5 Decision Rationale"** section (see template). If any pattern matches NG list, escalate Critical + re-ask.
+Q1-Q5 詳細と complement rule は `references/decision-quality-checklist.md` を canonical として参照する。goal-means consistency を Phase 2 draft 前に確認する。各 Q の output は Phase 2 PRD の **1.5 節** (template 参照) に書き込む。NG pattern にあたる場合は Critical を上げ、再度問い直す。
 
 ### Phase 2: Auto-generate PRD
 
@@ -93,24 +75,15 @@ Critical (must fix) / Warning (recommended) / Info (consider)
 
 ### Phase 4.5: Self-review on writing (pre-output)
 
-`/prd` is chat output, not persisted, so not in `/review` diff scope. AI self-checks draft before output against:
-
-- `skills/comprehensive-review/SKILL.md` writing NG table (conclusion-first, unsupported praise, vague words, undefined jargon, omitted subject, missing 5W1H, repetitive bullets, AI boilerplate, unclear call-to-action)
+`/prd` は chat 出力で persist しないため `/review` diff scope 外。AI が draft を以下 canonical に対し self-check する:
+- `skills/comprehensive-review/SKILL.md` writing NG table
 - `guidelines/writing/long-form-doc.md` NG dictionary
 
-1+ Critical or 4+ Warning hit → fix before Phase 5 (max 2 loop). Fix by embedding answers to 4 questions (reader, call-to-action, numbers, why) in prose.
-
-**Exceed 2 loops**: report remaining violations as "Phase 5 user confirm items", stop auto-fix. Declare loop limit reason (info gap / decision pending) + ask user.
-
-If PRD persisted via `--out <path>`, use `Read` + `Edit` rewrite loop like `/design-doc` Step 8.5.
+1+ Critical or 4+ Warning hit → Phase 5 前に fix (max 2 loop)。Loop 超過は残存違反を "Phase 5 user confirm items" として停止し、loop limit reason (info gap / decision pending) と共に user に問う。`--out <path>` 永続化時は `/design-doc` Step 8.5 と同等の `Read`+`Edit` rewrite loop を回す。
 
 ## Failure Handling
 
-| Situation | Behavior |
-|-----------|----------|
-| AskUserQuestion answer "unclear" / "pending" | defer to draft Open Questions, revisit later |
-| external API spec fetch fail (WebFetch) | log "external API spec not retrieved" Critical, ask user for spec URL |
-| Serena fail (service auto-detect) | ask user for explicit service, ban guessing |
+AskUserQuestion 回答が "unclear"/"pending" → draft Open Questions に退避し後で再検証 / external API spec fetch fail (WebFetch) → "external API spec not retrieved" を Critical で記録し spec URL を user に問う / Serena fail (service auto-detect) → service 名を明示で user に問い、推測は禁止する
 
 ### Phase 5: Fix & Approve
 
