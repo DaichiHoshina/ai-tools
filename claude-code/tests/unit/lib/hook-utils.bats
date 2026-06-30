@@ -714,3 +714,43 @@ teardown_ensure_worktree() {
   grep -q "old content" "${main_mem}/existing.md"
   teardown_ensure_worktree
 }
+
+# =============================================================================
+# _is_memory_path: memory file 判定 (NG-DICTIONARY / private-name block skip 対象)
+# canonical: CLAUDE.md § Memory write target + user 指示 2026-06-30
+# =============================================================================
+
+@test "is_memory_path: ~/ai-tools/memory/ 配下を memory として判定する" {
+  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/ai-tools/memory/foo.md'"
+  [ "$status" -eq 0 ]
+}
+
+@test "is_memory_path: ~/.claude/projects/*/memory/ 配下を memory として判定する" {
+  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/.claude/projects/-Users-foo-bar/memory/baz.md'"
+  [ "$status" -eq 0 ]
+}
+
+@test "is_memory_path: ~/.claude/agent-memory/ 配下を memory として判定する" {
+  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/.claude/agent-memory/agent-foo.md'"
+  [ "$status" -eq 0 ]
+}
+
+@test "is_memory_path: .serena/memories/ 配下を memory として判定する" {
+  run bash -c "source '$LIB_FILE' && _is_memory_path '/some/project/.serena/memories/notes.md'"
+  [ "$status" -eq 0 ]
+}
+
+@test "is_memory_path: 通常 path (~/ai-tools/claude-code/ 配下) は memory として判定しない" {
+  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/ai-tools/claude-code/CLAUDE.md'"
+  [ "$status" -eq 1 ]
+}
+
+@test "is_memory_path: memory に似た path (~/ai-tools/memory-archive/) は memory として判定しない" {
+  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/ai-tools/memory-archive/old.md'"
+  [ "$status" -eq 1 ]
+}
+
+@test "is_memory_path: ~/.claude/memory (projects なし) は memory として判定しない" {
+  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/.claude/memory/notes.md'"
+  [ "$status" -eq 1 ]
+}
