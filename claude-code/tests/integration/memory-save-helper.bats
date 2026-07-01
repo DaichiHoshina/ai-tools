@@ -147,6 +147,36 @@ teardown() {
   [[ "$first_line" == *"second save"* ]]
 }
 
+@test "extract-issue-key: PROJ-123 形式を抽出する" {
+  run "$HELPER" extract-issue-key "feature/PROJ-123-add-login"
+  [ "$status" -eq 0 ]
+  [ "$output" = "PROJ-123" ]
+}
+
+@test "extract-issue-key: #123 形式は数字だけ抽出する" {
+  run "$HELPER" extract-issue-key "fix/#456-null-guard"
+  [ "$status" -eq 0 ]
+  [ "$output" = "456" ]
+}
+
+@test "extract-issue-key: issue-789 形式は issue-<n> を返す" {
+  run "$HELPER" extract-issue-key "issue-789-refactor"
+  [ "$status" -eq 0 ]
+  [ "$output" = "issue-789" ]
+}
+
+@test "extract-issue-key: key 無い branch は空を返す" {
+  run "$HELPER" extract-issue-key "feature/add-login"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "extract-issue-key: 空 branch も空を返す (exit 0)" {
+  run "$HELPER" extract-issue-key ""
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
 @test "append-clear-line: 個別 file (work-context-*.md) は作らない" {
   rm -f "${MEMORY_SAVE_DIR}/MEMORY.md"
   rm -f "${MEMORY_SAVE_DIR}"/work-context-*.md

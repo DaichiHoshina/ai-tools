@@ -7,6 +7,7 @@
 #   3. resolve-name        — name collision 回避 (-2/-3 suffix 付与)
 #   4. update-index        — MEMORY.md 先頭に `- YYYY-MM-DD [desc](file.md) — hook` を追記 (重複 dedup)
 #   5. append-clear-line   — /memory-save clear 用、個別 file なしで MEMORY.md に `- YYYY-MM-DD [clear] <topic> — <summary> (commit: <hash>)` を prepend (dedup なし)
+#   6. extract-issue-key   — 現 branch 名から issue key (`PROJ-123` / `#123` / `issue-123`) を抽出して echo、無ければ空
 #
 # 注意: 本 script は AI 経由の Write/Edit ばらつきを排除するための deterministic helper。
 #       memory file 本体の write は /memory-save command (AI 側) が担当する。
@@ -129,6 +130,37 @@ cmd_append_clear_line() {
   mv "$tmp" "$INDEX_FILE"
 }
 
+# 現 branch 名から issue key を抽出。優先順:
+#   1. `PROJ-123` 形式 (JIRA / Linear / Shortcut 等の大文字英字 + 数字)
+#   2. `#123` 形式 (GitHub issue 参照、`123` を返す)
+#   3. `issue-123` / `issue/123` 形式
+# 引数で branch 名を明示可 (test 用)。省略時は `git branch --show-current`。
+# 抽出できなければ空を返し exit 0。
+# canonical: commands/memory-save.md § "Auto issue key suffix"
+cmd_extract_issue_key() {
+  local branch="${1:-}"
+  if [ -z "$branch" ]; then
+    branch=$(git -C "$(pwd)" branch --show-current 2>/dev/null || echo "")
+  fi
+  [ -z "$branch" ] && return 0
+  # 1. PROJ-123 (JIRA/Linear 形式) — 2 文字以上の大文字英字 + `-` + 数字
+  if [[ "$branch" =~ ([A-Z][A-Z0-9]+-[0-9]+) ]]; then
+    printf '%s\n' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+  # 2. #123 形式
+  if [[ "$branch" =~ \#([0-9]+) ]]; then
+    printf '%s\n' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+  # 3. issue-123 / issue/123 形式 (大文字小文字問わず)
+  if [[ "$branch" =~ [Ii]ssue[-/_]([0-9]+) ]]; then
+    printf 'issue-%s\n' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+  return 0
+}
+
 usage() {
   sed -n '2,15p' "$0"
   exit "${1:-0}"
@@ -142,6 +174,7 @@ main() {
     resolve-name)  cmd_resolve_name "$@" ;;
     update-index)  cmd_update_index "$@" ;;
     append-clear-line) cmd_append_clear_line "$@" ;;
+    extract-issue-key) cmd_extract_issue_key "$@" ;;
     -h|--help|help|"") usage 0 ;;
     *) printf 'unknown subcommand: %s\n' "$sub" >&2; usage 1 ;;
   esac
