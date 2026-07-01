@@ -165,6 +165,18 @@ teardown() {
   [ "$output" = "issue-789" ]
 }
 
+@test "extract-issue-key: issue/123 形式 (スラッシュ区切り) は issue-<n> を返す" {
+  run "$HELPER" extract-issue-key "issue/123-foo"
+  [ "$status" -eq 0 ]
+  [ "$output" = "issue-123" ]
+}
+
+@test "extract-issue-key: issue_456 形式 (アンダースコア区切り) は issue-<n> を返す" {
+  run "$HELPER" extract-issue-key "issue_456-bar"
+  [ "$status" -eq 0 ]
+  [ "$output" = "issue-456" ]
+}
+
 @test "extract-issue-key: key 無い branch は空を返す" {
   run "$HELPER" extract-issue-key "feature/add-login"
   [ "$status" -eq 0 ]
