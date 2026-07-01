@@ -177,6 +177,40 @@ teardown() {
   [ -z "$output" ]
 }
 
+@test "find-topic-match: 同日 exact suffix match で hit する" {
+  local today; today=$(date +%Y%m%d)
+  touch "${MEMORY_SAVE_DIR}/work-context-${today}-reload-fix.md"
+  touch "${MEMORY_SAVE_DIR}/work-context-${today}-other-topic.md"
+  run "$HELPER" find-topic-match "reload-fix"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"work-context-${today}-reload-fix.md"* ]]
+  [[ "$output" != *"other-topic"* ]]
+}
+
+@test "find-topic-match: issue key prefix があっても topic 部分で hit する" {
+  local today; today=$(date +%Y%m%d)
+  touch "${MEMORY_SAVE_DIR}/work-context-${today}-PROJ-123-reload-fix.md"
+  run "$HELPER" find-topic-match "reload-fix"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"work-context-${today}-PROJ-123-reload-fix.md"* ]]
+}
+
+@test "find-topic-match: match 無しで exit 0 + 空出力" {
+  local today; today=$(date +%Y%m%d)
+  touch "${MEMORY_SAVE_DIR}/work-context-${today}-foo.md"
+  run "$HELPER" find-topic-match "bar"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "find-topic-match: 部分 match (substring) では hit しない" {
+  local today; today=$(date +%Y%m%d)
+  touch "${MEMORY_SAVE_DIR}/work-context-${today}-login-flow.md"
+  run "$HELPER" find-topic-match "login"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
 @test "append-clear-line: 個別 file (work-context-*.md) は作らない" {
   rm -f "${MEMORY_SAVE_DIR}/MEMORY.md"
   rm -f "${MEMORY_SAVE_DIR}"/work-context-*.md

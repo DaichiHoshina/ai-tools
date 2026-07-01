@@ -8,6 +8,7 @@
 #   4. update-index        — MEMORY.md 先頭に `- YYYY-MM-DD [desc](file.md) — hook` を追記 (重複 dedup)
 #   5. append-clear-line   — /memory-save clear 用、個別 file なしで MEMORY.md に `- YYYY-MM-DD [clear] <topic> — <summary> (commit: <hash>)` を prepend (dedup なし)
 #   6. extract-issue-key   — 現 branch 名から issue key (`PROJ-123` / `#123` / `issue-123`) を抽出して echo、無ければ空
+#   7. find-topic-match    — 同日 work-context-*-<topic>.md を exact suffix match で filter (issue key prefix は無視)
 #
 # 注意: 本 script は AI 経由の Write/Edit ばらつきを排除するための deterministic helper。
 #       memory file 本体の write は /memory-save command (AI 側) が担当する。
@@ -161,6 +162,17 @@ cmd_extract_issue_key() {
   return 0
 }
 
+# 同日 work-context-*-<topic>.md を exact suffix match で filter する。
+# issue key prefix (`PROJ-123` 等) を無視して `<topic>` 部分のみで match するので、
+# branch 切替後も同 topic を merge 対象として拾える。
+# canonical: commands/memory-save.md § Flow (auto merge/new mode) step 1
+cmd_find_topic_match() {
+  local topic="${1:?topic required}"
+  local today; today=$(_today)
+  [ -d "$MEMORY_DIR" ] || return 0
+  find "$MEMORY_DIR" -maxdepth 1 -name "work-context-${today}-*-${topic}.md" -o -name "work-context-${today}-${topic}.md" 2>/dev/null | sort
+}
+
 usage() {
   sed -n '2,15p' "$0"
   exit "${1:-0}"
@@ -175,6 +187,7 @@ main() {
     update-index)  cmd_update_index "$@" ;;
     append-clear-line) cmd_append_clear_line "$@" ;;
     extract-issue-key) cmd_extract_issue_key "$@" ;;
+    find-topic-match)  cmd_find_topic_match "$@" ;;
     -h|--help|help|"") usage 0 ;;
     *) printf 'unknown subcommand: %s\n' "$sub" >&2; usage 1 ;;
   esac
