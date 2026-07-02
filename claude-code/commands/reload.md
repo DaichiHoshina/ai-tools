@@ -59,6 +59,8 @@ Else (fallback chain、上から順に評価、ヒットしたら次 step も並
      # state」と誤読しないようにする。
      mem_latest=$(head -1 ~/ai-tools/memory/MEMORY.md 2>/dev/null | grep -oE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' | head -1)  # B 段最新 entry の日付
      wc_file=$(ls -t ~/ai-tools/memory/work-context-*.md 2>/dev/null | head -1)
+     # wc_date は mem_latest と揃えるため YYYY-MM-DD 形式で保持する (比較を同形式にする)。
+     # file 名 glob (work-context-YYYYMMDD-*) で再利用する時だけ ${wc_date//-/} で YYYYMMDD に戻す。
      wc_date=$(basename "$wc_file" 2>/dev/null | grep -oE '20[0-9]{2}[0-9]{2}[0-9]{2}' | sed -E 's/(....)(..)(..)/\1-\2-\3/')
      if [ -n "$wc_file" ] && [ "$wc_date" = "$mem_latest" ]; then
        # work-context 本文が B 段最新 entry と同日 → 本文が直近 state の SoT。同日分を全件 Read
