@@ -17,11 +17,14 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 **Golden workflow (頻出 3 種)**
 
 - 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal の 6 択を Step 2 で判定、/goal は loop 系 objective gate task に限定)
-- worktree 隔離 + commit + ff-merge + push (`[[ai-tools-worktree-workflow]]` canonical、**dir 名 slug と branch 名は必ず一致させる** → `rules/worktree-branch-name-match.md`):
+- worktree 隔離 + commit + ff-merge + push (`[[ai-tools-worktree-workflow]]` canonical、**dir 名 slug と branch 名は必ず一致させる** → `rules/worktree-branch-name-match.md`)。**前提: まだ編集に着手していない状態で切る**。worktree pattern は「clean な状態から wt を作り、wt 内で初めて編集する」流れ。**既に main の working tree を編集済みなら worktree を使わない** (`git stash` した変更は新 wt に持ち込まれず取り残される罠、`[[worktree-fresh-baseref-uncommitted-trap]]`)。既編集時は下記 fallback を使う:
   ```bash
-  git stash push -u -m wip && git worktree add ../ai-tools-wt-<topic> -b <topic>
-  # wt 内で編集 + commit
+  # (A) 未着手から: worktree で隔離
+  git worktree add ../ai-tools-wt-<topic> -b <topic>   # wt 内で編集 + commit
   git merge --ff-only <topic> && git push origin main && git worktree remove ../ai-tools-wt-<topic> && git branch -d <topic>
+  # (B) 既に編集済み (main working tree に変更あり): worktree を使わず branch commit
+  git switch -c <topic> && git add <files> && git commit   # 変更はそのまま branch に乗る
+  git switch main && git merge --ff-only <topic> && git push origin main && git branch -d <topic>
   ```
 - skill 追加 → `/skill-add` / guideline 更新 → `/update-guidelines` / commit + push + PR → `/git-push --pr` (`pushして` でも発火)
 
