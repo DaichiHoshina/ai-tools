@@ -73,6 +73,7 @@ On-demand index from CLAUDE.md.
 | Document rewrite phases | `document-iteration-patterns.md` |
 | Writing common principles | `../guidelines/writing/PRINCIPLES.md` |
 | Writing supplement patterns (rewrite phases / textlint) | `writing-patterns.md` |
+| Writing sentence-level rules (文長 / ひらく漢字 / 漢数字 等 detail) | `writing-sentence-rules.md` |
 
 ## Serena / MCP
 
