@@ -1,6 +1,6 @@
 # Vue 3 Guidelines
 
-Vue 3.4+ (Composition API + `<script setup>`) + Vite + Vitest. Common guidelines: `~/.claude/guidelines/common/`.
+Vue 3.5+ (Composition API + `<script setup>`) + Vite + Vitest. Common guidelines: `~/.claude/guidelines/common/`.
 
 ## Core Principles
 

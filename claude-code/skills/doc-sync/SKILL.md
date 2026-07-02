@@ -15,6 +15,8 @@ Auto-fires on any of:
 - 「再度DD読んで」「再度DD読み込んで」「再度DDと比較して」「再度DDとの整合性チェック」「DDと比較して整合性大丈夫か」「DDとPRDが合っているか」
 - 「PRDとの整合性チェック」「整合性チェックして」「整合性取れているか」「local-docsに反映」
 - 「再度コメント読み込み」「再度コメント読んで」(PR/Issue comment 再読込)
+- 短縮・口語形 (「再度」prefix なしの初回読込も含む): 「dd調べて」「DD調べて」「DD読んで」「PRとDDを読み込んで」「DDを全部読み込んで」「整合性が取れるように」「整合取れてる」「dd見て」。大文字小文字は問わない (dd / DD 双方)
+- memory 突合系: 「memory も含めて整合性」「memory と doc の整合」(auto-memory と DD/local-docs の内容が食い違っていないか照合)
 - Mid-`/flow` check when changes since last sync are suspected
 - correction prefix 「違う、」「再度」を受けた場合は、直前 task 結果と現状の diff を 1 行 echo してから着手する (差分を明示することで再認識ループを短縮する)
 

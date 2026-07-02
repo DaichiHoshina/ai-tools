@@ -185,7 +185,7 @@ Misbehavior / non-obvious success → document immediately → auto-avoid next s
 
 chat も外向き text も **常体 plain JP の開いた文章** (〜する / 〜した、主語明示、指示語禁止) で書く。**閉じてない文章を全 context で禁止する**: 体言止め羅列 / 助詞省略 / 名詞ぶつ切り / 動詞省略 / 主語省略の連発。bullet 内も文として完結させる。canonical: `rules/genshijin.md` + `guidelines/writing/PRINCIPLES.md` + `guidelines/writing/NG-DICTIONARY.md`
 
-**AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。Commit message draft 前に NG 語 self-check 必須 (hook block retry = 2〜3 往復のトークン損失)。canonical: `guidelines/writing/NG-DICTIONARY.md`
+**AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。**commit message draft 前だけでなく、work-context / decision doc / gh comment / MEMORY.md 等の file 書き込み前にも NG 語を先手 sweep する** (登録済み語の block が retry 2〜3 往復のトークン損失を生むため。頻出は 該当なし 系 / 難読漢語 / AI 段取り定型)。canonical: `guidelines/writing/NG-DICTIONARY.md`
 
 ## Default Readability + Writing Priority
 
