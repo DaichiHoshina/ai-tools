@@ -230,3 +230,31 @@ teardown() {
   local file_count; file_count=$(find "${MEMORY_SAVE_DIR}" -maxdepth 1 -name 'work-context-*.md' 2>/dev/null | wc -l | tr -d ' ')
   [ "$file_count" -eq 0 ]
 }
+
+@test "find-clear-entry: append-clear-line で書いた topic の [clear] 行を拾う" {
+  "$HELPER" append-clear-line "reload-fix" "summary text" "abc1234"
+  run "$HELPER" find-clear-entry "reload-fix"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"[clear] reload-fix "* ]]
+  [[ "$output" == *"abc1234"* ]]
+}
+
+@test "find-clear-entry: 存在しない topic は空 + exit 0" {
+  "$HELPER" append-clear-line "other-topic" "summary" ""
+  run "$HELPER" find-clear-entry "missing-topic"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "find-clear-entry: 部分 match (substring) では hit しない" {
+  "$HELPER" append-clear-line "reload-fix-v2" "summary" ""
+  run "$HELPER" find-clear-entry "reload-fix"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "pbcopy-reload: /reload <topic> を stdout に返す (pbcopy 不在でも exit 0)" {
+  run "$HELPER" pbcopy-reload "my-topic"
+  [ "$status" -eq 0 ]
+  [ "$output" = "/reload my-topic" ]
+}

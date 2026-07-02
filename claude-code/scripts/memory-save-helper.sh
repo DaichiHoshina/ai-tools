@@ -173,6 +173,28 @@ cmd_find_topic_match() {
   find "$MEMORY_DIR" -maxdepth 1 -name "work-context-${today}-*-${topic}.md" -o -name "work-context-${today}-${topic}.md" 2>/dev/null | sort
 }
 
+# MEMORY.md 先頭から `[clear] <topic>` entry を 1 件返す (直近優先)。
+# clear は個別 file を作らないので、reload の名指し経路が topic から直近 state を
+# 拾うための source になる。見つからなければ空を返し exit 0。
+# canonical: commands/reload.md § 名指し fast path (clear entry 経路)
+cmd_find_clear_entry() {
+  local topic="${1:?topic required}"
+  [ -f "$INDEX_FILE" ] || return 0
+  grep -m1 -F -- "[clear] ${topic} " "$INDEX_FILE" 2>/dev/null || return 0
+}
+
+# `/reload <topic>` を clipboard へコピーする。pbcopy 不在環境 (Linux/CI) は
+# silent skip し exit 0 (fail させない)。実際にコピーしたコマンド文字列を stdout に返す。
+# canonical: commands/memory-save.md § clear post-processing
+cmd_pbcopy_reload() {
+  local topic="${1:?topic required}"
+  local cmd="/reload ${topic}"
+  if command -v pbcopy >/dev/null 2>&1; then
+    printf '%s' "$cmd" | pbcopy 2>/dev/null || true
+  fi
+  printf '%s\n' "$cmd"
+}
+
 usage() {
   sed -n '2,15p' "$0"
   exit "${1:-0}"
@@ -188,6 +210,8 @@ main() {
     append-clear-line) cmd_append_clear_line "$@" ;;
     extract-issue-key) cmd_extract_issue_key "$@" ;;
     find-topic-match)  cmd_find_topic_match "$@" ;;
+    find-clear-entry)  cmd_find_clear_entry "$@" ;;
+    pbcopy-reload)     cmd_pbcopy_reload "$@" ;;
     -h|--help|help|"") usage 0 ;;
     *) printf 'unknown subcommand: %s\n' "$sub" >&2; usage 1 ;;
   esac

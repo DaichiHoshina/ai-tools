@@ -20,10 +20,10 @@ Use after compaction (conversation compression) or when saying "continue". Resto
 ```bash
 /reload                                          # fallback chain (compact-restore → MEMORY.md → 直近 work-context)
 /reload work-context-20260629-foo                # 名指し fast path (~/ai-tools/memory/<name>.md)
-/reload foo                                      # prefix match (work-context-*-foo を 1 件)
+/reload foo                                      # prefix match、無ければ MEMORY.md の [clear] foo entry を拾う
 ```
 
-`/memory-save exit` が pbcopy する `/reload <name>` が paste されると名指し経路で確実復元する (個別 file を作る `exit` 経路のみ。`clear` は個別 file を作らないので名指し対象外)。
+`/memory-save` (clear / exit 両方) が pbcopy する `/reload <topic>` が paste されると名指し経路で復元する。`exit` は個別 file を直接 Read し、`clear` は個別 file が無いので MEMORY.md の `[clear] <topic>` entry を直近 state の source として拾う (名指し fast path step 4)。
 
 ## Task Execution
 
@@ -42,7 +42,11 @@ If $ARGUMENTS non-empty (名指し fast path):
   1. Read ~/ai-tools/memory/<arg>.md (拡張子なし指定でも .md 補完)
   2. file 不在なら ~/ai-tools/memory/ から prefix match で 1 件 Read
   3. cwd が ai-tools repo 外なら `<repo-root>/memory/**/<arg>.md` も prefix match で探索 (memory file は SoT 適用外、Read OK)
-  4. それでも不在なら fallback chain に降りる
+  4. 個別 file が無い時 (clear で保存された topic) は MEMORY.md の [clear] entry を拾う:
+     clear_line=$(bash ~/ai-tools/claude-code/scripts/memory-save-helper.sh find-clear-entry "<arg>")
+     [ -n "$clear_line" ] && この 1 行を直近 state の主 source として採用 (topic / summary / commit を抽出)
+     さらに B/C/E 段 (MEMORY.md 全体 / 直近 work-context 本文 / pending-improvements) も Read して補完する
+  5. それでも不在なら fallback chain に降りる
 
 Else (fallback chain、上から順に評価、ヒットしたら次 step も並行実行):
   A. compact-restore (post-compact hook が書く一時 file)
@@ -82,7 +86,7 @@ Else (fallback chain、上から順に評価、ヒットしたら次 step も並
      Read ~/ai-tools/memory/pending-improvements.md (存在すれば)
 ```
 
-`$ARGUMENTS` 経路は `/memory-save exit` が pbcopy した `/reload <name>` を確実に拾うための fast path。
+`$ARGUMENTS` 経路は `/memory-save` (clear / exit) が pbcopy した `/reload <topic>` を拾うための fast path。個別 file があれば直接 Read、無ければ MEMORY.md の `[clear] <topic>` entry を source とする。
 
 ### 3. Load Project CLAUDE.md
 

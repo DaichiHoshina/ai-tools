@@ -88,8 +88,8 @@ default (empty arg) と `$ARGUMENTS` に `clear` 含む時の動作 (2026-06-30 
 2. 現 session の `<topic>` と 1 行 `<summary>` を決定 (AI 側、最後の commit hash も任意で添える)
 3. `bash ~/ai-tools/claude-code/scripts/memory-save-helper.sh append-clear-line <topic> <summary> [<commit>]` を実行 (helper が MEMORY.md 先頭に 1 行 prepend)
 4. format: `- \`YYYY-MM-DD\` [clear] <topic> — <summary> (commit: <hash>)`
-5. 「memory index に 1 行追記済。次 session は MEMORY.md を Read して再開する。`/clear` 可」を 1 行 chat
-6. 旧仕様 (`/reload <name>` pbcopy) は **廃止** — 個別 file がないので reload 対象がない
+5. `bash ~/ai-tools/claude-code/scripts/memory-save-helper.sh pbcopy-reload <topic>` を実行し、`/reload <topic>` を clipboard へコピーする (pbcopy 不在環境は silent skip)
+6. 「memory index に 1 行追記済。`/reload <topic>` を clipboard にコピーした。次 session は paste して復元、または MEMORY.md を Read して再開する。`/clear` 可」を 1 行 chat
 
 ### 復元方法 (次 session)
 
