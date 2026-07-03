@@ -17,9 +17,9 @@ setup() {
 # ---------------------------------------------------------------------------
 # manager-agent: reallocation triggers section に Dev failure path がある
 # ---------------------------------------------------------------------------
-@test "manager-agent: Reallocation triggers (Dev failure | Reviewer P0) heading" {
+@test "manager-agent: Reallocation triggers (PO modify | Dev failure | Reviewer P0) heading" {
   [ -f "$MANAGER_FILE" ]
-  run grep -cF "### Reallocation triggers (Dev failure | Reviewer P0)" "$MANAGER_FILE"
+  run grep -cF "### Reallocation triggers (PO modify | Dev failure | Reviewer P0)" "$MANAGER_FILE"
   [ "$status" -eq 0 ]
   [ "$output" -eq 1 ]
 }
@@ -59,7 +59,7 @@ setup() {
 }
 
 @test "flow.md: --auto 2nd failure stop notify literal" {
-  run grep -cF "stop: dev failure 2x" "$FLOW_FILE"
+  run grep -cF "stop: lint-test 2× fail" "$FLOW_FILE"
   [ "$status" -eq 0 ]
   [ "$output" -eq 1 ]
 }

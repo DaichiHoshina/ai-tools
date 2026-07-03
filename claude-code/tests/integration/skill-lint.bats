@@ -118,7 +118,7 @@ setup_fake_root() {
 
   run "$fake_root/claude-code/scripts/skill-lint.sh"
   [ "$status" -eq 1 ]
-  [[ "$output" == *"skill.md not found"* ]]
+  [[ "$output" == *"SKILL.md not found"* ]]
 }
 
 # =============================================================================

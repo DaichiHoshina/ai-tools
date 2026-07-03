@@ -1090,6 +1090,7 @@ _teardown_git_stub_dual() {
 # =============================================================================
 
 @test "inject-log: commit message チェック時に jp-quality-inject.log が追記される" {
+  skip "実装 (_append_jp_quality_inject_log) が hooks/pre-tool-use.sh から削除済み。log 追記機能は復活時に unskip"
   local log_file="$HOME/.claude/logs/jp-quality-inject.log"
   local before_lines=0
   [[ -f "$log_file" ]] && before_lines=$(wc -l < "$log_file")

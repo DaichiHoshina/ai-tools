@@ -2,10 +2,10 @@
 #
 # audit-skills-writing.sh テストスイート（TDD）
 #
-# テスト対象: skills/*/skill.md 群の writing self-check dogfood スクリプト
+# テスト対象: skills/*/SKILL.md 群の writing self-check dogfood スクリプト
 # 方針: frontmatter を除外した本文のみを NG 辞書チェック
 #
-# ディレクトリ構造: $TEST_DIR/<skill_name>/skill.md
+# ディレクトリ構造: $TEST_DIR/<skill_name>/SKILL.md
 #
 
 setup() {
@@ -24,7 +24,7 @@ teardown() {
 
 @test "frontmatter のみに NG 語（本文クリーン） → ヒットなし" {
   mkdir -p "$TEST_DIR/skill2"
-  cat > "$TEST_DIR/skill2/skill.md" <<'EOF'
+  cat > "$TEST_DIR/skill2/SKILL.md" <<'EOF'
 ---
 name: skill2
 description: 必須機能
@@ -40,14 +40,14 @@ EOF
   [[ $status -eq 0 ]]
 
   # ヒット行を含まない
-  ! grep -q "skill2/skill.md" <<< "$output"
+  ! grep -q "skill2/SKILL.md" <<< "$output"
   # サマリ 0 件
   grep -q "Total: 0 hits" <<< "$output"
 }
 
 @test "本文に NG 語 → ヒット（行番号付き）" {
   mkdir -p "$TEST_DIR/skill1"
-  cat > "$TEST_DIR/skill1/skill.md" <<'EOF'
+  cat > "$TEST_DIR/skill1/SKILL.md" <<'EOF'
 ---
 name: skill1
 description: スキル概要
@@ -61,7 +61,7 @@ EOF
   [[ $status -eq 0 ]]
 
   # ヒット行番号が含まれる
-  grep -q "skill1/skill.md:L" <<< "$output"
+  grep -q "skill1/SKILL.md:L" <<< "$output"
   # サマリに 1 hit
   grep -q "Total: 1 hits across 1 skills" <<< "$output"
 }
@@ -69,7 +69,7 @@ EOF
 @test "複数 skill 同時走査（異なるヒット数）" {
   mkdir -p "$TEST_DIR/skill1" "$TEST_DIR/skill3"
 
-  cat > "$TEST_DIR/skill1/skill.md" <<'EOF'
+  cat > "$TEST_DIR/skill1/SKILL.md" <<'EOF'
 ---
 name: skill1
 ---
@@ -77,7 +77,7 @@ name: skill1
 必須要件です。
 EOF
 
-  cat > "$TEST_DIR/skill3/skill.md" <<'EOF'
+  cat > "$TEST_DIR/skill3/SKILL.md" <<'EOF'
 ---
 name: skill3
 ---
@@ -91,8 +91,8 @@ EOF
   [[ $status -eq 0 ]]
 
   # 複数ファイルヒット
-  grep -q "skill1/skill.md:L" <<< "$output"
-  grep -q "skill3/skill.md:L" <<< "$output"
+  grep -q "skill1/SKILL.md:L" <<< "$output"
+  grep -q "skill3/SKILL.md:L" <<< "$output"
 
   # サマリ（skill1 1件 + skill3 2件 = 計 3件）
   grep -q "Total: 3 hits across 2 skills" <<< "$output"
@@ -100,7 +100,7 @@ EOF
 
 @test "frontmatter なし skill → 全文走査される" {
   mkdir -p "$TEST_DIR/nofront"
-  cat > "$TEST_DIR/nofront/skill.md" <<'EOF'
+  cat > "$TEST_DIR/nofront/SKILL.md" <<'EOF'
 これは frontmatter がない必須ファイルです。
 EOF
 
@@ -108,7 +108,7 @@ EOF
 
   [[ $status -eq 0 ]]
 
-  grep -q "nofront/skill.md:L" <<< "$output"
+  grep -q "nofront/SKILL.md:L" <<< "$output"
 }
 
 @test "空ディレクトリ → exit 0、サマリ 0 件" {
@@ -120,7 +120,7 @@ EOF
 
 @test "NG 語なし skill → サマリ 0 件" {
   mkdir -p "$TEST_DIR/clean"
-  cat > "$TEST_DIR/clean/skill.md" <<'EOF'
+  cat > "$TEST_DIR/clean/SKILL.md" <<'EOF'
 ---
 name: clean
 description: クリーンなスキル
@@ -137,7 +137,7 @@ EOF
 
 @test "--dir 引数で走査ディレクトリ指定" {
   mkdir -p "$TEST_DIR/subdir/skill_test"
-  cat > "$TEST_DIR/subdir/skill_test/skill.md" <<'EOF'
+  cat > "$TEST_DIR/subdir/skill_test/SKILL.md" <<'EOF'
 ---
 name: skill_test
 ---
@@ -149,7 +149,7 @@ EOF
   run bash "$AUDIT_SCRIPT" --dir "$TEST_DIR/subdir"
 
   [[ $status -eq 0 ]]
-  grep -q "skill_test/skill.md:L" <<< "$output"
+  grep -q "skill_test/SKILL.md:L" <<< "$output"
   grep -q "Total: 2 hits across 1 skills" <<< "$output"
 }
 
@@ -188,7 +188,7 @@ EOF
 
 @test "frontmatter 開きっぱなし → stderr に 'unclosed frontmatter' warning、exit 0" {
   mkdir -p "$TEST_DIR/unclosed_fm"
-  cat > "$TEST_DIR/unclosed_fm/skill.md" <<'EOF'
+  cat > "$TEST_DIR/unclosed_fm/SKILL.md" <<'EOF'
 ---
 name: unclosed
 description: frontmatter が開いたまま
