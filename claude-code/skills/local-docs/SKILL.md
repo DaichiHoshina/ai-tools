@@ -82,7 +82,19 @@ cp _templates/{type}.html {dir}/{name}.html
 | `<!-- type: ... -->` | canonical type |
 | `<!-- status: ... -->` | canonical status |
 | `<!-- last-updated: ... -->` | 書かない (deprecated) |
+| `<!-- created: YYYY-MM-DD -->` | 作成日 (全 type 必須) |
 | title (`<h1>`) | 短く、親 context の repeat 禁止 (`STRUCTURE.md` Title Rules) |
+
+**type 別追加 metadata (本質情報)**:
+
+| type | 追加 metadata | 意味 |
+|---|---|---|
+| `rca` / `postmortem` | `<!-- event-date: YYYY-MM-DD -->` | 障害発生日 |
+| `report` | `<!-- data-window: YYYY-MM-DD/YYYY-MM-DD -->` | 計測期間 (単日なら同日) |
+| `log` | `<!-- observed-at: YYYY-MM-DD -->` | 観測日 (継続なら最新) |
+| `spec` / `runbook` / `guide` / `plan` | (なし、`created` のみ) | — |
+
+**禁止**: `<meta name="last-updated">` / frontmatter `last-updated:` / `<!-- updated: -->` (廃止規約、file mtime と `created` で代替)。title への日付埋め込みのみで metadata 省略も NG (識別子としての title 日付は可、ただし metadata は別途必須)。
 
 ### Step 6. Self-check (生成直後)
 
