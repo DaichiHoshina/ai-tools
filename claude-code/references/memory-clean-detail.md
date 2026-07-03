@@ -8,7 +8,7 @@
 
 - regex: `^work-context-(\d{8})-.*\.md$`
 - `date -j -f %Y%m%d` で Unix time 化
-- `today - N*86400` より古ければ trash 行き (N は `--days=N`、default 14)
+- `today - N*86400` より古ければ trash 行き (N は fixed 14 日)
 
 ### Duplicate detection
 
@@ -19,7 +19,7 @@
 
 Fuzzy match (Jaccard 0.6 等) 禁止 (false positive 過多)。exact / explicit prefix のみ。
 
-### Topic cluster (--cluster)
+### Topic cluster
 
 `feedback_<topic>_*` / `knowledge_<topic>_*` / `writing_failure_*` の topic part で group。3 file 以上を merge 候補として列挙。
 
@@ -30,11 +30,11 @@ Fuzzy match (Jaccard 0.6 等) 禁止 (false positive 過多)。exact / explicit 
 
 merge は user 手動 (旧 file を `mv` で trash)。skill は merge を実行しない。
 
-### Small file (--small=N)
+### Small file
 
-`wc -l < <file>` が N 未満の `*.md` を list 表示。除外: `MEMORY.md` / `pending-improvements*` / `compact-restore-*`。merge は user 判断。
+`wc -l < <file>` が 20 行未満の `*.md` を list 表示。除外: `MEMORY.md` / `pending-improvements*` / `compact-restore-*`。merge は user 判断。
 
-### Orphan / dead link (--orphan)
+### Orphan / dead link
 
 index (MEMORY.md) と file 実体の対応ずれを両方向で検出する。
 
@@ -60,9 +60,9 @@ grep -oE '\]\(([a-z][^)]+\.md)\)' MEMORY.md | sed -E 's/\]\(|\)//g' \
   | while read l; do [ -f "$l" ] || echo "DEAD-LINK: $l"; done
 ```
 
-> work-context を trash 送りにした後は MEMORY.md prune (flow Stage 2 step 5) で link 行が消えるが、過去に手動削除された file の link が残ると dead link 化する。`--orphan` 実行時に両方向を必ずチェックする。
+> work-context を trash 送りにした後は MEMORY.md prune (flow Stage 2 step 4) で link 行が消えるが、過去に手動削除された file の link が残ると dead link 化する。dry-run で両方向を必ずチェックする。
 
-### Graduate (--graduate) — memory → ai-tools 切り出し
+### Graduate — memory → ai-tools 切り出し
 
 | memory パターン | 切り出し先 |
 |---|---|
