@@ -79,7 +79,7 @@ dry-run 列挙再実行 → 表示 → 実行。
 4. `AskUserQuestion` で採用 tier 選択 (1 括採用 / 段階採用 / 個別選抜)
 5. `--apply` 併用時:
    - 対象 tier の各 file を canonical 反映 (`Write` 新規 or `Edit` 追記)、伏字化を適用
-   - 元 file 削除: `rm <src-dir>/<subdir>/<file>`
+   - 元 file 削除: `rm <src-dir>/<subdir>/<file>` (**注**: `<src-dir>` は別 repo 領域のため ai-tools の `.trash-*/` mv 対象外、`rm` を意図的に使う。削除前に Step 4 の `AskUserQuestion` 承認で必ず user 確認を経ている、承認済 file のみ削除する)
    - 元 repo の MEMORY.md index prune: 削除 file の行を `sed` で除去
    - 生きた feedback からの dead cross-ref 修正: 削除 file への `[[name]]` 参照を ai-tools canonical 参照に差替
    - work-context / .trash 系 log 内の dead ref は履歴保持のため触らない
