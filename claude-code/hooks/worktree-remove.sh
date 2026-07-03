@@ -5,7 +5,7 @@
 #   2. dangling cwd 問題の warn を systemMessage で Claude に通知し
 #      cd <CLAUDE_PROJECT_DIR> を促す
 #      (Claude Code spec: hook stdout は systemMessage として Claude に注入される)
-# 安全策: wt パス形式 (/private/tmp/wt-* or *-wt-*) かつ memory 空 (or symlink) の場合のみ削除
+# 安全策: wt パス形式 (/private/tmp/wt-* / *-wt-* / ~/ghq/worktrees/*) かつ memory 空 (or symlink) の場合のみ削除
 
 set -euo pipefail
 trap '' PIPE
@@ -30,7 +30,7 @@ fi
 
 # wt パターン以外は掃除対象外だが warn は発行する
 case "$WT_PATH" in
-  */wt-*|*-wt-*)
+  */wt-*|*-wt-*|*/ghq/worktrees/*)
     _IS_WT=1
     ;;
   *)

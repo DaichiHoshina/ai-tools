@@ -162,7 +162,7 @@ case "$TOOL_NAME" in
     # statusline マーカー更新ロジック
     # 1. cd 検出時: cd 先で書く（worktree/repo 移動の明示的追跡）
     # 2. cd 無し時: data.cwd で書く（session 認識する cwd へ巻き戻し）
-    # ただし既存マーカーが worktree (/private/tmp/wt-*) を指す場合は保護
+    # ただし既存マーカーが worktree (/private/tmp/wt-* または ~/ghq/worktrees/*) を指す場合は保護
     # （/snkr-issue 等の長期worktree作業で cd 含まない Bash 続行ケース）
     if [ -n "$SESSION_ID" ]; then
       MARKER_PATH="/tmp/claude-wt-${SESSION_ID}-${DATE_TODAY}"
