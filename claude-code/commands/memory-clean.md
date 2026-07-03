@@ -83,6 +83,7 @@ dry-run 列挙再実行 → 表示 → 実行。
    - 元 repo の MEMORY.md index prune: 削除 file の行を `sed` で除去
    - 生きた feedback からの dead cross-ref 修正: 削除 file への `[[name]]` 参照を ai-tools canonical 参照に差替
    - work-context / .trash 系 log 内の dead ref は履歴保持のため触らない
+6. 完了後、反映 file 数 / 削除 file 数 / cross-ref 差替数を chat に出力
 
 ## Out of scope (auto-delete しない)
 
