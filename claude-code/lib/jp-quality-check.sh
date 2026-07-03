@@ -41,6 +41,7 @@ _append_jp_quality_log() {
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
       mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
+      ls -1t "${log_file}".*.bak 2>/dev/null | tail -n +4 | xargs -I{} rm -f {} 2>/dev/null || true
     fi
   fi
   local ts
@@ -179,6 +180,7 @@ _append_jp_quality_inject_log() {
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
       mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
+      ls -1t "${log_file}".*.bak 2>/dev/null | tail -n +4 | xargs -I{} rm -f {} 2>/dev/null || true
     fi
   fi
   local ts

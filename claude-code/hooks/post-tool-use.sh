@@ -151,6 +151,13 @@ case "$TOOL_NAME" in
       _FULL60="${_FULL60:0:60}"
       TZ=UTC printf -v _TS '%(%Y-%m-%dT%H:%M:%SZ)T' -1
       printf '%s\t%s\t%s\n' "${_TS}" "${_TOKEN}" "${_FULL60}" >> "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || true
+      # size cap: >10MB なら直近 5000 行に trim (100 write に 1 回 check)
+      if [ "$(( RANDOM % 100 ))" -eq 0 ] && [ -f "${_BASH_BREAKDOWN_TSV}" ]; then
+        _BB_SIZE=$(stat -f %z "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || echo 0)
+        if [ "${_BB_SIZE}" -gt 10485760 ]; then
+          tail -5000 "${_BASH_BREAKDOWN_TSV}" > "${_BASH_BREAKDOWN_TSV}.tmp" 2>/dev/null && mv "${_BASH_BREAKDOWN_TSV}.tmp" "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || true
+        fi
+      fi
     fi
     # statusline マーカー更新ロジック
     # 1. cd 検出時: cd 先で書く（worktree/repo 移動の明示的追跡）
