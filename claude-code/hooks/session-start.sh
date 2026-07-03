@@ -210,6 +210,22 @@ if (( RANDOM % 100 == 0 )); then
   fi
 fi
 
+# /tmp/claude-* marker GC: 1% 確率で 7 日以上古い marker を非同期削除
+# 対象: claude-ngdict-* / claude-ng-inject-* / claude-session-scan-* / claude-transcript-decl-*
+#       / claude_session_bloat_* / claude-last-prompt-* / claude-deleg-checklist-*
+#       / claude-serena-fail-count-* / claude-today-commits-* / claude-fail-prompt-* / claude-wt-*
+# 各 hook が期限切れ回収せず溜まる問題への対応 (現 session の marker は mtime 新しいので保護)
+if (( RANDOM % 100 == 0 )); then
+  (
+    for _pat in 'claude-ngdict-*' 'claude-ng-inject-*' 'claude-session-scan-*' \
+                'claude-transcript-decl-*' 'claude_session_bloat_*' 'claude-last-prompt-*' \
+                'claude-deleg-checklist-*' 'claude-serena-fail-count-*' \
+                'claude-today-commits-*' 'claude-fail-prompt-*' 'claude-wt-*'; do
+      find /tmp -maxdepth 1 -name "${_pat}" -type f -mtime +7 -delete 2>/dev/null
+    done
+  ) &
+fi
+
 # analytics_start_session はバックグラウンド実行（SQLite append のみ、出力不要）
 _SS_LIB_DIR="${SCRIPT_DIR}/../lib"
 if [[ -f "${_SS_LIB_DIR}/analytics-writer.sh" ]]; then
