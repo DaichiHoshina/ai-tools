@@ -42,6 +42,8 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 |---|---|---|
 | `rules/` | `ai-output.md` | AI出力強制ルール (禁止リスト、超短い) |
 | `rules/` | `markdown.md` | markdown構造ルール |
+| `rules/` | `no-local-path-in-shared-docs.md` | DD / PR / issue / Slack 等の共有 doc に `~/ghq/...` 等の個人 path を書かない |
+| `rules/` | `screenshot-resize.md` | PR / issue / Slack / Notion / local-docs へのスクショ添付前に必ずリサイズ (幅 1200px / 500KB 目安) |
 | `guidelines/common/` | `notion-writing.md` | Notion固有フォーマット仕様 |
 | `references/` | `writing-patterns.md` | 詳細パターン (書き直しPhase 1-8 / レビュー3段 / textlint / フェーズ境界) |
 | `references/` | `document-iteration-patterns.md` | 書き直しの動的パターン |

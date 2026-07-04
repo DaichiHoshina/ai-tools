@@ -178,3 +178,12 @@ CLAUDE.md `## Context Management` の実測値委譲先。
 
 - 中断 task の継承: chat で「generate next-session mega-prompt」 → 出力を新 session に paste
 - 汚染なし単発質問: `/btw` (現 context を保持したまま別 question)
+
+## Cost 集計 tool 群
+
+| script | 用途 | 呼び方 |
+|---|---|---|
+| `scripts/usage-stats.sh` | slash command / skill の 0 利用検出 (`health-check.sh` 経由でも呼ばれる) | `./scripts/usage-stats.sh --days 30` |
+| `scripts/session-cost-top.sh` | session 別 cost top-N + msg 数 + agent 起動数 (ccusage + jsonl join) | `./scripts/session-cost-top.sh --top 10 --since 2026-06-25` |
+| `scripts/analytics-report.py` | analytics.db から tool / agent 使用集計 | `./scripts/analytics-report.py --days 7` |
+| `scripts/health-check.sh` | 上記 3 種 + hook-bench を束ねた session health レポート | `./scripts/health-check.sh` |

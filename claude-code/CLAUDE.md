@@ -172,6 +172,8 @@ Apply relevant items only. Scale by change size (typo → #6 / new feature → a
 
 Structural fix over symptomatic. **Reproduce → identify → design → verify** 4 steps required. Details: `/root-cause` skill。Production rollback: revert PR → main merge → deploy が CI canonical path。直接 platform 操作 (ECS task def rollback 等) は上書きされるため revert PR と並行実施 (`[[feedback-rollback-via-revert-pr]]`)。
 
+**incident 調査時の注意**: ローカル再現 = 真因確定と同一視しない。症状 endpoint に視野を閉じず、error signature を service 横断で時系列集計 + infra メトリクス (DB row_lock_time / blocked_transactions 等) を必ず確認する。canonical: `rules/incident-local-repro-not-root-cause.md`。
+
 ## Compounding Engineering
 
 Misbehavior / non-obvious success → document immediately → auto-avoid next session。Memory write target (ai-tools repo): **`~/ai-tools/memory/` 固定** (`.gitignore` 済)。`~/.claude/projects/.../memory/` と Serena `.serena/memories/` への write 禁止。詳細: `references/compounding-engineering-cycle.md` / `references/memory-relocation-pattern.md`
