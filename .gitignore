@@ -68,6 +68,8 @@ temp/
 # Claude Code session 一時生成物 / sync 先 (個人作業領域、canonical は claude-code/ 配下)
 .claude/commands/
 .claude/plans/
+# マシン固有 permission (個人パス入り)。共有したい permission は .claude/settings.json へ昇格する
+.claude/settings.local.json
 .claire/
 .playwright-mcp/
 /memory/
