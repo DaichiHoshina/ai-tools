@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # jq 必須（hook-utils.sh は lazy source のため require_jq を使わず inline check）
 if ! command -v jq &>/dev/null; then
-  echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+  echo '{"error": "jq not installed. Please run: brew install jq (macOS) / apt install jq (Ubuntu)"}' >&2
   exit 1
 fi
 

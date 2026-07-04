@@ -31,7 +31,7 @@ source "${BASH_SOURCE[0]%/*}/../hooks/lib/thresholds.sh"
 # Usage: require_jq
 require_jq() {
   if ! command -v jq &>/dev/null; then
-    echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+    echo '{"error": "jq not installed. Please run: brew install jq (macOS) / apt install jq (Ubuntu)"}' >&2
     exit 1
   fi
 }

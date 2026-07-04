@@ -16,7 +16,7 @@ mkdir -p "$(dirname "$LOG")"
 
 # jq 必須（hook-utils.sh 非依存のため inline check）
 if ! command -v jq &>/dev/null; then
-  echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+  echo '{"error": "jq not installed. Please run: brew install jq (macOS) / apt install jq (Ubuntu)"}' >&2
   exit 1
 fi
 
