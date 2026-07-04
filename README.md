@@ -1,7 +1,5 @@
 # AI Tools
 
-[![CI](https://github.com/DaichiHoshina/ai-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/DaichiHoshina/ai-tools/actions/workflows/ci.yml)
-
 **Claude Codeの設定を一元管理し、複数マシンで同じ開発体験を再現するためのツールキット。**
 
 コマンド、スキル、ガイドライン、Hooksを組み合わせて、AI支援開発のワークフローを構築・共有できます。
