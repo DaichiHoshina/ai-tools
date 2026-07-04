@@ -24,8 +24,9 @@ CWD=$(printf '%s' "${INPUT}" | jq -r '.cwd // ""')
 
 # graceful exit when cwd is absent or not a git repo
 if [[ -z "${CWD}" ]] || ! git -C "${CWD}" rev-parse --git-dir >/dev/null 2>&1; then
+  printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
   printf '%s stop-verify skipped: no cwd or not a git repo\n' \
-    "$(date '+%Y-%m-%dT%H:%M:%S')" >> "${LOG_FILE}"
+    "${_TS}" >> "${LOG_FILE}"
   exit 0
 fi
 
@@ -42,8 +43,9 @@ FILE_COUNT=$(printf '%s' "${CHANGED_FILES}" | grep -c . || true)
 
 # skip when no files changed
 if [[ "${FILE_COUNT}" -eq 0 ]]; then
+  printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
   printf '%s stop-verify skipped: doc-only (0 files)\n' \
-    "$(date '+%Y-%m-%dT%H:%M:%S')" >> "${LOG_FILE}"
+    "${_TS}" >> "${LOG_FILE}"
   exit 0
 fi
 
@@ -51,8 +53,9 @@ fi
 DOC_EXTS_RE='\.(md|txt|json|yml|yaml|toml)$'
 NON_DOC=$(printf '%s' "${CHANGED_FILES}" | grep -vE "${DOC_EXTS_RE}" || true)
 if [[ -z "${NON_DOC}" ]]; then
+  printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
   printf '%s stop-verify skipped: doc-only (%d files)\n' \
-    "$(date '+%Y-%m-%dT%H:%M:%S')" "${FILE_COUNT}" >> "${LOG_FILE}"
+    "${_TS}" "${FILE_COUNT}" >> "${LOG_FILE}"
   exit 0
 fi
 
@@ -87,8 +90,9 @@ PY_FILES=$(printf '%s' "${CHANGED_FILES}" | grep -E '\.py$' || true)
 if [[ -n "${SH_FILES}" ]]; then
   # bats availability check
   if ! command -v bats >/dev/null 2>&1; then
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify skipped: bats not found (warn)\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" >> "${LOG_FILE}"
+      "${_TS}" >> "${LOG_FILE}"
     exit 0
   fi
 
@@ -104,8 +108,9 @@ if [[ -n "${SH_FILES}" ]]; then
   fi
 
   if [[ ${#EXISTING_DIRS[@]} -eq 0 ]]; then
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify skipped: no bats test dirs found\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" >> "${LOG_FILE}"
+      "${_TS}" >> "${LOG_FILE}"
     exit 0
   fi
 
@@ -118,16 +123,18 @@ if [[ -n "${SH_FILES}" ]]; then
     FIRST_FAIL=$(printf '%s' "${BATS_OUT}" | grep -E '^not ok' | head -1 | sed 's/^not ok [0-9]* //' || true)
     [[ -z "${FIRST_FAIL}" ]] && FIRST_FAIL="(unknown test)"
 
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify BLOCK: bats rc=%d first_fail=%s files=%d\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" "${BATS_RC}" "${FIRST_FAIL}" "${FILE_COUNT}" >> "${LOG_FILE}"
+      "${_TS}" "${BATS_RC}" "${FIRST_FAIL}" "${FILE_COUNT}" >> "${LOG_FILE}"
 
     jq -n --arg reason "smoke test failed: ${FIRST_FAIL}" \
       '{decision: "block", reason: $reason, suppressOutput: false}'
     exit 0
   fi
 
+  printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
   printf '%s stop-verify pass: bats ok files=%d\n' \
-    "$(date '+%Y-%m-%dT%H:%M:%S')" "${FILE_COUNT}" >> "${LOG_FILE}"
+    "${_TS}" "${FILE_COUNT}" >> "${LOG_FILE}"
   exit 0
 fi
 
@@ -158,8 +165,9 @@ if [[ -n "${GO_FILES}" ]]; then
   GO_RUNNER=$(_resolve_runner "go")
 
   if [[ -z "${GO_RUNNER}" ]]; then
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify skipped: lang=go runner-not-found\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" >> "${LOG_FILE}"
+      "${_TS}" >> "${LOG_FILE}"
   else
     GO_OUT=""
     GO_RC=0
@@ -170,16 +178,18 @@ if [[ -n "${GO_FILES}" ]]; then
         | sed 's/^--- FAIL: //;s/^FAIL	//' || true)
       [[ -z "${FIRST_FAIL}" ]] && FIRST_FAIL="(unknown go test)"
 
+      printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
       printf '%s stop-verify BLOCK: lang=go rc=%d first_fail=%s files=%d\n' \
-        "$(date '+%Y-%m-%dT%H:%M:%S')" "${GO_RC}" "${FIRST_FAIL}" "${GO_FILE_COUNT}" >> "${LOG_FILE}"
+        "${_TS}" "${GO_RC}" "${FIRST_FAIL}" "${GO_FILE_COUNT}" >> "${LOG_FILE}"
 
       jq -n --arg reason "smoke test failed (go): ${FIRST_FAIL}" \
         '{decision: "block", reason: $reason, suppressOutput: false}'
       exit 0
     fi
 
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify pass: lang=go files=%d\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" "${GO_FILE_COUNT}" >> "${LOG_FILE}"
+      "${_TS}" "${GO_FILE_COUNT}" >> "${LOG_FILE}"
   fi
 fi
 
@@ -189,8 +199,9 @@ if [[ -n "${TS_FILES}" ]]; then
   TSC_RUNNER=$(_resolve_runner "tsc")
 
   if [[ -z "${TSC_RUNNER}" ]]; then
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify skipped: lang=ts runner-not-found\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" >> "${LOG_FILE}"
+      "${_TS}" >> "${LOG_FILE}"
   else
     TSC_OUT=""
     TSC_RC=0
@@ -201,16 +212,18 @@ if [[ -n "${TS_FILES}" ]]; then
       FIRST_FAIL=$(printf '%s' "${TSC_OUT}" | grep -E 'error TS' | head -1 || true)
       [[ -z "${FIRST_FAIL}" ]] && FIRST_FAIL="(unknown tsc error)"
 
+      printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
       printf '%s stop-verify BLOCK: lang=ts rc=%d first_fail=%s files=%d\n' \
-        "$(date '+%Y-%m-%dT%H:%M:%S')" "${TSC_RC}" "${FIRST_FAIL}" "${TS_FILE_COUNT}" >> "${LOG_FILE}"
+        "${_TS}" "${TSC_RC}" "${FIRST_FAIL}" "${TS_FILE_COUNT}" >> "${LOG_FILE}"
 
       jq -n --arg reason "smoke test failed (ts): ${FIRST_FAIL}" \
         '{decision: "block", reason: $reason, suppressOutput: false}'
       exit 0
     fi
 
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify pass: lang=ts files=%d\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" "${TS_FILE_COUNT}" >> "${LOG_FILE}"
+      "${_TS}" "${TS_FILE_COUNT}" >> "${LOG_FILE}"
   fi
 fi
 
@@ -220,8 +233,9 @@ if [[ -n "${PY_FILES}" ]]; then
   PYTEST_RUNNER=$(_resolve_runner "pytest")
 
   if [[ -z "${PYTEST_RUNNER}" ]]; then
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify skipped: lang=py runner-not-found\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" >> "${LOG_FILE}"
+      "${_TS}" >> "${LOG_FILE}"
   else
     PY_OUT=""
     PY_RC=0
@@ -232,20 +246,23 @@ if [[ -n "${PY_FILES}" ]]; then
         | sed 's/^FAILED //' || true)
       [[ -z "${FIRST_FAIL}" ]] && FIRST_FAIL="(unknown pytest)"
 
+      printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
       printf '%s stop-verify BLOCK: lang=py rc=%d first_fail=%s files=%d\n' \
-        "$(date '+%Y-%m-%dT%H:%M:%S')" "${PY_RC}" "${FIRST_FAIL}" "${PY_FILE_COUNT}" >> "${LOG_FILE}"
+        "${_TS}" "${PY_RC}" "${FIRST_FAIL}" "${PY_FILE_COUNT}" >> "${LOG_FILE}"
 
       jq -n --arg reason "smoke test failed (py): ${FIRST_FAIL}" \
         '{decision: "block", reason: $reason, suppressOutput: false}'
       exit 0
     fi
 
+    printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
     printf '%s stop-verify pass: lang=py files=%d\n' \
-      "$(date '+%Y-%m-%dT%H:%M:%S')" "${PY_FILE_COUNT}" >> "${LOG_FILE}"
+      "${_TS}" "${PY_FILE_COUNT}" >> "${LOG_FILE}"
   fi
 fi
 
 # no recognized code extension changed (or all languages passed)
+printf -v _TS '%(%Y-%m-%dT%H:%M:%S)T' -1
 printf '%s stop-verify done: no block\n' \
-  "$(date '+%Y-%m-%dT%H:%M:%S')" >> "${LOG_FILE}"
+  "${_TS}" >> "${LOG_FILE}"
 exit 0
