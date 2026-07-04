@@ -35,6 +35,9 @@ fi
 
 # shellcheck source=lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
+# hook-utils.sh 経由でも import 済みだが、broken install (lib/ 欠損) 時の fallback として直 source
+# shellcheck source=lib/portable-stat.sh
+source "${BASH_SOURCE[0]%/*}/lib/portable-stat.sh"
 source "${BASH_SOURCE[0]%/*}/lib/touchable-files-state.sh"
 
 # Nerd Fonts icons
@@ -329,8 +332,7 @@ _check_hook_edit_baseline_missing() {
     for f in "$_HOOK_BENCH_LOG_DIR"/hook-bench-*.log; do
       [ -e "$f" ] || continue
       local m
-      # GNU (stat -c) を先に試す: GNU の stat -f は filesystem mode となり garbage を返すため順序重要
-      m=$(stat -c %Y "$f" 2>/dev/null || stat -f %m "$f" 2>/dev/null || echo 0)
+      m=$(portable_stat_mtime "$f")
       [ "$m" -gt "$latest_mtime" ] && latest_mtime=$m
     done
   fi
@@ -1392,7 +1394,7 @@ case "$TOOL_NAME" in
     # session+transcript mtime キャッシュ: transcript 更新がない場合は python3 fork を skip
     _TRANSCRIPT=$(jq -r '.transcript_path // empty' <<< "$INPUT")
     if [ -n "$_TRANSCRIPT" ] && [ -f "$_TRANSCRIPT" ]; then
-      _TRANSCRIPT_MTIME=$(stat -c '%Y' "$_TRANSCRIPT" 2>/dev/null || stat -f '%m' "$_TRANSCRIPT" 2>/dev/null || echo "0")
+      _TRANSCRIPT_MTIME=$(portable_stat_mtime "$_TRANSCRIPT")
       _TRANSCRIPT_CACHE_FLAG="/tmp/claude-transcript-decl-${SESSION_ID:-$$}-${_TRANSCRIPT_MTIME}"
       if [[ -f "$_TRANSCRIPT_CACHE_FLAG" ]]; then
         _DECL_FOUND=$(cat "$_TRANSCRIPT_CACHE_FLAG" 2>/dev/null || true)

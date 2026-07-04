@@ -159,7 +159,7 @@ case "$TOOL_NAME" in
       printf '%s\t%s\t%s\n' "${_TS}" "${_TOKEN}" "${_FULL60}" >> "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || true
       # size cap: >10MB なら直近 5000 行に trim (100 write に 1 回 check)
       if [ "$(( RANDOM % 100 ))" -eq 0 ] && [ -f "${_BASH_BREAKDOWN_TSV}" ]; then
-        _BB_SIZE=$(stat -c%s "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || stat -f%z "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || echo 0)
+        _BB_SIZE=$(portable_stat_size "${_BASH_BREAKDOWN_TSV}")
         if [ "${_BB_SIZE}" -gt 10485760 ]; then
           tail -5000 "${_BASH_BREAKDOWN_TSV}" > "${_BASH_BREAKDOWN_TSV}.tmp" 2>/dev/null && mv "${_BASH_BREAKDOWN_TSV}.tmp" "${_BASH_BREAKDOWN_TSV}" 2>/dev/null || true
         fi

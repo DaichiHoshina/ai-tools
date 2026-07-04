@@ -11,6 +11,8 @@ _JP_QUALITY_CHECK_LOADED=1
 
 # shellcheck source=../hooks/lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/../hooks/lib/thresholds.sh"
+# shellcheck source=../hooks/lib/portable-stat.sh
+source "${BASH_SOURCE[0]%/*}/../hooks/lib/portable-stat.sh"
 
 # ====================================
 # AI定型語 / カタカナ造語 block 関数
@@ -37,7 +39,7 @@ _append_jp_quality_log() {
   # ファイルサイズ rotation: 1MB 超えたら mv してから新規
   if [[ -f "$log_file" ]]; then
     local fsize
-    fsize=$(stat -c%s "$log_file" 2>/dev/null || stat -f%z "$log_file" 2>/dev/null || echo 0)
+    fsize=$(portable_stat_size "$log_file")
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
       mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
@@ -131,9 +133,7 @@ _assert_required_keys() {
   # session+mtime 単位 flag file: /tmp/claude-ngdict-keys-ok-<SESSION_ID>-<mtime>
   # NG-DICTIONARY.md を同 session 内で編集した場合も mtime 変化で再検査する
   local _dict_mtime
-  _dict_mtime=$(stat -c '%Y' "$_principles_file" 2>/dev/null \
-    || stat -f '%m' "$_principles_file" 2>/dev/null \
-    || echo "0")
+  _dict_mtime=$(portable_stat_mtime "$_principles_file")
   local _flag_path="/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}-${_dict_mtime}"
   # 古いキャッシュ (同セッション・異なる mtime) のみ削除 — _flag_path 自体は残す
   for _old_flag in "/tmp/claude-ngdict-keys-ok-${SESSION_ID:-$$}"-*; do
@@ -176,7 +176,7 @@ _append_jp_quality_inject_log() {
   # ファイルサイズ rotation: 1MB 超えたら mv してから新規
   if [[ -f "$log_file" ]]; then
     local fsize
-    fsize=$(stat -c%s "$log_file" 2>/dev/null || stat -f%z "$log_file" 2>/dev/null || echo 0)
+    fsize=$(portable_stat_size "$log_file")
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
       mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true

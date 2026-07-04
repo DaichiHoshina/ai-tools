@@ -10,6 +10,9 @@
 #
 # Opt-out: env CLAUDE_TOUCHABLE_ENFORCE=0
 
+# shellcheck source=./portable-stat.sh
+source "${BASH_SOURCE[0]%/*}/portable-stat.sh"
+
 _TOUCHABLE_STATE_DIR="${HOME}/.claude/state"
 _TOUCHABLE_TTL_SEC=3600
 
@@ -59,8 +62,7 @@ _touchable_check() {
   local _f="${_TOUCHABLE_STATE_DIR}/touchable-${_sid}.txt"
   [[ ! -f "$_f" ]] && return 0
   local _mtime _now
-  # GNU (stat -c) を先に試す: GNU の stat -f は filesystem mode となり garbage を返すため順序重要
-  _mtime=$(stat -c %Y "$_f" 2>/dev/null || stat -f %m "$_f" 2>/dev/null || echo 0)
+  _mtime=$(portable_stat_mtime "$_f")
   _now=$(date +%s)
   if (( _now - _mtime > _TOUCHABLE_TTL_SEC )); then
     rm -f "$_f" 2>/dev/null

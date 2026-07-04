@@ -21,6 +21,8 @@ load_lib "detect-technique.sh" || exit 1
 
 # shellcheck source=lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
+# shellcheck source=lib/portable-stat.sh
+source "${BASH_SOURCE[0]%/*}/lib/portable-stat.sh"
 
 # === 前提条件チェック ===
 require_jq
@@ -143,8 +145,7 @@ _check_session_bloat() {
   # mtime+size 署名でキャッシュ (jsonl は append-only。署名一致なら python 再走査 skip)
   local _MSG_COUNT _TOKEN_TOTAL _LAST_EPOCH
   local _SIG _SCAN_CACHE
-  # GNU (stat -c) を先に試す: GNU の stat -f は filesystem mode となり garbage を返すため順序重要
-  _SIG=$(stat -c '%Y-%s' "${_JSONL}" 2>/dev/null || stat -f '%m-%z' "${_JSONL}" 2>/dev/null || echo "0-0")
+  _SIG=$(portable_stat_mtime_size "${_JSONL}")
   _SCAN_CACHE="/tmp/claude-session-scan-${session_id}-${_SIG}"
   if [[ -f "${_SCAN_CACHE}" ]]; then
     IFS=$'\t' read -r _MSG_COUNT _TOKEN_TOTAL _LAST_EPOCH < "${_SCAN_CACHE}" 2>/dev/null \
@@ -660,7 +661,7 @@ ${_DELEG_CHECKLIST_CTX}"
       _SIZE_LOG="${_LOG_DIR}/jp-quality-inject-size.log"
       mkdir -p "${_LOG_DIR}" 2>/dev/null || true
       if [[ -f "${_SIZE_LOG}" ]]; then
-        _fsize=$(stat -c%s "${_SIZE_LOG}" 2>/dev/null || stat -f%z "${_SIZE_LOG}" 2>/dev/null || echo 0)
+        _fsize=$(portable_stat_size "${_SIZE_LOG}")
         if [[ "${_fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
           printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
           mv "${_SIZE_LOG}" "${_SIZE_LOG}.${_bak_ts}.bak" 2>/dev/null || true

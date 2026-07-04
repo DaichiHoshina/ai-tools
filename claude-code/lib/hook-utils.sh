@@ -12,6 +12,8 @@ set -euo pipefail
 
 # shellcheck source=../hooks/lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/../hooks/lib/thresholds.sh"
+# shellcheck source=../hooks/lib/portable-stat.sh
+source "${BASH_SOURCE[0]%/*}/../hooks/lib/portable-stat.sh"
 
 # -----------------------------------------------------------------------------
 # 共通アイコン (Nerd Fonts / Unicode)
@@ -300,7 +302,7 @@ _append_block_log() {
   mkdir -p "$log_dir" 2>/dev/null || true
   if [[ -f "$log_file" ]]; then
     local fsize
-    fsize=$(stat -c%s "$log_file" 2>/dev/null || stat -f%z "$log_file" 2>/dev/null || echo 0)
+    fsize=$(portable_stat_size "$log_file")
     if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
       local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
       mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
