@@ -38,19 +38,6 @@ cp ~/.claude/templates/keybindings.json.template ~/.claude/keybindings.json
 - `Ctrl+Shift+T`: `/test`
 - `Ctrl+Shift+V`: `/lint-test`
 
-### settings-ghq.json.template
-
-ghq（Goリポジトリ管理ツール）を使用する環境向けのsettings.json。
-
-**使い方**:
-```bash
-# ghq環境の場合、こちらを使用
-cp ~/.claude/templates/settings-ghq.json.template ~/.claude/settings.json
-```
-
-**通常のsettings.json.templateとの違い**:
-- リポジトリパスがghq構造に最適化
-
 ### workflow-config.yaml.template
 
 カスタムワークフロー設定テンプレート（実験的機能）。
