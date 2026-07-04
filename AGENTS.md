@@ -5,7 +5,7 @@
 
 ## Project Structure & Module Organization
 - `claude-code/`: Main Claude Code assets (hooks, commands, skills, guidelines, lib).
-- `claude-code/hooks/`: Shell hooks that run on session/tool events (plus `test-*.sh` for hook checks).
+- `claude-code/hooks/`: Shell hooks that run on session/tool events (tests live in `claude-code/tests/`).
 - `codex/`: Codex templates and installer (`config.toml.example`, `AGENTS.md.example`, `hooks/*.example`).
 - `docs/`: Documentation hub. Notable subdirs: `docs/reports/` (historical reports), `docs/adr/` (ADRs); plus quickref/setup guides at the top level.
 - Root docs: `README.md`, `AGENTS.md`, `LICENSE`, `CODEX-SETUP.md`.
@@ -23,8 +23,9 @@
 - Prefer ASCII, concise comments, and existing naming patterns (`pre-*.sh`, `session-*.sh`).
 
 ## Testing Guidelines
-- There is no formal test runner; use hook checks and smoke tests instead.
-- Run `claude-code/hooks/test-pre-skill-use.sh` and `claude-code/hooks/test-user-prompt-submit.sh` after hook changes.
+- Bats suite: `cd claude-code && npm run test:bats` (unit + integration; requires `bats`).
+- Jest: `cd claude-code && npm test` (statusline etc. JS tests).
+- After hook changes, run the relevant bats files under `claude-code/tests/unit/hooks/` and `claude-code/tests/integration/`.
 - Validate installs by running the installer scripts and confirming expected symlinks.
 
 ## Commit & Pull Request Guidelines
@@ -34,4 +35,4 @@
 
 ## Security & Configuration Tips
 - Do not commit secrets or local paths; use environment variables and templates.
-- Keep `.mcp.json`, `.serena/`, and `codex/*.sh` (generated) untracked per `.gitignore`.
+- Keep `.mcp.json`, `.serena/`, and `codex/hooks/*.sh` (generated) untracked per `.gitignore`.
