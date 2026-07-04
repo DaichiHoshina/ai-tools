@@ -4,9 +4,6 @@ name: react-best-practices
 description: React/Next.js optimization: 45 rules, 8 categories. Use for React/Next.js impl.
 requires-guidelines:
   - nextjs-react
-hooks:
-  - event: PreSkillUse
-    command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
 # react-best-practices - React/Next.js Performance Optimization

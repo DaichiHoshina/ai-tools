@@ -16,9 +16,6 @@ parameters:
     values: [auto, go, typescript, python, rust]
     default: auto
     description: "Programming language (auto: detect from file extensions)"
-hooks:
-  - event: PreSkillUse
-    command: "~/.claude/hooks/pre-skill-use.sh"
 ---
 
 # backend-dev

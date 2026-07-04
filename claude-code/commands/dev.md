@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 argument-hint: "[--inline|--quick] <task-description>"
-description: Default = developer-agent delegation (Sonnet). Inline for 1-symbol fix only. --inline forces inline, --quick for short prompts, Team via /flow
+description: Default = developer-agent delegation. Inline for 1-symbol fix only. --inline forces inline, --quick for short prompts, Team via /flow
 ---
 
 ## /dev - Implementation mode
@@ -11,13 +11,13 @@ description: Default = developer-agent delegation (Sonnet). Inline for 1-symbol 
 
 ## Default delegation
 
-On `/dev` launch, delegate to `Task(developer-agent)` by default (Sonnet execution).
+On `/dev` launch, delegate to `Task(developer-agent)` by default (model canonical: `agents/developer-agent.md` frontmatter + `references/model-selection.md`).
 
 | Flag | Behavior |
 |---|---|
 | (none) | `developer-agent` delegation (default) |
 | `--inline` | parent inline execution (1-symbol fix only) |
-| `--quick` | Sonnet delegation, token-saving priority (short prompt) |
+| `--quick` | low-cost model delegation, token-saving priority (short prompt) |
 | `--team` | use `/flow` instead; not supported here |
 
 ## Options
@@ -25,7 +25,7 @@ On `/dev` launch, delegate to `Task(developer-agent)` by default (Sonnet executi
 ```bash
 /dev --quick <task>      # Fast mode (token-saving, 1-2 files)
 /dev --parallel <task>   # Worktree parallel (no PO/Manager, developer-agent ×N)
-/dev <task>              # Normal (developer-agent delegation, Sonnet)
+/dev <task>              # Normal (developer-agent delegation)
 # Team hierarchy + parallel needed? Use /flow --parallel
 ```
 
@@ -99,7 +99,7 @@ After completion: `/lint-test` auto-detects lang + runs all checks (lint/typeche
 | Scenario | Action |
 |----------|--------|
 | 2 consecutive same-approach failures | suggest `/clear` & stop, request replan |
-| `--quick` unexpected error | fallback Sonnet, continue minor fixes |
+| `--quick` unexpected error | fallback to default model, continue minor fixes |
 | Serena MCP fails | degrade to grep/Read, warn |
 
 PushNotification: notify only if task > 3min (`[dev] {task} done`).

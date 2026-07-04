@@ -54,7 +54,7 @@ material: `git diff --shortstat` / `gh pr diff <PR>` / `gh pr view <PR> --json b
 | `--deep` | pr-review-toolkit 6 agents parallel (5-10min) | any | large |
 | `--multi` | `comprehensive-review` + codex + code-review + coderabbit parallel → auto-post to PR | required | max |
 
-cloud large: see `/ultrareview`.
+cloud large: use the CLI subcommand `claude ultrareview` (below). Slash command `/ultrareview` は本 repo に定義しない。
 
 ### CI Integration
 

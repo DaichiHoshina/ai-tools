@@ -11,7 +11,7 @@ agent: reviewer-agent
 requires-guidelines:
   - common
   - clean-architecture
-  - domain-driven-design
+  - ddd
 parameters:
   focus:
     type: enum

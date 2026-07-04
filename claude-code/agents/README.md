@@ -12,11 +12,12 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 | **root-cause-analyzer** | opus 4.7 | RCA specialist | 5Whys analysis, structural fixes |
 | **po-agent** | opus 4.7 | Strategy decider | Product strategy, worktree mgmt, decision return |
 | **manager-agent** | opus 4.7 | Task decomposition & allocation | Large task allocation, integration verify |
-| **developer-agent** | sonnet 4.6 | Implementer | Code impl, fix, add |
+| **developer-agent** | opus 4.7 | Implementer | Code impl, fix, add |
 | **explore-agent** | sonnet 4.6 | Explorer/analyzer | Codebase investigation, parallel search |
 | **verify-app** | sonnet 4.6 | Verifier | Build, test, lint integration check |
+| **design-review-agent** | sonnet 4.6 | UI/UX reviewer | Live design review via Playwright |
 
-> Judgment role (PO / Manager / RCA) は opus 4.7 強制 (`references/model-selection.md` 2026-06-16〜、opus 4.8 regression 回避)。
+> Model canonical は各 agent frontmatter の `model:`。Judgment role (PO / Manager / RCA) は opus 4.7 強制 (`references/model-selection.md` 2026-06-16〜、opus 4.8 regression 回避)。
 
 ## Agent startup cost (highlights)
 
@@ -31,7 +32,7 @@ Full table & recalc method: [`references/performance-insights.md`](../references
 | Command | Agent launched | Flow |
 |---------|----------------|------|
 | `/flow` | po-agent (skip light task, else launch) | Parent: PO → Manager → Dev×N sequential (Team default) |
-| `/dev` | developer-agent (default) / None (`--inline`) | Default delegation (Sonnet). `--inline` = direct exec |
+| `/dev` | developer-agent (default) / None (`--inline`) | Default delegation. `--inline` = direct exec |
 | `/review` | reviewer-agent | Auto review |
 | `/plan` | po-agent + manager-agent | Strategy + task split |
 | (natural lang / Claude judgment) | explore-agent (parallel) | Concurrent multi-perspective search. Trigger: 3+ query broad search, ambiguous large investigation |

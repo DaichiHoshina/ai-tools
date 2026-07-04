@@ -20,7 +20,8 @@ Referenced by `load-guidelines` skill when subtopic triggers fire. When the foll
 | SLO, SLI, tracing, OpenTelemetry, observability | `~/.claude/guidelines/backend/observability-design.md` |
 | OWASP, rate limit, secret, mTLS, authn, authz | `~/.claude/guidelines/backend/security-hardening.md` |
 | scale, sharding, read replica, circuit breaker, bulkhead | `~/.claude/guidelines/backend/scalability-patterns.md` |
-| Kafka, Redpanda, RabbitMQ, SQS, SNS, Pub/Sub, event-driven, partition, consumer group, DLQ, exactly-once, schema registry, Debezium, CDC | `~/.claude/guidelines/backend/event-driven-architecture.md` |
+| Kafka, Redpanda, RabbitMQ, event-driven, partition, consumer group, schema registry, Debezium, CDC | `~/.claude/guidelines/backend/event-driven-architecture.md` |
+| SQS, SNS, Pub/Sub, DLQ, visibility timeout, ack deadline, exactly-once, outbox, consumer idempotency | `~/.claude/guidelines/languages/async-messaging.md` |
 | multi-tenant, tenancy, tenant_id, RLS, row-level security, SaaS isolation, schema-per-tenant, database-per-tenant | `~/.claude/guidelines/backend/multi-tenancy.md` |
 
 ## Language deep-dive subtopics

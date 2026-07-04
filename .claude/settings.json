@@ -15,9 +15,7 @@
       "mcp__serena__list_memories",
       "mcp__plugin_serena_serena__activate_project",
       "mcp__plugin_serena_serena__list_memories",
-      "mcp__plugin_serena_serena__read_memory",
-      "Bash(make lint-md)",
-      "Bash(go vet ./...)"
+      "mcp__plugin_serena_serena__read_memory"
     ]
   },
   "autoMode": {

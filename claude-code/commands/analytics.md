@@ -17,7 +17,7 @@ Analyze usage patterns, auto-generate improvement suggestions. Two modes: CLI (t
 ## CLI mode
 
 ```bash
-python3 "$HOME/ghq/github.com/DaichiHoshina/ai-tools/claude-code/scripts/analytics-report.py" --mode full
+python3 "$HOME/.claude/scripts/analytics-report.py" --mode full
 ```
 
 Output markdown with contextual commentary. "Suggestions" section customized to actual workflow.
@@ -29,10 +29,10 @@ After analytics summary, run `/audit --severity high` (scan package CVEs). CLI m
 ## UI mode
 
 ```bash
-bash "$HOME/ghq/github.com/DaichiHoshina/ai-tools/claude-code/scripts/dashboard.sh"
+bash "$HOME/.claude/scripts/dashboard.sh"
 ```
 
-On first run: backfill `~/.claude/analytics/analytics.db`, launch `http://localhost:8765`, auto-open browser.
+Requires `~/.claude/analytics/analytics.db` (hooks が逐次生成)。Launch `http://localhost:8765`, auto-open browser.
 
 ## Related
 

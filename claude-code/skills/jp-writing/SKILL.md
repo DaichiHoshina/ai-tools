@@ -33,7 +33,7 @@ Sentence length and style standards vary by medium. Determine medium first (deta
 |---|---|---|
 | 技術文書本文 (DD / RCA / long-form) | 100 字 | 冒頭結論 → 詳細 |
 | web / 短文 (PR / Slack / Notion / Issue) | 60 字 | PREP + scan 対応 |
-| chat | 緩め | genshijin (体言止め) |
+| chat | 緩め | 常体 plain JP (genshijin OFF、体言止め羅列禁止) |
 
 ## self-check (all dimensions, canonical reference)
 
