@@ -7,10 +7,11 @@ DASHBOARD_DIR="${SCRIPT_DIR}/../../dashboard"
 PORT="${1:-8765}"
 DB_PATH="${HOME}/.claude/analytics/analytics.db"
 
-# DB存在チェック
+# DB存在チェック（DB は hooks の lib/analytics-writer.sh がセッション実行時に逐次生成する）
 if [[ ! -f "$DB_PATH" ]]; then
-    echo "Analytics DB not found. Running backfill first..."
-    python3 "${SCRIPT_DIR}/backfill-analytics.py"
+    echo "Analytics DB not found: ${DB_PATH}" >&2
+    echo "DB は Claude Code セッション実行時に hooks が自動生成する。セッションを何度か実行してから再度起動すること。" >&2
+    exit 1
 fi
 
 # 既にポートが使用中かチェック
