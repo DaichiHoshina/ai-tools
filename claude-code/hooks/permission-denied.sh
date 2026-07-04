@@ -7,6 +7,7 @@ set -euo pipefail
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="${HOOK_DIR}/../lib"
 source "${LIB_DIR}/hook-utils.sh"
+require_jq
 
 INPUT=$(cat)
 

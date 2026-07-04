@@ -11,6 +11,7 @@ exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+require_jq
 
 # JSON入力を読み込む
 INPUT=$(cat)

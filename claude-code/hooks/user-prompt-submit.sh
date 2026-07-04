@@ -250,13 +250,13 @@ if [[ -f "${_CTX_FILE}" ]]; then
   fi
 fi
 
-# === Serena MCP health notice: 失敗が累積したら /serena-refresh 提案 ===
+# === Serena MCP health notice: 失敗が累積したら再 activate を提案 ===
 _SERENA_COUNTER="${CLAUDE_SERENA_FAIL_COUNT:-/tmp/claude-serena-fail-count-${_SESSION_ID}}"
 _SERENA_NOTICE_MSG=""
 if [[ -f "${_SERENA_COUNTER}" ]]; then
   read -r _SERENA_FAILS < "${_SERENA_COUNTER}" 2>/dev/null || _SERENA_FAILS="0"
   if [[ "${_SERENA_FAILS}" =~ ^[0-9]+$ ]] && [[ "${_SERENA_FAILS}" -ge 2 ]]; then
-    _SERENA_NOTICE_MSG="⚠️ Serena MCP が${_SERENA_FAILS}回失敗。ユーザーに \`/serena-refresh\` 実行を提案してください（再接続で復旧）。"
+    _SERENA_NOTICE_MSG="⚠️ Serena MCP が${_SERENA_FAILS}回失敗。mcp__serena__activate_project で project を再 activate して復旧を試みること（改善しなければユーザーに MCP 再接続を依頼）。"
     rm -f "${_SERENA_COUNTER}"  # 1度通知したらクリア
   fi
 fi

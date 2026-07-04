@@ -18,6 +18,9 @@ else
   [[ -f "$_FALLBACK_LIB" ]] && source "$_FALLBACK_LIB" || true
 fi
 
+# jq 必須（require_jq は hook-utils.sh 定義。lib 不在の broken install では skip し従来挙動）
+declare -f require_jq >/dev/null && require_jq
+
 # lib/jp-quality-check.sh を source する (AI定型語 / NG語 block 系)
 # shellcheck source=../lib/jp-quality-check.sh
 if [[ -f "${_HOOK_LIB_DIR}/jp-quality-check.sh" ]]; then

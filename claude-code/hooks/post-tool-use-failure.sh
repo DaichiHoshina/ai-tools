@@ -10,6 +10,12 @@ LOG_DIR="${HOME}/.claude/logs"
 LOG_FILE="${TOOL_FAILURE_LOG_FILE:-${LOG_DIR}/tool-failures.log}"
 mkdir -p "$(dirname "${LOG_FILE}")"
 
+# jq 必須（hook-utils.sh 非依存のため inline check）
+if ! command -v jq &>/dev/null; then
+  echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+  exit 1
+fi
+
 # JSON入力を読み取り（1回のみ）
 INPUT=$(cat)
 
@@ -64,7 +70,7 @@ if [[ -n "${ERROR}" && "${ERROR}" != "no details" ]] || [[ -n "${TOOL_NAME}" && 
 fi
 
 # Serena MCP 失敗のセッション内カウンタ
-# user-prompt-submit.sh が次プロンプト時に検知し /serena-refresh を提案
+# user-prompt-submit.sh が次プロンプト時に検知し Serena 再 activate を提案
 if [[ "${TOOL_NAME}" == mcp__serena__* ]]; then
   _SERENA_COUNTER="${CLAUDE_SERENA_FAIL_COUNT:-/tmp/claude-serena-fail-count-${SESSION_ID}}"
   _CURRENT=0

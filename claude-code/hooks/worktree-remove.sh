@@ -14,6 +14,12 @@ exec 2>>"$HOME/.claude/logs/hook-errors.log"
 LOG="$HOME/.claude/logs/worktree-cleanup.log"
 mkdir -p "$(dirname "$LOG")"
 
+# jq 必須（hook-utils.sh 非依存のため inline check）
+if ! command -v jq &>/dev/null; then
+  echo '{"error": "jq not installed. Please run: brew install jq"}' >&2
+  exit 1
+fi
+
 INPUT=$(cat)
 WT_PATH=$(jq -r '.worktree_path // .cwd // .workspace.current_dir // empty' <<< "$INPUT")
 
