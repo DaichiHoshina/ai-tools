@@ -50,7 +50,6 @@ On-demand index from CLAUDE.md.
 | Workflow tool templates (fan-out / pipeline / 多数決) | `workflow-templates.md` |
 | Agent Team interface schema (canonical) | `agent-team-contract.md` |
 | Agent output schema (status / confidence trailer) | `agent-output-schema.md` |
-| Agent silent-fail guard | `agent-silent-fail-guard.md` |
 | Developer agent delegation prompt (canonical) | `developer-agent-delegation-prompt.md` |
 | bats editing canonical rules (for Developer agents) | `bats-test-writing.md` |
 | Hook event payload map | `hook-payload-map.md` |
