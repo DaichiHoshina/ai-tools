@@ -6,9 +6,7 @@ description: local-docs 配下に HTML doc を作成・更新し、type 別 (pos
 
 # local-docs
 
-`~/ghq/<repo>/local-docs/` 配下に HTML 形式の doc を作成 / 更新する専用 skill。template compliance が必須で、type 別に本文品質 rule を強制する。
-
-type enum / 集約呼称 / placement は local-docs 側の `CLAUDE.md` と `STRUCTURE.md` を毎回 Read する (No Derived Literals、cache 禁止)。
+`~/ghq/<repo>/local-docs/` 配下に HTML 形式の doc を作成 / 更新する専用 skill。template compliance が必須で、type 別に本文品質 rule を強制する。type enum / 集約呼称 / placement は local-docs 側の `CLAUDE.md` と `STRUCTURE.md` を毎回 Read する (No Derived Literals、cache 禁止)。
 
 ## 禁止 rule (違反 = 即 abort)
 
@@ -24,7 +22,7 @@ type enum / 集約呼称 / placement は local-docs 側の `CLAUDE.md` と `STRU
 
 ## auto activation trigger
 
-skill は明示 invoke なしでも auto activate する。以下 3 分類のいずれかを満たせば起動する。
+skill は明示 invoke なしでも auto activate する (以下 3 分類のいずれかで起動)。
 
 | 種別 | trigger |
 |---|---|
@@ -39,7 +37,7 @@ skill は明示 invoke なしでも auto activate する。以下 3 分類のい
 | `/local-docs new {type} {topic}` | 新規作成 |
 | `/local-docs update {path}` | 既存 doc の追記 / 書き直し |
 | `/local-docs update {path} --reformat` | skeleton を最新 template に整合 |
-| *(省略)* | 文脈から `new` / `update` を推定 |
+| *(省略)* | 文脈から `new` / `update` を推定する |
 
 ## Prerequisites (毎回 Read、cache 禁止)
 
@@ -148,9 +146,5 @@ template は骨格 h2 を与える。各 h2 を何の粒度で埋めるかが do
 |---|---|
 | local-docs `CLAUDE.md` | canonical type / aggregation mapping (primary source) |
 | local-docs `STRUCTURE.md` | placement flow / type enum / Title Rules |
-| local-docs `_templates/README.html` | template list と usage |
-| `guidelines/writing/long-form-doc.md` | 本文書き出し前の必須 guideline |
-| `guidelines/writing/README.md` | 文体規範 canonical (1 文 100 字 / NG 語 / 指示語禁止) |
-| `guidelines/writing/NG-DICTIONARY.md` | NG 語辞書 (hook block 対象) |
-| `/root-cause` skill | postmortem / rca の 5 Why 支援 |
-| `jp-writing` skill | Polish & Verify Step 7-2 で必須起動 |
+| `guidelines/writing/long-form-doc.md` | 本文書き出し前の必須 guideline (template list: `_templates/README.html`) |
+| `guidelines/writing/README.md` | 文体規範 canonical (NG-DICTIONARY 含む、1 文 100 字 / NG 語 / 指示語禁止) |

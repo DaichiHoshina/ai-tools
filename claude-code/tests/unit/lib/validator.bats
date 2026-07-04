@@ -57,8 +57,8 @@ EOF
   chmod +x "${TEST_TMPDIR}/bin/npx"
 
   # PATH を制限してテスト - node が見つからないので exit 1
-  # 標準的なコマンド PATH (/usr/bin など) を含めて基本的なコマンドは利用可能にする
-  run bash -c "export PATH='${TEST_TMPDIR}/bin:/usr/bin:/bin:/usr/local/bin' && source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
+  # /usr/local/bin は node が実在する環境 (Linux / Intel Mac) があるため含めない
+  run bash -c "export PATH='${TEST_TMPDIR}/bin:/usr/bin:/bin' && source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
   [ "$status" -eq 1 ]
   [[ "$output" =~ "node" ]]
 }
@@ -72,8 +72,8 @@ EOF
   chmod +x "${TEST_TMPDIR}/bin/node"
 
   # PATH を制限してテスト - npx が見つからないので exit 1
-  # 標準的なコマンド PATH (/usr/bin など) を含めて基本的なコマンドは利用可能にする
-  run bash -c "export PATH='${TEST_TMPDIR}/bin:/usr/bin:/bin:/usr/local/bin' && source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
+  # /usr/local/bin は node/npx が実在する環境 (Linux / Intel Mac) があるため含めない
+  run bash -c "export PATH='${TEST_TMPDIR}/bin:/usr/bin:/bin' && source '$COMMON_LIB' && source '$LIB_FILE' && check_prerequisites" 2>&1
   [ "$status" -eq 1 ]
   [[ "$output" =~ "npx" ]]
 }

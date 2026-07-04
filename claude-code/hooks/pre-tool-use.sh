@@ -329,7 +329,8 @@ _check_hook_edit_baseline_missing() {
     for f in "$_HOOK_BENCH_LOG_DIR"/hook-bench-*.log; do
       [ -e "$f" ] || continue
       local m
-      m=$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)
+      # GNU (stat -c) を先に試す: GNU の stat -f は filesystem mode となり garbage を返すため順序重要
+      m=$(stat -c %Y "$f" 2>/dev/null || stat -f %m "$f" 2>/dev/null || echo 0)
       [ "$m" -gt "$latest_mtime" ] && latest_mtime=$m
     done
   fi

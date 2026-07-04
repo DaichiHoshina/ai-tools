@@ -59,7 +59,8 @@ _touchable_check() {
   local _f="${_TOUCHABLE_STATE_DIR}/touchable-${_sid}.txt"
   [[ ! -f "$_f" ]] && return 0
   local _mtime _now
-  _mtime=$(stat -f %m "$_f" 2>/dev/null || stat -c %Y "$_f" 2>/dev/null || echo 0)
+  # GNU (stat -c) を先に試す: GNU の stat -f は filesystem mode となり garbage を返すため順序重要
+  _mtime=$(stat -c %Y "$_f" 2>/dev/null || stat -f %m "$_f" 2>/dev/null || echo 0)
   _now=$(date +%s)
   if (( _now - _mtime > _TOUCHABLE_TTL_SEC )); then
     rm -f "$_f" 2>/dev/null

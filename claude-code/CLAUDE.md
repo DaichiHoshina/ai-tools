@@ -44,8 +44,6 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 | `lib/` | bash 共通 lib (`print-functions.sh` 等) |
 | `tests/` | bats (`tests/integration/` `tests/unit/`) + jest |
 
-詳細 dir 内 cross-ref は `references/INDEX.md` 参照。
-
 ## Editing Rule (data-loss guard)
 
 - **Always edit source `~/ai-tools/claude-code/`**. `~/.claude/` 直接編集は `sync.sh to-local` で wipe される

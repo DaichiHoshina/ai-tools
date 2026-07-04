@@ -80,11 +80,10 @@ setup_directories() {
     print_info "ディレクトリ構造を作成中..."
 
     mkdir -p "$CLAUDE_DIR"
-    mkdir -p "$CLAUDE_DIR/guidelines/common"
-    mkdir -p "$CLAUDE_DIR/guidelines/languages"
-    mkdir -p "$CLAUDE_DIR/guidelines/design"
-    mkdir -p "$CLAUDE_DIR/guidelines/infrastructure"
-    mkdir -p "$CLAUDE_DIR/guidelines/summaries"
+    # guidelines は repo の実カテゴリを列挙 (固定リストだと後発カテゴリの取りこぼしが起きる)
+    for _gdir in "$SCRIPT_DIR/guidelines"/*/; do
+        mkdir -p "$CLAUDE_DIR/guidelines/$(basename "$_gdir")"
+    done
     mkdir -p "$CLAUDE_DIR/scripts"
     mkdir -p "$CLAUDE_DIR/commands"
     mkdir -p "$CLAUDE_DIR/agents"
@@ -135,12 +134,12 @@ copy_directory_contents() {
         print_success "CANONICAL.md をコピーしました"
     fi
 
-    # Guidelines（各カテゴリ）
-    copy_files "$SCRIPT_DIR/guidelines/common" "$CLAUDE_DIR/guidelines/common" "guidelines/common"
-    copy_files "$SCRIPT_DIR/guidelines/languages" "$CLAUDE_DIR/guidelines/languages" "guidelines/languages"
-    copy_files "$SCRIPT_DIR/guidelines/design" "$CLAUDE_DIR/guidelines/design" "guidelines/design"
-    copy_files "$SCRIPT_DIR/guidelines/infrastructure" "$CLAUDE_DIR/guidelines/infrastructure" "guidelines/infrastructure"
-    copy_files "$SCRIPT_DIR/guidelines/summaries" "$CLAUDE_DIR/guidelines/summaries" "guidelines/summaries"
+    # Guidelines（repo の実カテゴリを全て。固定リストだと writing/backend/operations 等の取りこぼしが起きる）
+    for _gdir in "$SCRIPT_DIR/guidelines"/*/; do
+        local _gname
+        _gname=$(basename "$_gdir")
+        copy_files "$SCRIPT_DIR/guidelines/$_gname" "$CLAUDE_DIR/guidelines/$_gname" "guidelines/$_gname"
+    done
 
     # Commands
     copy_files "$SCRIPT_DIR/commands" "$CLAUDE_DIR/commands" "commands"
@@ -177,9 +176,28 @@ copy_directory_contents() {
         print_success "hooks をコピーしました"
     fi
 
-    # References（ガイドラインから参照される詳細資料）
+    # References（ガイドラインから参照される詳細資料。on-demand-rules/ 等の subdir を含むため rsync）
     if [ -d "$SCRIPT_DIR/references" ]; then
-        copy_files "$SCRIPT_DIR/references" "$CLAUDE_DIR/references" "references"
+        sync_dir_preserving_private "$SCRIPT_DIR/references" "$CLAUDE_DIR/references"
+        print_success "references をコピーしました"
+    fi
+
+    # Rules（hooks の social-hit block 等が参照する canonical。欠けると silent pass になる）
+    if [ -d "$SCRIPT_DIR/rules" ]; then
+        mkdir -p "$CLAUDE_DIR/rules"
+        copy_files "$SCRIPT_DIR/rules" "$CLAUDE_DIR/rules" "rules"
+    fi
+
+    # Output styles
+    if [ -d "$SCRIPT_DIR/output-styles" ]; then
+        mkdir -p "$CLAUDE_DIR/output-styles"
+        copy_files "$SCRIPT_DIR/output-styles" "$CLAUDE_DIR/output-styles" "output-styles"
+    fi
+
+    # Config
+    if [ -d "$SCRIPT_DIR/config" ]; then
+        mkdir -p "$CLAUDE_DIR/config"
+        copy_files "$SCRIPT_DIR/config" "$CLAUDE_DIR/config" "config"
     fi
 
     # statusline.js
