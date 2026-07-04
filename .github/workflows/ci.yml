@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update -q && sudo apt-get install -y shellcheck
+      - name: Run shellcheck (severity warning+, .shellcheckrc 準拠)
+        run: |
+          find . -name '*.sh' -not -path './.git/*' -not -path '*/node_modules/*' -print0 \
+            | xargs -0 shellcheck --severity=warning
+
+  markdownlint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run markdownlint
+        run: npx --yes markdownlint-cli --config .markdownlintrc --ignore-path .markdownlintignore "**/*.md"
+
+  bats:
+    name: Install + BATS (unit / integration)
+    runs-on: ubuntu-latest
+    env:
+      LC_ALL: C.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies (jq / sqlite3 / gawk / rsync / envsubst / bats)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y jq sqlite3 gawk rsync gettext-base
+          npm install -g bats
+      - name: Symlink repo to ~/ai-tools (hooks の repo path 解決に必要)
+        run: ln -sfn "$GITHUB_WORKSPACE" "$HOME/ai-tools"
+      - name: Run install.sh (non-interactive)
+        run: |
+          printf '\n%.0s' $(seq 100) | ./claude-code/install.sh
+          # 主要成果物の存在確認 (silent pass 防止で明示 assert)
+          test -f "$HOME/.claude/guidelines/writing/NG-DICTIONARY.md"
+          test -f "$HOME/.claude/rules/public-repo-private-data-block.md"
+          test -f "$HOME/.claude/hooks/pre-tool-use.sh"
+      - name: Run bats unit tests
+        working-directory: claude-code
+        run: bats -r tests/unit/
+      - name: Run bats integration tests
+        working-directory: claude-code
+        run: bats -r tests/integration/
+
+  jest:
+    name: Jest (statusline 等 JS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install and test
+        working-directory: claude-code
+        run: |
+          npm install
+          npm test
