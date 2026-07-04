@@ -31,6 +31,13 @@ Referenced by `load-guidelines` skill when subtopic triggers fire. When the foll
 | escape analysis, pprof, GOGC, GOMEMLIMIT, sync.Pool, PGO, allocation, benchstat | `~/.claude/guidelines/languages/go-performance.md` |
 | goroutine, GOMAXPROCS, scheduler, channel buffer, leak, mutex contention, race condition | `~/.claude/guidelines/languages/go-concurrency.md` |
 
+## Common subtopics
+
+| Trigger keywords | Load |
+|------------------|---------|
+| any, interface{}, unknown 型, type assertion, non-null assertion, type erasure | `~/.claude/guidelines/common/type-safety-principles.md` |
+| investigation, root cause, hypothesis, evidence, 3 principles, reproduce first | `~/.claude/guidelines/common/investigation-protocol.md` |
+
 ## Usage principles
 
 - If task contains no keywords, do not load (token savings)
