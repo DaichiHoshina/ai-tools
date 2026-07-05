@@ -1,6 +1,6 @@
 # Model Selection Guide
 
-Default: **Sonnet 4.6** (`claude-sonnet-4-6`)
+Default: **Fable 5** (`claude-fable-5`、settings.json.template `model` key canonical)
 
 ## Manual switching
 
@@ -9,6 +9,7 @@ Default: **Sonnet 4.6** (`claude-sonnet-4-6`)
 | Batch processing, type conversion, formatting, bulk file processing | Haiku 4.5 | `claude-haiku-4-5-20251001` | `/model` → haiku |
 | Simple fixes, investigation, code reading, normal development | **Sonnet 4.6** (default) | `claude-sonnet-4-6` | keep |
 | Root cause analysis, design decisions, complex bug analysis, security audit | Opus 4.7 | `claude-opus-4-7` | `/model` → opus |
+| Highest-difficulty tasks, session default | **Fable 5** (default) | `claude-fable-5` | `/model` → fable |
 | Task difficulty unknown, dynamic switching | Auto (Max subscribers only) | — | `/model` → auto |
 
 **Use explicit `/model` for switching** (natural language triggers risk misfire).
