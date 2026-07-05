@@ -39,14 +39,19 @@ Read `$HOME/.claude/CLAUDE.md` and internalize instructions.
 
 ```text
 If $ARGUMENTS non-empty (名指し fast path):
-  1. Read ~/ai-tools/memory/<arg>.md (拡張子なし指定でも .md 補完)
-  2. file 不在なら ~/ai-tools/memory/ から prefix match で 1 件 Read
-  3. cwd が ai-tools repo 外なら `<repo-root>/memory/**/<arg>.md` も prefix match で探索 (memory file は SoT 適用外、Read OK)
-  4. 個別 file が無い時 (clear で保存された topic) は MEMORY.md の [clear] entry を拾う:
-     clear_line=$(bash ~/ai-tools/claude-code/scripts/memory-save-helper.sh find-clear-entry "<arg>")
-     [ -n "$clear_line" ] && この 1 行を直近 state の主 source として採用 (topic / summary / commit を抽出)
-     さらに B/C/E 段 (MEMORY.md 全体 / 直近 work-context 本文 / pending-improvements) も Read して補完する
-  5. それでも不在なら fallback chain に降りる
+  # 2026-07-05 以降 `/memory-save clear` は個別 file (`work-context-YYYYMMDD-<topic>.md`) を
+  # 必ず書くようになった。ただし過渡期 (旧 clear で保存された 1 行 entry のみの topic) の互換のため
+  # step 4 で helper fallback を残す。
+  1. Read ~/ai-tools/memory/work-context-*-<arg>.md (glob で日付 suffix 吸収、`ls -t | head -1` で最新 1 件)
+  2. 上記 hit しなければ ~/ai-tools/memory/<arg>.md (拡張子なし指定でも .md 補完) を Read
+  3. まだ不在なら ~/ai-tools/memory/ から prefix match で 1 件 Read。cwd が ai-tools repo 外なら
+     `<repo-root>/memory/**/<arg>.md` も prefix match で探索 (memory file は SoT 適用外、Read OK)
+  4. **旧 clear (個別 file なし、MEMORY.md 1 行 entry のみ) の互換**:
+     clear_line=$(bash ~/.claude/scripts/memory-save-helper.sh find-clear-entry "<arg>")
+     [ -n "$clear_line" ] && この 1 行を直近 state の source として採用 (topic / summary / commit)
+  5. Step 1-3 で file が取れた場合、または Step 4 で clear_line が取れた場合、
+     さらに B/C/E 段 (MEMORY.md 全体 / 直近 work-context 本文 / pending-improvements) も Read で補完
+  6. Step 1-4 すべて空振りなら fallback chain に降りる
 
 Else (fallback chain、上から順に評価、ヒットしたら次 step も並行実行):
   A. compact-restore (post-compact hook が書く一時 file)
