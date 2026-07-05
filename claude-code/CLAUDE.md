@@ -149,7 +149,7 @@ AI を**思考パートナー**として扱う。subagent report の数値 / fil
 | Input | Action |
 |---|---|
 | "push" / "pushして" | `/git-push --pr` |
-| "全自動で" / "autoで" / "おまかせ" | `/flow-auto` |
+| "全自動で" / "autoで" / "おまかせ" | `/flow --auto` |
 | "レビュー" / "レビューして" | `/review` |
 | "team で" / "agent team で" / "分担で" / "本格的に" | `/flow` (PO/Manager/Dev hierarchy, forced) |
 | "並列実行で" / "wt 分けて" / "worktree 分けて" / "Developer 並列で" | `/flow --parallel` |

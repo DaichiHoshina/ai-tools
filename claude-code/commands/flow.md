@@ -8,7 +8,7 @@ argument-hint: "[task description]"
 
 **Core**: Orchestration-only command. Forces worktree parallel fan-out under parent direction; minimizing makespan is the top KPI. File-conflict tasks fall back via sequential downgrade.
 
-> Use: `/flow` (orchestrated parallel) / `/dev` (single-agent) / `/flow-auto` (`--auto` alias) / `/review-fix-push` (review-loop only)
+> Use: `/flow` (orchestrated parallel) / `/flow --auto` (fully autonomous) / `/dev` (single-agent) / `/review-fix-push` (review-loop only)
 
 ## Task type detection
 
@@ -75,6 +75,10 @@ Sweet spot / hard rules: `references/PARALLEL-PATTERNS.md#fan-out-hard-rules`.
 
 `--auto`: skip AskUserQuestion + auto-adopt / `bypassPermissions` / always PR push / auto-fix lint 1× / `--multi-review` auto-ON. review-fix loop: post-impl `/review` → auto-fix until Critical 0 + Warning 0 (max 3×). Detail: `references/flow-orchestration.md`
 
+**`--auto` skips confirmations / approvals / push prompts ONLY. It does NOT skip the hierarchy.** The `Task(po-agent)` → `Task(manager-agent)` → `Task(developer-agent)×N` chain is mandatory — autonomous means "no questions asked", not "no PO/Manager". Going straight to `developer-agent` (or inline implementation) without PO design judgment + Manager allocation is a spec violation. Only `--sequential` downgrades to single `/dev` (PO/Manager still run per step 2). Self-Review 3 gates (A/B/C) stay mandatory; canonical: `references/parallel-self-review.md`.
+
+Natural language triggers: "全自動で" / "autoで" / "おまかせ" → `/flow --auto` (旧 `/flow-auto` は本 command に統合済)。
+
 ## Execution logic
 
 1. **git status check** → WIP confirm → step 2
@@ -112,7 +116,7 @@ Required: impl → /lint-test → /review → review-fix → /git-push. 2× fail
 ### Completion actions
 
 - Save to auto-memory: `~/.claude/projects/<project>/memory/work-context-YYYYMMDD-{topic}.md`
-- `--auto`: secret check → /git-push --pr → notify `[flow-auto] {topic} complete → PR created` (fail: `fail: {reason}` / lint 2×: `stop: lint-test 2× fail`)
+- `--auto`: secret check → /git-push --pr → notify `[flow --auto] {topic} complete → PR created` (fail: `fail: {reason}` / lint 2×: `stop: lint-test 2× fail`)
 - Normal: AskUserQuestion "push?"
 - **/clear recommended (cache_read prevention)**: after /flow completes, propose `/clear` before next task (`--auto`: append `→ next task: start after /clear`)
 

@@ -11,7 +11,6 @@ setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
   export CANONICAL_FILE="${PROJECT_ROOT}/references/parallel-self-review.md"
   export FLOW_FILE="${PROJECT_ROOT}/commands/flow.md"
-  export FLOW_AUTO_FILE="${PROJECT_ROOT}/commands/flow-auto.md"
 }
 
 # ---------------------------------------------------------------------------
@@ -34,12 +33,8 @@ setup() {
   [ "$output" -ge 1 ]
 }
 
-@test "flow-auto.md: parallel-self-review.md canonical 参照が存在" {
-  [ -f "$FLOW_AUTO_FILE" ]
-  run grep -cF "references/parallel-self-review.md" "$FLOW_AUTO_FILE"
-  [ "$status" -eq 0 ]
-  [ "$output" -ge 1 ]
-}
+# flow-auto.md は 2026-07-05 に /flow --auto へ統合済 (file 削除)。
+# 旧 test "flow-auto.md: parallel-self-review.md canonical 参照が存在" は撤去した。
 
 # ---------------------------------------------------------------------------
 # Gate C lens 完全網羅 (12 lens 全部 canonical に列挙される)
