@@ -82,6 +82,7 @@ Same format as skill.md. Labels: `🔴 Critical (fix required, confidence ≥80)
 
 - **policy**: evidence-first (false positives are review debt), diff-only, Critical → Warning, 12 parallel
 - **scope**: changed files (git diff). exclude: auto-gen / vendor / node_modules / lock
+- **comment + writing check (always-on)**: diff に comment 行の追加/変更があれば `guidelines/writing/code-comment.md` 12 分類 check、prose diff (md/docs) があれば `guidelines/writing/PRINCIPLES.md` check を必ず実行する (canonical: `skills/comprehensive-review/SKILL.md` §Writing Enforcement)。skip 可否は comment/prose diff 0 の場合のみ
 - **difit**: local only, background after review (require `npm i -g difit`, suppress: `--no-difit`)
 
 ## Panel modes (--panel / --verifier-panel)

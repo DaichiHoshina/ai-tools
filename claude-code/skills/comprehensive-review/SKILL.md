@@ -112,9 +112,13 @@ Total: Critical N / Warning N / Discarded M / 🔁 Repeated K
 
 Zero findings → `### Critical: 0`. Tags: `must`=Critical / `imo`,`nits`=Warning / `q`=question.
 
-## Writing Enforcement (writing/docs/comment/prompt diff only)
+## Writing Enforcement (always-on)
 
-Additional Step 4.5 checks via `guidelines/writing/PRINCIPLES.md` / `code-comment.md` / `prompt-engineering.md` / `long-form-doc.md`. confidence-80 filter applies. comment 品質の詳細規範は `code-comment` skill に委譲する (trigger 重複を避ける)。
+**Comment check (毎 review 必須、diff 種別問わず)**: diff に comment 行 (`// ` `# ` `-- ` `/* ` `<!-- `) の追加/変更が 1 つでもあれば、`guidelines/writing/code-comment.md` canonical の 12 分類 table で分類する。削除 8 カテゴリ (what / PR 文脈依存 / 自明 / defensive / 主観 / テスト不確実 / 重複 / commented-out) + AI marker 該当 → Warning 以上で報告する。comment 行の diff が 0 なら `comment-check: no comment diff` と 1 行報告して skip する。
+
+**Prose check (writing/docs/prompt diff 時)**: `guidelines/writing/PRINCIPLES.md` / `prompt-engineering.md` / `long-form-doc.md` を Step 4.5 で追加適用する。
+
+confidence-80 filter は両 check に適用する。comment 品質の詳細規範 (Before/After rewrite) は `code-comment` skill に委譲する (trigger 重複を避ける)。
 
 ## Conditional Reference Loading
 

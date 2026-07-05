@@ -82,8 +82,8 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 |---|---|---|
 | **P0** Fix required | Type safety violations / Security vulns / Data corruption risk / Backward compat break | `any` abuse, SQL Injection, missing tx, no API migration path |
 | **P1** Fix recommended | Architecture violation / Error handling gaps / Test gaps / Performance | Layer boundary breach, N+1 query |
-| **P2** Improve | Duplication / Complexity / Unclear names / Doc gaps | Long function, deep nesting |
-| **P3** Nice-to-have | Code style / Minor refactor | Format issues |
+| **P2** Improve | Duplication / Complexity / Unclear names / Doc gaps / **Comment 規約違反** | Long function, deep nesting, what comment / AI marker / commented-out code (canonical: `guidelines/writing/code-comment.md` 削除 8 カテゴリ) |
+| **P3** Nice-to-have | Code style / Minor refactor / Writing 品質 | Format issues, 擬人化 comment / 主語省略 (canonical: `guidelines/writing/PRINCIPLES.md`) |
 
 ## Review process
 
