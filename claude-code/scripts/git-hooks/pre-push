@@ -62,10 +62,18 @@ has_hook_changes() {
     return 1
 }
 
+# quiet mode: informational な skip 通知を抑制する (default ON)。
+# block / warning は残す (安全側)。debug したい時は PRE_PUSH_QUIET=0 で通知を戻す。
+PRE_PUSH_QUIET="${PRE_PUSH_QUIET:-1}"
+_info() {
+    [[ "${PRE_PUSH_QUIET}" == "1" ]] && return 0
+    echo "$@" >&2
+}
+
 main() {
     # bench スクリプトが存在しなければ skip (初回 setup 前など)
     if [[ ! -x "${BENCH_CI}" ]]; then
-        echo "[pre-push] hook-bench-ci.sh not found, skipping bench check." >&2
+        _info "[pre-push] hook-bench-ci.sh not found, skipping bench check."
         exit 0
     fi
 
@@ -85,17 +93,17 @@ main() {
     done
 
     if [[ ${should_bench} -eq 0 ]]; then
-        echo "[pre-push] No hook-related changes detected, skipping bench." >&2
+        _info "[pre-push] No hook-related changes detected, skipping bench."
         exit 0
     fi
 
-    echo "[pre-push] Hook-related changes detected. Running performance check..." >&2
-    echo "" >&2
+    _info "[pre-push] Hook-related changes detected. Running performance check..."
+    _info ""
 
     local exit_code=0
     "${BENCH_CI}" --check || exit_code=$?
 
-    echo "" >&2
+    _info ""
 
     if [[ ${exit_code} -eq 1 ]]; then
         echo "[pre-push] PUSH BLOCKED: performance regression detected." >&2
