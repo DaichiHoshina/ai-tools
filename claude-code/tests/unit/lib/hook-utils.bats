@@ -455,8 +455,11 @@ _wait_for_file() {
 
 @test "send_stop_notification: terminal-notifier が PATH にないなら graceful" {
   setup_send_stop_notification
-  # stub を削除
+  # stub を削除しただけだと PATH 探索が homebrew の実 terminal-notifier に fallthrough
+  # して実通知が鳴る。jq だけ TEST_TMPDIR に link し、homebrew を含まない PATH に絞る
   rm "${TEST_TMPDIR}/terminal-notifier"
+  ln -s "$(command -v jq)" "${TEST_TMPDIR}/jq"
+  export PATH="${TEST_TMPDIR}:/usr/bin:/bin"
   local input='{"session_id":"s1","last_assistant_message":"test","cwd":"/tmp/project"}'
   run bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>&1
   [ "$status" -eq 0 ]
