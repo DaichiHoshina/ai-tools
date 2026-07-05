@@ -16,7 +16,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 **Golden workflow (頻出 3 種)**
 
-- 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal の 6 択を Step 2 で判定、/goal は loop 系 objective gate task に限定)
+- 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal の 6 択を Step 2 で判定、/goal は loop 系 objective gate task に限定)。**mode 判定のみ軽量に済ませたい時**は `/mode <task>` (inline / agent 並列の 2 択判定、設計・phase 分割なし)
 - worktree 隔離 + commit + ff-merge + push (`[[ai-tools-worktree-workflow]]` canonical、**dir 名 slug と branch 名は必ず一致させる** → `rules/worktree-branch-name-match.md`)。**前提: まだ編集に着手していない状態で切る**。worktree pattern は「clean な状態から wt を作り、wt 内で初めて編集する」流れ。**既に main の working tree を編集済みなら worktree を使わない** (`git stash` した変更は新 wt に持ち込まれず取り残される罠、`[[worktree-fresh-baseref-uncommitted-trap]]`)。既編集時は下記 fallback を使う:
   ```bash
   # (A) 未着手から: worktree で隔離
@@ -89,20 +89,44 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 外部 library の API method / hook / config 直書き前に **context7 skill / WebFetch で最新 docs 取得**。trigger: library method 直書き (`useState` / `axios.create` 等) / 新 library 採用 / API spec 6 か月超。hook warn-only 検出 (`hooks/pre-tool-use.sh`)、skill: `skills/context7/SKILL.md`。
 
-## Auto-Delegation (parent=Opus 4.7 default, subagent=Opus 4.7 executes)
+## Auto-Delegation (優先順: 速さ > クオリティ > トークン効率)
 
 *(Impl/edit task。Investigation phase → Discovery Routing)*
 
-**Default = `developer-agent` (Opus 4.7)**。inline は exception only。Model 切替は `/model sonnet` (session 単位)。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止)、**1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列)、**parent 監視責任**。直列 chain でも step 内 fan-out (`[[feedback-no-single-agent-overload]]`)。
+**判定 rule (独立 scope 数で切る)**: task 着手前にまず「独立 scope の数 N」を数える。判定式は下記 table を厳守する。速さ最優先のため、単発は agent 起動 overhead を回収できず inline が勝ち、2+ は並列 fan-out で wall-clock を圧縮する。
 
-**Inline default の正当 exception (delegate 禁止)**: 以下は parent 直編集を推奨。dev 連投 → bundle-violation hard block の罠を踏まない:
-- **CI fail 修正 / fixture 修正 / test 連鎖修正**: 周辺 file 把握必須、iteration 多発、bundle hook と相性最悪。parent context の方が cheap (`[[feedback-ci-fix-inline-default]]`)
+| N (独立 scope 数) | Default | 理由 |
+|---|---|---|
+| 1 (単発 task) | **inline** | agent 起動 overhead (数十秒〜数百秒) が単発では回収できず、速さで負ける |
+| 2+ (独立 task 複数) | **agent 並列 fan-out** (単一 message に N tool_use) | 逐次 inline より wall-clock 短、peak=N |
+| iteration 前提 (下記) | **inline 固定** (N に関係なく) | 往復のたびに agent 起動 cost が積む + context 断絶で品質も落ちる |
+
+**Iteration 前提 task (N に関係なく inline 固定)**:
+- **CI fail 修正 / fixture 修正 / test 連鎖修正**: 周辺 file 把握必須、iteration 多発 (`[[feedback-ci-fix-inline-default]]`)
 - **review feedback 反映**: 既 file の局所修正 1-3 箇所、context 既保持
 - **shellcheck / lint warn 1 箇所修正**: 1 line 編集
+- **1 symbol fix / 探索少なめの局所修正**: parent context で cheap
 
-→ 上記 3 種 (CI fail 修正 / review feedback 反映 / shellcheck / lint warn 1 箇所修正) に該当する task は `/dev` / `/flow` ではなく inline で直編集する。delegate するなら明示理由 (>5 file / 30+ line each) を 1 行宣言してから。
+**クオリティ最優先 mode (優先順 2 位)**: 品質最優先の重要変更 (破壊的変更 / migration / security 修正等) は **agent + Verifier loop** を使う。developer-agent (Generator) → reviewer-agent / verify-app (Verifier) で `status: accept/reject` + feedback を回し、reject 後に再生成する 1 round loop で self-review 盲点を潰す。詳細: `## Collaboration stance` 節。
 
-**Parallel fan-out 自己強制 (hard rule)**: N≥2 dev は**単一 assistant message に N tool_use**。**最初の dev 発火前に独立 task を全列挙し、独立分は初回 message に全 bundle する** (1 体ずつ発火して結果を見てから次を発火する運用は peak=1 に落ちる)。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。**前 agent の結果に依存する正当な逐次発火は prompt に `serial_reason: <依存内容 1 行>` を明記** (counter 対象外、独立 task への濫用禁止)。詳細: `references/auto-delegation-detailed.md` § serial_reason declaration。
+**Model 切替**: `/model sonnet` (session 単位)。**1 dev = 1 file 原則** (`bundle_justification` なき複数 file fan-out 禁止)、**1 Task scope 上限** (file 3-5 / 観点 1-2 超 → 単一 message に N Agent 並列)、**parent 監視責任**。直列 chain でも step 内 fan-out (`[[feedback-no-single-agent-overload]]`)。
+
+→ 判定 table の inline 側 (N=1 / iteration 前提) に該当する task は `/dev` / `/flow` ではなく inline で直編集する。agent delegate するなら「独立 scope N≥2」or「品質最優先 mode」の理由を 1 行宣言してから。
+
+**Parallel fan-out 自己強制 (hard rule) — agent 使用時は直列 chain 禁止**: N≥2 dev は**単一 assistant message に N tool_use**。**最初の dev 発火前に独立 task を全列挙し、独立分は初回 message に全 bundle する** (1 体ずつ発火して結果を見てから次を発火する運用は peak=1 に落ちて inline より遅くなる = 速さ優先則に反する)。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。
+
+**Agent 直列使用の禁止 (優先順 1 位「速さ」の帰結)**: agent を使うなら必ず並列 fan-out する。以下を禁じ手とする:
+- **禁止 A**: agent 1 体を単発発火する (「速さ」で inline に負ける。単発は inline 一択)
+- **禁止 B**: agent → 結果を見る → 次の agent を発火する逐次運用 (peak=1 で並列化の意味を失う)
+- **禁止 C**: 独立 task を複数 message に散らす (初回 message に全 bundle しないと peak=1 に落ちる)
+
+**例外 (serial_reason 明示で許容)**: 前 agent の結果に**真に依存**する場合のみ、prompt に `serial_reason: <依存内容 1 行>` を明記して逐次発火可 (counter 対象外)。独立 task への濫用禁止。詳細: `references/auto-delegation-detailed.md` § serial_reason declaration。
+
+**判定 flow**:
+- **N=1** → **inline** (agent 単発禁止)
+- **N≥2 独立** → **agent 並列 bundle** (単一 message に N tool_use)
+- **N≥2 依存 chain** → **原則 inline** (agent 直列を組むより速い、context 断絶もない)
+- **例外**: 依存 chain の各 step 内に**さらに独立 sub-task が 2+ ある**場合のみ、step 内で agent 並列 fan-out (`[[feedback-no-single-agent-overload]]`)。step 内が単一 task なら inline。
 
 **Subagent silent-fail guard**: subagent では `AskUserQuestion` 不可 + permission prompt 系 tool auto-deny で **silent fail**。approval-gated edit / 判断 fork は parent escalate (`status: blocked` + `issues_blocking[]`)。canonical: `agents/developer-agent.md` § Silent-fail guard。
 
