@@ -13,6 +13,8 @@ _JP_QUALITY_CHECK_LOADED=1
 source "${BASH_SOURCE[0]%/*}/../hooks/lib/thresholds.sh"
 # shellcheck source=../hooks/lib/portable-stat.sh
 source "${BASH_SOURCE[0]%/*}/../hooks/lib/portable-stat.sh"
+# shellcheck source=../hooks/lib/log-rotation.sh
+source "${BASH_SOURCE[0]%/*}/../hooks/lib/log-rotation.sh"
 
 # ====================================
 # AI定型語 / カタカナ造語 block 関数
@@ -36,16 +38,7 @@ _append_jp_quality_log() {
   local log_file="${log_dir}/jp-quality-block.log"
   # mkdir は -p で安全に
   mkdir -p "$log_dir" 2>/dev/null || true
-  # ファイルサイズ rotation: 1MB 超えたら mv してから新規
-  if [[ -f "$log_file" ]]; then
-    local fsize
-    fsize=$(portable_stat_size "$log_file")
-    if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
-      local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
-      mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
-      ls -1t "${log_file}".*.bak 2>/dev/null | tail -n +4 | xargs -I{} rm -f {} 2>/dev/null || true
-    fi
-  fi
+  _rotate_log_if_needed "$log_file" 3
   local ts
   printf -v ts '%(%Y-%m-%dT%H:%M:%S%z)T' -1
   printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$action" >> "$log_file" 2>/dev/null || true
@@ -173,16 +166,7 @@ _append_jp_quality_inject_log() {
   local log_dir="$HOME/.claude/logs"
   local log_file="${log_dir}/jp-quality-inject.log"
   mkdir -p "$log_dir" 2>/dev/null || true
-  # ファイルサイズ rotation: 1MB 超えたら mv してから新規
-  if [[ -f "$log_file" ]]; then
-    local fsize
-    fsize=$(portable_stat_size "$log_file")
-    if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
-      local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
-      mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
-      ls -1t "${log_file}".*.bak 2>/dev/null | tail -n +4 | xargs -I{} rm -f {} 2>/dev/null || true
-    fi
-  fi
+  _rotate_log_if_needed "$log_file" 3
   local ts
   printf -v ts '%(%Y-%m-%dT%H:%M:%S%z)T' -1
   printf '%s | tool=%s | bytes=%s | threshold=1500 | status=%s\n' \

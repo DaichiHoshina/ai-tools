@@ -873,3 +873,62 @@ teardown_ensure_worktree() {
   [ "$status" -eq 0 ]
   rm -rf "$tmp"
 }
+
+# =============================================================================
+# _rotate_log_if_needed: log rotation 共通関数
+# =============================================================================
+
+@test "rotate_log_if_needed: 存在しない file は no-op で 0 返し" {
+  local tmpdir; tmpdir="$(mktemp -d)"
+  run bash -c "source '$LIB_FILE' && _rotate_log_if_needed '${tmpdir}/absent.log'"
+  [ "$status" -eq 0 ]
+  [ ! -e "${tmpdir}/absent.log" ]
+  [ -z "$(ls "${tmpdir}"/absent.log.*.bak 2>/dev/null)" ]
+  rm -rf "$tmpdir"
+}
+
+@test "rotate_log_if_needed: 閾値以下の file は rotation しない" {
+  local tmpdir; tmpdir="$(mktemp -d)"
+  local log="${tmpdir}/small.log"
+  printf 'hello\n' > "$log"
+  run bash -c "source '$LIB_FILE' && _rotate_log_if_needed '$log'"
+  [ "$status" -eq 0 ]
+  [ -f "$log" ]
+  [ -z "$(ls "${tmpdir}"/small.log.*.bak 2>/dev/null)" ]
+  rm -rf "$tmpdir"
+}
+
+@test "rotate_log_if_needed: 閾値超えで .bak rename する" {
+  local tmpdir; tmpdir="$(mktemp -d)"
+  local log="${tmpdir}/big.log"
+  # _TH_LOG_MAX_BYTES=1048576 を超えるサイズ (1MB + 1B) を生成
+  dd if=/dev/zero of="$log" bs=1024 count=1025 2>/dev/null
+  run bash -c "source '$LIB_FILE' && _rotate_log_if_needed '$log'"
+  [ "$status" -eq 0 ]
+  [ ! -f "$log" ]
+  local bak_count
+  bak_count=$(ls "${tmpdir}"/big.log.*.bak 2>/dev/null | wc -l | tr -d ' ')
+  [ "$bak_count" -eq 1 ]
+  rm -rf "$tmpdir"
+}
+
+@test "rotate_log_if_needed: keep_bak_count=3 なら古い .bak を 3 世代まで残す" {
+  local tmpdir; tmpdir="$(mktemp -d)"
+  local log="${tmpdir}/rot.log"
+  # 既存 .bak を 4 個先置き (古い順)
+  touch -t 202001010001 "${tmpdir}/rot.log.20200101000100.bak"
+  touch -t 202001010002 "${tmpdir}/rot.log.20200101000200.bak"
+  touch -t 202001010003 "${tmpdir}/rot.log.20200101000300.bak"
+  touch -t 202001010004 "${tmpdir}/rot.log.20200101000400.bak"
+  dd if=/dev/zero of="$log" bs=1024 count=1025 2>/dev/null
+  run bash -c "source '$LIB_FILE' && _rotate_log_if_needed '$log' 3"
+  [ "$status" -eq 0 ]
+  [ ! -f "$log" ]
+  # 新規 rotation で 1 個増えたが keep=3 で古い側から 2 個削除される (計 5 - 2 = 3)
+  local bak_count
+  bak_count=$(ls "${tmpdir}"/rot.log.*.bak 2>/dev/null | wc -l | tr -d ' ')
+  [ "$bak_count" -eq 3 ]
+  # 最古 (20200101000100) は削除されている
+  [ ! -e "${tmpdir}/rot.log.20200101000100.bak" ]
+  rm -rf "$tmpdir"
+}

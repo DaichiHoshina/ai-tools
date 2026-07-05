@@ -6,6 +6,7 @@
 
 setup() {
   load "../../helpers/common"
+  load "../../helpers/hook-invoke"
   export PROJECT_ROOT
   export HOOK_FILE="${PROJECT_ROOT}/hooks/pre-tool-use.sh"
   setup_test_tmpdir
@@ -16,29 +17,16 @@ teardown() {
 }
 
 # =============================================================================
-# ヘルパー関数
+# ヘルパー関数 (共有 helper: tests/helpers/hook-invoke.bash)
+# invoke_hook / invoke_hook_run / invoke_hook_run_merged / get_system_message /
+# get_additional_context を共有 helper から load 済み。
+# 以下は既存 test 本文の call site 互換 (test 本文の書き換えを最小化するため)。
 # =============================================================================
 
-# フックを実行してJSON出力を取得
 _DEFAULT_INPUT="{}"
 
 run_hook() {
-  local tool_name="$1"
-  local tool_input="${2:-$_DEFAULT_INPUT}"
-  local input
-  input=$(jq -n --arg name "$tool_name" --argjson inp "$tool_input" \
-    '{tool_name: $name, tool_input: $inp}')
-  echo "$input" | bash "$HOOK_FILE"
-}
-
-# JSON出力から systemMessage を抽出
-get_system_message() {
-  echo "$1" | jq -r '.systemMessage // empty'
-}
-
-# JSON出力から additionalContext を抽出
-get_additional_context() {
-  echo "$1" | jq -r '.additionalContext // empty'
+  invoke_hook "$1" "${2:-$_DEFAULT_INPUT}"
 }
 
 # Forbidden 系（exit 2 で hook がブロックする）の Bash コマンド実行
@@ -46,8 +34,8 @@ get_additional_context() {
 _run_bash_forbidden() {
   local cmd="$1"
   local input
-  input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
-  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  input=$(jq -n --arg c "$cmd" '{command:$c}')
+  invoke_hook_run "Bash" "$input"
 }
 
 # =============================================================================
@@ -565,29 +553,22 @@ _run_bash_forbidden() {
 # =============================================================================
 
 _run_edit_hook() {
-  local file_path="$1"
-  local content="$2"
-  jq -n --arg fp "$file_path" --arg c "$content" \
-    '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $c}}' \
-    | bash "$HOOK_FILE"
+  local input
+  input=$(jq -n --arg fp "$1" --arg c "$2" '{file_path: $fp, new_string: $c}')
+  invoke_hook "Edit" "$input"
 }
 
 _run_write_hook() {
-  local file_path="$1"
-  local content="$2"
-  jq -n --arg fp "$file_path" --arg c "$content" \
-    '{tool_name: "Write", tool_input: {file_path: $fp, content: $c}}' \
-    | bash "$HOOK_FILE"
+  local input
+  input=$(jq -n --arg fp "$1" --arg c "$2" '{file_path: $fp, content: $c}')
+  invoke_hook "Write" "$input"
 }
 
 # bats run で hook 実行（exit 2 を捕捉するため）
 _run_hook_blocking() {
-  local file_path="$1"
-  local content="$2"
   local input
-  input=$(jq -n --arg fp "$file_path" --arg c "$content" \
-    '{tool_name: "Edit", tool_input: {file_path: $fp, new_string: $c}}')
-  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  input=$(jq -n --arg fp "$1" --arg c "$2" '{file_path: $fp, new_string: $c}')
+  invoke_hook_run "Edit" "$input"
 }
 
 @test "detect_dangerous: 通常編集は警告なし" {
@@ -685,10 +666,9 @@ _run_hook_blocking() {
 # =============================================================================
 
 _run_bash_jargon() {
-  local cmd="$1"
   local input
-  input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
-  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  input=$(jq -n --arg c "$1" '{command:$c}')
+  invoke_hook_run "Bash" "$input"
 }
 
 @test "pre-tool-use: 難読漢語 commit message は block (exit 2)" {
@@ -881,6 +861,8 @@ _run_hook_with_session() {
     --argjson inp "$tool_input" \
     --arg sid "$session_id" \
     '{tool_name: $name, tool_input: $inp, session_id: $sid}')
+  # session_id を stdin から優先させるため env の CLAUDE_CODE_SESSION_ID を落とす
+  # (共有 helper の invoke_hook_stdin は env 制御しないので直接展開)
   echo "$input" | env -u CLAUDE_CODE_SESSION_ID bash "$HOOK_FILE"
 }
 
@@ -1159,13 +1141,10 @@ _run_social_hit_write() {
   local content="$2"
   local tool_name="${3:-Write}"
   local input
-  input=$(jq -n \
-    --arg name "$tool_name" \
-    --arg fp "$file_path" \
-    --arg ct "$content" \
-    '{tool_name: $name, tool_input: {file_path: $fp, content: $ct}}')
-  # stdout と stderr を両方取得するため 2>&1 でマージ (bats run の $output に集約)
-  run bash -c 'echo "$1" | bash "$2" 2>&1' _ "$input" "$HOOK_FILE"
+  input=$(jq -n --arg fp "$file_path" --arg ct "$content" \
+    '{file_path: $fp, content: $ct}')
+  # stdout と stderr を両方取得するため merged variant を使う
+  invoke_hook_run_merged "$tool_name" "$input"
 }
 
 @test "social-hit: Write で hit 時に stderr へ [social-hit-block] hit_term= を出力する" {
@@ -1323,12 +1302,9 @@ _run_social_hit_write() {
 # =============================================================================
 
 _run_write_jargon() {
-  local file_path="$1"
-  local content="$2"
   local input
-  input=$(jq -n --arg p "$file_path" --arg c "$content" \
-    '{tool_name:"Write", tool_input:{file_path:$p, content:$c}}')
-  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  input=$(jq -n --arg p "$1" --arg c "$2" '{file_path:$p, content:$c}')
+  invoke_hook_run "Write" "$input"
 }
 
 @test "gap1: 作業 repo .md に NG 語 leverage を Write → exit 2 block" {
@@ -1606,12 +1582,9 @@ _run_legacy_memory_write() {
   local file_path="$1"
   local tool_name="${2:-Write}"
   local input
-  input=$(jq -n \
-    --arg name "$tool_name" \
-    --arg fp "$file_path" \
-    '{tool_name: $name, tool_input: {file_path: $fp, content: "test content"}}')
-  # stdout と stderr を両方取得するため 2>&1 でマージ
-  run bash -c 'echo "$1" | bash "$2" 2>&1' _ "$input" "$HOOK_FILE"
+  input=$(jq -n --arg fp "$file_path" \
+    '{file_path: $fp, content: "test content"}')
+  invoke_hook_run_merged "$tool_name" "$input"
 }
 
 @test "legacy-memory-block: ~/.claude/projects/*ai-tools*/memory/ への Write は exit 2 で block される" {
@@ -1652,14 +1625,9 @@ _run_legacy_memory_write() {
 # =============================================================================
 
 _run_memory_ng_write() {
-  local file_path="$1"
-  local content="$2"
   local input
-  input=$(jq -n \
-    --arg fp "$file_path" \
-    --arg ct "$content" \
-    '{tool_name: "Write", tool_input: {file_path: $fp, content: $ct}}')
-  run bash -c 'echo "$1" | bash "$2" 2>&1' _ "$input" "$HOOK_FILE"
+  input=$(jq -n --arg fp "$1" --arg ct "$2" '{file_path: $fp, content: $ct}')
+  invoke_hook_run_merged "Write" "$input"
 }
 
 @test "memory-exclusion: ~/ai-tools/memory/ に NG-DICTIONARY 語を含む write は block されない" {

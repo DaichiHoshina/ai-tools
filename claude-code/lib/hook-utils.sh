@@ -14,6 +14,8 @@ set -euo pipefail
 source "${BASH_SOURCE[0]%/*}/../hooks/lib/thresholds.sh"
 # shellcheck source=../hooks/lib/portable-stat.sh
 source "${BASH_SOURCE[0]%/*}/../hooks/lib/portable-stat.sh"
+# shellcheck source=../hooks/lib/log-rotation.sh
+source "${BASH_SOURCE[0]%/*}/../hooks/lib/log-rotation.sh"
 
 # -----------------------------------------------------------------------------
 # 共通アイコン (Nerd Fonts / Unicode)
@@ -327,14 +329,7 @@ _append_block_log() {
   local log_dir
   log_dir=$(dirname "$log_file")
   mkdir -p "$log_dir" 2>/dev/null || true
-  if [[ -f "$log_file" ]]; then
-    local fsize
-    fsize=$(portable_stat_size "$log_file")
-    if [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]]; then
-      local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
-      mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
-    fi
-  fi
+  _rotate_log_if_needed "$log_file"
   local ts
   ts=$(date '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf 'unknown')
   printf '%s | %s | %s | %s\n' "$ts" "$tool_name" "$hit_term" "$target" >> "$log_file" 2>/dev/null || true

@@ -1498,6 +1498,24 @@ PYEOF
       _re_notes_sq="--notes[[:space:]]+\'([^\']*)\'"
       _re_desc_sq="--description[[:space:]]+\'([^\']*)\'"
 
+      _gh_body=""; _gh_title=""; _glab_desc=""; _glab_title=""
+      if [[ "$COMMAND" =~ $_re_body_sq ]]; then
+        _gh_body="${BASH_REMATCH[1]}"
+      elif [[ "$COMMAND" =~ --body[[:space:]]\"([^\"]*)\" ]]; then
+        _gh_body="${BASH_REMATCH[1]}"
+      fi
+      if [[ "$COMMAND" =~ $_re_title_sq ]]; then
+        _gh_title="${BASH_REMATCH[1]}"
+      elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
+        _gh_title="${BASH_REMATCH[1]}"
+      fi
+      _glab_title="$_gh_title"
+      if [[ "$COMMAND" =~ $_re_desc_sq ]]; then
+        _glab_desc="${BASH_REMATCH[1]}"
+      elif [[ "$COMMAND" =~ --description[[:space:]]\"([^\"]*)\" ]]; then
+        _glab_desc="${BASH_REMATCH[1]}"
+      fi
+
       # --- git commit: -m オプション値を抽出 (commit-tree / commit-graph は除外) ---
       if [[ "$COMMAND" =~ git[[:space:]]+commit([[:space:]]|$) ]]; then
         _commit_msg=""
@@ -1567,18 +1585,9 @@ PYEOF
       if [[ "$GUARD_CLASS" != "Forbidden" ]] && { \
           [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment|review|merge) ]] || \
           [[ "$COMMAND" =~ gh[[:space:]]+release[[:space:]]+create ]]; }; then
-        _gh_text=""
-        # --body "..." or --body '...'
-        if [[ "$COMMAND" =~ $_re_body_sq ]]; then
-          _gh_text="${BASH_REMATCH[1]}"
-        elif [[ "$COMMAND" =~ --body[[:space:]]\"([^\"]*)\" ]]; then
-          _gh_text="${BASH_REMATCH[1]}"
-        fi
-        # --title "..." or --title '...' (append to check text)
-        if [[ "$COMMAND" =~ $_re_title_sq ]]; then
-          _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
-        elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
-          _gh_text="${_gh_text} ${BASH_REMATCH[1]}"
+        _gh_text="$_gh_body"
+        if [[ -n "$_gh_title" ]]; then
+          _gh_text="${_gh_text} ${_gh_title}"
         fi
         # --notes "..." or --notes '...' (gh release create)
         if [[ "$COMMAND" =~ $_re_notes_sq ]]; then
@@ -1616,16 +1625,9 @@ PYEOF
 
       # --- glab mr create / glab issue create / glab mr note ---
       if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]]; then
-        _glab_text=""
-        if [[ "$COMMAND" =~ $_re_desc_sq ]]; then
-          _glab_text="${BASH_REMATCH[1]}"
-        elif [[ "$COMMAND" =~ --description[[:space:]]\"([^\"]*)\" ]]; then
-          _glab_text="${BASH_REMATCH[1]}"
-        fi
-        if [[ "$COMMAND" =~ $_re_title_sq ]]; then
-          _glab_text="${_glab_text} ${BASH_REMATCH[1]}"
-        elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
-          _glab_text="${_glab_text} ${BASH_REMATCH[1]}"
+        _glab_text="$_glab_desc"
+        if [[ -n "$_glab_title" ]]; then
+          _glab_text="${_glab_text} ${_glab_title}"
         fi
         if [[ -n "$_glab_text" ]]; then
           _glab_subcmd=$(printf '%s' "$COMMAND" | grep -oE 'glab (mr|issue) (create|note)' | head -1)
@@ -1652,31 +1654,18 @@ PYEOF
         if [[ -z "$_pn_cmd_label" ]] && { \
             [[ "$COMMAND" =~ gh[[:space:]]+(pr|issue)[[:space:]]+(create|edit|comment|review|merge) ]] || \
             [[ "$COMMAND" =~ gh[[:space:]]+release[[:space:]]+create ]]; }; then
-          if [[ "$COMMAND" =~ $_re_body_sq ]]; then
-            _pn_cmd_text="${BASH_REMATCH[1]}"
-          elif [[ "$COMMAND" =~ --body[[:space:]]\"([^\"]*)\" ]]; then
-            _pn_cmd_text="${BASH_REMATCH[1]}"
+          _pn_cmd_text="$_gh_body"
+          if [[ -n "$_gh_title" ]]; then
+            _pn_cmd_text="${_pn_cmd_text} ${_gh_title}"
           fi
-          if [[ "$COMMAND" =~ $_re_title_sq ]]; then
-            _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
-          elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
-            _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
-          fi
-          # --body-file 経由本文も追加 (AI 定型語 block の _gh_file_content を再利用)
           [[ -n "${_gh_file_content:-}" ]] && _pn_cmd_text="${_pn_cmd_text}"$'\n'"${_gh_file_content}"
           _pn_cmd_label=$(printf '%s' "$COMMAND" | grep -oE 'gh (pr|issue) (create|edit|comment|review|merge)|gh release create' | head -1)
         fi
         # glab
         if [[ -z "$_pn_cmd_label" ]] && [[ "$COMMAND" =~ glab[[:space:]]+(mr|issue)[[:space:]]+(create|note) ]]; then
-          if [[ "$COMMAND" =~ $_re_desc_sq ]]; then
-            _pn_cmd_text="${BASH_REMATCH[1]}"
-          elif [[ "$COMMAND" =~ --description[[:space:]]\"([^\"]*)\" ]]; then
-            _pn_cmd_text="${BASH_REMATCH[1]}"
-          fi
-          if [[ "$COMMAND" =~ $_re_title_sq ]]; then
-            _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
-          elif [[ "$COMMAND" =~ --title[[:space:]]\"([^\"]*)\" ]]; then
-            _pn_cmd_text="${_pn_cmd_text} ${BASH_REMATCH[1]}"
+          _pn_cmd_text="$_glab_desc"
+          if [[ -n "$_glab_title" ]]; then
+            _pn_cmd_text="${_pn_cmd_text} ${_glab_title}"
           fi
           _pn_cmd_label=$(printf '%s' "$COMMAND" | grep -oE 'glab (mr|issue) (create|note)' | head -1)
         fi

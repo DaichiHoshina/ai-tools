@@ -9,22 +9,13 @@ setup() {
   # PROJECT_ROOT を設定
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../.." && pwd)"
   export HOOKS_DIR="${PROJECT_ROOT}/hooks"
-  # テスト用HOME（本番ログ汚染防止）
-  export ORIGINAL_HOME="$HOME"
-  export HOME="$(mktemp -d)"
-  mkdir -p "$HOME/.claude/logs"
-  mkdir -p "$HOME/.claude/session-logs"
-  # テスト隔離: 実環境の /tmp/claude-ctx-pct, /tmp/claude-serena-fail-count を参照しない
-  export CLAUDE_CTX_FILE="${HOME}/_ctx_pct_unset"
-  export CLAUDE_SERENA_FAIL_COUNT="${HOME}/_serena_unset"
+  # 共有 helper: HOME を tmp dir に隔離 (本番ログ汚染防止)
+  load "../helpers/common"
+  setup_home_isolated
 }
 
 teardown() {
-  # テスト用HOMEを削除して復元
-  if [[ "$HOME" != "$ORIGINAL_HOME" && "$HOME" == /tmp/* ]]; then
-    rm -rf "$HOME"
-  fi
-  export HOME="$ORIGINAL_HOME"
+  teardown_home_isolated
 }
 
 # =============================================================================
