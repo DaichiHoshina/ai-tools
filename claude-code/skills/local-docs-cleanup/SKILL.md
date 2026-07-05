@@ -35,11 +35,7 @@ grep -rl "status: released" {local-docs-root}/projects/*/README.html 2>/dev/null
 
 ### 3. Scan and classify
 
-**Keep**: RCA / postmortem / lessons-learned / active runbooks or specs / decision-basis docs / domain-specs candidates.
-
-**Archive candidates**: `planning/` intermediate notes / individual `verification/rehearsal/` logs (skip if series summary exists) / `inbox/` remnants / `notion-drafts/` / duplicate summaries (keep newer) / files duplicating README.
-
-**Needs review**: content-dependent files / files potentially referenced by other projects.
+Classify into **Keep** / **Archive candidates** / **Needs review**. Criteria come from STRUCTURE.md `## PJ released 後の cleanup レビュー` (loaded in Step 1) — do not restate from skill memory.
 
 ### 4. Present confirmation list
 

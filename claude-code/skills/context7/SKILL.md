@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash
 name: context7
-description: Fetch latest docs via Context7 API. Required before writing any library API method (see CLAUDE.md § Library API Live Doc Required). Use when checking API specs or adopting a new library.
+description: Fetch latest docs via Context7 API. Required before writing any library API method, when adopting a new library, or when the API spec is older than 6 months (see CLAUDE.md § Library API Live Doc Required).
 ---
 
 # context7 - Library Documentation Search
@@ -9,6 +9,8 @@ description: Fetch latest docs via Context7 API. Required before writing any lib
 ## Overview
 
 This skill enables retrieval of current documentation for software libraries and components by querying the Context7 API via curl. Use it instead of relying on potentially outdated training data.
+
+Hook 連携: `hooks/lib/write-checkers.sh` の `_LIVE_DOC_KEYWORDS` (25 keyword: `useState` / `axios.create` / `FastAPI(` / `prisma.*.findMany` / `createClient(` / `OpenAI(` 等) が write-type tool 前に warn-only で検出する。warn が出たら本 skill を起動して最新 docs を取得してから書く。
 
 ## Workflow
 
@@ -43,7 +45,7 @@ curl -s "https://context7.com/api/v2/context?libraryId=LIBRARY_ID&query=TOPIC&ty
 - `query` (required): The specific topic to retrieve documentation for
 - `type` (optional): Response format - `json` (default) or `txt` (plain text, more readable)
 
-## Examples
+## Example
 
 ### React hooks documentation
 
@@ -54,26 +56,6 @@ curl -s "https://context7.com/api/v2/libs/search?libraryName=react&query=hooks" 
 
 # Fetch useState documentation
 curl -s "https://context7.com/api/v2/context?libraryId=/websites/react_dev_reference&query=useState&type=txt"
-```
-
-### Next.js routing documentation
-
-```bash
-# Find Next.js library ID
-curl -s "https://context7.com/api/v2/libs/search?libraryName=nextjs&query=routing" | jq '.results[0].id'
-
-# Fetch app router documentation
-curl -s "https://context7.com/api/v2/context?libraryId=/vercel/next.js&query=app+router&type=txt"
-```
-
-### FastAPI dependency injection
-
-```bash
-# Find FastAPI library ID
-curl -s "https://context7.com/api/v2/libs/search?libraryName=fastapi&query=dependencies" | jq '.results[0].id'
-
-# Fetch dependency injection documentation
-curl -s "https://context7.com/api/v2/context?libraryId=/fastapi/fastapi&query=dependency+injection&type=txt"
 ```
 
 ## Tips

@@ -16,7 +16,9 @@ Auto-fires on any of:
 - 「PRDとの整合性チェック」「整合性チェックして」「整合性取れているか」「local-docsに反映」
 - 「再度コメント読み込み」「再度コメント読んで」(PR/Issue comment 再読込)
 - 短縮・口語形 (「再度」prefix なしの初回読込も含む): 「dd調べて」「DD調べて」「DD読んで」「PRとDDを読み込んで」「DDを全部読み込んで」「整合性が取れるように」「整合取れてる」「dd見て」。大文字小文字は問わない (dd / DD 双方)
-- memory 突合系: 「memory も含めて整合性」「memory と doc の整合」(auto-memory と DD/local-docs の内容が食い違っていないか照合)
+- spec / 設計変更の反映系: 「spec 更新を local-docs に吸収」「設計変更を doc に反映して」「spec と local-docs を合わせて」
+- 実装変更後の doc 追跡系: 「実装が変わったので doc も更新して」「コードが変わったので DD も更新」「実装に合わせて local-docs を更新して」
+- memory 突合系: 「memory も含めて整合性」「memory と doc の整合」(memory = `~/ai-tools/memory/` または repo 配下 `memory/` の md file。Serena `.serena/memories/` と `~/.claude/projects/` 配下は照合対象外)
 - Mid-`/flow` check when changes since last sync are suspected
 - correction prefix 「違う、」「再度」を受けた場合は、直前 task 結果と現状の diff を 1 行 echo してから着手する (差分を明示することで再認識ループを短縮する)
 

@@ -24,7 +24,7 @@ parameters:
 
 ## Perspectives
 
-Details: `references/review-patterns-universal.md` / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`. Noise discard / P2/P3 downgrade: `references/on-demand-rules/review-noise-discard.md`. Self-Review Gate C (`/flow`): `references/parallel-self-review.md` — fires via `reviewer-agent` 12-lens parallel.
+Details: `skills/comprehensive-review/references/` 配下 (`review-criteria.md` / `writing-docs.md` / `silent-failure.md` / `type-design.md` / `db-concurrency.md`) を後述 Conditional Reference Loading に従い読み込む。Noise discard / P2/P3 downgrade: `references/on-demand-rules/review-noise-discard.md`. Self-Review Gate C (`/flow`): `references/parallel-self-review.md` — fires via `reviewer-agent` 12-lens parallel.
 
 | Perspective | Description |
 |---|---|
@@ -114,33 +114,11 @@ Zero findings → `### Critical: 0`. Tags: `must`=Critical / `imo`,`nits`=Warnin
 
 ## Writing Enforcement (writing/docs/comment/prompt diff only)
 
-Additional Step 4.5 checks via `guidelines/writing/PRINCIPLES.md` / `code-comment.md` / `prompt-engineering.md` / `long-form-doc.md`. confidence-80 filter applies.
+Additional Step 4.5 checks via `guidelines/writing/PRINCIPLES.md` / `code-comment.md` / `prompt-engineering.md` / `long-form-doc.md`. confidence-80 filter applies. comment 品質の詳細規範は `code-comment` skill に委譲する (trigger 重複を避ける)。
 
 ## Conditional Reference Loading
 
-**Default (`--type` absent or `all`)**: Read all 5 reference files before Step 1.
-
-```
-skills/comprehensive-review/references/review-criteria.md
-skills/comprehensive-review/references/silent-failure.md
-skills/comprehensive-review/references/type-design.md
-skills/comprehensive-review/references/db-concurrency.md
-skills/comprehensive-review/references/writing-docs.md
-```
-
-**`--type` specified**: Load only the files mapped below. Reduces token cost for single-focus runs.
-
-| `--type` value | Files to Read |
-|---|---|
-| `security` | `silent-failure.md` + `review-criteria.md` |
-| `silent-failure` | `silent-failure.md` + `review-criteria.md` |
-| `type-design` | `type-design.md` + `review-criteria.md` |
-| `db-concurrency` | `db-concurrency.md` + `silent-failure.md` |
-| `writing` / `docs` | `writing-docs.md` + `review-criteria.md` |
-| `architecture` / `quality` / `readability` / `root-cause` / `logging` / `test-coverage` | `review-criteria.md` only |
-| `all` (explicit) | All 5 files (same as default) |
-
-All paths are relative to `skills/comprehensive-review/references/`. Read selected files immediately after this step, before Step 1.
+`--type` absent or `all` → `references/` 配下 5 file 全部読む。単一 focus 時は該当 file + `review-criteria.md` のみ (`db-concurrency` → + `silent-failure.md`)。Step 1 前に load する。
 
 ## Multi-lens panel (`/review --panel` only)
 

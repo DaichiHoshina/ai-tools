@@ -27,6 +27,8 @@ Systematically analyze bug/error root causes, propose structural fix strategy.
 
 Collect from user: error message, repro steps, impact scope, frequency.
 
+症状 endpoint に視野を閉じない。同時刻に他 endpoint / service でも同一 error signature が出ていないか、および infra メトリクス (DB lock / CPU / write_latency 等) を横断で確認する。canonical: `rules/incident-local-repro-not-root-cause.md`
+
 ### Step 2: 5 Why Analysis
 
 Question "why" at each level, gather evidence.
@@ -56,7 +58,7 @@ Use Serena MCP to search codebase for same pattern.
 
 ### Step 6: Report Generation
 
-Save to Claude Code auto-memory via `Write`: `~/.claude/projects/<project-key>/memory/rca-{date}-{summary}.md` (Serena `write_memory` forbidden — 2026-06-10 decision, avoid dual management)
+Save via `Write` to the working repo's `memory/` dir (for ai-tools repo → `~/ai-tools/memory/rca-{date}-{summary}.md`). `~/.claude/projects/<project-key>/memory/` への write は禁止 (CLAUDE.md `## Compounding Engineering`)。Serena `write_memory` も forbidden (2026-06-10 decision, avoid dual management)
 
 ## Serena MCP Priority Use
 

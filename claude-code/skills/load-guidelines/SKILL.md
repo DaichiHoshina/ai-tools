@@ -74,14 +74,7 @@ description: Auto-load guidelines by tech stack, save tokens. Use when loading g
 
 Report detected (comma-sep lang or `common`, mode `summary`/`full`).
 
-**Zero findings behavior**: If Step 1 doesn't match lang, load common fallback per mode (`full` keeps mandatory rules):
-
-| Mode | Load | Report |
-|--------|---------|------|
-| `summary` (default) | `common/code-quality-design.md` only | `detected: none, fallback: common-summary` |
-| `full` | `common/claude-code-tips.md` + `common/code-quality-design.md` + `common/development-process.md` (mandatory 3) | `detected: none, fallback: common-full` |
-
-Neither errors, continue. Never skip common 3 when `full`.
+**Zero findings**: no lang match → `summary` loads `common/code-quality-design.md` (`fallback: common-summary`); `full` loads mandatory 3 (`fallback: common-full`). Never skip common 3 when `full`.
 
 ---
 
@@ -104,7 +97,29 @@ Basic: Resolve to `~/.claude/guidelines/<category>/<id>.md`. Category auto-detec
 - `clean-architecture|ddd|async-job-patterns` → `design/`
 - `database-performance|mysql-performance|caching-strategies|distributed-transactions|observability-design|security-hardening|scalability-patterns|event-driven-architecture|multi-tenancy` → `backend/`
 
-**Unresolved ID**: If `requires-guidelines` ID not in above → warn log `[load-guidelines] unresolved id: <id>`, skip only that ID, continue loading rest (skill doesn't fail).
+**On-demand ID mapping (not auto-loaded, resolve when `requires-guidelines` names them)**:
+
+| ID | Path |
+|---|---|
+| `guardrails` | `common/guardrails.md` |
+| `investigation-protocol` | `common/investigation-protocol.md` |
+| `logging-standards` | `common/logging-standards.md` |
+| `notion-database` | `common/notion-database.md` |
+| `notion-design` | `common/notion-design.md` |
+| `notion-operations` | `common/notion-operations.md` |
+| `notion-writing` | `common/notion-writing.md` |
+| `release-management` | `common/release-management.md` |
+| `session-modes` | `common/session-modes.md` |
+| `technical-pitfalls` | `common/technical-pitfalls.md` |
+| `technique-selection` | `common/technique-selection.md` |
+| `testing-guidelines` | `common/testing-guidelines.md` |
+| `type-safety-principles` | `common/type-safety-principles.md` |
+| `cqrs` | `design/cqrs.md` |
+| `async-messaging` | `languages/async-messaging.md` |
+| `vue3` | `languages/vue3.md` |
+| `prompt-caching` | `operations/prompt-caching.md` |
+
+**Unresolved ID**: not in above → warn log `[load-guidelines] unresolved id: <id>`, skip only that ID, continue loading rest.
 
 ---
 

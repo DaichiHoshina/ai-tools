@@ -18,7 +18,6 @@ Switch Claude Code behavior mode per-session. Operation guard behavior, loaded s
 | git commit/push | Always confirm |
 | Config change | Always confirm |
 | npm install | Always confirm |
-| disableSkillShellExecution | `true` (disable skill shell exec) |
 | Use case | Prod work, critical refactoring |
 
 ### normal Mode (Default)
@@ -40,7 +39,7 @@ Switch Claude Code behavior mode per-session. Operation guard behavior, loaded s
 | git push | Feature branch auto-approve, main/master confirm |
 | npm install (safe) | Auto-approve |
 | File edit | Auto-approve (delete only confirm) |
-| Use case | Prototyping, exploratory dev, Boris daily |
+| Use case | Prototyping, exploratory dev, daily exploratory use |
 
 **SafeBoundary (auto-approved in fast)**:
 git commit (local), git push (feature branch), npm install (safe), format(code), file_edit (existing)

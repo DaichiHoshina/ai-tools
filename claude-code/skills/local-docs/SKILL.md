@@ -127,18 +127,14 @@ reformat mode は skeleton h2 / `<style>` / `<script>` を最新 `_templates/{ty
 
 ## Type-specific authoring (本文品質)
 
-template は骨格 h2 を与える。各 h2 を何の粒度で埋めるかが doc の価値を決める。type enum / 集約呼称 / h2 列挙の canonical は local-docs `CLAUDE.md` / `_templates/{type}.html` (No Derived Literals)。本節は埋め方の質のみ規定する。
+共通の文体規範 (結論先行 / PREP / 1 文 100 字 / 段落 3〜4 行 / 指示語具体化 / blameless) は `guidelines/writing/long-form-doc.md` に従う。type enum / h2 列挙は local-docs `CLAUDE.md` / `_templates/{type}.html` canonical。本節は type 別差分のみ。
 
-共通ルール: 冒頭 lead を結論先行 1〜3 文で書く。段落は 3〜4 行に抑える。指示語は具体名に置換する。読者が「何が起きたか / 何が分かったか」を最初の段落で把握できる状態にする。
-
-| Type | 主要ルール | 必須 metadata |
+| Type | type 別差分ルール | 必須 metadata |
 |---|---|---|
-| postmortem / rca | 時系列 = 絶対時刻 HH:MM + 主語 + 観測事実 (相対表現「しばらくして」「その後」禁止)。影響範囲は定量化 (ユーザ数 / 期間 / 失敗率 / 金額)。symptom と root cause を分離。rca は 5 Why で構造要因まで掘る (`/root-cause` 連携)。再発防止は検証可能な action (担当 / 期限 / 完了条件)。「注意する」「気をつける」不可 | `event-date` (障害発生日) |
-| report | 結論を §1 か冒頭 lead に先出し、根拠を後続 § で支える (PREP)。数値は必ず出典 + 計測条件を添える (clickable link / query / 期間)。解釈 (§4) と事実 (§3) を混ぜない。推測には「推定」「仮説」と明示。次アクション (§5) は誰が何を判断できるかを 1 行で書く | `data-window` |
-| plan | 作業フェーズは依存順 + 完了条件付き。リスクは発生確率 + 影響 + 回避策をセットで書く | — |
-| decision | 比較軸 (§3) は選択肢間で同一軸に揃える。採用 / 不採用は trade-off を明示し「何を捨てたか」を残す | — |
-
-外向き共有前提の doc (postmortem / report) は `guidelines/writing/` canonical の文体規範 (1 文 100 字 / NG 語回避 / 指示語禁止) を本文にも適用する。
+| postmortem / rca | 時系列は絶対時刻 HH:MM + 主語 + 観測事実 (相対表現禁止)。影響範囲は定量化 (ユーザ数 / 期間 / 失敗率 / 金額)。symptom と root cause を分離。rca は 5 Why で構造要因まで掘る (`/root-cause` 連携)。再発防止は検証可能 action (担当 / 期限 / 完了条件)、「注意する」不可 | `event-date` |
+| report | 数値は出典 + 計測条件を添える (link / query / 期間)。事実 § と解釈 § を混ぜない。推測は「推定」「仮説」と明示。次アクションは誰が何を判断できるかを 1 行で書く | `data-window` |
+| plan | 作業フェーズは依存順 + 完了条件付き。リスクは発生確率 + 影響 + 回避策セット | — |
+| decision | 比較軸は選択肢間で同一軸に揃える。採用 / 不採用は trade-off を明示し「何を捨てたか」を残す | — |
 
 ## Related (cross-ref)
 
@@ -146,5 +142,5 @@ template は骨格 h2 を与える。各 h2 を何の粒度で埋めるかが do
 |---|---|
 | local-docs `CLAUDE.md` | canonical type / aggregation mapping (primary source) |
 | local-docs `STRUCTURE.md` | placement flow / type enum / Title Rules |
-| `guidelines/writing/long-form-doc.md` | 本文書き出し前の必須 guideline (template list: `_templates/README.html`) |
-| `guidelines/writing/README.md` | 文体規範 canonical (NG-DICTIONARY 含む、1 文 100 字 / NG 語 / 指示語禁止) |
+| `guidelines/writing/long-form-doc.md` | 本文書き出し前の必須 guideline + 文体規範 (1 文 100 字 / NG 語 / 指示語禁止)、template list は `_templates/README.html` |
+| `local-docs-cleanup` skill | released プロジェクトの archive 移動 / 整理は本 skill では扱わず `local-docs-cleanup` に委譲する |
