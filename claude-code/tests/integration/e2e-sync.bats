@@ -117,3 +117,15 @@ checksum_file() {
   run grep -n 'source.*\.env' "${PROJECT_ROOT}/claude-code/sync.sh"
   [ "$status" -eq 1 ]
 }
+
+# =============================================================================
+# repo root 記録 (.ai-tools-root)
+# =============================================================================
+
+@test "e2e: sync to-local records repo root to .ai-tools-root" {
+  [ -f "$HOME/.claude/.ai-tools-root" ]
+  local recorded
+  recorded="$(head -1 "$HOME/.claude/.ai-tools-root")"
+  [ "$recorded" = "$PROJECT_ROOT" ]
+  [ -d "$recorded/claude-code" ]
+}

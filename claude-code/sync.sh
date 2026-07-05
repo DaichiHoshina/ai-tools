@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -23,7 +23,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 CLAUDE_CODE_DIR="${SCRIPT_DIR}"           # claude-code/ 自身
 AI_TOOLS_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"  # ai-tools/ root
-CLAUDE_DIR="$HOME/.claude"
+# CLAUDE_DIR は test 隔離用に env override 可 (default: ~/.claude)
+CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 
 # 同期対象（apply_changes / show_diff の共通定義）
 # 二重管理によるドリフト防止のためここで一元管理する。
@@ -78,6 +79,41 @@ if ! command -v escape_for_sed &> /dev/null; then
         printf '%s\n' "$1" | sed 's/[&/\]/\\&/g'
     }
 fi
+
+# =============================================================================
+# Dependency Preflight (macOS 機体差対応)
+# arm (/opt/homebrew) / intel (/usr/local) の Homebrew PATH 差と、
+# jq / rsync / git の未導入を実行前に検出する。どの Mac でも同じ挙動にする。
+# =============================================================================
+
+ensure_brew_path() {
+    local d
+    for d in /opt/homebrew/bin /usr/local/bin; do
+        [ -d "$d" ] || continue
+        case ":$PATH:" in
+            *":$d:"*) ;;
+            *) PATH="$PATH:$d" ;;
+        esac
+    done
+    export PATH
+}
+
+check_dependencies() {
+    local mode="$1"
+    ensure_brew_path
+
+    if ! command -v git &> /dev/null; then
+        print_warning "git が見つかりません。repo 鮮度チェックと pre-push hook 配置をスキップします"
+    fi
+    if [ "$mode" = "from-local" ] && ! command -v rsync &> /dev/null; then
+        print_error "rsync が見つかりません（from-local に必須）→ 'brew install rsync'"
+        return 1
+    fi
+    if [ "$mode" != "diff" ] && ! check_jq; then
+        print_warning "jq が見つかりません。settings.json の同期をスキップします → 'brew install jq'"
+    fi
+    return 0
+}
 
 # =============================================================================
 # gh skill Protection Functions
@@ -287,7 +323,26 @@ sync_to_local() {
     # pre-push hook のシンボリックリンクを配置
     setup_pre_push_hook
 
+    # repo root を記録（clone 先が機体ごとに違っても hooks が path 解決できるようにする）
+    record_repo_root
+
     print_success "ローカルへの同期が完了しました"
+}
+
+# =============================================================================
+# Repo Root Record
+# ai-tools repo の実 path を ~/.claude/.ai-tools-root に記録する。
+# hooks (lib/hook-utils.sh の _aitools_dir / _aitools_prefixes) がこれを最優先で
+# 読むため、ghq 以外の場所に clone した Mac でも path 解決が壊れない。
+# =============================================================================
+
+record_repo_root() {
+    local root_file="$CLAUDE_DIR/.ai-tools-root"
+    if printf '%s\n' "$AI_TOOLS_ROOT" > "$root_file"; then
+        print_success "repo root を記録: $root_file"
+    else
+        print_warning "repo root の記録に失敗: $root_file"
+    fi
 }
 
 verify_to_local_sync() {
@@ -683,6 +738,11 @@ main() {
         esac
         shift
     done
+
+    # 依存 preflight（mode 指定時のみ、from-local は rsync 必須で fail-fast）
+    if [ -n "$mode" ]; then
+        check_dependencies "$mode" || exit 1
+    fi
 
     # バージョンチェック（diff以外）
     if [ "$mode" != "diff" ] && [ -n "$mode" ]; then

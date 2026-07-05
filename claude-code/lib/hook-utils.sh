@@ -342,13 +342,34 @@ _append_block_log() {
 
 # =============================================================================
 # ai-tools repo path helper
-# symlink (~/ai-tools/) と ghq 実 path の両方を OR 判定するユーティリティ。
-# symlink が存在しない環境でも block が正常動作するよう両 prefix を列挙する。
+# sync.sh to-local が記録する ~/.claude/.ai-tools-root を最優先で使い、
+# symlink (~/ai-tools/) と ghq 実 path を fallback として OR 判定する。
+# clone 先が機体ごとに違う Mac でも block / path 解決が正常動作する。
 # =============================================================================
 
+# repo root 記録 file の path を返す (test 用に AITOOLS_ROOT_FILE で override 可)。
+_aitools_root_file() {
+  printf '%s' "${AITOOLS_ROOT_FILE:-$HOME/.claude/.ai-tools-root}"
+}
+
+# 記録済み repo root を返す。claude-code/ を含む実在 dir のみ有効とし、
+# 不在・無効 (repo 移動後の stale 記録等) なら 1 を返す。
+_aitools_recorded_root() {
+  local f root
+  f="$(_aitools_root_file)"
+  [[ -f "$f" ]] || return 1
+  IFS= read -r root < "$f" || true
+  [[ -n "$root" && -d "$root/claude-code" ]] || return 1
+  printf '%s' "$root"
+}
+
 # ai-tools repo の path prefix list を改行区切りで出力する。
-# symlink と ghq 実 path の両方を返す。
+# 記録済み root → symlink → ghq 実 path の順で返す。
 _aitools_prefixes() {
+  local recorded
+  if recorded="$(_aitools_recorded_root)"; then
+    printf '%s\n' "${recorded}/"
+  fi
   printf '%s\n' \
     "$HOME/ai-tools/" \
     "$HOME/ghq/github.com/DaichiHoshina/ai-tools/"
@@ -436,13 +457,17 @@ _aitools_relpath() {
   return 1
 }
 
-# 実在する ai-tools repo dir を 1 つ返す (ghq 実 path 優先、symlink fallback)。
-# どちらも存在しなければ ghq canonical path を返す (呼出側で -d チェック想定)。
+# 実在する ai-tools repo dir を 1 つ返す
+# (記録済み root 優先 → ghq 実 path → symlink fallback)。
+# いずれも存在しなければ ghq canonical path を返す (呼出側で -d チェック想定)。
 # usage: dir=$(_aitools_dir)
 _aitools_dir() {
-  local ghq="$HOME/ghq/github.com/DaichiHoshina/ai-tools"
-  local symlink="$HOME/ai-tools"
-  if [[ -d "$ghq" ]]; then
+  local recorded ghq symlink
+  ghq="$HOME/ghq/github.com/DaichiHoshina/ai-tools"
+  symlink="$HOME/ai-tools"
+  if recorded="$(_aitools_recorded_root)"; then
+    printf '%s' "$recorded"
+  elif [[ -d "$ghq" ]]; then
     printf '%s' "$ghq"
   elif [[ -d "$symlink" ]]; then
     printf '%s' "$symlink"

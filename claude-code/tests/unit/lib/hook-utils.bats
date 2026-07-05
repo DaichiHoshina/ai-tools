@@ -820,3 +820,56 @@ teardown_ensure_worktree() {
   run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/.claude/memory/notes.md'"
   [ "$status" -eq 1 ]
 }
+
+# =============================================================================
+# _aitools_recorded_root / _aitools_dir / _aitools_prefixes
+# (.ai-tools-root 記録 file による repo root 解決)
+# =============================================================================
+
+@test "aitools_dir: 記録 file が有効なら記録済み root を最優先で返す" {
+  local tmp
+  tmp="$(mktemp -d)"
+  mkdir -p "$tmp/repo/claude-code"
+  echo "$tmp/repo" > "$tmp/root-file"
+  run bash -c "source '$LIB_FILE' && AITOOLS_ROOT_FILE='$tmp/root-file' _aitools_dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$tmp/repo" ]
+  rm -rf "$tmp"
+}
+
+@test "aitools_dir: 記録 file の root が実在しなければ fallback path を返す" {
+  local tmp
+  tmp="$(mktemp -d)"
+  echo "$tmp/nonexistent" > "$tmp/root-file"
+  run bash -c "source '$LIB_FILE' && AITOOLS_ROOT_FILE='$tmp/root-file' _aitools_dir"
+  [ "$status" -eq 0 ]
+  [[ "$output" == "$HOME/"* ]]
+  rm -rf "$tmp"
+}
+
+@test "aitools_dir: 記録 file 不在でも従来の fallback で動作する" {
+  run bash -c "source '$LIB_FILE' && AITOOLS_ROOT_FILE='/nonexistent/root-file' _aitools_dir"
+  [ "$status" -eq 0 ]
+  [[ "$output" == "$HOME/"* ]]
+}
+
+@test "aitools_prefixes: 記録済み root が prefix list の先頭に入る" {
+  local tmp
+  tmp="$(mktemp -d)"
+  mkdir -p "$tmp/repo/claude-code"
+  echo "$tmp/repo" > "$tmp/root-file"
+  run bash -c "source '$LIB_FILE' && AITOOLS_ROOT_FILE='$tmp/root-file' _aitools_prefixes | head -1"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$tmp/repo/" ]
+  rm -rf "$tmp"
+}
+
+@test "is_aitools_path: 記録済み root 配下の path を ai-tools 配下と判定する" {
+  local tmp
+  tmp="$(mktemp -d)"
+  mkdir -p "$tmp/repo/claude-code"
+  echo "$tmp/repo" > "$tmp/root-file"
+  run bash -c "source '$LIB_FILE' && AITOOLS_ROOT_FILE='$tmp/root-file' _is_aitools_path '$tmp/repo/claude-code/CLAUDE.md'"
+  [ "$status" -eq 0 ]
+  rm -rf "$tmp"
+}
