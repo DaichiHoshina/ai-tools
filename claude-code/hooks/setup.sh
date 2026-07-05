@@ -4,7 +4,9 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_setup_src="${BASH_SOURCE[0]}"
+[[ "${_setup_src}" == /* ]] || _setup_src="${PWD}/${_setup_src}"
+SCRIPT_DIR="${_setup_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 
 # jq前提条件チェック

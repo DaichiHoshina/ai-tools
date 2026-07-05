@@ -6,7 +6,9 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_ups_src="${BASH_SOURCE[0]}"
+[[ "${_ups_src}" == /* ]] || _ups_src="${PWD}/${_ups_src}"
+SCRIPT_DIR="${_ups_src%/*}"
 LIB_DIR="${SCRIPT_DIR}/../lib"
 
 # === ライブラリ読み込み ===
@@ -26,6 +28,21 @@ source "${BASH_SOURCE[0]%/*}/lib/portable-stat.sh"
 
 # === 前提条件チェック ===
 require_jq
+
+# === 外向き執筆 trigger 語彙 (single source of truth) ===
+# _OUTWARD_SHARE_TRIGGERS: 共有/報告 phrase subset。chat 応答にも外向き規範を適用する trigger。
+# _OUTWARD_EXTRA_TRIGGERS: 文書種別 + 動作動詞 (外向き文書 trigger の残り部分、subset の superset を構成)。
+# 論理: _is_outward_writing_trigger = SHARE ∪ EXTRA、_inject_outward_mode_if_trigger = SHARE。
+readonly _OUTWARD_SHARE_TRIGGERS=(
+  "共有用" "報告用" "共有して" "報告して" "共有文" "報告文"
+  "共有テキスト" "報告書" "共有する文" "報告する内容"
+)
+readonly _OUTWARD_EXTRA_TRIGGERS=(
+  "プルリク" "commit" "コミット" "push" "issue" "slack" "notion"
+  "design doc" "デザインドック" "設計書" "prd" "rca" "障害報告" "ポストモーテム" "postmortem"
+  "/git-push" "/commit" "/post-comment" "/design-doc" "/prd" "/docs"
+  "ドラフト" "下書き"
+)
 
 # === 入力処理 ===
 input=$(cat)
@@ -410,9 +427,8 @@ fi
 # user 入力に共有/報告系 phrase が含まれる場合、chat 応答にも外向き規範を適用するよう inject
 _inject_outward_mode_if_trigger() {
   local prompt="$1"
-  local triggers=("共有用" "報告用" "共有して" "報告して" "共有文" "報告文" "共有テキスト" "報告書" "共有する文" "報告する内容")
   local t
-  for t in "${triggers[@]}"; do
+  for t in "${_OUTWARD_SHARE_TRIGGERS[@]}"; do
     if [[ "$prompt" == *"$t"* ]]; then
       printf '%s\n' "[jp-quality-outward-mode] user 入力に共有/報告系 phrase 検出。chat 応答も外向き文書扱いとし、AI 定型語 / カタカナ造語 / 難読漢語 / 非日常英語の 4 block list を自己検査して回避すること。source: guidelines/writing/PRINCIPLES.md"
       return 0
@@ -526,13 +542,9 @@ _is_outward_writing_trigger() {
   # 文書種別 + 動作動詞。大小文字非依存 (lower 比較)。
   # 裸の "pr" は improve/express/approach/compress/spring 等の英単語に部分一致で誤爆するため
   # 配列に入れず、語境界判定 (後述) で別扱いする。
-  local triggers=("プルリク" "commit" "コミット" "push" "issue" "slack" "notion" \
-    "design doc" "デザインドック" "設計書" "prd" "rca" "障害報告" "ポストモーテム" "postmortem" \
-    "/git-push" "/commit" "/post-comment" "/design-doc" "/prd" "/docs" \
-    "共有用" "報告用" "共有して" "報告して" "共有文" "報告文" "報告書" \
-    "ドラフト" "下書き")
+  # trigger 語彙は file 冒頭の SHARE ∪ EXTRA を union で走査 (single source of truth)。
   local t
-  for t in "${triggers[@]}"; do
+  for t in "${_OUTWARD_SHARE_TRIGGERS[@]}" "${_OUTWARD_EXTRA_TRIGGERS[@]}"; do
     if [[ "${prompt_lower}" == *"${t,,}"* ]]; then return 0; fi
   done
   # "pr" は語境界 (前後が非英数字 or 行頭行末) のときのみ hit

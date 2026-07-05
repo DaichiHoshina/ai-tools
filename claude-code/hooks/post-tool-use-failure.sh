@@ -4,7 +4,9 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_ptuf_src="${BASH_SOURCE[0]}"
+[[ "${_ptuf_src}" == /* ]] || _ptuf_src="${PWD}/${_ptuf_src}"
+SCRIPT_DIR="${_ptuf_src%/*}"
 
 LOG_DIR="${HOME}/.claude/logs"
 LOG_FILE="${TOOL_FAILURE_LOG_FILE:-${LOG_DIR}/tool-failures.log}"
@@ -52,11 +54,10 @@ LOG_ERROR="${ERROR:0:500}"
 # ログ記録（500文字で切り詰め）
 echo "[${TIMESTAMP}] FAIL: ${TOOL_NAME} | ${LOG_ERROR}" >> "${LOG_FILE}"
 
-# ログファイルが1000行超えたら古い行を削除
-if [ "$(wc -l < "${LOG_FILE}")" -gt 1000 ]; then
-  tail -500 "${LOG_FILE}" > "${LOG_FILE}.tmp"
-  mv "${LOG_FILE}.tmp" "${LOG_FILE}"
-fi
+# ログファイルが _TH_LOG_ROTATION_LINES 超えたら古い行を削除
+# shellcheck source=lib/log-rotation.sh
+source "${SCRIPT_DIR}/lib/log-rotation.sh"
+_rotate_log_by_lines_if_needed "${LOG_FILE}"
 
 # --- additionalContext inject: error 200 chars 切り捨て + tool name 付与 ---
 # format: "tool <tool_name> failed: <error[:200]>" (200超は末尾に " ..." 付与)
