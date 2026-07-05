@@ -40,22 +40,7 @@ list に literal match しない場合でも、AI は以下カテゴリの語を
 
 ## block 条件
 
-### Write / Edit / MultiEdit (ai-tools 配下 file 書込)
-
-以下の**全て**を満たす場合に block する。
-
-1. tool が Write / Edit / MultiEdit のいずれか
-2. `file_path` が `~/ai-tools/` 配下 (`$HOME/ai-tools/` 絶対パス前方一致)
-3. content (`new_string` / `file_text` / `edits[].new_string`) に social-hit term または `private-name-list.txt` 内 term が含まれる
-
-### Bash (git commit / gh / glab、commit message + PR / Issue body)
-
-以下を満たす場合に block する。
-
-1. tool が Bash
-2. command が `git commit` / `gh pr create` / `gh pr edit` / `gh issue create` / `gh issue comment` / `glab` 系のいずれか
-3. command 内 (`-m` 引数 / heredoc / `--body` 引数) に social-hit term または `private-name-list.txt` 内 term が含まれる
-4. allowlist (本人名 / Anthropic / OSS 名) は除外
+Write / Edit / MultiEdit で `~/ai-tools/` 配下 file に書込む場合、および Bash の `git commit` / `gh pr` / `gh issue` / `glab` 系 command で commit message や PR / Issue body を渡す場合、content に social-hit term または `private-name-list.txt` 内 term が含まれると block する。allowlist (本人名 / Anthropic / OSS 名) は除外する。詳細判定 logic は `hooks/pre-tool-use.sh` を参照する。
 
 ## 自己除外 (allowlist)
 
@@ -73,27 +58,3 @@ list に literal match しない場合でも、AI は以下カテゴリの語を
 ## Why
 
 過去に社内 product 名・社内 doc 名を含む file を public push した (`[[public-repo-social-hit-incident]]`)。事後削除は git history に残るため事前 block で再発防止する。private 保管先は `~/.claude/references-private/` (sync.sh 管理外、gitignore 済)。block 発生時は `~/.claude/logs/social-hit-block.log` に記録する。
-
-## NG-DICTIONARY.md canonical key 変更禁止
-
-`guidelines/writing/NG-DICTIONARY.md` の既存 key を rename / 削除すると、`hooks/pre-tool-use.sh` の exact match 参照が壊れる。
-
-### 保護対象 key (rename 禁止)
-
-- `AI定型語` (block)
-- `カタカナ造語禁止` (block)
-- `断定語 (warn-only)` (warn-only)
-
-### canonical format
-
-```
-**<name> (block|warn-only)**: <terms>
-```
-
-key 名は hook が literal で grep するため、`AI定型語` を `AI 定型語` (空白挿入) や `AI-template` (英訳) に変えると block が機能しなくなる。
-
-### 既存 key 削減 / category 追加が必要な case
-
-- 既存 key 削減: hook 側 (`pre-tool-use.sh`) の grep pattern を同時に削除
-- 新 category 追加: hook 側に新 key の grep pattern を追加 + bats test 追記
-- いずれも CLAUDE.md `## Compounding Engineering` の「sync-canonical-with-bats」rule に従う

@@ -39,47 +39,9 @@ git worktree add ../size-selection-doc -b size-selection-doc
 
 ## wt 内で branch 切替禁止
 
-wt は **単一 branch 専用の作業 dir** とする。wt 内で `git checkout <other>` / `git switch <other>` / `git switch -` で別 branch に切り替える運用は禁止する。
+wt は単一 branch 専用の作業 dir とする。wt 内で `git switch` / `git checkout` による別 branch 切替は禁止する。別 topic の並行作業は別 wt を新設する (`git worktree add`)。
 
-### 禁止例
-
-```bash
-# NG: wt 内で main に戻る
-cd ../ai-tools-wt-foo
-git switch main
-
-# NG: wt 内で別 topic branch に切り替える
-cd ../ai-tools-wt-foo
-git checkout bar
-```
-
-### OK 手順 (別 branch を触りたくなった時)
-
-```bash
-# 1. wt 内の作業を commit or stash してから wt を出る
-cd ../ai-tools-wt-foo && git status  # clean 確認
-cd -                                  # 親 repo に戻る
-
-# 2. wt を畳む
-git worktree remove ../ai-tools-wt-foo
-git branch -d foo   # merge 済みなら
-
-# 3. 親 repo で目的の branch に切り替える (main 等)
-git switch main
-```
-
-もし別 topic の並行作業がしたいだけなら、既存 wt を残したまま**別 wt を新設**する:
-
-```bash
-git worktree add ../ai-tools-wt-bar -b bar
-```
-
-### Why
-
-- wt 内で branch 切替すると dir 名 slug と HEAD branch がずれ、本 rule 冒頭の「dir 名 = branch 名」不一致状態を発生させる
-- `git worktree list` の表示 (dir → branch mapping) が実態と食い違い、cleanup / ff-merge 時の対象取り違えを誘発する
-- 「main に戻る」用途は wt の設計思想 (1 wt = 1 作業単位で親 repo を汚さない) と真逆。畳んでから戻るのが正
-- 親 repo 側で main が既に checkout されている時に wt 内で `git switch main` すると `already checked out` で fail するが、他 branch は fail せず silent に不一致を作る
+詳細 (禁止例 / 畳み手順 / 親 repo での silent 不一致問題): 手順は `CLAUDE.md ## Quick Reference` の worktree pattern に従う。
 
 ## 適用範囲
 
