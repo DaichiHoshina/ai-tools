@@ -7,7 +7,7 @@ feature flag / maintenance flag / config 切替は、**「flag ON」と「利用
 - flag ON だけでは有効化しない。「設定変更 + 利用側 deploy / 再読み込み」の両方が要る
 - 新 middleware を含む機能リリースは「**deploy 完了 → flag ON**」順を厳守する
 - 「flag ON できた」判定は 2 段で確認する: 状態確認 (Redis / DB / config store の値変化) + 実挙動確認 (実 traffic の応答変化)
-- 逆順 (flag ON 後に deploy) は禁止。deploy 失敗時 flag だけ立った中間状態が本番に残る
+- 逆順 (flag ON 後に deploy) は禁止。deploy 失敗時に flag だけ立った中間状態が本番に残り、外形挙動が変わらない中途半端な状態が長時間放置される (過去に 50 分放置の事例あり)
 
 ## 同構造パターン
 
