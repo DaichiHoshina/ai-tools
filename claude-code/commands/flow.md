@@ -113,6 +113,8 @@ A/B mandatory on orchestration path; `--sequential` exempts A/B. `/dev --paralle
 
 Required: impl → /lint-test → /review → review-fix → /git-push. 2× fail same approach → `/clear` → re-organize.
 
+**Code comment enforcement (always-on)**: 各 developer-agent の delegation prompt に `guidelines/writing/code-comment.md` canonical 準拠を明示する (default = 書かない / WHY only / 削除 8 カテゴリ / AI marker 禁止 / Comment Traps 回避)。Self-Review Gate 5 (developer-agent.md) で comment 混入を目視確認する。
+
 ### Completion actions
 
 - Save to auto-memory: `~/.claude/projects/<project>/memory/work-context-YYYYMMDD-{topic}.md`

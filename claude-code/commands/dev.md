@@ -74,10 +74,12 @@ Flow: identify file → fix (Serena MCP) → verify (lint/type) → propose comm
 
 ## Step 0: Guideline loading (conditional)
 
+**Always-on (skip 不可)**: `guidelines/writing/code-comment.md` を Read。code comment (`// ` `# ` `-- ` `/* ` `<!-- `) を新規追加/編集する場合は削除 8 カテゴリ + AI marker 禁止 + Comment Traps 回避を必ず適用する (`--quick` でも skip しない)。
+
 | Scenario | Action |
 |----------|--------|
-| `--quick` | skip (save tokens) |
-| 1-2 files, minor | skip OK (if pattern known) |
+| `--quick` | skip (save tokens、ただし code-comment canonical のみ Read) |
+| 1-2 files, minor | skip OK (if pattern known、code-comment canonical のみ Read) |
 | new feature, design decision | `load-guidelines` (summary recommended) |
 | UI dev | `ui-skills` recommended |
 | Backend | `backend-dev` recommended |
