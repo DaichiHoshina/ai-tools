@@ -12,7 +12,11 @@ source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 require_jq
 
 INPUT=$(cat)
-send_stop_notification "$INPUT" "" "" "robot" "default"
+# デスクトップ通知は default OFF (subprocess の /tmp cwd 由来など noise になるため)。
+# 通知を戻したい時は CLAUDE_STOP_NOTIFY=1 を export する。
+if [[ "${CLAUDE_STOP_NOTIFY:-0}" == "1" ]]; then
+  send_stop_notification "$INPUT" "" "" "robot" "default"
+fi
 
 CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 PROJECT_NAME=$(basename "${CWD:-unknown}")

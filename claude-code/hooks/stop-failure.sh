@@ -8,7 +8,11 @@ source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 require_jq
 
 INPUT=$(cat)
-send_stop_notification "$INPUT" "APIエラー" "" "warning,robot" "high"
+# API error 通知も default OFF。CLAUDE_STOP_NOTIFY=1 で全 stop 通知を戻す。
+# error 通知だけ残したい場合は CLAUDE_STOP_FAILURE_NOTIFY=1 を単独指定する。
+if [[ "${CLAUDE_STOP_NOTIFY:-0}" == "1" ]] || [[ "${CLAUDE_STOP_FAILURE_NOTIFY:-0}" == "1" ]]; then
+  send_stop_notification "$INPUT" "APIエラー" "" "warning,robot" "high"
+fi
 
 CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 PROJECT_NAME=$(basename "${CWD:-unknown}")
