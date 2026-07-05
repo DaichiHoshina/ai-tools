@@ -564,61 +564,22 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
       esac
     done < "${_PRINCIPLES_PATH}"
 
-    # chat応答向け: AI定型語のみ全列挙 + カタカナ造語は参照形式 (token 節約)
-    _CHAT_PARTS=""
-    if [[ -n "${_AI_TERMS_LINE}" ]]; then
-      _AI_TERMS=$(printf '%s' "${_AI_TERMS_LINE}" | sed 's/^\*\*AI定型語\*\*: //')
-      _CHAT_PARTS="AI定型語: ${_AI_TERMS}"
-    fi
-    _KATAKANA_HINT=""
-    if [[ -n "${_KATAKANA_LINE}" ]]; then
-      _KATAKANA_HINT=" / カタカナ造語禁止 (source: PRINCIPLES.md **カタカナ造語禁止**: 行参照)"
-    fi
-    if [[ -n "${_CHAT_PARTS}" ]]; then
-      _AI_TERMS_CTX="[chat応答genshijin強化] 以下をchat応答で使用禁止: ${_CHAT_PARTS}${_KATAKANA_HINT}。代替は説明的記述で対応 (例: シームレス → 中断なく)。"
-    elif [[ -n "${_KATAKANA_HINT}" ]]; then
-      _AI_TERMS_CTX="[chat応答genshijin強化] カタカナ造語禁止${_KATAKANA_HINT}。代替は説明的記述で対応。"
+    # chat応答向け: AI定型語 + カタカナ造語を参照 1 行に圧縮 (list 展開は NG-DICTIONARY.md canonical へ委譲)
+    if [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; then
+      _AI_TERMS_CTX="[chat応答genshijin強化] AI定型語 / カタカナ造語を chat 応答で使用禁止。canonical: guidelines/writing/NG-DICTIONARY.md §AI定型語 / §カタカナ造語禁止。代替は説明的記述 (例: シームレス → 中断なく)。"
     fi
 
-    # 外向き文書品質 + 断定語注意: 永続化文書を書く trigger 時のみ注入 (毎-turn 固定費削減)。
-    # chat genshijin (上記) は trigger 無関係に毎-turn 維持。
+    # 外向き文書品質: 永続化文書 trigger 時のみ、jargon / 略語 / 断定語を参照 1 行で注入
     if _is_outward_writing_trigger "$prompt"; then
-    # 外向き文書向け: jargon + 略語
-    _DOC_PARTS=""
-    if [[ -n "${_JARGON_LINE}" ]]; then
-      _JARGON=$(printf '%s' "${_JARGON_LINE}" | sed 's/^\*\*内部jargon初出和訳必須\*\*: //')
-      _DOC_PARTS="jargon: ${_JARGON}"
-    fi
-    if [[ -n "${_ABBREV_LINE}" ]]; then
-      _ABBREV=$(printf '%s' "${_ABBREV_LINE}" | sed 's/^\*\*略語初出展開必須\*\*: //')
-      if [[ -n "${_DOC_PARTS}" ]]; then
-        _DOC_PARTS="${_DOC_PARTS} / 略語: ${_ABBREV}"
-      else
-        _DOC_PARTS="略語: ${_ABBREV}"
-      fi
-    fi
-    if [[ -n "${_DOC_PARTS}" ]]; then
-      _DOC_CTX="[外向き文書品質] 永続化文書 (PR/commit/Issue/Slack/Notion/DD/PRD/RCA) では初出時に和訳/展開必須: ${_DOC_PARTS}"
-      if [[ -n "${_AI_TERMS_CTX}" ]]; then
-        _AI_TERMS_CTX="${_AI_TERMS_CTX}
+      if [[ -n "${_JARGON_LINE}" ]] || [[ -n "${_ABBREV_LINE}" ]] || [[ -n "${_SOFTBLOCK_LINE}" ]]; then
+        _DOC_CTX="[外向き文書品質] 永続化文書 (PR/commit/Issue/Slack/Notion/DD/PRD/RCA): 初出 jargon 和訳 + 略語展開必須、断定語 (warn-only) 慎重使用。canonical: guidelines/writing/PRINCIPLES.md §内部jargon初出和訳必須 / §略語初出展開必須 / §断定語 (warn-only)。"
+        if [[ -n "${_AI_TERMS_CTX}" ]]; then
+          _AI_TERMS_CTX="${_AI_TERMS_CTX}
 ${_DOC_CTX}"
-      else
-        _AI_TERMS_CTX="${_DOC_CTX}"
+        else
+          _AI_TERMS_CTX="${_DOC_CTX}"
+        fi
       fi
-    fi
-
-    # 断定語 (warn-only) hint: commit message では正当用法、chat 応答での AI 確定表現に注意喚起のみ
-    # _SOFTBLOCK_LINE は冒頭 1-pass read で取得済 (旧: grep ×5 を 1-pass 化)
-    if [[ -n "${_SOFTBLOCK_LINE}" ]]; then
-      _SOFTBLOCK_TERMS=$(printf '%s' "${_SOFTBLOCK_LINE}" | sed 's/^\*\*断定語 (warn-only)\*\*: //')
-      _SOFTBLOCK_CTX="[断定語注意 (warn-only)] 以下は外向き prose では慎重に使用 (commit subject では許可): ${_SOFTBLOCK_TERMS}"
-      if [[ -n "${_AI_TERMS_CTX}" ]]; then
-        _AI_TERMS_CTX="${_AI_TERMS_CTX}
-${_SOFTBLOCK_CTX}"
-      else
-        _AI_TERMS_CTX="${_SOFTBLOCK_CTX}"
-      fi
-    fi
     fi
 
     # 共有/報告系 trigger 検出 → outward-mode inject

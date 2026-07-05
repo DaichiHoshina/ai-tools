@@ -113,20 +113,11 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 → 判定 table の inline 側 (N=1 / iteration 前提) に該当する task は `/dev` / `/flow` ではなく inline で直編集する。agent delegate するなら「独立 scope N≥2」or「品質最優先 mode」の理由を 1 行宣言してから。
 
-**Parallel fan-out 自己強制 (hard rule) — agent 使用時は直列 chain 禁止**: N≥2 dev は**単一 assistant message に N tool_use**。**最初の dev 発火前に独立 task を全列挙し、独立分は初回 message に全 bundle する** (1 体ずつ発火して結果を見てから次を発火する運用は peak=1 に落ちて inline より遅くなる = 速さ優先則に反する)。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。
+**Agent 使用時は必ず並列 fan-out (直列禁止)**: N≥2 dev は**単一 assistant message に N tool_use を bundle**。禁じ手: (A) agent 単発 (N=1 で起動、inline に負ける) / (B) agent → 結果 → 次 agent の逐次 (peak=1 で並列化の意味を失う) / (C) 独立 task を複数 message に散らす (peak=1 落ち)。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。
 
-**Agent 直列使用の禁止 (優先順 1 位「速さ」の帰結)**: agent を使うなら必ず並列 fan-out する。以下を禁じ手とする:
-- **禁止 A**: agent 1 体を単発発火する (「速さ」で inline に負ける。単発は inline 一択)
-- **禁止 B**: agent → 結果を見る → 次の agent を発火する逐次運用 (peak=1 で並列化の意味を失う)
-- **禁止 C**: 独立 task を複数 message に散らす (初回 message に全 bundle しないと peak=1 に落ちる)
+**例外 (serial_reason 明示で許容)**: 前 agent の結果に**真に依存**する場合のみ prompt に `serial_reason: <依存内容 1 行>` 明記で逐次発火可 (counter 対象外)。独立 task への濫用禁止。詳細: `references/auto-delegation-detailed.md` § serial_reason declaration。
 
-**例外 (serial_reason 明示で許容)**: 前 agent の結果に**真に依存**する場合のみ、prompt に `serial_reason: <依存内容 1 行>` を明記して逐次発火可 (counter 対象外)。独立 task への濫用禁止。詳細: `references/auto-delegation-detailed.md` § serial_reason declaration。
-
-**判定 flow**:
-- **N=1** → **inline** (agent 単発禁止)
-- **N≥2 独立** → **agent 並列 bundle** (単一 message に N tool_use)
-- **N≥2 依存 chain** → **原則 inline** (agent 直列を組むより速い、context 断絶もない)
-- **例外**: 依存 chain の各 step 内に**さらに独立 sub-task が 2+ ある**場合のみ、step 内で agent 並列 fan-out (`[[feedback-no-single-agent-overload]]`)。step 内が単一 task なら inline。
+**判定 flow**: N=1 → inline / N≥2 独立 → agent 並列 bundle / N≥2 依存 chain → 原則 inline (直列より速い) / 例外: 依存 chain の step 内に独立 sub-task 2+ ある場合のみ step 内で agent 並列 (`[[feedback-no-single-agent-overload]]`)。
 
 **Subagent silent-fail guard**: subagent では `AskUserQuestion` 不可 + permission prompt 系 tool auto-deny で **silent fail**。approval-gated edit / 判断 fork は parent escalate (`status: blocked` + `issues_blocking[]`)。canonical: `agents/developer-agent.md` § Silent-fail guard。
 
@@ -142,15 +133,11 @@ AI を**思考パートナー**として扱う。subagent report の数値 / fil
 
 ## Session Efficiency
 
-**Autonomous mode ON by default + 質問抑制 default**。質問許可は 4 条件 (破壊的操作 / scope 完全欠落 / 推奨拮抗 / 既存方針競合) のみ。canonical: `rules/minimize-questions.md`。Long output = conclusion-first + PREP。Decision request = leading `要決定:` block。Token budget: Read with `limit`/`offset` (>200-line files)、Bash long output via `| head/tail -N`、code via Serena `find_symbol`。Full list: `references/session-efficiency-detailed.md`。
+Autonomous mode ON、質問抑制 default (canonical: `rules/minimize-questions.md`)。Long output = conclusion-first + PREP、Decision request = 先頭 `要決定:` block、Token budget = Read `limit`/`offset` + Bash `| head/tail`、code = Serena `find_symbol`。詳細: `references/session-efficiency-detailed.md`。
 
 ## Public-repo private-data block
 
-**全 repo 共通 (public / private 問わず)**: commit message 本文 / trailer / footer、PR title / body、issue / MR comment に**具体的な人名 / GitHub handle (`@<handle>`) / Slack display name / 社員 alias を書かない**。Co-Authored-By trailer の AI marker (`Claude Opus 4.7` 等) は人物ではないため対象外。レビュー指摘の引用が必要なら handle を伏せて「レビュー指摘」と総称する。canonical: `~/ai-tools/memory/feedback_no_personal_name_in_commit.md`
-
-**ai-tools repo は public**。社内 product 名 / 社内識別子 / 個人名 / 会社名 / project 固有名詞を `~/ai-tools/` 配下 file・commit message に書込禁止。`pre-tool-use.sh` hard block、canonical list: `~/.claude/references-private/private-name-list.txt`。詳細: `rules/public-repo-private-data-block.md` (`[[public-repo-social-hit-incident]]`)
-
-**Hook block / NG-DICTIONARY.md**: AI定型語 / カタカナ造語禁止 / 難読漢語 / 非日常英語を hook block。**既存 key の name 変更禁止** (hook が exact match 参照)。詳細: `guidelines/writing/NG-DICTIONARY.md`
+commit / PR / issue / MR に**人名 / handle / Slack name / 社員 alias 書込禁止** (全 repo 共通、Co-Authored-By AI marker は対象外)。**ai-tools は public** のため社内 product / 個人名 / 会社名 / project 固有名詞も `~/ai-tools/` 配下 file と commit message に書込禁止 (`pre-tool-use.sh` hard block、canonical list: `~/.claude/references-private/private-name-list.txt`)。詳細: `rules/public-repo-private-data-block.md` + `guidelines/writing/NG-DICTIONARY.md` (hook block 語、既存 key rename 禁止)。
 
 ## Rewind / Context Management
 
@@ -194,9 +181,7 @@ Apply relevant items only. Scale by change size (typo → #6 / new feature → a
 
 ## Root Cause Analysis
 
-Structural fix over symptomatic. **Reproduce → identify → design → verify** 4 steps required. Details: `/root-cause` skill。Production rollback: revert PR → main merge → deploy が CI canonical path。直接 platform 操作 (ECS task def rollback 等) は上書きされるため revert PR と並行実施 (`[[feedback-rollback-via-revert-pr]]`)。
-
-**incident 調査時の注意**: ローカル再現 = 真因確定と同一視しない。症状 endpoint に視野を閉じず、error signature を service 横断で時系列集計 + infra メトリクス (DB row_lock_time / blocked_transactions 等) を必ず確認する。canonical: `rules/incident-local-repro-not-root-cause.md`。
+Structural fix over symptomatic (Reproduce → identify → design → verify 4 steps)。詳細: `/root-cause` skill。Production rollback は revert PR → main merge → deploy 経路 (`[[feedback-rollback-via-revert-pr]]`)。incident 調査時: ローカル再現 = 真因確定と同一視しない (canonical: `rules/incident-local-repro-not-root-cause.md`)。
 
 ## Compounding Engineering
 
@@ -208,11 +193,9 @@ Misbehavior / non-obvious success → document immediately → auto-avoid next s
 
 外向き text を書く前に **today's commits を確認** (`git log --since=midnight --pretty=format:'%h %s'`)。hook が write-type tool 前に auto-inject (2 source: working repo + `~/ai-tools` guidelines)。code comment: `guidelines/writing/code-comment.md`。
 
-## Writing Style (genshijin OFF default)
+## Writing Style
 
-chat も外向き text も **常体 plain JP の開いた文章** (〜する / 〜した、主語明示、指示語禁止) で書く。**閉じてない文章を全 context で禁止する**: 体言止め羅列 / 助詞省略 / 名詞ぶつ切り / 動詞省略 / 主語省略の連発。bullet 内も文として完結させる。canonical: `rules/genshijin.md` + `guidelines/writing/PRINCIPLES.md` + `guidelines/writing/NG-DICTIONARY.md`
-
-**AI定型語 hook block**: 外向き text に AI定型語 (NG-DICTIONARY.md canonical) が含まれると `hooks/pre-tool-use.sh` が exit 2 でブロック。削除・置換して再実行 (`~/.claude/logs/jp-quality-block.log`)。**commit message draft 前だけでなく、work-context / decision doc / gh comment / MEMORY.md 等の file 書き込み前にも NG 語を先手 sweep する** (登録済み語の block が retry 2〜3 往復のトークン損失を生むため。頻出は 該当なし 系 / 難読漢語 / AI 段取り定型)。canonical: `guidelines/writing/NG-DICTIONARY.md`
+canonical: `rules/genshijin.md` (常体 plain JP、閉じてない文章禁止) + `guidelines/writing/NG-DICTIONARY.md` (AI定型語 hook block、file 書込前に先手 sweep で retry 損失を避ける)。
 
 ## Default Readability + Writing Priority
 

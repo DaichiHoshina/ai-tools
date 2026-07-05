@@ -246,6 +246,11 @@ sync_to_local() {
                     rm -f "$dst"/test-*.sh 2>/dev/null || true
                     print_info "  → テストファイル(test-*.sh)を除外"
                 fi
+                # skills の .system/ 配下 (OpenAI Codex 向け、Claude Code から使わない) を除外
+                if [ "$item" = "skills" ] && [ -d "$dst/.system" ]; then
+                    rm -rf "$dst/.system" 2>/dev/null || true
+                    print_info "  → skills/.system/ を除外"
+                fi
                 # 退避していた gh skill 管理スキルを復元
                 if [ -n "$gh_bak" ]; then
                     restore_gh_skills "$dst" "$gh_bak"
