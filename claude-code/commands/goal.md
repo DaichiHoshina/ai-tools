@@ -86,7 +86,7 @@ Completed: <yes/no>
 
 ## Cadence (out of scope)
 
-Single-invocation only. Recurring / scheduled execution is user-managed via cron (see `scripts/install-hook-bench-cron.sh` as pattern reference). Cadence integration is planned in `commands/loop.md` (`/loop`) — see `references/boris-style-mapping.md` "未取り込み" list.
+Single-invocation only. Recurring / scheduled execution is user-managed via cron (see `scripts/install-hook-bench-cron.sh` as pattern reference). Cadence integration is planned in `commands/loop.md` (`/loop`、未作成) — see `references/boris-style-mapping.md` "未取り込み" list.
 
 ## Related
 

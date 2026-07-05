@@ -74,13 +74,7 @@ metadata:
 
 ## Options
 
-| Arg | Behavior |
-|-----|----------|
-| (none) | **default = clear**、個別 file 作らず MEMORY.md に 1 行 prepend |
-| `<topic>` | 同日 exact match あれば **auto merge**、無ければ **new file** 作成 (質問なし) |
-| `exit` | auto merge/new + saved path / restore 手順出力 (topic は AI 決定) |
-| `--preview` | dry-run、body を chat 出力のみ。write も MEMORY.md 更新もしない。`<topic>` と併用可 (`/memory-save foo --preview`) |
-| `clear` | default と同義 (backward compat) |
+→ Mode 判定 (上記 `## Mode 判定 (arg → mode)` table) を参照する。
 
 ## `clear` post-processing
 

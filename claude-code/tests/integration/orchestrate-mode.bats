@@ -65,7 +65,7 @@ setup() {
 
 # self-verify red 化手順 (実装者必須実行):
 # 1. orchestrate-mode.md から `## Firing protocol` heading を削除 → case 1 FAIL 確認
-# 2. flow.md から `## --orchestrate` heading を削除 → case 2 FAIL 確認
+# 2. flow.md から `## Orchestration (forced)` heading を削除 → case 2 FAIL 確認
 # 3. delegation-prompt.md から `## 0. Parent pre-delegation checklist` heading を削除 → case 3 FAIL 確認
 # 4. 全 file を git checkout で復元 → bats 全件 PASS 確認
 # pass-by-coincidence 排除確認済

@@ -13,7 +13,7 @@ Use after compaction (conversation compression) or when saying "continue". Resto
 
 > **vs session-start.sh**: session-start runs auto at session start with memory load. `/reload` is **post-compaction re-restore** only.
 
-> **CLAUDE.md compliance**: Serena `.serena/memories/` は read/write 禁止。auto-memory (`~/ai-tools/memory/` + `~/.claude/projects/.../memory/`) のみ使う。
+> **CLAUDE.md compliance**: Serena `.serena/memories/` は read/write 禁止。projects/memory (`~/.claude/projects/.../memory/`) は compact-restore の read + rm のみ許可 (write 禁止)。write は `~/ai-tools/memory/` 固定。
 
 ## Usage
 

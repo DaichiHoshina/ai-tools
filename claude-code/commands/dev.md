@@ -83,9 +83,11 @@ Flow: identify file → fix (Serena MCP) → verify (lint/type) → propose comm
 | Backend | `backend-dev` recommended |
 
 ```
-/load-guidelines        # summary only (~2.5K tokens)
-/load-guidelines full   # w/ detail (~5.5K tokens)
+load-guidelines skill        # summary only (~2.5K tokens、Skill tool 経由)
+load-guidelines skill (full) # w/ detail (~5.5K tokens、Skill tool 経由)
 ```
+
+Note: `load-guidelines` は skill (`skills/load-guidelines/`) であり、slash command (`commands/load-guidelines.md` は存在しない) ではない。
 
 Detailed mapping: `references/command-resource-map.md`.
 

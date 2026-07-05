@@ -22,7 +22,7 @@ Confirm hook/agent/lib changes execute correctly. No re-verify after.
 ## Flow (sequential, fail = stop)
 
 1. **syntax**: all changed `.sh` → `bash -n`, all `.json` → `jq empty`
-2. **unit**: `tests/bats/*.bats` matched test run (filter by changed file)
+2. **unit**: `bats -r tests/` matched test run (filter by changed file)
 3. **integration**: `hooks-integration.bats` etc
 4. **invariants**: `agent-frontmatter.bats` (agents change only)
 5. **behavior**: run changed hook with dummy JSON input, check expected output

@@ -6,7 +6,7 @@
 
 ## Gate A: Parallel-judgment self-review (step 6.5)
 
-Manager の allocation を fan-out 前に parent Opus が 5 観点で再評価。判定 log は chat 出力せず、FAIL のみ 1 行通知。
+Manager の allocation を fan-out 前に parent が 5 観点で再評価。判定 log は chat 出力せず、FAIL のみ 1 行通知。
 
 | 観点 | 検査 |
 |---|---|
@@ -21,7 +21,7 @@ FAIL → Manager 再実行 (allocation 破棄、step 4 へ戻る、max 1 回)。
 
 ## Gate B: Parallel-implementation self-review (step 8.5)
 
-aggregate 後、N 本の dev 差分を parent Opus が 4 観点で再評価。**diff type で有効観点 subset を変える**。diff type 定義:
+aggregate 後、N 本の dev 差分を parent が 4 観点で再評価。**diff type で有効観点 subset を変える**。diff type 定義:
 - **code (LSP 対応)**: `*.ts` / `*.tsx` / `*.js` / `*.go` / `*.py` / `*.rs` 等 LSP-backed 言語。propagation check に Serena 利用可
 - **code (LSP 外)**: `*.sh` / `*.bash` / `*.sql` / `*.yaml` / `*.json` / `*.toml` 等。propagation check は grep ベース fallback (`grep -rnF '<symbol>' .`)
 - **doc-only**: 全 task が `*.md` / `*.txt` 等のみ。propagation 観点は適用外
@@ -45,8 +45,8 @@ FAIL → step 9 P0 loop へ強制投入 (P0 0 件でも実行)。max 1 loop。ma
 - stage 1: 6 lens 並列 (`architecture / quality / security / root-cause / silent-failure / type-design` の構造系) + `--codex` × 1 = 7 agent (`--codex` 未設定時は 6 agent)
 - stage 2: 6 lens 並列 (`db-concurrency / readability / docs / test-coverage / logging / writing` の品質系 + db-concurrency) = 6 agent
 
-各 stage は **1 message bundle 発火** (flow.md L108 dev fan-out と同じ規則)。stage 間は parent Opus が stage 1 結果待ち後に stage 2 発火。各 reviewer は単一 lens 専念で深掘り、Stage B dedup は parent Opus 集約。
+各 stage は **1 message bundle 発火** (flow.md L108 dev fan-out と同じ規則)。stage 間は parent が stage 1 結果待ち後に stage 2 発火。各 reviewer は単一 lens 専念で深掘り、Stage B dedup は parent 集約。
 
 cost 帯: 12 lens stage split (10-12min 級、stage 1 = 7 agent / stage 2 = 6 agent)。default `/flow` は従来通り comprehensive + codex 並列 2 agent 維持。
 
-判定: 各 lens reviewer が Critical / Warning を返却 → parent Opus が `references/on-demand-rules/review-noise-discard.md` filter 後に dedup → step 9 P0 loop へ。
+判定: 各 lens reviewer が Critical / Warning を返却 → parent が `references/on-demand-rules/review-noise-discard.md` filter 後に dedup → step 9 P0 loop へ。

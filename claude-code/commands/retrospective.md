@@ -89,11 +89,7 @@ Delegation rule: 1 domain = 1 agent call. Never bundle multiple domains into 1 p
 
 If writing failures detected (user feedback "hard to read" / "AI-smelling" / "so what?"), accumulate examples to memory for next session's hook reference.
 
-**Save destination follows Phase 0 selection** (private / public).
-
-Save to: `~/.claude/projects/{project}/memory/writing_failure_{topic}.md` (frontmatter: `name` / `description` / `metadata.type: writing-failure` / `metadata.date`). Sections: What Happened / Relevant Location / Root Cause / Prevention (cite PRINCIPLES.md axis).
-
-Memories injected via `~/.claude/CLAUDE.md` at session start → next session avoids same failure.
+Save to: `~/ai-tools/memory/writing_failure_{topic}.md` (frontmatter: `name` / `description` / `metadata.type: writing-failure` / `metadata.date`). Sections: What Happened / Relevant Location / Root Cause / Prevention (cite PRINCIPLES.md axis).
 
 ### Phase 4: Adopt & Apply
 
@@ -101,7 +97,7 @@ AskUserQuestion → select proposals → implement (new skill / edit existing / 
 
 ### Phase 5: pending-improvements memory auto-update
 
-Read then re-write `~/.claude/projects/{project}/memory/pending-improvements.md` via `Write` (Serena `write_memory` forbidden — 2026-06-10 decision; avoid dual management; use read-modify-write on auto-memory file):
+Read then re-write `~/ai-tools/memory/pending-improvements.md` via `Write` (Serena `write_memory` forbidden — 2026-06-10 decision; avoid dual management; use read-modify-write on auto-memory file):
 
 - Append today's session results to completed list
 - Remove consumed items from pending; record unadopted proposals under "remaining"
@@ -127,12 +123,7 @@ Read then re-write `~/.claude/projects/{project}/memory/pending-improvements.md`
 
 ## Output Prose
 
-Report for Notion/md for others. Apply `guidelines/writing/long-form-doc.md` principles:
-
-- conclusion (main learnings) first
-- "improved" / "efficient" → numbers: frequency / count / time
-- "recommend" + 1-line reason
-- end with next action (when/who/what)
+Notion/md 向け prose は canonical `guidelines/writing/long-form-doc.md` に従う (conclusion-first / 数値化 / 推奨 + 理由 / next action)。
 
 ## Failure Handling
 

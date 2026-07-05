@@ -19,7 +19,7 @@ Design + language (auto-detect) + project type guidelines. Detail: `references/c
 1. **File count**: Glob / wc -l で file 数と line 数を取得
 2. **Undecided points**: edit scope / delete target / decision fork を列挙
 3. **Immediate decision (default)**: 各 undecided point に対し context (CLAUDE.md / memory / repo convention) から推奨を 1 件選び、1-line basis を添えて Step 2 へ進める
-4. **Sub question (exception only)**: AskUserQuestion (**max 1**) は scope input 完全欠落 / 2 推奨拮抗 / 破壊的操作・既存方針との明確衝突、のいずれかでのみ発火する
+4. **Sub question (exception only)**: AskUserQuestion (**max 1**、plan 特化の絞り込み。全体 canonical は max 2 = `rules/minimize-questions.md`) は scope input 完全欠落 / 2 推奨拮抗 / 破壊的操作・既存方針との明確衝突、のいずれかでのみ発火する
 5. **Skip condition (→ Step 2 直行)**: typo / 1 symbol rename / 1-2 file edit / 明示指示 / 推奨 1 件確定 → no question
 
 ## Step 2: Execution mode judgment (required)

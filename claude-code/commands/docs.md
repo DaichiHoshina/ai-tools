@@ -90,7 +90,7 @@ Type-specific templates:
 
 ### Step 5.5: Interactive rewrite (required)
 
-Detail / dict / template: `guidelines/writing/long-form-doc.md`。Pre-load `~/.claude/projects/{project}/memory/user_vocabulary.md` (既知語 skip)。3 layer (Intent / Understanding / Expression) を順次実行、合計 ≤9 item。Layer 2 の user 応答 text は AI 換言せず draft にそのまま織込み、`user_vocabulary.md` へ追記する。
+Detail / dict / template: `guidelines/writing/long-form-doc.md`。Pre-load `~/ai-tools/memory/user_vocabulary.md` (既知語 skip、projects/memory への Write は hook block 対象のため `~/ai-tools/memory/` 固定)。3 layer (Intent / Understanding / Expression) を順次実行、合計 ≤9 item。Layer 2 の user 応答 text は AI 換言せず draft にそのまま織込み、`user_vocabulary.md` へ追記する。
 
 ### Step 6: Output URL
 

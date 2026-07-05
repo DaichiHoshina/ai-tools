@@ -11,6 +11,8 @@ Semi-automated flow to integrate memory files into CLAUDE.md / ai-tools / projec
 
 Detailed routing criteria & proper-noun dictionary: `~/.claude/references-private/memory-promotion-flow.md`
 
+> **Fallback**: `references-private` は sync 管理外の machine-local file なので、当該 file が不在の machine では本 command の Step 内記述のみで判定する。
+
 ## Input
 
 | Arg | Action |
@@ -24,7 +26,7 @@ Detailed routing criteria & proper-noun dictionary: `~/.claude/references-privat
 ### Step 1: Target memory + same-topic candidate scan
 
 ```
-ls ~/.claude/projects/<project>/memory/
+ls ~/ai-tools/memory/
 ```
 
 - Read the argument memory_file

@@ -7,7 +7,9 @@ effort: low
 
 # /memory-clean - Memory housekeeping (auto-memory)
 
-自 memory の housekeeping と、他 repo memory からの汎用 knowledge 取込を **1 command で完結**させる。**Memory dir auto-detect**: `~/ai-tools/memory/` を優先、無ければ `~/.claude/projects/-Users-daichi-hoshina-ghq-github-com-DaichiHoshina-ai-tools/memory/` を fallback。
+自 memory の housekeeping と、他 repo memory からの汎用 knowledge 取込を **1 command で完結**させる。**Memory dir auto-detect**: `~/ai-tools/memory/` を優先、無ければ project の projects-memory dir (動的解決、`scripts/memory-save-helper.sh:_resolve_memory_dir` と同方式) を fallback。
+
+> **Housekeeping guard**: mv (trash) / prune / 自動修正の対象は `~/ai-tools/memory/` 配下のみ。projects/memory dir は fallback 検出時も scan (read) のみで、mv / rm / write はしない。
 
 > **Policy**: `mtime` を value proxy にしない。auto delete は work-context (date prefix で短命明示) と name/description exact dup のみ。
 >
