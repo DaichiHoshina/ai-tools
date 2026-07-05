@@ -348,6 +348,8 @@ setup_send_stop_notification() {
   mkdir -p "${HOME}/.claude"
   # short-message skip を default 無効化 (既存 test は短 message を許容前提のため)
   export CLAUDE_STOP_NOTIFY_MIN_LEN=0
+  # 通知 hard-off を bypass (send_stop_notification 関数自体の挙動を test したいため)
+  export CLAUDE_STOP_NOTIFY=1
 
   # stub script: terminal-notifier
   cat > "${TEST_TMPDIR}/terminal-notifier" << 'EOF'
@@ -371,7 +373,7 @@ EOF
 
 teardown_send_stop_notification() {
   rm -rf "${TEST_TMPDIR}"
-  unset TEST_TMPDIR CLAUDE_STOP_NOTIFY_MIN_LEN
+  unset TEST_TMPDIR CLAUDE_STOP_NOTIFY_MIN_LEN CLAUDE_STOP_NOTIFY
 }
 
 @test "send_stop_notification: min_len 未満の short message は notify skip" {
@@ -381,6 +383,17 @@ teardown_send_stop_notification() {
   local input='{"last_assistant_message":"test","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
   # 200ms 待って log が生成されないことを確認
+  sleep 0.2
+  [ ! -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: CLAUDE_STOP_NOTIFY 未設定なら hard-off (notify skip)" {
+  setup_send_stop_notification
+  # hard-off の test なので CLAUDE_STOP_NOTIFY を unset
+  unset CLAUDE_STOP_NOTIFY
+  local input='{"last_assistant_message":"long enough message here","cwd":"/tmp/project"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
   sleep 0.2
   [ ! -f "${TEST_TMPDIR}/terminal-notifier.log" ]
   teardown_send_stop_notification

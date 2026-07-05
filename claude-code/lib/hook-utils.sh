@@ -130,6 +130,13 @@ extract_json_fields() {
 # Stop/StopFailure共通の通知送信
 # Usage: send_stop_notification "$INPUT" "タイトル接尾辞" "サウンド名" "ntfyタグ" "ntfy優先度"
 send_stop_notification() {
+  # デスクトップ通知 (terminal-notifier + ntfy.sh) は default で完全無効化。
+  # 復活させたい時は CLAUDE_STOP_NOTIFY=1 を export する。
+  # caller 側 (hooks/stop.sh / stop-failure.sh) の env gate と二重にする hard-off。
+  if [[ "${CLAUDE_STOP_NOTIFY:-0}" != "1" ]]; then
+    return 0
+  fi
+
   local input="$1"
   local title_suffix="${2:-}"
   local sound="${3:-Glass}"
