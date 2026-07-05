@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
-argument-hint: "[--inline|--quick] <task-description>"
+argument-hint: "[--inline|--quick|--plan <file>] <task-description>"
 description: Default = developer-agent delegation. Inline for 1-symbol fix only. --inline forces inline, --quick for short prompts, Team via /flow
 ---
 
@@ -26,8 +26,21 @@ On `/dev` launch, delegate to `Task(developer-agent)` by default (model canonica
 /dev --quick <task>      # Fast mode (token-saving, 1-2 files)
 /dev --parallel <task>   # Worktree parallel (no PO/Manager, developer-agent ×N)
 /dev <task>              # Normal (developer-agent delegation)
+/dev --plan <file>       # /plan output intake (skip re-analysis & pre-impl confirm)
 # Team hierarchy + parallel needed? Use /flow --parallel
 ```
+
+## Plan intake (`--plan` / auto-detect)
+
+`/plan` の成果物を入力として受け取り、scope 再分析と実行前確認を省いて即実装に入る。
+
+| 入力 | 動作 |
+|---|---|
+| `--plan <file>` | plan file を Read し、Requirements / Phase / mode 判定根拠 / worktree 判断をそのまま採用する。Execution flow 2-4 (再分析 / 再計画 / user confirm) を skip し Phase 1 から実装する |
+| flag なし + 同 session で `/plan` 済 | 当該 plan を同様に採用する (plansDirectory の最新該当 file) |
+| plan なし | 通常 flow (Execution flow 1-6) |
+
+plan は SoT として扱い、mode 再判定をしない。plan と実 code の乖離 (file 消失 / symbol 改名等) を検出した場合のみ再分析に戻し、乖離内容を 1 行報告する。破壊的操作 (削除 / migration / force 系) を含む Phase は plan 有無に関わらず実行前確認する。
 
 ## --parallel spec
 
@@ -79,9 +92,9 @@ Detailed mapping: `references/command-resource-map.md`.
 ## Execution flow
 
 1. Load guidelines
-2. Analyze code w/ Serena MCP
-3. Plan w/ TaskCreate
-4. Confirm w/ user
+2. Analyze code w/ Serena MCP (plan intake 時 skip)
+3. Plan w/ TaskCreate (plan intake 時 = plan の Phase をそのまま登録)
+4. Confirm w/ user (plan intake 時 skip、plan 承認済とみなす)
 5. Implement
 6. Run lint/test
 
@@ -119,4 +132,4 @@ PushNotification: notify only if task > 3min (`[dev] {task} done`).
 | `/refactor` | structure improvement w/o behavior change. Can run after `/dev` |
 | `/lint-test` | CI-equivalent checks. Recommended after `/dev` |
 
-**Pre-impl user confirmation required. Use Serena MCP for code ops.**
+**Pre-impl user confirmation required (plan intake 時は skip、破壊的操作のみ確認). Use Serena MCP for code ops.**

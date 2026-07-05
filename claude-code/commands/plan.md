@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*, mcp__context7__*
-argument-hint: "<task-or-scope>"
-description: Design & planning — strategy formulation via PO Agent (read-only)
+argument-hint: "[--go] <task-or-scope>"
+description: Design & planning — strategy formulation via PO Agent (read-only, --go chains into impl)
 ---
 
 ## Boundary w/ `/design-doc`
@@ -69,6 +69,14 @@ Anti-pattern filter (investigation / plan discard): `references/on-demand-rules/
 
 Phase consolidation (same root cause → 1 Phase) / detail-level alignment / convention alignment / Zero-phase valid (no padding). Do not include judgment log in plan file.
 
+## Step 3: Handoff to implementation (required)
+
+Plan 保存後、実装への受け渡しを必ず行う。判定 mode を user が手で組み立て直す状態を残さない。
+
+1. **Next command block を必ず出力**: Step 2 の判定 mode を、plan file path 込みで copy-paste 可能な 1 行にする (例: `/dev --plan ~/.claude/plans/2026-07-05_ai-tools_foo.md` / `/flow N=3 --plan <path>` / inline 判定時は「このまま実装を指示すれば inline で開始する」の 1 行)
+2. **引き継ぐ context**: Requirements / Phase 分割 / mode 判定根拠 / worktree 判断を plan file に閉じる。実装側は plan を SoT として読み、scope 再調査と mode 再判定をしない
+3. **`--go` flag**: `/plan --go <task>` は plan 出力 + 保存後、そのまま判定 mode で実装を開始する (Next command を自分で発火、user 確認なし)。破壊的操作 (削除 / migration / force 系) を含む Phase のみ実行前確認に戻す
+
 ## Output format
 
 ```
@@ -93,6 +101,9 @@ Phase 2: [task]
 ## Worktree
 - Needed: Yes/No
 - Branch name: [propose]
+
+## Next command
+[copy-paste 可能な 1 行: `/dev --plan <plan-file>` / `/flow N=<n> --plan <plan-file>` 等]
 ```
 
 ## Plan storage
@@ -103,4 +114,4 @@ Save to `plansDirectory` (default `~/.claude/plans`) as `YYYY-MM-DD_[project]_[f
 
 PO Agent launch fail → direct downgrade + warn (complex 時は requirement split 提案) / Guideline load fail → common のみで継続、maintainer 判断 / Serena MCP fail → grep/Glob 代替 + 精度低下 warn / `plansDirectory` write fail → chat 出力のみ + manual save 誘導
 
-**Read-only** - Implementation via `/dev`.
+**Read-only** (default) — 実装は Step 3 の Next command 経由で開始する。`--go` 指定時のみ plan 確定後にそのまま実装へ continue する。

@@ -16,7 +16,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 **Golden workflow (頻出 3 種)**
 
-- 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal の 6 択を Step 2 で判定、/goal は loop 系 objective gate task に限定)。**mode 判定のみ軽量に済ませたい時**は `/mode <task>` (inline / agent 並列の 2 択判定、設計・phase 分割なし)
+- 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal の 6 択を Step 2 で判定、/goal は loop 系 objective gate task に限定)。plan → 実装は **Next command block** (`/dev --plan <file>` 等) で受け渡す、`/plan --go` なら判定 mode のままそのまま実装へ continue する。**mode 判定のみ軽量に済ませたい時**は `/mode <task>` (inline / agent 並列の 2 択判定、設計・phase 分割なし、判定後そのまま実装開始)
 - worktree 隔離 + commit + ff-merge + push (`[[ai-tools-worktree-workflow]]` canonical、**dir 名 slug と branch 名は必ず一致させる** → `rules/worktree-branch-name-match.md`)。**前提: まだ編集に着手していない状態で切る**。worktree pattern は「clean な状態から wt を作り、wt 内で初めて編集する」流れ。**既に main の working tree を編集済みなら worktree を使わない** (`git stash` した変更は新 wt に持ち込まれず取り残される罠、`[[worktree-fresh-baseref-uncommitted-trap]]`)。既編集時は下記 fallback を使う:
   ```bash
   # (A) 未着手から: worktree で隔離
