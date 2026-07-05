@@ -4,7 +4,9 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_tc_src="${BASH_SOURCE[0]}"
+[[ "${_tc_src}" == /* ]] || _tc_src="${PWD}/${_tc_src}"
+SCRIPT_DIR="${_tc_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 # shellcheck source=lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"

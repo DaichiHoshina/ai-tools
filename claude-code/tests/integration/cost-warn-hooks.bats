@@ -599,3 +599,52 @@ _make_session_jsonl() {
   rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
         "${log_dir}/.dev-agent-fire-lastts-${session_id}"
 }
+
+# =============================================================================
+# Case S1-J: 直前 bundle が並列 (size>=2) なら新 bundle 開始でも counter 加算しない
+# 正当な多段 batch (並列 bundle → merge → 並列 bundle) を hard block する
+# false positive の regression test (2026-07-05 incident)。
+# =============================================================================
+@test "bundle-violation: no block when previous fire was a parallel bundle" {
+  local session_id="bundle-multibatch-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # 並列 bundle のみの多段 batch session = 確定 solo 0。直前 bundle size=2 (並列)
+  # なら今回の新 bundle 開始は counter 対象外 → 何 batch 重ねても block しない
+  printf '0\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  printf '2\n' > "${log_dir}/.dev-agent-fire-bundlesize-${session_id}"
+  touch "${log_dir}/.bundle-violation-warned-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "bundle-violation-block" ]]
+  # counter は据え置き (並列 bundle 直後の新 bundle は solo 未確定)
+  local _post_count
+  _post_count=$(cat "${log_dir}/.dev-agent-fire-count-${session_id}")
+  [ "${_post_count}" = "0" ]
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}" \
+        "${log_dir}/.dev-agent-fire-bundlesize-${session_id}" \
+        "${log_dir}/.bundle-violation-warned-${session_id}"
+}

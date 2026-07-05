@@ -7,7 +7,9 @@ set -euo pipefail
 
 exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_sv_src="${BASH_SOURCE[0]}"
+[[ "${_sv_src}" == /* ]] || _sv_src="${PWD}/${_sv_src}"
+SCRIPT_DIR="${_sv_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 require_jq
 

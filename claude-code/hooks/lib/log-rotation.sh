@@ -33,3 +33,22 @@ _rotate_log_if_needed() {
     ls -1t "${log_file}".*.bak 2>/dev/null | tail -n +$((keep_bak_count + 1)) | xargs -I{} rm -f {} 2>/dev/null || true
   fi
 }
+
+# usage: _rotate_log_by_lines_if_needed <log_file> [max_lines] [keep_lines]
+# 行数 base の rotation。max_lines 超過時に `tail -<keep_lines>` で in-place 切詰め。
+# max_lines 未指定時は _TH_LOG_ROTATION_LINES を使う。keep_lines 未指定時は max_lines/2。
+# bash builtin で行数カウント (wc -l fork を避ける)。
+_rotate_log_by_lines_if_needed() {
+  local log_file="$1"
+  local max_lines="${2:-${_TH_LOG_ROTATION_LINES}}"
+  local keep_lines="${3:-$(( max_lines / 2 ))}"
+  [[ -f "$log_file" ]] || return 0
+  local _lines=0
+  local _limit=$(( max_lines + 1 ))
+  while IFS= read -r _ && (( _lines < _limit )); do
+    _lines=$(( _lines + 1 ))
+  done < "$log_file" 2>/dev/null || true
+  if (( _lines > max_lines )); then
+    tail -"${keep_lines}" "$log_file" > "${log_file}.tmp" && mv "${log_file}.tmp" "$log_file"
+  fi
+}

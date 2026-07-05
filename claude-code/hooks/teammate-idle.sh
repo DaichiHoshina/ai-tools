@@ -6,8 +6,12 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_ti_src="${BASH_SOURCE[0]}"
+[[ "${_ti_src}" == /* ]] || _ti_src="${PWD}/${_ti_src}"
+SCRIPT_DIR="${_ti_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# shellcheck source=lib/log-rotation.sh
+source "${SCRIPT_DIR}/lib/log-rotation.sh"
 
 # ICON_* \u306f hook-utils.sh \u3067\u5b9a\u7fa9\u6e08\u307f
 
@@ -29,11 +33,9 @@ TZ=UTC printf -v TIMESTAMP '%(%Y-%m-%dT%H:%M:%SZ)T' -1
 LOG_DIR="${HOME}/.claude/logs"
 mkdir -p "$LOG_DIR"
 
-# イベントログに記録（1000行超でローテーション）
+# イベントログに記録（_TH_LOG_ROTATION_LINES 超でローテーション）
 LOG_FILE="${LOG_DIR}/agent-team-events.log"
-if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE" | tr -d ' ') -gt 1000 ]]; then
-  tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
-fi
+_rotate_log_by_lines_if_needed "$LOG_FILE"
 echo "[${TIMESTAMP}] IDLE | teammate=${TEAMMATE_NAME} | team=${TEAM_NAME}" >> "$LOG_FILE"
 
 # idle回数カウント（最後の START 以降の IDLE 数）

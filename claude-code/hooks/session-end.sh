@@ -9,7 +9,9 @@ trap '' PIPE
 
 exec 2>>"$HOME/.claude/logs/hook-errors.log"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_se_src="${BASH_SOURCE[0]}"
+[[ "${_se_src}" == /* ]] || _se_src="${PWD}/${_se_src}"
+SCRIPT_DIR="${_se_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 require_jq
 

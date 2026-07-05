@@ -4,7 +4,9 @@
 
 set -euo pipefail
 
-HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_pd_src="${BASH_SOURCE[0]}"
+[[ "${_pd_src}" == /* ]] || _pd_src="${PWD}/${_pd_src}"
+HOOK_DIR="${_pd_src%/*}"
 LIB_DIR="${HOOK_DIR}/../lib"
 source "${LIB_DIR}/hook-utils.sh"
 require_jq

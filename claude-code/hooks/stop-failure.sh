@@ -3,7 +3,9 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_sf_src="${BASH_SOURCE[0]}"
+[[ "${_sf_src}" == /* ]] || _sf_src="${PWD}/${_sf_src}"
+SCRIPT_DIR="${_sf_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 require_jq
 

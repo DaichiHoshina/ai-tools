@@ -21,7 +21,9 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_pc_src="${BASH_SOURCE[0]}"
+[[ "${_pc_src}" == /* ]] || _pc_src="${PWD}/${_pc_src}"
+SCRIPT_DIR="${_pc_src%/*}"
 # shellcheck source=../lib/hook-utils.sh
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 

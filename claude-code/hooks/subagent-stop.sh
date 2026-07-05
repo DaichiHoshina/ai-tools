@@ -4,8 +4,12 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_sas_src="${BASH_SOURCE[0]}"
+[[ "${_sas_src}" == /* ]] || _sas_src="${PWD}/${_sas_src}"
+SCRIPT_DIR="${_sas_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# shellcheck source=lib/log-rotation.sh
+source "${SCRIPT_DIR}/lib/log-rotation.sh"
 
 # jq前提条件チェック
 require_jq
@@ -26,11 +30,9 @@ TZ=UTC printf -v TIMESTAMP '%(%Y-%m-%dT%H:%M:%SZ)T' -1
 LOG_DIR="${HOME}/.claude/logs"
 mkdir -p "$LOG_DIR"
 
-# ログファイルに記録（1000行超でローテーション）
+# ログファイルに記録（_TH_LOG_ROTATION_LINES 超でローテーション）
 LOG_FILE="${LOG_DIR}/subagent-events.log"
-if [[ -f "$LOG_FILE" ]] && [[ $(wc -l < "$LOG_FILE") -gt 1000 ]]; then
-  tail -500 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
-fi
+_rotate_log_by_lines_if_needed "$LOG_FILE"
 echo "[${TIMESTAMP}] STOP  | agent_id=${AGENT_ID} | type=${AGENT_TYPE} | cwd=${CWD}" >> "$LOG_FILE"
 
 # --- Analytics記録をバックグラウンドへ ---

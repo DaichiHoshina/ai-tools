@@ -326,6 +326,14 @@ get_additional_context() {
   [[ "$ctx" =~ "[jp-quality-outward-mode]" ]]
 }
 
+@test "user-prompt-submit: 共有テキスト trigger で [jp-quality-outward-mode] inject される (share/outward union guard)" {
+  cd "$TEST_TMPDIR"
+  local input='{"prompt":"チーム向けの共有テキストを整えて"}'
+  local out=$(run_hook "$input")
+  local ctx=$(get_additional_context "$out")
+  [[ "$ctx" =~ "[jp-quality-outward-mode]" ]]
+}
+
 @test "user-prompt-submit: trigger なし prompt では [jp-quality-outward-mode] inject されない" {
   cd "$TEST_TMPDIR"
   local input='{"prompt":"コードをリファクタリングして"}'

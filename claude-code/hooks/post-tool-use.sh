@@ -5,7 +5,9 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_ptu_src="${BASH_SOURCE[0]}"
+[[ "${_ptu_src}" == /* ]] || _ptu_src="${PWD}/${_ptu_src}"
+SCRIPT_DIR="${_ptu_src%/*}"
 # hook-utils.sh は Edit/Write/MultiEdit/Bash tool 時のみ lazy source（Read/Glob/Grep 等では不要）
 # writing-self-check.sh / bats-self-check.sh は md/bats case 内で lazy source
 

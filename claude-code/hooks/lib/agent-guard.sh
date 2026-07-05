@@ -233,6 +233,7 @@ _check_developer_agent_bundle_violation() {
 
   local _COUNT_FILE="${_LOG_DIR}/.dev-agent-fire-count-${session_id}"
   local _LASTTS_FILE="${_LOG_DIR}/.dev-agent-fire-lastts-${session_id}"
+  local _SIZE_FILE="${_LOG_DIR}/.dev-agent-fire-bundlesize-${session_id}"
   local _FENCE_FILE="${_LOG_DIR}/.bundle-violation-warned-${session_id}"
   local _BLOCK_FENCE_FILE="${_LOG_DIR}/.bundle-violation-blocked-${session_id}"
 
@@ -251,11 +252,16 @@ _check_developer_agent_bundle_violation() {
 
   local _ELAPSED=$(( _NOW_NS - _LAST_NS ))
 
-  # 500ms 以内 = 1 message bundle 並列 (正常)、counter 維持 (リセットしない)
+  # _TH_PARALLEL_WINDOW_NS (30s) 以内 = 1 message bundle 並列 (正常)、counter 維持 (リセットしない)
   # 旧実装は counter=0 リセットだったため「並列を 1 回挟むと sequential 検出が永久に再起動」
   # する bug があり、混合パターン (並列 → 直列 → 直列) を見逃していた。
   # 累積 sequential 発火数を維持して直列 chain を必ず検出する。
+  # bundle size を記録し、次の bundle 開始時に「直前 bundle が solo だったか」を後判定する。
   if (( _LAST_NS > 0 && _ELAPSED <= _TH_PARALLEL_WINDOW_NS )); then
+    local _BSZ=1
+    [[ -f "$_SIZE_FILE" ]] && read -r _BSZ < "$_SIZE_FILE" 2>/dev/null || _BSZ=1
+    [[ "$_BSZ" =~ ^[0-9]+$ ]] || _BSZ=1
+    printf '%s\n' "$(( _BSZ + 1 ))" > "$_SIZE_FILE" 2>/dev/null || true
     return 0
   fi
 
@@ -268,24 +274,39 @@ _check_developer_agent_bundle_violation() {
     printf '%s | %s | serial_reason_declared | elapsed_ms=%s\n' \
       "$_TS_SERIAL" "$session_id" "$(( _ELAPSED / 1000000 ))" \
       >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
+    # size=0 (exempt marker): 次の bundle 開始時に solo として count させない
+    printf '0\n' > "$_SIZE_FILE" 2>/dev/null || true
     return 0
   fi
 
-  # counter ++ (sequential 発火 = elapsed > _TH_PARALLEL_WINDOW_NS の累積)
+  # 新 bundle 開始: 直前 bundle の size で solo / 並列を後判定する。
+  # 並列 bundle (size>=2) の先頭発火も無条件 +1 する旧実装では、正当な多段 batch
+  # (並列 bundle → merge → 並列 bundle) が batch 数回で hard block に到達する
+  # false positive があった (2026-07-05 incident)。solo bundle (size==1) が確定した
+  # 時のみ counter++ し、判定値 _CUR = 確定 solo 数 + 今回 (暫定 solo) で
+  # 純粋な直列 chain の warn (2 発目) / block (3 発目) タイミングは従来と同一に保つ。
   # NOTE: fence check はカウンタ更新・block 判定の後に置く。
   # 旧実装は fence check を先に置いていたため「warn 発火後の 3 回目以降が early return」
   # し、hard block threshold (_TH_BUNDLE_HARD_BLOCK_SEQ=3) に永遠に到達しない bug があった。
-  local _CUR=0
-  [[ -f "$_COUNT_FILE" ]] && read -r _CUR < "$_COUNT_FILE" 2>/dev/null || _CUR=0
-  [[ "$_CUR" =~ ^[0-9]+$ ]] || _CUR=0
-  _CUR=$(( _CUR + 1 ))
-  printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
+  local _PREV_SIZE=0
+  [[ -f "$_SIZE_FILE" ]] && read -r _PREV_SIZE < "$_SIZE_FILE" 2>/dev/null || _PREV_SIZE=0
+  [[ "$_PREV_SIZE" =~ ^[0-9]+$ ]] || _PREV_SIZE=0
+  printf '1\n' > "$_SIZE_FILE" 2>/dev/null || true
 
-  # 初回 fire (_CUR==1) で bundle 判断を先出し inject する。
+  local _CONFIRMED=0
+  [[ -f "$_COUNT_FILE" ]] && read -r _CONFIRMED < "$_COUNT_FILE" 2>/dev/null || _CONFIRMED=0
+  [[ "$_CONFIRMED" =~ ^[0-9]+$ ]] || _CONFIRMED=0
+  if (( _PREV_SIZE == 1 )); then
+    _CONFIRMED=$(( _CONFIRMED + 1 ))
+    printf '%s\n' "$_CONFIRMED" > "$_COUNT_FILE" 2>/dev/null || true
+  fi
+  local _CUR=$(( _CONFIRMED + 1 ))
+
+  # 初回 fire (直前 bundle なし + 確定 solo なし) で bundle 判断を先出し inject する。
   # warn (2 発目) 時点では 1 体目の直列実行時間 (実測 2-4 分) を既に浪費している。
   # 30d 実測 (flow-baseline n=22) で peak_concurrency=1 が 10 回 = 45% あり、
   # 発火前の task 全列挙を促すのが最大の並列化 lever。
-  if (( _CUR == 1 )); then
+  if (( _PREV_SIZE == 0 && _CONFIRMED == 0 )); then
     local _PRE_CHECK="[bundle-pre-check] developer-agent 初回発火。残 task を今全列挙し、独立 task が残るなら次は 1 message に N tool_use で bundle 発火する (逐次発火は 2 発目 warn / ${_TH_BUNDLE_HARD_BLOCK_SEQ} 発目 hard block)。前 agent の結果に依存する逐次発火は prompt に serial_reason: <依存内容 1 行> を書く (counter 対象外)"
     if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
       ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_PRE_CHECK}"
