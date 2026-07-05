@@ -144,6 +144,13 @@ send_stop_notification() {
   local project_name
   project_name=$(basename "${cwd:-unknown}")
 
+  # short-message skip: 通知本文が閾値未満なら通知しない (「test」等の一言応答による noise 抑制)。
+  # 閾値は CLAUDE_STOP_NOTIFY_MIN_LEN で変更可 (default 8)。0 で skip 無効化。
+  local min_len="${CLAUDE_STOP_NOTIFY_MIN_LEN:-8}"
+  if [[ "${min_len}" != "0" ]] && [[ ${#last_msg} -lt ${min_len} ]]; then
+    return 0
+  fi
+
   local notify_msg="${last_msg:0:80}"
   if [ ${#last_msg} -gt 80 ]; then
     notify_msg="${notify_msg}..."

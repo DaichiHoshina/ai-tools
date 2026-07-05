@@ -346,6 +346,8 @@ setup_send_stop_notification() {
   export PATH="${TEST_TMPDIR}:${PATH}"
   export HOME="${TEST_TMPDIR}/home"
   mkdir -p "${HOME}/.claude"
+  # short-message skip を default 無効化 (既存 test は短 message を許容前提のため)
+  export CLAUDE_STOP_NOTIFY_MIN_LEN=0
 
   # stub script: terminal-notifier
   cat > "${TEST_TMPDIR}/terminal-notifier" << 'EOF'
@@ -369,7 +371,19 @@ EOF
 
 teardown_send_stop_notification() {
   rm -rf "${TEST_TMPDIR}"
-  unset TEST_TMPDIR
+  unset TEST_TMPDIR CLAUDE_STOP_NOTIFY_MIN_LEN
+}
+
+@test "send_stop_notification: min_len 未満の short message は notify skip" {
+  setup_send_stop_notification
+  # skip 発火のため min_len を default (8) に戻す
+  unset CLAUDE_STOP_NOTIFY_MIN_LEN
+  local input='{"last_assistant_message":"test","cwd":"/tmp/project"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
+  # 200ms 待って log が生成されないことを確認
+  sleep 0.2
+  [ ! -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  teardown_send_stop_notification
 }
 
 # send_stop_notification は terminal-notifier / curl を background (&) で fire するため、
