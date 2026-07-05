@@ -142,6 +142,20 @@ send_stop_notification() {
   local ntfy_tags="${4:-robot}"
   local ntfy_priority="${5:-default}"
 
+  # user turn 以外からの呼び出しを skip する (実測 2026-07-05 /tmp/stop-hook-env-probe):
+  # - session_id なし = bats fixture / 手動 smoke (実 event は必ず session_id を持つ)
+  # - cursor_version あり = Claude Code 以外の editor (Cursor) が同 script を実行した場合
+  # - Stop event で background_tasks に running あり = agent / background shell 実行中。
+  #   task 完了後に main loop が再開し、次の user turn の Stop で改めて通知する
+  if printf '%s' "$input" | jq -e '
+      (has("session_id") | not)
+      or has("cursor_version")
+      or ((.hook_event_name == "Stop")
+          and ([.background_tasks[]? | select(.status == "running")] | length > 0))
+    ' >/dev/null 2>&1; then
+    return 0
+  fi
+
   local last_msg default_msg
   default_msg="作業が完了しました"
   last_msg=$(echo "$input" | jq -r ".last_assistant_message // \"${default_msg}\"")

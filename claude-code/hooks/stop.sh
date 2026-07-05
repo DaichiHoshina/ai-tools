@@ -12,10 +12,10 @@ source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 require_jq
 
 INPUT=$(cat)
-# Stop hook は user turn (Claude が停止して user 入力待ちになる時) にだけ発火する。
-# SubagentStop とは分離されており、subagent 完了通知は増えない。
-# noise (subprocess の /tmp cwd 由来 / 一言 message) は send_stop_notification 側の
-# short-message skip (CLAUDE_STOP_NOTIFY_MIN_LEN, default 8) と、caller が渡す title で吸収する。
+# 通知は「user の入力待ちになった時」だけ鳴らす。send_stop_notification 側で
+# (1) background task (agent / shell) 実行中の Stop、(2) session_id なし (test fixture /
+# 手動 smoke)、(3) cursor_version あり (Claude Code 以外の caller) を skip し、
+# 一言 message は short-message skip (CLAUDE_STOP_NOTIFY_MIN_LEN, default 8) で吸収する。
 # 明示的に off にしたい時は CLAUDE_STOP_NOTIFY=0 を export する。
 if [[ "${CLAUDE_STOP_NOTIFY:-1}" != "0" ]]; then
   send_stop_notification "$INPUT" "" "" "robot" "default"

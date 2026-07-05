@@ -13,6 +13,9 @@ setup() {
   # stop.sh は HOME/.claude/logs/ へ stderr を飛ばすため HOME を差し替え
   export HOME="${TEST_TMPDIR}"
   mkdir -p "${TEST_TMPDIR}/.claude/logs"
+  # fixture は session_id なしで guard により notify skip されるが、実通知の誤発火を
+  # 二重に防ぐため明示 OFF にする
+  export CLAUDE_STOP_NOTIFY=0
 }
 
 teardown() {

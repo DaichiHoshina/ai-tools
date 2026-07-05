@@ -380,7 +380,7 @@ teardown_send_stop_notification() {
   setup_send_stop_notification
   # skip 発火のため min_len を default (8) に戻す
   unset CLAUDE_STOP_NOTIFY_MIN_LEN
-  local input='{"last_assistant_message":"test","cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","last_assistant_message":"test","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
   # 200ms 待って log が生成されないことを確認
   sleep 0.2
@@ -392,7 +392,7 @@ teardown_send_stop_notification() {
   setup_send_stop_notification
   # 明示 OFF は CLAUDE_STOP_NOTIFY=0
   export CLAUDE_STOP_NOTIFY=0
-  local input='{"last_assistant_message":"long enough message here","cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","last_assistant_message":"long enough message here","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
   sleep 0.2
   [ ! -f "${TEST_TMPDIR}/terminal-notifier.log" ]
@@ -412,7 +412,7 @@ _wait_for_file() {
 
 @test "send_stop_notification: terminal-notifier に title/message を渡す" {
   setup_send_stop_notification
-  local input='{"last_assistant_message":"test message","cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","last_assistant_message":"test message","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input' '' 'Glass'" 2>/dev/null
   _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
   [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
@@ -423,7 +423,7 @@ _wait_for_file() {
 @test "send_stop_notification: メッセージが 80 文字超なら truncate される" {
   setup_send_stop_notification
   local long_msg=$(printf 'x%.0s' {1..100})  # 100文字
-  local input="{\"last_assistant_message\":\"${long_msg}\",\"cwd\":\"/tmp/project\"}"
+  local input="{\"session_id\":\"s1\",\"last_assistant_message\":\"${long_msg}\",\"cwd\":\"/tmp/project\"}"
   bash -c "source '$LIB_FILE' && send_stop_notification '$input' '' 'Glass'" 2>/dev/null
   _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
   [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
@@ -435,7 +435,7 @@ _wait_for_file() {
 @test "send_stop_notification: NTFY_TOPIC がなければ curl は呼ばれない" {
   setup_send_stop_notification
   unset CLAUDE_NTFY_TOPIC 2>/dev/null || true
-  local input='{"last_assistant_message":"test","cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","last_assistant_message":"test","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
   # curl.log が生成されない（呼ばれていない）
   [ ! -f "${TEST_TMPDIR}/curl.log" ]
@@ -445,7 +445,7 @@ _wait_for_file() {
 @test "send_stop_notification: NTFY_TOPIC があれば curl で ntfy.sh を叩く" {
   setup_send_stop_notification
   export CLAUDE_NTFY_TOPIC="test-topic"
-  local input='{"last_assistant_message":"hello","cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","last_assistant_message":"hello","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
   _wait_for_file "${TEST_TMPDIR}/curl.log"
   [ -f "${TEST_TMPDIR}/curl.log" ]
@@ -457,7 +457,7 @@ _wait_for_file() {
   setup_send_stop_notification
   # stub を削除
   rm "${TEST_TMPDIR}/terminal-notifier"
-  local input='{"last_assistant_message":"test","cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","last_assistant_message":"test","cwd":"/tmp/project"}'
   run bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>&1
   [ "$status" -eq 0 ]
   teardown_send_stop_notification
@@ -465,7 +465,7 @@ _wait_for_file() {
 
 @test "send_stop_notification: 空メッセージでも crash しない" {
   setup_send_stop_notification
-  local input='{"last_assistant_message":"","cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","last_assistant_message":"","cwd":"/tmp/project"}'
   run bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>&1
   [ "$status" -eq 0 ]
   teardown_send_stop_notification
@@ -473,7 +473,7 @@ _wait_for_file() {
 
 @test "send_stop_notification: default message を使う（last_assistant_message なし）" {
   setup_send_stop_notification
-  local input='{"cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
   _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
   [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
@@ -483,11 +483,47 @@ _wait_for_file() {
 
 @test "send_stop_notification: title_suffix が付与される" {
   setup_send_stop_notification
-  local input='{"last_assistant_message":"msg","cwd":"/tmp/project"}'
+  local input='{"session_id":"s1","last_assistant_message":"msg","cwd":"/tmp/project"}'
   bash -c "source '$LIB_FILE' && send_stop_notification '$input' '[SUCCESS]'" 2>/dev/null
   _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
   [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
   grep -q "\[SUCCESS\]" "${TEST_TMPDIR}/terminal-notifier.log"
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: session_id なし (fixture/smoke) は notify skip" {
+  setup_send_stop_notification
+  local input='{"last_assistant_message":"real event ではない fixture","cwd":"/tmp/project"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
+  sleep 0.2
+  [ ! -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: cursor_version あり (Claude Code 以外) は notify skip" {
+  setup_send_stop_notification
+  local input='{"session_id":"s1","cursor_version":"1.0","last_assistant_message":"cursor generation done"}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
+  sleep 0.2
+  [ ! -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: Stop event で background task running なら notify skip" {
+  setup_send_stop_notification
+  local input='{"session_id":"s1","hook_event_name":"Stop","last_assistant_message":"agent 実行中に turn end","cwd":"/tmp/project","background_tasks":[{"id":"t1","type":"shell","status":"running"}]}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
+  sleep 0.2
+  [ ! -f "${TEST_TMPDIR}/terminal-notifier.log" ]
+  teardown_send_stop_notification
+}
+
+@test "send_stop_notification: background task が全部 completed なら notify する" {
+  setup_send_stop_notification
+  local input='{"session_id":"s1","hook_event_name":"Stop","last_assistant_message":"全 task 完了後の user turn","cwd":"/tmp/project","background_tasks":[{"id":"t1","type":"shell","status":"completed"}]}'
+  bash -c "source '$LIB_FILE' && send_stop_notification '$input'" 2>/dev/null
+  _wait_for_file "${TEST_TMPDIR}/terminal-notifier.log"
+  [ -f "${TEST_TMPDIR}/terminal-notifier.log" ]
   teardown_send_stop_notification
 }
 
