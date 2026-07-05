@@ -299,9 +299,9 @@ verify_to_local_sync() {
         [ -e "$src" ] && [ -e "$dst" ] || continue
         if [ -d "$src" ]; then
             diff_output=$(diff -rq "$src" "$dst" 2>/dev/null || true)
-            # skills は gh skill 管理ぶんを除外
+            # skills は gh skill 管理ぶんと .system/ (OpenAI Codex 向け、sync 除外対象) を除外
             if [ "$item" = "skills" ] && [ -n "$diff_output" ]; then
-                diff_output=$(echo "$diff_output" | while IFS= read -r line; do
+                diff_output=$(echo "$diff_output" | grep -v -E '/skills/\.system(/|$)|skills: \.system$' | while IFS= read -r line; do
                     name=$(echo "$line" | sed -E 's|.*/skills/([^/]+)/.*|\1|')
                     [ -n "$name" ] && [ -f "$CLAUDE_DIR/skills/$name/skill.md" ] && \
                         has_gh_skill_metadata "$CLAUDE_DIR/skills/$name/skill.md" && continue
