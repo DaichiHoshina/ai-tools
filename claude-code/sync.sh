@@ -563,14 +563,39 @@ check_version() {
 # =============================================================================
 
 setup_pre_push_hook() {
-    local repo_root
+    local repo_root hooks_dir
     repo_root="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null)" || {
         print_warning "git リポジトリが見つかりません。pre-push hook のセットアップをスキップします"
         return 0
     }
 
-    local pre_push_target="${repo_root}/.git/hooks/pre-push"
-    local pre_push_source="${repo_root}/claude-code/scripts/git-hooks/pre-push"
+    # linked worktree では .git が file のため "${repo_root}/.git/hooks" は存在しない。
+    # --git-path hooks は通常 repo / worktree の両方で共有 hooks dir を返す
+    # (core.hooksPath 設定時はその値を返す)。相対 path で返る場合があるため絶対化する。
+    hooks_dir="$(git -C "${repo_root}" rev-parse --git-path hooks 2>/dev/null)" || {
+        print_warning "hooks dir を解決できません。pre-push hook のセットアップをスキップします"
+        return 0
+    }
+    case "${hooks_dir}" in
+        /*) ;;
+        *) hooks_dir="${repo_root}/${hooks_dir}" ;;
+    esac
+    mkdir -p "${hooks_dir}"
+
+    # symlink source は main checkout 側に解決する。worktree 側 file を指すと
+    # worktree 撤去後に dangling symlink になり push が壊れる。
+    # main repo では common-dir = <root>/.git なので dirname = repo_root と一致する。
+    local common_dir main_root
+    common_dir="$(cd "${repo_root}" && git rev-parse --git-common-dir 2>/dev/null)"
+    case "${common_dir}" in
+        /*) ;;
+        *) common_dir="${repo_root}/${common_dir}" ;;
+    esac
+    main_root="$(dirname "${common_dir}")"
+    [[ -d "${main_root}/claude-code" ]] || main_root="${repo_root}"
+
+    local pre_push_target="${hooks_dir}/pre-push"
+    local pre_push_source="${main_root}/claude-code/scripts/git-hooks/pre-push"
 
     if [[ ! -f "${pre_push_source}" ]]; then
         print_warning "pre-push hook source が見つかりません: ${pre_push_source}"
