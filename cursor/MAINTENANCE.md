@@ -77,6 +77,29 @@ cd ~/ai-tools/cursor && ./sync.sh diff
 | F2 | rules symlink | `ls -la ~/.cursor/rules/` |
 | F3 | 別マシン反映手順が通る | `git pull && ./install.sh` |
 
+### チェックボックス（/retrospective が未完了項目を読む）
+
+- [ ] A1: `sync.sh diff` が空
+- [ ] A2: マシン固有値がない
+- [ ] A3: 非推奨キーがない
+- [ ] A4: format on save が意図通り
+- [ ] A5: watcher 除外が過不足ない
+- [ ] B1: キーバインド衝突がない
+- [ ] B2: 未使用バインドを整理
+- [ ] C1: `alwaysApply` rules が最小限
+- [ ] C2: Claude Code ルールと矛盾しない
+- [ ] C3: 参照 path が現行構成と一致
+- [ ] D1: 未使用拡張がない
+- [ ] D2: 拡張が Cursor 更新後も動作
+- [ ] D3: 重複 linter / formatter がない
+- [ ] E1: memories の日付・参照が最新
+- [ ] E2: memories と rules が矛盾しない
+- [ ] E3: 重複 memory がない
+- [ ] E4: memories に秘匿情報がない
+- [ ] F1: User settings symlink が有効
+- [ ] F2: rules symlink が有効
+- [ ] F3: `git pull && ./install.sh` が通る
+
 ---
 
 ## 改善フロー

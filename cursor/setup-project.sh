@@ -40,10 +40,12 @@ copy_tree() {
   if [[ -d "${src}" ]]; then
     mkdir -p "${dst}"
     local child
+    # glob * は .vscode 等の dot ディレクトリを拾わない
+    shopt -s dotglob nullglob
     for child in "${src}"/*; do
-      [[ -e "${child}" ]] || continue
       copy_tree "${child}" "${dst_root}"
     done
+    shopt -u dotglob nullglob
   fi
 }
 

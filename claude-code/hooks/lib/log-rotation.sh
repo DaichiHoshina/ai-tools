@@ -29,8 +29,15 @@ _rotate_log_if_needed() {
   local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
   mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
   if [[ "${keep_bak_count}" -gt 0 ]]; then
+    local _idx=0 _bak
     # shellcheck disable=SC2012
-    ls -1t "${log_file}".*.bak 2>/dev/null | tail -n +$((keep_bak_count + 1)) | xargs -I{} rm -f {} 2>/dev/null || true
+    while IFS= read -r _bak; do
+      [[ -n "$_bak" ]] || continue
+      _idx=$(( _idx + 1 ))
+      if (( _idx > keep_bak_count )); then
+        rm -f "$_bak" 2>/dev/null || true
+      fi
+    done < <(ls -1t "${log_file}".*.bak 2>/dev/null)
   fi
 }
 

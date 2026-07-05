@@ -15,6 +15,7 @@ cursor/
 ├── install-extensions.sh   # 推奨拡張を一括インストール
 ├── setup-project.sh        # プロジェクトへ .vscode テンプレ配置
 ├── sync.sh                 # User 設定の to-local / from-local
+├── MAINTENANCE.md          # 月次チェックリスト
 ├── User/
 │   ├── settings.json       # テーマ・フォント・エディタ UX
 │   └── keybindings.json    # ショートカット
