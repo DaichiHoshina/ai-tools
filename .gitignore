@@ -33,6 +33,7 @@ Thumbs.db
 
 # エディタ設定
 .vscode/
+!cursor/templates/**/.vscode/
 .idea/
 *.swp
 *.swo

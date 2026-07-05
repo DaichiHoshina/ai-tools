@@ -54,7 +54,7 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 | global rules | `Glob ~/ai-tools/cursor/rules/*.mdc` → Read |
 | project memories | `Glob .cursor/memories/*.md` → Read (ai-tools: `~/ai-tools/.cursor/memories/`) |
 | project rules | `Glob .cursor/rules/*.mdc` (if present) |
-| maintenance checklist | Read `~/ai-tools/cursor/MAINTENANCE.md` — flag unchecked monthly items |
+| maintenance checklist | Read `~/ai-tools/cursor/MAINTENANCE.md` — list items still marked `- [ ]` |
 
 > log は a9ebeb5 (2026-06-29) 以降のみ集計する (a9ebeb5 (2026-06-29) 以前は bats test 由来の汚染あり)。
 
