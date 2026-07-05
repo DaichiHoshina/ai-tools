@@ -115,10 +115,29 @@ run_writing_check() {
         if (match(curr, pattern)) {
           should_output = 1
 
-          # a) curr 行内に 丸括弧で根拠を示す （具体例:|例:|詳細: ... または複数 , を含む）
-          #    または 鉤括弧 「[^」]+」 を含む（文脈が明示的）
-          if (match(curr, /（（具体例:|例:|詳細:|参考:)[^）]*(, |，)|「[^」]+」/)) {
+          # a) curr 行内に 丸括弧で根拠を示す （具体例:|例:|詳細:|参考: + 読点）
+          #    または 鉤括弧 「…」 を含む（文脈が明示的）→ 除外。
+          #    macOS 標準 awk (BSD awk) は byte 指向で、[^」] 等の多バイト否定クラスは
+          #    「」と byte (e3/80) を共有する日本語文字で途切れて誤動作する。
+          #    regex を使わず index() の substring 探索で判定する (gawk でも同挙動)。
+          ko = index(curr, "「")
+          if (ko > 0 && index(substr(curr, ko + 1), "」") > 0) {
             should_output = 0
+          }
+          if (should_output) {
+            n_mk = split("（具体例:,（例:,（詳細:,（参考:", mks, ",")
+            for (mi = 1; mi <= n_mk; mi++) {
+              mp = index(curr, mks[mi])
+              if (mp > 0) {
+                rest = substr(curr, mp)
+                cp = index(rest, "）")
+                seg = (cp > 0) ? substr(rest, 1, cp) : rest
+                if (index(seg, ", ") > 0 || index(seg, "，") > 0) {
+                  should_output = 0
+                  break
+                }
+              }
+            }
           }
 
           if (should_output) {
