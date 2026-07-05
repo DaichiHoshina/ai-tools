@@ -12,9 +12,12 @@ source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 require_jq
 
 INPUT=$(cat)
-# デスクトップ通知は default OFF (subprocess の /tmp cwd 由来など noise になるため)。
-# 通知を戻したい時は CLAUDE_STOP_NOTIFY=1 を export する。
-if [[ "${CLAUDE_STOP_NOTIFY:-0}" == "1" ]]; then
+# Stop hook は user turn (Claude が停止して user 入力待ちになる時) にだけ発火する。
+# SubagentStop とは分離されており、subagent 完了通知は増えない。
+# noise (subprocess の /tmp cwd 由来 / 一言 message) は send_stop_notification 側の
+# short-message skip (CLAUDE_STOP_NOTIFY_MIN_LEN, default 8) と、caller が渡す title で吸収する。
+# 明示的に off にしたい時は CLAUDE_STOP_NOTIFY=0 を export する。
+if [[ "${CLAUDE_STOP_NOTIFY:-1}" != "0" ]]; then
   send_stop_notification "$INPUT" "" "" "robot" "default"
 fi
 

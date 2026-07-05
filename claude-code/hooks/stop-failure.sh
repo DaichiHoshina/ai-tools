@@ -8,9 +8,9 @@ source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 require_jq
 
 INPUT=$(cat)
-# API error 通知も default OFF。CLAUDE_STOP_NOTIFY=1 で全 stop 通知を戻す。
-# error 通知だけ残したい場合は CLAUDE_STOP_FAILURE_NOTIFY=1 を単独指定する。
-if [[ "${CLAUDE_STOP_NOTIFY:-0}" == "1" ]] || [[ "${CLAUDE_STOP_FAILURE_NOTIFY:-0}" == "1" ]]; then
+# StopFailure hook も user turn (API error で session が止まった時) にだけ発火する。
+# 明示的に off にしたい時は CLAUDE_STOP_NOTIFY=0 または CLAUDE_STOP_FAILURE_NOTIFY=0 を export する。
+if [[ "${CLAUDE_STOP_NOTIFY:-1}" != "0" ]] && [[ "${CLAUDE_STOP_FAILURE_NOTIFY:-1}" != "0" ]]; then
   send_stop_notification "$INPUT" "APIエラー" "" "warning,robot" "high"
 fi
 
