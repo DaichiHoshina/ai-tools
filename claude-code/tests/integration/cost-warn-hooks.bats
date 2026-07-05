@@ -471,3 +471,131 @@ _make_session_jsonl() {
         "${log_dir}/.bundle-violation-warned-${session_id}" \
         "${log_dir}/.bundle-violation-blocked-${session_id}"
 }
+
+# =============================================================================
+# Case S1-G: prompt に serial_reason: 宣言がある逐次発火は counter 対象外 (warn 抑止)
+# 依存 chain (実装 → 修正) の正当な逐次発火を bundle 違反と誤検出しないため。
+# =============================================================================
+@test "bundle-violation: serial_reason declared prompt skips counter and warn" {
+  local session_id="bundle-serial-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter=1、lastts 35 秒前 (>30s window) → serial_reason なしなら counter=2 = warn
+  printf '1\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"serial_reason: dev1 の patch 適用結果に依存する修正\nimpl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "bundle-violation-warn" ]]
+  # counter は増えない (serial_reason fire は sequential 累積の対象外)
+  local _post_count
+  _post_count=$(cat "${log_dir}/.dev-agent-fire-count-${session_id}")
+  [ "${_post_count}" = "1" ]
+  # audit log に marker が残る
+  grep -q "serial_reason_declared" "${log_dir}/bundle-violation-warn.log"
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+}
+
+# =============================================================================
+# Case S1-H: serial_reason 宣言は hard block 直前 (counter=2 / warn 済) でも block を回避する
+# =============================================================================
+@test "bundle-violation: serial_reason declared prompt bypasses hard block" {
+  local session_id="bundle-serialblk-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter=2 (warn 発火済)、serial_reason なしなら次呼出しで counter=3 = hard block
+  printf '2\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  touch "${log_dir}/.bundle-violation-warned-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"serial_reason: reviewer の reject feedback を反映する再実装\nimpl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  # block されない (exit 0)、counter も 2 のまま
+  [ "$status" -eq 0 ]
+  local _post_count
+  _post_count=$(cat "${log_dir}/.dev-agent-fire-count-${session_id}")
+  [ "${_post_count}" = "2" ]
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}" \
+        "${log_dir}/.bundle-violation-warned-${session_id}"
+}
+
+# =============================================================================
+# Case S1-I: developer-agent 初回発火 (counter 新規 =1) で bundle-pre-check を先出し inject する
+# warn (2 発目) 時点では 1 体目の直列実行時間を既に浪費しているため、
+# 発火前の残 task 全列挙 + bundle 判断を初回に促す。
+# =============================================================================
+@test "bundle-violation: first developer-agent fire injects bundle-pre-check" {
+  local session_id="bundle-first-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter / lastts なし = session 初回 fire
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "bundle-pre-check" ]]
+  # 初回 fire は warn ではない
+  [[ ! "$output" =~ "bundle-violation-warn" ]]
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+}

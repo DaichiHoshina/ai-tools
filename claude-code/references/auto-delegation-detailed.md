@@ -22,6 +22,17 @@ Never bundle 2+ domains (different file groups / root causes / verify systems) i
 
 For N independent tasks: **place N `Agent` tool_use calls in a single assistant message**. Repeating 1-message-1-Agent over N messages serializes on previous agent's STOP, reducing peak concurrency to 1 (formula PASS / cap 8 does not guarantee simultaneity `[[parallel-fire-format-peak-concurrency]]`). **The act of bundling tool_use in 1 message IS the parallelization**; cap/formula only sets the upper limit on fire count. Verify: `scripts/flow-baseline.sh --summary` `peak_concurrency distribution` — heavy 1s indicates serialization.
 
+### Upfront decomposition (before the FIRST Task fire)
+
+Enumerate ALL independent tasks **before firing the first developer-agent**, and include every independent task in the first bundle message. The fire-one-read-result-fire-next loop drops peak concurrency to 1 (30d measured: 10 of 22 flow runs at peak=1). Hook injects `[bundle-pre-check]` on the first dev fire as a reminder — at that point the parallelization decision for the current turn is already made, so enumeration must happen at planning time, not after.
+
+### serial_reason declaration (dependent sequential fires)
+
+A sequential developer-agent fire that **depends on a previous agent's output** (implement → reviewer reject → re-implement / patch apply → follow-up fix) is legitimate, not a bundle violation. Declare it by writing `serial_reason: <dependency, 1 line>` in the Task prompt. The hook excludes declared fires from the sequential counter (no warn / no hard block) and records `serial_reason_declared` in `bundle-violation-warn.log` for audit.
+
+- Misuse ban: writing serial_reason on an independent task to dodge the counter is forbidden — independent tasks go in the bundle.
+- Without the declaration, 3 cumulative sequential fires per session hard-block (PO Gate v2). Legitimate chains hitting the block was the main driver of "delegate feels slower than inline" (2026-07-04/05: 3 sessions blocked).
+
 ## Parent pre-delegation obligation
 
 Before delegating, parent must: (a) identify target `file:line` (`find_symbol` / `grep`) (b) finalize verify command (c) condense DoD to 1 line. Do not push exploration to subagent (exploration phase dominates makespan). Prompts without explicit targets trigger full-repo scans.

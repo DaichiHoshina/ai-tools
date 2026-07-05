@@ -785,8 +785,13 @@ _check_sequential_agent_fire() {
 # ====================================
 # developer-agent 限定 bundle 違反検出 (warn-only)
 # /flow step 7 / `flow.md` L110: Task(developer-agent)×N は 1 message bundle 必須
-# 連続発火 (>500ms 間隔) ≥2 回 = bundle 違反 = parentUuid serial chain
+# 連続発火 (>_TH_PARALLEL_WINDOW_NS 間隔) ≥2 回 = bundle 違反 = parentUuid serial chain
 # (work-context-20260618-flow-self-review-3gate.md next-action #1)
+#
+# $2 = task prompt。prompt に `serial_reason:` 宣言がある逐次発火は
+# 依存 chain (前 agent の結果待ち) として counter 対象外にする。
+# 宣言なしの正当な依存 chain も 3 発で hard block されるため、delegate が
+# inline より高コストになり inline 回帰を誘発していた (2026-07-04/05 block log ×3)。
 #
 # counter: ~/.claude/logs/.dev-agent-fire-count-<session_id>
 # 最終 fire timestamp: ~/.claude/logs/.dev-agent-fire-lastts-<session_id>
@@ -795,6 +800,7 @@ _check_sequential_agent_fire() {
 # ====================================
 _check_developer_agent_bundle_violation() {
   local session_id="$1"
+  local task_prompt="${2:-}"
   [[ -z "$session_id" || "$session_id" == "null" ]] && return 0
 
   local _LOG_DIR="${HOME}/.claude/logs"
@@ -828,6 +834,18 @@ _check_developer_agent_bundle_violation() {
     return 0
   fi
 
+  # serial_reason 宣言 = 前 agent の結果に依存する正当な逐次発火 → counter 対象外。
+  # 独立 task への serial_reason 濫用は禁止 (references/auto-delegation-detailed.md canonical)。
+  # audit 用に warn log へ marker 付きで記録する。
+  if [[ -n "$task_prompt" && "$task_prompt" == *"serial_reason:"* ]]; then
+    local _TS_SERIAL
+    printf -v _TS_SERIAL '%(%Y-%m-%dT%H:%M:%S)T' -1
+    printf '%s | %s | serial_reason_declared | elapsed_ms=%s\n' \
+      "$_TS_SERIAL" "$session_id" "$(( _ELAPSED / 1000000 ))" \
+      >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
+    return 0
+  fi
+
   # counter ++ (sequential 発火 = elapsed > _TH_PARALLEL_WINDOW_NS の累積)
   # NOTE: fence check はカウンタ更新・block 判定の後に置く。
   # 旧実装は fence check を先に置いていたため「warn 発火後の 3 回目以降が early return」
@@ -837,6 +855,20 @@ _check_developer_agent_bundle_violation() {
   [[ "$_CUR" =~ ^[0-9]+$ ]] || _CUR=0
   _CUR=$(( _CUR + 1 ))
   printf '%s\n' "$_CUR" > "$_COUNT_FILE" 2>/dev/null || true
+
+  # 初回 fire (_CUR==1) で bundle 判断を先出し inject する。
+  # warn (2 発目) 時点では 1 体目の直列実行時間 (実測 2-4 分) を既に浪費している。
+  # 30d 実測 (flow-baseline n=22) で peak_concurrency=1 が 10 回 = 45% あり、
+  # 発火前の task 全列挙を促すのが最大の並列化 lever。
+  if (( _CUR == 1 )); then
+    local _PRE_CHECK="[bundle-pre-check] developer-agent 初回発火。残 task を今全列挙し、独立 task が残るなら次は 1 message に N tool_use で bundle 発火する (逐次発火は 2 発目 warn / ${_TH_BUNDLE_HARD_BLOCK_SEQ} 発目 hard block)。前 agent の結果に依存する逐次発火は prompt に serial_reason: <依存内容 1 行> を書く (counter 対象外)"
+    if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_PRE_CHECK}"
+    else
+      ADDITIONAL_CONTEXT="${_PRE_CHECK}"
+    fi
+    return 0
+  fi
 
   # threshold ≥3 で hard block (PO Gate v2 enforcement、warn 後の更なる sequential fire は明確な違反)
   # CLAUDE_BUNDLE_HARD_BLOCK=0 で opt-out (debug / 一時的 escape hatch)
@@ -849,7 +881,7 @@ _check_developer_agent_bundle_violation() {
         "$_TS_BLOCK" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
         >> "${_LOG_DIR}/bundle-violation-block.log" 2>/dev/null || true
     fi
-    echo "[bundle-violation-block] Task(developer-agent) ${_CUR} 回逐次発火 = PO Gate v2 違反。1 message bundle で並列 fan-out するか、bundle_justification を明示せよ。opt-out: env CLAUDE_BUNDLE_HARD_BLOCK=0" >&2
+    echo "[bundle-violation-block] Task(developer-agent) ${_CUR} 回逐次発火 = PO Gate v2 違反。独立 task なら 1 message bundle で並列 fan-out する。前 agent の結果に依存する逐次発火なら prompt に serial_reason: <依存内容 1 行> を明記して再発火する (counter 対象外)。opt-out: env CLAUDE_BUNDLE_HARD_BLOCK=0" >&2
     exit 2
   fi
 
@@ -866,7 +898,7 @@ _check_developer_agent_bundle_violation() {
       "$_TS_LABEL" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
       >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
 
-    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >30s = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md L110 / N declaration : tool_use firing message = 1:1 strict)。${_TH_BUNDLE_HARD_BLOCK_SEQ} 回目で hard block する"
+    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >30s = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md L110 / N declaration : tool_use firing message = 1:1 strict)。依存 chain の逐次発火なら prompt に serial_reason: を明記する (counter 対象外)。${_TH_BUNDLE_HARD_BLOCK_SEQ} 回目で hard block する"
     if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
       ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
     else
@@ -1823,9 +1855,10 @@ ${PARALLEL_REVIEW}${PREP_WARN}"
     # bundle 違反検出 (warn-only): developer-agent 限定で逐次発火を検出
     # work-context-20260618 next-action #1 / Gate A 衰弱点補強
     # /flow step 7 では Task(developer-agent)×N を 1 message bundle 必須
-    # 連続発火 (>500ms) ≥2 回 = bundle 違反 = parentUuid serial chain
+    # 連続発火 (>_TH_PARALLEL_WINDOW_NS) ≥2 回 = bundle 違反 = parentUuid serial chain
+    # prompt を渡して serial_reason: 宣言 (依存 chain の逐次発火) を counter 対象外にする
     if [ "${SUBAGENT_TYPE}" = "developer-agent" ]; then
-      _check_developer_agent_bundle_violation "$SESSION_ID"
+      _check_developer_agent_bundle_violation "$SESSION_ID" "$TASK_PROMPT"
     fi
     ;;
 

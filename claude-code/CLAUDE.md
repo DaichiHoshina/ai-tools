@@ -102,7 +102,7 @@ Agent startup is the biggest cost source (dozens of seconds to minutes).
 
 → 上記 3 種 (CI fail 修正 / review feedback 反映 / shellcheck / lint warn 1 箇所修正) に該当する task は `/dev` / `/flow` ではなく inline で直編集する。delegate するなら明示理由 (>5 file / 30+ line each) を 1 行宣言してから。
 
-**Parallel fan-out 自己強制 (hard rule)**: N≥2 dev は**単一 assistant message に N tool_use**。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。
+**Parallel fan-out 自己強制 (hard rule)**: N≥2 dev は**単一 assistant message に N tool_use**。**最初の dev 発火前に独立 task を全列挙し、独立分は初回 message に全 bundle する** (1 体ずつ発火して結果を見てから次を発火する運用は peak=1 に落ちる)。発火直前 self-check 1 行宣言必須。違反検出: `pre-tool-use.sh:_check_developer_agent_bundle_violation`。**前 agent の結果に依存する正当な逐次発火は prompt に `serial_reason: <依存内容 1 行>` を明記** (counter 対象外、独立 task への濫用禁止)。詳細: `references/auto-delegation-detailed.md` § serial_reason declaration。
 
 **Subagent silent-fail guard**: subagent では `AskUserQuestion` 不可 + permission prompt 系 tool auto-deny で **silent fail**。approval-gated edit / 判断 fork は parent escalate (`status: blocked` + `issues_blocking[]`)。canonical: `agents/developer-agent.md` § Silent-fail guard。
 
