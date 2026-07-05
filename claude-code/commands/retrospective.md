@@ -22,6 +22,7 @@ Ask user via AskUserQuestion.
 **Default = private**. Select `public` only when explicitly chosen (prevents private data leak).
 
 **On public selection**:
+
 - Echo `rules/public-repo-private-data-block.md` reference at top of doc
 - Verify no social-hit terms in analyzed sessions before saving
 
@@ -38,22 +39,34 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 
 **Additional sources** (skip with 1-line note if missing):
 
+| Source             | Command                                                                                                        |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| usage stats        | `ccusage daily --since 7`                                                                                      |
+| JP quality blocks  | `awk -F' \| ' '$1 >= "2026-06-29T11:21:24+0900" { print }' ~/.claude/logs/jp-quality-block.log \| tail -n 50`  |
+| hook bench logs    | `tail -n 20 ~/.claude/logs/bench-*.log` (glob)                                                                 |
+| /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (generates `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
+
+**Cursor sources** (skip with 1-line note if missing):
+
 | Source | Command |
 |--------|---------|
-| usage stats | `ccusage daily --since 7` |
-| JP quality blocks | `awk -F' \| ' '$1 >= "2026-06-29T11:21:24+0900" { print }' ~/.claude/logs/jp-quality-block.log \| tail -n 50` |
-| hook bench logs | `tail -n 20 ~/.claude/logs/bench-*.log` (glob) |
-| /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (generates `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
+| settings drift | `cd ~/ai-tools/cursor && ./sync.sh diff` |
+| global rules | `Glob ~/ai-tools/cursor/rules/*.mdc` → Read |
+| project memories | `Glob .cursor/memories/*.md` → Read (ai-tools: `~/ai-tools/.cursor/memories/`) |
+| project rules | `Glob .cursor/rules/*.mdc` (if present) |
+| maintenance checklist | Read `~/ai-tools/cursor/MAINTENANCE.md` — flag unchecked monthly items |
 
 > log は a9ebeb5 (2026-06-29) 以降のみ集計する (a9ebeb5 (2026-06-29) 以前は bats test 由来の汚染あり)。
 
 ### Phase 2: Signal Extraction (≤500 token output, parent inline only)
 
-| Analysis Target | Extract |
-|----------------|---------|
-| failure patterns | high-error tasks, retry spikes, dropped tasks |
+| Analysis Target       | Extract                                         |
+| --------------------- | ----------------------------------------------- |
+| failure patterns      | high-error tasks, retry spikes, dropped tasks   |
 | inefficiency patterns | churn keywords hit, each-session config explain |
-| success patterns | efficient workflows, what-worked approaches |
+| success patterns      | efficient workflows, what-worked approaches     |
+| Cursor friction       | settings drift (sync diff), rules/memory contradiction, Cursor-only retries |
+| Cursor staleness      | old `更新:` dates, dead paths in `.cursor/memories/` |
 
 For each Serena memory name matching a detected signal: `mcp__serena__read_memory(name)` on-demand only.
 
@@ -61,12 +74,14 @@ For each Serena memory name matching a detected signal: `mcp__serena__read_memor
 
 Group signals by domain. ≥2 signals in a domain → `developer-agent` parallel delegation. <2 signals → skip.
 
-| Domain | Content |
-|--------|---------|
-| new skill | common patterns → skill-ify |
-| existing skill | related Qs common → add feature |
+| Domain             | Content                          |
+| ------------------ | -------------------------------- |
+| new skill          | common patterns → skill-ify      |
+| existing skill     | related Qs common → add feature  |
 | CLAUDE.md addition | recurring confirms → define once |
-| hook automation | manual repetition → auto-run |
+| hook automation    | manual repetition → auto-run     |
+| cursor config      | settings/rules/memories drift → edit `cursor/` or `/cursor-review` |
+| cursor rule        | recurring Cursor agent behavior → update `ai-tools-agent.mdc` or `.cursor/rules/` |
 
 Delegation rule: 1 domain = 1 agent call. Never bundle multiple domains into 1 prompt.
 
@@ -87,19 +102,26 @@ AskUserQuestion → select proposals → implement (new skill / edit existing / 
 ### Phase 5: pending-improvements memory auto-update
 
 Read then re-write `~/.claude/projects/{project}/memory/pending-improvements.md` via `Write` (Serena `write_memory` forbidden — 2026-06-10 decision; avoid dual management; use read-modify-write on auto-memory file):
+
 - Append today's session results to completed list
 - Remove consumed items from pending; record unadopted proposals under "remaining"
 - Retain on-hold items (tech barrier / trigger unmet)
 - Add today's learnings to knowledge section
+- Cursor improvements: tag `[cursor]` in pending; link `cursor/MAINTENANCE.md` item when applicable
 
 ## Output Format
 
 ```markdown
 # Retrospective Report
+
 ## Analysis Period: YYYY-MM-DD ~ YYYY-MM-DD (recent N)
+
 ## Problem Patterns (frequency: high/mid/low)
+
 ## Success Patterns
+
 ## Improvement Proposals (new skill / existing / auto-run) each: name, why, priority
+
 ## Next Steps
 ```
 
@@ -114,14 +136,14 @@ Report for Notion/md for others. Apply `guidelines/writing/long-form-doc.md` pri
 
 ## Failure Handling
 
-| Situation | Behavior |
-|-----------|----------|
-| `~/.claude/history.jsonl` missing | skip, continue with Serena memory alone, warn |
-| `ccusage` not installed | skip, append "ccusage unavailable" to report |
-| log path missing | skip, append "log path missing: {path}" to report |
-| Serena memory connect fail | skip, continue with history.jsonl alone, note precision loss |
-| recent sessions < 10 | insufficient data, report "accumulating" → done |
-| all data fetch fail | cannot generate proposals, guide user to manual review |
+| Situation                         | Behavior                                                     |
+| --------------------------------- | ------------------------------------------------------------ |
+| `~/.claude/history.jsonl` missing | skip, continue with Serena memory alone, warn                |
+| `ccusage` not installed           | skip, append "ccusage unavailable" to report                 |
+| log path missing                  | skip, append "log path missing: {path}" to report            |
+| Serena memory connect fail        | skip, continue with history.jsonl alone, note precision loss |
+| recent sessions < 10              | insufficient data, report "accumulating" → done              |
+| all data fetch fail               | cannot generate proposals, guide user to manual review       |
 
 ## Notes
 

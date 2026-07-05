@@ -44,7 +44,7 @@ DEFAULT_PRICING = {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_writ
 _KNOWN_SKILLS_FALLBACK = [
     "dev", "flow", "review", "test",
     "git-push", "git-pull", "diagnose", "plan", "docs",
-    "lint-test", "memory-save", "retrospective",
+    "lint-test", "memory-save", "retrospective", "cursor-review",
 ]
 
 

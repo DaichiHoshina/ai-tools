@@ -37,3 +37,4 @@ Requires `~/.claude/analytics/analytics.db` (hooks が逐次生成)。Launch `ht
 ## Related
 
 - `/retrospective` — session review + memory-based improvement suggestions
+- `/cursor-review` — Cursor settings/rules/memories audit (`cursor/MAINTENANCE.md`)

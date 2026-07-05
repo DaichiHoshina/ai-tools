@@ -35,6 +35,8 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "Notion に書いて", "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages` (confirm parent page first) |
 | "PR コメント残して", "レビューコメント残して" | `/post-comment` (PR number/URL required) |
 | "local-docs cleanup", "archive に送って", "不要な doc を整理", "released プロジェクトの cleanup" | `/local-docs-cleanup` (scan released projects, propose archive list, move to ../local-docs-archive/) |
+| "Cursor 設定見直し", "cursor 監査", "cursor review" | `/cursor-review` (settings/rules/memories 3-axis audit) |
+| "Cursor メンテ", "cursor ブラッシュアップ" | `/cursor-review` or read `cursor/MAINTENANCE.md` |
 
 ## Not interpreted
 

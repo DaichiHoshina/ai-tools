@@ -1,6 +1,6 @@
 # Cursor IDE 設定メモ
 
-更新: 2026-06-20
+更新: 2026-07-05
 
 ## 正本
 
@@ -9,11 +9,18 @@ ai-tools/cursor/
 ├── User/settings.json, keybindings.json
 ├── rules/ai-tools-agent.mdc      # ~/.cursor/rules/ へ install
 ├── recommendations/extensions.json
+├── MAINTENANCE.md                # 月次チェックリスト
 ├── install.sh / install-extensions.sh / setup-project.sh
 └── README.md
 ```
 
-Git: main に push 済み (`56a4324`, `ab80ce7`)
+## メンテナンス
+
+| 手段 | 用途 |
+|------|------|
+| `cursor/MAINTENANCE.md` | 月次チェックリスト |
+| `/cursor-review` | 3 軸自動監査（consistency / redundancy / drift） |
+| `/retrospective` | セッション履歴から Cursor 改善案 |
 
 ## ユーザー好み
 
