@@ -23,7 +23,7 @@ Use after compaction (conversation compression) or when saying "continue". Resto
 /reload foo                                      # prefix match、無ければ MEMORY.md の [clear] foo entry を拾う
 ```
 
-`/memory-save` (clear / exit 両方) が pbcopy する `/reload <topic>` が paste されると名指し経路で復元する。`exit` は個別 file を直接 Read し、`clear` は個別 file が無いので MEMORY.md の `[clear] <topic>` entry を直近 state の source として拾う (名指し fast path step 4)。
+`/memory-save` (clear / exit 両方) が pbcopy する `/reload <topic>` が paste されると名指し経路で復元する。clear / exit とも個別 file を書くため通常は step 1-3 の Read で復元し、個別 file を持たない旧 clear 保存分のみ MEMORY.md の `[clear] <topic>` entry を直近 state の source として拾う (名指し fast path step 4)。
 
 ## Task Execution
 
@@ -39,9 +39,9 @@ Read `$HOME/.claude/CLAUDE.md` and internalize instructions.
 
 ```text
 If $ARGUMENTS non-empty (名指し fast path):
-  # 2026-07-05 以降 `/memory-save clear` は個別 file (`work-context-YYYYMMDD-<topic>.md`) を
-  # 必ず書くようになった。ただし過渡期 (旧 clear で保存された 1 行 entry のみの topic) の互換のため
-  # step 4 で helper fallback を残す。
+  # `/memory-save` は clear / exit とも個別 file (`work-context-YYYYMMDD-<topic>.md`) を書く。
+  # 個別 file を持たない旧 clear 保存分 (MEMORY.md 1 行 entry のみ) の互換として step 4 の
+  # helper fallback を残す。
   1. Read ~/ai-tools/memory/work-context-*-<arg>.md (glob で日付 suffix 吸収、`ls -t | head -1` で最新 1 件)
   2. 上記 hit しなければ ~/ai-tools/memory/<arg>.md (拡張子なし指定でも .md 補完) を Read
   3. まだ不在なら ~/ai-tools/memory/ から prefix match で 1 件 Read。cwd が ai-tools repo 外なら
@@ -62,10 +62,9 @@ Else (fallback chain、上から順に評価、ヒットしたら次 step も並
      Read ~/ai-tools/memory/MEMORY.md (200 行まで)
      先頭 1-3 行で当日 [clear] entry の <topic> / <summary> / <commit> を確認
   C. 直近 work-context 本文 (clear-aware、B 段の日付と source を一致させる)
-     # `/memory-save clear` は個別 work-context file を作らず MEMORY.md に 1 行 prepend する
-     # だけなので、clear 主体で運用すると work-context file の最新日付は B 段 (MEMORY.md 先頭
-     # [clear] entry の日付) より古くなる。C 段は B 段と source を一致させ、古い本文を「直近
-     # state」と誤読しないようにする。
+     # 個別 file を持たない旧 clear entry が MEMORY.md 先頭に並ぶと、work-context file の
+     # 最新日付は B 段 (MEMORY.md 先頭 [clear] entry の日付) より古くなる。C 段は B 段と
+     # source を一致させ、古い本文を「直近 state」と誤読しないようにする。
      mem_latest=$(head -1 ~/ai-tools/memory/MEMORY.md 2>/dev/null | grep -oE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' | head -1)  # B 段最新 entry の日付
      wc_file=$(ls -t ~/ai-tools/memory/work-context-*.md 2>/dev/null | head -1)
      # wc_date は mem_latest と揃えるため YYYY-MM-DD 形式で保持する (比較を同形式にする)。
@@ -75,7 +74,7 @@ Else (fallback chain、上から順に評価、ヒットしたら次 step も並
        # work-context 本文が B 段最新 entry と同日 → 本文が直近 state の SoT。同日分を全件 Read
        Read $(ls -t ~/ai-tools/memory/work-context-${wc_date//-/}-*.md)
      else
-       # work-context 本文が B 段より古い (それ以降は clear のみで保存された) →
+       # work-context 本文が B 段より古い (それ以降は旧 clear のみで保存された) →
        # 直近 state の主 source は MEMORY.md 先頭の [clear] entry 群 (B 段) とする。
        # 古い work-context 本文は補助 context として 1 件だけ Read し、summary では
        # 「本文は <wc_date> 時点、それ以降の作業は MEMORY.md entry 参照」と日付を明示する。
