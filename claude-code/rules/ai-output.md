@@ -17,6 +17,7 @@ Brief prohibition list only. Details: `guidelines/writing/`
 - Table-format file listings (duplicates diff)
 - Boilerplate like "changes in this PR"
 - **Body = Why only**: commit WHAT → subject line only. Body (if written): Why (motivation / constraint / problem) in 1-3 lines. No WHAT supplement bullets / file lists / function enumerations. Details: `guidelines/writing/commit-message.md` **"原則"** + **"Why を本文 1 行目に書く"** section (canonical source)
+- **Present-state facts only (no progress log)**: PR body / commit body / code comments describe the **final diff as it is now**. Never narrate development history ("initially X, then changed to Y" / "fixed per review" / "reworked from v1"). History lives in commits and review threads. If a rejected alternative matters to the reader, state it as a present-tense adoption reason in 1-2 lines ("Z adopted; X rejected because ..."). Canonical: `guidelines/writing/pr-description.md` §禁止 + `code-comment.md` 削除カテゴリ (8) 経過メモ
 - **Reviewer assign**: do not use `--reviewer` flag in `gh pr create` / `gh pr edit`. Do not proactively suggest "assign reviewer". Do not edit auto-assign workflows (`.github/CODEOWNERS` etc). Leave reviewer field empty when PR template includes one (team allocation depends on availability / domain / rotation — AI assignment misfires).
 
 Details: `guidelines/writing/commit-message.md` / `pr-description.md`

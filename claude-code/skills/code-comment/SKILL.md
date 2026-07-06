@@ -32,7 +32,7 @@ trigger 語 (skill auto-fire):
    - ARGUMENTS に file path → 該当 file のコメント抽出
    - ARGUMENTS 空 → 直前 assistant turn の code block 内コメント
    - どちらもなし → 「対象 file 指定 or コメント貼り付け」と 1 行返す
-3. 抽出後、canonical の 12 カテゴリ table で **1 コメントずつ分類**
+3. 抽出後、canonical の 13 カテゴリ table で **1 コメントずつ分類**
 4. 削除・書き直しの対象には **Before / After ペア** を出力する (列挙で止めない)
 
 ## Decision flow (canonical 3 分類 + 9 削除)
@@ -42,7 +42,7 @@ trigger 語 (skill auto-fire):
 | 判定 | 対応 |
 |---|---|
 | **残す 3 分類** (WHY / 重要 memo / godoc) | そのまま、または日本語品質のみ rewrite |
-| **削除 9 カテゴリ** (what / PR 文脈依存 / 自明 / defensive / 主観評価 / テスト不確実 / 重複 / commented-out / AI marker) | 該当行を削除、または WHY に書き直し |
+| **削除 9 カテゴリ + AI marker** (what / PR 文脈依存 / 自明 / defensive / 主観評価 / テスト不確実 / 重複 / 経過メモ / commented-out / AI marker) | 該当行を削除、または現在形の WHY に書き直し |
 
 詳細判定基準・例・category table は **canonical を直接 Read** する。本 skill 内で list を再記載しない (重複は drift 源)。
 
@@ -72,7 +72,7 @@ i++
 After: (削除)
 ````
 
-信頼度が 80% 未満の判定は **discard** する (canonical `guidelines/writing/code-comment.md` の 12 分類 table と整合)。
+信頼度が 80% 未満の判定は **discard** する (canonical `guidelines/writing/code-comment.md` の 13 分類 table と整合)。
 
 ## 非対象 (誤発火を避ける)
 
