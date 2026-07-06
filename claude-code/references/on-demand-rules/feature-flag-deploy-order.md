@@ -19,5 +19,5 @@ feature flag + 利用箇所 deploy / config 書換え + 再読み込み / DB sch
 
 ## 参照
 
-- `rules/pr-release-order.md` (release 順の設計)
+- `references/on-demand-rules/pr-release-order.md` (release 順の設計)
 - CLAUDE.md `## Definition of Done`

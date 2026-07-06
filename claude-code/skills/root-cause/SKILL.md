@@ -27,7 +27,7 @@ Systematically analyze bug/error root causes, propose structural fix strategy.
 
 Collect from user: error message, repro steps, impact scope, frequency.
 
-症状 endpoint に視野を閉じない。同時刻に他 endpoint / service でも同一 error signature が出ていないか、および infra メトリクス (DB lock / CPU / write_latency 等) を横断で確認する。canonical: `rules/incident-local-repro-not-root-cause.md`
+症状 endpoint に視野を閉じない。同時刻に他 endpoint / service でも同一 error signature が出ていないか、および infra メトリクス (DB lock / CPU / write_latency 等) を横断で確認する。canonical: `references/on-demand-rules/incident-local-repro-not-root-cause.md`
 
 ### Step 2: 5 Why Analysis
 

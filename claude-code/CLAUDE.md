@@ -67,7 +67,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 **EN-conversion-protected files/sections**: see `references/on-demand-rules/en-conversion-protected.md` (mistranslation breaks rules, bats tests, JP trigger matching).
 
-**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下 (markdown-anchor-sync / en-conversion-protected / api-design / review-noise-discard / measure-before-hook-change / sync-canonical-with-bats)。trigger: md heading rename → `markdown-anchor-sync.md` / EN refactor・`/claude-update-fix` → `en-conversion-protected.md` / handler・controller・resolver・api・endpoint → `api-design.md` / `/review`・`/review-fix-push`・`comprehensive-review` skill 発火時 → `review-noise-discard.md` / `hooks/` block・warn 系編集時 → `measure-before-hook-change.md` / `commands/`・`agents/`・`references/` の heading・YAML key・step 番号改変時 → `sync-canonical-with-bats.md`。
+**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下 (markdown-anchor-sync / en-conversion-protected / api-design / review-noise-discard / measure-before-hook-change / sync-canonical-with-bats / incident-local-repro-not-root-cause / pr-release-order / chain-pr-main-merge / screenshot-resize / feature-flag-deploy-order)。trigger: md heading rename → `markdown-anchor-sync.md` / EN refactor・`/claude-update-fix` → `en-conversion-protected.md` / handler・controller・resolver・api・endpoint → `api-design.md` / `/review`・`/review-fix-push`・`comprehensive-review` skill 発火時 → `review-noise-discard.md` / `hooks/` block・warn 系編集時 → `measure-before-hook-change.md` / `commands/`・`agents/`・`references/` の heading・YAML key・step 番号改変時 → `sync-canonical-with-bats.md` / incident 調査 (5xx・latency・lock 障害の RCA) → `incident-local-repro-not-root-cause.md` / 機能の複数 PR 分割・release 順設計 → `pr-release-order.md` / chain PR (base≠main) 操作 → `chain-pr-main-merge.md` / screenshot を外向き text に添付 → `screenshot-resize.md` / feature flag・maintenance flag・config 切替 release → `feature-flag-deploy-order.md`。
 
 ## Discovery / Investigation Routing (anti-overuse)
 
@@ -181,7 +181,7 @@ Apply relevant items only. Scale by change size (typo → #6 / new feature → a
 
 ## Root Cause Analysis
 
-Structural fix over symptomatic (Reproduce → identify → design → verify 4 steps)。詳細: `/root-cause` skill。Production rollback は revert PR → main merge → deploy 経路 (`[[feedback-rollback-via-revert-pr]]`)。incident 調査時: ローカル再現 = 真因確定と同一視しない (canonical: `rules/incident-local-repro-not-root-cause.md`)。
+Structural fix over symptomatic (Reproduce → identify → design → verify 4 steps)。詳細: `/root-cause` skill。Production rollback は revert PR → main merge → deploy 経路 (`[[feedback-rollback-via-revert-pr]]`)。incident 調査時: ローカル再現 = 真因確定と同一視しない (canonical: `references/on-demand-rules/incident-local-repro-not-root-cause.md`)。
 
 ## Compounding Engineering
 

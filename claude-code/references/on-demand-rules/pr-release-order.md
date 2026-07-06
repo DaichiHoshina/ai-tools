@@ -45,6 +45,6 @@
 
 ## 参照
 
-- `rules/feature-flag-deploy-order.md`
-- `rules/chain-pr-main-merge.md`
+- `references/on-demand-rules/feature-flag-deploy-order.md`
+- `references/on-demand-rules/chain-pr-main-merge.md`
 - CLAUDE.md `## Definition of Done`
