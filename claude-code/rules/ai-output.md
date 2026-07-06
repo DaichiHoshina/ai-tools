@@ -44,8 +44,8 @@ Before embedding issue/PR/discussion URLs in outward text (PR body / commit / Is
 
 Prohibit AI-generation markers (`// AI-generated`, `// TODO: AI suggested` etc).
 
-Details: `guidelines/writing/code-comment.md` (WHY / important memo / 7 deletion categories / fail-safe template)
+Details: `guidelines/writing/code-comment.md` (WHY / important memo / 9 deletion categories / fail-safe template)
 
 ## Reference: Pre-post Self-check
 
-Verify `guidelines/writing/PRINCIPLES.md` **"4 questions before writing"** (who reads / what decides / data source / why) + **"6-item pre-output checklist"** before posting.
+Verify `guidelines/writing/PRINCIPLES.md` **"4 questions before writing"** (who reads / what decides / data source / why) + **"7-item pre-output checklist"** before posting.
