@@ -42,7 +42,7 @@ Execute commit → push → PR/MR creation in single command.
 3. `git push -u origin <branch>`
 4. **IMPL_NOTES detection** (skip on `--no-impl-notes`): `~/.claude/plans/impl-notes/` 配下で current branch (kebab-case 正規化) に一致する `<feature-slug>` dir を探索。複数なら timestamp prefix 最新を選び、`MERGED.md` があれば **Design decisions** + **Open questions** を PR body draft 候補として user confirm step に提示する (auto-insert はしない)。No match は silent skip。
 5. `gh pr create` / `glab mr create` (auto-detect remote)
-5.5. **writing check (PR body)**: PR body draft にも step 2 の writing pre-check (NG-DICTIONARY.md / PRINCIPLES.md、max 3 loops、残存時 user 確認) を適用する。PR body の issue/PR URL は `gh issue view` / `gh pr view` で番号存在を事前検証する (`rules/ai-output.md` `## URL / Issue & PR Number Validation`)。
+5.5. **writing check (PR body)**: PR body draft にも step 2 の writing pre-check (NG-DICTIONARY.md / PRINCIPLES.md、max 3 loops、残存時 user 確認) を適用する。PR body の issue/PR URL は `gh issue view` / `gh pr view` で番号存在を事前検証する (`references/on-demand-rules/ai-output.md` `## URL / Issue & PR Number Validation`)。
 6. Display PR/MR URL
 7. **Auto-review** (`--auto-review` only, GitHub only, default OFF): `/code-review:code-review <PR#>` と `coderabbit:code-review` を `Bash run_in_background:true` で並列起動 → `BashOutput` で順次完了確認。成功は PR comment 投稿を user に表示、失敗は tool 名 / exit code / stderr tail 10 行を表示 (PR 作成自体は成功扱い)。GitLab/`glab` 環境は skip + warn 表示。
 
@@ -73,7 +73,7 @@ Conventional Commits format: `<type>(<scope>): <subject>`
 
 Post-push/MR-create, if Jira ticket ID in commit msg or branch name, auto-comment MR/PR URL to ticket w/ `mcp__jira__jira_post`. ID not detected: warn only, push/MR create success (Jira integration is auxiliary, don't block main flow).
 
-Auto-comment body は `rules/ai-output.md` (PREP 3 / 4 questions / 6-item self-check) canonical に従う。Default template: "Conclusion: PR created → review request / Reason: <branch + change summary> / Next action: <reviewer assignment or unclear>".
+Auto-comment body は `references/on-demand-rules/ai-output.md` (PREP 3 / 4 questions / 6-item self-check) canonical に従う。Default template: "Conclusion: PR created → review request / Reason: <branch + change summary> / Next action: <reviewer assignment or unclear>".
 
 ## Cautions
 

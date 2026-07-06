@@ -468,7 +468,7 @@ NG 語 canonical: [NG-DICTIONARY.md](NG-DICTIONARY.md)。全 key (AI定型語 / 
 - [design-doc-protocol.md](design-doc-protocol.md) — DesignDoc専用プロトコル
 - [auto-knowledge-update.md](auto-knowledge-update.md) — セッション中の学び追記
 - `references/writing-patterns.md` — 詳細パターン集 (textlint / 図表型 / 書き直しPhase / 専門用語置換)
-- `rules/ai-output.md` — 強制ルール (PR/commit/code-comment禁止事項)
+- `references/on-demand-rules/ai-output.md` — 強制ルール (PR/commit/code-comment禁止事項)
 
 ## アンチパターン参照 (writing_failure_* memory)
 

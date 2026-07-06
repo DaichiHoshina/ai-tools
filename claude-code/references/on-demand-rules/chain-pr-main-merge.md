@@ -47,4 +47,4 @@ git push
 ## 参照
 
 - CLAUDE.md `## Git Merge Prohibition`
-- `rules/worktree-branch-name-match.md`
+- `references/on-demand-rules/worktree-branch-name-match.md`

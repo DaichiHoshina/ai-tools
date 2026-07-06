@@ -6,54 +6,24 @@ paths:
 
 ## 1. Secret Leak Prevention
 
-**Strictly forbidden** (responses excluded): API keys / tokens / passwords / cloud credentials / SSH private keys / TLS certs / `.env` / env dumps (env, printenv, set)
-
-Detection: mask with `[REDACTED: type]` + notify user "secret info masked"
+API key / token / password / cloud credential / SSH 秘密鍵 / TLS 証明書 / `.env` / env dump (env, printenv, set) の出力と書込を禁止する。検出時は `[REDACTED: type]` で mask して user に通知する。
 
 ## 2. Pre-commit Git Check
 
-Detect and **warn + stop** on:
-
-| Pattern | Type |
-|---------|-----|
-| `AKIA[0-9A-Z]{16}` | AWS Access Key |
-| `ghp_[a-zA-Z0-9]{36}` | GitHub PAT |
-| `sk-[a-zA-Z0-9]{48}` | OpenAI/Anthropic Key |
-| `xoxb-`, `xoxp-` | Slack Token |
-| `-----BEGIN.*PRIVATE KEY-----` | Private Key |
-| 64+ char Base64 continuous alphanum | Encoded secret |
-
-**Code-enforced (hook layer, not LLM judgment)**:
-- Input: `hooks/pre-tool-use.sh` inspects Write/Edit input, blocks on detection
-- Output: `hooks/post-tool-use.sh` passes Bash `tool_response.stdout` through `lib/output-sanitizer.sh` for `[REDACTED]` replacement (Phase 1, top-5 patterns, updates `hookSpecificOutput.updatedToolOutput` + notifies Claude via `additionalContext`)
+secret pattern (AWS key / GitHub PAT / OpenAI・Anthropic key / Slack token / private key / 64+ 文字連続 Base64) は hook 層で code-enforced になっている: input は `hooks/pre-tool-use.sh` が block し、output は `hooks/post-tool-use.sh` + `lib/output-sanitizer.sh` が `[REDACTED]` 置換する。pattern canonical は `lib/output-sanitizer.sh`。
 
 ## 3. Cloud Metadata Protection (SSRF Prevention)
 
-Forbidden access: `169.254.169.254` (AWS/Azure) / `metadata.google.internal` (GCP) / `100.100.100.200` (Alibaba)
-
-- **Primary defense**: `permissions.deny` with `Bash(curl*169.254*)` etc
-- **Secondary defense**: sandbox-only `sandbox.network.deniedDomains` (activated via `claude --sandbox`, worktree isolation, `EnterWorktree`)
+`169.254.169.254` (AWS/Azure) / `metadata.google.internal` (GCP) / `100.100.100.200` (Alibaba) へのアクセスを禁止する (`permissions.deny` + sandbox `deniedDomains` で enforce 済)。
 
 ## 4. MCP / External API Data Classification
 
-| Category | Examples | Handling |
-|------|------|---------|
-| Forbidden | PII, auth secrets, private messages | Do not fetch |
-| Restricted | Source code, internal API specs | Context only, confirm on file save |
-| Internal | Metric aggregates, dashboard defs | Fetch OK, no external share |
-| Public | Published docs, OSS code | No restrictions |
+PII・認証 secret・private message は取得禁止 / source code・内部 API 仕様は context 利用のみ (file 保存時に確認) / metric 集計は取得可・外部共有不可 / public doc は制限なし。
 
 ## 5. Output Sanitization
 
-Auto-masked: internal IPs (10.x / 172.16-31.x / 192.168.x) / corporate email / AWS account ID (12 digits) / DB connection strings
+内部 IP (10.x / 172.16-31.x / 192.168.x) / 社用 email / AWS account ID (12 桁) / DB 接続文字列を auto-mask する。
 
 ## 6. PII Protection (MCP / External API)
 
-Conversations sent to Anthropic API; external tool data treated as input.
-
-- Do not fetch PII (user_id / IP / email / phone) via MCP
-- No raw individual records (aggregate only: count, GROUP BY, SUM)
-- Individual user investigation → direct to tool UI URL
-- File save → anonymize (User-A, User-B style)
-
-**Per-MCP**: Datadog no `extra_fields` PII / Slack DMs forbidden / Notion private page expansion forbidden
+MCP で PII (user_id / IP / email / phone) を取得しない。個別 raw record は禁止し集計のみ (count / GROUP BY / SUM) とする。個人 user 調査は tool UI URL へ誘導し、file 保存時は匿名化 (User-A 形式) する。Datadog は `extra_fields` PII 禁止 / Slack DM 禁止 / Notion private page 展開禁止。

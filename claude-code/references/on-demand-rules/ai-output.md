@@ -1,11 +1,3 @@
----
-paths:
-  - "**/*.md"
-  - "**/*.go"
-  - "**/*.ts"
-  - "**/*.tsx"
-  - "**/*.py"
----
 # AI Output Rules (Enforced)
 
 Brief prohibition list only. Details: `guidelines/writing/`

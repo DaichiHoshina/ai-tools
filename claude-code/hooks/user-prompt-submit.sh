@@ -498,6 +498,25 @@ _inject_commit_ng_top6_if_trigger() {
   done
   (( hit )) || return 1
 
+  # throttle: 同一 session で 300 秒以内の再 inject を抑制する (delegation checklist と同 pattern)。
+  # inject は会話 history に残り以降の全 turn で再送されるため、dedup なしだと 1 日 100 回超の重複が発生した (2026-07-03 実測 117 回)。
+  local _NG_FLAG="/tmp/claude-ng-topn-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
+  if [[ -f "${_NG_FLAG}" ]]; then
+    local _NG_LAST _NG_NOW _NG_SINCE
+    read -r _NG_LAST < "${_NG_FLAG}" 2>/dev/null || _NG_LAST=""
+    if [[ ! "${_NG_LAST}" =~ ^[0-9]+$ ]] || (( _NG_LAST == 0 )); then
+      return 1
+    fi
+    printf -v _NG_NOW '%(%s)T' -1
+    _NG_SINCE=$(( _NG_NOW - _NG_LAST ))
+    if (( _NG_SINCE >= 0 && _NG_SINCE < 300 )); then
+      return 1
+    fi
+  fi
+  local _NG_NOW_TS
+  printf -v _NG_NOW_TS '%(%s)T' -1
+  printf '%s\n' "${_NG_NOW_TS}" > "${_NG_FLAG}" 2>/dev/null || true
+
   local _LOG="${HOME}/.claude/logs/jp-quality-block.log"
   [[ -f "${_LOG}" ]] || return 1
 
@@ -577,8 +596,11 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
     done < "${_PRINCIPLES_PATH}"
 
     # chat応答向け: AI定型語 + カタカナ造語を参照 1 行に圧縮 (list 展開は NG-DICTIONARY.md canonical へ委譲)
-    if [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; then
+    # 1 session 1 回のみ inject する (毎 prompt 固定費 ~170B × 全 turn 再送を削減、内容は session 内で不変)
+    _GENSHIJIN_FLAG="/tmp/claude-genshijin-ctx-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
+    if [[ ! -f "${_GENSHIJIN_FLAG}" ]] && { [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; }; then
       _AI_TERMS_CTX="[chat応答genshijin強化] AI定型語 / カタカナ造語を chat 応答で使用禁止。canonical: guidelines/writing/NG-DICTIONARY.md §AI定型語 / §カタカナ造語禁止。代替は説明的記述 (例: シームレス → 中断なく)。"
+      touch "${_GENSHIJIN_FLAG}" 2>/dev/null || true
     fi
 
     # 外向き文書品質: 永続化文書 trigger 時のみ、jargon / 略語 / 断定語を参照 1 行で注入

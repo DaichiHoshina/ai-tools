@@ -84,5 +84,5 @@ After: (削除)
 
 - canonical: `guidelines/writing/code-comment.md` (本 skill の唯一 source of truth)
 - 日本語品質: `guidelines/writing/PRINCIPLES.md` (擬人化 NG / 「ため」連鎖 / 半角スペース)
-- AI marker rule: `rules/ai-output.md`
+- AI marker rule: `references/on-demand-rules/ai-output.md`
 - review 時に併用: `comprehensive-review` skill Step 4.5 (post-hoc audit)

@@ -40,7 +40,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 
 | 場所 | ファイル | 用途 |
 |---|---|---|
-| `rules/` | `ai-output.md` | AI出力強制ルール (禁止リスト、超短い) |
+| `references/on-demand-rules/` | `ai-output.md` | AI出力強制ルール (禁止リスト、外向き text 起草時に Read) |
 | `rules/` | `markdown.md` | markdown構造ルール |
 | `rules/` | `no-local-path-in-shared-docs.md` | DD / PR / issue / Slack 等の共有 doc に `~/ghq/...` 等の個人 path を書かない |
 | `references/on-demand-rules/` | `screenshot-resize.md` | PR / issue / Slack / Notion / local-docs へのスクショ添付前に必ずリサイズ (幅 1200px / 500KB 目安) |
@@ -82,7 +82,7 @@ CLAUDE.md `## ai-tools Writing Canonical Priority` の詳細委譲先。
 ### 優先順位 (high → low)
 
 1. `~/ai-tools/claude-code/guidelines/writing/` canonical (PR / commit / external-post / long-form-doc / code-comment / PRINCIPLES / NG-DICTIONARY)
-2. `~/ai-tools/claude-code/rules/` (genshijin / ai-output / public-repo-private-data-block 等)
+2. `~/ai-tools/claude-code/rules/` (genshijin / public-repo-private-data-block 等) + `references/on-demand-rules/ai-output.md`
 3. project 側 template / convention (`.github/pull_request_template.md` / `.gitlab/merge_request_templates/` / `CONTRIBUTING.md` / project CLAUDE.md / project commit hook 等)
 
 ### 適用範囲 (ai-tools 優先)
