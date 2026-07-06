@@ -20,7 +20,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 
 | ファイル | 用途 | 適用タイミング |
 |---|---|---|
-| [PRINCIPLES.md](PRINCIPLES.md) | 共通文章原則 (4問 / 7指針 / 3変換 / 媒体別構造 / セルフチェック6) | 全ヒト向けdoc着手前 |
+| [PRINCIPLES.md](PRINCIPLES.md) | 共通文章原則 (4問 / 8指針 / 3変換 / 媒体別構造 / セルフチェック7) | 全ヒト向けdoc着手前 |
 | [auto-knowledge-update.md](auto-knowledge-update.md) | 指摘・指示の自動追記ワークフロー | セッション中の気づき検出時 |
 
 ### 適用先別
