@@ -100,7 +100,7 @@ copy_template() {
 
 show_help() {
     cat <<'EOF'
-Usage: ./codex/install.sh [--doctor|--help]
+Usage: ./codex/install.sh [--sync|--doctor|--help]
 
 Install Codex configuration into ~/.codex.
 
@@ -113,6 +113,10 @@ This installer:
 Existing config.toml, AGENTS.md, hooks.json, and hook scripts are not overwritten.
 
 Options:
+  --sync, sync     Non-interactive re-sync. Repairs symlinks/templates without
+                   overwriting, and overwrites bridge skills from codex/skills/.
+                   Codex-native hand-written skills are left untouched.
+                   Called automatically by claude-code/sync.sh to-local.
   --doctor, check  Check the current Codex setup without changing files.
   --help, -h       Show this help.
 EOF
@@ -177,10 +181,27 @@ doctor_check_native_skills() {
         return
     fi
 
-    if [ -f "$target/writing-lite/SKILL.md" ]; then
-        doctor_success "writing-lite skill が存在します"
-    elif [ -d "$SCRIPT_DIR/skills/writing-lite" ]; then
-        doctor_warning "writing-lite skill が未インストールです。./codex/install.sh でコピーできます"
+    if [ ! -d "$SCRIPT_DIR/skills" ]; then
+        return
+    fi
+
+    local expected=0 installed=0 missing=""
+    local skill_dir skill_name
+    for skill_dir in "$SCRIPT_DIR/skills"/*; do
+        [ -d "$skill_dir" ] || continue
+        skill_name="$(basename "$skill_dir")"
+        expected=$((expected + 1))
+        if [ -f "$target/$skill_name/SKILL.md" ]; then
+            installed=$((installed + 1))
+        else
+            missing="$missing $skill_name"
+        fi
+    done
+
+    if [ "$installed" -eq "$expected" ]; then
+        doctor_success "bridge skills が全て存在します ($installed/$expected)"
+    else
+        doctor_warning "未インストールの bridge skill:$missing（./codex/install.sh でコピーできます）"
     fi
 }
 
@@ -419,6 +440,8 @@ copy_templates() {
 }
 
 copy_codex_skills() {
+    # $1=overwrite: "1" のとき既存 bridge skill を上書き再コピー（--sync 用）。
+    local overwrite="${1:-0}"
     print_header "Codex native skills のコピー"
 
     local skills_source="$SCRIPT_DIR/skills"
@@ -442,7 +465,13 @@ copy_codex_skills() {
         local target="$skills_target/$skill_name"
 
         if [ -e "$target" ]; then
-            print_info "skills/$skill_name は既に存在します（スキップ）"
+            if [ "$overwrite" = "1" ]; then
+                rm -rf "$target"
+                cp -R "$skill_dir" "$target"
+                print_success "更新: skills/$skill_name"
+            else
+                print_info "skills/$skill_name は既に存在します（スキップ）"
+            fi
             continue
         fi
 
@@ -451,6 +480,17 @@ copy_codex_skills() {
     done
 
     print_success "Codex native skills のコピー完了"
+}
+
+run_sync() {
+    # 非対話の再同期。sync.sh to-local から呼ばれる想定。
+    # symlink / テンプレは既存を壊さず、bridge skill のみ上書き再コピーする。
+    print_header "Codex Configuration Sync"
+    setup_directories
+    create_symlinks
+    copy_templates
+    copy_codex_skills 1
+    print_success "Codex sync 完了"
 }
 
 # =============================================================================
@@ -509,6 +549,10 @@ main() {
     case "${1:-}" in
         --doctor|doctor|check)
             run_doctor
+            ;;
+        --sync|sync)
+            run_sync
+            exit 0
             ;;
         -h|--help)
             show_help

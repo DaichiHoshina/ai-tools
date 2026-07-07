@@ -326,7 +326,32 @@ sync_to_local() {
     # repo root を記録（clone 先が機体ごとに違っても hooks が path 解決できるようにする）
     record_repo_root
 
+    # Codex 側 (~/.codex) も同期する。Codex 未使用 PC では ~/.codex 不在のためスキップ。
+    sync_codex
+
     print_success "ローカルへの同期が完了しました"
+}
+
+# Codex 設定 (~/.codex) を同期する。
+# ~/.codex が存在する環境でのみ codex/install.sh --sync を呼ぶ。
+# bridge skill は上書き再コピーされ、手書き Codex native skill は保護される。
+sync_codex() {
+    if [ ! -d "$HOME/.codex" ]; then
+        return 0
+    fi
+
+    local codex_installer="$AI_TOOLS_ROOT/codex/install.sh"
+    if [ ! -x "$codex_installer" ]; then
+        print_warning "Codex installer が見つかりません（スキップ）: $codex_installer"
+        return 0
+    fi
+
+    print_header "Codex (~/.codex) 同期"
+    if "$codex_installer" --sync; then
+        print_success "Codex 同期が完了しました"
+    else
+        print_warning "Codex 同期に失敗しました（Claude 側同期は完了済み）"
+    fi
 }
 
 # =============================================================================
@@ -685,7 +710,7 @@ setup_pre_push_hook() {
 usage() {
     echo "Usage: $0 [to-local|from-local|diff] [--yes|-y] [--skip-git-check] [--allow-overwrite]"
     echo ""
-    echo "  to-local    リポジトリ → ~/.claude/ に反映"
+    echo "  to-local    リポジトリ → ~/.claude/ に反映（~/.codex があれば Codex も同期）"
     echo "  from-local  ~/.claude/ → リポジトリ に反映"
     echo "  diff        差分を表示"
     echo ""
