@@ -2,14 +2,13 @@
 set -euo pipefail
 
 # Cursor 設定インストーラ
-# - User/ → ~/Library/Application Support/Cursor/User/
-# - rules/ → ~/.cursor/rules/
+# - rules/ → ~/.cursor/rules/ (symlink)
+# - 共有 memory → ~/.cursor/memory/ (symlink)
+# settings.json / keybindings.json は symlink しない (機体ごとの個人設定を保護)。
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 AI_TOOLS_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
-SRC_USER="${SCRIPT_DIR}/User"
 SRC_RULES="${SCRIPT_DIR}/rules"
-CURSOR_USER_DIR="${HOME}/Library/Application Support/Cursor/User"
 CURSOR_RULES_DIR="${HOME}/.cursor/rules"
 SHARED_MEMORY_SRC="${AI_TOOLS_ROOT}/memory"
 CURSOR_MEMORY_LINK="${HOME}/.cursor/memory"
@@ -92,12 +91,11 @@ install_shared_memory() {
 
 main() {
   info "Cursor 設定をインストールします"
-  info "User ソース: ${SRC_USER}"
-  info "User リンク先: ${CURSOR_USER_DIR}"
   info "Rules リンク先: ${CURSOR_RULES_DIR}"
 
-  link_file "settings.json" "${SRC_USER}/settings.json" "${CURSOR_USER_DIR}/settings.json"
-  link_file "keybindings.json" "${SRC_USER}/keybindings.json" "${CURSOR_USER_DIR}/keybindings.json"
+  # settings.json / keybindings.json は symlink しない。
+  # 機体ごとの個人設定 (テーマ / lineHeight 等) をローカルに保つため
+  # (config.toml と同じ手編集保護方針)。共有するのは rules と memory のみ。
   install_rules
   install_shared_memory
 

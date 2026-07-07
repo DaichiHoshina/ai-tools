@@ -31,6 +31,7 @@ ls -la ~/.codex/
 # guidelines@ -> ~/ai-tools/claude-code/guidelines/
 # commands@ -> ~/ai-tools/claude-code/commands/
 # lib@ -> ~/ai-tools/claude-code/lib/
+# memories/shared@ -> ~/ai-tools/memory/ (3 ツール共有 memory)
 
 # 利用可能なリソース
 ls ~/.codex/agents
@@ -41,6 +42,24 @@ ls ~/.codex/commands
 # 推奨設定の一括確認
 ./codex/install.sh --doctor
 ```
+
+## 共有 memory（3 ツール共通）
+
+過去セッションの学習・失敗知見・feedback は `~/ai-tools/memory/` に一元管理し、Claude Code / Codex / Cursor の 3 ツールで共有する。`~/ai-tools/memory/` は `.gitignore` 済みで、public repo には載せずローカルの single source として扱う。
+
+各ツールは同じ 1 箇所を symlink で参照する。
+
+| ツール | 参照 path | 実体 |
+|---|---|---|
+| Claude Code | `~/ai-tools/memory/` | write target 固定（SoT） |
+| Codex | `~/.codex/memories/shared/` → `~/ai-tools/memory/` | symlink |
+| Cursor | `~/.cursor/memory/` → `~/ai-tools/memory/` | symlink + `alwaysApply` rule |
+
+ghq 配下のどのプロジェクトで各エージェントを起動しても、この global path から同じ memory を読める。3 ツールとも「プロジェクトごとの場所」ではなく「グローバル 1 箇所」を参照するため。
+
+memory の**新規作成・更新は Claude Code 側に一本化**する。Codex / Cursor からは原則読むだけにする。3 ツールが同じ file を同時に書き換えて壊すのを避けるため。
+
+symlink は `./codex/install.sh --sync` と `./cursor/install.sh` が張る。`./sync.sh to-local` 実行時に両方が自動で呼ばれる。健全性は `./codex/install.sh --doctor` の「共有 memory の確認」で検査できる。
 
 ## 手動セットアップ（Level 3）
 
