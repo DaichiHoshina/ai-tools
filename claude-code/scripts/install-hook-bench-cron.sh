@@ -53,6 +53,24 @@ if [[ ! -x "${REPO_ROOT}/scripts/hook-bench.sh" ]]; then
   exit 2
 fi
 
+# hook-bench.sh は連想配列 (declare -A) を使うため bash 4+ が必須。
+# launchd の login shell から `env bash` を解決すると macOS 標準の 3.2 を拾い
+# `declare: -A: invalid option` で失敗するため、install 時に 4+ の bash を
+# 検出して plist の interpreter に絶対 path で固定する。
+BASH_BIN=""
+for cand in /opt/homebrew/bin/bash /usr/local/bin/bash "$(command -v bash 2>/dev/null)"; do
+  [[ -x "$cand" ]] || continue
+  major="$("$cand" -c 'echo "${BASH_VERSINFO[0]}"' 2>/dev/null)"
+  if [[ "${major:-0}" -ge 4 ]]; then
+    BASH_BIN="$cand"
+    break
+  fi
+done
+if [[ -z "$BASH_BIN" ]]; then
+  echo "ERROR: bash 4+ が見つかりません (hook-bench.sh は declare -A 依存)。'brew install bash' してください" >&2
+  exit 2
+fi
+
 plist_body() {
   cat <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -63,9 +81,9 @@ plist_body() {
   <string>${LABEL}</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/bin/bash</string>
+    <string>${BASH_BIN}</string>
     <string>-lc</string>
-    <string>cd ${REPO_ROOT} && ./scripts/hook-bench.sh --log --diff</string>
+    <string>cd ${REPO_ROOT} && ${BASH_BIN} ./scripts/hook-bench.sh --log --diff</string>
   </array>
   <key>StartCalendarInterval</key>
   <dict>

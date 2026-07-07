@@ -25,6 +25,23 @@ teardown() {
   [ ! -f "$TEST_HOME/Library/LaunchAgents/com.daichi.hook-bench.weekly.plist" ]
 }
 
+@test "plist interpreter は bash 4+ の絶対 path で /bin/bash ではない" {
+  # 再発防止: cron の login shell 経由で bash 3.2 が呼ばれ declare -A が
+  # 失敗する事象 (hook-bench.sh requires bash 4+) を install 時点で防ぐ。
+  run bash "$SCRIPT_FILE" --dry-run --repo "$PROJECT_ROOT"
+  [ "$status" -eq 0 ]
+  # ProgramArguments 先頭が /bin/bash でないこと (3.2 回避)
+  ! echo "$output" | grep -qE "<string>/bin/bash</string>"
+  # 埋め込まれた interpreter が実際に bash 4+ であること
+  interp="$(echo "$output" | grep -oE "<string>[^<]*/bash</string>" | head -1 | sed -E 's/<\/?string>//g')"
+  [ -x "$interp" ]
+  major="$("$interp" -c 'echo "${BASH_VERSINFO[0]}"')"
+  [ "$major" -ge 4 ]
+  # コマンド文字列内でも hook-bench.sh を bash 4+ で起動すること。
+  # (外側 interpreter を固定しても shebang 再起動で 3.2 を拾う事象を防ぐ)
+  echo "$output" | grep -qE "${interp} \./scripts/hook-bench\.sh"
+}
+
 @test "worktree path を REPO_ROOT に渡すと error で stop する" {
   WT_PATH="$TEST_HOME/ai-tools-wt-test/claude-code"
   mkdir -p "$WT_PATH/scripts"

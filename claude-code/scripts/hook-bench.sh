@@ -13,6 +13,14 @@
 #   ./scripts/hook-bench.sh --diff-threshold 30  # WARN 閾値 (%、default 20)
 set -euo pipefail
 
+# 連想配列 (declare -A) を使うため bash 4+ が必須。cron の login shell 経由で
+# 3.2 が呼ばれると `declare: -A: invalid option` になるため早期に検知する。
+if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
+  echo "ERROR: hook-bench.sh requires bash 4+, running on ${BASH_VERSION}." >&2
+  echo "       plist/cron の interpreter を bash 4+ (例: /opt/homebrew/bin/bash) に固定してください。" >&2
+  exit 3
+fi
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOOK_DIR="$REPO_ROOT/hooks"
 LOG_DIR="${HOME}/.claude/logs"
@@ -23,6 +31,14 @@ ONLY_HOOK=""
 LOG_ENABLED=0
 DIFF_ENABLED=0
 DIFF_THRESHOLD=20
+
+# timeout は macOS 標準に無く homebrew coreutils のみ (/opt/homebrew/bin/timeout)。
+# launchd/cron の最小 PATH では見つからず、hook が実行されず全 err になるため
+# 絶対 path で解決し、無ければ timeout なしで実行する。
+TIMEOUT_BIN=""
+for cand in "$(command -v timeout 2>/dev/null)" /opt/homebrew/bin/timeout /usr/local/bin/timeout; do
+  if [[ -x "$cand" ]]; then TIMEOUT_BIN="$cand"; break; fi
+done
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -43,7 +59,9 @@ PREV_LOG=""
 if [[ "$DIFF_ENABLED" -eq 1 ]]; then
   if [[ -d "$LOG_DIR" ]]; then
     # mtime 降順で 1 件、ls -t は read-time も含むため stat ベース
-    PREV_LOG=$(find "$LOG_DIR" -maxdepth 1 -name 'hook-bench-*.log' -type f -print0 2>/dev/null \
+    # 日付形式 (hook-bench-YYYYMMDD-*.log) のみ対象。cron の stderr/stdout log
+    # (hook-bench-cron.*.log) を prev として誤選択しないよう数字始まりに限定する。
+    PREV_LOG=$(find "$LOG_DIR" -maxdepth 1 -name 'hook-bench-[0-9]*.log' -type f -print0 2>/dev/null \
       | xargs -0 ls -t 2>/dev/null | head -1 || true)
   fi
   if [[ -n "$PREV_LOG" && -f "$PREV_LOG" ]]; then
@@ -142,11 +160,14 @@ bench_one() {
   local i t0 t1 status
 
   for ((i=1; i<=RUNS; i++)); do
+    # hook を bash 4+ ($BASH = 実行中の interpreter、冒頭ガードで 4+ 保証) で明示起動する。
+    # shebang (#!/usr/bin/env bash) 任せだと最小 PATH で 3.2 を拾い、hook 内の
+    # source 先 (lib/jp-quality-check.sh の declare -A 等) が壊れて全 err になる。
     t0=$(now_ms)
-    if echo "$input" | timeout 10 "$hook_path" >/dev/null 2>&1; then
-      status="ok"
+    if [[ -n "$TIMEOUT_BIN" ]]; then
+      echo "$input" | "$TIMEOUT_BIN" 10 "$BASH" "$hook_path" >/dev/null 2>&1 && status="ok" || status="err"
     else
-      status="err"
+      echo "$input" | "$BASH" "$hook_path" >/dev/null 2>&1 && status="ok" || status="err"
     fi
     t1=$(now_ms)
     if (( i > WARMUP )); then
