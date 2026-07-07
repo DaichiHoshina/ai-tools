@@ -277,6 +277,42 @@ doctor_check_native_skills() {
     fi
 }
 
+doctor_check_shared_memory() {
+    print_header "共有 memory の確認"
+
+    local source="$AI_TOOLS_DIR/memory"
+    local target="$CODEX_DIR/memories/shared"
+
+    if [ ! -d "$source" ]; then
+        doctor_error "共有 memory の元が見つかりません: $source"
+        return
+    fi
+    source="$(cd "$source" && pwd -P)"
+
+    if [ ! -L "$target" ]; then
+        if [ -e "$target" ]; then
+            doctor_error "memories/shared は symlink ではありません: $target"
+        else
+            doctor_warning "memories/shared の symlink が見つかりません（./codex/install.sh --sync で作成）"
+        fi
+        return
+    fi
+
+    local actual
+    actual="$(readlink "$target")"
+    if [ "$actual" = "$source" ]; then
+        doctor_success "共有 memory がリンクされています ($target -> $source)"
+    else
+        doctor_error "memories/shared のリンク先が想定と異なります: $actual"
+    fi
+
+    if [ -f "$target/MEMORY.md" ]; then
+        doctor_success "共有 memory の MEMORY.md が読めます"
+    else
+        doctor_warning "共有 memory の MEMORY.md が見つかりません: $target/MEMORY.md"
+    fi
+}
+
 doctor_check_config() {
     print_header "Codex config の確認"
 
@@ -401,6 +437,7 @@ run_doctor() {
 
     doctor_check_shared_links
     doctor_check_native_skills
+    doctor_check_shared_memory
     doctor_check_config
     doctor_check_codex_features
     doctor_check_hooks
