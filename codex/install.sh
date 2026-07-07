@@ -98,6 +98,78 @@ copy_template() {
     fi
 }
 
+# Managed marker block sync
+# template 内の `<!-- BEGIN managed:<name> -->` ~ `<!-- END managed:<name> -->`
+# ブロックを実体ファイルへ冪等に反映する。マーカー外の手編集は保護する。
+# 実体にマーカーが無ければ末尾に追記、あれば範囲を置換、同一なら何もしない。
+sync_managed_block() {
+    local template="$1"
+    local target="$2"
+    local name="$3"
+    local label="$4"
+
+    local begin="<!-- BEGIN managed:${name} -->"
+    local end="<!-- END managed:${name} -->"
+
+    if [ ! -f "$template" ] || [ ! -f "$target" ]; then
+        return 0
+    fi
+
+    # template から managed ブロックを抽出（マーカー行を含む）。
+    local block
+    block="$(awk -v b="$begin" -v e="$end" '
+        $0==b {inblk=1}
+        inblk {print}
+        $0==e {inblk=0}
+    ' "$template")"
+
+    if [ -z "$block" ]; then
+        print_warning "template に managed:${name} ブロックがありません（スキップ）"
+        return 0
+    fi
+
+    # 実体の現ブロックを抽出して比較。同一なら何もしない（冪等）。
+    local current
+    current="$(awk -v b="$begin" -v e="$end" '
+        $0==b {inblk=1}
+        inblk {print}
+        $0==e {inblk=0}
+    ' "$target")"
+
+    if [ "$current" = "$block" ]; then
+        print_info "${label} は最新です"
+        return 0
+    fi
+
+    # 単純な行走査で置換/追記する（awk の process-substitution 依存を避け移植性を確保）。
+    local tmp
+    tmp="$(mktemp)"
+    {
+        local replaced=0 skipping=0
+        while IFS= read -r line || [ -n "$line" ]; do
+            if [ "$line" = "$begin" ]; then
+                printf '%s\n' "$block"
+                skipping=1
+                replaced=1
+                continue
+            fi
+            if [ "$line" = "$end" ]; then
+                skipping=0
+                continue
+            fi
+            [ "$skipping" -eq 1 ] && continue
+            printf '%s\n' "$line"
+        done < "$target"
+        if [ "$replaced" -eq 0 ]; then
+            # マーカーが無い旧実体 → 末尾に追記する。
+            printf '\n%s\n' "$block"
+        fi
+    } > "$tmp"
+
+    mv "$tmp" "$target"
+    print_success "更新: ${label}"
+}
+
 show_help() {
     cat <<'EOF'
 Usage: ./codex/install.sh [--sync|--doctor|--help]
@@ -394,7 +466,42 @@ create_symlinks() {
         fi
     done
 
+    link_shared_memory
+
     print_success "シンボリックリンクの作成完了"
+}
+
+link_shared_memory() {
+    # グローバル共有 memory (~/ai-tools/memory) を Codex から読めるようにする。
+    # Codex 自前の ~/.codex/memories/ (MEMORY.md 自動生成) と衝突しないよう
+    # 別ディレクトリ ~/.codex/memories/shared に symlink する。非対話で冪等。
+    # ~/ai-tools 自体が symlink の環境があるため、実 path (pwd -P) に正規化して
+    # 比較・作成する。正規化しないと毎回リンク先が揺れて再作成が発生する。
+    local source="$AI_TOOLS_DIR/memory"
+    local target="$CODEX_DIR/memories/shared"
+
+    if [ ! -d "$source" ]; then
+        print_warning "共有 memory がありません: $source"
+        return 0
+    fi
+    source="$(cd "$source" && pwd -P)"
+
+    mkdir -p "$CODEX_DIR/memories"
+
+    if [ -L "$target" ]; then
+        if [ "$(readlink "$target")" = "$source" ]; then
+            print_info "memory は既にリンク済みです"
+            return 0
+        fi
+        rm -f "$target"
+    elif [ -e "$target" ]; then
+        local backup="${target}.backup.$(date +%Y%m%d%H%M%S)"
+        mv "$target" "$backup"
+        print_info "memory をバックアップ: $backup"
+    fi
+
+    ln -sf "$source" "$target"
+    print_success "作成: memories/shared (-> $source)"
 }
 
 # =============================================================================
@@ -410,8 +517,15 @@ copy_templates() {
     fi
 
     # AGENTS.md
+    # 実体不在なら丸ごとコピー、既存なら managed マーカーブロックだけ template と同期する。
+    # マーカー外の手編集は保護する。
     if [ -f "$SCRIPT_DIR/AGENTS.md.example" ]; then
         copy_template "$SCRIPT_DIR/AGENTS.md.example" "$CODEX_DIR/AGENTS.md" "AGENTS.md"
+        sync_managed_block \
+            "$SCRIPT_DIR/AGENTS.md.example" \
+            "$CODEX_DIR/AGENTS.md" \
+            "codex-memory" \
+            "AGENTS.md (memory 節)"
     fi
 
     # COMMANDS.md

@@ -326,8 +326,9 @@ sync_to_local() {
     # repo root を記録（clone 先が機体ごとに違っても hooks が path 解決できるようにする）
     record_repo_root
 
-    # Codex 側 (~/.codex) も同期する。Codex 未使用 PC では ~/.codex 不在のためスキップ。
+    # Codex / Cursor 側も同期する。各ツール未使用 PC では dir 不在のためスキップ。
     sync_codex
+    sync_cursor
 
     print_success "ローカルへの同期が完了しました"
 }
@@ -351,6 +352,28 @@ sync_codex() {
         print_success "Codex 同期が完了しました"
     else
         print_warning "Codex 同期に失敗しました（Claude 側同期は完了済み）"
+    fi
+}
+
+# Cursor 設定 (~/.cursor) を同期する。
+# ~/.cursor が存在する環境でのみ cursor/install.sh を呼ぶ。
+# rules と共有 memory symlink を配置する。install.sh は非対話・冪等。
+sync_cursor() {
+    if [ ! -d "$HOME/.cursor" ]; then
+        return 0
+    fi
+
+    local cursor_installer="$AI_TOOLS_ROOT/cursor/install.sh"
+    if [ ! -x "$cursor_installer" ]; then
+        print_warning "Cursor installer が見つかりません（スキップ）: $cursor_installer"
+        return 0
+    fi
+
+    print_header "Cursor (~/.cursor) 同期"
+    if "$cursor_installer"; then
+        print_success "Cursor 同期が完了しました"
+    else
+        print_warning "Cursor 同期に失敗しました（Claude 側同期は完了済み）"
     fi
 }
 

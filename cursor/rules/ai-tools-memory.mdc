@@ -1,0 +1,23 @@
+---
+description: グローバル共有 memory (~/ai-tools/memory) を全プロジェクトで参照する
+alwaysApply: true
+---
+
+# 共有 memory 参照ルール
+
+過去セッションの学習・失敗知見・feedback は `~/ai-tools/memory/` に一元管理する。Claude Code / Codex / Cursor の 3 ツールがこの 1 箇所を共有 source として読む。
+
+## 読み方
+
+1. セッション開始時にまず `~/ai-tools/memory/MEMORY.md` (index) を読む。1 行 1 memory の要約が並ぶ。
+2. index の中から現タスクに関連しそうな memory を選び、`~/ai-tools/memory/<name>.md` の本体を読む。
+3. `~/.cursor/memory` は `~/ai-tools/memory` への symlink なので、どちらの path からでも同じ内容を読める。
+
+## 書き込み
+
+- memory の**新規作成・更新は Claude Code 側に一本化**する。Cursor からは原則読むだけにする。
+- Cursor で新しい知見を得た場合は、その旨をユーザーに伝えて Claude Code 側で保存してもらう。3 ツールが同じ file を同時に書き換えて壊すのを避けるため。
+
+## 適用範囲
+
+ghq 配下のどのプロジェクトで Cursor を起動しても、この global rule が `alwaysApply` で効き、同じ共有 memory を読める。
