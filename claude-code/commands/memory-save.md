@@ -59,6 +59,8 @@ name: <kebab-case-slug>
 description: <one-line summary>
 metadata:
   type: project
+  worktree: <abs-path>   # optional: cwd が linked worktree の時のみ (下記判定)
+  branch: <branch-name>  # optional: worktree と対で記録
 ---
 
 ## task               # 必須
@@ -71,6 +73,8 @@ metadata:
 ```
 
 3 必須 (task / progress / next-action) のみで完結可。短 session は 10 行台で OK。
+
+**Worktree 判定** (auto merge/new と clear の両 mode で body 生成前に実行): `[ -f "$(git rev-parse --show-toplevel 2>/dev/null)/.git" ]` が true なら cwd は linked worktree (main repo は `.git` が dir、wt は file)。true の時のみ frontmatter に `worktree:` (`git rev-parse --show-toplevel`) と `branch:` (`git branch --show-current`) を記録する。`/reload` がこの field を読んで wt へ復帰する (canonical: `commands/reload.md` step 2.5)。
 
 ## `clear` post-processing
 

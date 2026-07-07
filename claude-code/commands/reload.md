@@ -92,6 +92,14 @@ Else (fallback chain、上から順に評価、ヒットしたら次 step も並
 
 `$ARGUMENTS` 経路は `/memory-save` (clear / exit) が pbcopy した `/reload <topic>` を拾うための fast path。個別 file があれば直接 Read、無ければ MEMORY.md の `[clear] <topic>` entry を source とする。
 
+### 2.5 Worktree 復帰 (work-context に worktree field がある時のみ)
+
+Step 2 で Read した work-context の frontmatter に `metadata.worktree` があれば実行する (無ければ skip):
+
+1. **dir 存在 + cwd 不一致** → Bash で `cd <worktree>` する (cwd は Bash call 間で永続)。`git branch --show-current` が frontmatter の `branch:` と一致するか確認し、不一致なら切替せず warn を 1 行出す (wt 内 branch 切替禁止 rule と整合)
+2. **dir 不在** → 「worktree `<path>` は削除済み (merge / cleanup 済の可能性)」と 1 行報告して cwd を維持する。main 側で `git log --oneline -3` を見て merge 済かを補足する
+3. 切替した場合の注意: session の permission scope / Serena active project は起動 dir 基準のまま変わらない。wt 作業を長く続けるなら「wt dir で session を再起動すると permission / Serena も揃う」と 1 行添える
+
 ### 3. Load Project CLAUDE.md
 
 cwd に `CLAUDE.md` / `.claude/rules/` があれば Read。無ければ skip した旨を 1 行明示する (user 側の判定 cost 削減)。
@@ -104,6 +112,7 @@ Report summary to chat (4 block 固定):
 - **直近 state**: MEMORY.md 先頭 [clear] entry (B 段) を主 source に task / progress / next-action を 3 行で要約する。work-context 本文 (C 段) が B 段最新 entry より古い場合は「本文は `<wc_date>` 時点、以降は MEMORY.md entry `<日付>` を参照」と日付乖離を明示し、古い本文を最新扱いしない
 - **未消化 item**: pending-improvements.md から「進行中 / 保留」item を抜粋 (該当なければ「なし」)
 - **Next action**: user 指示待ち、または直近 state (B 段が新しければ B 段、同日なら work-context) の next-action をそのまま提示
+- (step 2.5 で worktree 切替 / 不在検出があった場合のみ) **Worktree**: 切替先 path + branch、または削除済みの旨を 1 行追加
 
 ## "Continue" Alternative
 
