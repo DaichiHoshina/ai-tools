@@ -72,11 +72,20 @@ _check_social_hit() {
 
 # Bash 外向き text (commit message / pr body 等) を social-hit term で判定する
 # 引数: label (人間可読: "commit message" / "gh pr create" 等), text
+# cwd が ai-tools 配下でない場合は skip する (public repo 保護は ai-tools cwd 限定、
+# snkrdunk 等の private repo cwd での gh pr / gh issue 系は自 project の名前を含んで正常)。
 _check_social_hit_in_text() {
   local label="$1"
   local text="$2"
   [[ -z "$text" ]] && return 0
   [[ -f "$_social_hit_rule_file" ]] || return 0
+
+  # cwd 判定: ai-tools 配下 cwd のみで発火。それ以外の repo cwd (snkrdunk 等) では skip。
+  # pre-tool-use.sh L83 で先に取得済み。fallback は $PWD (hook shell の起動 dir)。
+  local _cwd="${_CWD_FOR_SPLIT:-$PWD}"
+  if ! _is_aitools_path "$_cwd"; then
+    return 0
+  fi
 
   local found=() _terms=() word
   while IFS= read -r word; do
