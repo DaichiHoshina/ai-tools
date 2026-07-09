@@ -587,6 +587,64 @@ _clear_markers() {
 }
 
 # =============================================================================
+# Permission-Denied Hook Tests
+# =============================================================================
+
+@test "hooks: permission-denied accepts valid JSON input" {
+  local input='{"tool_name": "Bash", "session_id": "test-123", "cwd": "/test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/permission-denied.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq . >/dev/null
+  [[ "$(echo "$output" | jq -r '.systemMessage')" == *"Permission denied: Bash"* ]]
+}
+
+@test "hooks: permission-denied falls back to unknown on empty input" {
+  local input='{}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/permission-denied.sh"
+  [ "$status" -eq 0 ]
+  [[ "$(echo "$output" | jq -r '.systemMessage')" == *"Permission denied: unknown"* ]]
+}
+
+# =============================================================================
+# Serena Hook Wrapper Tests
+# =============================================================================
+
+@test "hooks: serena-hook rejects missing subcmd with usage" {
+  run -64 "${HOOKS_DIR}/serena-hook.sh"
+  [[ "$output" == *"Usage:"* ]]
+}
+
+@test "hooks: serena-hook rejects unknown subcmd" {
+  run -64 "${HOOKS_DIR}/serena-hook.sh" bogus
+  [[ "$output" == *"Usage:"* ]]
+}
+
+@test "hooks: serena-hook silently passes when Serena not installed" {
+  run env SERENA_PATH="${BATS_TEST_TMPDIR}/no-such-serena" "${HOOKS_DIR}/serena-hook.sh" remind
+  [ "$status" -eq 0 ]
+  [[ -z "$output" ]]
+}
+
+# =============================================================================
+# Stop-Failure Hook Tests
+# =============================================================================
+
+@test "hooks: stop-failure accepts valid JSON input" {
+  local input='{"cwd": "/test", "session_id": "test-123"}'
+  run bash -c "echo '$input' | CLAUDE_STOP_NOTIFY=0 ${HOOKS_DIR}/stop-failure.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq . >/dev/null
+  [[ "$(echo "$output" | jq -r '.systemMessage')" == "API error detected." ]]
+}
+
+@test "hooks: stop-failure handles missing cwd" {
+  local input='{}'
+  run bash -c "echo '$input' | CLAUDE_STOP_NOTIFY=0 ${HOOKS_DIR}/stop-failure.sh"
+  [ "$status" -eq 0 ]
+  echo "$output" | jq . >/dev/null
+}
+
+# =============================================================================
 # NOTE: _check_parent_prep_missing / _check_colloquial_trigger の unit test は
 #       tests/unit/hooks/pre-tool-use-prep-check.bats に移動済 (source + 関数直呼び)
 # =============================================================================
