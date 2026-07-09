@@ -75,72 +75,46 @@ _run_social_hit_write() {
   invoke_hook_run_merged "$tool_name" "$input"
 }
 
-@test "social-hit: Write で hit 時に stderr へ [social-hit-block] hit_term= を出力する" {
-  # term literal は bash string concat で split し hook block を回避
+# =============================================================================
+# 2026-07-09: Edit/Write の social-hit / private-name block を恒久廃止
+# 理由: local reversible な file 書込を毎回止めるとメモ集約作業等が回らない。
+#       不可逆な公開経路 (git commit / gh / glab) は Bash 側の block で防ぐ。
+# 下記 test 群は「Edit/Write では block されない (素通し)」ことの回帰保証。
+# =============================================================================
+
+@test "social-hit: Write は hit 語含んでも block されない (Edit/Write 経路恒久廃止)" {
   local term1="snkr""dunk"
   local target_path
   target_path="${HOME}/ai-tools/claude-code/some-new-file.md"
   _run_social_hit_write "${target_path}" "this mentions ${term1} product"
-  # social-hit block は exit 2 で返る
-  [[ "$status" -eq 2 ]]
-  # stderr に [social-hit-block] hit_term= が含まれること
-  echo "${output}" | grep -q "\[social-hit-block\] hit_term="
+  # Edit/Write は素通し (exit 2 にならない)
+  [[ "$status" -ne 2 ]]
+  # stderr に [social-hit-block] も出ない
+  ! echo "${output}" | grep -q "\[social-hit-block\] hit_term="
 }
 
-@test "social-hit: stderr 出力に file= パスが含まれる" {
-  # oripa は 2026-06-12 に allowlist 化 (業界一般名称) のため snkrdunk で代替
+@test "social-hit: ai-tools 別 file への Write も素通し" {
   local term2="snkr""dunk"
   local target_path
   target_path="${HOME}/ai-tools/claude-code/another-file.md"
   _run_social_hit_write "${target_path}" "${term2} data pipeline"
-  [[ "$status" -eq 2 ]]
-  echo "${output}" | grep -q "file="
-}
-
-@test "social-hit: allowlist ファイル (pre-tool-use.sh) は block されない" {
-  # 自己除外 allowlist: claude-code/hooks/pre-tool-use.sh は判定対象外
-  local term1="snkr""dunk"
-  local term2="ori""pa"
-  local allowlist_path
-  allowlist_path="${HOME}/ai-tools/claude-code/hooks/pre-tool-use.sh"
-  _run_social_hit_write "${allowlist_path}" "${term1} ${term2} term"
-  # allowlist なので block されない (exit 2 にならない)
   [[ "$status" -ne 2 ]]
 }
 
-@test "social-hit: ai-tools 配下以外のパスは block されない" {
+@test "social-hit: ai-tools 配下以外のパスも素通し (従来通り)" {
   local term1="snkr""dunk"
   local outside_path
   outside_path="${HOME}/ghq/github.com/myorg/some-repo/file.md"
   _run_social_hit_write "${outside_path}" "${term1} content"
-  # ai-tools/ 外なので block されない
   [[ "$status" -ne 2 ]]
 }
 
-# =============================================================================
-# social-hit block: ghq 実 path (~/ai-tools/ symlink なし環境) テスト
-# (2026-06-08 追加: symlink 非存在時の block 漏れ修正の回帰テスト)
-# =============================================================================
-
-@test "social-hit: ghq 実 path でも hit 時に block される" {
+@test "social-hit: ghq 実 path への Write も素通し" {
   local term1="snkr""dunk"
   local ghq_path
-  # DaichiHoshina を個人名として直接 path に含めるが、path literal なので block 対象外
   ghq_path="${HOME}/ghq/github.com/DaichiHoshina/ai-tools/claude-code/some-new-file.md"
   _run_social_hit_write "${ghq_path}" "this mentions ${term1} product"
-  # ghq 実 path でも exit 2 で block される
-  [[ "$status" -eq 2 ]]
-  echo "${output}" | grep -q "\[social-hit-block\] hit_term="
-}
-
-@test "social-hit: ghq 実 path でも file= パスが stderr 出力に含まれる" {
-  # oripa は 2026-06-12 に allowlist 化 のため snkrdunk で代替
-  local term2="snkr""dunk"
-  local ghq_path
-  ghq_path="${HOME}/ghq/github.com/DaichiHoshina/ai-tools/claude-code/docs/report.md"
-  _run_social_hit_write "${ghq_path}" "${term2} pipeline data"
-  [[ "$status" -eq 2 ]]
-  echo "${output}" | grep -q "file="
+  [[ "$status" -ne 2 ]]
 }
 
 # =============================================================================

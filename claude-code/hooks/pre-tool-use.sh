@@ -184,12 +184,9 @@ case "$TOOL_NAME" in
       detect_dangerous_patterns "$EDIT_CONTENT"
     fi
 
-    # social-hit block: ai-tools public repo への社内 product 名書き込み防止
-    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
-      if [ -n "$_EDIT_FILE_PATH" ]; then
-        _check_social_hit "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
-      fi
-    fi
+    # social-hit block (Edit/Write): 恒久的に無効化 (2026-07-09、git commit / gh / glab 系のみ block)
+    # 理由: local reversible な file 書込を毎回止めるとメモ集約作業等が回らない。
+    # 不可逆な公開経路 (git push 経由 remote) は Bash 側の _check_social_hit_in_text で防ぐ。
 
     # live-doc warn: library API method 直書き検出 → context7 / WebFetch 確認を促す (warn-only)
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
@@ -206,25 +203,9 @@ case "$TOOL_NAME" in
       _check_local_docs_template "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
     fi
 
-    # private-name block: private-name-list.txt の term を ai-tools 配下 file 書込に適用
-    # memory file は除外 (user 指示 2026-06-30: memory save 時に NG word 検出を skip)
-    if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
-      _PN_PATH="$_EDIT_FILE_PATH"
-      if _is_aitools_path "$_PN_PATH" && ! _is_memory_path "$_PN_PATH"; then
-        # 自己除外: rule 説明文として term を保持する file は判定対象外
-        _PN_REL=$(_aitools_relpath "$_PN_PATH")
-        case "$_PN_REL" in
-          claude-code/rules/public-repo-private-data-block.md|\
-          claude-code/CLAUDE.md|\
-          claude-code/hooks/pre-tool-use.sh|\
-          claude-code/tests/unit/hooks/pre-tool-use.bats)
-            : ;;  # skip
-          *)
-            _check_private_name "$_PN_PATH" "$EDIT_CONTENT"
-            ;;
-        esac
-      fi
-    fi
+    # private-name block (Edit/Write): 恒久的に無効化 (2026-07-09、git commit / gh / glab 系のみ block)
+    # 理由: local reversible な file 書込を毎回止めるとメモ集約作業等が回らない。
+    # 不可逆な公開経路 (git push 経由 remote) は Bash 側の _check_private_name で防ぐ。
 
     # .serena/memories/ block: CLAUDE.md 規約違反パスへの書き込みを block
     if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ]; then
