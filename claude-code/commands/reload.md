@@ -23,7 +23,7 @@ Use after compaction (conversation compression) or when saying "continue". Resto
 /reload foo                                      # prefix match、無ければ MEMORY.md の [clear] foo entry を拾う
 ```
 
-`/memory-save` (clear / exit 両方) が pbcopy する `/reload <topic>` が paste されると名指し経路で復元する。clear / exit とも個別 file を書くため通常は step 1-3 の Read で復元し、個別 file を持たない旧 clear 保存分のみ MEMORY.md の `[clear] <topic>` entry を直近 state の source として拾う (名指し fast path step 4)。
+`/memory-save` (全 mode) が pbcopy する `/reload <topic>` が paste されると名指し経路で復元する。どの mode も個別 file を書くため通常は step 1-3 の Read で復元し、個別 file を持たない旧 clear 保存分のみ MEMORY.md の `[clear] <topic>` entry を直近 state の source として拾う (名指し fast path step 4)。
 
 ## Task Execution
 
@@ -39,7 +39,7 @@ Read `$HOME/.claude/CLAUDE.md` and internalize instructions.
 
 ```text
 If $ARGUMENTS non-empty (名指し fast path):
-  # `/memory-save` は clear / exit とも個別 file (`work-context-YYYYMMDD-<topic>.md`) を書く。
+  # `/memory-save` は全 mode で個別 file (`work-context-YYYYMMDD-<topic>.md`) を書く。
   # 個別 file を持たない旧 clear 保存分 (MEMORY.md 1 行 entry のみ) の互換として step 4 の
   # helper fallback を残す。
   1. Read ~/ai-tools/memory/work-context-*-<arg>.md (glob で日付 suffix 吸収、`ls -t | head -1` で最新 1 件)
@@ -90,7 +90,7 @@ Else (fallback chain、上から順に評価、ヒットしたら次 step も並
      Read ~/ai-tools/memory/pending-improvements.md (存在すれば)
 ```
 
-`$ARGUMENTS` 経路は `/memory-save` (clear / exit) が pbcopy した `/reload <topic>` を拾うための fast path。個別 file があれば直接 Read、無ければ MEMORY.md の `[clear] <topic>` entry を source とする。
+`$ARGUMENTS` 経路は `/memory-save` が pbcopy した `/reload <topic>` を拾うための fast path。個別 file があれば直接 Read、無ければ MEMORY.md の `[clear] <topic>` entry を source とする。
 
 ### 2.5 Worktree 復帰 (work-context に worktree field がある時のみ)
 
