@@ -406,6 +406,24 @@ DDを「みやすく / 端的に / 抽象度を上げて」と反復で詰める
 [ ] 既出議論と本文方針が整合
 ```
 
+## PRD と PR コメントの優先順位 (SoT の扱い)
+
+**Rule**: SoT (真の値) は PRD。だが PRD 本文が PR review や朝会で決まったことを反映しそびれるケースがある。整合性チェックで PRD と DD が食い違ったら、**PRD 本文だけでなく PRD 側の PR コメントも必ず読む**。PR コメントが真の確定事項のことがある。
+
+**Why**: PRD 本文だけ見て整合性を判断すると方向を誤る。実際に「PRD が古く、PR review コメントで PdM が方針を変えた」ケースで Critical の方向を逆に出した事故がある。
+
+**How to apply**:
+
+- 整合性チェックで齟齬発見時: `gh pr view <N> --comments` で PRD PR のコメントを確認。inline も `gh api repos/.../pulls/<N>/comments` で読む
+- PRD 修正は PdM 領域。DD に「PRD のここを直す必要がある」節を作らない。齟齬は Slack / PR コメントで PdM に伝える
+- 役割分担: PRD = 要件・背景 (PdM 管理) / DD = 実装方針 (エンジニア管理) / Figma = UI / PR コメント・朝会ログ = PRD 反映が遅れたときの真の決定源
+- 実装詳細 (PRD に縛りがない範囲) は DD 側の設計判断で確定してよい
+
+## Mermaid 構文の罠
+
+- `subgraph DB[(MySQL)]` は **構文エラー**。`[(...)]` cylinder は node 専用で、subgraph は `[...]` のみ
+- DB テーブル間の矢印は **FK 表現なら点線 `-. FK .->`**、実線は handler→table 等のアクセス関係。semantic 分離すると読み手が混乱しない
+
 ## 関連
 
 - [PRINCIPLES.md](PRINCIPLES.md) — 共通文章原則 (DDにも適用)
