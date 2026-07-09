@@ -129,6 +129,7 @@ teardown() {
   local end=$(date +%s)
   local duration=$((end - start))
 
+  [ "$status" -eq 0 ]
   # 5秒以内に完了することを確認
   [ "$duration" -lt 5 ]
 }
@@ -175,6 +176,21 @@ teardown() {
   [ "$status" -eq 0 ]
 }
 
+@test "hooks: setup reports Serena enabled when serena MCP present" {
+  local input='{"cwd": "/test/proj", "mcp_servers": {"serena": {}}}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/setup.sh"
+  [ "$status" -eq 0 ]
+  [[ "$(echo "$output" | jq -r '.systemMessage')" == *"Serena enabled"* ]]
+  [[ "$(echo "$output" | jq -r '.additionalContext')" == *"/test/proj"* ]]
+}
+
+@test "hooks: setup falls back to Basic mode without serena MCP" {
+  local input='{"cwd": "/test/proj", "mcp_servers": {}}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/setup.sh"
+  [ "$status" -eq 0 ]
+  [[ "$(echo "$output" | jq -r '.systemMessage')" == *"Basic mode"* ]]
+}
+
 # =============================================================================
 # Subagent Start/Stop Hook Tests
 # =============================================================================
@@ -197,6 +213,42 @@ teardown() {
   local input='{"agent_id": "unknown", "agent_type": "unknown", "cwd": "."}'
   run bash -c "echo '$input' | ${HOOKS_DIR}/subagent-start.sh"
   [ "$status" -eq 0 ]
+}
+
+@test "hooks: subagent-start reports zero recent activity on first launch" {
+  local input='{"agent_id": "first-1", "agent_type": "developer-agent", "cwd": "/test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/subagent-start.sh"
+  [ "$status" -eq 0 ]
+  [[ "$(echo "$output" | jq -r '.systemMessage')" == *"Subagent started: developer-agent"* ]]
+  [[ "$(echo "$output" | jq -r '.additionalContext')" == *"0 subagents started in last 24h"* ]]
+}
+
+@test "hooks: subagent-start warns on duplicate launch within 60s" {
+  local input1='{"agent_id": "dup-1", "agent_type": "developer-agent", "cwd": "/test"}'
+  bash -c "echo '$input1' | ${HOOKS_DIR}/subagent-start.sh" >/dev/null
+  local input2='{"agent_id": "dup-2", "agent_type": "developer-agent", "cwd": "/test"}'
+  run bash -c "echo '$input2' | ${HOOKS_DIR}/subagent-start.sh"
+  [ "$status" -eq 0 ]
+  [[ "$(echo "$output" | jq -r '.systemMessage')" == *"Subagent重複疑い: developer-agent"* ]]
+  [[ "$(echo "$output" | jq -r '.additionalContext')" == *"1 subagents started in last 24h"* ]]
+}
+
+@test "hooks: subagent-stop computes duration from matching START" {
+  local input='{"agent_id": "dur-1", "agent_type": "developer-agent", "cwd": "/test"}'
+  bash -c "echo '$input' | ${HOOKS_DIR}/subagent-start.sh" >/dev/null
+  run bash -c "echo '$input' | ${HOOKS_DIR}/subagent-stop.sh"
+  [ "$status" -eq 0 ]
+  local ac
+  ac=$(echo "$output" | jq -r '.additionalContext')
+  [[ "$ac" != *"N/A"* ]]
+  [[ "$ac" == *"24h:1"* ]]
+}
+
+@test "hooks: subagent-stop reports N/A duration without matching START" {
+  local input='{"agent_id": "ghost-1", "agent_type": "developer-agent", "cwd": "/test"}'
+  run bash -c "echo '$input' | ${HOOKS_DIR}/subagent-stop.sh"
+  [ "$status" -eq 0 ]
+  [[ "$(echo "$output" | jq -r '.additionalContext')" == *"N/A"* ]]
 }
 
 # =============================================================================
@@ -321,6 +373,38 @@ teardown() {
   local input='{}'
   run bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh"
   [ "$status" -eq 0 ]
+}
+
+@test "hooks: teammate-idle escalates level across repeated idles" {
+  local input='{"teammate_name": "dev1", "team_name": "alpha"}'
+
+  run bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh"
+  [ "$status" -eq 0 ]
+  [ "$(echo "$output" | jq -r '.escalationLevel')" = "1" ]
+
+  run bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh"
+  [ "$status" -eq 0 ]
+  [ "$(echo "$output" | jq -r '.escalationLevel')" = "2" ]
+  [[ "$(echo "$output" | jq -r '.additionalContext')" == *"Level 2"* ]]
+
+  run bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh"
+  [ "$status" -eq 0 ]
+  [ "$(echo "$output" | jq -r '.escalationLevel')" = "3" ]
+  [[ "$(echo "$output" | jq -r '.additionalContext')" == *"Level 3"* ]]
+}
+
+@test "hooks: teammate-idle resets idle count after START for same teammate" {
+  local input='{"teammate_name": "dev2", "team_name": "alpha"}'
+  bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh" >/dev/null
+  bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh" >/dev/null
+
+  # 同一 teammate の START 行を挟むと idle count が最後の START 以降で数え直される
+  TZ=UTC printf -v _ts '%(%Y-%m-%dT%H:%M:%SZ)T' -1
+  echo "[${_ts}] START | teammate=dev2 | team=alpha" >> "${HOME}/.claude/logs/agent-team-events.log"
+
+  run bash -c "echo '$input' | ${HOOKS_DIR}/teammate-idle.sh"
+  [ "$status" -eq 0 ]
+  [ "$(echo "$output" | jq -r '.escalationLevel')" = "1" ]
 }
 
 # =============================================================================
