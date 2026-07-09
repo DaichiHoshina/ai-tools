@@ -1,5 +1,6 @@
 {
   "model": "claude-fable-5",
+  "availableModels": ["claude-fable-5", "claude-opus-4-7"],
   "fallbackModel": ["claude-opus-4-7", "claude-sonnet-4-6", "claude-haiku-4-5"],
   "alwaysThinkingEnabled": false,
   "env": {

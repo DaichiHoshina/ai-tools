@@ -210,6 +210,7 @@ sync_settings_root_keys() {
     local root_keys=(
         "env"
         "model"
+        "availableModels"
         "fallbackModel"
         "statusLine"
         "autoUpdatesChannel"
