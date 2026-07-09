@@ -22,6 +22,26 @@ teardown() {
   [ "$output" = "$MEMORY_SAVE_DIR" ]
 }
 
+@test "resolve-dir returns ai-tools SoT when MEMORY_SAVE_DIR unset (from non-ai-tools cwd)" {
+  # 3 tool 共有 SoT 固定: cwd がどの repo でも ~/ai-tools/memory を返す (CLAUDE.md L188)
+  local fake_repo; fake_repo=$(mktemp -d)
+  ( cd "$fake_repo" && git init -q )
+  # <repo-parent>/memory/ を作っても影響しない (旧 fallback 廃止確認)
+  mkdir -p "${fake_repo%/*}/memory"
+  run env -u MEMORY_SAVE_DIR bash -c "cd '$fake_repo' && '$HELPER' resolve-dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "${HOME}/ai-tools/memory" ]
+  rm -rf "$fake_repo" "${fake_repo%/*}/memory"
+}
+
+@test "resolve-dir returns ai-tools SoT when outside any git repo" {
+  local nogit; nogit=$(mktemp -d)
+  run env -u MEMORY_SAVE_DIR bash -c "cd '$nogit' && '$HELPER' resolve-dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "${HOME}/ai-tools/memory" ]
+  rm -rf "$nogit"
+}
+
 @test "list-today returns empty when no files" {
   run "$HELPER" list-today
   [ "$status" -eq 0 ]
