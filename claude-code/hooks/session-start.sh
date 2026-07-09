@@ -276,7 +276,7 @@ if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
-_AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__list_memories\` でメモリ一覧を確認する (project は --project-from-cwd で自動 activate 済)\n2. 関連メモリがあれば読み込む\n\n**追加推奨**: コーディング作業を開始する場合、最初の編集前に \`/load-guidelines\` を実行\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否\n\n**文体**: 常体 plain JP、canonical \`rules/genshijin.md\` (体言止め羅列 / 助詞省略 / AI 段取り定型 / 過剰丁寧を禁止)"
+_AC_BASE="**自動実行（必須）**: 以下を順に実行してください\n1. \`mcp__serena__list_memories\` でメモリ一覧を確認する (project は --project-from-cwd で自動 activate 済)\n2. 関連メモリがあれば読み込む\n3. **ai-tools 共有 memory の index を read**: \`~/ai-tools/memory/MEMORY.md\` (3 tool 共有 SoT、全 project で参照する)。関連 topic の個別 file は必要時に read\n\n**追加推奨**: コーディング作業を開始する場合、最初の編集前に \`/load-guidelines\` を実行\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否\n\n**文体**: 常体 plain JP、canonical \`rules/genshijin.md\` (体言止め羅列 / 助詞省略 / AI 段取り定型 / 過剰丁寧を禁止)"
 _AC_PREFIX=""
 if [[ -n "${_CWD_GUARD_MSG}" ]]; then
     _AC_PREFIX+="${_CWD_GUARD_MSG}"
