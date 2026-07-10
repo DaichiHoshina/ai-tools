@@ -96,7 +96,7 @@ teardown() {
   local expected_claude="${fake_home}/.claude"
   [ ! -d "$expected_claude" ]
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
   [ -d "$expected_claude" ]
   [ -f "${expected_claude}/CLAUDE.md" ]
@@ -109,7 +109,7 @@ teardown() {
   mkdir -p "$fake_home"
   local expected_claude="${fake_home}/.claude"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
   [ -f "${expected_claude}/settings.json" ]
 }
@@ -131,7 +131,7 @@ teardown() {
   jq '.permissions.deny = ["NotebookEdit"]' "$template" > "$live"
 
   # to-local 実行
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # template の permissions.deny と同じ内容に復元されていることを assert
@@ -153,7 +153,7 @@ teardown() {
   # live の sandbox section を削除
   jq 'del(.sandbox)' "$template" > "$live"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # sandbox section が復元されていることを assert
@@ -175,7 +175,7 @@ teardown() {
   # live の permissions.allow に独自 rule を追加
   jq '.permissions.allow += ["Bash(my-custom-tool *)"]' "$template" > "$live"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # permissions.allow が template 値で上書きされ、独自追加が消えることを assert（仕様確認 test）
@@ -218,7 +218,7 @@ teardown() {
   jq '.model = "old-model-value-to-be-overwritten"' "$live" > "${fake_home}/.claude/live_modified.json"
   cp "${fake_home}/.claude/live_modified.json" "$live"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # to-local 後に model が template の値に戻っていることを assert
@@ -242,7 +242,7 @@ teardown() {
   # live の model を template と異なる値に設定
   jq '.model = "claude-haiku-3-5"' "$template" > "$live"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # to-local 後に live.model が template の値に上書きされていることを assert
@@ -272,7 +272,7 @@ teardown() {
   live_skill_before=$(jq -c '.skillOverrides' "$live")
   live_perm_before=$(jq -c '.permissions' "$live")
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # hooks は sync_settings_hooks の merge ロジックで処理されるため、
@@ -458,7 +458,7 @@ teardown() {
   jq '.hooks.PreToolUse += [{"matcher": "my-custom-matcher", "hooks": [{"type": "command", "command": "my-custom-hook.sh"}]}]' \
     "$template" > "$live"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # 独自 entry が残存していることを assert
@@ -483,7 +483,7 @@ teardown() {
   tpl_has_post=$(jq 'if .hooks.PostToolUse then 1 else 0 end' "$template")
   [ "$tpl_has_post" -eq 1 ] || skip "template に PostToolUse が存在しない"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # PostToolUse が live に追加されていることを assert
@@ -504,7 +504,7 @@ teardown() {
   # live: template そのままでスタート
   cp "$template" "$live"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # PreToolUse の entry 数が template と一致（重複なし）することを assert
@@ -545,7 +545,7 @@ teardown() {
   before_count=$(jq '.hooks.Stop | length' "$live")
   [ "$before_count" -ge 3 ]
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # sync 後: matcher="*" の entry は template と同じ数だけ残る (古い command 消滅)
@@ -573,7 +573,7 @@ teardown() {
   jq '.hooks.PreToolUse += [{"matcher": "user-private-matcher-xyz", "hooks": [{"type": "command", "command": "user-script.sh"}]}]' \
     "$template" > "$live"
 
-  run env HOME="$fake_home" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
+  run env HOME="$fake_home" CLAUDE_DIR="${fake_home}/.claude" bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --yes --skip-git-check
   [ "$status" -eq 0 ]
 
   # 独自 matcher が保持されている + template entry も保持されている
