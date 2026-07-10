@@ -1,7 +1,7 @@
 ---
 name: design-review-agent
 description: Live UI/UX review via Playwright MCP. 7-phase eval per Stripe/Airbnb/Linear. Use for UI feature finalization + pre-PR a11y validation.
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 color: pink
 permissionMode: fast
 tools:

@@ -1,7 +1,7 @@
 ---
 name: explore-agent
 description: Explore agent (explore1-4) - Conducts exploration & analysis. Read-only. Serena MCP required.
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 color: green
 permissionMode: fast
 memory: project

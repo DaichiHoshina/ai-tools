@@ -2,7 +2,7 @@
 name: root-cause
 description: Root cause analysis (5 Why): bugs to recurrence prevention. Use for RCA.
 allowed-tools: Read, Write, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 requires-guidelines:
   - common
   - clean-architecture

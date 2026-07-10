@@ -6,24 +6,24 @@ Default: **Fable 5** (`claude-fable-5`、settings.json.template `model` key cano
 
 | Task | Recommended | Model ID | Switch |
 |--------|-----------|---------|------|
-| Batch processing, type conversion, formatting, bulk file processing | Haiku 4.5 | `claude-haiku-4-5-20251001` | `/model` → haiku |
-| Simple fixes, investigation, code reading, normal development | **Sonnet 4.6** (default) | `claude-sonnet-4-6` | keep |
+| Batch processing, type conversion, formatting, bulk file processing | Haiku 4.5 | `claude-haiku-4-5` | `/model` → haiku |
+| Simple fixes, investigation, code reading, normal development | Sonnet 5 | `claude-sonnet-5` | `/model` → sonnet |
 | Root cause analysis, design decisions, complex bug analysis, security audit | Opus 4.7 | `claude-opus-4-7` | `/model` → opus |
 | Highest-difficulty tasks, session default | **Fable 5** (default) | `claude-fable-5` | `/model` → fable |
-| Task difficulty unknown, dynamic switching | Auto (Max subscribers only) | — | `/model` → auto |
+| Task difficulty unknown, dynamic switching | Auto | — | `/model` → auto |
 
 **Use explicit `/model` for switching** (natural language triggers risk misfire).
 
-**Auto Mode** (v2.1.111+): Available to Max subscribers with Opus base. `--enable-auto-mode` flag no longer needed. Claude auto-switches model by task difficulty.
+**Auto Mode** (v2.1.111+): `/model` → auto で有効化すると Claude が task 難易度で model を自動切替する (`--enable-auto-mode` flag は不要になった)。
 
 ## Per-agent auto-assignment
 
 Specified in each agent's frontmatter.
 
-**Policy**: parent (chat) orchestrates with Opus 4.7; subagents split into judgment=Opus 4.7 / execution=Sonnet 4.6 (judgment-Opus is forced to 4.7 since 2026-06-16 due to Opus 4.8 regression — see [[opus-4-8-regression-2026-06]]).
+**Policy**: subagents split into judgment=Opus 4.7 / execution=Sonnet 5 (judgment-Opus is forced to 4.7 since 2026-06-16 due to Opus 4.8 regression — see [[opus-4-8-regression-2026-06]]。Sonnet 5 切替は 2026-07-10 judge-panel 34 対 27 で採用)。
 
-- **Opus 4.7 (judgment subagents)**: po-agent (strategy / design decisions), manager-agent (task decomp / parallelism calculation), root-cause-analyzer (complex bug analysis / 5 Why)
-- **Sonnet 4.6 (execution subagents)**: developer-agent (impl / refactor), explore-agent (read-only exploration), verify-app (build / test execution), reviewer-agent (12-perspective review)
+- **Opus 4.7 (judgment + impl subagents)**: po-agent (strategy / design decisions), manager-agent (task decomp / parallelism calculation), root-cause-analyzer (complex bug analysis / 5 Why), developer-agent (impl / refactor)
+- **Sonnet 5 (execution subagents)**: explore-agent (read-only exploration), verify-app (build / test execution), reviewer-agent (12-perspective review), design-review-agent (live UI/UX review)
 
 ## Effort levels
 
