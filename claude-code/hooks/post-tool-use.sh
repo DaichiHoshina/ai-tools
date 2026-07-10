@@ -36,6 +36,33 @@ case "$TOOL_NAME" in
     ;;
 esac
 
+# --- Session 編集 log 記録: 並行 session の commit 巻き込み guard 用 ---
+# 同一 repo で複数 Claude session 動作時、他 session 未 commit 変更が git commit に混入する事故防止
+# 編集 file の絶対 path を session 別 log へ 1 行 append する。pre-tool-use の commit guard で staged と突合
+# SESSION_ID 空なら noop (誤爆防止優先)
+if [ -n "$SESSION_ID" ]; then
+  _SES_EDIT_LOG="/tmp/claude-session-edits-${SESSION_ID}.log"
+  _SES_EDIT_PATH=""
+  case "$TOOL_NAME" in
+    Edit|Write|MultiEdit|NotebookEdit)
+      [ -n "$FILE_PATH" ] && _SES_EDIT_PATH="$FILE_PATH"
+      ;;
+    mcp__serena__create_text_file|mcp__serena__replace_regex|mcp__serena__replace_content|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol)
+      if [ -n "$RELATIVE_PATH" ]; then
+        # serena の relative_path は CWD 基準の相対 (稀に絶対を渡す実装もあるため両対応)
+        if [[ "$RELATIVE_PATH" = /* ]]; then
+          _SES_EDIT_PATH="$RELATIVE_PATH"
+        else
+          _SES_EDIT_PATH="${CWD%/}/${RELATIVE_PATH}"
+        fi
+      fi
+      ;;
+  esac
+  if [ -n "$_SES_EDIT_PATH" ]; then
+    printf '%s\n' "$_SES_EDIT_PATH" >> "$_SES_EDIT_LOG" 2>/dev/null || true
+  fi
+fi
+
 # デフォルトメッセージ
 MESSAGE=""
 

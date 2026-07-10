@@ -381,6 +381,37 @@ PYEOF
           fi
         fi
 
+        # --- 並行 session 巻き込み guard: staged file が本 session 編集 log に無ければ warn ---
+        # skip 条件: SESSION_ID 空 / log 不在 / log 空 / git repo 外。誤爆防止優先で block しない
+        if [[ -n "$SESSION_ID" ]]; then
+          _SES_LOG="/tmp/claude-session-edits-${SESSION_ID}.log"
+          if [[ -f "$_SES_LOG" && -s "$_SES_LOG" ]]; then
+            _CWD_COMMIT=$(jq -r '.cwd // empty' <<< "$INPUT")
+            [[ -z "$_CWD_COMMIT" ]] && _CWD_COMMIT="."
+            if _GIT_TOPLEVEL=$(git -C "$_CWD_COMMIT" rev-parse --show-toplevel 2>/dev/null); then
+              # staged file の絶対 path (git ls-files 相対 path を repo root から解決)
+              # macOS の /tmp /var は /private への symlink のため、両側 realpath で正規化して突合する
+              _STAGED_ABS=$(git -C "$_GIT_TOPLEVEL" diff --cached --name-only 2>/dev/null \
+                | awk -v r="$_GIT_TOPLEVEL" 'NF{print r"/"$0}' \
+                | while IFS= read -r _p; do realpath "$_p" 2>/dev/null || printf '%s\n' "$_p"; done)
+              if [[ -n "$_STAGED_ABS" ]]; then
+                _SES_UNIQ=$(sort -u "$_SES_LOG" 2>/dev/null \
+                  | while IFS= read -r _p; do realpath "$_p" 2>/dev/null || printf '%s\n' "$_p"; done \
+                  | sort -u)
+                _INTRUDERS=$(printf '%s\n' "$_STAGED_ABS" | grep -Fxv -f <(printf '%s\n' "$_SES_UNIQ") 2>/dev/null || true)
+                if [[ -n "$_INTRUDERS" ]]; then
+                  _COMMIT_GUARD_WARN="⚠ 並行 session 巻き込み疑い: 本 session の編集 log に無い staged file が commit に含まれる可能性。並行 session 変更混入の確認を推奨:"$'\n'"${_INTRUDERS}"
+                  if [ -n "$ADDITIONAL_CONTEXT" ]; then
+                    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_COMMIT_GUARD_WARN}"
+                  else
+                    ADDITIONAL_CONTEXT="${_COMMIT_GUARD_WARN}"
+                  fi
+                fi
+              fi
+            fi
+          fi
+        fi
+
         # --amend で inline body オプション (-m/--message/-F/--file) が無い場合:
         # editor 編集で hook は本文取得不可 → warn-only。
         # substring 判定だと --message が -m に誤マッチして warn を抑止するため word-boundary で判定する。
