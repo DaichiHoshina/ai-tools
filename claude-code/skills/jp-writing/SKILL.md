@@ -31,7 +31,7 @@ Sentence length and style standards vary by medium (canonical: PRINCIPLES.md `##
 
 ## self-check
 
-評価軸 canonical: `commands/jp-writing.md` §5-Axis Check ([A]-[E]) 参照。PRINCIPLES.md を load して A→E 順で評価する。
+評価軸 canonical: `commands/jp-writing.md` §5-Axis Check ([A]-[E]) 参照。PRINCIPLES.md はコア層 (冒頭 index table「check / rewrite 実行」行の section) のみ load して A→E 順で評価する。全文 load は深い書き直し時のみ。
 
 ## Rewrite output format
 
