@@ -183,6 +183,10 @@ _check_term_list() {
   # code block を除去してからチェック
   local clean_text
   clean_text=$(_strip_code_blocks "$text")
+  # hyphen 連結の ASCII 識別子 (skill / file / branch 名等) を除去する。
+  # 例: comprehensive-review が「comprehensive」に部分一致して誤 block するのを防ぐ。
+  # 英語 NG 語は識別子内で使われても文章表現ではないため除去して問題ない。
+  clean_text=$(printf '%s' "$clean_text" | sed -E 's/[A-Za-z0-9_.]+(-[A-Za-z0-9_.]+)+/ /g')
   # 語リストを配列に収集
   local words=()
   while IFS= read -r word; do

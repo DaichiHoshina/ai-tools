@@ -704,6 +704,12 @@ else
 fi
 
 # Forbiddenの場合はexit 2でツール実行をブロック（v2.1.90で正常動作）
+# exit 2 の block 理由は stderr 経由で Claude に渡る仕様のため、stdout JSON とは別に stderr へも出す。
+# stderr なしだと harness には「hook error: No stderr output」としか表示されず原因特定ができない。
 if [ "$GUARD_CLASS" = "Forbidden" ]; then
+  {
+    [ -n "$MESSAGE" ] && printf '%s\n' "$MESSAGE"
+    [ -n "$ADDITIONAL_CONTEXT" ] && printf '%s\n' "$ADDITIONAL_CONTEXT"
+  } >&2
   exit 2
 fi

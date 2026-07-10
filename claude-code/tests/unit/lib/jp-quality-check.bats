@@ -421,3 +421,41 @@ teardown() {
   "
   [ "$status" -eq 0 ]
 }
+
+# =============================================================================
+# Case: hyphen 連結識別子は NG 語の部分一致で block しない
+# =============================================================================
+
+@test "pass: hyphen 識別子 'comprehensive-review' を含む text → GUARD_CLASS を変更しない" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'comprehensive-review skill に coverage 規範を追加する。' 'commit message'
+
+    [ -z \"\${GUARD_CLASS}\" ]
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: 裸の 'comprehensive' (非日常英語) は識別子除去後も block する" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'a comprehensive check を追加する。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ]
+  "
+  [ "$status" -eq 0 ]
+}
