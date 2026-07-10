@@ -45,9 +45,9 @@ _run_hook_blocking() {
 }
 
 @test "detect_dangerous: 通常編集は警告なし" {
+  # Edit の静的 header message は削除済 (noise)。危険パターン警告が無いことだけ確認する
   result=$(_run_edit_hook "/tmp/x.txt" "hello world")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "ファイル編集" ]]
   [[ ! "$msg" =~ "機密情報" ]]
   [[ ! "$msg" =~ "危険パターン" ]]
 }

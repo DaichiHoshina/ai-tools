@@ -23,6 +23,8 @@ load_lib "detect-technique.sh" || exit 1
 
 # shellcheck source=lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
+# shellcheck source=lib/log-rotation.sh
+source "${BASH_SOURCE[0]%/*}/lib/log-rotation.sh"
 # shellcheck source=lib/portable-stat.sh
 source "${BASH_SOURCE[0]%/*}/lib/portable-stat.sh"
 
@@ -333,6 +335,7 @@ _fail_detect() {
     # throttle flag 立て
     printf '1\n' > "${_FAIL_FLAG}" 2>/dev/null || true
     # 観測 log: 1 週間の発火頻度と誤検出パターンを記録
+    _rotate_log_if_needed "$HOME/.claude/logs/fail-repeat-detect.log"
     printf '[%s] fail-repeat fired | sid=%s | prompt=%.100s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "${session_id}" "${prompt_lc}" >> "$HOME/.claude/logs/fail-repeat-detect.log" 2>/dev/null || true
   fi
 

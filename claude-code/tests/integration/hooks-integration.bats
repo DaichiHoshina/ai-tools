@@ -461,14 +461,15 @@ teardown() {
     local input="{\"tool_name\": \"${tool}\", \"tool_input\": {}}"
     run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
     [ "$status" -eq 0 ]
-    # Boundary操作はsystemMessageあり
-    echo "$output" | jq -e '.systemMessage' >/dev/null
+    # Boundary操作は block なし + 静的 systemMessage なし (noise 削減で削除済)
+    echo "$output" | jq -e '.systemMessage == null' >/dev/null
   done
 }
 
 @test "integration: pre-tool-use classifies Forbidden bash commands" {
   local input='{"tool_name": "Bash", "tool_input": {"command": "rm -rf /"}}'
-  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-tool-use.sh"
+  # Forbidden は stdout JSON に加え stderr にも block 理由を出すため、jq へは stdout のみ渡す
+  run bash -c "echo '$input' | ${HOOKS_DIR}/pre-tool-use.sh 2>/dev/null"
   # Forbiddenは exit 2 でtoolブロック
   [ "$status" -eq 2 ]
   # additionalContext が出力される

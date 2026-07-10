@@ -7,9 +7,6 @@
 # 使用方法:
 #   source /path/to/lib/common.sh
 #
-# オプション環境変数:
-#   COMMON_LOAD_I18N=true  # i18n.sh を読み込む（デフォルト: false）
-#
 # 必要なbashバージョン: 5.0+
 #   理由: EPOCHREALTIME / EPOCHSECONDS builtin (bash 5.0+) を session-start.sh で使用
 #
@@ -77,15 +74,6 @@ if [[ -f "${_COMMON_LIB_DIR}/hook-utils.sh" ]]; then
     source "${_COMMON_LIB_DIR}/hook-utils.sh"
 fi
 
-# Level 2: print-functions に依存（オプション）
-if [[ "${COMMON_LOAD_I18N:-false}" = "true" ]]; then
-    if [[ -f "${_COMMON_LIB_DIR}/i18n.sh" ]]; then
-        source "${_COMMON_LIB_DIR}/i18n.sh"
-    else
-        echo "WARNING: i18n.sh not found, COMMON_LOAD_I18N=true but file missing" >&2
-    fi
-fi
-
 # --- ヘルパー関数 ---
 
 # lib ファイルを安全に読み込み
@@ -113,9 +101,6 @@ common_version() {
     echo "  bash: ${BASH_VERSION}"
     echo "  lib_dir: ${_COMMON_LIB_DIR}"
     echo "  loaded_libs: colors, print-functions, security-functions, hook-utils"
-    if [[ "${COMMON_LOAD_I18N:-false}" = "true" ]]; then
-        echo "  i18n: enabled"
-    fi
 }
 
 # 読み込み済みライブラリ一覧表示

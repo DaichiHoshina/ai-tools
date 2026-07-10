@@ -162,50 +162,51 @@ _run_bash_forbidden() {
 # Boundary操作テスト
 # =============================================================================
 
-@test "pre-tool-use: Edit はBoundary（要確認メッセージ）" {
+@test "pre-tool-use: Edit はBoundary (静的 message なし)" {
+  # 毎 Edit 発火の header message は noise として削除済 (下流 check が必要時のみ context を積む)
   result=$(run_hook "Edit")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
-@test "pre-tool-use: Write はBoundary" {
+@test "pre-tool-use: Write はBoundary (静的 message なし)" {
   result=$(run_hook "Write")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
-@test "pre-tool-use: MultiEdit はBoundary" {
+@test "pre-tool-use: MultiEdit はBoundary (静的 message なし)" {
   result=$(run_hook "MultiEdit")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
 # =============================================================================
 # Serena MCP変更系テスト（Boundary）
 # =============================================================================
 
-@test "pre-tool-use: mcp__serena__create_text_file はBoundary" {
+@test "pre-tool-use: mcp__serena__create_text_file はBoundary (静的 message なし)" {
   result=$(run_hook "mcp__serena__create_text_file")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
-@test "pre-tool-use: mcp__serena__replace_regex はBoundary" {
+@test "pre-tool-use: mcp__serena__replace_regex はBoundary (静的 message なし)" {
   result=$(run_hook "mcp__serena__replace_regex")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
-@test "pre-tool-use: mcp__serena__execute_shell_command はBoundary" {
+@test "pre-tool-use: mcp__serena__execute_shell_command はBoundary (静的 message なし)" {
   result=$(run_hook "mcp__serena__execute_shell_command")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
-@test "pre-tool-use: mcp__serena__write_memory はBoundary" {
+@test "pre-tool-use: mcp__serena__write_memory はBoundary (静的 message なし)" {
   result=$(run_hook "mcp__serena__write_memory")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
 # =============================================================================
@@ -513,11 +514,10 @@ _run_bash_forbidden() {
 # 未知ツールテスト
 # =============================================================================
 
-@test "pre-tool-use: 未知ツールはBoundary" {
+@test "pre-tool-use: 未知ツールはBoundary (message なし、log に記録)" {
+  # systemMessage は出さず、drift 検出用に hook-info.log へ tool 名を残す
   result=$(run_hook "UnknownTool123")
-  msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
-  [[ "$msg" =~ "未分類" ]]
+  [ "$result" = "{}" ]
 }
 
 # =============================================================================

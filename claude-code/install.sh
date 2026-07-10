@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 ENV_FILE="$HOME/.env"
 
-# Load common library (includes security, i18n, print functions)
+# Load common library (includes security, print functions)
 LIB_DIR="${SCRIPT_DIR}/lib"
 # shellcheck source=lib/common.sh
 source "${LIB_DIR}/common.sh"
@@ -162,7 +162,7 @@ copy_directory_contents() {
     done
     print_success "scripts をコピーしました"
 
-    # Lib（セキュリティライブラリ・i18n）
+    # Lib（セキュリティライブラリ）
     if [ -d "$SCRIPT_DIR/lib" ]; then
         copy_files "$SCRIPT_DIR/lib" "$CLAUDE_DIR/lib" "lib"
         chmod +x "$CLAUDE_DIR/lib/"*.sh 2>/dev/null || true

@@ -104,16 +104,6 @@ teardown() {
   [[ "$output" =~ "bash:" ]]
 }
 
-@test "common_version: shows i18n status when enabled" {
-  run bash -c "
-    export COMMON_LOAD_I18N=true
-    source '$LIB_FILE'
-    common_version
-  "
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "i18n" ]] || [[ "$output" =~ "common.sh" ]]
-}
-
 # =============================================================================
 # common_list_loaded 関数テスト
 # =============================================================================
@@ -145,16 +135,6 @@ teardown() {
   run bash -c "source '$LIB_FILE' && declare -f print_info &>/dev/null && echo 'print_loaded'"
   [ "$status" -eq 0 ]
   [[ "$output" =~ "print_loaded" ]]
-}
-
-@test "common: i18n.sh not loaded by default" {
-  run bash -c "
-    export COMMON_LOAD_I18N=false
-    source '$LIB_FILE'
-    declare -f msg &>/dev/null || echo 'i18n_not_loaded'
-  "
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "i18n_not_loaded" ]]
 }
 
 # =============================================================================

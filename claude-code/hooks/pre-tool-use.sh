@@ -39,6 +39,8 @@ source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
 # shellcheck source=lib/portable-stat.sh
 source "${BASH_SOURCE[0]%/*}/lib/portable-stat.sh"
 source "${BASH_SOURCE[0]%/*}/lib/touchable-files-state.sh"
+# shellcheck source=lib/log-rotation.sh
+source "${BASH_SOURCE[0]%/*}/lib/log-rotation.sh"
 
 # Nerd Fonts icons
 ICON_CRITICAL=$'\u25c9'   # exclamation-circle (critical/forbidden)
@@ -112,8 +114,8 @@ case "$TOOL_NAME" in
 
   # === 要確認操作（要確認・警告） ===
   "Edit"|"Write"|"MultiEdit"|"NotebookEdit")
+    # MESSAGE なし: 毎 Edit 発火の静的 header は noise。下流 check が必要時のみ context を積む
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 要確認: ファイル編集"
 
     # touchable_files allowlist guard (subagent context)
     # parent (user-prompt-submit hook) が developer-agent fire 時に
@@ -126,6 +128,7 @@ case "$TOOL_NAME" in
       if ! _touchable_check "$SESSION_ID" "$_TF_PATH"; then
         _TS_TF=$(date '+%Y-%m-%dT%H:%M:%S')
         mkdir -p "${HOME}/.claude/logs" 2>/dev/null || true
+        _rotate_log_if_needed "${HOME}/.claude/logs/touchable-files-block.log"
         printf '%s | %s | %s | target=%s\n' \
           "$_TS_TF" "$SESSION_ID" "$TOOL_NAME" "$_TF_PATH" \
           >> "${HOME}/.claude/logs/touchable-files-block.log" 2>/dev/null || true
@@ -542,6 +545,7 @@ PYEOF
         ADDITIONAL_CONTEXT="${_read_hint}"
       fi
       # 観測 log: 1 週間の発火頻度と誤検出パターンを記録
+      _rotate_log_if_needed "$HOME/.claude/logs/cat-read-hint.log"
       printf '[%s] cat-read-hint fired | cmd=%.150s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$COMMAND" >> "$HOME/.claude/logs/cat-read-hint.log" 2>/dev/null || true
     fi
 
@@ -560,8 +564,8 @@ PYEOF
     ;;
 
   "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_content"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol"|"mcp__serena__write_memory"|"mcp__serena__delete_memory"|"mcp__serena__execute_shell_command"|"mcp__serena__rename_symbol")
+    # MESSAGE なし: Serena write 系の毎回通知は noise。memory path block は Forbidden 側で独立動作
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 要確認: Serena変更操作"
 
     # .serena/memories/ block: create_text_file / write_memory 経由の書き込みも block
     # create_text_file は relative_path、write_memory は memory_name パラメータを使う
@@ -708,9 +712,12 @@ ${PARALLEL_REVIEW}${PREP_WARN}"
     ;;
 
   *)
-    # 未知のツールはBoundary扱い
+    # 未知のツールはBoundary扱い。MESSAGE は出さず (新 harness tool ごとに毎回出て noise)、
+    # case 追加漏れの drift 検出用に tool 名だけ log へ残す
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 要確認: 未分類ツール: $TOOL_NAME"
+    _UNCLASSIFIED_LOG="$HOME/.claude/logs/hook-info.log"
+    _rotate_log_if_needed "$_UNCLASSIFIED_LOG"
+    printf '[%s] unclassified-tool | %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$TOOL_NAME" >> "$_UNCLASSIFIED_LOG" 2>/dev/null || true
     ;;
 esac
 

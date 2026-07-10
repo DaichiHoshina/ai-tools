@@ -85,7 +85,6 @@ teardown() {
   # ライブラリファイルの存在確認
   [ -f "${PROJECT_ROOT}/claude-code/lib/security-functions.sh" ]
   [ -f "${PROJECT_ROOT}/claude-code/lib/print-functions.sh" ]
-  [ -f "${PROJECT_ROOT}/claude-code/lib/i18n.sh" ]
   [ -f "${PROJECT_ROOT}/claude-code/lib/colors.sh" ]
   [ -f "${PROJECT_ROOT}/claude-code/lib/hook-utils.sh" ]
 }

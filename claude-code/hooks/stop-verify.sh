@@ -11,9 +11,12 @@ _sv_src="${BASH_SOURCE[0]}"
 [[ "${_sv_src}" == /* ]] || _sv_src="${PWD}/${_sv_src}"
 SCRIPT_DIR="${_sv_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# shellcheck source=lib/log-rotation.sh
+source "${SCRIPT_DIR}/lib/log-rotation.sh"
 require_jq
 
 LOG_FILE="$HOME/.claude/logs/stop-verify.log"
+_rotate_log_if_needed "$LOG_FILE"
 STOP_VERIFY_ENFORCE="${STOP_VERIFY_ENFORCE:-0}"
 
 # opt-in guard: default OFF

@@ -23,7 +23,6 @@ bats tests/unit/lib/print-functions.bats
 | hook-utils.bats | 15 | 100% | ✅ |
 | detect-from-files.bats | 13 | 100% | ✅ |
 | detect-from-git.bats | 16 | 100% | ✅ |
-| i18n.bats | 22 | 95% | ✅ |
 | detect-from-keywords.bats | 15 | 13% | ⚠️ |
 | detect-from-errors.bats | 17 | 94% | ⚠️ |
 

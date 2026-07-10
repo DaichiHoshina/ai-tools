@@ -13,6 +13,8 @@ _se_src="${BASH_SOURCE[0]}"
 [[ "${_se_src}" == /* ]] || _se_src="${PWD}/${_se_src}"
 SCRIPT_DIR="${_se_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# shellcheck source=lib/log-rotation.sh
+source "${SCRIPT_DIR}/lib/log-rotation.sh"
 require_jq
 
 # JSON入力を読み込む
@@ -122,6 +124,7 @@ echo "[${_SE_TS}] $SESSION_ID | $PROJECT_NAME | msg:$TOTAL_MESSAGES | tok:$TOTAL
     done < <(find "${_LOGS_DIR}" -maxdepth 1 -name "${_pat}" -type f -mtime +2 -print0 2>/dev/null)
   done
   if [[ "${_purged}" -gt 0 ]]; then
+    _rotate_log_if_needed "${_LOGS_DIR}/hook-info.log"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] session-end: purged ${_purged} stale state file(s)" \
       >> "${_LOGS_DIR}/hook-info.log" 2>/dev/null || true
   fi

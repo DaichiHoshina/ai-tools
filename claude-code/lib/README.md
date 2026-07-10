@@ -21,9 +21,6 @@ source "${SCRIPT_DIR}/../lib/common.sh"
 # detect ライブラリ（個別）
 load_lib "detect-from-keywords.sh"
 
-# i18n（オプション）
-export COMMON_LOAD_I18N=true
-source "${LIB_DIR}/common.sh"
 ```
 
 ## ライブラリ一覧
@@ -46,7 +43,6 @@ source "${LIB_DIR}/common.sh"
 | ファイル | 提供内容 |
 |--------|---------|
 | `hook-utils.sh` | フック入力解析（`read_hook_input`, `get_field`, `get_nested_field`）、jq に依存 |
-| `i18n.sh` | 国際化（`msg`, `error_msg`, `set_language`）、bash 4.2+ 連想配列に依存、オプション |
 
 ### Level 3: 検出ライブラリ（user-prompt-submit.sh で使用）
 
@@ -64,7 +60,6 @@ common.sh は以下を自動読み込み（重複防止あり）：
 2. print-functions.sh
 3. security-functions.sh
 4. hook-utils.sh
-5. i18n.sh（COMMON_LOAD_I18N=true 時のみ）
 ```
 
 detect（Level 3）・自律実行ライブラリ（Level 4）は `load_lib()` で個別読み込み。
