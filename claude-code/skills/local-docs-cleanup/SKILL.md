@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash, Read, Edit
 name: local-docs-cleanup
-description: local-docs の released プロジェクトを cleanup する。archive 送り候補をスキャンして確認リストを提示し、承認後に ../local-docs-archive/ へ移動する。「local-docs cleanup」「archive に送って」「不要な doc を整理」「released プロジェクトの cleanup」等で使用する。
+description: local-docs の released project を archive 移動で cleanup。「local-docs cleanup」「archive に送って」で起動。
 ---
 
 # local-docs-cleanup

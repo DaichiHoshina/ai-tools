@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash
 name: context7
-description: Fetch latest docs via Context7 API. Required before writing any library API method, when adopting a new library, or when the API spec is older than 6 months (see CLAUDE.md § Library API Live Doc Required).
+description: Fetch latest docs via Context7 API. Required before library API writes, new library adoption, or 6+ month old specs.
 ---
 
 # context7 - Library Documentation Search

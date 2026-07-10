@@ -17,15 +17,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 **Golden workflow (頻出 3 種)**
 
 - 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal の 6 択を Step 2 で判定、/goal は loop 系 objective gate task に限定)。plan → 実装は **Next command block** (`/dev --plan <file>` 等) で受け渡す、`/plan --go` なら判定 mode のままそのまま実装へ continue する。**mode 判定のみ軽量に済ませたい時**は `/mode <task>` (inline / agent 並列の 2 択判定、設計・phase 分割なし、判定後そのまま実装開始)
-- worktree 隔離 + commit + ff-merge + push (`[[ai-tools-worktree-workflow]]` canonical、**dir 名 slug と branch 名は必ず一致させる** → `references/on-demand-rules/worktree-branch-name-match.md`)。**前提: まだ編集に着手していない状態で切る**。worktree pattern は「clean な状態から wt を作り、wt 内で初めて編集する」流れ。**既に main の working tree を編集済みなら worktree を使わない** (`git stash` した変更は新 wt に持ち込まれず取り残される罠、`[[worktree-fresh-baseref-uncommitted-trap]]`)。既編集時は下記 fallback を使う:
-  ```bash
-  # (A) 未着手から: worktree で隔離
-  git worktree add ../ai-tools-wt-<topic> -b <topic>   # wt 内で編集 + commit
-  git merge --ff-only <topic> && git push origin main && git worktree remove ../ai-tools-wt-<topic> && git branch -d <topic>
-  # (B) 既に編集済み (main working tree に変更あり): worktree を使わず branch commit
-  git switch -c <topic> && git add <files> && git commit   # 変更はそのまま branch に乗る
-  git switch main && git merge --ff-only <topic> && git push origin main && git branch -d <topic>
-  ```
+- worktree 隔離 + commit + ff-merge + push (`[[ai-tools-worktree-workflow]]` canonical、**dir 名 slug と branch 名は必ず一致させる**)。**前提: まだ編集に着手していない状態で切る**。既に main を編集済みなら worktree を使わず branch commit に切替える (`[[worktree-fresh-baseref-uncommitted-trap]]`)。fallback パターン (A)/(B) の bash 手順は `references/on-demand-rules/worktree-branch-name-match.md` § Fallback パターン に集約する
 - skill 追加 → `/skill-add` / guideline 更新 → `/update-guidelines` / commit + push + PR → `/git-push --pr` (`pushして` でも発火)
 
 ## Repo layout
@@ -67,7 +59,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 **EN-conversion-protected files/sections**: see `references/on-demand-rules/en-conversion-protected.md` (mistranslation breaks rules, bats tests, JP trigger matching).
 
-**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下 (markdown-anchor-sync / en-conversion-protected / api-design / review-noise-discard / measure-before-hook-change / sync-canonical-with-bats / incident-local-repro-not-root-cause / pr-release-order / chain-pr-main-merge / screenshot-resize / feature-flag-deploy-order / ai-output / worktree-branch-name-match)。trigger: md heading rename → `markdown-anchor-sync.md` / EN refactor・`/claude-update-fix` → `en-conversion-protected.md` / handler・controller・resolver・api・endpoint → `api-design.md` / `/review`・`/review-fix-push`・`comprehensive-review` skill 発火時 → `review-noise-discard.md` / `hooks/` block・warn 系編集時 → `measure-before-hook-change.md` / `commands/`・`agents/`・`references/` の heading・YAML key・step 番号改変時 → `sync-canonical-with-bats.md` / incident 調査 (5xx・latency・lock 障害の RCA) → `incident-local-repro-not-root-cause.md` / 機能の複数 PR 分割・release 順設計 → `pr-release-order.md` / chain PR (base≠main) 操作 → `chain-pr-main-merge.md` / screenshot を外向き text に添付 → `screenshot-resize.md` / feature flag・maintenance flag・config 切替 release → `feature-flag-deploy-order.md` / commit・PR・issue・外向き post 起草時 → `ai-output.md` / `git worktree add` 発行・worktree 手順提案時 → `worktree-branch-name-match.md`。
+**On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下。trigger 一覧と対応 file: `references/on-demand-rules/README.md`。
 
 ## Discovery / Investigation Routing (anti-overuse)
 

@@ -1,6 +1,6 @@
 ---
 name: design-review-agent
-description: Elite design review specialist - live UI/UX review via Playwright MCP. 7-phase systematic eval (interaction/responsiveness/visual polish/a11y/stability/code health/content) following Stripe/Airbnb/Linear standards. Use for significant UI/UX feature finalization, pre-PR visual validation, full a11y + responsive testing. Adapted from OneRedOak/claude-code-workflows.
+description: Live UI/UX review via Playwright MCP. 7-phase eval per Stripe/Airbnb/Linear. Use for UI feature finalization + pre-PR a11y validation.
 model: claude-sonnet-4-6
 color: pink
 permissionMode: fast

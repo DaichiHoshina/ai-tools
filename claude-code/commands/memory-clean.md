@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash, Read, Write, Edit, Agent, AskUserQuestion, TaskCreate, TaskUpdate
-description: Auto-memory housekeeping — 自 memory の trash / prune / audit を全部 default 有効化、`--import=<src-dir>` で他 repo memory から汎用 knowledge を取込む。Default は dry-run、`--apply` で実行。
+description: Auto-memory housekeeping (trash / prune / audit)。`--import=<src>` で他 repo 取込、`--apply` で実行。
 argument-hint: "[--apply] [--import=<src-dir>]"
 effort: low
 ---

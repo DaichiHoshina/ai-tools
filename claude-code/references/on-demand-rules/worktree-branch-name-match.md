@@ -41,7 +41,20 @@ git worktree add ../size-selection-doc -b size-selection-doc
 
 wt は単一 branch 専用の作業 dir とする。wt 内で `git switch` / `git checkout` による別 branch 切替は禁止する。別 topic の並行作業は別 wt を新設する (`git worktree add`)。
 
-詳細 (禁止例 / 畳み手順 / 親 repo での silent 不一致問題): 手順は `CLAUDE.md ## Quick Reference` の worktree pattern に従う。
+詳細 (禁止例 / 畳み手順 / 親 repo での silent 不一致問題): 下記 Fallback パターン (A)/(B) に従う。
+
+## Fallback パターン (A)/(B)
+
+worktree pattern は「clean な状態から wt を作り、wt 内で初めて編集する」流れ。**既に main の working tree を編集済みなら worktree を使わない** (`git stash` した変更は新 wt に持ち込まれず取り残される罠、`[[worktree-fresh-baseref-uncommitted-trap]]`)。既編集時は (B) fallback を使う。
+
+```bash
+# (A) 未着手から: worktree で隔離
+git worktree add ../ai-tools-wt-<topic> -b <topic>   # wt 内で編集 + commit
+git merge --ff-only <topic> && git push origin main && git worktree remove ../ai-tools-wt-<topic> && git branch -d <topic>
+# (B) 既に編集済み (main working tree に変更あり): worktree を使わず branch commit
+git switch -c <topic> && git add <files> && git commit   # 変更はそのまま branch に乗る
+git switch main && git merge --ff-only <topic> && git push origin main && git branch -d <topic>
+```
 
 ## 適用範囲
 

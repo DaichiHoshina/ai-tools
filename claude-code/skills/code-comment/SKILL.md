@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Grep, Edit
 name: code-comment
-description: "コードコメント (//、#、--、/* */、<!-- -->) 追加・編集・レビュー時の品質チェック。WHY only / 削除 9 カテゴリ / 擬人化 NG / AI marker 禁止 / Comment Traps 回避を guidelines/writing/code-comment.md canonical 準拠で適用。"
+description: "code comment の品質 check。WHY only / 擬人化 NG / AI marker 禁止を guidelines/writing/code-comment.md で適用。"
 context: fork
 disallowed-tools:
   - Bash
