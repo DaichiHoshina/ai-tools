@@ -1,6 +1,6 @@
 # 長文ドキュメント執筆 (DesignDoc / PRD / RCA / Notionページ)
 
-長文ドキュメント (DesignDoc / PRD / RCA / Notionページ) の追加ルール。共通原則は [PRINCIPLES.md](PRINCIPLES.md) 参照。
+共通原則は [PRINCIPLES.md](PRINCIPLES.md) 参照。
 
 > **原則**: ドキュメントは記憶ダンプではなく、読み手の判断と行動を助ける道具。書くたびに「誰のどの判断を助けるか」から逆算する。
 

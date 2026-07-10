@@ -1,6 +1,6 @@
 # GitHub issue body 書式
 
-impl issue を起票するときの body 書式。共通文章原則は [PRINCIPLES.md](PRINCIPLES.md) 参照。
+共通文章原則は [PRINCIPLES.md](PRINCIPLES.md) 参照。
 
 ## 原則
 
