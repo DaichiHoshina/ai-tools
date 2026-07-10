@@ -28,7 +28,7 @@ Execute commit → push → PR/MR creation in single command.
 ### Common
 
 1. Check state (`git status --short` / `branch --show-current` / `diff --stat` / `log --oneline -5`)
-2. **Writing pre-check** (commit msg / PR body 生成前): `guidelines/writing/NG-DICTIONARY.md` + `PRINCIPLES.md` (AI定型語 / 要根拠語 / 難読漢語 / 非日常英語) を self-check し plain 表現に置換する (max 3 loops、3 回で hit 残存時は user に提示して続行確認)。Hook (`pre-tool-use.sh`) が `git commit` で block する前に潰す。Scope: 全 commit message 生成経路 (`/git-push` / 直接 `git commit` 共通)。
+2. **Writing pre-check** (commit msg / PR body 生成前): `guidelines/writing/NG-DICTIONARY.md` + `PRINCIPLES.md` (AI定型語 / 要根拠語 / 難読漢語 / 非日常英語) を self-check し plain 表現に置換する (max 3 loops、3 回で hit 残存時は user に提示して続行確認)。連続漢字 5 字以上の複合語は助詞挿入か訓読みで開く (structural warn 最多 pattern の先手 sweep)。Hook (`pre-tool-use.sh`) が `git commit` で block する前に潰す。Scope: 全 commit message 生成経路 (`/git-push` / 直接 `git commit` 共通)。
 3. Uncommitted changes present → analyze diff → generate Conventional Commits msg → confirm w/ user → commit
 
 ### main mode

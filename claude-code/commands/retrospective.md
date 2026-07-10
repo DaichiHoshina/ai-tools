@@ -43,7 +43,7 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 | ------------------ | -------------------------------------------------------------------------------------------------------------- |
 | usage stats        | `ccusage daily --since 7`                                                                                      |
 | JP quality blocks  | `awk -F' \| ' '$1 >= "2026-06-29T11:21:24+0900" { print }' ~/.claude/logs/jp-quality-block.log \| tail -n 50`  |
-| hook bench logs    | `tail -n 20 ~/.claude/logs/bench-*.log` (glob)                                                                 |
+| session split logs | `tail -n 20 ~/.claude/logs/session-split-warn.log`                                                             |
 | /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (generates `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
 
 **Cursor sources** (skip with 1-line note if missing):
