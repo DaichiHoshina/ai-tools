@@ -82,6 +82,8 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 1. **Scope**: `git status && git diff` to identify range
 2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (see `references/serena-tool-map.md`). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
 3. **Per-viewpoint review**: Run `comprehensive-review` skill (canonical: `skills/comprehensive-review/SKILL.md`)
+
+   **Coverage-first discovery**: During steps 1-3, surface every candidate finding — including uncertain or low-severity ones — with confidence and severity attached. Do not drop a finding during discovery because it seems minor; filtering happens only at step 4 (Self-Filter Gate) and downstream Stage A/B. Silently dropping a real bug is worse than surfacing one that gets filtered later.
 4. **Self-Filter Gate (moderate strictness)**: For every candidate P0/P1/P2, run the discard criteria below before emit:
    - **Evidence**: anchored to observed diff/code/docs/tests/tool output (else discard)
    - **Scope**: tied to user request / issue / design doc / code contract / changed behavior (else discard or downgrade to question)

@@ -84,6 +84,8 @@ Unused imports/vars/functions, backward compat remnants, progress comments. Bash
 
 ### Step 4 + 4.5: Scoring & Self-Filter
 
+**Coverage-first**: Steps 1-3 は coverage 優先で候補を全部挙げる (低 severity / 不確実でも confidence + severity 付きで出す)。severity / confidence による filter は本 Step と Stage A/B のみで行い、発見段階では self-filter しない。
+
 Score 0-100: **80+** (low 90+, high 70+) → Critical / **50-79** → Warning / **<25** → Discard. Validate each candidate:
 
 | Check | Pass condition |

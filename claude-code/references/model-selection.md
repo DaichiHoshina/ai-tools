@@ -34,10 +34,14 @@ Control thinking depth per session via `--effort` flag or `/effort`.
 | `low` | Simple questions, formatting fixes | `claude --effort low -p "fix typo"` |
 | `medium` | Light development / investigation (cost-conscious) | `claude --effort medium` |
 | `high` | Normal development | `claude --effort high` |
-| `xhigh` | High-difficulty tasks / design decisions / deep analysis (Opus only) | `claude --effort xhigh` |
+| `xhigh` | High-difficulty tasks / design decisions / deep analysis | `claude --effort xhigh` |
 | `max` | Hardest debugging / large-scale RCA. Not for daily use (reports of overthinking backfire) | `claude --effort max` |
 
-> `xhigh` is Opus-only (v2.1.111+; check `claude --help` `--effort` choices). Opus 4.7 default effort is `high`. Other models fall back to `high`.
+> `xhigh` は Fable 5 / Sonnet 5 / Opus 4.8 / 4.7 で使える (Opus 限定は旧情報。公式 effort doc 準拠)。
+> Fable 5 は `high` default で開始する。低 effort でも旧 model の `xhigh` を上回ることが多く、task 完了までが不要に長い時は effort を下げる。
+> Sonnet 5 の cross-model 目安: `medium` ≒ Sonnet 4.6 `high`、`high` ≒ Sonnet 4.6 `max`。
+> 新 model 群 (Fable 5 / Sonnet 5 / Opus 4.7+) は effort を厳格に守る。複雑な問題で推論が浅い場合は prompt で粘らず effort を上げるのが第一手になる。
+> ultracode は API の effort level ではなく、`xhigh` + multi-agent workflow 常時許可の組合せを指す (公式 effort doc 記載)。
 
 For scripts with `--print`, also specify `--fallback-model sonnet` for auto-fallback on overload.
 
