@@ -300,6 +300,9 @@ PYEOF
 
     # 書く系 tool: 今日の commit inject（writing 規約更新を最新規範で反映させる）
     _inject_today_commits
+
+    # code comment 規範 inject: code file への comment 追加を検出したら digest を 1 session 1 回 inject
+    _inject_code_comment_rules "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
     fi  # end: cwd-guard Forbidden skip
     ;;
 
@@ -573,6 +576,14 @@ PYEOF
     if [[ -n "$_SERENA_PATH" ]]; then
       _check_serena_memory_path "$_SERENA_PATH"
     fi
+
+    # code comment 規範 inject: serena 編集系 (content / body / repl param) も Write/Edit と同様に検査
+    case "$TOOL_NAME" in
+      "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_content"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol")
+        _SERENA_NEW_CONTENT=$(jq -r '[.tool_input.content // empty, .tool_input.body // empty, .tool_input.repl // empty] | join("\n")' <<< "$INPUT")
+        _inject_code_comment_rules "$_SERENA_PATH" "$_SERENA_NEW_CONTENT"
+        ;;
+    esac
     ;;
 
   "mcp__jira__jira_post"|"mcp__jira__jira_put"|"mcp__jira__jira_patch"|"mcp__jira__jira_delete"|"mcp__confluence__conf_post"|"mcp__confluence__conf_put"|"mcp__confluence__conf_patch"|"mcp__confluence__conf_delete")

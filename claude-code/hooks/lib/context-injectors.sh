@@ -185,3 +185,59 @@ ${_replace_hint}
     "$_TS_INJ" "${TOOL_NAME:-unknown}" "${_NTERMS}" \
     >> "$_SWEEP_LOG" 2>/dev/null || true
 }
+
+# code file への新規 comment 追加を検出したら code-comment 規範 digest を inject する
+# 目的: canonical (guidelines/writing/code-comment.md) が on-demand で編集時 context に無いため、
+#       編集の瞬間に compact digest を届けて WHY/Why not 限定・分量上限を守らせる
+# 重複抑制: SESSION_ID ベースの flag file で 1 session 1 回のみ inject
+_inject_code_comment_rules() {
+  local _cc_path="$1"
+  local _cc_content="$2"
+  if [[ -z "$_cc_path" || -z "$_cc_content" ]]; then
+    return 0
+  fi
+
+  # code file のみ対象 (md / json / yaml 等の非 code は対象外)
+  local _cc_ext="${_cc_path##*.}"
+  local _cc_re=""
+  case "$_cc_ext" in
+    py|rb|sh|bash|zsh|tf|pl|ex|exs)
+      # shebang (#!) は comment とみなさない
+      _cc_re='^[[:space:]]*#([^!]|$)' ;;
+    sql|lua|hs)
+      _cc_re='^[[:space:]]*--' ;;
+    go|ts|tsx|js|jsx|mjs|cjs|rs|java|kt|kts|c|cc|cpp|h|hpp|swift|php|scala|proto|dart)
+      _cc_re='^[[:space:]]*(//|/\*)' ;;
+    *)
+      return 0 ;;
+  esac
+
+  # session 重複抑制
+  local _session_key="${SESSION_ID:-$$}"
+  local _today; printf -v _today '%(%Y%m%d)T' -1
+  local _flag_file="/tmp/claude-comment-inject-${_session_key}-${_today}"
+  if [[ -f "$_flag_file" ]]; then
+    return 0
+  fi
+
+  # extract_json_fields (@tsv) 経由の content は newline が literal \n に escape されるため復元する
+  _cc_content="${_cc_content//\\n/$'\n'}"
+
+  # 新規 content に comment 行が無ければ silent skip (flag も書かない)
+  if ! grep -Eq "$_cc_re" <<< "$_cc_content"; then
+    return 0
+  fi
+
+  touch "$_flag_file" 2>/dev/null || true
+
+  local _cc_msg="【code comment 規範】新規 comment を検出した。canonical: guidelines/writing/code-comment.md
+- default = 書かない。書くなら WHY / Why not (採らなかった選択肢と理由) / 重要 memo のみ
+- 上限 2 行 (WHY 1 文 + 根拠 or Why not 1 文)。3 行以上は incident / 外部仕様由来の重要 memo のみ
+- what 言い換え / 開発経緯 / defensive 言い訳 (「念のため」等) / AI marker は禁止"
+
+  if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_cc_msg}"
+  else
+    ADDITIONAL_CONTEXT="${_cc_msg}"
+  fi
+}
