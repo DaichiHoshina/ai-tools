@@ -26,13 +26,15 @@ invoke_hook() {
 # bats `run` 経由で hook を実行する (exit code / $status / $output キャプチャ用)。
 # 呼び出し元は `run` を再度書かず、`$status` / `$output` を直接参照可能。
 # stderr は取り込まない (必要なら invoke_hook_run_merged を使う)。
+# bats の `run` は stderr も $output に merge するため、stdout JSON の parse を
+# 壊さないよう明示的に捨てる (Forbidden 時の stderr 出力は d73e4e2 で追加)。
 invoke_hook_run() {
   local tool_name="$1"
   local tool_input="${2:-{\}}"
   local input
   input=$(jq -n --arg name "$tool_name" --argjson inp "$tool_input" \
     '{tool_name: $name, tool_input: $inp}')
-  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  run bash -c 'echo "$1" | bash "$2" 2>/dev/null' _ "$input" "$HOOK_FILE"
 }
 
 # stderr を stdout にマージした状態で bats `run` する。

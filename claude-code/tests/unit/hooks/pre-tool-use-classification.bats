@@ -489,6 +489,14 @@ _run_bash_forbidden() {
   [[ "$ctx" =~ "破壊的" ]]
 }
 
+@test "pre-tool-use: Forbidden時に block 理由が stderr にも出る" {
+  local input
+  input=$(jq -n --arg c "rm -rf /" '{command:$c}')
+  invoke_hook_run_merged "Bash" "$input"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "禁止" ]]
+}
+
 @test "pre-tool-use: Safe時にadditionalContextは空" {
   result=$(run_hook "Read")
   ctx=$(get_additional_context "$result")
