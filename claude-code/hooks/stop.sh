@@ -42,6 +42,33 @@ if [[ -n "${_RAW_TC_HIT}" ]]; then
   exit 0
 fi
 
+# === chat 応答 JP 文体検査: 高精度 NG 語は block で自己修正させ、低精度 + 構造系は warn 通知 ===
+# loop 防止 2 重化: (1) stop_hook_active=true (block 起因の再 Stop) は検査 skip で 1 stop 1 回を構造保証、
+# (2) 同 session の block 5 回到達で log-only へ降格 (辞書と chat 内容が構造的に衝突する session への保険)。
+# 誤爆時の脱出口: export JP_QUALITY_STOP_CHECK=0
+_STOP_HOOK_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false')
+_STOP_SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // ""')
+_JPQ_WARN_MSG=""
+if [[ "${JP_QUALITY_STOP_CHECK:-1}" == "1" && "${_STOP_HOOK_ACTIVE}" != "true" && "${LAST_MSG}" != "Done" ]]; then
+  # shellcheck source=../lib/jp-quality-check.sh
+  source "${SCRIPT_DIR}/../lib/jp-quality-check.sh"
+  _chat_quality_check "$LAST_MSG"
+  if [[ -n "${_CHAT_BLOCK_REASON}" ]]; then
+    printf -v _JPQ_DATE '%(%Y%m%d)T' -1
+    _JPQ_COUNT_FILE="/tmp/claude-stop-jpq-count-${_STOP_SESSION_ID:-$$}-${_JPQ_DATE}"
+    _JPQ_COUNT=$(cat "${_JPQ_COUNT_FILE}" 2>/dev/null || echo 0)
+    [[ "${_JPQ_COUNT}" =~ ^[0-9]+$ ]] || _JPQ_COUNT=0
+    if (( _JPQ_COUNT < 5 )); then
+      printf '%s' "$(( _JPQ_COUNT + 1 ))" > "${_JPQ_COUNT_FILE}" 2>/dev/null || true
+      jq -n --arg reason "${_CHAT_BLOCK_REASON}" '{decision: "block", reason: $reason}'
+      exit 0
+    fi
+    _JPQ_WARN_MSG="${ICON_WARNING:-▲} chat NG 語 (block ${_JPQ_COUNT} 回到達で log-only 降格): ${_CHAT_BLOCK_REASON}"
+  elif [[ -n "${_CHAT_WARN_MSG}" ]]; then
+    _JPQ_WARN_MSG="${_CHAT_WARN_MSG}"
+  fi
+fi
+
 # === SQL auto-pbcopy: 最終応答中の最後の ```sql ブロックを clipboard へ ===
 # 末尾改行は bash $() の auto-strip で 1 個消費、pbcopy 不在環境 (Linux/CI) は silent skip
 _SQL_NOTICE=""
@@ -92,16 +119,13 @@ if [[ -x "${_FLOW_BASELINE}" ]] && [[ ! -f "${_TODAY_TSV}" ]]; then
   bash "${_FLOW_BASELINE}" --since 7d >>"$HOME/.claude/logs/hook-info.log" 2>&1 &
 fi
 
-# === 出力: SQL notice と memory notice を連結 ===
+# === 出力: SQL notice / memory notice / JP 文体 warn を連結 ===
 _SYSTEM_MSG=""
-if [[ -n "${_SQL_NOTICE}" ]] && [[ -n "${_MEMORY_NOTICE}" ]]; then
-  _SYSTEM_MSG="${_SQL_NOTICE}
-${_MEMORY_NOTICE}"
-elif [[ -n "${_SQL_NOTICE}" ]]; then
-  _SYSTEM_MSG="${_SQL_NOTICE}"
-elif [[ -n "${_MEMORY_NOTICE}" ]]; then
-  _SYSTEM_MSG="${_MEMORY_NOTICE}"
-fi
+for _part in "${_SQL_NOTICE}" "${_MEMORY_NOTICE}" "${_JPQ_WARN_MSG}"; do
+  [[ -z "${_part}" ]] && continue
+  _SYSTEM_MSG="${_SYSTEM_MSG:+${_SYSTEM_MSG}
+}${_part}"
+done
 
 if [[ -n "${_SYSTEM_MSG}" ]]; then
   jq -n --arg ts "$TERM_SEQ" --arg msg "$_SYSTEM_MSG" '{terminalSequence: $ts, systemMessage: $msg}'

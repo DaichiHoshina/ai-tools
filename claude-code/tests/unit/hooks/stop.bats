@@ -82,3 +82,94 @@ LT='<'
   echo "${out}" | jq -e '.decision == "block"' >/dev/null
   echo "${out}" | jq -e '.reason | length > 0' >/dev/null
 }
+
+# =============================================================================
+# chat 応答 JP 文体検査 (decision:block / systemMessage warn)
+# =============================================================================
+
+# 最小 NG 辞書 fixture を差し替え HOME 配下へ生成する
+_make_stop_ng_dict() {
+  mkdir -p "${TEST_TMPDIR}/.claude/guidelines/writing"
+  cat > "${TEST_TMPDIR}/.claude/guidelines/writing/NG-DICTIONARY.md" <<'NGDICT'
+# NG 辞書 (stop test fixture)
+
+**AI定型語**: 効果的に / 素晴らしい
+
+**断定語 (warn-only)**: 見込み
+
+**英語jargon (warn-only)**: canonical / salience
+
+**難読漢語 (block)**: 鑑みる / 踏襲
+
+**弱い表現 (block)**: かもしれない
+
+**冗長表現 (block)**: することができる
+
+**非日常英語 (block)**: leverage / robust
+
+**AI段取り定型 (block)**: まずは
+
+**ヘッジ濫用 (block)**: 念のため
+
+**過剰丁寧 (block)**: ご確認ください
+
+**カタカナ造語禁止**: シームレス / ロバスト
+
+**置換候補 (頻出)**: 鑑みる→踏まえる
+NGDICT
+}
+
+# msg を stop.sh へ渡して JSON 出力全体を返す (session_id は test 固定)
+_stop_out() {
+  local msg="$1"
+  shift
+  jq -n --arg m "$msg" --argjson extra "${1:-{\}}" \
+    '{last_assistant_message:$m, cwd:"/tmp", session_id:"batsjpq"} + $extra' \
+    | bash "${HOOK_FILE}" 2>/dev/null
+}
+
+@test "stop: chat 応答の難読漢語 '鑑みる' は block + reason に置換候補" {
+  _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+  local out
+  out=$(_stop_out "過去の経緯を鑑みると妥当だ。")
+  printf '%s' "${out}" | jq -e '.decision == "block"' >/dev/null
+  printf '%s' "${out}" | jq -e '.reason | contains("踏まえる")' >/dev/null
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+}
+
+@test "stop: NG 語なしの chat 応答は PASS" {
+  _make_stop_ng_dict
+  [[ "$(_decision "テストは全て通過した。次は配布を実行する。")" == "PASS" ]]
+}
+
+@test "stop: stop_hook_active=true なら NG 語入りでも検査 skip で PASS" {
+  _make_stop_ng_dict
+  local out
+  out=$(_stop_out "過去の経緯を鑑みると妥当だ。" '{"stop_hook_active":true}')
+  printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
+}
+
+@test "stop: JP_QUALITY_STOP_CHECK=0 なら NG 語入りでも PASS (escape hatch)" {
+  _make_stop_ng_dict
+  local out
+  out=$(jq -n '{last_assistant_message:"過去の経緯を鑑みると妥当だ。", cwd:"/tmp", session_id:"batsjpq"}' \
+    | JP_QUALITY_STOP_CHECK=0 bash "${HOOK_FILE}" 2>/dev/null)
+  printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
+}
+
+@test "stop: backtick 内の NG 語は検査対象外で PASS" {
+  _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+  local out
+  out=$(_stop_out "\`robust\` という識別子を維持した。")
+  printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
+}
+
+@test "stop: warn 系のみ ('念のため') は block せず systemMessage に warn" {
+  _make_stop_ng_dict
+  local out
+  out=$(_stop_out "念のため設定を確認した。")
+  printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
+  printf '%s' "${out}" | jq -e '.systemMessage | contains("chat 文体 warn")' >/dev/null
+}
