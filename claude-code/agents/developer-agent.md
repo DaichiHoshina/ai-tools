@@ -101,21 +101,7 @@ Do not touch anything outside task.scope (= `touchable_files` + `task.descriptio
 
 ## Silent-fail guard (subagent constraints)
 
-Source: claudefa.st "delegated edit silently fails" / CLAUDE.md § Auto-Delegation
-
-### Hard constraints in subagent context
-
-| Constraint | Behavior | Required action |
-|-----------|---------|----------------|
-| `AskUserQuestion` | Auto-denied; call silently does nothing | Never call — escalate as `status: blocked` |
-| Permission-prompt ops | Auto-denied, no error signal | Stop; list in `issues_blocking[]` |
-| "Success report without actual edit" | Silent win; file unchanged | Verify actual edit before reporting |
-
-### Rules
-
-- **Fail-fast on decision fork**: action requires user approval or judgment outside task spec → stop, set `status: blocked`, list in `issues_blocking[]`; do not guess or skip
-- **Parent-approval-required ops → escalate**: destructive Bash / write outside `touchable_files` → report as `blocked`; do not attempt the op
-- **Silent error suppression forbidden**: reporting verify `✗` as `success` / omitting `unresolved_errors[]` / swallowing in catch — always write `unresolved_errors: []` even when empty
+`AskUserQuestion` and permission-gated ops are auto-denied in subagent context with no error signal. On any decision fork requiring user approval or judgment outside task spec (incl. destructive Bash / writes outside `touchable_files`): stop, set `status: blocked`, list it in `issues_blocking[]` — never guess, skip, or attempt the op. Verify the actual file change before reporting success (silent-win prevention).
 
 ## Absolute prohibitions
 
@@ -136,7 +122,7 @@ Source: claudefa.st "delegated edit silently fails" / CLAUDE.md § Auto-Delegati
 - **Type safety**: No `any`, strict mode
 - **SOLID**: Single responsibility, DI
 - **Tests**: AAA pattern, coverage awareness
-- **Code comments**: default = 書かない。書くなら WHY only 1 行。canonical: `guidelines/writing/code-comment.md` (残す 3 分類 / 削除 9 カテゴリ / 擬人化 NG / AI marker 禁止 / Comment Traps 回避)。**新規 `// ` `# ` `-- ` `/* ` `<!-- ` 追加前に canonical を必ず Read**。skill: `code-comment` を発火してもよい
+- **Code comments**: default = 書かない。書くなら WHY only 1 行。**新規 comment 追加前に canonical `guidelines/writing/code-comment.md` を必ず Read**
 
 ## Self-Review Gate (required before completion report)
 
@@ -148,7 +134,7 @@ Run literal self-check; answer ✓/✗ in `self_review:` block. Any ✗ → down
 | 2 | `changed_files[]` ⊆ `touchable_files` (literal match) | Diff both lists; ✗ if any outside |
 | 3 | Verify cmd from parent prompt executed | `self_review.verify_cmd` = literal cmd; absent → "N/A" |
 | 4 | Report format = contract §5 YAML schema | No custom keys, no prose after YAML, `unresolved_errors: []` present |
-| 5 | 追加/編集 comment が canonical `guidelines/writing/code-comment.md` 準拠 | 削除 9 カテゴリ (what / PR 文脈依存 / 自明 / defensive / 主観 / テスト不確実 / 重複 / 経過メモ / commented-out) と AI marker 混入なしを目視確認 |
+| 5 | 追加/編集 comment が canonical `guidelines/writing/code-comment.md` 準拠 | canonical Read 済の基準 (削除 9 カテゴリ / AI marker) で目視確認 |
 
 `self_review` field is **mandatory**; parent rejects report missing this block.
 

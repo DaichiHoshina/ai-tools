@@ -27,7 +27,9 @@ effort: low
 
 **他の細かい挙動は全て default 有効化** — flag で覚えなくて良い。
 
-- `work-context` 14 日超 → trash 候補 (自動)
+- `work-context` 7 日超 → trash 候補 (自動)
+- MEMORY.md 先頭の `[clear]` entry は当日分 + 直近 3 件を超えた分 → prune 候補 (自動、file なし行のため trash 不要)
+- MEMORY.md 8KB / 100 行超 → 肥大 warning (prune 後も超過なら chat で報告)
 - MEMORY.md orphan / dead-link → 検出 (自動)
 - feedback 間 cross-ref の kebab ↔ snake 表記揺れ → 検出 + `--apply` で自動修正
 - 削除済 memory への `[[..]]` 参照 → canonical 差替候補 / `{{deleted:}}` 記号化候補として提示
@@ -39,7 +41,8 @@ effort: low
 
 1. Memory dir 検出 (auto-detect)
 2. **Auto-delete 候補列挙**:
-   - `work-context-YYYYMMDD-*.md` で 14 日超 → trash candidate
+   - `work-context-YYYYMMDD-*.md` で 7 日超 → trash candidate
+   - MEMORY.md 先頭 `[clear]` entry の当日分 + 直近 3 件超過分 → prune candidate
    - `description` exact match / name prefix 3 tokens 一致 → duplicate candidate (新 mtime keep)
    - frontmatter `description` 欠落 → rescue candidate
 3. **整合 audit**:
@@ -58,7 +61,7 @@ dry-run 列挙再実行 → 表示 → 実行。
 1. trash dir `mkdir memory/.trash-YYYYMMDD-HHMM/`
 2. expired work-context / duplicate older → `mv`
 3. description rescue: body line 1 先頭 80 字 → frontmatter 書込 (body 不変)
-4. MEMORY.md prune: trashed file link 行削除 / dead-link 行削除 / rescue 済 file 無 link なら 1 行 append
+4. MEMORY.md prune: trashed file link 行削除 / dead-link 行削除 / 超過 `[clear]` 行削除 / rescue 済 file 無 link なら 1 行 append
 5. cross-ref: kebab ↔ snake 表記揺れは `sed` で自動修正、canonical 差替 / `{{deleted:}}` 記号化は候補提示のみ (`--apply` でも auto 適用しない、user 判断)
 6. trash rotation: `.trash-*` 3 超なら最古削除
 
@@ -72,7 +75,7 @@ dry-run 列挙再実行 → 表示 → 実行。
 2. subdir ごとに `explore-agent` を並列 fan-out (parallelism = subdir 数、max 8)。各 agent への prompt:
    - 全 file を read、**汎用性 high の候補**を抽出
    - **除外基準**: 社内 product 名 / 個人名 / 会社名 / 固有 path を含む / 既存 ai-tools rule と重複 / 単発 incident log
-   - 既知知識として `~/ai-tools/claude-code/CLAUDE.md` / `rules/*.md` / `guidelines/writing/*.md` / `~/ai-tools/memory/feedback_*.md` を渡す
+   - 既知知識として `~/ai-tools/claude-code/CLAUDE.global.md` / `rules/*.md` / `guidelines/writing/*.md` / `~/ai-tools/memory/feedback_*.md` を渡す
    - 出力: 候補 file / 提案先 / 汎用化後の要旨 (常体 plain JP) / 汎用性 confidence / 伏字化対象
 3. Tier 分類して chat に一覧表示:
    - **Tier A**: `rules/` `guidelines/` に独立 file / 独立追記
@@ -102,7 +105,7 @@ dry-run 列挙再実行 → 表示 → 実行。
 $ /memory-clean
 [memory-dir] ~/ai-tools/memory/
 [dry-run] enumerate only, no file changes
-[work-context-expired] 10 files (>14d)
+[work-context-expired] 10 files (>7d)
 [duplicate] 0 / [description-missing] 0
 [orphan] 3 files (index 未登録) / [dead-link] 2 (link 先 file 不在)
 [xref-audit] fixable(表記揺れ) 5 / canonical 差替候補 3 / {{deleted:}} 記号化候補 11
@@ -111,13 +114,7 @@ $ /memory-clean
 Run: /memory-clean --apply で trash + MEMORY.md prune + 表記揺れ自動修正を実行
 ```
 
-```text
-$ /memory-clean --import=~/ghq/github.com/<org>/memory/
-[import-scan] fan-out 7 explore-agent (subdir 数)
-[import-candidates] Tier A: 8 / Tier B: 10 / Tier C: 7
-(自 memory audit の結果もあわせて表示)
-Run: /memory-clean --import=<src-dir> --apply で採用 tier 反映 + 元 file 削除 + cross-ref 差替 + 自 memory 反映を実行
-```
+`--import` 時は上記に import-scan (explore-agent fan-out) + Tier A/B/C 候補数が加わる。
 
 ## Fallback
 

@@ -64,15 +64,7 @@ Schema: `references/agent-team-contract.md` §6 canonical. MERGED.md は read-on
 
 ## Noise suppression & task creation control
 
-**Feedback condition**: Based on actual diff/code/docs / Actionable / In scope. Mark speculation as "hypothesis:". No style, preference, generalization.
-
-**No invented problem framing**: Do not create a new problem statement and then criticize the change for not solving it. A P0/P1/P2 finding requires an observed violation, regression, or concrete risk tied to the user request, issue/design doc, tests, code contract, or runtime/tool evidence.
-
-**Speculation boundary**: "Could be a problem", "best to check", and "might be useful" are questions/notes only. Do not list them as findings or turn them into fix tasks.
-
-**No unvalidated TODOs**: "Just in case" items / past-pattern steps / unconfirmed ops (only up to "needs confirm") / user-declined work / non-blocker items.
-
-**Issue/ticket/task creation**: Only on explicit user request.
+Every finding must pass the Self-Filter Gate (§Review process step 4): evidence-anchored, in scope, actionable, no invented problem framing. Speculation ("could be a problem" / "best to check" / "might be useful") stays a question/note marked "hypothesis:" — never a finding or fix task. No "just in case" TODOs, past-pattern steps, or user-declined work. Issue/ticket/task creation only on explicit user request.
 
 ## Review viewpoints (P0-P3 definition)
 
@@ -158,12 +150,9 @@ parent 側の集計: file:line key で N lens の結果を集約し、2/N 以上
 
 ## Prohibitions
 
-- ❌ Direct code edit (no Edit/Write/Bash edit commands)
-- ❌ Auto-fix
+- ❌ Direct code edit (no Edit/Write/Bash edit commands) / auto-fix
 - ❌ Subjective preference feedback (objective only)
-- ❌ Invent problem framing not grounded in the requested scope or observed evidence
-- ❌ Create issue/ticket/task without user request
-- ❌ Elevate past-pattern steps to this-cycle TODO
+- ❌ Findings violating §Noise suppression (invented framing / past-pattern TODO / unrequested issue creation)
 
 ---
 

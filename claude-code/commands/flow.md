@@ -56,20 +56,7 @@ Formula trace echo: `formula: N=<N_chosen> / sum_T_i=<sum>s / LPT+ovh=<expected_
 
 ## Parallel (forced)
 
-Physically parallelizes via worktree isolation.
-
-| Item | Action |
-|------|------|
-| Parallelism degree eval | Forced (Manager) |
-| worktree proposal | Forced (PO) |
-| worktree creation | `--auto`: auto under 4 skip conditions; otherwise user confirm |
-| Sequential downgrade | On file conflict / physical conflict detected, or `--sequential` |
-
-**`--auto` skip conditions**: Parallel formula PASS + clean worktree + no branch/worktree collision + creation fail → sequential downgrade + notify. Details: `references/PARALLEL-PATTERNS.md` `### /flow --parallel --auto skip-confirmation 4 conditions`.
-
-**worktree cleanup**: Changes present → return branch + merge + delete / no changes → auto-delete / collision → sequential downgrade + leave. Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`.
-
-Sweet spot / hard rules: `references/PARALLEL-PATTERNS.md#fan-out-hard-rules`.
+Physically parallelizes via worktree isolation. Parallelism eval = Manager forced / worktree proposal = PO forced / worktree creation = `--auto` は 4 skip conditions で auto、それ以外は user confirm / file conflict or `--sequential` → sequential downgrade。`--auto` skip 4 conditions / cleanup policy / sweet spot / hard rules は `references/PARALLEL-PATTERNS.md` canonical を参照する。
 
 ## --auto mode
 
@@ -87,12 +74,12 @@ Natural language triggers: "全自動で" / "autoで" / "おまかせ" → `/flo
 4. **Manager Agent (required)**: task split / file dedup / N calc + `formula_trace`
 5. **Post-Manager downgrade**: `parallelism: 1` + `worktree_required: false` or file conflict → Dev×1 sequential
 6. **Orchestration pre-delegation** (internal + echo 2 lines); `mkdir -p <impl_notes.dir>`
-6.3. **PO Gate** (required). Parent re-spawns PO with Manager allocation. Returns `verdict: pass | fail | modify`. `pass` → 6.5. `modify` → Manager re-allocation (1 loop max, then escalate); parent MUST `grep -F` each `task.files[]` literal against PO `manager_instruction` priority/constraints — mismatch → discard Manager output. `fail` → stop + user escalation. Canonical: `agents/po-agent.md`. PO `fix_request` schema (contract §1.1): `modify_target_task_ids[]` + `unchanged_task_ids[]` + `modify_reason` + `concrete_change` 必須 (canonical: `references/retrospectives/2026-06-22_manager-hallucination.md` 案 1)。
-6.5. **Gate A: parallel-judgment self-review** (required; N≥2 only). 6 criteria. FAIL → re-run Manager. PASS → step 7. Canonical: `references/parallel-self-review.md`
+6.3. **PO Gate** (required). Parent re-spawns PO with Manager allocation → `verdict: pass | fail | modify`。`pass` → 6.5 / `modify` → Manager re-allocation (1 loop max, then escalate) / `fail` → stop + user escalation。criteria / `fix_request` schema / literal 検証は §Self-Review 参照。Canonical: `agents/po-agent.md`
+6.5. **Gate A** (required; N≥2 only). FAIL → re-run Manager. PASS → step 7. criteria は §Self-Review 参照
 7. **Parallel fan-out**: Fire `Task(developer-agent)×N` in 1 message (bundle required)
 8. **Parallel integrate + review** (1 message): Manager integrate + `Task(reviewer-agent, --codex)`×1 (or Gate C on `--auto`/`--multi-review`). Canonical: `references/parallel-self-review.md` §Gate C
-8.5. **Gate B** (required; N≥2): 4 criteria. FAIL → force step 9. Canonical: `references/parallel-self-review.md`
-8.7. **Dev failure gate** (required; after step-8 aggregate). `status ∈ {failure, partial, dep_unresolved}` → Manager realloc (1 loop max). 2nd fail → stop + escalate
+8.5. **Gate B** (required; N≥2). FAIL → force step 9. criteria は §Self-Review 参照
+8.7. **Dev failure gate** (required; after step-8 aggregate). criteria は §Self-Review 参照
 9. **P0 re-fix loop**: P0 → manager realloc → dev×M fix → reviewer re-verify (max 1 loop). **`--until-gate-green "<cmd>"`**: switches stop-condition to bash `<cmd>` exit 0 (max-iter default 3). Canonical: `references/loop-engineering.md`
 
 Detail step prose: `references/flow-orchestration.md`
@@ -113,7 +100,7 @@ A/B mandatory on orchestration path; `--sequential` exempts A/B. `/dev --paralle
 
 Required: impl → /lint-test → /review → review-fix → /git-push. 2× fail same approach → `/clear` → re-organize.
 
-**Code comment enforcement (always-on)**: 各 developer-agent の delegation prompt に `guidelines/writing/code-comment.md` canonical 準拠を明示する (default = 書かない / WHY only / 削除 9 カテゴリ / AI marker 禁止 / Comment Traps 回避)。Self-Review Gate 5 (developer-agent.md) で comment 混入を目視確認する。
+**Code comment enforcement (always-on)**: 各 developer-agent の delegation prompt に canonical `guidelines/writing/code-comment.md` 準拠 (Read 必須) を明示する。Self-Review Gate 5 (developer-agent.md) で comment 混入を目視確認する。
 
 ### Completion actions
 

@@ -94,29 +94,19 @@ Summary: Apply critical-path formula and `N_initial` algorithm per `references/P
 
 ## Allocation plan format
 
-Schema: `references/agent-team-contract.md` §3 (Manager → parent) — canonical. **Fill contract §3 YAML literal as-is** (do not rename fields / change hierarchy / alter types).
+Schema: `references/agent-team-contract.md` §3 (Manager → parent) — canonical. **Fill contract §3 YAML literal as-is**: no field rename / hierarchy change / type change / custom fields; `task` / `verify` are sub-field objects (not free strings); `developer_id` = `dev1` form only. Violation → parent discards output and re-runs.
 
-Trailer schema (`status` / `confidence` / `issues_blocking`): `references/agent-output-schema.md` — canonical, mandatory. Missing trailer → parent treats output as `failure`.
+Trailer schema (`status` / `confidence` / `issues_blocking`): `references/agent-output-schema.md` — canonical, mandatory. Missing trailer → treated as `failure`.
 
-Required fields: `execution_mode` / `parallelism` / `worktree_required` / `impl_notes.dir` / `tasks[]` (each with `developer_id` / `task` / `verify` / `dod` sub-fields) — see contract §3 for full sub-field spec.
+Per-task mandatory fields (PO Gate v2 準拠):
+- `file_count: int` — 省略不可
+- `bundle_justification: string | null` — `file_count > 1` なら理由 1 行必須、`file_count == 1` なら `null` を明示する。欠落時は parent が allocation を reject して Manager を再実行する
 
-**Allocation mandatory fields per task** (PO Gate v2 8 観点準拠、canonical: `references/retrospectives/2026-06-19_agent-oversight.md`):
-- `file_count: int` — 各 task が編集するファイル数。必須、省略不可
-- `bundle_justification: string | null` — `file_count > 1` のとき必須。理由を 1 行で記載する。`file_count == 1` のとき `null` を明示する
-- `file_count > 1` かつ `bundle_justification` が `null` または未指定の場合、parent は allocation を reject して Manager を再実行する
+`formula_trace` は every allocation で required (12 sub-fields per contract §3)。`downgrade_reason` valid values: `single-task` / `same-file-sequential` / `file-conflict` / `formula-fail` / `parent-override`。
 
-`formula_trace` required (12 sub-fields per contract §3) — see contract §3 for field list. `downgrade_reason` valid values: `single-task` / `same-file-sequential` / `file-conflict` / `formula-fail` / `parent-override`.
+**PO literal echo (mandatory)**: 各 task の `task.files[]` / `task.title` / `task.description` / `bundle_justification` は PO `manager_instruction` の literal string をそのまま preserve する (意訳 / 要約 / 改名 / path 変換は禁止)。parent が `grep -F` 完全一致で diff し、不一致なら allocation を reject する (経緯: `references/retrospectives/2026-06-22_manager-hallucination.md`)。
 
-**Prohibitions**:
-- No custom fields outside contract §3
-- `task` / `verify` must be sub-field objects, not free strings
-- `developer_id` hyphen form forbidden (`dev1` only)
-
-Violation → parent discards output and re-runs.
-
-**PO literal echo (mandatory)**: 各 task の `task.files[]` / `task.title` / `task.description` / `bundle_justification` は PO `manager_instruction` (priority / constraints) の literal string をそのまま preserve する。意訳・要約・改名・path 変換は禁止する。元 PO string と異なる場合は parent が `grep -F` 完全一致で diff を取り、不一致なら allocation を reject する (canonical: `references/retrospectives/2026-06-22_manager-hallucination.md` 案 2)。
-
-Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。Manager MUST include computed formula_trace in every allocation (mandatory, not optional)。
+Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。
 
 ## Developer allocation handoff
 
@@ -153,32 +143,11 @@ Semantic conflict detection across Devs is out of scope (user reads MERGED.md to
 
 All paths share: **1 loop max** / parent re-spawns `Task(developer-agent)×M` after Manager output / on residual failure return as `user_decision_required: true` (stop, do not loop again).
 
-**Path 0: PO modify** (oversight callback verdict = `modify`, fires pre-fan-out)
+**Path 0: PO modify** (oversight verdict = `modify`, fires pre-fan-out) — input: PO `fix_request` (contract §1.1)。Touch only `modify_target_task_ids[]`; copy every `unchanged_task_ids[]` entry verbatim from the previous allocation (no `developer_id` shuffle / `files[]` rename / `description` rewrite / scope shrink)。修正後 task でも `files[]` / `task.title` は PO 元 instruction を literal preserve する。`modify_target_task_ids` 欠落 → `status: failure` + `issues_blocking: ["fix_request.modify_target_task_ids missing"]` (no guessing)。
 
-Parent re-spawns Manager with PO `fix_request` (contract §1.1) containing `modify_target_task_ids[]` + `unchanged_task_ids[]` + `modify_reason` + `concrete_change`. Manager MUST:
+**Path 1: Dev failure** (fires on aggregate if any Dev `status ∈ {failure, partial, dep_unresolved}`) — input: `failed_devs[]` (contract §3.1)。Target failed Dev tasks only (success Devs untouched)。各 `failed_devs[i]` の `unresolved_errors[]` + `blocker` + impl_notes を読み、narrowed scope (root-cause fix only) の new task を作る: `task.id` = `<original-id>-fix1`、`developer_id` は可能な限り維持、`verify` block は元 failure を再現する内容にする。2nd failure → parent escalates to user (stop fan-out, no Reviewer)。
 
-- **Touch only `modify_target_task_ids[]`** — other tasks remain literal-identical (no `developer_id` shuffle, no `files[]` rename, no `description` rewrite, no scope shrink)
-- For each `unchanged_task_ids[i]`: copy the entire task entry verbatim from previous allocation output
-- Missing `modify_target_task_ids` → treat as parent error, return `status: failure` with `issues_blocking: ["fix_request.modify_target_task_ids missing"]` (no guessing)
-- Hallucination guard: each `modify_target_task_ids[i]` の修正後 task でも `files[]` / `task.title` は PO 元 instruction を literal preserve する (canonical: `references/retrospectives/2026-06-22_manager-hallucination.md` 案 1)
-
-**Path 1: Dev failure** (NEW, fires before Reviewer)
-
-Parent calls Manager back **immediately on aggregate** if any Dev report has `status ∈ {failure, partial, dep_unresolved}`. Input from parent: `failed_devs[]` list (see contract §3.1). Manager:
-
-- **Target failed Dev tasks only** (success Devs untouched; Manager does not re-touch their files)
-- For each `failed_devs[i]`: read `unresolved_errors[]` + `blocker` + `impl_notes` (if written), produce a new task with **narrowed scope** (root-cause fix only, not full re-attempt) and a `verify` block that reproduces the original failure
-- New `task.id` = `<original-id>-fix1`; preserve `developer_id` mapping where possible
-- After re-allocation, parent fan-out resumes from step 7 (skip PO, skip step 6 echo since `formula_trace` unchanged); on 2nd failure parent escalates to user (stop fan-out, no Reviewer)
-
-**Path 2: Reviewer P0**
-
-Parent calls Manager back with `Task(reviewer-agent)` result. Manager:
-
-- **Target P0 only** (P1 below → user report, not re-fix target)
-- Decompose feedback (file, line, fix candidate) to task units
-- If changes cluster in one file → sequential; if spread → parallel allocation
-- Parent spawns `Task(developer-agent)×M` → after, **once only** `Task(reviewer-agent)` for re-verify
+**Path 2: Reviewer P0** — target P0 only (P1 below → user report, not re-fix target)。Feedback (file / line / fix candidate) を task 単位に分解し、same-file cluster → sequential / spread → parallel。Parent spawns `Task(developer-agent)×M` → after, **once only** `Task(reviewer-agent)` for re-verify
 
 ## parallelism=1 constraint (strict)
 
@@ -190,8 +159,4 @@ Parent calls Manager back with `Task(reviewer-agent)` result. Manager:
 
 If none apply but `parallelism: 1` is returned, set `formula_trace.downgrade_reason` to one of the valid literals (see Allocation plan format above).
 
-`parallelism: 1` without explicit reason → parent discards allocation and re-runs Manager (aligned with `/flow` step 5).
-
-### Why
-
-Analysis of /flow runs (2026-06-08): 8 of 22 peak=1 invocations (36%) were cap=1 caused by Manager choosing parallelism=1 even for independent tasks. Explicit reason requirement makes mis-judgments visible and improves parallel efficiency.
+`parallelism: 1` without explicit reason → parent discards allocation and re-runs Manager (aligned with `/flow` step 5; 経緯: 2026-06-08 分析で peak=1 の 36% が Manager の不要な parallelism=1 だった).

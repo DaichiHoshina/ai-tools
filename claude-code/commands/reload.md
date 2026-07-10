@@ -39,9 +39,7 @@ Auto-execute the following:
 
 ```text
 If $ARGUMENTS non-empty (名指し fast path):
-  # `/memory-save` は全 mode で個別 file (`work-context-YYYYMMDD-<topic>.md`) を書く。
-  # 個別 file を持たない旧 clear 保存分 (MEMORY.md 1 行 entry のみ) の互換として step 4 の
-  # helper fallback を残す。
+  # step 4 は個別 file を持たない旧 clear 保存分 (MEMORY.md 1 行 entry のみ) の互換
   1. Read ~/ai-tools/memory/work-context-*-<arg>.md (glob で日付 suffix 吸収、`ls -t | head -1` で最新 1 件)
   2. 上記 hit しなければ ~/ai-tools/memory/<arg>.md (拡張子なし指定でも .md 補完) を Read
   3. まだ不在なら ~/ai-tools/memory/ から prefix match で 1 件 Read。cwd が ai-tools repo 外なら
@@ -61,27 +59,18 @@ Else (fallback chain、上から順に評価、ヒットしたら次 step も並
   B. MEMORY.md (index、`/memory-save clear` が 1 行 entry を prepend する SoT)
      Read ~/ai-tools/memory/MEMORY.md (200 行まで)
      先頭 1-3 行で当日 [clear] entry の <topic> / <summary> / <commit> を確認
-  C. 直近 work-context 本文 (clear-aware、B 段の日付と source を一致させる)
-     # 個別 file を持たない旧 clear entry が MEMORY.md 先頭に並ぶと、work-context file の
-     # 最新日付は B 段 (MEMORY.md 先頭 [clear] entry の日付) より古くなる。C 段は B 段と
-     # source を一致させ、古い本文を「直近 state」と誤読しないようにする。
-     mem_latest=$(head -1 ~/ai-tools/memory/MEMORY.md 2>/dev/null | grep -oE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' | head -1)  # B 段最新 entry の日付
+  C. 直近 work-context 本文 (clear-aware — B 段と source を一致させ、古い本文を「直近 state」と誤読しない)
+     mem_latest=$(head -1 ~/ai-tools/memory/MEMORY.md 2>/dev/null | grep -oE '20[0-9]{2}-[0-9]{2}-[0-9]{2}' | head -1)
      wc_file=$(ls -t ~/ai-tools/memory/work-context-*.md 2>/dev/null | head -1)
-     # wc_date は mem_latest と揃えるため YYYY-MM-DD 形式で保持する (比較を同形式にする)。
-     # file 名 glob (work-context-YYYYMMDD-*) で再利用する時だけ ${wc_date//-/} で YYYYMMDD に戻す。
+     # wc_date は比較のため mem_latest と同じ YYYY-MM-DD 形式に揃える
      wc_date=$(basename "$wc_file" 2>/dev/null | grep -oE '20[0-9]{2}[0-9]{2}[0-9]{2}' | sed -E 's/(....)(..)(..)/\1-\2-\3/')
      if [ -n "$wc_file" ] && [ "$wc_date" = "$mem_latest" ]; then
-       # work-context 本文が B 段最新 entry と同日 → 本文が直近 state の SoT。
-       # 全件 Read はしない (日 5-9 file で 25KB 超になる): 最新 1 件のみ Read し、
-       # 同日の他 file は file 名を 1 行 list で提示して「/reload <topic>」で個別復元に誘導する
+       # 同日 → 本文が直近 state の SoT。全件 Read はしない (日 5-9 file で 25KB 超)
        Read "$wc_file"
-       ls -t ~/ai-tools/memory/work-context-${wc_date//-/}-*.md | tail -n +2  # 名前のみ列挙
+       ls -t ~/ai-tools/memory/work-context-${wc_date//-/}-*.md | tail -n +2  # 名前のみ列挙し /reload <topic> へ誘導
      else
-       # work-context 本文が B 段より古い (それ以降は旧 clear のみで保存された) →
-       # 直近 state の主 source は MEMORY.md 先頭の [clear] entry 群 (B 段) とする。
-       # 古い work-context 本文は補助 context として 1 件だけ Read し、summary では
-       # 「本文は <wc_date> 時点、それ以降の作業は MEMORY.md entry 参照」と日付を明示する。
-       [ -n "$wc_file" ] && Read "$wc_file"  # 補助のみ、直近 state の主 source にしない
+       # 本文が B 段より古い → 主 source は MEMORY.md [clear] entry 群。本文は補助として 1 件のみ Read し、summary で日付乖離を明示する
+       [ -n "$wc_file" ] && Read "$wc_file"
      fi
   D. cwd が ai-tools repo 外の場合のみ追加 (memory file は SoT 適用外、Read OK)
      repo_root=$(git rev-parse --show-toplevel 2>/dev/null)

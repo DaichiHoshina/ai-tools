@@ -14,18 +14,7 @@ bats -r tests/              # bash hook / lib / scripts の bats 全実行
 
 ## Repo layout
 
-| dir | 役割 |
-|---|---|
-| `commands/` | slash command (`/plan` `/flow` `/review` `/workflow` 等) |
-| `skills/` | Skill (`comprehensive-review` `jp-writing` `local-docs` 等) |
-| `agents/` | subagent 定義 (`developer-agent` `po-agent` `manager-agent` 等) |
-| `hooks/` | Claude Code hooks (`pre-tool-use.sh` `session-start.sh` 等) |
-| `rules/` | 規約 (`genshijin.md` `public-repo-private-data-block.md` 等) |
-| `guidelines/` | 執筆 / language / design 規範 (`writing/` `design/` 等) |
-| `references/` | 詳細仕様 / 履歴 / cross-ref 集 (`INDEX.md` 等) |
-| `templates/` | `settings.json.template` ほか canonical config |
-| `scripts/` | sync 補助 / hook-bench / git-hooks |
-| `lib/` | bash 共通 lib / `tests/` | bats + jest |
+dir 構成 (commands / skills / agents / hooks / rules / guidelines / references / templates / scripts / lib / tests) の役割一覧は `README.md` を参照する。
 
 ## Editing Rule (data-loss guard)
 

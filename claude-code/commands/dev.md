@@ -44,21 +44,7 @@ plan は SoT として扱い、mode 再判定をしない。plan と実 code の
 
 ## --parallel spec
 
-Launch Developer×N worktree parallel w/o PO/Manager. Formula detail: `references/PARALLEL-PATTERNS.md`. Gate A/B (parallel self-review) not applied to `/dev --parallel` (`/flow --parallel` exclusive).
-
-| Item | Action |
-|------|------|
-| Parallelism degree eval | Forced |
-| worktree proposal | Forced |
-| worktree creation | User confirm required |
-
-### `--parallel --auto` skip conditions
-
-Details: `references/PARALLEL-PATTERNS.md` `### /dev --parallel --auto skip-confirmation 4 conditions`. Summary: formula PASS + clean worktree + no branch/worktree collision + creation fail → downgrade.
-
-### worktree cleanup
-
-Details: `references/PARALLEL-PATTERNS.md` `### Cleanup policy (common)`. Summary: Changes present → return branch + merge + delete / no changes → auto-delete / collision → sequential downgrade + leave in place.
+Launch Developer×N worktree parallel w/o PO/Manager. Parallelism eval + worktree proposal は forced、worktree creation は user confirm required。Formula / `--auto` skip 4 conditions / cleanup policy は `references/PARALLEL-PATTERNS.md` canonical を参照する。Gate A/B (parallel self-review) not applied to `/dev --parallel` (`/flow --parallel` exclusive).
 
 ## --quick (formerly /quick-fix)
 
@@ -74,7 +60,7 @@ Flow: identify file → fix (Serena MCP) → verify (lint/type) → propose comm
 
 ## Step 0: Guideline loading (conditional)
 
-**Always-on (skip 不可)**: `guidelines/writing/code-comment.md` を Read。code comment (`// ` `# ` `-- ` `/* ` `<!-- `) を新規追加/編集する場合は削除 9 カテゴリ + AI marker 禁止 + Comment Traps 回避を必ず適用する (`--quick` でも skip しない)。
+**Always-on (skip 不可)**: code comment (`// ` `# ` `-- ` `/* ` `<!-- `) を新規追加/編集する場合は canonical `guidelines/writing/code-comment.md` を Read して適用する (`--quick` でも skip しない)。
 
 | Scenario | Action |
 |----------|--------|

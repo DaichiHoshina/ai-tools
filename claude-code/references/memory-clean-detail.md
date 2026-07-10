@@ -8,7 +8,7 @@
 
 - regex: `^work-context-(\d{8})-.*\.md$`
 - `date -j -f %Y%m%d` で Unix time 化
-- `today - N*86400` より古ければ trash 行き (N は fixed 14 日)
+- `today - N*86400` より古ければ trash 行き (N は fixed 7 日)
 
 ### Duplicate detection
 

@@ -28,7 +28,6 @@ On-demand index from CLAUDE.md.
 | Review command usage guide | `review-commands.md` |
 | Review mode details (deep / multi aggregation) | `review-modes-advanced.md` |
 | Command × resource map | `command-resource-map.md` |
-| skillOverrides design guide | `skill-overrides-guide.md` |
 | Guideline auto-trigger list | `guideline-triggers.md` |
 | Skill tool invocation patterns (forked exec) | `skill-tool-invocation.md` |
 | Loop engineering (14-step roadmap, 4-condition test, Ralph Wiggum guard) | `loop-engineering.md` |
@@ -40,12 +39,10 @@ On-demand index from CLAUDE.md.
 | Multi-repo side-by-side | `multi-repo-workflow.md` |
 | Design phase transitions | `design-phase-flow.md` |
 | Ticket → PR completion stages | `ticket-to-pr-workflow.md` |
-| Incident response flow | `incident-flow.md` |
 | Compounding Engineering | `compounding-engineering-cycle.md` |
 | Parallel execution patterns (worktree decisions) | `PARALLEL-PATTERNS.md` |
 | /flow 詳細 orchestration 仕様 (pre-delegation / 3 Gate 詳細) | `flow-orchestration.md` |
 | Orchestrate mode (parent-led delegation supplement) | `orchestrate-mode.md` |
-| Large-scale refactor N-parallel split strategies | `parallel-refactor-split-strategies.md` |
 | Parallel self-review (Gate C 12-lens) | `parallel-self-review.md` |
 | Workflow tool templates (fan-out / pipeline / 多数決) | `workflow-templates.md` |
 | Agent Team interface schema (canonical) | `agent-team-contract.md` |
@@ -89,7 +86,6 @@ On-demand index from CLAUDE.md.
 | Topic | File |
 |-------|------|
 | Serena cc-system-prompt-override setup | `serena-cc-prompt-setup.md` |
-| user-scope MCP の per-project 無効化 (disabledMcpServers) | `claude-code-mcp-per-project-disable.md` |
 | Serena tool 用途マップ (per-agent canonical) + 事故防止ルール | `serena-tool-map.md` |
 
 ## Other
@@ -99,10 +95,7 @@ On-demand index from CLAUDE.md.
 | Memory usage guide | `memory-usage.md` |
 | Memory relocation pattern (auto-memory → project-scoped path) | `memory-relocation-pattern.md` |
 | Memory → CLAUDE.md / ai-tools promotion flow | `~/.claude/references-private/memory-promotion-flow.md` |
-| UI default settings | `ui-defaults.md` |
-| Private config storage convention | `private-config-convention.md` |
 | Plugin marketplace caveats (cascade uninstall) | `plugin-marketplace-caveats.md` |
 | CodeRabbit plugin cheat sheet | `coderabbit-plugin.md` |
-| Shell snapshot が rc を上書きする挙動 / CLAUDECODE 判定 | `shell-snapshot-rc-override.md` |
 | Boris 流開発スタイル対応表 | `boris-style-mapping.md` |
 | Claude Code official best practices (JA) | https://code.claude.com/docs/ja/best-practices |

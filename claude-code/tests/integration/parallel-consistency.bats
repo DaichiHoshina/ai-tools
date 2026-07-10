@@ -15,7 +15,7 @@ setup() {
   export MANAGER_FILE="${PROJECT_ROOT}/agents/manager-agent.md"
   export FLOW_FILE="${PROJECT_ROOT}/commands/flow.md"
   export DEV_FILE="${PROJECT_ROOT}/commands/dev.md"
-  export CLAUDEMD_FILE="${PROJECT_ROOT}/CLAUDE.md"
+  export CLAUDEMD_FILE="${PROJECT_ROOT}/CLAUDE.global.md"
   export TRIGGERS_FILE="${PROJECT_ROOT}/references/natural-language-triggers.md"
 }
 
@@ -91,18 +91,19 @@ require_anchor() {
   done
 }
 
-@test "flow_auto_four_conditions_with_cleanup: flow.md / dev.md に --auto 4 条件 + 後片付け 3 項目" {
+@test "flow_auto_four_conditions_with_cleanup: flow.md / dev.md は canonical 参照、実体は PARALLEL-PATTERNS.md に存在" {
+  # flow.md / dev.md は summary を再記述せず canonical link のみ持つ (desync の構造的排除)
   for file in "$FLOW_FILE" "$DEV_FILE"; do
-    # --auto skip conditions
-    grep -qF "formula PASS" "$file" || { echo "missing formula PASS in $file"; false; }
-    grep -qF "clean worktree" "$file" || { echo "missing clean worktree in $file"; false; }
-    grep -qE "(branch|worktree).*collision" "$file" || { echo "missing collision in $file"; false; }
-    grep -qE "(fallback|downgrade)" "$file" || { echo "missing fallback/downgrade in $file"; false; }
-    # cleanup 3 items
-    grep -qF "Changes present" "$file" || { echo "missing Changes present in $file"; false; }
-    grep -qF "no changes" "$file" || { echo "missing no changes in $file"; false; }
-    grep -qF "collision" "$file" || { echo "missing collision in $file"; false; }
+    grep -qF "skip 4 conditions" "$file" || { echo "missing skip 4 conditions ref in $file"; false; }
+    grep -qF "cleanup policy" "$file" || { echo "missing cleanup policy ref in $file"; false; }
+    grep -qF "PARALLEL-PATTERNS.md" "$file" || { echo "missing PARALLEL-PATTERNS.md ref in $file"; false; }
   done
+  # canonical 側に実体 (4 条件 + 後片付け 3 項目) が存在すること
+  grep -qF "formula PASS" "$PATTERNS_FILE" || { echo "missing formula PASS in PATTERNS_FILE"; false; }
+  grep -qiF "clean worktree" "$PATTERNS_FILE" || { echo "missing clean worktree in PATTERNS_FILE"; false; }
+  grep -qiE "(branch|worktree).*(collision|conflict)" "$PATTERNS_FILE" || { echo "missing collision in PATTERNS_FILE"; false; }
+  grep -qiF "worktree with changes" "$PATTERNS_FILE" || { echo "missing worktree-with-changes in PATTERNS_FILE"; false; }
+  grep -qiF "no changes" "$PATTERNS_FILE" || { echo "missing no changes in PATTERNS_FILE"; false; }
 }
 
 # =============================================================================

@@ -114,7 +114,7 @@ Zero findings → `### Critical: 0`. Tags: `must`=Critical / `imo`,`nits`=Warnin
 
 ## Writing Enforcement (always-on)
 
-**Comment check (毎 review 必須、diff 種別問わず)**: diff に comment 行 (`// ` `# ` `-- ` `/* ` `<!-- `) の追加/変更が 1 つでもあれば、`guidelines/writing/code-comment.md` canonical の 13 分類 table で分類する。削除 9 カテゴリ (what / PR 文脈依存 / 自明 / defensive / 主観 / テスト不確実 / 重複 / 経過メモ / commented-out) + AI marker 該当 → Warning 以上で報告する。comment 行の diff が 0 なら `comment-check: no comment diff` と 1 行報告して skip する。
+**Comment check (毎 review 必須、diff 種別問わず)**: diff に comment 行 (`// ` `# ` `-- ` `/* ` `<!-- `) の追加/変更が 1 つでもあれば、canonical `guidelines/writing/code-comment.md` を Read して 13 分類 table で分類する。削除 9 カテゴリ + AI marker 該当 → Warning 以上で報告する。comment 行の diff が 0 なら `comment-check: no comment diff` と 1 行報告して skip する。
 
 **Prose check (writing/docs/prompt diff 時)**: `guidelines/writing/PRINCIPLES.md` / `prompt-engineering.md` / `long-form-doc.md` を Step 4.5 で追加適用する。
 

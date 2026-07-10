@@ -18,17 +18,11 @@
 
 ## 質問禁止 (推奨即決すべきケース)
 
-- file 数 / 編集 mode / 並列数の判定 → CLAUDE.md decision table から自動判定
-- branch 名 / commit message 文言 → repo 慣習 + Conventional Commits prefix で auto
-- 「これでいい?」「進める?」系の確認 → 推奨を 1 行明示して即実行
-- 細部の wording / format 選択 → guideline canonical に従って auto
-- 複数の reasonable な実装案 → 推奨 1 案を選び、chat で 1 行根拠表示してから実行 (user が NG なら interrupt で返ってくる)
+file 数 / 編集 mode / 並列数 / branch 名 / commit 文言 / wording / format / 複数の reasonable な実装案は、CLAUDE.md decision table・repo 慣習・guideline canonical から推奨 1 つを選び、1 行根拠を chat に示して即実行する (user が NG なら interrupt で返ってくる)。「これでいい?」「進める?」系の確認も同様に推奨明示 + 即実行に置換する。
 
 ## 適用範囲
 
-- `/plan` Step 1 Sub 質問 — 推奨即決優先、Step 2 mode 判定も auto
-- `/dev` / `/flow` / `/workflow` の前段確認 — recipe で推奨が出るなら聞かない
-- chat 全般 — 「〜しますか?」「どうしますか?」は推奨 1 行 + 実行に置換
+`/plan` Step 1 Sub 質問 / `/dev` `/flow` `/workflow` の前段確認 / chat 全般 — いずれも推奨即決を優先する。
 
 ## 違反時
 
