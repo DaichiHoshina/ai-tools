@@ -86,7 +86,7 @@ Both needed for large features. Small changes: `/plan` alone is usually sufficie
 - `../guidelines/writing/design-doc-protocol.md` — DesignDoc 4 steps + 10 patterns + anti-patterns + template selection + self-check 18
 - `design-doc-template.md` — Full 12-section template
 - `document-iteration-patterns.md` — Phase progression and revision patterns for rewrites (dynamic supplement)
-- `prd-review-checkpoints.md` — Review checkpoints for human focus in PRD review
+- `_archive/prd-review-checkpoints.md` — Review checkpoints for human focus in PRD review (archived)
 - `decision-quality-checklist.md` — 5-question decision quality check
 - `performance-issue-template.md` — Performance improvement issue: measure → analyze → staged improvement → load test
 - `review-patterns-universal.md` — Common review findings for design decisions and SQL dialects

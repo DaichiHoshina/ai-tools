@@ -40,7 +40,7 @@ Choose from 6 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>
 
 **`/goal` 4 conditions** (all required; canonical: `commands/goal.md`): iterative task / automated stop-condition (exit code) / token budget absorbs N iter waste / agent holds senior tools (Bash/Edit/Task)
 
-**Anti-patterns (avoid past churn)**: inline 3+ files / 30+ lines each (context pressure) ・ /dev fully independent 3+ files (parallel benefit を捨てる) ・ /workflow full PRD→Plan→impl→review→push (no Gate で progress 崩壊) ・ /flow ≤2 files (overhead unrecoverable) ・ /flow --auto design branch / large refactor (auto-adopt が誤判定通過) ・ /goal one-shot / subjective verifier / no hard stop / maker=checker (Ralph Wiggum infinite loop)
+**Anti-patterns**: canonical `references/auto-delegation-detailed.md` 参照。
 
 ### /workflow vs /flow
 
@@ -52,22 +52,7 @@ N formula (/flow): canonical = `references/PARALLEL-PATTERNS.md#critical-path-re
 
 ## Self-Review (required, 2-stage)
 
-Run before any `/plan` output. Cannot skip. Applies uniformly across PO Agent / Direct / `--update` / `--scope` modes. Stage common definition: `commands/review.md` `## Delegation & Self-Review`. Noise discard: `references/on-demand-rules/review-noise-discard.md`.
-
-### Stage A: plan-specific filter
-
-Anti-pattern filter (investigation / plan discard): `references/on-demand-rules/review-noise-discard.md`.
-
-**Step 2 judgment validity review** (mode mismatch check):
-- mode overshoot/undershoot: inline ↔ `/dev` ↔ `/flow` ↔ `/workflow` ↔ `/goal` の境界条件 (Step 2 table / Anti-patterns) を 1 件ずつ反証する
-- `/goal` 4 conditions 不成立 / iterative + objective gate task で単一 `/dev` (no gate loop)
-- N over-allocation (coupling=0 不成立 / wall_clock_parallel ≥ sequential)
-- `--auto` 提案下に user confirm 分岐 (design branch / destructive op / external send) が残存
-- carry-over / out-of-scope task の混入
-
-### Stage B: aggregate view
-
-Phase consolidation (same root cause → 1 Phase) / detail-level alignment / convention alignment / Zero-phase valid (no padding). Do not include judgment log in plan file.
+Run before any `/plan` output. Cannot skip. Applies uniformly across PO Agent / Direct / `--update` / `--scope` modes. Stage common definition (Stage A plan-specific filter + Stage B aggregate view を含む): `commands/review.md` `## Delegation & Self-Review`. Noise discard: `references/on-demand-rules/review-noise-discard.md`.
 
 ## Step 3: Handoff to implementation (required)
 

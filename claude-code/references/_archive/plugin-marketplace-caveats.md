@@ -54,4 +54,4 @@ done
 
 ## Related
 
-- `references/coderabbit-plugin.md` (CodeRabbit uses separate marketplace, no cascading impact)
+- `references/_archive/coderabbit-plugin.md` (CodeRabbit uses separate marketplace, no cascading impact)

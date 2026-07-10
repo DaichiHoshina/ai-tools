@@ -10,7 +10,7 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "main push", "mainにpush" | `/git-push --main` (push directly to main) |
 | "sync push", "push sync" | `/git-push` → `sync.sh to-local` (ai-tools repo only) |
 | "全自動で", "autoで", "おまかせ" | `/flow --auto` |
-| "横並びで", "同じ修正を" | Multi-repo parallel work (see multi-repo-workflow.md) |
+| "横並びで", "同じ修正を" | Multi-repo parallel work (see `references/_archive/multi-repo-workflow.md`) |
 | "レビュー", "レビューして", "コードレビュー" | `/review` (default, mode auto-detected internally) |
 | "PR<番号>レビュー", "<PR-URL>レビュー" | `/review <PR>` |
 | "codexでレビュー", "セカンドオピニオン" | `/review --codex` |

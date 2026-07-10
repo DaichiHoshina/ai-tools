@@ -29,16 +29,14 @@ On-demand index from CLAUDE.md.
 | Review mode details (deep / multi aggregation) | `review-modes-advanced.md` |
 | Command × resource map | `command-resource-map.md` |
 | Guideline auto-trigger list | `guideline-triggers.md` |
-| Skill tool invocation patterns (forked exec) | `skill-tool-invocation.md` |
+| WCAG a11y checklist (canonical, 2.2 AA) | `wcag-a11y-checklist.md` |
 | Loop engineering (14-step roadmap, 4-condition test, Ralph Wiggum guard) | `loop-engineering.md` |
 
 ## Workflows
 
 | Topic | File |
 |-------|------|
-| Multi-repo side-by-side | `multi-repo-workflow.md` |
 | Design phase transitions | `design-phase-flow.md` |
-| Ticket → PR completion stages | `ticket-to-pr-workflow.md` |
 | Compounding Engineering | `compounding-engineering-cycle.md` |
 | Parallel execution patterns (worktree decisions) | `PARALLEL-PATTERNS.md` |
 | /flow 詳細 orchestration 仕様 (pre-delegation / 3 Gate 詳細) | `flow-orchestration.md` |
@@ -73,7 +71,7 @@ On-demand index from CLAUDE.md.
 | Topic | File |
 |-------|------|
 | DesignDoc writing and granularity | `../guidelines/writing/design-doc-protocol.md` |
-| PRD review checkpoints | `prd-review-checkpoints.md` |
+| Writing self-check protocol (閾値 / loop 上限 canonical) | `writing-check-protocol.md` |
 | Performance improvement issues | `performance-issue-template.md` |
 | Universal review patterns | `review-patterns-universal.md` |
 | Document rewrite phases | `document-iteration-patterns.md` |
@@ -94,8 +92,5 @@ On-demand index from CLAUDE.md.
 |-------|------|
 | Memory usage guide | `memory-usage.md` |
 | Memory relocation pattern (auto-memory → project-scoped path) | `memory-relocation-pattern.md` |
-| Memory → CLAUDE.md / ai-tools promotion flow | `~/.claude/references-private/memory-promotion-flow.md` |
-| Plugin marketplace caveats (cascade uninstall) | `plugin-marketplace-caveats.md` |
-| CodeRabbit plugin cheat sheet | `coderabbit-plugin.md` |
 | Boris 流開発スタイル対応表 | `boris-style-mapping.md` |
 | Claude Code official best practices (JA) | https://code.claude.com/docs/ja/best-practices |

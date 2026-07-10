@@ -90,5 +90,6 @@ Detected: npm (web/), Go (api/) | Skipped: python (pip-audit not installed)
 - `/lint-test` — CI-wide checks (code quality); this is **dependency-audit specific**
 - `/review --focus security` — security review of code itself
 - `/git-push --pr` — create PR after applying fixes
+- `/analytics` — CLI mode 完了後に `/audit --severity high` を自動起動する
 
 ARGUMENTS: $ARGUMENTS

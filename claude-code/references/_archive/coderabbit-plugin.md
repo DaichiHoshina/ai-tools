@@ -47,4 +47,4 @@ https://docs.coderabbit.ai/cli/claude-code-integration
 
 ## Note
 
-Removing the `claude-plugins-official` marketplace does not remove the CodeRabbit plugin (managed separately). See `references/plugin-marketplace-caveats.md`.
+Removing the `claude-plugins-official` marketplace does not remove the CodeRabbit plugin (managed separately). See `references/_archive/plugin-marketplace-caveats.md`.

@@ -22,22 +22,7 @@ Skip 条件 (即 Step 2): typo / 1 symbol rename / 1 file の局所修正 → **
 
 ## Step 2: Mode judgment (required)
 
-CLAUDE.md `## Auto-Delegation` の N 判定 flow を canonical として厳守する。
-
-| 条件 | Mode | 実行 |
-|---|---|---|
-| Iteration 前提 (N 無関係) | **inline 固定** | parent 直編集 |
-| N=1 | **inline** | parent 直編集 (agent 単発禁止) |
-| N≥2 独立 | **agent 並列 bundle** | 単一 message に N Task(developer-agent) (Team hierarchy 要件時のみ `/flow --parallel`、判定は NL trigger「team で」「本格的に」等に従う = `references/natural-language-triggers.md`) |
-| N≥2 依存 chain | **原則 inline** | 逐次 chain は inline が速い |
-| N≥2 依存 chain + step 内に独立 sub-task 2+ | **step 内で agent 並列** | 各 step 内で fan-out |
-| 品質最優先の重要変更 (破壊的 / migration / security) | **agent + Verifier loop** | developer-agent → reviewer-agent 1 round |
-
-### 禁じ手 (優先順「速さ」の帰結)
-
-- **agent 単発** (N=1 で agent を起動する) → 起動 overhead 回収不能。inline 一択
-- **agent 直列 chain** (agent → 結果 → 次 agent) → peak=1 で並列化の意味を失う。inline に落とす
-- **独立 task を複数 message に散らす** → peak=1 落ち。初回 message に全 bundle
+判定 table canonical: `references/auto-delegation-detailed.md` 参照 (N 判定 flow / 禁じ手 / inline exception を含む)。`/dev` との違い: `/mode` は N 判定結果を echo してから実装開始、`/dev` は agent delegation default で即実装。
 
 ## Step 3: Execute (default)
 

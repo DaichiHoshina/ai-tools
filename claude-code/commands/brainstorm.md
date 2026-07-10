@@ -62,9 +62,7 @@ Task("skeptic",   subagent_type="explore-agent",
 
 ### Gate 2: trailer read
 
-After each agent completes, read trailer from output end.
 Trailer literal: `references/agent-output-schema.md` (no duplicate definition here).
-Fields: `status` / `confidence` / `issues_blocking`.
 
 ### Gate 3: fallback
 

@@ -151,7 +151,7 @@ No new opportunities. Range 2.1.149–2.1.150; CHANGELOG shows internal infrastr
 
 No new opportunities. Range 2.1.146–2.1.148; repo impact grep confirmed.
 
-- `/simplify` → `/code-review` rename [2.1.147]: use-case changed (post-impl bundle fast execute → diff correctness review @ effort level), plain rename not adopted. Removed all `simplify` references from `commands/flow.md` Auto-apply table / `references/skill-tool-invocation.md` / `references/command-resource-map.md` (post-impl replaced by `/lint-test`)
+- `/simplify` → `/code-review` rename [2.1.147]: use-case changed (post-impl bundle fast execute → diff correctness review @ effort level), plain rename not adopted. Removed all `simplify` references from `commands/flow.md` Auto-apply table / `references/_archive/skill-tool-invocation.md` / `references/command-resource-map.md` (post-impl replaced by `/lint-test`)
 - 2.1.146 Opus 4.8 thinking block fix: bugfix only
 - 2.1.148 Bash exit code 127 regression fix: bugfix only
 - 2.1.147 others: many bugfixes (auto-updater retry / prompt history dedup / PowerShell / Windows terminal / `/help` / `/effort` / `/theme` / `/background` / MCP pagination / hook `if` PowerShell match / `CLAUDE_CODE_SUBAGENT_MODEL` teammate fix) — unused or existing behavior OK
