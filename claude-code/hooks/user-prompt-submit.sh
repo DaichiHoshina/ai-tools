@@ -581,8 +581,10 @@ _is_outward_writing_trigger() {
 _AI_TERMS_CTX=""
 if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
   _PRINCIPLES_PATH="${HOME}/.claude/guidelines/writing/PRINCIPLES.md"
+  _NG_DICT_PATH="${HOME}/.claude/guidelines/writing/NG-DICTIONARY.md"
   if [[ -f "${_PRINCIPLES_PATH}" ]]; then
-    # PRINCIPLES.md から 5 key を 1-pass bash read で抽出 (旧: grep ×5 fork = -22ms)
+    # 5 key を fork なしの bash read で抽出。
+    # AI定型語 / カタカナ造語禁止 / 断定語 の key 行は NG-DICTIONARY.md 側にある
     _AI_TERMS_LINE=""
     _KATAKANA_LINE=""
     _JARGON_LINE=""
@@ -590,19 +592,25 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
     _SOFTBLOCK_LINE=""
     while IFS= read -r _pl; do
       case "$_pl" in
-        '**AI定型語**:'*)               [[ -z "$_AI_TERMS_LINE" ]] && _AI_TERMS_LINE="$_pl" ;;
-        '**カタカナ造語禁止**:'*)       [[ -z "$_KATAKANA_LINE" ]] && _KATAKANA_LINE="$_pl" ;;
         '**内部jargon初出和訳必須**:'*) [[ -z "$_JARGON_LINE" ]] && _JARGON_LINE="$_pl" ;;
         '**略語初出展開必須**:'*)       [[ -z "$_ABBREV_LINE" ]] && _ABBREV_LINE="$_pl" ;;
-        '**断定語 (warn-only)**:'*)     [[ -z "$_SOFTBLOCK_LINE" ]] && _SOFTBLOCK_LINE="$_pl" ;;
       esac
     done < "${_PRINCIPLES_PATH}"
+    if [[ -f "${_NG_DICT_PATH}" ]]; then
+      while IFS= read -r _pl; do
+        case "$_pl" in
+          '**AI定型語**:'*)           [[ -z "$_AI_TERMS_LINE" ]] && _AI_TERMS_LINE="$_pl" ;;
+          '**カタカナ造語禁止**:'*)   [[ -z "$_KATAKANA_LINE" ]] && _KATAKANA_LINE="$_pl" ;;
+          '**断定語 (warn-only)**:'*) [[ -z "$_SOFTBLOCK_LINE" ]] && _SOFTBLOCK_LINE="$_pl" ;;
+        esac
+      done < "${_NG_DICT_PATH}"
+    fi
 
     # chat応答向け: AI定型語 + カタカナ造語を参照 1 行に圧縮 (list 展開は NG-DICTIONARY.md canonical へ委譲)
     # 1 session 1 回のみ inject する (毎 prompt 固定費 ~170B × 全 turn 再送を削減、内容は session 内で不変)
     _STYLE_CTX_FLAG="/tmp/claude-style-ctx-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
     if [[ ! -f "${_STYLE_CTX_FLAG}" ]] && { [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; }; then
-      _AI_TERMS_CTX="[chat応答文体強化] AI定型語 / カタカナ造語を chat 応答で使用禁止。canonical: guidelines/writing/NG-DICTIONARY.md §AI定型語 / §カタカナ造語禁止。代替は説明的記述 (例: シームレス → 中断なく)。"
+      _AI_TERMS_CTX="[chat応答文体強化] chat 応答で禁止: AI定型語 / カタカナ造語 / 日本語で言える一般語の英語化 (digest→要約 等) / 体言止め・助詞省略 / 冗長 (結論と根拠だけ書く)。canonical: rules/plain-jp.md + guidelines/writing/NG-DICTIONARY.md。"
       touch "${_STYLE_CTX_FLAG}" 2>/dev/null || true
     fi
 

@@ -10,6 +10,10 @@ hook (`hooks/pre-tool-use.sh:_extract_term_list`) が動的抽出する NG 語 l
 
 > 連続漢字≥5 の頻出 NG 例 (structural warn 対象、warn-only): 動作確認手順 / 回答案検討 / 回答案確定 / 対応方針決定 / 参照箇所影響範囲確認 / 上流下流関係 / 再投稿完了 / 同梱未対応。「動作の 確認手順」「回答案を 検討」のように助詞挿入か訓読み開きで分解する。
 
+**英語jargon (warn-only)**: digest / inject / sweep / canonical / trigger / fan out / stale / orchestrate / delegate / salience / priming
+
+> 英語jargon は warn-only。日本語で言える一般語は日本語化する (digest→要約 / inject→差し込む / sweep→点検 / canonical→正 / trigger→きっかけ / stale→古い)。識別子・command 名として正当に使う場合は backtick で囲むと検査対象外になる。追加根拠は user 指摘「専門用語使いすぎ」(2026-07-10) の incident。
+
 **主体不明断定 (skill-only)**: 多くの〜 / 一般に〜 / 一般的に〜 / よく〜される / 〜と言われる / 〜だろう / 〜と考えられている
 
 > `(skill-only)` mode は hook 抽出対象外。`/jp-writing` skill self-check 経由でのみ参照する。技術 README 等で正当な総称表現として使う場面があり、hook 自動 block / warn は誤爆コストが高いため。語源は PRINCIPLES.md `## AI臭の根本: 書き手不在` `(1) 主体を明示する`。

@@ -17,6 +17,8 @@ _make_ng_dict() {
 
 **断定語 (warn-only)**: 完了 / 解消 / 見込み / クリア / 問題なし
 
+**英語jargon (warn-only)**: digest / inject / sweep / canonical / trigger / fan out / stale / orchestrate / delegate / salience / priming
+
 **難読漢語 (block)**: 鑑みる / 勘案 / 斟酌 / 慮る / 忖度 / 俯瞰 / 俯瞰的 / 概観 / 敷衍 / 援用 / 惹起 / 奏功 / 踏襲 / 看做す / 然るに / 喫緊 / 肝要 / 要諦 / 蓋し
 
 **弱い表現 (block)**: かもしれない / と思います / と思われる / 可能性がある
@@ -152,6 +154,46 @@ teardown() {
     # (_append_jp_quality_log は bats 実行中 log 汚染回避のため skip 設計、log 不在で正)
     hit=\$(_check_term_list 'デプロイ完了。' '断定語 (warn-only)') || true
     [[ \"\$hit\" = '完了' ]]
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "warn-only: 英語jargon 'inject' を含む text → block されず ADDITIONAL_CONTEXT に warn が載る" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'hook が digest を inject する構成にした。' 'commit message'
+
+    # warn-only → block しない (GUARD_CLASS 空のまま)
+    [ -z \"\${GUARD_CLASS}\" ] || exit 1
+
+    # warn は ADDITIONAL_CONTEXT に載り、hit 語を含む
+    [[ \"\${ADDITIONAL_CONTEXT}\" == *'英語jargon warn'* ]] || exit 1
+    [[ \"\${ADDITIONAL_CONTEXT}\" == *'inject'* ]]
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "warn-only: backtick 内の英語jargon は warn しない" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '\`trigger\` option を有効にした。' 'commit message'
+
+    [ -z \"\${GUARD_CLASS}\" ] || exit 1
+    [[ \"\${ADDITIONAL_CONTEXT}\" != *'英語jargon warn'* ]]
   "
   [ "$status" -eq 0 ]
 }

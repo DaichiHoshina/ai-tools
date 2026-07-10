@@ -158,7 +158,7 @@ rename に伴い他 file / 同 file 内 cross-ref も `[未決事項 #X]` → `[
 
 ## PREP 法 + 5W1H (長文構造の規範)
 
-長文出力は **PREP 法** で構成し、**why / how** を必須とする。**chat 内の作業完了報告 / 調査結果 / 検証結果 / RCA 概要 / 実装方針報告** にも同構造を適用する (最短でも 4 行 = 4 ブロック省略しない)。対象外: 「読んだ」「確認した」レベルの 1 文応答、質問返答、casual chat。詳細: `mem:feedback-report-prep-format`。
+長文出力は **PREP 法** で構成し、**why / how** を必須とする。**chat 内の作業完了報告 / 調査結果 / 検証結果 / RCA 概要 / 実装方針報告** にも同構造を適用する (10 行以上の報告は 4 ブロックを省略しない)。対象外: 「読んだ」「確認した」レベルの 1 文応答、質問返答、casual chat。詳細: `mem:feedback-report-prep-format`。
 
 ### 構造
 
@@ -167,7 +167,7 @@ rename に伴い他 file / 同 file 内 cross-ref も `[未決事項 #X]` → `[
 - **E**xample (具体例): how の詳細、数値、動作、file path
 - **P**oint (再確認): 締めの一行、効果や次の手
 
-各 P/R/E/P は **太字 label** で明示する。暗黙構造は読み手に伝わらない、隠さない。
+10 行以上の報告は各 P/R/E/P を **太字 label** で明示する (暗黙構造は読み手に伝わらない)。10 行未満の応答は label を付けず、地の文で結論 → 理由 → 具体の順を守る。短い応答に label を機械的に繰り返すと、それ自体が機械の書いた見た目になる。
 
 ### 5W1H チェック
 
@@ -194,6 +194,12 @@ rename に伴い他 file / 同 file 内 cross-ref も `[未決事項 #X]` → `[
 **理由**: 1 段階だと subagent 任せで見落としや過剰指摘が残る。
 **例**: parent Opus が 7 観点で再 check。全 mode 適用。file: `commands/review.md`
 **結論再確認**: subagent 単独判定の取りこぼしを parent が拾える状態。
+```
+
+10 行未満の応答は label を付けず、同じ順序を地の文で書く。
+
+```text
+`/review` を 2 段階 self-check に変えた。1 段階だと subagent 任せで見落としが残るためで、parent が 7 観点で再 check する。file: `commands/review.md`
 ```
 
 ### decision 要求時の Point 変種 (decision-frame-first)

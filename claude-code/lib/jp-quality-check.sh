@@ -142,7 +142,7 @@ _assert_required_keys() {
   _assert_required_keys_done=1
   # NG-DICTIONARY.md 不在時は別経路で既に silent pass → この検査はスキップ
   [[ -f "$_principles_file" ]] || return 0
-  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)" "冗長表現 (block)" "AI段取り定型 (block)" "ヘッジ濫用 (block)" "過剰丁寧 (block)")
+  local required_keys=("AI定型語" "カタカナ造語禁止" "断定語 (warn-only)" "英語jargon (warn-only)" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)" "冗長表現 (block)" "AI段取り定型 (block)" "ヘッジ濫用 (block)" "過剰丁寧 (block)")
   local key
   for key in "${required_keys[@]}"; do
     local result
@@ -304,6 +304,16 @@ _block_if_ai_jargon() {
     _append_jp_quality_log "$context_label" "$_warn_list" "warn"
   fi
 
+  # 英語jargon warn-only: log に加えて additionalContext で書き直しを促す (block はしない)
+  local _jargon_words=""
+  local _jargon_msg=""
+  if ! _jargon_words=$(_check_term_list "$text" "英語jargon (warn-only)"); then
+    local _jargon_list
+    _jargon_list=$(printf '%s' "$_jargon_words" | tr '\n' ',' | sed 's/,$//')
+    _append_jp_quality_log "$context_label" "jargon: ${_jargon_list}" "warn"
+    _jargon_msg="${ICON_WARNING:-▲} 英語jargon warn (${context_label}): ${_jargon_list} — 日本語で言える一般語は日本語化、識別子として使うなら backtick で囲む (NG-DICTIONARY.md §英語jargon)"
+  fi
+
   # 構造的可読性 warn (連続漢字 / 読点)。block しない、additionalContext に追記
   local _struct_warn
   _struct_warn=$(_check_structural_quality "$text")
@@ -311,6 +321,13 @@ _block_if_ai_jargon() {
   if [[ -n "$_struct_warn" ]]; then
     _append_jp_quality_log "$context_label" "structural: ${_struct_warn}" "warn"
     _struct_msg="${ICON_WARNING:-▲} 可読性 warn (${context_label}): ${_struct_warn}"
+  fi
+  if [[ -n "$_jargon_msg" ]]; then
+    if [[ -n "$_struct_msg" ]]; then
+      _struct_msg="${_struct_msg}"$'\n'"${_jargon_msg}"
+    else
+      _struct_msg="${_jargon_msg}"
+    fi
   fi
 
   # block なし → return (構造 warn があれば additionalContext に載せる)
