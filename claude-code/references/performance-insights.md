@@ -84,7 +84,7 @@ subagent-events.log aggregation (2026-04-06–2026-04-22) + 2026-05-23 additiona
 - Claude Code CLI/SDK/API spec questions: `claude-code-guide` agent
 - `general-purpose`: hard-blocked by `hooks/pre-tool-use.sh` (exit 2) — N=21 measured, highest cost source. Substitute with explore-agent / claude-code-guide / developer-agent. Escape hatch: `GP_BLOCK_OFF=1` reverts to warn-only (hook debug)
 
-Details: `claude-code/CLAUDE.md` "Discovery / Investigation Routing".
+Details: `claude-code/CLAUDE.global.md` "Discovery / Investigation Routing".
 
 ## Re-measurement Commands
 

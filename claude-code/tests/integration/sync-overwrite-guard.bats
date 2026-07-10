@@ -55,7 +55,7 @@ CLAUDE_DIR="$DST_DIR"
 # _check_overwrite_guard と _guard_mode_hint を sync.sh から抽出して実行
 RUNNER_EOF
 
-    # sync.sh から _check_overwrite_guard と _guard_mode_hint の関数本体を抽出
+    # sync.sh から _check_overwrite_guard / _guard_mode_hint / resolve_item_path の関数本体を抽出
     python3 - "${PROJECT_ROOT}/claude-code/sync.sh" >> "${GUARD_RUNNER}" << 'PYEOF'
 import sys, re
 
@@ -64,7 +64,7 @@ with open(sys.argv[1]) as f:
 
 # 関数定義を抽出: _check_overwrite_guard と _guard_mode_hint
 pattern = re.compile(
-    r'^(_check_overwrite_guard\(\)|_guard_mode_hint\(\))\s*\{.*?\n\}',
+    r'^(_check_overwrite_guard\(\)|_guard_mode_hint\(\)|resolve_item_path\(\))\s*\{.*?\n\}',
     re.MULTILINE | re.DOTALL
 )
 for m in pattern.finditer(content):

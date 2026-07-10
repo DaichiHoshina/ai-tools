@@ -6,7 +6,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 
 | Resource type | Auto-fired | Notes |
 |---------------|-----------|-------|
-| **rule** | Auto-applied at launch | Loaded from `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md`, `claude-code/CLAUDE.md`. Project `.claude/rules/*.md` added if present. No explicit invoke. |
+| **rule** | Auto-applied at launch | Loaded from `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md`, `claude-code/CLAUDE.global.md`. Project `.claude/rules/*.md` added if present. No explicit invoke. |
 | **hook** | Auto-fired via settings.json | PreToolUse, PostToolUse, SessionStart, UserPromptSubmit, Stop, Notification. **Same across all commands.** No explicit invoke. |
 | **agent** | Via Task tool | Parent launches with `Task(subagent_type)`: po-agent, manager-agent, developer-agent, reviewer-agent. |
 | **skill** | Lazy-loaded | Step 0 shows recommended list (text only). Body loaded on `Skill()` call or manual Read. |

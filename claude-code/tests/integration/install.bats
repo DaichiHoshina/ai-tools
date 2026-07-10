@@ -34,7 +34,7 @@ teardown() {
 }
 
 @test "install.sh: required files exist" {
-  [ -f "${PROJECT_ROOT}/claude-code/CLAUDE.md" ]
+  [ -f "${PROJECT_ROOT}/claude-code/CLAUDE.global.md" ]
   [ -f "${PROJECT_ROOT}/claude-code/install.sh" ]
   [ -f "${PROJECT_ROOT}/claude-code/sync.sh" ]
 }

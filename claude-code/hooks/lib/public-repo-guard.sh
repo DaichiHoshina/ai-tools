@@ -35,7 +35,7 @@ _check_social_hit() {
   rel_path=$(_aitools_relpath "$file_path")
   case "$rel_path" in
     claude-code/rules/public-repo-private-data-block.md|\
-    claude-code/CLAUDE.md|\
+    claude-code/CLAUDE.global.md|\
     claude-code/hooks/pre-tool-use.sh|\
     claude-code/hooks/lib/public-repo-guard.sh|\
     claude-code/hooks/lib/agent-guard.sh|\

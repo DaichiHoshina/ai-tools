@@ -23,7 +23,7 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 
 - **Avoid**: `general-purpose` ~115s avg / 501s max
 
-Full table & recalc method: [`references/performance-insights.md`](../references/performance-insights.md) (single source). Operations rule: `claude-code/CLAUDE.md` "exploration/investigation split".
+Full table & recalc method: [`references/performance-insights.md`](../references/performance-insights.md) (single source). Operations rule: `claude-code/CLAUDE.global.md` "exploration/investigation split".
 
 ---
 

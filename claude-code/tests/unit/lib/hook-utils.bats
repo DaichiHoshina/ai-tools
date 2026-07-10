@@ -807,7 +807,7 @@ teardown_ensure_worktree() {
 }
 
 @test "is_memory_path: 通常 path (~/ai-tools/claude-code/ 配下) は memory として判定しない" {
-  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/ai-tools/claude-code/CLAUDE.md'"
+  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/ai-tools/claude-code/CLAUDE.global.md'"
   [ "$status" -eq 1 ]
 }
 
@@ -869,7 +869,7 @@ teardown_ensure_worktree() {
   tmp="$(mktemp -d)"
   mkdir -p "$tmp/repo/claude-code"
   echo "$tmp/repo" > "$tmp/root-file"
-  run bash -c "source '$LIB_FILE' && AITOOLS_ROOT_FILE='$tmp/root-file' _is_aitools_path '$tmp/repo/claude-code/CLAUDE.md'"
+  run bash -c "source '$LIB_FILE' && AITOOLS_ROOT_FILE='$tmp/root-file' _is_aitools_path '$tmp/repo/claude-code/CLAUDE.global.md'"
   [ "$status" -eq 0 ]
   rm -rf "$tmp"
 }

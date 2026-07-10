@@ -57,7 +57,7 @@ _inject_today_commits() {
   _project_real=$(cd "$_project_dir" 2>/dev/null && pwd -P 2>/dev/null || echo "")
   if [[ -n "$_aitools_real" && "$_aitools_real" != "$_project_real" ]]; then
     _writing_commits=$(git -C "$_aitools_repo_dir" log --since="midnight" --pretty=format:'%h %s' --no-merges \
-      -- "claude-code/guidelines/" "claude-code/CLAUDE.md" 2>/dev/null | head -n "${_commit_cap}" || true)
+      -- "claude-code/guidelines/" "claude-code/CLAUDE.global.md" 2>/dev/null | head -n "${_commit_cap}" || true)
     # 非 git repo は silent skip (上の Source 1 と同方針)。
     if [[ -z "$_writing_commits" ]] && [[ "${CLAUDE_HOOK_INJECT_LOG_EMPTY:-0}" == "1" ]] \
         && git -C "$_aitools_repo_dir" rev-parse --git-dir >/dev/null 2>&1; then

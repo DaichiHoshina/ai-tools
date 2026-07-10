@@ -27,7 +27,7 @@ _check_serena_memory_path() {
     if _is_aitools_path "$file_path"; then
       rel_path=$(_aitools_relpath "$file_path")
       case "$rel_path" in
-        claude-code/CLAUDE.md|\
+        claude-code/CLAUDE.global.md|\
         claude-code/rules/*|\
         claude-code/hooks/pre-tool-use.sh|\
         claude-code/hooks/lib/memory-path-guard.sh|\

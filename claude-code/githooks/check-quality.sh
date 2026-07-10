@@ -34,7 +34,7 @@ if [ -x "./claude-code/scripts/skill-lint.sh" ]; then
 fi
 
 # 2. メタファイル肥大検出 (リファクタ後の現状値+α を上限)
-check_size "claude-code/CLAUDE.md" 200         || failed=1
+check_size "claude-code/CLAUDE.global.md" 200         || failed=1
 check_size "claude-code/README.md" 300         || failed=1
 
 # 3. skill body 行数 (CLAUDE.md目安: 100-130、150を超えたら fail)

@@ -69,6 +69,18 @@ check_jq() {
     command -v jq &> /dev/null
 }
 
+# repo 側は CLAUDE.md を CLAUDE.global.md として保持する
+# (repo 内作業時に directory memory として ~/.claude/CLAUDE.md と二重 load されるのを防ぐ)。
+# 与えられた dir に item が無く .global 版があればそちらの path を返す。
+resolve_item_path() {
+    local dir="$1" item="$2"
+    if [ "$item" = "CLAUDE.md" ] && [ ! -e "$dir/$item" ] && [ -e "$dir/CLAUDE.global.md" ]; then
+        echo "$dir/CLAUDE.global.md"
+    else
+        echo "$dir/$item"
+    fi
+}
+
 # =============================================================================
 # Utility Functions
 # =============================================================================
@@ -247,7 +259,8 @@ sync_to_local() {
     local items=("${SYNC_ITEMS[@]}")
 
     for item in "${items[@]}"; do
-        local src="$SCRIPT_DIR/$item"
+        local src
+        src=$(resolve_item_path "$SCRIPT_DIR" "$item")
         local dst="$CLAUDE_DIR/$item"
 
         if [ -e "$src" ]; then
@@ -397,7 +410,7 @@ verify_to_local_sync() {
     local mismatched=()
     local item src dst diff_output
     for item in "${SYNC_ITEMS[@]}"; do
-        src="$SCRIPT_DIR/$item"
+        src=$(resolve_item_path "$SCRIPT_DIR" "$item")
         dst="$CLAUDE_DIR/$item"
         [ -e "$src" ] && [ -e "$dst" ] || continue
         if [ -d "$src" ]; then
@@ -447,8 +460,9 @@ _check_overwrite_guard() {
     local item
 
     for item in "${SYNC_ITEMS[@]}"; do
-        local src="${src_dir}/${item}"
-        local dst="${dst_dir}/${item}"
+        local src dst
+        src=$(resolve_item_path "$src_dir" "$item")
+        dst=$(resolve_item_path "$dst_dir" "$item")
         [ -e "$src" ] && [ -e "$dst" ] || continue
 
         local raw_diff
@@ -512,7 +526,7 @@ sync_from_local() {
     local files=("VERSION" "SERENA_VERSION" "CLAUDE.md")
     for file in "${files[@]}"; do
         if [ -f "$CLAUDE_DIR/$file" ]; then
-            if ! cp "$CLAUDE_DIR/$file" "$SCRIPT_DIR/$file"; then
+            if ! cp "$CLAUDE_DIR/$file" "$(resolve_item_path "$SCRIPT_DIR" "$file")"; then
                 print_error "コピー失敗: $file"
                 return 1
             fi
@@ -607,7 +621,8 @@ show_diff() {
     local has_diff=false
 
     for item in "${items[@]}"; do
-        local src="$SCRIPT_DIR/$item"
+        local src
+        src=$(resolve_item_path "$SCRIPT_DIR" "$item")
         local dst="$CLAUDE_DIR/$item"
 
         if [ -e "$src" ] && [ -e "$dst" ]; then

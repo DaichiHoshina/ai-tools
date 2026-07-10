@@ -34,7 +34,7 @@ checksum_file() {
 
 @test "e2e: sync to-local copies CLAUDE.md" {
   [ -f "$HOME/.claude/CLAUDE.md" ]
-  diff -q "${PROJECT_ROOT}/claude-code/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+  diff -q "${PROJECT_ROOT}/claude-code/CLAUDE.global.md" "$HOME/.claude/CLAUDE.md"
 }
 
 @test "e2e: sync to-local copies commands directory" {
