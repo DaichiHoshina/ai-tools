@@ -2,6 +2,21 @@
 
 > canonical: `commands/workflow.md` から切出。各 template の name / 概要 / args は本体側を参照する。
 
+## 0. Null-guard helper (全 template 必須)
+
+`agent()` は rate limit / kill で null を返して黙って落ちる。捨てる前に数えて warn し、return に `dropped` を載せる。checker / gate の null は fail-closed で abort する (canonical: `commands/workflow.md` § Null-guard)。
+
+```javascript
+const dropped = (arr, label) => {
+  const n = arr.filter(x => x == null).length
+  if (n > 0) log(`WARN: ${label} dropped ${n}/${arr.length} agents (rate limit / kill の疑い)`)
+  return n
+}
+// checker / gate 判定の null は accept と見なさない (fail-closed)
+const verdict = await agent('Gate check: ...', { schema: VERDICT_SCHEMA })
+if (verdict == null) { log('WARN: checker null — abort (fail-closed)'); return { aborted: true } }
+```
+
 ## 1. review
 
 dimensions → find → adversarially verify pipeline. pipeline default (no barrier); verify fires per finding.
@@ -24,7 +39,8 @@ const results = await pipeline(DIMS,
       .then(v => ({ ...f, verdict: v }))
   ))
 )
-return { confirmed: results.flat().filter(Boolean).filter(f => f.verdict?.isReal) }
+const flat = results.flat()
+return { confirmed: flat.filter(Boolean).filter(f => f.verdict?.isReal), dropped: dropped(flat, 'Verify') }
 ```
 
 ## 2. migrate (worktree isolation required)
@@ -38,7 +54,7 @@ phase('Transform')
 const fixed = await parallel(sites.items.map(s => () =>
   agent(`Migrate ${s.file}:${s.line} from X to Y`, { isolation: 'worktree' })
 ))
-return { migrated: fixed.filter(Boolean).length }
+return { migrated: fixed.filter(Boolean).length, dropped: dropped(fixed, 'Transform') }
 ```
 
 ## 3. research (multi-modal sweep)

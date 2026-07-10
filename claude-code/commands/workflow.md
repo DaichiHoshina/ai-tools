@@ -59,6 +59,16 @@ If user specifies `+500k` etc., use `budget.remaining()` for dynamic scale (e.g.
 
 Use worktree isolation (`isolation: 'worktree'`) **only for parallel edits to the same file**. Read-only or separate-file writes do not need it (Workflow tool setup overhead 200-500ms/agent + disk cost)。`git worktree add` 単体は 90ms だが、Workflow tool は env init を含むため重い。`/flow --parallel` 系の wt 費用とは別計上する (canonical: `references/PARALLEL-PATTERNS.md` cost breakdown)。Default ON in `migrate` template only.
 
+### Null-guard (silent-fail detection)
+
+`agent()` は rate limit / user skip / terminal error で **null を返して黙って落ちる** (2026-07-10 の gate loop silent 停止で実害が出た)。script には次の 3 点を必須で入れる:
+
+1. `.filter(Boolean)` で捨てる前に null 数を数え、`log()` で warn する (`WARN: <stage> dropped N/M agents`)
+2. return に `dropped: <N>` を含める (parent が summary で user に報告する)
+3. checker / verifier / gate 判定の null は **fail-closed**: accept と見なさず loop を abort して `aborted: true` を return する
+
+Helper 実装と適用例: `references/workflow-templates.md` § 0 Null-guard helper。
+
 ## Constraints
 
 - Default subagent_type is Workflow native subagent. Use `agentType: 'explore-agent'` etc. to specify ai-tools agents
