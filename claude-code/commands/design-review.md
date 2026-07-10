@@ -39,7 +39,7 @@ Confirm preview URL (dev server) with user. If not running, start with `npm run 
 2. **Interaction & user flow**: Run main flows, verify hover/active/disabled states, destructive-action confirmation
 3. **Responsiveness**: Screenshot at 1440 / 768 / 375 viewport, detect horizontal scroll / element overlap
 4. **Visual polish**: alignment / spacing / typography / color / visual hierarchy
-5. **Accessibility (WCAG 2.1 AA)**: Tab order / focus visible / Enter+Space activation / semantic HTML / labels / alt text / contrast 4.5:1
+5. **Accessibility**: a11y checklist は `references/wcag-a11y-checklist.md` 参照 (WCAG 2.2 AA)。Playwright 上で Tab 実操作 / focus 可視化 / 実測 contrast / snapshot による semantic 確認を行う
 6. **Stability check**: form validation / content overflow / loading+empty+error states / edge cases
 7. **Code health & content**: existing pattern compliance / design token usage / grammar / console errors
 

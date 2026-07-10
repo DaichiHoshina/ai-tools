@@ -6,9 +6,7 @@ description: Refactoring mode (auto-load language guidelines)
 
 ## /refactor - Refactoring Mode
 
-## protection-mode
-
-Auto-apply via `/flow`. Single run: recommend `/protection-mode` if changing files.
+protection-mode 適用: `/protection-mode` 参照。
 
 ## Think Mode (critical)
 

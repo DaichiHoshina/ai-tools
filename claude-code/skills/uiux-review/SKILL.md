@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Grep, Glob
 name: uiux-review
-description: UI/UX review (MD3/WCAG2.2/Nielsen). Use during screen implementation.
+description: UI/UX review (MD3/WCAG2.2/Nielsen). Use during screen implementation. — Tailwind 実装制約 check は baseline-ui、デザイン方向性の生成は frontend-design を使う
 disallowed-tools:
   - Write
   - Edit
@@ -29,15 +29,7 @@ Review 3 principles (Material Design 3 / WCAG 2.2 AA / Nielsen 10) in order, fla
 
 ### Step 2: WCAG 2.2 AA
 
-#### 🔴 Critical
-- [ ] Contrast ≥ 4.5:1 (normal text)
-- [ ] Contrast ≥ 3:1 (UI components)
-- [ ] Keyboard operable (Tab, Enter, Escape)
-- [ ] Focus clearly visible (2px+ ring)
-- [ ] Touch target ≥ 44×44px
-- [ ] Images have alt text
-- [ ] Form inputs have labels
-- [ ] Info not conveyed by color alone
+a11y checklist は `references/wcag-a11y-checklist.md` を canonical として参照する。本 skill は静的コードレビュー時に code 上で判定できる項目 (label 関連付け / alt text / semantic HTML / focus ring class / touch target size class 等) のみ確認する。実測 contrast / 実 keyboard 操作は Playwright ライブ検証 (`/design-review`) の役割。
 
 ### Step 3: Nielsen 10 Heuristics
 

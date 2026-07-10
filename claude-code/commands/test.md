@@ -6,9 +6,7 @@ description: Test creation mode - write tests for existing code
 
 ## /test - Test Creation Mode
 
-## protection-mode
-
-Auto-apply via `/flow`. Single run: recommend `/protection-mode` if changing files.
+protection-mode 適用: `/protection-mode` 参照。
 
 ## Step 0: Auto-load Guidelines (required)
 
