@@ -29,7 +29,7 @@
 - × 外挿 / 余裕大 / 無視可 / 無視可能 / 懸念解消 / 全観点 / 判定確定 / 漸近 / 線形 / 冪等性 / 直交 / ロバスト
 - ○ 本番だと / 枠の半分以下 / 気にしなくていい / 心配なし / 全部OK / GOで進める
 
-技術用語 (TX / migration / replica lag / index 等) は読み手 (engineer / PM) の前提知識として残す。**書き手の語彙でなく読み手の語彙で書く**。
+英語のまま残すのは code 識別子 / command 名 / 固有名詞 / 定着済み開発用語 (commit / PR / hook / lint / API 等) に限る (基準は `rules/plain-jp.md` と共通)。日本語で自然に言える一般語は日本語で書き、置換は [PRINCIPLES-word-replace.md](PRINCIPLES-word-replace.md) に従う。**書き手の語彙でなく読み手の語彙で書く**。本 section は外向き text だけでなく chat 応答にも適用する。
 
 書く前の self-check: 「この語、user が知らないと言ったら言い換えられるか？」答え No なら使わない。
 
