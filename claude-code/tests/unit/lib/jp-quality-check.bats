@@ -501,3 +501,138 @@ teardown() {
   "
   [ "$status" -eq 0 ]
 }
+
+# =============================================================================
+# _check_sentence_structure: 文構造の機械検出 (warn-only)
+# =============================================================================
+
+# 共通 runner: text と polite flag を渡して出力を取得する
+_run_sentence_structure() {
+  local text="$1"
+  local polite="${2:-0}"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _check_sentence_structure \"\$1\" '${polite}'
+  " _ "$text"
+}
+
+@test "sentence-structure: 体言止め bullet '- 実装完了' → warn 検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '- 実装完了
+- テストは通過した'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"体言止めbullet: 1行"* ]]
+}
+
+@test "sentence-structure: 動詞で閉じた bullet '- 実装した' → 非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '- 実装した
+- テストは通過した'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"体言止めbullet"* ]]
+}
+
+@test "sentence-structure: table 記号 | を含む bullet 行は体言止め判定から除外" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '- foo | bar 対応'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"体言止めbullet"* ]]
+}
+
+@test "sentence-structure: 矢印チェーン 'A → B → C' → warn 検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure 'A → B → C の順で処理する。'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"矢印チェーン: 1行"* ]]
+}
+
+@test "sentence-structure: 置換ペア列挙 'a→b / c→d' は矢印チェーン非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '置換例は 鑑みる→踏まえる / 踏襲→引き継ぐ とする。'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"矢印チェーン"* ]]
+}
+
+@test "sentence-structure: 同一文末 3 連続 '〜した。×3' → warn 検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '実装した。検証した。反映した。'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"同一文末3連続: 1箇所"* ]]
+}
+
+@test "sentence-structure: 同一文末 2 連続は非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '実装した。検証した。配布を実行する。'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"同一文末3連続"* ]]
+}
+
+@test "sentence-structure: 100 字超の文 → warn 検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure "$(printf 'あ%.0s' {1..120})。"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"100字超文: 1文"* ]]
+}
+
+@test "sentence-structure: 100 字未満の文は非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '短い文は検出しない。'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"100字超文"* ]]
+}
+
+@test "sentence-structure: polite flag=1 で敬体 'しました' → warn 検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '実装しました。' 1
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"敬体混入: 1文"* ]]
+}
+
+@test "sentence-structure: polite flag=0 では敬体を検査しない" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '実装しました。' 0
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"敬体混入"* ]]
+}
+
+@test "sentence-structure: fenced code block 内の体言止め bullet は除外" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '```
+- 実装完了
+```
+本文は文として閉じている。'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"体言止めbullet"* ]]
+}
+
+# =============================================================================
+# _chat_quality_check: chat 応答 (stop hook 経路) の block / warn 降格
+# =============================================================================
+
+@test "chat-quality: 難読漢語 '鑑みる' → _CHAT_BLOCK_REASON 非空 + 置換候補併記" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '過去の経緯を鑑みると妥当だ。'
+    [ -n \"\${_CHAT_BLOCK_REASON}\" ] || { echo 'BLOCK empty' >&2; exit 1; }
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '踏まえる' || { echo \"no suggestion: \${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: 弱い表現 'かもしれない' は block せず _CHAT_WARN_MSG に降格" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '原因は設定かもしれない。'
+    [ -z \"\${_CHAT_BLOCK_REASON}\" ] || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+    printf '%s' \"\${_CHAT_WARN_MSG}\" | grep -q 'かもしれない' || { echo \"WARN=\${_CHAT_WARN_MSG}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}

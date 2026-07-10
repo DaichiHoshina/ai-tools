@@ -84,6 +84,34 @@ _extract_term_list() {
   return 0
 }
 
+# 辞書全 key を 1 pass の builtin parse で cache へ載せる (key 数 × 5 fork → 0 fork)
+# _extract_term_list と同じ抽出結果になるよう「**key**: 語1 / 語2」行を / 区切りで分解して trim する
+_preload_term_lists() {
+  [[ -f "$_principles_file" ]] || return 0
+  [[ "${_term_lists_preloaded:-0}" == "1" ]] && return 0
+  _term_lists_preloaded=1
+  local nl=$'\n'
+  local line key body result word cache_key
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" == "**"*"**:"* ]] || continue
+    key="${line:2}"
+    key="${key%%\*\**}"
+    cache_key="${_principles_file}::${key}"
+    # grep -m1 相当: 同 key の重複行は先勝ち
+    [[ -v "_term_list_cache[${cache_key}]" ]] && continue
+    body="${line#*: }"
+    result=""
+    while IFS= read -r word; do
+      word="${word#"${word%%[![:space:]]*}"}"
+      word="${word%"${word##*[![:space:]]}"}"
+      [[ -z "$word" ]] && continue
+      result="${result:+${result}${nl}}${word}"
+    done <<< "${body//\//${nl}}"
+    _term_list_cache["${cache_key}"]="${result}"
+  done < "$_principles_file"
+  return 0
+}
+
 # 置換候補 (頻出) key から word に対応する置換先を返す
 # 引数: word (踏襲 / leverage 等)
 # 返値: 置換先文字列 (stdout)。対応なしなら空文字
@@ -245,12 +273,106 @@ print(f"{len(h)}\t"+" ".join(h[:3]))' 2>/dev/null || printf '0\t')
   return 0
 }
 
+# 文構造の機械検出 (体言止め bullet / 矢印チェーン / 同一文末3連続 / 100字超文 / 敬体混入)。warn-only。
+# 引数: text, polite_check (1 で です/ます 混入も検査。外向き doc は敬体が正のケースがあるため default 0),
+#       include_readability (1 で連続漢字≥5 / 読点≥4 も同じ python 1 fork で検査。
+#       chat 経路用: _check_structural_quality との 2 重 fork を避ける。外向き経路は既存関数のまま)
+# 出力: warn 文字列 (検出ゼロなら空)。python3 不在なら graceful skip。
+# 体言止め suffix は NG-DICTIONARY.md「体言止め末尾 (structural)」key から取得 (欠落時は builtin fallback)。
+_check_sentence_structure() {
+  local text="$1"
+  local polite_check="${2:-0}"
+  local include_readability="${3:-0}"
+  [[ -z "$text" ]] && return 0
+  command -v python3 &>/dev/null || return 0
+  local clean
+  clean=$(_strip_code_blocks "$text")
+  local _taigen_suf
+  _taigen_suf=$(_extract_term_list "$_principles_file" "体言止め末尾 (structural)" 2>/dev/null | paste -sd'|' - || true)
+  local result
+  result=$(printf '%s' "$clean" | TAIGEN_SUF="$_taigen_suf" POLITE_CHECK="$polite_check" INCLUDE_READABILITY="$include_readability" python3 -c '
+import sys, os, re
+text = sys.stdin.read()
+lines = text.splitlines()
+
+suf = os.environ.get("TAIGEN_SUF") or "済|済み|完了|可能|必要|対応|中|なし|あり|予定|実施|確認|追加|削除|修正|更新|化"
+suffixes = tuple(s for s in suf.split("|") if s)
+verb_end = re.compile(r"(する|した|して|している|だ|である|ます|ました|です|ない|いる|ある|なる|なった|れる|れた|られる|られた|できる|できた)$")
+bullet = re.compile(r"^\s*([-*・]|\d+\.)\s+(.+)$")
+taigen = 0
+for ln in lines:
+    m = bullet.match(ln)
+    if not m:
+        continue
+    body = m.group(2)
+    if "|" in body:
+        continue
+    body = body.rstrip().rstrip("。)）`").rstrip()
+    if body.endswith((":", "：")):
+        continue
+    if verb_end.search(body):
+        continue
+    if body.endswith(suffixes):
+        taigen += 1
+
+arrow = 0
+for ln in lines:
+    if any(re.search(r"→.*→", seg) for seg in ln.split("/")):
+        arrow += 1
+
+sents = [s.strip() for s in re.split(r"。", text) if s.strip()]
+tail = re.compile(r"(した|する|です|ます|ました|ません|ない|だ|である|いる|ある)$")
+labels = [(m.group(1) if (m := tail.search(s)) else "") for s in sents]
+rep = 0
+run = 1
+for i in range(1, len(labels)):
+    if labels[i] and labels[i] == labels[i - 1]:
+        run += 1
+        if run == 3:
+            rep += 1
+    else:
+        run = 1
+
+long_cnt = sum(1 for s in sents if len(s.replace("\n", "")) >= 100)
+
+polite = 0
+if os.environ.get("POLITE_CHECK") == "1":
+    pol = re.compile(r"(です|ます|でした|ました|ましょう|ません)$")
+    polite = sum(1 for s in sents if pol.search(s))
+
+kanji_cnt = 0
+kanji_sample = ""
+touten = 0
+if os.environ.get("INCLUDE_READABILITY") == "1":
+    runs = sorted(set(re.findall(r"[一-龯]{5,}", text)))
+    kanji_cnt = len(runs)
+    kanji_sample = " ".join(runs[:3])
+    touten = sum(1 for s in sents if s.count("、") >= 4)
+
+print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_sample}\t{touten}")
+' 2>/dev/null || printf '0\t0\t0\t0\t0\t0\t\t0')
+  local _tg _ar _rp _lg _pl _kc _ks _tt
+  IFS=$'\t' read -r _tg _ar _rp _lg _pl _kc _ks _tt <<< "$result"
+  local out=""
+  [[ "${_kc:-0}" =~ ^[0-9]+$ ]] && (( _kc > 0 )) && out="連続漢字≥5: ${_kc}種 (${_ks}) → 助詞挿入/訓読み開く; "
+  [[ "${_tt:-0}" =~ ^[0-9]+$ ]] && (( _tt > 0 )) && out="${out}読点≥4の文: ${_tt}個 → 文分割; "
+  [[ "${_tg:-0}" =~ ^[0-9]+$ ]] && (( _tg > 0 )) && out="${out}体言止めbullet: ${_tg}行 → 文として閉じる (〜する/〜した); "
+  [[ "${_ar:-0}" =~ ^[0-9]+$ ]] && (( _ar > 0 )) && out="${out}矢印チェーン: ${_ar}行 → 文章に展開; "
+  [[ "${_rp:-0}" =~ ^[0-9]+$ ]] && (( _rp > 0 )) && out="${out}同一文末3連続: ${_rp}箇所 → 文末を変える; "
+  [[ "${_lg:-0}" =~ ^[0-9]+$ ]] && (( _lg > 0 )) && out="${out}100字超文: ${_lg}文 → 文分割; "
+  [[ "${_pl:-0}" =~ ^[0-9]+$ ]] && (( _pl > 0 )) && out="${out}敬体混入: ${_pl}文 → 常体に統一; "
+  [[ -n "$out" ]] && printf '%s' "${out%; }"
+  return 0
+}
+
 # 外向き text を AI語 + カタカナ造語チェックし、hit 時に Forbidden block をセットする
 # 全 block category を一括収集して exit 2 + まとめて提示する (逐次 block 廃止)
 # 呼び出し元: tool ごとの case 節
 _block_if_ai_jargon() {
   local text="$1"
   local context_label="$2"  # "commit message" / "PR body" 等
+  # 辞書全 key を 1 pass で cache 化してから sanity check (以降の _extract_term_list は fork 0)
+  _preload_term_lists
   # 必須 key sanity check (session 内 cache 済なら即 return)
   _assert_required_keys
 
@@ -317,6 +439,12 @@ _block_if_ai_jargon() {
   # 構造的可読性 warn (連続漢字 / 読点)。block しない、additionalContext に追記
   local _struct_warn
   _struct_warn=$(_check_structural_quality "$text")
+  # 文構造 warn (体言止め bullet / 矢印チェーン / 文末反復 / 100字超)。敬体 check は外向き doc で off
+  local _sent_warn
+  _sent_warn=$(_check_sentence_structure "$text" 0)
+  if [[ -n "$_sent_warn" ]]; then
+    _struct_warn="${_struct_warn:+${_struct_warn}; }${_sent_warn}"
+  fi
   local _struct_msg=""
   if [[ -n "$_struct_warn" ]]; then
     _append_jp_quality_log "$context_label" "structural: ${_struct_warn}" "warn"
@@ -412,4 +540,82 @@ ${_ref_lines}"
   if [[ -n "$_struct_msg" ]]; then
     ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_struct_msg}"
   fi
+}
+
+# chat 応答 (stop hook 経路) の文体検査。高精度 5 key のみ block し、低精度 key + 構造検査は warn に降格する。
+# 出力契約: _CHAT_BLOCK_REASON (block hit 時のみ非空) / _CHAT_WARN_MSG (warn hit 時のみ非空) の 2 変数。
+# _assert_required_keys は呼ばない (exit 2 が stop hook では block に化けるため)。dict 不在は graceful return。
+_chat_quality_check() {
+  local text="$1"
+  _CHAT_BLOCK_REASON=""
+  _CHAT_WARN_MSG=""
+  [[ -z "$text" ]] && return 0
+  [[ -f "$_principles_file" ]] || return 0
+  _preload_term_lists
+
+  local _cq_block_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)" "冗長表現 (block)")
+  local _cq_warn_keys=("弱い表現 (block)" "AI段取り定型 (block)" "ヘッジ濫用 (block)" "過剰丁寧 (block)" "断定語 (warn-only)" "英語jargon (warn-only)")
+
+  # fast path: 全 key の語 union を 1 回の grep で検査し、hit ゼロ (大多数) なら per-key loop を省く
+  local _cq_clean
+  _cq_clean=$(_strip_code_blocks "$text")
+  _cq_clean=$(printf '%s' "$_cq_clean" | sed -E 's/[A-Za-z0-9_.]+(-[A-Za-z0-9_.]+)+/ /g')
+  local _cq_key _cq_word
+  local _cq_all_words=()
+  for _cq_key in "${_cq_block_keys[@]}" "${_cq_warn_keys[@]}"; do
+    while IFS= read -r _cq_word; do
+      [[ -n "$_cq_word" ]] && _cq_all_words+=("$_cq_word")
+    done < <(_extract_term_list "$_principles_file" "$_cq_key")
+  done
+  local _cq_any=""
+  if [[ ${#_cq_all_words[@]} -gt 0 ]]; then
+    _cq_any=$(printf '%s' "$_cq_clean" | grep -ioFf <(printf '%s\n' "${_cq_all_words[@]}") | sort -u || true)
+  fi
+
+  local _cq_block_terms="" _cq_detail="" _cq_warn_terms=""
+  if [[ -n "$_cq_any" ]]; then
+    local _cq_hits _cq_list
+    for _cq_key in "${_cq_block_keys[@]}"; do
+      if ! _cq_hits=$(_check_term_list "$text" "$_cq_key"); then
+        _cq_list=$(printf '%s' "$_cq_hits" | tr '\n' ',' | sed 's/,$//')
+        _cq_block_terms="${_cq_block_terms:+${_cq_block_terms},}${_cq_list}"
+        # 置換候補を併記して自己修正の 1 発成功率を上げる
+        local _cq_sugg _cq_sline=""
+        while IFS= read -r _cq_word; do
+          [[ -z "$_cq_word" ]] && continue
+          _cq_sugg=$(_lookup_suggestion "$_cq_word")
+          [[ -n "$_cq_sugg" ]] && _cq_sline="${_cq_sline} ${_cq_word}→${_cq_sugg}"
+        done <<< "$_cq_hits"
+        _cq_detail="${_cq_detail}${_cq_key}: [${_cq_list}]${_cq_sline:+ (置換候補:${_cq_sline})}; "
+      fi
+    done
+    for _cq_key in "${_cq_warn_keys[@]}"; do
+      if ! _cq_hits=$(_check_term_list "$text" "$_cq_key"); then
+        _cq_list=$(printf '%s' "$_cq_hits" | tr '\n' ',' | sed 's/,$//')
+        _cq_warn_terms="${_cq_warn_terms:+${_cq_warn_terms},}${_cq_list}"
+      fi
+    done
+  fi
+
+  # 構造検査 (常に warn)。chat は常体規範なので敬体 check on + 可読性 (連続漢字/読点) 同梱で python 1 fork
+  local _cq_struct
+  _cq_struct=$(_check_sentence_structure "$text" 1 1)
+
+  if [[ -n "$_cq_block_terms" ]]; then
+    _append_jp_quality_log "chat" "$_cq_block_terms" "block"
+    _CHAT_BLOCK_REASON="chat 応答に NG 用語がある: ${_cq_detail%; } — 直前の応答本文だけを NG 用語なしの plain JP に書き直して再送する。source: guidelines/writing/NG-DICTIONARY.md"
+  fi
+  local _cq_warn_out=""
+  if [[ -n "$_cq_warn_terms" ]]; then
+    _append_jp_quality_log "chat" "$_cq_warn_terms" "warn"
+    _cq_warn_out="語: ${_cq_warn_terms}"
+  fi
+  if [[ -n "$_cq_struct" ]]; then
+    _append_jp_quality_log "chat" "structural: ${_cq_struct}" "warn"
+    _cq_warn_out="${_cq_warn_out:+${_cq_warn_out}; }${_cq_struct}"
+  fi
+  if [[ -n "$_cq_warn_out" ]]; then
+    _CHAT_WARN_MSG="${ICON_WARNING:-▲} chat 文体 warn: ${_cq_warn_out} — 次の応答は plain JP 規範 (rules/plain-jp.md) に沿って直す"
+  fi
+  return 0
 }
