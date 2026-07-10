@@ -98,7 +98,7 @@ if [ -n "${RESTORE_FILE}" ]; then
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}1. **Read tool** で compact-restore を読込:${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}   - \`${RESTORE_FILE}\`${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}2. \`~/ai-tools/memory/MEMORY.md\` を Read (先頭 1-3 行で当日 [clear] entry 確認)${NL}"
-  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. work-context 本文を clear-aware に Read: 最新 \`work-context-*.md\` の日付が MEMORY.md 先頭 [clear] entry の日付と一致すれば本文が直近 state の SoT (同日分全件 Read)。古ければ B 段 (MEMORY.md entry) を主 source にし、本文は補助として 1 件のみ Read、summary で日付乖離を明示する${NL}"
+  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}3. work-context 本文を clear-aware に Read: 最新 \`work-context-*.md\` の日付が MEMORY.md 先頭 [clear] entry の日付と一致すれば本文が直近 state の SoT (最新 1 件のみ Read、同日の他 file は名前のみ列挙して \`/reload <topic>\` に誘導)。古ければ B 段 (MEMORY.md entry) を主 source にし、本文は補助として 1 件のみ Read、summary で日付乖離を明示する${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}4. \`~/ai-tools/memory/pending-improvements.md\` を Read (未消化 item surface)${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}5. 読込後、Loaded / 直近 state / 未消化 item / Next action の 4 block で summary 報告 (直近 state は B 段主 source、work-context 本文が古い時は日付を明示)${NL}"
   ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}6. 読込済 \`compact-restore-*\` file を削除（蓄積防止、\`rm\` via Bash）${NL}${NL}"
