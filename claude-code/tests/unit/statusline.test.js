@@ -27,7 +27,18 @@ describe("getGitBranch", () => {
 
 describe("isWorktree", () => {
   test("通常リポジトリでfalseを返す", () => {
-    expect(isWorktree(process.cwd())).toBe(false);
+    // process.cwd() が git worktree の場合に環境依存で fail するため、
+    // 一時 dir に通常リポジトリを作って判定する
+    const fs = require("fs");
+    const os = require("os");
+    const { execFileSync } = require("child_process");
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "statusline-test-"));
+    try {
+      execFileSync("git", ["init", "-q"], { cwd: tmpDir, stdio: "ignore" });
+      expect(isWorktree(tmpDir)).toBe(false);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 
   test("無効なディレクトリでfalseを返す", () => {
