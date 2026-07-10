@@ -96,4 +96,4 @@ npm test -- --coverage
 
 ### Go: Table-driven Tests
 
-Go details (`map[string]struct{}` required / parallelization / go-cmp): see `guidelines/languages/golang.md` / `guidelines/languages/go-test-stability.md`.
+詳細: `guidelines/languages/golang.md` / `guidelines/languages/go-test-stability.md` 参照。

@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep
 name: api-design
-description: API design (REST/GraphQL): versioning, errors, docs. Use when designing APIs.
+description: API design (REST/GraphQL): versioning, errors, docs. Use when designing APIs. — 実装は backend-dev を使う
 requires-guidelines:
   - common
   - clean-architecture

@@ -41,15 +41,7 @@ Common principles and per-medium guides: see `guidelines/writing/`. This file co
 
 ## Review in 3 Stages: Content → Text → Structure
 
-Mixing all perspectives in one pass loses focus. **Content → Text → Structure changes abstraction level** — do stages 1→2→3 in order for efficiency.
-
-| Stage | Perspective | Target |
-|-------|-------------|--------|
-| 1 Content consistency | File paths / struct fields / DB NOT NULL / acceptance condition mapping gaps / plan dependencies / Why-not validity | Existing code grep |
-| 2 Text rules | Evidence for evaluation words / duplicate particles / register mixing / AI listing pattern / abstract terms / action-oriented endings | NG dictionary + textlint |
-| 3 Readability | Information density / table vs paragraph balance / priority / diagram consistency / forward reference anchors / new reader perspective | AI visual review |
-
-Timing: Stage 1 after `/design-doc` output before PR creation, Stage 2 after PR creation after CI passes, Stage 3 last "can a first-time reader follow this?" check.
+3 段レビュー canonical: `guidelines/writing/design-doc-protocol.md` §3 段レビュー参照。
 
 ## Detect Style Drift with textlint
 

@@ -62,7 +62,7 @@ Detailed logs, stack traces → `<details>` folding.
 
 ### Step 2.5: writing check (NG 語チェック)
 
-draft を `guidelines/writing/NG-DICTIONARY.md` の AI定型語 + 要根拠語に grep 突き合わせ、hit があれば置換 / 根拠追記して rewrite (max 3 loop、残存は user 確認)。channel 共通強度。target に issue/PR URL を含む場合、貼る前に `gh issue view` / `gh pr view` で番号実在と title 一致を検証する (`references/on-demand-rules/ai-output.md`)。
+writing check: `references/writing-check-protocol.md` 参照 (対象: issue / PR comment draft、channel 共通強度)。target に issue/PR URL を含む場合は貼る前に `gh issue view` / `gh pr view` で番号実在と title 一致を検証する (`references/on-demand-rules/ai-output.md`)。
 
 ### Step 3: Display as post candidate
 

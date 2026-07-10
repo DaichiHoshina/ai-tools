@@ -10,46 +10,7 @@ Switch Claude Code behavior mode per-session. Operation guard behavior, loaded s
 
 ## Mode Definitions
 
-### strict Mode
-
-| Item | Content |
-|------|------|
-| Load | `session-modes.md` + `guardrails.md` |
-| git commit/push | Always confirm |
-| Config change | Always confirm |
-| npm install | Always confirm |
-| Use case | Prod work, critical refactoring |
-
-### normal Mode (Default)
-
-| Item | Content |
-|------|------|
-| Load | CLAUDE.md (8 principles) only |
-| git commit/push | Confirm |
-| Config change | Confirm |
-| npm install (safe) | Auto-approve |
-| Use case | Normal dev work |
-
-### fast Mode
-
-| Item | Content |
-|------|------|
-| Load | Minimal |
-| git commit | Auto-approve (local only) |
-| git push | Feature branch auto-approve, main/master confirm |
-| npm install (safe) | Auto-approve |
-| File edit | Auto-approve (delete only confirm) |
-| Use case | Prototyping, exploratory dev, daily exploratory use |
-
-**SafeBoundary (auto-approved in fast)**:
-git commit (local), git push (feature branch), npm install (safe), format(code), file_edit (existing)
-
-**Reduce confirms in fast mode**:
-- `/flow` run: Skip post-type-detect confirm
-- `/dev` run: Skip Plan confirm
-- AskUserQuestion: Single option = auto-select
-- Mid confirms: Skip all (except /prd Phase 1)
-- Error fix: Obvious errors = instant fix, no confirm
+mode 定義 canonical: `guidelines/common/session-modes.md` 参照。
 
 ## Failure Behavior
 

@@ -6,9 +6,7 @@ paths:
 
 ## Error Handling
 
-- Always handle errors (no `_` ignoring)
-- Add context with errors.Wrap/Wrapf
-- Compare sentinel errors with errors.Is
+詳細: `guidelines/languages/golang.md` §Quick Reference 参照。
 
 ## Naming
 
@@ -19,15 +17,11 @@ paths:
 
 ## Concurrency
 
-- Prevent goroutine leaks (use context)
-- Channel creator closes channel
-- Manage lifecycle with sync.WaitGroup/errgroup
+詳細: `guidelines/languages/golang.md` §Quick Reference 参照。
 
 ## Logging
 
-- Log **once at error origin**. If returning err, caller must not re-log
-- ErrNotFound needs no log (normal case). Repository returns as-is
-- UseCase layer decides if NotFound is exceptional
+詳細: `guidelines/languages/golang.md` §Quick Reference 参照。ErrNotFound は log 不要 (Repository は as-is 返却、UseCase 層で判定) の絶対禁止事項のみ本 rule で強制する。
 
 ## Testing
 

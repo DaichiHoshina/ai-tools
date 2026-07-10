@@ -27,4 +27,6 @@ paths:
 
 **Flow**: User states intent → Claude proposes SELECT → User executes via jump → Share result summary only (no raw dump)
 
-**Anti-patterns**: User runs jump session for Claude / Paste tables with PII / Repeated exploratory `SELECT *`
+**Anti-patterns**: User runs jump session for Claude / Paste tables with PII
+
+クエリ設計規約: `guidelines/languages/golang.md` §Database 参照。

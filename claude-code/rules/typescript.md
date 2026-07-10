@@ -6,26 +6,19 @@ paths:
 
 ## Type Safety
 
-- any forbidden
-- Minimize as casts
-- Prefer unknown + type guards
-- Assume strictNullChecks
+`any` は禁止する。詳細: `guidelines/languages/typescript.md` §Quick Reference 参照。
 
 ## Naming
 
-- Variables: camelCase
-- Constants: UPPER_SNAKE_CASE
-- Classes/types: PascalCase
+詳細: `guidelines/languages/typescript.md` §Quick Reference 参照。
 
 ## Imports
 
-- Relative: same directory only
-- Otherwise: use alias (@/)
+詳細: `guidelines/languages/typescript.md` §Quick Reference 参照。
 
 ## Error Handling
 
-- Result type preferred (neverthrow etc)
-- try-catch at system boundaries only
+詳細: `guidelines/languages/typescript.md` §Quick Reference 参照。
 
 ## ESLint
 

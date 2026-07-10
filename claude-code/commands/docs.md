@@ -53,7 +53,7 @@ Load type-matched coordinating guidelines/skills.
 
 ### Step 4.8: writing check (pre-Notion post, required)
 
-`notion-create-pages` 発火前に AI が md 草稿を self-check する。Check items: writing axis NG table (`skills/comprehensive-review/SKILL.md`) + NG dict (`guidelines/writing/long-form-doc.md`)。Critical ≥1 / Warning ≥4 → rewrite → re-check (max 2 loops)。Post-edit cost が高いので必ず pre-post で check する。
+writing check: `references/writing-check-protocol.md` 参照 (対象: Notion doc md draft)。Post-edit cost が高いので `notion-create-pages` 発火前に必ず走らせる。
 
 ### Step 5: Create/update Notion page
 

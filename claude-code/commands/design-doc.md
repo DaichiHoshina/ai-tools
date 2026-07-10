@@ -38,7 +38,7 @@ Beyond explicit options (`--prd` `--update` `--out` `--type` `--dry` `--scope`),
 | derive mode | "from PRD ~" / "based on ~" + PRD `.md` path | `--prd <path>` equivalent |
 | new mode | None above | Normal flow (from Step 1) |
 
-**Q keyword dict** (shared w/ `/prd`): Q1=goal/Why, Q2=out-of-scope/Null, Q3=tradeoff/comparison, Q4=failure/premortem, Q5=assumption/break/if
+**Q keyword dict**: `commands/prd.md` §Scope keyword dictionary 参照。
 
 **Ambiguous**:
 - fix keyword present, path absent → `Glob "**/design/*.md"` `**/docs/design/*.md"` propose candidates + AskUserQuestion
@@ -71,7 +71,7 @@ If Q1-Q5 already settled in `/prd`, Design Doc **inherits without re-evaluation*
 | 6. Quality gate | Type-specific required items, **Q1-Q5 sufficiency check** (on inherit, verify transcription; on re-eval, Critical on NG pattern), supplement w/ questions or `Edit` rewrite (max 2 loops) |
 | 7. Interactive rewrite | Per `guidelines/writing/long-form-doc.md` (≤9 items total, Layer 2 answers weave as-is) |
 | 8. Write file | `--out` > `docs/design/` > `design/` > current, `YYYY-MM-DD_<slug>.md`. On `--dry`, don't write; treat as stdin downstream |
-| 8.5. **writing check (file target)** | `Read` output md to extract content. Count violations vs NG dict from `guidelines/writing/long-form-doc.md` + writing axis NG table from `skills/comprehensive-review/SKILL.md`. Critical ≥1 or Warning ≥4 → rewrite w/ `Edit`, max 2 loops. Output final result to user |
+| 8.5. **writing check** | `references/writing-check-protocol.md` 参照 (対象: design doc file)。`--dry` 時は生成 draft text を直接 check する |
 | 9. Notion intake notice | After completion, guide `/docs --from <path>` if needed |
 
 ## Design types
@@ -100,16 +100,9 @@ Type-specific section detail & quality gate apply conditions: `references/design
 | `--scope Q1,Q3` | Re-evaluate specified Q only from Q1-Q5 (partial fix, auto-infer from natural language) |
 | `--dry` | Preview only, no file write |
 
-## Writing quality assurance (guideline ref + post-write review)
+## Writing quality assurance
 
-At draft generation, reference principles from `guidelines/writing/long-form-doc.md` (4 questions・conclusion-first・evidence-cited・hard-word-defined・abstract-word-free・prose-bridge).
-
-**Post-write review (Step 8.5)**: After file write, `Read` content and count hits vs NG table from `skills/comprehensive-review/SKILL.md` writing axis (unjustified evaluative words・abstract-word-left-hanging・hard-word-undefined etc.) + NG dict from `guidelines/writing/long-form-doc.md`. Since `/review --focus=writing` is git-diff based, for stable checking of newly-written files, **use Read + AI self-judgment**.
-
-- Critical ≥1, or Warning ≥4 → rewrite w/ `Edit`, re-check (max 2 loops)
-- On `--dry` mode, don't write; check generated draft text directly w/ same checks
-
-Writing Context comment block at top is optional (not forced).
+Draft 生成時は `guidelines/writing/long-form-doc.md` の 4 questions・conclusion-first・evidence-cited・hard-word-defined・abstract-word-free・prose-bridge を参照する。Post-write の self-check (Step 8.5) は `references/writing-check-protocol.md` に一本化した (対象: design doc file、`--dry` 時は draft text)。Writing Context comment block at top is optional (not forced).
 
 ## Common guards
 

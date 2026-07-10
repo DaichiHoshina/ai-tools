@@ -23,76 +23,7 @@ requires-guidelines:
 | 7 | JavaScript Performance | LOW-MEDIUM | `js-` |
 | 8 | Advanced Patterns | LOW | `advanced-` |
 
-## Quick Reference
-
-### 1. Eliminating Waterfalls (CRITICAL)
-
-- `async-defer-await` - Move await to needed branches
-- `async-parallel` - Promise.all() for independent ops
-- `async-dependencies` - Partial deps with better-all
-- `async-api-routes` - Early Promise start in API routes
-- `async-suspense-boundaries` - Stream with Suspense
-
-### 2. Bundle Size Optimization (CRITICAL)
-
-- `bundle-barrel-imports` - Avoid barrel, import direct
-- `bundle-dynamic-imports` - Heavy components with next/dynamic
-- `bundle-defer-third-party` - Load analytics post-hydration
-- `bundle-conditional` - Load modules on feature enable
-- `bundle-preload` - Preload on hover/focus
-
-### 3. Server-Side Performance (HIGH)
-
-- `server-cache-react` - React.cache() per request
-- `server-cache-lru` - LRU across requests
-- `server-serialization` - Minimal data to Client Component
-- `server-parallel-fetching` - Parallelize fetches in component tree
-- `server-after-nonblocking` - Non-blocking with after()
-
-### 4. Client-Side Data Fetching (MEDIUM-HIGH)
-
-- `client-swr-dedup` - Auto dedup with SWR
-- `client-event-listeners` - Dedup global listeners
-
-### 5. Re-render Optimization (MEDIUM)
-
-- `rerender-defer-reads` - Don't subscribe to state used only in callbacks
-- `rerender-memo` - Extract expensive work to memo component
-- `rerender-dependencies` - Keep effect deps primitive
-- `rerender-derived-state` - Subscribe to derived boolean, not raw value
-- `rerender-functional-setstate` - Functional setState for stable callback
-- `rerender-lazy-state-init` - Expensive init = function with useState
-- `rerender-transitions` - startTransition for non-urgent updates
-
-### 6. Rendering Performance (MEDIUM)
-
-- `rendering-animate-svg-wrapper` - Animate div wrapper, not SVG
-- `rendering-content-visibility` - content-visibility for long lists
-- `rendering-hoist-jsx` - Extract static JSX outside component
-- `rendering-svg-precision` - Reduce SVG coordinate precision
-- `rendering-hydration-no-flicker` - Inline script to prevent flicker
-- `rendering-activity` - Activity component for show/hide
-- `rendering-conditional-render` - Ternary, not && for conditionals
-
-### 7. JavaScript Performance (LOW-MEDIUM)
-
-- `js-batch-dom-css` - Batch CSS with class or cssText
-- `js-index-maps` - Build Map for repeated lookups
-- `js-cache-property-access` - Cache property access in loops
-- `js-cache-function-results` - Cache results in module-level Map
-- `js-cache-storage` - Cache localStorage/sessionStorage reads
-- `js-combine-iterations` - Combine multiple filter/map → 1 loop
-- `js-length-check-first` - Check array length before expensive compare
-- `js-early-exit` - Early return from function
-- `js-hoist-regexp` - Hoist RegExp creation outside loop
-- `js-min-max-loop` - Use loop, not sort for min/max
-- `js-set-map-lookups` - Use Set/Map for O(1) lookup
-- `js-tosorted-immutable` - toSorted() for immutability
-
-### 8. Advanced Patterns (LOW)
-
-- `advanced-event-handler-refs` - Store event handlers in refs
-- `advanced-use-latest` - useLatest for stable callbacks
+check 内容 canonical: `guidelines/languages/nextjs-react.md` 参照。rule ID は上記 prefix + 個別 slug 形式 (例: `async-parallel`, `bundle-barrel-imports`) で報告する。
 
 ## Output Format
 

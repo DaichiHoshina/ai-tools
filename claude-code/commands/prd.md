@@ -75,11 +75,7 @@ Critical (must fix) / Warning (recommended) / Info (consider)
 
 ### Phase 4.5: Self-review on writing (pre-output)
 
-`/prd` は chat 出力で persist しないため `/review` diff scope 外。AI が draft を以下 canonical に対し self-check する:
-- `skills/comprehensive-review/SKILL.md` writing NG table
-- `guidelines/writing/long-form-doc.md` NG dictionary
-
-1+ Critical or 4+ Warning hit → Phase 5 前に fix (max 2 loop)。Loop 超過は残存違反を "Phase 5 user confirm items" として停止し、loop limit reason (info gap / decision pending) と共に user に問う。`--out <path>` 永続化時は `/design-doc` Step 8.5 と同等の `Read`+`Edit` rewrite loop を回す。
+writing check: `references/writing-check-protocol.md` 参照 (対象: PRD draft、`--out <path>` 時は書き出し file)。`/prd` は chat 出力で persist しない経路が default のため `/review` diff scope 外、canonical の loop を必ず走らせる。Loop 超過時の残存違反は "Phase 5 user confirm items" として停止し、loop limit reason (info gap / decision pending) と共に user に問う。
 
 ## Failure Handling
 

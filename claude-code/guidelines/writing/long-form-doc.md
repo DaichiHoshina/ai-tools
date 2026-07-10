@@ -42,18 +42,7 @@
 
 ## 1 文 1 行format (sentence-per-line)
 
-DesignDoc / PRD / RCAなど Git 管理の長文 markdownは、段落本文を **1 文ごとに改行**して書く。
-
-| ルール | 内容 |
-|---|---|
-| 段落本文 | 「。」の直後で改行する。1 文 = 1 行 |
-| list itemの継続文 | 子インデントでネストする |
-| 空行 | 段落の区切りにのみ入れる。1 文ごとには入れない |
-| 対象外 | code block / table / headingは通常どおり改行しない |
-
-**Why**: レビュー差分が文単位で出るため、修正した文だけがdiffに現れて変更箇所が読み手に伝わる。textlintの行長制限違反も文単位で解消できる。markdownのレンダリング結果 (段落の見た目) は改行を入れても変わらない。
-
-**適用範囲**: Gitリポジトリ管理の md (DesignDoc / PRD / RCA / ADR)。Notionなど WYSIWYG 系の本文には適用しない (改行が段落分割として描画されるため)。
+DesignDoc / PRD / RCA など Git 管理長文 md に適用する規約。詳細: `guidelines/writing/PRINCIPLES.md` §markdown 長文 doc 参照。Notion など WYSIWYG 系本文には適用しない (改行が段落分割として描画されるため)。
 
 ## 分量目安
 

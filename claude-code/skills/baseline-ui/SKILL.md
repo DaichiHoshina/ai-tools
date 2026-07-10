@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Grep, Glob
 name: baseline-ui
-description: Validates animation, typography, a11y, and layout anti-patterns in Tailwind CSS. Use when building UI or reviewing CSS.
+description: Validates animation, typography, a11y, and layout anti-patterns in Tailwind CSS. Use when building UI or reviewing CSS. — 評価 review は uiux-review を使う
 disallowed-tools:
   - Write
   - Edit

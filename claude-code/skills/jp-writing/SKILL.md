@@ -29,40 +29,9 @@ Do not ask "What should I check?". Exclude code blocks (` ``` ` / `` ` ``) befor
 
 Sentence length and style standards vary by medium (canonical: PRINCIPLES.md `## 媒体別構造` / `## Web 可読性`): 技術文書本文 100 字上限 (冒頭結論)、web / 短文 60 字上限 (PREP + scan)、chat は常体 plain JP。
 
-## self-check (all dimensions, canonical reference)
+## self-check
 
-Load PRINCIPLES.md and evaluate A→D in order.
-
-### A. NG term detection (delete / replace)
-
-Extract all keys from `guidelines/writing/NG-DICTIONARY.md` (block categories + 断定語 warn) → enumerate hits. Replacements: `PRINCIPLES-word-replace.md` (カタカナ造語 / 英単語 両 section)。
-
-### B. Sentence-level readability (PRINCIPLES.md `## 文単位の品質規約`)
-
-- **Sentence length**: exceeds medium limit → split
-- **Commas ≤3**: 4 or more → split sentence
-- **Consecutive kanji ≤4**: 5+ consecutive kanji → insert particle / kun-reading / verbify (e.g. `利用者認証処理管理` → `利用者の認証処理を管理`)
-- **Open 7 word classes**: convert 形式名詞・副詞・接続詞・補助動詞 etc. to hiragana (test: "would you handwrite this kanji?")
-- **No consecutive adversative が** / no `! ?` in body / unify kanji/arabic numerals
-
-### C. AI smell removal (PRINCIPLES.md `## AI臭を消す3変換`)
-
-- (a) 抽象語 (改善 / 最適化 / 効率化) → 数字 or 事例
-- (b) 評価語 (低 / 中 / 高 / 重要 / 必須) → 根拠 1 文を加える
-- (c) 難語 → 削除でなく定義を併記する
-- (d) 英単語 → 平易表現
-- (e) **書き手不在チェック** (canonical: PRINCIPLES.md `## AI臭の根本: 書き手不在`)
-  - L1 主体: 「多くの〜」「一般に〜」「よく〜される」等の主体不明断定 → 特定主体 + 根拠 1 文。語源 `NG-DICTIONARY.md` `主体不明断定 (skill-only)`
-  - L2 見出し: 主観形容詞 (重要 / 効率的 / 強力 / シンプル) 入り heading → 事実 / 数値 / 対象を含む中立名詞句
-  - L4 リズム: 段落長 / 文長 / 文末が均質化していないか。1 段落 1 文段や短中長交互配置で書き手の呼吸を出す
-- 初出 jargon は和訳併記 / 初出略語はフルスペル (list: PRINCIPLES.md `### NG辞書`)
-
-### D. Structure (PRINCIPLES.md `## PREP 法 + 5W1H` / `## 避けるパターン`)
-
-- Conclusion in first 1-3 sentences (remove「本稿では」)
-- Long text / report / PR body: PREP (conclusion → reason → example how/number/path → reconfirm)
-- Decision request: leading `要決定:` block
-- End with reader's next action (approve / execute / ask)
+評価軸 canonical: `commands/jp-writing.md` §5-Axis Check ([A]-[E]) 参照。PRINCIPLES.md を load して A→E 順で評価する。
 
 ## Rewrite output format
 
@@ -74,7 +43,7 @@ Before: 本機能はシームレスな連携を効率的に実現します。
 After:  認証 API と在庫 API を中断なく連携する。連携 1 回あたりの待ち時間を 200ms 短縮した。
 ```
 
-If all hits = 0, report「可読性 問題なし (A-D 全通過)」.
+If all hits = 0, report「可読性 問題なし (A-E 全通過)」.
 
 ## Hook integration
 

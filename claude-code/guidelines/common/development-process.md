@@ -40,11 +40,4 @@
 
 ## Definition of Done
 
-| Check | Detail |
-|-------|--------|
-| On spec | Behavior confirmed to match design spec |
-| Regression | Regression test for existing features complete |
-| Quality | lint/prettier/test all pass |
-| Clean | Unnecessary code and comments removed |
-| Docs | Documentation updated |
-| Review | All review feedback addressed |
+DoD canonical: CLAUDE.md §Definition of Done 参照。
