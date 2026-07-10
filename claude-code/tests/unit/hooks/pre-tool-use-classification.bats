@@ -524,17 +524,16 @@ _run_bash_forbidden() {
 # エッジケース
 # =============================================================================
 
-@test "pre-tool-use: Bashコマンドにパイプがある場合はBoundary" {
+@test "pre-tool-use: Bashコマンドにパイプがある場合はBoundary (message なし)" {
+  # fallback Boundary は systemMessage を出さない (noise 削減で MESSAGE を削除済)
   result=$(run_hook "Bash" '{"command": "git status | grep modified"}')
-  msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ "$result" = "{}" ]
 }
 
-@test "pre-tool-use: Bashコマンドにセミコロンがある場合はBoundary" {
-  # セミコロン付きはSafe判定から除外される（Forbiddenパターンを含まない例）
+@test "pre-tool-use: Bashコマンドにセミコロンがある場合はBoundary (message なし)" {
+  # セミコロン付きはSafe判定から除外されるが、fallback Boundary は message を出さない
   result=$(run_hook "Bash" '{"command": "ls ; echo done"}')
-  msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ "$result" = "{}" ]
 }
 
 @test "pre-tool-use: Bash git branch はSafe" {

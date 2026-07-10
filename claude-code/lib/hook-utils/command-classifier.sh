@@ -157,9 +157,8 @@ classify_bash_command() {
     return
   fi
 
-  # その他のBashコマンドはBoundary扱い
+  # その他のBashコマンドはBoundary扱い (MESSAGE なし = systemMessage を出さず noise と token を削る)
   GUARD_CLASS="Boundary"
-  MESSAGE="🔶 要確認: Bashコマンド"
 }
 
 # ====================================
