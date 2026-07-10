@@ -82,12 +82,12 @@ CLAUDE.md `## ai-tools Writing Canonical Priority` の詳細委譲先。
 ### 優先順位 (high → low)
 
 1. `~/ai-tools/claude-code/guidelines/writing/` canonical (PR / commit / external-post / long-form-doc / code-comment / PRINCIPLES / NG-DICTIONARY)
-2. `~/ai-tools/claude-code/rules/` (genshijin / public-repo-private-data-block 等) + `references/on-demand-rules/ai-output.md`
+2. `~/ai-tools/claude-code/rules/` (plain-jp / public-repo-private-data-block 等) + `references/on-demand-rules/ai-output.md`
 3. project 側 template / convention (`.github/pull_request_template.md` / `.gitlab/merge_request_templates/` / `CONTRIBUTING.md` / project CLAUDE.md / project commit hook 等)
 
 ### 適用範囲 (ai-tools 優先)
 
-PR / MR body 構成 / commit message format / Issue 投稿 / comment 書式 / Notion / Slack / Design Doc / PRD / RCA / 動作確認 section 構成 / 文体規約 (genshijin / readability / NG 語)
+PR / MR body 構成 / commit message format / Issue 投稿 / comment 書式 / Notion / Slack / Design Doc / PRD / RCA / 動作確認 section 構成 / 文体規約 (plain-jp / readability / NG 語)
 
 ### project 優先で残す (ai-tools 介入しない)
 

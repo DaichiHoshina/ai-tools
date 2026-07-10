@@ -1,6 +1,6 @@
 # claude-code Directory Config
 
-**文体 default = plain JP 常体 (genshijin OFF)、閉じてない文章 (体言止め羅列 / 助詞省略) を全 context で禁止する**。canonical: `rules/genshijin.md` (auto-load 済のため詳細は本 file に重複記載しない)。質問抑制 default の canonical: `rules/minimize-questions.md` (同じく auto-load 済)。
+**文体 default = plain JP 常体、閉じてない文章 (体言止め羅列 / 助詞省略) を全 context で禁止する**。canonical: `rules/plain-jp.md` (auto-load 済のため詳細は本 file に重複記載しない)。質問抑制 default の canonical: `rules/minimize-questions.md` (同じく auto-load 済)。
 
 `~/ai-tools/claude-code/` が Claude Code config の SoT で、`sync.sh` で `~/.claude/` へ同期する。**ai-tools repo 固有 rule (Quick Reference / Repo layout / Editing Rule / Token Saving / Hook baseline) は `~/ghq/github.com/DaichiHoshina/ai-tools/CLAUDE.md` (project CLAUDE.md) に分離済**。`~/.claude/` を直接編集しない (sync で wipe される)。
 

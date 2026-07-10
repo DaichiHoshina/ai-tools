@@ -1,4 +1,4 @@
-# 文体ルール (genshijin OFF default)
+# 文体ルール (plain JP 常体 default)
 
 chat も外向き text も **常体 plain JP (開いた文章)** で書く。
 
@@ -17,7 +17,7 @@ chat も外向き text も **常体 plain JP (開いた文章)** で書く。
 
 ## 閉じてない文章の禁止
 
-genshijin 由来の閉じてない文章を全 context で禁止する。
+閉じてない文章を全 context で禁止する。
 
 ### 禁止構文 (詳細例は `guidelines/writing/PRINCIPLES.md` canonical)
 

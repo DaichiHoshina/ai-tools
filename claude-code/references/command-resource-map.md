@@ -24,7 +24,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 | **skill** | UI dev: `ui-skills`, Backend dev: `backend-dev`, Common: `cleanup-enforcement` |
 | **agent** | None (direct execution, no Agent Team) |
 | **hook** | Common across all commands (see Legend) |
-| **rule** | genshijin mode, markdown rules, enterprise security, AI output rules (auto-applied) |
+| **rule** | plain JP style, markdown rules, enterprise security, AI output rules (auto-applied) |
 
 **Step 0**: Conditionally runs `load-guidelines` (summary mode). Shows `ui-skills` for UI / `backend-dev` for backend.
 
@@ -38,7 +38,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 | **skill** | Recommended: `clean-architecture-ddd`, `api-design`, `microservices-monorepo` (when detected), `load-guidelines`, `terraform` (IaC planning) |
 | **agent** | po-agent (for complex planning) |
 | **hook** | Common across all commands (see Legend) |
-| **rule** | genshijin mode, markdown rules, git merge prohibition (auto-applied) |
+| **rule** | plain JP style, markdown rules, git merge prohibition (auto-applied) |
 
 **Step 0**: Required guidelines (A) + language auto-detect (B) + infra planning (C) + skill integration (D). Appends reference to `references/command-resource-map.md`.
 
@@ -66,7 +66,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 | **skill** | Dynamically selected by task type: design consultation → `clean-architecture-ddd`, incident → `incident-response`, root cause → `root-cause`, data analysis → `data-analysis`, IaC → `terraform` |
 | **agent** | po-agent (Step 1) → manager-agent (Step 2) → developer-agent×N (Step 3) → reviewer-agent (final review) |
 | **hook** | Common across all commands (see Legend) |
-| **rule** | genshijin mode, markdown rules, git merge prohibition, root cause analysis rules (auto-applied) |
+| **rule** | plain JP style, markdown rules, git merge prohibition, root cause analysis rules (auto-applied) |
 
 **Step 0**: "Step 0: select skill / agent after task-type determination". Placed before determination table.
 

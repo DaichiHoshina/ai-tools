@@ -11,7 +11,7 @@
 
 ## 質問許可条件 (これ以外で質問しない)
 
-1. **破壊的操作の確認** — git push --force / DROP / rm -rf / branch delete / external 送信 等 (genshijin.md と整合)
+1. **破壊的操作の確認** — git push --force / DROP / rm -rf / branch delete / external 送信 等 (plain-jp.md と整合)
 2. **scope の input が完全欠落** — 「plan して」「修正して」だけで対象 file / 機能名 / 症状が一切ない場合、1 問だけ scope を聞く
 3. **2 つの推奨が拮抗** — context から推奨を 1 つに絞れない (例: design 分岐で trade-off が同程度) ときのみ。ただし「迷ったら simple 側」を default 推奨にして避ける
 4. **user 既存方針との明確な競合** — memory / CLAUDE.md の rule と現 task 要求が衝突する場合
@@ -30,6 +30,6 @@ User 指摘 ("質問が多い" / "auto で進めて" 等) → 該当 command / s
 
 ## 参照
 
-- `rules/genshijin.md` — 破壊的操作の確認は plain JP に戻る
+- `rules/plain-jp.md` — 破壊的操作の確認は plain JP に戻る
 - `commands/plan.md` Step 1 — Sub 質問 skip 条件 (本 rule で範囲拡張)
 - CLAUDE.md `## Session Efficiency` — autonomous mode ON default の同義

@@ -597,10 +597,10 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
 
     # chat応答向け: AI定型語 + カタカナ造語を参照 1 行に圧縮 (list 展開は NG-DICTIONARY.md canonical へ委譲)
     # 1 session 1 回のみ inject する (毎 prompt 固定費 ~170B × 全 turn 再送を削減、内容は session 内で不変)
-    _GENSHIJIN_FLAG="/tmp/claude-genshijin-ctx-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
-    if [[ ! -f "${_GENSHIJIN_FLAG}" ]] && { [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; }; then
-      _AI_TERMS_CTX="[chat応答genshijin強化] AI定型語 / カタカナ造語を chat 応答で使用禁止。canonical: guidelines/writing/NG-DICTIONARY.md §AI定型語 / §カタカナ造語禁止。代替は説明的記述 (例: シームレス → 中断なく)。"
-      touch "${_GENSHIJIN_FLAG}" 2>/dev/null || true
+    _STYLE_CTX_FLAG="/tmp/claude-style-ctx-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
+    if [[ ! -f "${_STYLE_CTX_FLAG}" ]] && { [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; }; then
+      _AI_TERMS_CTX="[chat応答文体強化] AI定型語 / カタカナ造語を chat 応答で使用禁止。canonical: guidelines/writing/NG-DICTIONARY.md §AI定型語 / §カタカナ造語禁止。代替は説明的記述 (例: シームレス → 中断なく)。"
+      touch "${_STYLE_CTX_FLAG}" 2>/dev/null || true
     fi
 
     # 外向き文書品質: 永続化文書 trigger 時のみ、jargon / 略語 / 断定語を参照 1 行で注入

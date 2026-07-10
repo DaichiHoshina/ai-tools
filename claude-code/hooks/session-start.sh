@@ -276,7 +276,7 @@ if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
-_AC_BASE="**memory 読込 (条件付き、token 節約)**: 実作業 (編集 / 実装 / 調査 / debug) を開始する時のみ \`~/ai-tools/memory/MEMORY.md\` (3 tool 共有 index) を read し、関連 topic の個別 file を必要時に read する。質問応答や軽い確認のみの session では読まない。\`mcp__serena__list_memories\` も同条件 (project は --project-from-cwd で自動 activate 済)\n\n**追加推奨**: コーディング作業を開始する場合、最初の編集前に \`/load-guidelines\` を実行\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否\n\n**文体**: 常体 plain JP、canonical \`rules/genshijin.md\` (体言止め羅列 / 助詞省略 / AI 段取り定型 / 過剰丁寧を禁止)"
+_AC_BASE="**memory 読込 (条件付き、token 節約)**: 実作業 (編集 / 実装 / 調査 / debug) を開始する時のみ \`~/ai-tools/memory/MEMORY.md\` (3 tool 共有 index) を read し、関連 topic の個別 file を必要時に read する。質問応答や軽い確認のみの session では読まない。\`mcp__serena__list_memories\` も同条件 (project は --project-from-cwd で自動 activate 済)\n\n**追加推奨**: コーディング作業を開始する場合、最初の編集前に \`/load-guidelines\` を実行\n\n原則: ${ICON_SUCCESS}安全操作→即実行 ${ICON_WARNING}要確認→承認 ${ICON_FORBIDDEN}禁止→拒否\n\n**文体**: 常体 plain JP、canonical \`rules/plain-jp.md\` (体言止め羅列 / 助詞省略 / AI 段取り定型 / 過剰丁寧を禁止)"
 _AC_PREFIX=""
 if [[ -n "${_CWD_GUARD_MSG}" ]]; then
     _AC_PREFIX+="${_CWD_GUARD_MSG}"

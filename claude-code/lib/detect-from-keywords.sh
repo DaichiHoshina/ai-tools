@@ -209,7 +209,7 @@ detect_from_keywords() {
 
   # 執筆意図検出（ヒト向けdoc執筆時に PRINCIPLES を強制ロード）
   # 対象: Notion/Design Doc/PRD/PR description/issue本文/RCA/記事/まとめ
-  # genshijin chat 応答とは別軸（doc出力前のみ発火）
+  # chat 応答文体 rule とは別軸（doc出力前のみ発火）
   # 最適化: 先頭60文字 case で早期判定 → カテゴリ別サブ regex で確定（300+ OR 単一 eval を回避）
   local _writing_detected=0
   local _ph="${prompt_lower:0:60}"

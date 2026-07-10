@@ -51,7 +51,7 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 
 ## Pre-execution (required order)
 
-**genshijin OFF**: write/rewrite body・outline は normal Japanese。review finding / progress は genshijin。
+**文体**: write/rewrite body・outline・review finding・progress のすべてを plain JP 常体 (`rules/plain-jp.md`) で書く。
 
 ### 1. 4-Question Checkpoint (pre-write, mandatory)
 
@@ -59,7 +59,7 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 
 ### 2. Load Resources
 
-`guidelines/writing/PRINCIPLES.md` full load。詳細 pattern は `references/writing-patterns.md` on demand。
+`guidelines/writing/PRINCIPLES.md` はコア層 (冒頭 index table の「check / rewrite 実行」行に列挙した section) のみ load する。詳細層 (AI臭を消す3変換 / 避けるパターン / Web 可読性詳細) と全文 load は深い書き直し (`rewrite` mode) 時のみ。詳細 pattern は `references/writing-patterns.md` on demand。
 
 ### 3. Dynamic Load by Type
 
