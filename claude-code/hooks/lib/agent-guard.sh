@@ -76,7 +76,8 @@ _check_session_split() {
   [[ -z "$session_id" || "$session_id" == "null" ]] && return 0
 
   local _WARN_FILE="${HOME}/.claude/logs/.session-split-warned-${session_id}"
-  [[ -f "$_WARN_FILE" ]] && return 0  # 既に通知済 → skip
+  local _FORCE_FILE="${HOME}/.claude/logs/.session-split-forced-${session_id}"
+  [[ -f "$_WARN_FILE" && -f "$_FORCE_FILE" ]] && return 0  # warn / force 両方通知済 → skip
 
   # jsonl path 構築 (msg count で引き続き使用)
   local _slug="${cwd//\//-}"
@@ -96,6 +97,26 @@ _check_session_split() {
   _MSG_COUNT=$(grep -c '"type":"user"\|"type":"assistant"' "$_JSONL" 2>/dev/null) || _MSG_COUNT=0
 
   local _AGE_H=$(( _ELAPSED / 3600 ))
+
+  # --- force level (400 msg): warn とは独立に 1 session 1 回、強指示を注入 ---
+  if [[ ! -f "$_FORCE_FILE" ]] && (( _MSG_COUNT >= _TH_SESSION_MSG_FORCE )); then
+    mkdir -p "${HOME}/.claude/logs" 2>/dev/null || true
+    touch "$_FORCE_FILE" 2>/dev/null || true
+    local _TS_FORCE
+    printf -v _TS_FORCE '%(%Y-%m-%dT%H:%M:%S%z)T' -1
+    printf '%s | %s | level=force | msg=%s\n' "$_TS_FORCE" "$session_id" "$_MSG_COUNT" \
+      >> "${HOME}/.claude/logs/session-split-warn.log" 2>/dev/null || true
+    local _FORCE_MSG="[session-split-force] messages=${_MSG_COUNT} >= ${_TH_SESSION_MSG_FORCE}。context 常駐が肥大している。現在の step を完了させたら新しい subtask に着手せず、/memory-save で work-context を保存して user に /clear を提案すること"
+    if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_FORCE_MSG}"
+    else
+      ADDITIONAL_CONTEXT="${_FORCE_MSG}"
+    fi
+    return 0
+  fi
+
+  [[ -f "$_WARN_FILE" ]] && return 0  # warn 通知済 → skip
+
   local _REASON=""
   (( _ELAPSED >= _TH_SESSION_AGE_S )) && _REASON="age=${_AGE_H}h"
   if (( _MSG_COUNT >= _TH_SESSION_MSG )); then
@@ -112,7 +133,7 @@ _check_session_split() {
   printf '%s | %s | %s | msg=%s\n' "$_TS_LABEL" "$session_id" "age=${_AGE_H}h" "$_MSG_COUNT" \
     >> "${HOME}/.claude/logs/session-split-warn.log" 2>/dev/null || true
 
-  local _WARN_MSG="[session-split-warn] ${_REASON} exceeds threshold (3h / 1000 msg). Suggest /clear or /compact to refresh cache TTL"
+  local _WARN_MSG="[session-split-warn] ${_REASON} exceeds threshold (3h / ${_TH_SESSION_MSG} msg). Suggest /clear or /compact to refresh cache TTL"
   if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
     ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_WARN_MSG}"
   else

@@ -137,6 +137,49 @@ _make_session_jsonl() {
 }
 
 # =============================================================================
+# Case 1c (B1): msg >= 400 → [session-split-force] を注入 (warn 済でも独立発火)
+# =============================================================================
+@test "session-split-force: strong nudge at 400 msgs even after warn fired" {
+  local session_id="split-force-$(date +%s%N | tail -c 6)"
+  local cwd="${HOME}/testproject"
+
+  # elapsed 10 分 / msg 410 (force threshold 超え)
+  _make_session_jsonl "${session_id}" "${cwd}" 600 410 > /dev/null
+
+  # warn は既に通知済の状態を作る (force が独立に出ることを検証)
+  touch "${HOME}/.claude/logs/.session-split-warned-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    --arg cwd "${cwd}" \
+    '{"session_id":$sid,"tool_name":"Read","tool_input":{"file_path":"/tmp/test.txt"},"cwd":$cwd}' \
+    > "${input_file}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # 1 回目: force が出て state file が作成される
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "session-split-force" ]]
+  [ -f "${home_dir}/.claude/logs/.session-split-forced-${session_id}" ]
+
+  # 2 回目: force が出ない (warn / force 両 state file 済 → skip)
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+  [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "session-split-force" ]]
+}
+
+# =============================================================================
 # Case 2 (B2): large-repo src 3 回連続 Edit → additionalContext に [delegation-suggest] を含む
 # =============================================================================
 @test "delegation-suggest: warn after 3 consecutive large-repo edits" {

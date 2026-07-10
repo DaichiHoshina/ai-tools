@@ -106,6 +106,13 @@ cmd_append_clear_line() {
   local tmp; tmp=$(mktemp)
   { printf '%s\n' "$line"; cat "$INDEX_FILE"; } > "$tmp"
   mv "$tmp" "$INDEX_FILE"
+
+  # 肥大防止: [clear] entry は最新 CLEAR_LINE_MAX 件のみ保持する。
+  # 超過分の削除は index からのみで、同 topic の work-context 個別 file は残るため情報損失なし
+  local max="${CLEAR_LINE_MAX:-10}"
+  local tmp2; tmp2=$(mktemp)
+  awk -v max="$max" '/^- `[0-9]{4}-[0-9]{2}-[0-9]{2}` \[clear\] / { c++; if (c > max) next } { print }' \
+    "$INDEX_FILE" > "$tmp2" && mv "$tmp2" "$INDEX_FILE"
 }
 
 # 現 branch 名から issue key を抽出。優先順:

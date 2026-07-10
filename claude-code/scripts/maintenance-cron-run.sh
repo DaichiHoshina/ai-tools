@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # 週次 maintenance loop 本体 (launchd から呼ばれる)
 #
-# claude CLI headless (-p) で dry-run 系 maintenance command を順に実行し、
+# claude CLI headless (-p) で maintenance command を順に実行し、
 # 結果を ~/.claude/logs/maintenance-cron-<ts>.log に追記する。
-# 全 command が report-only (repo への write なし) なので無人実行できる。
+# memory-clean のみ --apply (trash + MEMORY.md prune + 表記揺れ修正まで実行、
+# cluster / graduate 等の判断が要る操作は --apply でも提案止まり)。他は report-only。
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,7 +18,7 @@ if [[ -z "$CLAUDE_BIN" ]]; then
 fi
 
 MAINTENANCE_COMMANDS=(
-  "/memory-clean"
+  "/memory-clean --apply"
   "/claude-update-fix --dry-run"
   "/serena-update-fix --dry-run"
 )
@@ -32,5 +33,11 @@ for cmd in "${MAINTENANCE_COMMANDS[@]}"; do
     printf 'WARN: %s が非 0 で終了した\n' "$cmd" >> "$log_file"
   fi
 done
+
+# first-ctx 床値の regression 検知 (claude CLI 不要の直接実行、warn は log で確認)
+printf '=== first-ctx-check (%s) ===\n' "$(date '+%F %T')" >> "$log_file"
+if ! "${REPO_ROOT}/scripts/first-ctx-check.sh" --log >> "$log_file" 2>&1; then
+  printf 'WARN: first-ctx threshold 超過 session あり\n' >> "$log_file"
+fi
 
 echo "done: ${log_file}"
