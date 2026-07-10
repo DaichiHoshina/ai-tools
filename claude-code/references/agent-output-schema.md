@@ -45,6 +45,30 @@ issues_blocking: [<string>, ...]
 
 **issues_blocking** — 未解決 blocker を string 配列で列挙。解決済みなら `[]`。粒度: 1 要素 = 1 blocker (root cause 1 行)。推測は書かず、確認済み事実のみ記載。
 
+## Evidence label (VERIFIED / REASONED / ASSUMED)
+
+report 本文中の claim (個別の主張。測定値 / file 変更 / 重要な結論) 単位に、検証根拠ラベルを付ける。
+
+| label | 意味 |
+|----|------|
+| `VERIFIED` | command 実行・test・file 読取で直接確認した |
+| `REASONED` | 確認済み事実からの推論で導いた |
+| `ASSUMED` | 未確認の仮定に基づく |
+
+`confidence` は report 全体の確度を示す数値で、evidence label は claim 単位の検証根拠を示す。役割が違うため両者は併存し、evidence label が trailer field を置き換えることはない (trailer field は 3 つのまま変わらない)。
+
+出力例:
+
+```yaml
+claims:
+  - claim: "hook latency は 120ms 前後で baseline と同等"
+    evidence: VERIFIED   # hook-bench.sh を実行して確認した
+  - claim: "regression は import 追加が原因"
+    evidence: REASONED   # 計測差分と diff から推論した
+  - claim: "CI 環境でも同じ latency になる"
+    evidence: ASSUMED    # CI では未計測
+```
+
 ## Examples
 
 ### Template

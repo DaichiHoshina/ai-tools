@@ -125,6 +125,9 @@ Serena tool priorities: `references/serena-tool-map.md` 参照
 - Quality assessment / key improvements
 ```
 
+Evidence label (mandatory for findings): attach `VERIFIED` / `REASONED` / `ASSUMED` to each finding line to state how it was confirmed.
+Definitions: `references/agent-output-schema.md` § Evidence label. Per-finding evidence labels coexist with the lens-mode `confidence` number.
+
 ## Writer/Reviewer parallel pattern
 
 **When to use**: Large changes (10+ files, 500+ lines) / Critical features (auth, payment, migration) / Architecture change
