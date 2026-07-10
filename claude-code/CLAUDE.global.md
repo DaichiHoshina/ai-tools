@@ -117,6 +117,7 @@ Misbehavior / non-obvious success → document immediately → auto-avoid next s
 
 ## Writing
 
+- **記述対象の使い分け (超重要)**: コードには How を、テストコードには What を、コミットログには Why を、コードコメントには Why not (採らなかった選択肢とその理由) を書く
 - 外向き text を書く前に today's commits を確認 (`git log --since=midnight --pretty=format:'%h %s'`)。hook が write-type tool 前に auto-inject する
 - 文体規範 canonical: `guidelines/writing/PRINCIPLES.md` + `NG-DICTIONARY.md` (AI 定型語 hook block、書込前に先手 sweep で retry 損失を避ける)。1 文 100 字 (短文 60 字) 上限
 - 外向き doc は種別 guideline を on-demand で 1 本だけ読んで書く (一覧: `guidelines/writing/README.md`)。深い書き直し時のみ `/jp-writing`
