@@ -78,7 +78,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 
 ## ai-tools Writing Canonical Priority 詳細
 
-CLAUDE.md `## ai-tools Writing Canonical Priority` の詳細委譲先。
+`CLAUDE.global.md` `## Writing` の優先順 (1) `guidelines/writing/` canonical → (2) `rules/` → (3) project template を本 file が詳細化する。
 
 ### 優先順位 (high → low)
 
