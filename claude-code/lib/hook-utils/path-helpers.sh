@@ -137,7 +137,8 @@ _is_aitools_path() {
   local p="$1"
   local prefix
   while IFS= read -r prefix; do
-    [[ "$p" == "${prefix}"* ]] && return 0
+    # prefix は末尾 / 付き。repo root ちょうど (末尾 / なし) の cwd も配下と判定する
+    [[ "$p" == "${prefix}"* || "${p}/" == "$prefix" ]] && return 0
   done < <(_aitools_prefixes)
   return 1
 }

@@ -874,6 +874,17 @@ teardown_ensure_worktree() {
   rm -rf "$tmp"
 }
 
+@test "is_aitools_path: repo root ちょうど (末尾 / なし) も配下と判定する" {
+  local tmp
+  tmp="$(mktemp -d)"
+  mkdir -p "$tmp/repo/claude-code"
+  echo "$tmp/repo" > "$tmp/root-file"
+  # cwd が repo root そのもの (git commit 時の典型 cwd) で prefix 末尾 / と不一致でも配下扱い
+  run bash -c "source '$LIB_FILE' && AITOOLS_ROOT_FILE='$tmp/root-file' _is_aitools_path '$tmp/repo'"
+  [ "$status" -eq 0 ]
+  rm -rf "$tmp"
+}
+
 # =============================================================================
 # _rotate_log_if_needed: log rotation 共通関数
 # =============================================================================
