@@ -101,7 +101,7 @@ After completion: `/lint-test` auto-detects lang + runs all checks (lint/typeche
 
 | Scenario | Action |
 |----------|--------|
-| 2 consecutive same-approach failures | suggest `/clear` & stop, request replan |
+| 2 consecutive same-approach failures | objective gate (test / lint exit code) を定義できるなら `/loop` を提案 (fresh context 反復は同一 context 再試行より成功率が高い)、定義できなければ suggest `/clear` & stop, request replan |
 | `--quick` unexpected error | fallback to default model, continue minor fixes |
 | Serena MCP fails | degrade to grep/Read, warn |
 

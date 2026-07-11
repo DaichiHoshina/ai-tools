@@ -24,7 +24,7 @@ Design + language (auto-detect) + project type guidelines. Detail: `references/c
 
 ## Step 2: Execution mode judgment (required)
 
-Choose from 6 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"`. `/goal` is orthogonal (iterative objective-gate tasks only; combinable as `/goal --inner /dev` etc.).
+Choose from 7 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"` / `/loop`. `/goal` is orthogonal (iterative objective-gate tasks only; combinable as `/goal --inner /dev` etc.). `/loop` covers cadence / unattended / >5-iteration variants of the same objective-gate tasks (external headless loop).
 
 | Condition | Mode | Why |
 |------|---------|------|
@@ -59,7 +59,7 @@ Run before any `/plan` output. Cannot skip. Applies uniformly across PO Agent / 
 
 Plan 保存後、実装への受け渡しを必ず行う。判定 mode を user が手で組み立て直す状態を残さない。
 
-1. **Next command block を必ず出力**: Step 2 の判定 mode を、plan file path 込みで copy-paste 可能な 1 行にする (例: `/dev --plan ~/.claude/plans/2026-07-05_ai-tools_foo.md` / `/flow N=3 --plan <path>` / inline 判定時は「このまま実装を指示すれば inline で開始する」の 1 行)
+1. **Next command block を必ず出力**: Step 2 の判定 mode を、plan file path 込みで copy-paste 可能な 1 行にする (例: `/dev --plan ~/.claude/plans/2026-07-05_ai-tools_foo.md` / `/flow N=3 --plan <path>` / `/loop` 判定時は `/loop init <name> "<objective>" --gate "<cmd>"` → `/loop run <name>` の 2 行 / inline 判定時は「このまま実装を指示すれば inline で開始する」の 1 行)
 2. **引き継ぐ context**: Requirements / Phase 分割 / mode 判定根拠 / worktree 判断を plan file に閉じる。実装側は plan を SoT として読み、scope 再調査と mode 再判定をしない
 3. **`--go` flag**: `/plan --go <task>` は plan 出力 + 保存後、そのまま判定 mode で実装を開始する (Next command を自分で発火、user 確認なし)。破壊的操作 (削除 / migration / force 系) を含む Phase のみ実行前確認に戻す
 
@@ -80,9 +80,10 @@ Phase 1: [task]
 Phase 2: [task]
 
 ## Execution mode
-- Mode: inline / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"`
-- Basis: [file count / coupling / T_i / overhead comparison + /workflow vs /flow orthogonal judgment + (if /goal) 4 conditions and stop-condition cmd in 1 line]
+- Mode: inline / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"` / `/loop`
+- Basis: [file count / coupling / T_i / overhead comparison + /workflow vs /flow orthogonal judgment + (if /goal or /loop) 4 conditions and stop-condition cmd in 1 line]
 - (if /goal only) Stop-condition: [`bats tests/foo` / `npm run lint` etc. exit code as verdict cmd], Hard stops: max-iter=5 / max-token=100000 / timeout=30m
+- (if /loop only) Gate cmd + hard stops: max-iter=10 / cost $5 / 60m (canonical: `commands/loop.md`)
 
 ## Worktree
 - Needed: Yes/No

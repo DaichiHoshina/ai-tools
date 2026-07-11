@@ -96,6 +96,7 @@ step 8 両 agent 完了後:
 - hard stops: token budget 100k / wall-clock 30m (内 default、`/goal` と同)
 - maker/checker 分離: 既存 `developer-agent` (maker) + bash check (objective checker) の組み合わせで Ralph Wiggum guard を default 充足。reviewer-agent は flag 無し時の subjective gate のまま、flag 有り時は bash check に置換
 - 互換性: flag 無し時は現行挙動 (reviewer-agent P0=0 で停止、max 1 loop) 維持
+- **escalate**: max-iter 到達で gate 未 green のときは session 内で回数を増やさず `/loop` への切替を提案する (external headless loop が fresh context で続きを回す。gate cmd をそのまま `--gate` に渡し、state は `~/.claude/loops/<name>/` に引き継ぐ)
 - 詳細: `references/loop-engineering.md` § Failure modes / Minimum viable loop
 
 ## --auto skip conditions (detail)
