@@ -150,7 +150,7 @@ rename に伴い他 file / 同 file 内 cross-ref も `[未決事項 #X]` → `[
 
 ### PR description
 
-4セクション固定: **Why** / **What changed** (数字・事例) / **Testing** / **Review focus**。詳細は [pr-description.md](pr-description.md) 参照。
+テンプレ・記法は [pr-description.md](pr-description.md) を canonical とする。
 
 ### DesignDoc
 

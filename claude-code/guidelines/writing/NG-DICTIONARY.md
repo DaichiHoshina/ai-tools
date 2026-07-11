@@ -1,6 +1,6 @@
 # NG 辞書
 
-hook (`hooks/pre-tool-use.sh:_extract_term_list`) が動的抽出する NG 語 list。key 名・記法を 1 文字も変えない。
+hook (`lib/jp-quality-check.sh:_extract_term_list`、`hooks/pre-tool-use.sh` から source) が動的抽出する NG 語 list。key 名・記法を 1 文字も変えない。
 
 執筆論・使用指針は [PRINCIPLES.md](PRINCIPLES.md) 参照。
 

@@ -31,14 +31,7 @@
 
 ## 品質検証タイミング
 
-| コマンド | タイミング |
-|---------|----------|
-| `/design-doc` | Step 8書き出し → Step 8.5で `Read` + NG判定 + `Edit` で書き直しloop |
-| `/prd` | 出力直前にself-review (Phase 4.5)。`--out <path>` 時はファイル経由 |
-| `/docs` | Notion投稿前 (Step 4.8) にdraft self-review |
-| `/retrospective` / `/diagnose` 長文 | 出力前に4問 + 共通セルフチェック7適用 |
-
-**合格ライン**: Critical 1件以上or Warning 4件以上で書き直し (最大2 loop)。3 loop残存はユーザー報告。
+各 command の self-check 発動タイミングと合格ライン・loop 上限は `references/writing-check-protocol.md` を canonical とする (`/design-doc` Step 8.5 / `/prd` Phase 4.5 / `/docs` Step 4.8 / `/post-comment` Step 2.5 / `/git-push` Step 2・5.5)。`/retrospective` `/diagnose` 長文は出力前に4問 + 共通セルフチェック7を適用する。
 
 **Web 出力 (Notion / GitHub / Confluence) 時は追加チェック 4 項目**: 1 文 60 字 / 主張型 heading / 段落 3-4 行上限 / 太字 scan 化 — 詳細 `PRINCIPLES.md` `## Web 可読性`。
 
@@ -107,7 +100,7 @@ draft完成後の仕上げ (`/docs` が主に使用)。
 
 ## NG辞書 (長文向け検出)
 
-`PRINCIPLES.md` の「### NG辞書 (削除対象)」を canonicalとする。Layer 3の検出 categoryは同sectionの AI 定型語 / 硬い文語 / 評価語 に対応。
+`PRINCIPLES.md` の「### NG辞書」を canonicalとする。Layer 3の検出 categoryは同sectionの AI 定型語 / 硬い文語 / 評価語 に対応。
 
 ## Before/Afterサンプル
 
