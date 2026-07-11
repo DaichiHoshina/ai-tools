@@ -21,14 +21,16 @@ jobs:
       - run: npm test
 
   bats:
-    runs-on: ubuntu-latest
+    # hooks の実行対象は macOS のため、bats も macOS runner で回す
+    # (ubuntu では locale / BSD-GNU 差で 29 件 fail した)
+    runs-on: macos-latest
     defaults:
       run:
         working-directory: claude-code
     steps:
       - uses: actions/checkout@v4
-      - name: Install deps (parallel / jq)
-        run: sudo apt-get update && sudo apt-get install -y parallel jq
+      - name: Install deps (parallel)
+        run: brew install parallel
         working-directory: .
       - name: Install bats-core 1.13.0
         run: |
