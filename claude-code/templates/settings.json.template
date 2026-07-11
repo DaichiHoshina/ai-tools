@@ -1,6 +1,10 @@
 {
-  "model": "claude-fable-5",
-  "fallbackModel": ["claude-opus-4-7", "claude-sonnet-4-6", "claude-haiku-4-5"],
+  "model": "claude-opus-4-7",
+  "fallbackModel": [
+    "claude-opus-4-7",
+    "claude-sonnet-4-6",
+    "claude-haiku-4-5"
+  ],
   "alwaysThinkingEnabled": false,
   "env": {
     "CLAUDE_CODE_AUTO_CONNECT_IDE": "false",
@@ -52,7 +56,6 @@
     ],
     "deny": [
       "NotebookEdit",
-
       "Bash(sudo *)",
       "Bash(su *)",
       "Bash(chmod 777 *)",
@@ -64,7 +67,6 @@
       "Bash(bash -c*curl*)",
       "Bash(*> /etc/*)",
       "Bash(*>> /etc/*)",
-
       "Bash(rm -rf /)",
       "Bash(rm -rf /*)",
       "Bash(rm -rf ~)",
@@ -77,7 +79,6 @@
       "Bash(rm -rf .)",
       "Bash(rm -rf ./*)",
       "Bash(rmdir /)",
-
       "Bash(git push*--force*main)",
       "Bash(git push*--force*master)",
       "Bash(git push*-f*main)",
@@ -91,12 +92,10 @@
       "Bash(git stash drop)",
       "Bash(git branch -D main)",
       "Bash(git branch -D master)",
-
       "Bash(mkfs*)",
       "Bash(dd if=*of=/dev/*)",
       "Bash(history -c)",
       "Bash(shred *)",
-
       "Bash(env)",
       "Bash(printenv)",
       "Bash(printenv *)",
@@ -113,7 +112,6 @@
       "Bash(wget*metadata.google*)",
       "Bash(curl*100.100.100.200*)",
       "Bash(wget*100.100.100.200*)",
-
       "Read(.env)",
       "Read(.env.*)",
       "Read(**/.env)",
@@ -502,5 +500,10 @@
       }
     }
   },
-  "awaySummaryEnabled": false
+  "awaySummaryEnabled": false,
+  "availableModels": [
+    "claude-opus-4-7",
+    "claude-fable-5",
+    "claude-sonnet-5"
+  ]
 }
