@@ -730,14 +730,22 @@ setup_pre_push_hook() {
         return 0
     fi
 
+    # 既に正しいリンクなら何もしない (並列 sync 時の再配置競合も避ける)
+    if [[ -L "${pre_push_target}" && "$(readlink "${pre_push_target}")" == "${pre_push_source}" ]]; then
+        return 0
+    fi
+
     # 既存ファイルがシンボリックリンクでない場合はバックアップ
     if [[ -e "${pre_push_target}" && ! -L "${pre_push_target}" ]]; then
         mv "${pre_push_target}" "${pre_push_target}.bak"
         print_info "既存 pre-push hook をバックアップ: ${pre_push_target}.bak"
     fi
 
-    # シンボリックリンク配置（既存リンクは上書き）
-    ln -sf "${pre_push_source}" "${pre_push_target}"
+    # シンボリックリンク配置。ln -sf は unlink→symlink の 2 step で並列実行時に
+    # EEXIST 競合するため、temp link を rename (atomic) で置き換える
+    local tmp_link="${pre_push_target}.tmp.$$"
+    ln -s "${pre_push_source}" "${tmp_link}"
+    mv -f "${tmp_link}" "${pre_push_target}"
     print_success "pre-push hook を配置しました: ${pre_push_target} -> ${pre_push_source}"
 }
 
