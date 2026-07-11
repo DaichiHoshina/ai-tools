@@ -2,7 +2,7 @@
 
 Centralized management of commands, skills, agents, guidelines, and Hooks for Claude Code. Synced to `~/.claude/` using `install.sh`.
 
-Changelog: [CHANGELOG.md](CHANGELOG.md) / Project-specific instructions: [CLAUDE.md](CLAUDE.md) / CLI tracking: [VERSION](VERSION)
+Changelog: [CHANGELOG.md](CHANGELOG.md) / Global instructions: [CLAUDE.global.md](CLAUDE.global.md) / CLI tracking: [VERSION](VERSION)
 
 ## Quick Start
 

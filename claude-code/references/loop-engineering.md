@@ -143,7 +143,7 @@ In ai-tools: `hooks/pre-tool-use.sh` blocks private-name leakage (see `rules/pub
 
 ## When NOT to build a loop
 
-Single well-aimed prompt wins for: architecture rewrites / auth / payments (`[[feedback_db_change_review_blind_spot]]`) / production deploys (`[[feedback_rollback_via_revert_pr]]`) / vague product work / any code without automated verification.
+Single well-aimed prompt wins for: architecture rewrites / auth / payments (`[[feedback-db-change-review-blind-spot]]`) / production deploys (`[[feedback-rollback-via-revert-pr]]`) / vague product work / any code without automated verification.
 
 Rule of thumb: if a human would need to think deeply about each output before accepting it, don't loop it.
 
@@ -185,4 +185,4 @@ Cross-ref: `[[feedback-db-change-review-blind-spot]]` (DB change 4-path holistic
 | `references/auto-delegation-detailed.md` | parent=Opus orchestrate / subagent=Sonnet delegation (maker/checker separation basis) |
 | `references/PARALLEL-PATTERNS.md` | Parallel N adoption threshold, worktree pattern |
 | CLAUDE.md §Quick Reference | ai-tools worktree workflow canonical |
-| CLAUDE.md `[[feedback_no_retry_after_interrupt]]` | Interrupt → no auto-retry (loop hard stop reinforcement) |
+| CLAUDE.md `[[feedback-no-retry-after-interrupt]]` | Interrupt → no auto-retry (loop hard stop reinforcement) |
