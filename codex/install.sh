@@ -245,7 +245,7 @@ doctor_check_native_skills() {
 
     local target="$CODEX_DIR/skills"
     if [ -L "$target" ]; then
-        doctor_error "skills/ はシンボリックリンクです。Codex native directory として保持してください"
+        doctor_error "skills/ はシンボリックリンクです。./codex/install.sh --sync で backup 退避のうえ自動修復されます"
     elif [ -d "$target" ]; then
         doctor_success "skills/ は Codex native directory として存在します"
     else
@@ -601,6 +601,14 @@ copy_codex_skills() {
     if [ ! -d "$skills_source" ]; then
         print_info "Codex native skills テンプレートはありません（スキップ）"
         return
+    fi
+
+    # 旧 install 方式の symlink (dangling 含む) が残っていると mkdir -p が失敗するため、
+    # backup へ退避して実 directory を作り直す
+    if [ -L "$skills_target" ]; then
+        local skills_backup="${skills_target}.backup.$(date +%Y%m%d%H%M%S)"
+        mv "$skills_target" "$skills_backup"
+        print_warning "skills/ が symlink だったため退避しました: $skills_backup"
     fi
 
     mkdir -p "$skills_target"

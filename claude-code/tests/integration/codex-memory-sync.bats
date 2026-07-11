@@ -29,6 +29,7 @@ setup() {
     awk '/^link_shared_memory\(\)/,/^}/' "$INSTALL_SH"
     awk '/^sync_managed_block\(\)/,/^}/' "$INSTALL_SH"
     awk '/^doctor_check_shared_memory\(\)/,/^}/' "$INSTALL_SH"
+    awk '/^copy_codex_skills\(\)/,/^}/' "$INSTALL_SH"
   } > "$HELPER"
 }
 
@@ -211,4 +212,72 @@ EOF
   "
   [ "$status" -eq 0 ]
   [[ "$output" == *"symlink ではありません"* ]]
+}
+
+# --- copy_codex_skills ----------------------------------------------------
+
+# fake skills source (SCRIPT_DIR/skills/<name>/SKILL.md) を作る
+_make_skills_source() {
+  local script_dir="${TEST_HOME}/codex-src"
+  mkdir -p "${script_dir}/skills/demo-skill"
+  echo "demo" > "${script_dir}/skills/demo-skill/SKILL.md"
+  echo "${script_dir}"
+}
+
+@test "copy_codex_skills: dangling symlink の skills/ を退避して実 dir を作る" {
+  local script_dir
+  script_dir=$(_make_skills_source)
+  local codex="${TEST_HOME}/.codex"
+  mkdir -p "$codex"
+  ln -s "${TEST_HOME}/nonexistent-target" "${codex}/skills"
+
+  run bash -c "
+    source '$HELPER'
+    SCRIPT_DIR='$script_dir'
+    CODEX_DIR='$codex'
+    copy_codex_skills 1
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"退避しました"* ]]
+  [ -d "${codex}/skills" ] && [ ! -L "${codex}/skills" ]
+  [ -f "${codex}/skills/demo-skill/SKILL.md" ]
+  # backup が残ること
+  ls "${codex}/skills.backup."* >/dev/null
+}
+
+@test "copy_codex_skills: 生きた symlink の skills/ も退避される" {
+  local script_dir
+  script_dir=$(_make_skills_source)
+  local codex="${TEST_HOME}/.codex"
+  mkdir -p "$codex" "${TEST_HOME}/live-target"
+  ln -s "${TEST_HOME}/live-target" "${codex}/skills"
+
+  run bash -c "
+    source '$HELPER'
+    SCRIPT_DIR='$script_dir'
+    CODEX_DIR='$codex'
+    copy_codex_skills 1
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"退避しました"* ]]
+  [ -d "${codex}/skills" ] && [ ! -L "${codex}/skills" ]
+}
+
+@test "copy_codex_skills: 通常 dir 既存なら退避せずコピーする" {
+  local script_dir
+  script_dir=$(_make_skills_source)
+  local codex="${TEST_HOME}/.codex"
+  mkdir -p "${codex}/skills"
+
+  run bash -c "
+    source '$HELPER'
+    SCRIPT_DIR='$script_dir'
+    CODEX_DIR='$codex'
+    copy_codex_skills 1
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"退避しました"* ]]
+  [ -f "${codex}/skills/demo-skill/SKILL.md" ]
+  # backup が作られないこと
+  ! ls "${codex}/skills.backup."* >/dev/null 2>&1
 }
