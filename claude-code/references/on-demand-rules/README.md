@@ -23,6 +23,7 @@
 | git merge 承認判断・interrupt 後の再実行・既存 PR branch への push | `git-safety-ops.md` |
 | report / HTML 生成 command 実行・生成物の保存先指定 | `report-output-outside-repo.md` |
 | PR checks で集約 job のみ FAILURE (CI fail 調査時) | `ci-flaky-aggregate-job.md` |
+| 実装中に PRD / DesignDoc と実装の乖離を検出した時 | `dd-first-update.md` |
 
 ## 運用
 

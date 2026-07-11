@@ -239,6 +239,37 @@ run_detect_from_keywords() {
 }
 
 # =============================================================================
+# 正常系テスト: impact-analysis検出
+# =============================================================================
+
+@test "detect-from-keywords: detects impact-analysis from '影響分析して' keyword" {
+  run run_detect_from_keywords '影響分析して'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_impact=$(echo "$output" | jq '.skills | contains(["impact-analysis"])')
+  [ "$has_impact" = "true" ]
+}
+
+@test "detect-from-keywords: detects impact-analysis from '影響範囲を調べて' keyword" {
+  run run_detect_from_keywords '影響範囲を調べて'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_impact=$(echo "$output" | jq '.skills | contains(["impact-analysis"])')
+  [ "$has_impact" = "true" ]
+}
+
+@test "detect-from-keywords: does not detect impact-analysis from plain '影響' keyword" {
+  run run_detect_from_keywords 'この変更の影響は小さい'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_impact=$(echo "$output" | jq '.skills | contains(["impact-analysis"])')
+  [ "$has_impact" = "false" ]
+}
+
+# =============================================================================
 # 正常系テスト: Serena検出
 # =============================================================================
 

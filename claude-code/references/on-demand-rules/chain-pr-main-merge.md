@@ -33,6 +33,14 @@ git push
 
 各 chain PR の head に `git merge --no-ff origin/<base-pr-branch>` を上流から順次実行する。base と head の merge commit が揃い、`base ↔ head` diff が本来スコープに戻る。
 
+## chain 運用の追加規約 (実案件で確立)
+
+- chain branch への push は **fast-forward / merge commit のみ、force-push 禁止**。下流 branch との整合性を壊す。PR base の付け替え時だけ user 承認の上で rebase + force-push する
+- 薄すぎる PR (数十行規模) は上流 PR へ統合する。PR title に `n/N` の chain 番号を付ける
+- branch ごとに linked worktree を分離し、修正 commit は「差分が属する層の branch」に入れて base 側から順に下流へ伝播する
+- shallow clone の worktree は merge-base が切れて chain merge に失敗する → `git fetch --unshallow` で復旧する
+- dev 検証用の巨大 branch は分割 PR 完成後に close し、chain 末端 PR を deploy 起点にする
+
 ## chain 自体を減らす検討
 
 - 通常 PR は `base = main` の独立構成にし、chain は本当に必要なときのみ使う

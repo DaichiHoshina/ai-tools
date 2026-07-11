@@ -24,11 +24,11 @@ GitHub issue を起点に「SoT 確認 → 影響分析 → PR 分割 → 実装
 
 ### 2. SoT 確認
 
-PRD / DesignDoc を SoT として Read する。実装中に設計と実装の乖離が出たら「DD を先に更新 → 実装」の順を守り、実装側で勝手に設計を変えない。DD の新規生成・大改訂は `/design-doc` へ委譲する。
+PRD / DesignDoc を SoT として Read する。実装中に設計と実装の乖離が出たら `references/on-demand-rules/dd-first-update.md` を Read し、「DD を先に更新 → 実装」の順を守る。DD の新規生成・大改訂は `/design-doc` へ委譲する。
 
 ### 3. モノリス影響分析 (設計の要)
 
-変更対象 symbol ごとに `mcp__serena__find_referencing_symbols` で fan-in (呼び出し元) を洗い、影響する module / 層を列挙してから設計を確定する。層境界の妥当性確認は `clean-architecture-ddd` skill を使う。DB 変更は DoD #7 の 4 経路 (FK / long TX / replica lag / maintenance scope) を必ず見る。
+`impact-analysis` skill で fan-in 洗い出し → 層判定 → DB 4 経路確認 → 影響表を作ってから設計を確定する。影響表は issue / DD に貼る。
 
 ### 4. PR 分割設計
 

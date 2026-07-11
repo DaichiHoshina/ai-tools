@@ -11,6 +11,7 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "sync push", "push sync" | `/git-push` → `sync.sh to-local` (ai-tools repo only) |
 | "syncして", "sync して", "同期して" | `sync-to-local` skill (`sync.sh to-local` 実行、ai-tools repo only) |
 | "issueベースで開発", "issue 起点で", "issue 駆動で" | `issue-dev-flow` skill (issue → SoT 確認 → 影響分析 → PR 分割 → 順次 merge) |
+| "影響分析して", "影響範囲を調べて" | `impact-analysis` skill (fan-in → 層判定 → DB 4 経路 → 影響表) |
 | "全自動で", "autoで", "おまかせ" | `/flow --auto` |
 | "横並びで", "同じ修正を" | Multi-repo parallel work (see `references/_archive/multi-repo-workflow.md`) |
 | "レビュー", "レビューして", "コードレビュー" | `/review` (default, mode auto-detected internally) |

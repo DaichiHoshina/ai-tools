@@ -439,6 +439,7 @@
     "docs": "name-only",
     "fewer-permission-prompts": "user-invocable-only",
     "grpc-protobuf": "off",
+    "impact-analysis": "name-only",
     "incident-response": "name-only",
     "init": "user-invocable-only",
     "keybindings-help": "off",
