@@ -4,7 +4,7 @@ Canonical interface definitions for the `/flow` Team path (PO → Manager → De
 
 ## Common Terms
 
-- **parent**: Claude Code host (Opus). Only parent spawns subagents
+- **parent**: Claude Code host (session model、`references/model-selection.md` canonical). Only parent spawns subagents
 - **field names**: snake_case throughout
 - **path**: absolute path required (`~` not allowed, `$HOME` must be expanded)
 
@@ -160,7 +160,7 @@ parent embeds 1 task from Manager allocation into Developer prompt, firing **N t
 Max 300 words. Checkboxes: `✓` (done) / `✗` (failed) / `—` (N/A). `[ ]` prohibited.
 
 ```yaml
-status: success  # success | partial | failure | dep_unresolved
+status: success  # success | partial | failure | dep_unresolved | blocked
 task_id: task-001
 changed_files:
   - path: <path>
@@ -197,6 +197,8 @@ progress_pct: 60  # 0-100 integer estimate
 ```
 
 `partial` is **not a free pass**: agent must have actively attempted retry within budget and report the specific blocker. `partial` without a concrete `blocker` line is rejected by parent as `failure`.
+
+`blocked` = user 判断が必要な decision fork で停止 (subagent silent-fail guard 発火)。parent は Manager 再割当 loop に入れず、`issues_blocking` の内容を即 user に escalate する (`dep_unresolved` は agent/環境依存、`blocked` は user 判断待ちで区別する)。
 
 ### 6. parent → Reviewer (input)
 

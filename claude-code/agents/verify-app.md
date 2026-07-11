@@ -13,8 +13,6 @@ tools:
   - TaskCreate
   - TaskUpdate
   - TaskList
-  - mcp__serena__read_file
-  - mcp__serena__execute_shell_command
 disallowedTools:
   - Write
   - Edit
@@ -33,8 +31,7 @@ This agent operates as the **Verifier** in the Generator-Verifier pattern.
 
 - **Verifier** (this agent): validates Generator (developer-agent / build process) output via build / test / lint / smoke checks
 - **accept** (gate=green): all required stages pass → status=success
-- **reject** (gate=red): any required stage fails → status=failure + failure reason with stage, command, and exit code
-- Canonical reference: https://claude.com/blog/multi-agent-coordination-patterns
+- **reject** (gate=red): any required stage fails → status=failure + failure reason with stage, command, and exit code (Anthropic multi-agent Generator-Verifier pattern)
 
 ## Launch condition
 
@@ -107,7 +104,19 @@ List per-lang results in summary & state **reason for worst-case** (which lang/w
 
 **Docker security note**: `trivy config` static Dockerfile (no image needed). Full scan after build: add `trivy image <tag>`.
 
-## Tools: see frontmatter (Bash / Read / Grep / Glob / TaskCreate / TaskUpdate / TaskList / mcp__serena__*)
+## Tools: see frontmatter (Bash / Read / Grep / Glob / TaskCreate / TaskUpdate / TaskList)
+
+## Timeout/Retry spec
+
+| Item | Value |
+|------|-------|
+| Timeout | 20min (6-stage flow; build/test runs are long) |
+| Retry | 0× |
+| At timeout | Report completed stages; mark unrun stages `—` + `status: partial` |
+
+## Silent-fail guard
+
+AskUserQuestion is auto-denied in subagent context. On decision fork requiring user judgment, return `status: blocked` + question in `issues_blocking[]`. Canonical: `agents/developer-agent.md` §Silent-fail guard.
 
 ## Absolute prohibitions
 
@@ -115,6 +124,7 @@ List per-lang results in summary & state **reason for worst-case** (which lang/w
 - Git operations (add/commit/push)
 - Auto-install dependencies
 - Auto-modify config files
+- Bash mutation of source files (verification is read + execute only)
 
 ## Output format
 
@@ -148,6 +158,8 @@ List per-lang results in summary & state **reason for worst-case** (which lang/w
 | Rejected | `failure` |
 
 `dep_unresolved`: 依存 agent (build runner / test runner) の起動失敗で verify 続行不能の場合に使用。
+
+Evidence label: 各 stage verdict は command 実行結果なので `VERIFIED` 固定。実行できなかった stage への推測 verdict は禁止 (`—` + `ASSUMED` note で区別)。定義: `references/agent-output-schema.md` §Evidence label。
 
 Trailer example:
 

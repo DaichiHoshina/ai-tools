@@ -11,13 +11,13 @@ argument-hint: "[scope]"
 
 ## Delegation & Self-Review (required, 2 stages)
 
-**Delegation**: Delegate `comprehensive-review` skill to `reviewer-agent` (Sonnet) via Task. Delegation prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` Parent Opus runs Stage A (per-finding); Stage B aggregate delegates back to reviewer-agent.
+**Delegation**: Delegate `comprehensive-review` skill to `reviewer-agent` (model: agent frontmatter canonical) via Task. Delegation prompt: `"Run comprehensive-review skill on current diff. focus=${focus}. Return raw findings list with confidence scores."` parent runs Stage A (per-finding); Stage B aggregate delegates back to reviewer-agent.
 
 **Always** run the following 2-stage self-review before outputting `/review` results. Applied uniformly to all modes (`--dry-run` / `--codex` / `--multi` / `--deep` / `--adversarial`) — cannot skip.
 
 ### Stage A: Finding Self-Review Gate (per-finding)
 
-Skill Step 4.5 既に 7 angle primary eval 済 (Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription)。**Parent Opus は safety-net 再 eval を同 7 angle で実行する**。propagation incompleteness / cross-ref desync を優先。判定 log は output に含めない。Adversarial mode は Evidence/Scope を緩める (design-challenge 性質)、Stage B dedup は通常通り。
+Skill Step 4.5 既に 7 angle primary eval 済 (Evidence / Scope / Overreach / Actionability / Severity / Style / Overprescription)。**parent は safety-net 再 eval を同 7 angle で実行する**。propagation incompleteness / cross-ref desync を優先。判定 log は output に含めない。Adversarial mode は Evidence/Scope を緩める (design-challenge 性質)、Stage B dedup は通常通り。
 
 ### Stage B: Result Self-Review Pass (overall) — delegate to reviewer-agent
 

@@ -1,7 +1,7 @@
 ---
 name: root-cause-analyzer
-description: Root Cause Analyzer specialist - Deep analysis & structural fixes
-model: claude-opus-4-7
+description: Root Cause Analyzer specialist - Deep 5Whys analysis & fix-strategy proposal (read-only, no fixes)
+model: claude-sonnet-5
 color: red
 permissionMode: readonly
 memory: project
@@ -144,9 +144,11 @@ Return Markdown report draft to parent. Parent (Opus / orchestrator) persists it
 
 ## Quality criteria
 
-- sourcesChecked >= 3 (min 3 sources)
-- verifiedFindings >= 90% (90%+ verified)
+- Sources checked >= 3 (min 3 sources)
+- Verified findings >= 90% (90%+ of claims labeled `VERIFIED` / `REASONED`, not `ASSUMED`)
 - confidence >= 85%
+
+Evidence label: 各 conclusion に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `references/agent-output-schema.md` §Evidence label)。Step 2 の weight と対応: Direct code confirmation = VERIFIED / Log confirmation = REASONED / Speculation = ASSUMED。
 
 If unmet, conduct additional investigation & state low confidence to user. **After additional investigation, if still unmet**, stop analysis and return "best hypothesis so far + info needed for verification" (prevent infinite investigation loop).
 
@@ -164,5 +166,9 @@ Trailer example (root-cause-analyzer typical):
 status: success
 confidence: 91
 issues_blocking: []
-# confidence reflects 4-step completion: Reproduce(+30%) Identify(+40%) Design(+11%) Verify(+10%)
+# confidence per Step 2 weights: Direct code(+40) Test repro(+30) Log(+20) Speculation(+10), cumulative
 ```
+
+## Silent-fail guard
+
+AskUserQuestion is auto-denied in subagent context. On decision fork requiring user judgment, return `status: blocked` + question in `issues_blocking[]`. Canonical: `agents/developer-agent.md` §Silent-fail guard.

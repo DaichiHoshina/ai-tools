@@ -20,10 +20,16 @@ Default: **Fable 5** (`claude-fable-5`、settings.json.template `model` key cano
 
 Specified in each agent's frontmatter.
 
-**Policy**: subagents split into judgment=Opus 4.7 / execution=Sonnet 5 (judgment-Opus is forced to 4.7 since 2026-06-16 due to Opus 4.8 regression — see [[opus-4-8-regression-2026-06]]。Sonnet 5 切替は 2026-07-10 judge-panel 34 対 27 で採用)。
+**Policy** (2026-07-11〜): 初手の戦略判断 = Fable 5 / 他 subagent = Sonnet 5。
 
-- **Opus 4.7 (judgment + impl subagents)**: po-agent (strategy / design decisions), manager-agent (task decomp / parallelism calculation), root-cause-analyzer (complex bug analysis / 5 Why), developer-agent (impl / refactor)
-- **Sonnet 5 (execution subagents)**: explore-agent (read-only exploration), verify-app (build / test execution), reviewer-agent (12-perspective review), design-review-agent (live UI/UX review)
+- **Fable 5 (strategy)**: po-agent (strategy / design decisions — session の初手判断のみ最上位 tier)
+- **Sonnet 5 (judgment + impl + execution)**: manager-agent (task decomp / parallelism calculation), root-cause-analyzer (complex bug analysis / 5 Why), developer-agent (impl / refactor), explore-agent (read-only exploration), verify-app (build / test execution), reviewer-agent (12-perspective review), design-review-agent (live UI/UX review)
+
+決定履歴:
+
+- 2026-06-16: judgment 系を Opus 4.7 に pin (Opus 4.8 regression 回避 — see [[opus-4-8-regression-2026-06]])
+- 2026-07-10: 実行系を Sonnet 5 に切替 (judge-panel 34 対 27 で採用)
+- 2026-07-11: Opus 4.7 pin 解除。po-agent = Fable 5、判断系他 3 agent (manager / developer / RCA) = Sonnet 5 (user 決定: 初手判断のみ Fable、他は Sonnet 5 相当が適切)
 
 ## Effort levels
 

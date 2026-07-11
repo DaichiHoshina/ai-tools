@@ -61,7 +61,7 @@ source: https://code.claude.com/docs/en/hooks (確認日: 2026-06-19)
 
 ### 案 A: parent inline 受取 gate (採用)
 
-Task() の返り値を parent 側で受け取った時点で trailer の `status` field (取りうる値: `success` / `partial` / `failure` / `dep_unresolved`) を確認する。subagent-stop.sh は触らず、各 agent md の **Output schema** で trailer 必須化 + callsite の commands/agents md で gate 化する。
+Task() の返り値を parent 側で受け取った時点で trailer の `status` field (取りうる値: `success` / `partial` / `failure` / `dep_unresolved` / `blocked`) を確認する。subagent-stop.sh は触らず、各 agent md の **Output schema** で trailer 必須化 + callsite の commands/agents md で gate 化する。
 
 → Phase 1 (agent-output-schema.md canonical 化) + Phase 2 (callsite gate 記載) で対応
 

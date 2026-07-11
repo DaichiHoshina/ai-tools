@@ -39,7 +39,7 @@ Evaluate all 4 before starting. Any `✗` → abort with reason.
 
 1. **Parse stop-condition** — extract test/build/lint command from natural language, or use `--check <cmd>` directly.
 
-2. **Maker iteration** — `Task(developer-agent)` executes one implementation pass (Sonnet). Scoped to `task.files`; no scope creep.
+2. **Maker iteration** — `Task(developer-agent)` executes one implementation pass (model: agent frontmatter canonical). Scoped to `task.files`; no scope creep.
 
 3. **Checker iteration** — Separate `Task` runs the **objective gate via Bash** (exit code is the sole verdict). Default checker: `reviewer-agent`. Override with `--checker silent-failure-hunter` or any registered agent. **Checker must not see maker's reasoning** (prevents self-preferential bias). **Checker must run on a different model than maker** (`--checker-model`; maker=opus → checker=sonnet, maker=sonnet → checker=haiku) — shared-model bias is the weak form of self-preference.
 

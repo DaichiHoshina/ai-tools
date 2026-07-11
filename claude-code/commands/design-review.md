@@ -16,7 +16,7 @@ description: Live UI/UX design review via Playwright (Stripe/Airbnb/Linear stand
 
 ## Delegation
 
-Delegate to `design-review-agent` (Sonnet). Parent Opus collects git diff and surfaces final report only.
+Delegate to `design-review-agent` (model: agent frontmatter canonical). parent collects git diff and surfaces final report only.
 
 ```
 Agent(subagent_type=design-review-agent, prompt=<context below>)
@@ -93,7 +93,7 @@ Confirm preview URL (dev server) with user. If not running, start with `npm run 
 Read `design-review-agent` output trailer and apply:
 
 - `issues_blocking != []` → stop; surface `issues_blocking` content to user and escalate
-- `status: failure` or `dep_unresolved` → stop + escalate (do not proceed)
+- `status: failure` / `dep_unresolved` / `blocked` → stop + escalate (do not proceed)
 - `issues_blocking == []` and `status: success` → proceed to next step
 
 Trailer field meanings: `references/agent-output-schema.md`.

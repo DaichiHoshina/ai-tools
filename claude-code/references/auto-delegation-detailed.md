@@ -6,7 +6,7 @@ Detail for CLAUDE.md `## Auto-Delegation`. CLAUDE.md keeps default declaration +
 
 ## Decision principle (top priority)
 
-Delegate on uncertainty. Under-delegation risk > over-delegation cost. Opus parent handles orchestration / judgment only; all actual work (write / refactor / commit) goes to Sonnet. "If told to do it, Sonnet does it" principle (per user direction 2026-05-22). Verification: parent inline default (build / typecheck required for compiled language projects goes to subagent; details: `references/developer-agent-delegation-prompt.md`).
+Delegate on uncertainty. Under-delegation risk > over-delegation cost. Parent handles orchestration / judgment only; all actual work (write / refactor / commit) goes to subagents (委譲先 model は各 agent frontmatter canonical、`references/model-selection.md` 参照). "If told to do it, the subagent does it" principle (per user direction 2026-05-22). Verification: parent inline default (build / typecheck required for compiled language projects goes to subagent; details: `references/developer-agent-delegation-prompt.md`).
 
 ## Time-first (top priority)
 
@@ -66,12 +66,13 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
 | design decision / large plan / multi-phase | `po-agent` auto (or `/plan`) |
 | multi-stage task (investigate→design→impl→verify) | `/flow` hierarchy (PO→Manager→Dev→Reviewer) |
 | 10+ file bulk processing | `claude -p` fan-out (`references/fanout-recipes.md`) |
-| **bulk / exhaustive / large-scale readonly** | `explore-agent` (read-only) or `developer-agent` (edit) — mandatory Sonnet delegate, parent Opus sample reduction prohibited |
+| **bulk / exhaustive / large-scale readonly** | `explore-agent` (read-only) or `developer-agent` (edit) — mandatory Sonnet delegate, parent sample reduction prohibited |
 
 ## Model default 切替経緯 (2026-06-29)
 
 - 切替前: Opus 4.7 default
 - 切替後: Sonnet 4.6 default
+- 2026-07〜: session default = Fable 5 (`references/model-selection.md` canonical)。委譲先 model は各 agent frontmatter canonical
 - 目的: cost 削減 (Opus cache_read $1.50/M → Sonnet $0.30/M、1/5)
 - Opus 4.7 を使うべき task:
   - deep design (architecture 判断 / trade-off 整理)

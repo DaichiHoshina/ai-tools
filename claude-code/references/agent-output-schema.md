@@ -9,7 +9,7 @@ Agent (Manager / Developer / Reviewer 等) は、出力 Markdown の末尾に `-
 Parent はこの trailer を parse して `status` を判定し、次 gate を制御する。
 Trailer が欠落した場合は `status: failure` と同等に扱う (`hook-payload-map.md` §Subagent failure 検知 設計方針 参照)。
 
-適用範囲: `agent-team-contract.md` §3.1 で定義する全 agent output (Developer / Manager / Reviewer 等)。
+適用範囲: `agent-team-contract.md` §5 で定義する全 agent output (Developer / Manager / Reviewer 等)。
 
 ## Trailer format
 
@@ -30,7 +30,7 @@ issues_blocking: [<string>, ...]
 
 ## Field spec
 
-**status** — `agent-team-contract.md` §3.1 と完全一致の enum (この順序で固定):
+**status** — `agent-team-contract.md` §5 と完全一致の enum (この順序で固定):
 
 | 値 | 意味 |
 |----|------|
@@ -38,6 +38,7 @@ issues_blocking: [<string>, ...]
 | `partial` | 一部完了。`issues_blocking` に blocker を列挙済み |
 | `failure` | タスク失敗。retry 2 回消費 + root cause 特定済み |
 | `dep_unresolved` | 外部依存 (他 Dev 成果物 / 環境) が未解決で続行不能 |
+| `blocked` | user 判断が必要な decision fork で停止 (subagent silent-fail guard 発火)。parent は user に escalate する |
 
 `partial` は free pass ではない。具体的 blocker 行が `issues_blocking` に必須。blocker なしの `partial` は parent が `failure` 扱いで reject する。
 
@@ -75,7 +76,7 @@ claims:
 
 ```
 ---
-status: success | partial | failure | dep_unresolved
+status: success | partial | failure | dep_unresolved | blocked
 confidence: 0-100
 issues_blocking: []
 ---
@@ -100,7 +101,11 @@ issues_blocking: []
 
 → `status` field がないため parent は `failure` と判定する。`---` 区切りも欠落している点に注意。
 
+## Inlining policy
+
+各 agent file は trailer example (5 行) を inline 必須とする。agent が references/ を読めない context で spawn されても trailer format に従えるようにするため。semantics / enum / evidence label の定義は本 file が canonical で、inline example と本 file の enum が食い違った場合は本 file が勝つ。
+
 ## Cross-references
 
-- `agent-team-contract.md` §3.1 — status enum 定義 (canonical source)
+- `agent-team-contract.md` §5 — status enum 定義 (canonical source)
 - `hook-payload-map.md` §Subagent failure 検知 設計方針 — trailer 欠落時の failure 判定方針

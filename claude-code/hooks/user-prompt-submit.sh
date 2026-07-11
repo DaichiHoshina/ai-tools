@@ -479,7 +479,7 @@ _inject_delegation_checklist_if_trigger() {
   printf -v _NOW '%(%s)T' -1
   printf '%s\n' "${_NOW}" > "${_FLAG}" 2>/dev/null || true
 
-  printf '%s\n' "[delegation-checklist] developer-agent 委譲意図検出。発火前に §0 checklist 6 項目を満たすこと: (1) target file:line 特定済 (2) verify cmd bash literal 確定 (3) DoD 1 行化 (4) 単 domain (5) touchable_files: YAML block を delegation prompt §1 に literal 記載 (6) blocker-on-stop 方針記載。touchable_files 欠落で発火 = subagent 側 partial 停止。Return 時は §0.5 B fact-check (数値 formula 確認 / 測定値 1 sample 再現 / file 変更 git diff --stat) を最低 1 つ実行。source: references/developer-agent-delegation-prompt.md §0, §0.5, §1"
+  printf '%s\n' "[delegation-checklist] developer-agent 委譲意図検出。発火前に §0 checklist 7 項目を満たすこと: (1) target file:line 特定済 (2) verify cmd bash literal 確定 (3) DoD 1 行化 (4) 単 domain (5) touchable_files: YAML block を delegation prompt §1 に literal 記載 (6) blocker-on-stop 方針記載 (7) Self-Review Gate 明示。touchable_files 欠落で発火 = subagent 側 partial 停止。Return 時は §0.5 B fact-check (数値 formula 確認 / 測定値 1 sample 再現 / file 変更 git diff --stat) を最低 1 つ実行。source: references/developer-agent-delegation-prompt.md §0, §0.5, §1"
   return 0
 }
 

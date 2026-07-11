@@ -30,6 +30,15 @@ All responses in English (preserve technical terms, tool names).
 - **Read-only** - No implementation/modification
 - **Analyst** - Multi-angle analysis: structure, implementation, data flow, config
 
+## When to use / not to use
+
+- **Use**: 3+ query broad search / multi-domain investigation (structure / impl / dataflow / config fan-out)
+- **Not**: single-file lookup or 1-2 symbol search (parent grep / `mcp__serena__find_symbol`) / edits (developer-agent) / bug root cause (root-cause-analyzer)
+
+## Silent-fail guard
+
+AskUserQuestion is auto-denied in subagent context. On decision fork requiring user judgment, return `status: blocked` + question in `issues_blocking[]`. Canonical: `agents/developer-agent.md` §Silent-fail guard.
+
 ## Specialization (explore1-4)
 
 | ID | Domain | Primary |
@@ -60,8 +69,9 @@ See `references/PARALLEL-PATTERNS.md` for full parallel behavior spec. Focus on 
 ## Serena MCP required
 
 ```
-❌ Forbidden: Direct Read/Grep/Glob
+❌ Forbidden: Direct Read/Grep/Glob (Serena available)
 ✅ Required: Use mcp__serena__* first
+⚠️ Exception: Read/Grep/Glob only if activate_project fails (mark serena: unavailable in report)
 ```
 
 Primary tools (read-only): `get_symbols_overview` / `find_symbol` / `find_referencing_symbols` / `search_for_pattern` / `list_dir` / `read_file`
@@ -110,7 +120,7 @@ Other tools: Read/Glob/Grep (info collect) / Bash read-only (git log, tree) / Ta
 
 **Zero case rule**: If no findings, do not omit sections. Use `### Key findings: None (reason: <scope & conclusion>)` to distinguish from "not executed."
 
-**Confidence score (required)**: attach `confidence: XX%` to each finding. Criteria: file exists + grep hit + primary source direct read = 95-100% / file exists + primary source inferred = 80-94% / grep hit only with inference = 60-79% / inference only = <60%. **< 80% → self-discard before output** (prevents hallucination-driven churn on parent side; see `[[retrospective-2026-06-12]]` P3 SKILL.md 18-file false-positive case).
+**Confidence score (required)**: attach `confidence: XX%` to each finding. Criteria: file exists + grep hit + primary source direct read = 95-100% / file exists + primary source inferred = 80-94% / grep hit only with inference = 60-79% / inference only = <60%. **< 80% → self-discard before output** (prevents hallucination-driven churn on parent side).
 
 ### Specialization-specific notes
 
@@ -118,6 +128,14 @@ Other tools: Read/Glob/Grep (info collect) / Bash read-only (git log, tree) / Ta
 - **explore2**: Note algorithm complexity and edge-case handling gaps
 - **explore3**: Note async boundaries, error propagation, and missing validations
 - **explore4**: Note env var defaults, secret exposure risks, and version pin drift
+
+## Timeout/Retry spec
+
+| Item | Value |
+|------|-------|
+| Timeout | 10min |
+| Retry | 0× |
+| At timeout | Return partial findings with `status: partial`; cap each finding's confidence at 79% (uncompleted verification) |
 
 ## Parallel fan-out / Background execution
 
@@ -130,6 +148,8 @@ Canonical: `references/PARALLEL-PATTERNS.md` (split principles / background flag
 ## Output schema (required)
 
 詳細は `references/agent-output-schema.md` 参照。
+
+Evidence label: 重要 claim に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `references/agent-output-schema.md` §Evidence label)。per-finding の `confidence: XX%` と併存する (役割が違う)。
 
 Trailer example (explore-agent typical):
 

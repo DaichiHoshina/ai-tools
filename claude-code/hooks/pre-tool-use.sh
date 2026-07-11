@@ -653,7 +653,7 @@ PYEOF
     # hook が "Task" のみ listen していた間 bundle-violation 検出が全 session で空振りしていた
     GUARD_CLASS="Safe"
     # エージェント起動はSafe（実際の操作は各エージェント内で判定）
-    # ただし general-purpose は CLAUDE.md「原則使わない」最大コスト源 → Boundary 警告
+    # ただし general-purpose は CLAUDE.md「絶対禁止」最大コスト源 → hard block (GP_BLOCK_OFF=1 で warn に緩和)
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
 
     # 並列判定 self-review (全 Task 発火時に inject)

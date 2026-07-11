@@ -230,7 +230,7 @@ _check_sequential_agent_fire() {
 
 # ====================================
 # developer-agent 限定 bundle 違反検出 (warn-only)
-# /flow step 7 / `flow.md` L110: Task(developer-agent)×N は 1 message bundle 必須
+# /flow step 7 (commands/flow.md Parallel fan-out): Task(developer-agent)×N は 1 message bundle 必須
 # 連続発火 (>_TH_PARALLEL_WINDOW_NS 間隔) ≥2 回 = bundle 違反 = parentUuid serial chain
 # (work-context-20260618-flow-self-review-3gate.md next-action #1)
 #
@@ -365,7 +365,7 @@ _check_developer_agent_bundle_violation() {
       "$_TS_LABEL" "$session_id" "$_CUR" "$(( _ELAPSED / 1000000 ))" \
       >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
 
-    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >30s = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md L110 / N declaration : tool_use firing message = 1:1 strict)。依存 chain の逐次発火なら prompt に serial_reason: を明記する (counter 対象外)。${_TH_BUNDLE_HARD_BLOCK_SEQ} 回目で hard block する"
+    local _SUGGEST="[bundle-violation-warn] Task(developer-agent) を ${_CUR} 回逐次発火 (elapsed >30s = parentUuid serial chain)。/flow step 7 は 1 message bundle 必須 (commands/flow.md step 7 Parallel fan-out / N declaration : tool_use firing message = 1:1 strict)。依存 chain の逐次発火なら prompt に serial_reason: を明記する (counter 対象外)。${_TH_BUNDLE_HARD_BLOCK_SEQ} 回目で hard block する"
     if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
       ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SUGGEST}"
     else

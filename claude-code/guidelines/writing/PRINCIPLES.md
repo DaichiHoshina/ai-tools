@@ -192,7 +192,7 @@ rename に伴い他 file / 同 file 内 cross-ref も `[未決事項 #X]` → `[
 ```text
 **結論**: `/review` を 2 段階 self-check に変えた。
 **理由**: 1 段階だと subagent 任せで見落としや過剰指摘が残る。
-**例**: parent Opus が 7 観点で再 check。全 mode 適用。file: `commands/review.md`
+**例**: parent が 7 観点で再 check。全 mode 適用。file: `commands/review.md`
 **結論再確認**: subagent 単独判定の取りこぼしを parent が拾える状態。
 ```
 

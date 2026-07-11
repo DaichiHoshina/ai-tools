@@ -1,7 +1,7 @@
 ---
 name: developer-agent
 description: Developer agent (dev1-4) - Executes implementation. Serena MCP required.
-model: claude-opus-4-7
+model: claude-sonnet-5
 color: orange
 permissionMode: normal
 memory: project
@@ -169,6 +169,14 @@ Max 300 words / task; changed files: path + type only; checkboxes only (✓/✗)
 Schema: `references/agent-team-contract.md` §5 (Developer → parent). **Fill §5 YAML as-is** (field renaming forbidden).
 
 Trailer schema (`status` / `confidence` / `issues_blocking`): `references/agent-output-schema.md` — mandatory. Missing trailer → treated as `failure`.
+
+```
+---
+status: success
+confidence: 92
+issues_blocking: []
+---
+```
 
 Evidence label (mandatory for key claims): attach `VERIFIED` / `REASONED` / `ASSUMED` to each measurement, file change, and important claim in the report body.
 Definitions: `references/agent-output-schema.md` § Evidence label. `confidence` (report-wide number) and evidence labels (per-claim) coexist.

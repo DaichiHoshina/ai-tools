@@ -8,16 +8,21 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 
 | Agent | Model | Role | Primary use |
 |-------|-------|------|-------------|
-| **reviewer-agent** | sonnet 4.6 | Review owner | Code quality, security, test review |
-| **root-cause-analyzer** | opus 4.7 | RCA specialist | 5Whys analysis, structural fixes |
-| **po-agent** | opus 4.7 | Strategy decider | Product strategy, worktree mgmt, decision return |
-| **manager-agent** | opus 4.7 | Task decomposition & allocation | Large task allocation, integration verify |
-| **developer-agent** | opus 4.7 | Implementer | Code impl, fix, add |
-| **explore-agent** | sonnet 4.6 | Explorer/analyzer | Codebase investigation, parallel search |
-| **verify-app** | sonnet 4.6 | Verifier | Build, test, lint integration check |
-| **design-review-agent** | sonnet 4.6 | UI/UX reviewer | Live design review via Playwright |
+| **reviewer-agent** | sonnet 5 | Review owner | Code quality, security, test review |
+| **root-cause-analyzer** | sonnet 5 | RCA specialist | 5Whys analysis, fix-strategy proposal |
+| **po-agent** | fable 5 | Strategy decider | Product strategy, worktree mgmt, decision return |
+| **manager-agent** | sonnet 5 | Task decomposition & allocation | Large task allocation, integration verify |
+| **developer-agent** | sonnet 5 | Implementer | Code impl, fix, add |
+| **explore-agent** | sonnet 5 | Explorer/analyzer | Codebase investigation, parallel search |
+| **verify-app** | sonnet 5 | Verifier | Build, test, lint integration check |
+| **design-review-agent** | sonnet 5 | UI/UX reviewer | Live design review via Playwright |
 
-> Model canonical は各 agent frontmatter の `model:`。Judgment role (PO / Manager / RCA) は opus 4.7 強制 (`references/model-selection.md` 2026-06-16〜、opus 4.8 regression 回避)。
+> Model canonical は各 agent frontmatter の `model:`。この表は frontmatter 導出 — 更新時は `grep -H "^model:" agents/*.md` で一致を検証する。決定 log: `references/model-selection.md` (2026-07-11: po = Fable 5 / 他は Sonnet 5、Opus 4.7 pin 解除)。
+
+## External agents (agents/ に定義なし)
+
+- **claude-code-guide**: plugin 由来。Claude Code CLI / SDK / API の仕様質問に使う (CLAUDE.global.md Discovery Routing 参照)
+- **silent-failure-hunter** 等: `pr-review-toolkit` plugin 由来 (6 agents)。`/review --deep` / `/goal --checker` で使う (`references/review-modes-advanced.md` 参照)。plugin 未導入環境では unknown subagent_type になる
 
 ## Agent startup cost (highlights)
 
@@ -31,10 +36,10 @@ Full table & recalc method: [`references/performance-insights.md`](../references
 
 | Command | Agent launched | Flow |
 |---------|----------------|------|
-| `/flow` | po-agent (skip light task, else launch) | Parent: PO → Manager → Dev×N sequential (Team default) |
+| `/flow` | po-agent (required; cannot skip) | Parent: PO → Manager → Dev×N sequential (Team default) |
 | `/dev` | developer-agent (default) / None (`--inline`) | Default delegation. `--inline` = direct exec |
 | `/review` | reviewer-agent | Auto review |
-| `/plan` | po-agent + manager-agent | Strategy + task split |
+| `/plan` | po-agent | Strategy only (Manager は `/flow` 側) |
 | (natural lang / Claude judgment) | explore-agent (parallel) | Concurrent multi-perspective search. Trigger: 3+ query broad search, ambiguous large investigation |
 
 ---
@@ -103,3 +108,4 @@ Per-agent details: see corresponding `.md` files
 - [manager-agent.md](./manager-agent.md)
 - [po-agent.md](./po-agent.md)
 - [verify-app.md](./verify-app.md)
+- [design-review-agent.md](./design-review-agent.md)

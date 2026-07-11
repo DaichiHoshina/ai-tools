@@ -50,7 +50,7 @@ Details: `skills/comprehensive-review/references/` 配下 (`review-criteria.md` 
 
 ## Execution Flow
 
-> Steps 1-4: `reviewer-agent` (Sonnet). Step 4.5 output → parent Opus for Stage B aggregation.
+> Steps 1-4: `reviewer-agent` (model: agent frontmatter canonical). Step 4.5 output → parent for Stage B aggregation.
 
 **Step -1 (Noise)**: diff/code/docs only. Unverified → "hypothesis:". No nitpicks, no unsolicited TODO creation.
 
