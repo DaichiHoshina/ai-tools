@@ -167,6 +167,14 @@ case "$TOOL_NAME" in
           fi
           ;;
       esac
+
+      # settings SoT (templates/settings.json.template) 編集後の sync 忘れ検知。
+      # template は sync.sh to-local を実行しないと ~/.claude/settings.json に
+      # 反映されず、model 等の変更が静かに無視される (再発防止)。
+      REAL_PATH=$(realpath "$FILE_PATH" 2>/dev/null || echo "")
+      if [[ "$REAL_PATH" =~ /ai-tools/claude-code/templates/settings\.json\.template$ ]]; then
+        MESSAGE=$(append_message "$MESSAGE" "⚠ settings template を編集した。反映には 'cd ~/ai-tools/claude-code && bash sync.sh to-local -y' が必須 (未実行だと ~/.claude/settings.json に反映されない)")
+      fi
     fi
     ;;
 
