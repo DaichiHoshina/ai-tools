@@ -14,62 +14,6 @@ _PUBLIC_REPO_GUARD_LOADED=1
 # ====================================
 _social_hit_rule_file="$HOME/.claude/rules/public-repo-private-data-block.md"
 
-# ai-tools public repo への social-hit term 書き込みを block する
-# 引数: file_path, content
-_check_social_hit() {
-  local file_path="$1"
-  local content="$2"
-  [[ -z "$file_path" ]] && return 0
-  [[ -z "$content" ]] && return 0
-
-  # rule file 不在時は silent pass (未 sync 環境への配慮)
-  [[ -f "$_social_hit_rule_file" ]] || return 0
-
-  # ai-tools/ 配下の path のみ判定対象 (symlink と ghq 実 path の両方を OR 判定)
-  if ! _is_aitools_path "$file_path"; then
-    return 0
-  fi
-
-  # 自己除外 (allowlist): rule 説明文として term を保持する file は判定対象外
-  local rel_path
-  rel_path=$(_aitools_relpath "$file_path")
-  case "$rel_path" in
-    claude-code/rules/public-repo-private-data-block.md|\
-    claude-code/CLAUDE.global.md|\
-    claude-code/hooks/pre-tool-use.sh|\
-    claude-code/hooks/lib/public-repo-guard.sh|\
-    claude-code/hooks/lib/agent-guard.sh|\
-    claude-code/hooks/lib/write-checkers.sh|\
-    claude-code/tests/unit/hooks/pre-tool-use.bats)
-      return 0
-      ;;
-  esac
-
-  # social-hit term 抽出 → 1 パス grep で hit 語列挙 (N×fork → 1 fork、jp-quality-check.sh:182 と同手法)
-  local found=() _terms=() word
-  while IFS= read -r word; do
-    [[ -z "$word" ]] && continue
-    _terms+=("$word")
-  done < <(_extract_term_list "$_social_hit_rule_file" "social-hit (block)")
-  if [[ ${#_terms[@]} -gt 0 ]]; then
-    local _found_raw
-    _found_raw=$(printf '%s' "$content" | grep -oFf <(printf '%s\n' "${_terms[@]}") | sort -u || true)
-    [[ -n "$_found_raw" ]] && mapfile -t found < <(printf '%s\n' "$_found_raw")
-  fi
-
-  if [[ ${#found[@]} -gt 0 ]]; then
-    local word_list
-    word_list=$(printf '%s' "${found[*]}" | tr ' ' ',')
-    GUARD_CLASS="Forbidden"
-    MESSAGE="${ICON_CRITICAL} social-hit block: [${word_list}] file=${file_path}"
-    ADDITIONAL_CONTEXT="ai-tools repo は public。社内 product 名 / 識別子を public repo に書き込めません。
-対処: file_path を ~/.claude/references-private/ に切り替えるか、term を削除 / 匿名化して再実行してください。
-ログ: ~/.claude/logs/social-hit-block.log"
-    printf '[social-hit-block] hit_term=%s file=%s\n' "$word_list" "$file_path" >&2
-    _append_block_log "${HOME}/.claude/logs/social-hit-block.log" "$TOOL_NAME" "$word_list" "$file_path"
-  fi
-}
-
 # Bash 外向き text (commit message / pr body 等) を social-hit term で判定する
 # 引数: label (人間可読: "commit message" / "gh pr create" 等), text
 # cwd が ai-tools 配下でない場合は skip する (public repo 保護は ai-tools cwd 限定、
@@ -205,8 +149,8 @@ _warn_private_terms_in_staged_diff() {
   done < <(_load_private_name_terms)
   [[ ${#terms[@]} -eq 0 ]] && return 0
 
-  # 追加行のみ抽出。rule 説明文として term を保持する file は _check_social_hit の
-  # 自己除外 list と同じ対象を pathspec で除外する。128KB 上限で巨大 diff の性能を担保
+  # 追加行のみ抽出。rule 説明文として term を保持する file は下記 pathspec で除外する。
+  # 128KB 上限で巨大 diff の性能を担保
   local added
   added=$(git -C "$cwd" diff --cached --unified=0 --no-color -- \
       ':(top,exclude)claude-code/rules/public-repo-private-data-block.md' \

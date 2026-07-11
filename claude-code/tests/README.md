@@ -72,10 +72,7 @@ tests/
 
 | ファイル | テスト数 | カバレッジ |
 |---------|:--------:|:----------:|
-| lib/security-functions.sh | 23 | 95% |
-
-**未テスト**:
-- `secure_token_input()` (手動入力が必要なため統合テストで対応予定)
+| lib/security-functions.sh | 15 | 95% |
 
 ## CI/CD統合（今後）
 

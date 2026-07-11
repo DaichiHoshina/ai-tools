@@ -137,12 +137,6 @@ _lookup_suggestion() {
   return 0
 }
 
-# AI定型語を NG-DICTIONARY.md から抽出 (後方互換 wrapper)
-_extract_ai_jargon() {
-  local file="$1"
-  _extract_term_list "$file" "AI定型語"
-}
-
 # 必須 key sanity check: hook が exact match 参照する key が抽出 0 件なら fail-loud
 # NG-DICTIONARY.md key rename / 記法破壊を早期検出して silent pass を防ぐ
 # session+mtime 単位 flag file cache: 同セッション内の 7 grep を skip、dict 編集時は mtime 変化で再検査
@@ -234,11 +228,6 @@ _check_term_list() {
   return 0
 }
 
-# 後方互換: AI定型語チェック
-_check_ai_jargon() {
-  local text="$1"
-  _check_term_list "$text" "AI定型語"
-}
 
 # 構造的可読性の機械検出 (連続漢字≥5 / 読点≥4)。warn-only、block しない。
 # PRINCIPLES.md `## 文単位の品質規約` (連続漢字 4 文字上限 / 読点 3 個まで) を機械検出に接続。

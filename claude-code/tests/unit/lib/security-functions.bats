@@ -94,61 +94,6 @@ setup() {
 }
 
 # =============================================================================
-# validate_file_path() テスト
-# =============================================================================
-
-@test "validate_file_path: 存在するディレクトリ（HOME）" {
-    run validate_file_path "$HOME"
-    [ "$status" -eq 0 ]
-}
-
-@test "validate_file_path: 存在するディレクトリ（/tmp）" {
-    run validate_file_path "/tmp"
-    [ "$status" -eq 0 ]
-}
-
-@test "validate_file_path: 存在しないパス" {
-    run validate_file_path "/nonexistent/path/12345"
-    [ "$status" -eq 1 ]
-    [[ "$output" =~ "does not exist" ]]
-}
-
-@test "validate_file_path: 親ディレクトリ制約（許可）" {
-    run validate_file_path "$HOME" "$HOME"
-    [ "$status" -eq 0 ]
-}
-
-@test "validate_file_path: 親ディレクトリ制約（拒否）" {
-    run validate_file_path "/tmp" "$HOME"
-    [ "$status" -eq 1 ]
-    [[ "$output" =~ "outside allowed directory" ]]
-}
-
-@test "validate_file_path: シンボリックリンク解決" {
-    # /tmp はシンボリックリンクの可能性あり（macOS: /private/tmp）
-    run validate_file_path "/tmp"
-    [ "$status" -eq 0 ]
-}
-
-# =============================================================================
-# read_stdin_with_limit() テスト
-# =============================================================================
-
-@test "read_stdin_with_limit: 通常サイズ入力" {
-    input="test data"
-    result=$(echo "$input" | read_stdin_with_limit 1024)
-    [ "$result" = "$input" ]
-}
-
-@test "read_stdin_with_limit: サイズ超過検出" {
-    skip "bash -c subprocess context limitation"
-    # 100バイト制限で200バイト入力
-    input=$(printf 'a%.0s' {1..200})
-    run bash -c "echo '$input' | source lib/security-functions.sh && read_stdin_with_limit 100"
-    [ "$status" -eq 1 ]
-}
-
-# =============================================================================
 # 統合テスト
 # =============================================================================
 

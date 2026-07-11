@@ -76,10 +76,3 @@ _touchable_check() {
   done < "$_f"
   return 1
 }
-
-# remove state file (call from subagent-stop or session-end)
-_touchable_clear() {
-  local _sid="$1"
-  [[ -z "$_sid" || "$_sid" == "null" ]] && return 0
-  rm -f "${_TOUCHABLE_STATE_DIR}/touchable-${_sid}.txt" 2>/dev/null
-}
