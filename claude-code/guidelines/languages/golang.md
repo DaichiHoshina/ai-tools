@@ -134,12 +134,7 @@ Check `go.mod` `go` directive for target version before flagging.
 
 ### Table-Driven / Flaky Test Prevention
 
-- Use **map** not slice (forces subtest names, randomizes order for isolation)
-- Assertions: `cmp.Diff(expected, actual)`
-- Names: underscore-separated (`TestXxx_returns_error`)
-- Auto-generated IDs: check existence only, not exact value
-- Parallel tests: do not mutate shared data (deep copy before operation)
-- `parallel` tag: `t.Parallel()` REQUIRED on both top-level and subtests
+Table-driven / flaky 対策の詳細: `go-test-stability.md` 参照。
 
 ## Database
 
