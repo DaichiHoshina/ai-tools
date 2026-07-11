@@ -24,8 +24,9 @@ teardown() {
     rm -rf "${HOME}"
   fi
   export HOME="${ORIG_HOME}"
-  # throttle flag cleanup
-  rm -f /tmp/claude_session_bloat_bats-test-* 2>/dev/null || true
+  # throttle flag cleanup (自 test の flag のみ。wildcard 全消しは -j 並列で他 test の flag を壊す)
+  rm -f /tmp/claude_session_bloat_bats-test-*"-n${BATS_TEST_NUMBER}-"* \
+        /tmp/claude_session_bloat_urgent_bats-test-*"-n${BATS_TEST_NUMBER}-"* 2>/dev/null || true
 }
 
 # ヘルパー: fake session jsonl を生成する
@@ -75,7 +76,7 @@ _make_session_jsonl() {
 # Case 1: elapsed < 3h かつ msg < 1000 → session-bloat warn が出ない
 # =============================================================================
 @test "session-bloat: no warn when elapsed=25min and msg=100" {
-  local session_id="bats-test-no-warn-$(date +%s)"
+  local session_id="bats-test-no-warn-n${BATS_TEST_NUMBER}-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
@@ -97,7 +98,7 @@ _make_session_jsonl() {
 # Case 2: elapsed > 3h → session-bloat warn が出る
 # =============================================================================
 @test "session-bloat: warn when elapsed > 3h" {
-  local session_id="bats-test-elapsed-$(date +%s)"
+  local session_id="bats-test-elapsed-n${BATS_TEST_NUMBER}-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
@@ -123,7 +124,7 @@ _make_session_jsonl() {
 # Case 3: throttle - 同 session 2 回目は 15min 以内なら warn 抑制
 # =============================================================================
 @test "session-bloat: throttle suppresses 2nd warn within 15min" {
-  local session_id="bats-test-throttle-$(date +%s)"
+  local session_id="bats-test-throttle-n${BATS_TEST_NUMBER}-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
   local bloat_flag="/tmp/claude_session_bloat_${session_id}_${date_today}"
@@ -150,7 +151,7 @@ _make_session_jsonl() {
 # Case 4: token >= 5M → session-bloat warn が出る (token=XM 形式)
 # =============================================================================
 @test "session-bloat: warn when token >= 5M" {
-  local session_id="bats-test-token-$(date +%s)"
+  local session_id="bats-test-token-n${BATS_TEST_NUMBER}-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
@@ -173,7 +174,7 @@ _make_session_jsonl() {
 # Case 5: token < 5M かつ elapsed < 3h かつ msg < 1000 → warn 不要
 # =============================================================================
 @test "session-bloat: no warn when token=1M elapsed=25min msg=50" {
-  local session_id="bats-test-token-nowarn-$(date +%s)"
+  local session_id="bats-test-token-nowarn-n${BATS_TEST_NUMBER}-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
@@ -194,7 +195,7 @@ _make_session_jsonl() {
 # Case 6: python3 失敗時 (PATH 隠蔽) → elapsed/msg 判定は動作する
 # =============================================================================
 @test "session-bloat: python3 failure falls back to elapsed/msg check" {
-  local session_id="bats-test-py3-fallback-$(date +%s)"
+  local session_id="bats-test-py3-fallback-n${BATS_TEST_NUMBER}-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
@@ -222,7 +223,7 @@ _make_session_jsonl() {
 # Case 7: token >= 50M → URGENT level warn が出る
 # =============================================================================
 @test "session-bloat: URGENT when token >= 50M" {
-  local session_id="bats-test-urgent-$(date +%s)"
+  local session_id="bats-test-urgent-n${BATS_TEST_NUMBER}-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
@@ -245,7 +246,7 @@ _make_session_jsonl() {
 # Case 8: idle >= 30min → idle keyword 付きで warn が出る
 # =============================================================================
 @test "session-bloat: warn when idle >= 30min" {
-  local session_id="bats-test-idle-$(date +%s)"
+  local session_id="bats-test-idle-n${BATS_TEST_NUMBER}-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
