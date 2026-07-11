@@ -10,6 +10,8 @@ set -euo pipefail
 #   - リポジトリ更新後: ./sync.sh to-local（リポジトリ → ~/.claude/）
 #   - ローカル変更後: ./sync.sh from-local（~/.claude/ → リポジトリ）
 #   - 差分確認: ./sync.sh diff
+#   - 状態確認: ./sync.sh status（version / 最終 sync / backup / 差分の一覧）
+#   - 誤同期からの復旧: ./sync.sh rollback（直近 backup を ~/.claude/ に復元）
 #
 # 使い分け:
 #   install.sh: 初回セットアップ（ディレクトリ作成・シンボリックリンク）
@@ -47,6 +49,46 @@ SYNC_ITEMS=(
     "config"
     "references"
 )
+
+# =============================================================================
+# Partial Sync Filter (--only)
+# --only=<a,b> で SYNC_ITEMS を部分集合に絞る。単一 hook / command の
+# 編集後に全体同期を待たず高速反映するための仕組み。
+# =============================================================================
+
+ONLY_ITEMS=""
+
+item_selected() {
+    local item="$1"
+    [ -z "$ONLY_ITEMS" ] && return 0
+    case ",${ONLY_ITEMS}," in
+        *",${item},"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+apply_only_filter() {
+    [ -z "$ONLY_ITEMS" ] && return 0
+    local requested_item item found
+    local requested=() filtered=()
+    IFS=',' read -ra requested <<< "$ONLY_ITEMS"
+    for requested_item in "${requested[@]}"; do
+        found=false
+        for item in "${SYNC_ITEMS[@]}"; do
+            [ "$item" = "$requested_item" ] && found=true && break
+        done
+        if [ "$found" = false ]; then
+            print_error "--only: 不明な item '$requested_item'"
+            echo "  対象一覧: ${SYNC_ITEMS[*]}" >&2
+            return 1
+        fi
+    done
+    for item in "${SYNC_ITEMS[@]}"; do
+        item_selected "$item" && filtered+=("$item")
+    done
+    SYNC_ITEMS=("${filtered[@]}")
+    print_info "--only: 同期対象を限定 (${SYNC_ITEMS[*]})"
+}
 
 # Load security library (Critical #4, #7対策)
 LIB_DIR="${SCRIPT_DIR}/lib"
@@ -121,7 +163,7 @@ check_dependencies() {
         print_error "rsync が見つかりません（from-local に必須）→ 'brew install rsync'"
         return 1
     fi
-    if [ "$mode" != "diff" ] && ! check_jq; then
+    if { [ "$mode" = "to-local" ] || [ "$mode" = "from-local" ]; } && ! check_jq; then
         print_warning "jq が見つかりません。settings.json の同期をスキップします → 'brew install jq'"
     fi
     return 0
@@ -241,6 +283,124 @@ check_repo_freshness() {
 }
 
 # =============================================================================
+# Concurrency Lock
+# 複数 terminal / hook からの sync 同時実行で wipe と copy が交錯する事故を防ぐ。
+# mkdir の atomic 性で排他し、所有 process 死亡後の stale lock は自動回収する。
+# =============================================================================
+
+SYNC_LOCK_DIR=""
+
+release_sync_lock() {
+    if [ -n "$SYNC_LOCK_DIR" ]; then
+        rm -rf "$SYNC_LOCK_DIR" 2>/dev/null || true
+        SYNC_LOCK_DIR=""
+    fi
+}
+
+acquire_sync_lock() {
+    # 再入 OK（同一 process 内の複数回呼び出しは既得 lock を維持する）
+    [ -n "$SYNC_LOCK_DIR" ] && return 0
+    local lock_dir="$CLAUDE_DIR/.sync.lock"
+    mkdir -p "$CLAUDE_DIR"
+    if ! mkdir "$lock_dir" 2>/dev/null; then
+        local owner_pid
+        owner_pid=$(cat "$lock_dir/pid" 2>/dev/null || true)
+        if [ -n "$owner_pid" ] && kill -0 "$owner_pid" 2>/dev/null; then
+            print_error "別の sync が実行中 (pid: $owner_pid)。終了を待って再実行する"
+            return 1
+        fi
+        print_warning "stale lock を回収する: $lock_dir"
+        rm -rf "$lock_dir"
+        if ! mkdir "$lock_dir" 2>/dev/null; then
+            print_error "lock を取得できない: $lock_dir"
+            return 1
+        fi
+    fi
+    echo "$$" > "$lock_dir/pid"
+    SYNC_LOCK_DIR="$lock_dir"
+    trap 'release_sync_lock' EXIT
+    return 0
+}
+
+# =============================================================================
+# Backup / Rollback
+# to-local の破壊的上書き前に ~/.claude 側の同期対象を丸ごと退避する。
+# 誤 sync（古い workspace の反映等）は ./sync.sh rollback で直近状態へ戻せる。
+# 保持は直近 BACKUP_KEEP 世代のみ（古い世代は自動削除、--no-backup で作成抑制）。
+# =============================================================================
+
+BACKUP_KEEP=3
+
+create_backup() {
+    local ts backup_dir item copied=0
+    ts=$(date +%Y%m%d-%H%M%S)
+    backup_dir="$CLAUDE_DIR/.sync-backups/$ts"
+    mkdir -p "$backup_dir"
+    for item in "${SYNC_ITEMS[@]}"; do
+        [ -e "$CLAUDE_DIR/$item" ] || continue
+        if cp -a "$CLAUDE_DIR/$item" "$backup_dir/"; then
+            copied=$((copied + 1))
+        else
+            print_warning "backup 失敗: $item"
+        fi
+    done
+    if [ "$copied" -eq 0 ]; then
+        rmdir "$backup_dir" 2>/dev/null || true
+        return 0
+    fi
+    print_info "backup 作成: $backup_dir (${copied} item)"
+    prune_backups
+}
+
+prune_backups() {
+    local root="$CLAUDE_DIR/.sync-backups"
+    [ -d "$root" ] || return 0
+    local all=() d i
+    # shellcheck disable=SC2012  # backup dir 名は自前の timestamp 形式のみ
+    while IFS= read -r d; do
+        [ -n "$d" ] && all+=("$d")
+    done < <(ls -1 "$root" 2>/dev/null | sort)
+    local excess=$(( ${#all[@]} - BACKUP_KEEP ))
+    for (( i = 0; i < excess; i++ )); do
+        rm -rf "${root:?}/${all[$i]}"
+    done
+    return 0
+}
+
+rollback_backup() {
+    local root="$CLAUDE_DIR/.sync-backups"
+    local latest
+    # shellcheck disable=SC2012
+    latest=$(ls -1 "$root" 2>/dev/null | sort | tail -1 || true)
+    if [ -z "$latest" ]; then
+        print_error "backup が存在しない: $root"
+        echo "  → backup は to-local 実行時に自動作成される" >&2
+        return 1
+    fi
+
+    acquire_sync_lock || return 1
+
+    print_header "rollback: ${latest} を ~/.claude/ に復元"
+    local entry name
+    for entry in "$root/$latest"/*; do
+        [ -e "$entry" ] || continue
+        name=$(basename "$entry")
+        rm -rf "${CLAUDE_DIR:?}/${name}"
+        if ! cp -a "$entry" "$CLAUDE_DIR/$name"; then
+            print_error "復元失敗: $name"
+            return 1
+        fi
+        print_success "$name"
+    done
+    print_success "rollback 完了（backup は保持: ${root}/${latest}）"
+}
+
+record_last_sync() {
+    # status 表示用に最終 sync の時刻と方向を残す
+    printf '%s %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$1" > "$CLAUDE_DIR/.last-sync" 2>/dev/null || true
+}
+
+# =============================================================================
 # Sync: to-local (リポジトリ → ローカル)
 # =============================================================================
 
@@ -254,6 +414,12 @@ sync_to_local() {
     # workspace が古いまま反映されると、追加されたファイルが取りこぼされる。
     if [ "${SKIP_GIT_CHECK:-false}" != "true" ]; then
         check_repo_freshness || true
+    fi
+
+    # 同時実行 guard + 誤 sync 復旧用 backup（./sync.sh rollback で戻せる）
+    acquire_sync_lock || return 1
+    if [ "${NO_BACKUP:-false}" != "true" ]; then
+        create_backup
     fi
 
     local items=("${SYNC_ITEMS[@]}")
@@ -277,18 +443,28 @@ sync_to_local() {
                     gh_bak=$(mktemp -d)
                     preserve_gh_skills "$dst" "$gh_bak"
                 fi
-                # 例外伝播の明示化（Critical #7対策）
-                if ! rm -rf "${dst:?}"; then
-                    print_error "削除失敗: $dst"
-                    [ -n "$gh_bak" ] && rm -rf "$gh_bak"
-                    [ -n "$private_bak" ] && rm -rf "$private_bak"
-                    return 1
-                fi
-                if ! cp -r "$src" "$dst"; then
-                    print_error "コピー失敗: $src -> $dst"
-                    [ -n "$gh_bak" ] && rm -rf "$gh_bak"
-                    [ -n "$private_bak" ] && rm -rf "$private_bak"
-                    return 1
+                # rsync 差分適用を優先（wipe → copy 間の中途失敗で dst が空になる窓を塞ぐ）
+                if command -v rsync &> /dev/null; then
+                    if ! rsync -a --delete "$src/" "$dst/"; then
+                        print_error "同期失敗: $src -> $dst"
+                        [ -n "$gh_bak" ] && rm -rf "$gh_bak"
+                        [ -n "$private_bak" ] && rm -rf "$private_bak"
+                        return 1
+                    fi
+                else
+                    # 例外伝播の明示化（Critical #7対策）
+                    if ! rm -rf "${dst:?}"; then
+                        print_error "削除失敗: $dst"
+                        [ -n "$gh_bak" ] && rm -rf "$gh_bak"
+                        [ -n "$private_bak" ] && rm -rf "$private_bak"
+                        return 1
+                    fi
+                    if ! cp -r "$src" "$dst"; then
+                        print_error "コピー失敗: $src -> $dst"
+                        [ -n "$gh_bak" ] && rm -rf "$gh_bak"
+                        [ -n "$private_bak" ] && rm -rf "$private_bak"
+                        return 1
+                    fi
                 fi
                 # hooksディレクトリの場合、テストファイルを除外
                 if [ "$item" = "hooks" ]; then
@@ -323,26 +499,33 @@ sync_to_local() {
         fi
     done
 
-    # settings.json hooks / skillOverrides / security-critical sections / root keys をテンプレートからマージ
-    sync_settings_hooks             || print_warning "settings.json 同期不完全 (hooks)"
-    sync_settings_skill_overrides   || print_warning "settings.json 同期不完全 (skillOverrides)"
-    sync_settings_permissions       || print_warning "settings.json 同期不完全 (permissions)"
-    sync_settings_root_keys         || print_warning "settings.json 同期不完全 (root keys)"
+    if [ -z "$ONLY_ITEMS" ]; then
+        # settings.json hooks / skillOverrides / security-critical sections / root keys をテンプレートからマージ
+        sync_settings_hooks             || print_warning "settings.json 同期不完全 (hooks)"
+        sync_settings_skill_overrides   || print_warning "settings.json 同期不完全 (skillOverrides)"
+        sync_settings_permissions       || print_warning "settings.json 同期不完全 (permissions)"
+        sync_settings_root_keys         || print_warning "settings.json 同期不完全 (root keys)"
+    fi
 
     # post-sync 整合性検証: 同期後に差分が残るのは異常（過去の直編集残骸 / コピー失敗の検出）
     # gh skill 管理スキル除外のため skills ディレクトリは個別判定する。
     verify_to_local_sync
 
-    # pre-push hook のシンボリックリンクを配置
-    setup_pre_push_hook
+    if [ -z "$ONLY_ITEMS" ]; then
+        # pre-push hook のシンボリックリンクを配置
+        setup_pre_push_hook
 
-    # repo root を記録（clone 先が機体ごとに違っても hooks が path 解決できるようにする）
-    record_repo_root
+        # repo root を記録（clone 先が機体ごとに違っても hooks が path 解決できるようにする）
+        record_repo_root
 
-    # Codex / Cursor 側も同期する。各ツール未使用 PC では dir 不在のためスキップ。
-    sync_codex
-    sync_cursor
+        # Codex / Cursor 側も同期する。各ツール未使用 PC では dir 不在のためスキップ。
+        sync_codex
+        sync_cursor
+    else
+        print_info "--only 指定のため settings / pre-push hook / Codex / Cursor 同期を skip"
+    fi
 
+    record_last_sync "to-local"
     print_success "ローカルへの同期が完了しました"
 }
 
@@ -522,9 +705,12 @@ sync_from_local() {
     # 上書き保護: SCRIPT_DIR (repo) に未コミット変更が残っている場合にブロック
     _check_overwrite_guard "$CLAUDE_DIR" "$SCRIPT_DIR" "${ALLOW_OVERWRITE:-false}" || return 1
 
+    acquire_sync_lock || return 1
+
     # 単体ファイル同期
     local files=("VERSION" "SERENA_VERSION" "CLAUDE.md")
     for file in "${files[@]}"; do
+        item_selected "$file" || continue
         if [ -f "$CLAUDE_DIR/$file" ]; then
             if ! cp "$CLAUDE_DIR/$file" "$(resolve_item_path "$SCRIPT_DIR" "$file")"; then
                 print_error "コピー失敗: $file"
@@ -538,6 +724,7 @@ sync_from_local() {
     # rsync で private-*/local-* を除外 → public repo に個人非公開設定が漏れない
     local dirs=("commands" "guidelines" "skills" "agents" "scripts" "lib" "output-styles" "hooks" "rules" "config" "references")
     for dir in "${dirs[@]}"; do
+        item_selected "$dir" || continue
         if [ -d "$CLAUDE_DIR/$dir" ]; then
             mkdir -p "$SCRIPT_DIR/$dir"
             if ! rsync -a --delete \
@@ -556,15 +743,18 @@ sync_from_local() {
     done
 
     # statusline.js
-    if [ -f "$CLAUDE_DIR/statusline.js" ]; then
+    if item_selected "statusline.js" && [ -f "$CLAUDE_DIR/statusline.js" ]; then
         cp "$CLAUDE_DIR/statusline.js" "$SCRIPT_DIR/statusline.js"
         print_success "statusline.js"
     fi
 
-    # Templates (センシティブ情報をマスク)
-    sync_settings_template
-    sync_gitlab_mcp_template
+    if [ -z "$ONLY_ITEMS" ]; then
+        # Templates (センシティブ情報をマスク)
+        sync_settings_template
+        sync_gitlab_mcp_template
+    fi
 
+    record_last_sync "from-local"
     print_success "リポジトリへの同期が完了しました"
 }
 
@@ -615,10 +805,13 @@ sync_gitlab_mcp_template() {
 # =============================================================================
 
 show_diff() {
+    # detail に "full" を渡すと dir 差分を省略せず全件表示する（--dry-run 用）
+    local detail="${1:-}"
     print_header "差分確認"
 
     local items=("${SYNC_ITEMS[@]}")
     local has_diff=false
+    local diff_count=0
 
     for item in "${items[@]}"; do
         local src
@@ -635,30 +828,81 @@ show_diff() {
                 fi
                 if [ -n "$diff_output" ]; then
                     echo -e "${YELLOW}$item/:${NC}"
-                    echo "$diff_output" | head -10
+                    if [ "$detail" = "full" ]; then
+                        echo "$diff_output"
+                    else
+                        echo "$diff_output" | head -10
+                        local total
+                        total=$(echo "$diff_output" | wc -l | tr -d ' ')
+                        [ "$total" -gt 10 ] && echo "  ... (他 $((total - 10)) 行、全件表示は --dry-run)"
+                    fi
                     has_diff=true
+                    diff_count=$((diff_count + 1))
                 fi
             else
                 if ! diff -q "$src" "$dst" > /dev/null 2>&1; then
                     echo -e "${YELLOW}$item:${NC} 差分あり"
                     has_diff=true
+                    diff_count=$((diff_count + 1))
                 fi
             fi
         elif [ -e "$src" ] && [ ! -e "$dst" ]; then
             echo -e "${BLUE}$item:${NC} ローカルに存在しない"
             has_diff=true
+            diff_count=$((diff_count + 1))
         elif [ ! -e "$src" ] && [ -e "$dst" ]; then
             echo -e "${GREEN}$item:${NC} リポジトリに存在しない"
             has_diff=true
+            diff_count=$((diff_count + 1))
         fi
     done
 
     if [ "$has_diff" = false ]; then
         print_success "差分なし（同期済み）"
         return 0
-    else
-        return 1
     fi
+    print_warning "差分あり: ${diff_count} item"
+    return 1
+}
+
+# =============================================================================
+# Status
+# version / 最終 sync / backup 世代 / repo 鮮度 / 差分を 1 画面にまとめる。
+# =============================================================================
+
+show_status() {
+    print_header "sync status"
+
+    local repo_version local_version
+    repo_version=$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "unknown")
+    local_version=$(cat "$CLAUDE_DIR/VERSION" 2>/dev/null || echo "unknown")
+    echo "  repo VERSION : ${repo_version}"
+    echo "  local VERSION: ${local_version}"
+
+    if [ -f "$CLAUDE_DIR/.last-sync" ]; then
+        echo "  last sync    : $(cat "$CLAUDE_DIR/.last-sync")"
+    else
+        echo "  last sync    : 記録なし"
+    fi
+
+    local root="$CLAUDE_DIR/.sync-backups"
+    if [ -d "$root" ] && [ -n "$(ls -1 "$root" 2>/dev/null)" ]; then
+        local n latest
+        # shellcheck disable=SC2012
+        n=$(ls -1 "$root" | wc -l | tr -d ' ')
+        # shellcheck disable=SC2012
+        latest=$(ls -1 "$root" | sort | tail -1)
+        echo "  backups      : ${n} 世代 (最新: ${latest})"
+    else
+        echo "  backups      : なし"
+    fi
+    echo ""
+
+    if [ "${SKIP_GIT_CHECK:-false}" != "true" ]; then
+        check_repo_freshness || true
+    fi
+
+    show_diff
 }
 
 # =============================================================================
@@ -754,14 +998,19 @@ setup_pre_push_hook() {
 # =============================================================================
 
 usage() {
-    echo "Usage: $0 [to-local|from-local|diff] [--yes|-y] [--skip-git-check] [--allow-overwrite]"
+    echo "Usage: $0 [to-local|from-local|diff|status|rollback] [options]"
     echo ""
     echo "  to-local    リポジトリ → ~/.claude/ に反映（~/.codex があれば Codex も同期）"
     echo "  from-local  ~/.claude/ → リポジトリ に反映"
     echo "  diff        差分を表示"
+    echo "  status      version / 最終 sync / backup / 差分をまとめて表示"
+    echo "  rollback    直近の backup を ~/.claude/ に復元（誤 sync からの復旧）"
     echo ""
     echo "Options:"
     echo "  --yes, -y         確認プロンプトをスキップ"
+    echo "  --dry-run         反映せず変更予定を全件表示（to-local / from-local）"
+    echo "  --only=<a,b>      同期対象を item 名で限定（例: --only=hooks,commands）"
+    echo "  --no-backup       to-local 前の自動 backup を作らない"
     echo "  --skip-git-check  to-local 時の origin/main 未取り込みチェックを抑制"
     echo "  --allow-overwrite 上書き警告をスキップして強制反映（差分確認は ./sync.sh diff で）"
 }
@@ -769,6 +1018,7 @@ usage() {
 main() {
     local mode=""
     local skip_confirm=false
+    local dry_run=false
     ALLOW_OVERWRITE=false
 
     # 引数パース
@@ -777,21 +1027,29 @@ main() {
             --yes|-y)
                 skip_confirm=true
                 ;;
+            --dry-run)
+                dry_run=true
+                ;;
+            --no-backup)
+                export NO_BACKUP=true
+                ;;
+            --only=*)
+                ONLY_ITEMS="${1#--only=}"
+                ;;
             --skip-git-check)
                 export SKIP_GIT_CHECK=true
                 ;;
             --allow-overwrite)
                 ALLOW_OVERWRITE=true
                 ;;
-            to-local|from-local|diff)
+            to-local|from-local|diff|status|rollback)
                 mode="$1"
                 ;;
             "")
                 ;;
-            --force|-f|--dry-run|--check)
+            --force|-f|--check)
                 print_error "未対応フラグ: $1"
-                echo "  → このスクリプトは --yes/-y のみ対応" >&2
-                echo "  → 強制実行は不要（show_diff で差分確認後に確認プロンプト）" >&2
+                echo "  → 事前確認は --dry-run、強制反映は --allow-overwrite を使う" >&2
                 usage
                 exit 1
                 ;;
@@ -810,18 +1068,26 @@ main() {
         shift
     done
 
+    # --only の検証と適用（不正 item 名は fail-fast）
+    apply_only_filter || exit 1
+
     # 依存 preflight（mode 指定時のみ、from-local は rsync 必須で fail-fast）
     if [ -n "$mode" ]; then
         check_dependencies "$mode" || exit 1
     fi
 
-    # バージョンチェック（diff以外）
-    if [ "$mode" != "diff" ] && [ -n "$mode" ]; then
+    # バージョンチェック（diff / status 以外）
+    if [ -n "$mode" ] && [ "$mode" != "diff" ] && [ "$mode" != "status" ]; then
         check_version
     fi
 
     case "$mode" in
         to-local)
+            if [ "$dry_run" = true ]; then
+                show_diff full || true
+                print_info "dry-run のため反映しない"
+                exit 0
+            fi
             show_diff || true
             echo ""
             if [ "$skip_confirm" = true ] || confirm "ローカルに反映しますか？"; then
@@ -829,6 +1095,11 @@ main() {
             fi
             ;;
         from-local)
+            if [ "$dry_run" = true ]; then
+                show_diff full || true
+                print_info "dry-run のため反映しない"
+                exit 0
+            fi
             show_diff || true
             echo ""
             if [ "$skip_confirm" = true ] || confirm "リポジトリに反映しますか？"; then
@@ -837,6 +1108,14 @@ main() {
             ;;
         diff)
             show_diff
+            ;;
+        status)
+            show_status
+            ;;
+        rollback)
+            if [ "$skip_confirm" = true ] || confirm "直近の backup を ~/.claude/ に復元しますか？"; then
+                rollback_backup
+            fi
             ;;
         "")
             usage
