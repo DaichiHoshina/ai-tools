@@ -53,13 +53,7 @@
 
 ## Layer Structure
 
-| Layer | Responsibility | Depends On |
-|-------|----------------|-----------|
-| **Domain** | Entity, ValueObject, Repository IF, Domain Event | None |
-| **Application** | UseCase, DTO | Domain only |
-| **Infrastructure** | Repository impl, external API | All layers |
-
-> Details: see `clean-architecture.md`
+DDD's Domain layer also holds Domain Event (in addition to Entity, ValueObject, Repository IF). Full layer table (incl. Interface/Infrastructure): `clean-architecture.md`
 
 ---
 
@@ -76,10 +70,7 @@
 
 ## Test Strategy
 
-| Layer | Test Type | Characteristics |
-|-------|-----------|-----------------|
-| **Domain** | Unit test, no mocks | Verify business logic |
-| **Application** | Mock Repository, flow verification | Verify use cases |
+Same as clean-architecture.md (Domain: unit test, no mocks / Application: mock Repository, verify flow). Full table (incl. Infrastructure layer): `clean-architecture.md`
 
 ---
 

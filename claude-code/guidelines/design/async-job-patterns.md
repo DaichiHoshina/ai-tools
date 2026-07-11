@@ -59,49 +59,25 @@ bounded_context/
 
 ## DLQ (Dead Letter Queue) Design
 
-Prevents consumer total halt from poison pills.
+Full DLQ design (mandatory config, alarms, replay procedure): `../languages/async-messaging.md` §DLQ.
 
-| Config | Recommendation |
-|--------|----------------|
-| DLQ placement | Required for all queues |
-| max retry | 3–5 times (adjust per job characteristics) |
-| backoff | Exponential (1s → 4s → 16s) |
-| DLQ arrival condition | Retry exceeded or parse failure |
-| Alert on DLQ receipt | Count SLO; alert if stale >24h |
-| Reprocessing procedure | Inspect DLQ message → fix cause → re-enqueue to main queue |
-
-**Attach per-message cause metadata to DLQ** (error message, stack trace, attempt count). Enables re-enqueueing and analysis later.
+Backoff for this repo's workers: exponential, 1s → 4s → 16s.
 
 ## Ensuring Idempotency
 
-At-least-once delivery is assumed; design so "duplicate execution produces the same result" is mandatory.
+Full idempotency strategy comparison (dedup table / conditional update / natural key upsert / outbox): `../languages/async-messaging.md` §Idempotency.
 
-| Pattern | Implementation |
-|---------|----------------|
-| **Idempotency Key** | Client generates UUID; server stores fingerprint and detects duplicates |
-| **Natural key** | Business key (order number etc.) with unique constraint |
-| State check | Check current state before processing; skip if already processed |
-| Transaction | Maintain consistency between DB operations and queue operations |
-
-```http
-POST /payments
-Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
-```
+Go/Postgres dedup table used in this repo's consumers:
 
 ```go
-// dedup table for duplicate elimination (event consumer side)
 INSERT INTO event_dedup (event_id, processed_at)
 VALUES ($1, now())
 ON CONFLICT (event_id) DO NOTHING RETURNING event_id;
 // Insert success → unprocessed; failure → duplicate skip
 ```
 
-**Design notes**:
-- Producer assigns UUID as event_id; carry through all paths
-- Manage dedup table bloat with TTL/partitioning (e.g., retain 7 days only)
-- TTL: delete fingerprint after ~24h (per IETF draft)
-- Put business transaction and dedup insert in the **same DB tx** (separate DBs cause two-phase problems)
+Put the business transaction and the dedup insert in the **same DB tx**; TTL the dedup table (~24h) to bound growth.
 
 ---
 
-- Related: `backend/event-driven-architecture.md` (Kafka/streaming/exactly-once), `backend/distributed-transactions.md` (Outbox/Saga)
+- Related: `../languages/async-messaging.md` (SQS/Pub-Sub, DLQ, idempotency, ordering — canonical for messaging-level design), `backend/event-driven-architecture.md` (Kafka/streaming/exactly-once), `backend/distributed-transactions.md` (Outbox/Saga)

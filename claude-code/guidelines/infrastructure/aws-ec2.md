@@ -38,10 +38,10 @@
 
 | Use Case | Recommended Type |
 |----------|-----------------|
-| General purpose | t3, m5, m6i (e.g. t3.medium, m5.xlarge) |
-| Compute-optimized | c5, c6i |
-| Memory-optimized | r5, r6i |
-| Storage-optimized | i3, d2 |
+| General purpose | t3/t4g, m6i/m7i (latest gen in family) |
+| Compute-optimized | c6i/c7i |
+| Memory-optimized | r6i/r7i |
+| Storage-optimized | i4i, d3en |
 
 ### Cost Optimization
 
