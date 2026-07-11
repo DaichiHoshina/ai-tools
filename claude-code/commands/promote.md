@@ -17,7 +17,7 @@ Detailed routing criteria & proper-noun dictionary: `~/.claude/references-privat
 
 | Arg | Action |
 |---|---|
-| `<memory_file>` | promote single file |
+| `<memory_file>` | promote single file (`/memory-save exit` 産の `feedback-<slug>.md` / `project-<slug>.md` もここに渡す) |
 | `--topic <name>` | aggregate-promote multiple files with same topic |
 | `--scan` | scan and show trigger A/B candidates only (no execution) |
 
@@ -92,6 +92,7 @@ Apply to `~/.claude/` side (CLAUDE.md "Editing Rule" compliant, local-edit wipe 
 - On detecting 3+ files with same topic (`~/.claude/references-private/memory-promotion-flow.md` §6 trigger B)
 - MEMORY.md exceeds 50 lines (trigger A)
 - Single file exceeds 5KB / 150 lines (trigger D)
+- `/memory-save exit` が report に添えた `feedback-<slug>.md` / `project-<slug>.md` (恒久ナレッジ候補) を config 化する時。再現可能な手順 / 全 session 共通 rule ならこの trigger で `<memory_file>` に該当 file を渡す
 - User explicit judgment
 
 ## Fallback

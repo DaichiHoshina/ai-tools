@@ -1,43 +1,50 @@
 # Memory Usage Guide
 
+保存先は `~/ai-tools/memory/` の一本 SoT (Claude Code のみ write、Codex / Cursor は symlink 経由で read-only 共有)。
+
 | Memory | Purpose | Auto-loaded |
 |--------|---------|------------|
-| auto-memory (default: `~/.claude/projects/{project}/memory/`) | Stable patterns / conventions / user preferences | Every session (200-line limit) |
-| auto-memory (ai-tools repo: `~/ai-tools/memory/`、`.gitignore` 済) | Same as above; relocated for user-readable + git-managed path | Not auto-loaded — `MEMORY.md` 経由で明示 Read |
-| Serena memory | Work context / retrospectives / transient investigation results | Manual `read_memory` |
+| auto-memory (`~/ai-tools/memory/`、`.gitignore` 済) | work-context (進捗) + 恒久ナレッジ (feedback / project / user / reference) | `MEMORY.md` を session-start hook が 200 行まで自動注入。個別 file 本文は `/reload <topic>` で明示復元する |
+| Serena memory | write 禁止 (`.serena/memories/`)。過去分の read は可だが新規保存には使わない | — |
 
-ai-tools repo 固有の path 切替経緯は `memory-relocation-pattern.md` § 適用実績 + `CLAUDE.md` § Memory write target 参照。
+`~/.claude/projects/{project}/memory/` は post-compact hook が一時 file (`compact-restore-*.md`) を書く場所のみで、`/reload` がその場で read + rm する使い捨て経路になる (auto-memory の保存先とは別物)。
 
-## Rules
+## Modes (`/memory-save`)
 
-- Don't write the same information to both
-- Keep auto-memory concise — it consumes tokens every session
-- **Task Diary**: propose `/memory-save` only when any of these apply at completion:
-  - 3+ files changed
-  - Refactor with non-obvious design decisions
-  - Incident response
-  - Otherwise, automatic accumulation to `~/.claude/logs/task-diary.log` is sufficient
+| Mode | 用途 | 書込先 |
+|------|------|--------|
+| `clear` (default、無引数) | session 終了時の状態を保存する (task / progress / next-action) | `work-context-YYYYMMDD-<topic>.md` + MEMORY.md 1 行 index |
+| `<topic>` | 同日同 topic の作業を集約する | 同上 (auto merge / new) |
+| `exit` | task が完全に終わった時に呼ぶ。clear の全処理をした上で恒久ナレッジを抽出する | 上記 + `feedback-<slug>.md` / `project-<slug>.md` |
+
+詳細 flow は `commands/memory-save.md` を参照する。
+
+- **Task Diary**: `/memory-save` を明示提案するのは以下のいずれかに当てはまる時のみ。それ以外は `~/.claude/logs/task-diary.log` への自動蓄積で足りる
+  - 3 file 以上を変更した
+  - 非自明な設計判断を伴う refactor をした
+  - incident response をした
 
 ## Recording Targets (Compounding Engineering)
 
-Not only misbehavior but also **non-obvious successes** are recording targets. Boris-style compound improvement to ensure reproducibility.
+misbehavior だけでなく **non-obvious な成功パターン**も記録対象にする。再現性を持たせるための積み上げ改善という考え方だ。
 
-Config side (CLAUDE.md / skill / hook) is primary; auto-memory is supplementary. Reason: auto-memory is written by Claude's automatic judgment and becomes stale; config side is more explicit and reproducible.
+config 側 (CLAUDE.md / skill / hook) を主保存先とし、auto-memory は補助にする。理由は、auto-memory が Claude の自動判断で書かれ古くなりやすいのに対して、config 側は明示的で再現性が高いからだ。
 
 | Type | Example | Primary storage | Supplementary | Write method |
 |------|---------|----------------|--------------|--------------|
-| Misbehavior (recurrence prevention) | Same path error, unexpected file deletion | CLAUDE.md / skill / hook | auto-memory | User Edit / Claude auto |
-| Non-obvious success (reproduction) | Trial-and-error hit, non-standard approach | CLAUDE.md / skill | auto-memory | User instruction / Claude |
-| Transient investigation | Incident investigation state, unconfirmed hypothesis | Serena memory | — | User (`/memory-save`) |
+| Misbehavior (再発防止) | 同じ path error、想定外の file 削除 | CLAUDE.md / skill / hook | `feedback-*.md` (`/memory-save exit`) | User Edit / Claude auto |
+| Non-obvious success (再現用) | 試行錯誤で当てた非標準 approach | CLAUDE.md / skill | `feedback-*.md` (`/memory-save exit`) | User instruction / Claude |
+| Project constraint / decision | repo から導出できない制約とその理由 | `project-*.md` (`/memory-save exit`) | — | Claude auto (exit 時) |
+| Transient work state | 進行中 session の進捗・再開手順 | `work-context-*.md` (`/memory-save` clear/topic) | — | Claude auto |
 
 **Write path notes:**
 
-- **CLAUDE.md / skill / hook**: User edits directly, or Claude appends in same conversation if prompted "update CLAUDE.md or relevant skill"
-- **auto-memory**: Claude auto-writes to `~/.claude/projects/{project}/memory/` (default) or `~/ai-tools/memory/` (ai-tools repo, hook-enforced) from conversation context. Prone to duplication and staleness — config side takes priority
-- **Serena memory**: Explicit save via `/memory-save`. Only for 3+ file changes / non-obvious decisions / incident response
+- **CLAUDE.md / skill / hook**: user が直接 Edit するか、同一会話内で「CLAUDE.md か該当 skill を更新して」と指示された時に Claude が追記する
+- **auto-memory (`~/ai-tools/memory/`)**: `/memory-save` が全 mode で個別 file を書く。`exit` mode のみ `feedback-*` / `project-*` の恒久 file を追加抽出する。再現可能な手順や全 session 共通 rule は `/promote` で config 側へ昇格させ、memory 側は削除する
+- **housekeeping**: `/memory-clean` が `~/ai-tools/memory/` 配下 (work-context / feedback / project 問わず全 file) を対象に trash / prune / 表記揺れ修正をする (`commands/memory-clean.md` 参照)
 
-Prioritize skill over memory for anything reproducible via config (skill is the right place). Memory is a "supplementary rule" / "pattern" store that Claude auto-references.
+config で再現できることは skill / CLAUDE.md を優先する。memory は再現しづらい文脈や進行中の状態を保つ場所だ。
 
-## Relocation pattern (optional)
+## Relocation pattern (背景、optional)
 
-auto-memory dir が encoded path で人間に辜りづらい / project 跨ぎで散逸する問題への対処として、auto-memory dir をやめて project / org / user の scope 別に repo 配下や user 私物 dir に集約する pattern がある。auto-load は失うが、user-readable / git 管理可能 / 横断検索容易の利得を取る。詳細: `memory-relocation-pattern.md`。
+auto-memory dir が encoded path で人間には辿りづらく、project をまたぐと散逸しやすい。この問題への対処として、auto-memory dir をやめて project / org / user の scope 別に repo 配下や user 私物 dir へ集約する pattern がある。auto-load は失うが、user-readable / git 管理可能 / 横断検索が容易という利得を取る考え方だ。`~/ai-tools/memory/` への一本化はこの pattern の適用結果になる。詳細: `memory-relocation-pattern.md`。

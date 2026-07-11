@@ -9,7 +9,7 @@ effort: low
 
 自 memory の housekeeping と、他 repo memory からの汎用 knowledge 取込を **1 command で完結**させる。**Memory dir auto-detect**: `~/ai-tools/memory/` を優先、無ければ project の projects-memory dir (動的解決、`scripts/memory-save-helper.sh:_resolve_memory_dir` と同方式) を fallback。
 
-> **Housekeeping guard**: mv (trash) / prune / 自動修正の対象は `~/ai-tools/memory/` 配下のみ。projects/memory dir は fallback 検出時も scan (read) のみで、mv / rm / write はしない。
+> **Housekeeping guard**: mv (trash) / prune / 自動修正の対象は `~/ai-tools/memory/` 配下のみ。projects/memory dir は fallback 検出時も scan (read) のみで、mv / rm / write はしない。対象には `work-context-*.md` だけでなく `/memory-save exit` が生成する `feedback-<slug>.md` / `project-<slug>.md` (恒久ナレッジ) も含む。ただし `exit` 産 file は日付 prefix を持たないため trash 候補の対象外で、duplicate / orphan / cluster / xref-audit の対象にのみなる。
 
 > **Policy**: `mtime` を value proxy にしない。auto delete は work-context (date prefix で短命明示) と name/description exact dup のみ。
 >
@@ -49,7 +49,7 @@ effort: low
    - orphan (MEMORY.md にも他 file にも参照されない孤立 file) / dead-link (MEMORY.md link 先 file 不在) を検出
    - feedback 間 `[[name]]` cross-ref を検査: 表記揺れ (fixable) / canonical 差替候補 / `{{deleted:}}` 記号化候補
 4. **提案候補**:
-   - topic cluster (`feedback_<topic>_*` が 3 file 以上)
+   - topic cluster (`feedback_<topic>_*` snake 表記 または `feedback-<topic>-*` kebab 表記 (`/memory-save exit` 産) が 3 file 以上)
    - small file (<20 行)
    - graduate 候補 (ai-tools 配下 `rules/` `guidelines/` `references/` へ切り出しやすい heuristic)
 5. chat 出力 → exit、変更なし
