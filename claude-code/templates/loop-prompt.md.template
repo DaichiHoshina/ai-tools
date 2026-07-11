@@ -1,0 +1,25 @@
+# <name> — standing objective
+
+<!-- loop.sh が毎 iteration 全文を再読する (goal drift 対策)。人が書く / /loop init が scaffold する -->
+
+## Objective
+
+<達成したいことを 1 文で。例: tests/unit/scripts/ の bats を全部 green にする>
+
+## Done
+
+gate command がそのまま完了条件になる (verbatim):
+
+```bash
+<gate cmd。例: bats tests/unit/scripts/>
+```
+
+## Constraints
+
+- 触ってよい範囲: <file / dir を列挙>
+- 触ってはいけない範囲: <Don't touch list。例: hooks/*.sh の block/warn logic>
+- <その他の制約。例: 依存追加禁止>
+
+## Escalation
+
+人間の判断が必要になったら、state.md の `## Blocked` に理由を書いて iteration を終える。勝手に scope を広げて回避しない。

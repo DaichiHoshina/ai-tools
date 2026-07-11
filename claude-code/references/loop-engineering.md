@@ -44,10 +44,10 @@ Before launching any loop, verify all 5:
 Cadence startup: schedule / event / trigger. In Claude Code: `/loop` (session-scoped, ends on session end) / Desktop scheduled tasks (restart-survival) / Routines (cloud) / hooks (lifecycle events).
 
 `/loop` vs `/goal` distinction:
-- `/loop` — cadence-driven ("every push", "every hour")
-- `/goal` — stop-condition-driven ("keep iterating until all tests pass")
+- `/loop` — external headless loop (`scripts/loop.sh` + `claude -p`): long-run / cadence / unattended。fresh context per iteration; state file is the only carrier across iterations. `commands/loop.md` for spec
+- `/goal` — session-scoped, stop-condition-driven ("keep iterating until all tests pass"), ≤5 iterations
 
-For objective-gate enforcement, `/goal` is the primary defense against the Ralph Wiggum loop (see § Failure modes). `commands/goal.md` for spec.
+For objective-gate enforcement, both enforce the same gate semantics (exit code only). `/goal` is the in-session defense against the Ralph Wiggum loop (see § Failure modes); `/loop` additionally eliminates context rot / goal drift by construction. Scheduling: `scripts/install-loop-cron.sh` (launchd).
 
 ### Worktree
 
@@ -132,14 +132,22 @@ In ai-tools: `hooks/pre-tool-use.sh` blocks private-name leakage (see `rules/pub
 
 | 14-step concept | ai-tools existing | Gap |
 |---|---|---|
-| Automation (`/loop` `/goal`) | `commands/workflow.md` (deterministic fan-out) + `commands/goal.md` (`/goal` single-task gate) + `commands/flow.md --until-gate-green` (P0 loop を objective gate に切替) | `/loop` (cadence) not yet implemented; cron-based scheduling fills the gap for now |
+| Automation (`/loop` `/goal`) | `commands/workflow.md` (deterministic fan-out) + `commands/goal.md` (`/goal` single-task gate) + `commands/flow.md --until-gate-green` (P0 loop を objective gate に切替) + `commands/loop.md` / `scripts/loop.sh` (external headless loop, launchd cadence 対応) | OK |
 | Worktree parallel | `[[ai-tools-worktree-workflow]]` + EnterWorktree | OK |
 | Skills as compounding | `skills/` registry deployed (count via `ls skills/`) | OK |
 | MCP connectors | Serena / context7 / playwright + `gh` CLI | GitHub MCP not configured; `gh` CLI fills gap for most cases |
-| Maker/checker separation | `developer-agent` + `reviewer-agent` (Stage A 7-observation) | Both default to same model (Opus 4.7); checker separate-model enforcement is weak |
-| State file | `local-docs/` (HTML) + auto-memory (`~/.claude/projects/.../memory/`) | Loop-dedicated `STATE.md` template not yet available (M-scope, separate session) |
+| Maker/checker separation | `developer-agent` + `reviewer-agent` (Stage A 7-observation)。`/goal` は checker 別 model 必須 (Forbidden patterns)、`loop.sh` は layer-1 bash gate + layer-2 `--checker-model` (default haiku ≠ maker) の 2 層 | OK |
+| State file | `local-docs/` (HTML) + auto-memory + `templates/loop-state.md.template` (ledger / Lessons / Next hint / Blocked) | OK |
 | Objective gate | `/verify-once` `/lint-test` | OK — must run at every loop iteration, not just on final output |
 | Security: skill audit | `hooks/pre-tool-use.sh` (private-name block) | Skill source credential scan not implemented (L-scope, separate session) |
+
+## Compounding path (state → memory → skill)
+
+Loop の学習を捨てない経路を固定する:
+
+1. **Iteration 間**: state.md の `## Lessons learned` / `## Next-iteration hint` を loop.sh が次 iteration の prompt に全文注入する
+2. **Loop 完了時**: `/loop status <name>` が `/memory-save <name>-loop` を提示し、lessons を auto-memory (`~/ai-tools/memory/`) に落とす
+3. **恒久化**: 同種 loop で 2 回以上再出現した lesson は `/promote` で skill / CLAUDE.md へ昇格する
 
 ## When NOT to build a loop
 
@@ -180,6 +188,7 @@ Cross-ref: `[[feedback-db-change-review-blind-spot]]` (DB change 4-path holistic
 | File | Role |
 |---|---|
 | `commands/goal.md` | `/goal` implementation (Ralph Wiggum prevention, objective gate enforcement) |
+| `commands/loop.md` + `scripts/loop.sh` | `/loop` external headless loop (fresh context per iteration; hard stops / no-progress / state guard) |
 | `references/boris-style-mapping.md` | Boris Cherny official best-practice 12-tip mapping table |
 | `references/compounding-engineering-cycle.md` | Failure → record → auto-avoid cycle (loop analog for config) |
 | `references/auto-delegation-detailed.md` | parent=Opus orchestrate / subagent=Sonnet delegation (maker/checker separation basis) |

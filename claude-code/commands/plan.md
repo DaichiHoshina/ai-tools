@@ -37,6 +37,7 @@ Choose from 6 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>
 | 3+ files / strong cross-file coupling or order dependency | **`/dev` sequential** | parallelism causes conflict |
 | 3+ files / only few lines each | **inline consecutive Edit** | overhead unrecoverable |
 | iterative + objective gate (test / lint / build exit code) for done | **`/goal "<stop>"`** | maker-checker separation + iteration, Ralph Wiggum guard |
+| cadence / unattended / >5 iter + objective gate | **`/loop`** (external headless loop) | fresh context per iteration, no context rot / goal drift |
 
 **`/goal` 4 conditions** (all required; canonical: `commands/goal.md`): iterative task / automated stop-condition (exit code) / token budget absorbs N iter waste / agent holds senior tools (Bash/Edit/Task)
 

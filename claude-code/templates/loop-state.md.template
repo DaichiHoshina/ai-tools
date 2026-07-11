@@ -1,0 +1,28 @@
+# <name> loop state
+
+- Gate: `<cmd>`
+- Status: running
+- Created: <ISO datetime>
+
+## Progress ledger
+
+<!-- loop.sh が append する (newest-first)。agent は編集禁止 -->
+
+| iter | datetime | diff stat | gate | cost (USD) |
+|------|----------|-----------|------|------------|
+
+## Lessons learned
+
+<!-- agent が append-only で書く。次 iteration の prompt に全文注入される -->
+
+## Next-iteration hint
+
+<!-- agent が毎回上書きする。次の 1 手が分かる 1-3 行 -->
+
+## Blocked
+
+<!-- 人間 escalation 用。書いたら iteration を終える -->
+
+## Gate log
+
+<!-- loop.sh が gate fail 時の出力 tail を append する (private term は REDACT 済) -->

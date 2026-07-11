@@ -41,7 +41,7 @@ Evaluate all 4 before starting. Any `✗` → abort with reason.
 
 2. **Maker iteration** — `Task(developer-agent)` executes one implementation pass (Sonnet). Scoped to `task.files`; no scope creep.
 
-3. **Checker iteration** — Separate `Task` runs the **objective gate via Bash** (exit code is the sole verdict). Default checker: `reviewer-agent`. Override with `--checker silent-failure-hunter` or any registered agent. **Checker must not see maker's reasoning** (prevents self-preferential bias).
+3. **Checker iteration** — Separate `Task` runs the **objective gate via Bash** (exit code is the sole verdict). Default checker: `reviewer-agent`. Override with `--checker silent-failure-hunter` or any registered agent. **Checker must not see maker's reasoning** (prevents self-preferential bias). **Checker must run on a different model than maker** (`--checker-model`; maker=opus → checker=sonnet, maker=sonnet → checker=haiku) — shared-model bias is the weak form of self-preference.
 
 4. **Gate result**:
    - Exit 0 → done; write state file; report.
@@ -82,14 +82,16 @@ Completed: <yes/no>
 |---------|---------------|
 | Subjective verifier ("does this look correct?") | No exit code → loop never terminates on objective evidence |
 | Maker and checker are the same agent type | Self-preferential bias; Ralph Wiggum failure mode |
+| Maker and checker on the same model without `--checker-model` justification | Shared-model bias (weak self-preference) |
 | No hard stop configured | Loop exits only on rate limit or user interrupt |
 
-## Cadence (out of scope)
+## Cadence / long-run → `/loop`
 
-Single-invocation only. Recurring / scheduled execution is user-managed via cron (see `scripts/install-hook-bench-cron.sh` as pattern reference). Cadence integration is planned in `commands/loop.md` (`/loop`、未作成) — see `references/boris-style-mapping.md` "未取り込み" list.
+Single-invocation only. **>5 iterations, unattended runs, or recurring cadence → use `/loop`** (`commands/loop.md`, external headless loop via `scripts/loop.sh`): fresh context per iteration eliminates context rot / goal drift that `/goal` tolerates only because of its 5-iteration cap. Scheduling: `scripts/install-loop-cron.sh`.
 
 ## Related
 
+- `commands/loop.md` — `/loop` external headless loop (Tier 2: long-run / cadence / unattended)
 - `references/loop-engineering.md` — 14-step canonical; why-and-test / building-blocks / failure-modes
 - `commands/workflow.md` — `/workflow` deterministic fan-out (orthogonal)
 - `commands/flow.md` — `/flow` PO/Manager/Dev hierarchy. `/flow --until-gate-green "<cmd>"` switches step 9 P0 loop to the same objective-gate semantics as `/goal`
