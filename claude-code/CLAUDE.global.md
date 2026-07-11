@@ -2,7 +2,7 @@
 
 **文体 default = plain JP 常体、閉じてない文章 (体言止め羅列 / 助詞省略)・不要な英語 jargon (日本語で言える一般語の英語化)・冗長 (聞かれてない補足 / 言い換え反復) を全 context で禁止する**。canonical: `rules/plain-jp.md` (auto-load 済のため詳細は本 file に重複記載しない)。質問抑制 default の canonical: `rules/minimize-questions.md` (同じく auto-load 済)。
 
-`~/ai-tools/claude-code/` が Claude Code config の SoT で、`sync.sh` で `~/.claude/` へ同期する。**ai-tools repo 固有 rule (Quick Reference / Repo layout / Editing Rule / Token Saving / Hook baseline) は `~/ghq/github.com/DaichiHoshina/ai-tools/CLAUDE.md` (project CLAUDE.md) に分離済**。`~/.claude/` を直接編集しない (sync で wipe される)。
+`~/ai-tools/claude-code/` が Claude Code config の SoT で、`sync.sh` で `~/.claude/` へ同期する。**ai-tools repo 固有 rule (Quick Reference / Repo layout / Editing Rule / Token Saving / Hook baseline) は `~/ghq/github.com/DaichiHoshina/ai-tools/CLAUDE.repo.md` に分離済 (owner 階層 `~/ghq/github.com/DaichiHoshina/CLAUDE.md` の import 経由で load、repo 直下 CLAUDE.md は `claudeMdExcludes` で除外)**。`~/.claude/` を直接編集しない (sync で wipe される)。
 
 ## Golden workflow
 

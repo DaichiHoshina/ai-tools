@@ -230,6 +230,7 @@ sync_settings_root_keys() {
         "skipDangerousModePermissionPrompt"
         "instructions"
         "awaySummaryEnabled"
+        "claudeMdExcludes"
     )
     local keys_json
     keys_json=$(printf '%s\n' "${root_keys[@]}" | jq -R . | jq -s .)

@@ -30,6 +30,12 @@
   "worktree": {
     "baseRef": "fresh"
   },
+  "claudeMdExcludes": [
+    "**/ghq/github.com/*/*/CLAUDE.md",
+    "**/ghq/github.com/*/*/CLAUDE.local.md",
+    "**/ghq/github.com/*/*/.claude/CLAUDE.md",
+    "**/ghq/github.com/*/*/.claude/rules/**"
+  ],
   "permissions": {
     "allow": [
       "Bash(git *)",
