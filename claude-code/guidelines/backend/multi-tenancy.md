@@ -185,7 +185,7 @@ PostgreSQL with 10,000+ schemas causes catalog bloat (pg_class, pg_attribute) โ
 | Requirement | Response |
 |-------------|---------|
 | **GDPR data residency** | Region pinning (EU tenants on EU region DB); prohibit cross-region replication |
-| **GDPR right to erasure** | Complete deletion flow (DB, backup, log, cache, CDN, event store) |
+| **GDPR right to erasure** | See ยง7 Deletion (cascade scope: DB, backup, log, cache, CDN, event store) |
 | **HIPAA / PCI DSS** | DB isolation recommended; separate audit log; encryption at rest/in transit; BAA |
 | **SOC 2** | Per-tenant access log, change log, anomaly detection |
 | **Data export** | Self-service export UI, machine-readable format |
