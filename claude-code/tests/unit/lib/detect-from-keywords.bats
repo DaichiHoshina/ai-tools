@@ -177,6 +177,37 @@ run_detect_from_keywords() {
 }
 
 # =============================================================================
+# 正常系テスト: sync-to-local検出
+# =============================================================================
+
+@test "detect-from-keywords: detects sync-to-local from 'syncして' keyword" {
+  run run_detect_from_keywords 'syncして'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_sync=$(echo "$output" | jq '.skills | contains(["sync-to-local"])')
+  [ "$has_sync" = "true" ]
+}
+
+@test "detect-from-keywords: detects sync-to-local from '同期して' keyword" {
+  run run_detect_from_keywords '~/.claude に同期して'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_sync=$(echo "$output" | jq '.skills | contains(["sync-to-local"])')
+  [ "$has_sync" = "true" ]
+}
+
+@test "detect-from-keywords: does not detect sync-to-local from 'async' keyword" {
+  run run_detect_from_keywords 'async job の worker を実装'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_sync=$(echo "$output" | jq '.skills | contains(["sync-to-local"])')
+  [ "$has_sync" = "false" ]
+}
+
+# =============================================================================
 # 正常系テスト: Serena検出
 # =============================================================================
 

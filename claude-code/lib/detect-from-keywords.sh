@@ -189,6 +189,7 @@ detect_from_keywords() {
     ['systematic.*debug|根本原因|デバッグ.*体系']=":superpowers:systematic-debugging"
     ['monitoring|alert|slo|burn.*rate|runbook|障害対応|アラート']=":incident-response"
     ['async.*job|queue|worker|job.*pattern|非同期|キュー|ワーカー|dlq|dead.*letter']=":backend-dev"
+    ['(^|[^a-z])sync|同期して|同期する']=":sync-to-local"
   )
 
   # set -u対応

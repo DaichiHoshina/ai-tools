@@ -456,6 +456,7 @@
     "session-mode": "name-only",
     "skills-manage": "name-only",
     "slack-rich-copy": "name-only",
+    "sync-to-local": "name-only",
     "techdebt": "name-only",
     "terraform": "off",
     "test": "name-only",
