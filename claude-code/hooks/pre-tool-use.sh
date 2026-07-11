@@ -418,6 +418,21 @@ PYEOF
           fi
         fi
 
+        # --- staged diff scan (warn-only 第二防衛線): 追加行の private term を検出 ---
+        # Edit/Write 即時 block 廃止後の補完。ai-tools 外 cwd は関数内で即 return する
+        if [[ "$GUARD_CLASS" != "Forbidden" ]]; then
+          _CWD_DIFF=$(jq -r '.cwd // empty' <<< "$INPUT")
+          [[ -z "$_CWD_DIFF" ]] && _CWD_DIFF="$PWD"
+          _STAGED_DIFF_WARN=$(_warn_private_terms_in_staged_diff "$_CWD_DIFF")
+          if [[ -n "$_STAGED_DIFF_WARN" ]]; then
+            if [ -n "$ADDITIONAL_CONTEXT" ]; then
+              ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_STAGED_DIFF_WARN}"
+            else
+              ADDITIONAL_CONTEXT="${_STAGED_DIFF_WARN}"
+            fi
+          fi
+        fi
+
         # --amend で inline body オプション (-m/--message/-F/--file) が無い場合:
         # editor 編集で hook は本文取得不可 → warn-only。
         # substring 判定だと --message が -m に誤マッチして warn を抑止するため word-boundary で判定する。
