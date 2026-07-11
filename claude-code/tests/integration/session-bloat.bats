@@ -74,20 +74,20 @@ _make_session_jsonl() {
 # =============================================================================
 # Case 1: elapsed < 3h かつ msg < 1000 → session-bloat warn が出ない
 # =============================================================================
-@test "session-bloat: no warn when elapsed=1h and msg=100" {
+@test "session-bloat: no warn when elapsed=25min and msg=100" {
   local session_id="bats-test-no-warn-$(date +%s)"
   local date_today
   date_today=$(date +%Y%m%d)
 
-  # elapsed 1h = 3600s, msg 100
-  local jsonl cwd
-  jsonl=$(_make_session_jsonl "${session_id}" 3600 100 | head -1)
-  cwd=$(_make_session_jsonl "${session_id}" 3600 100 | tail -1)
+  # elapsed 25min = 1500s (fixture は全 entry が start_ts のため idle ~ elapsed。
+  # 旧 fixture の elapsed 1h は idle 30min 閾値を踏んで warn が正しく出る入力だった)
+  _make_session_jsonl "${session_id}" 1500 100 > /dev/null
+  local cwd="${HOME}/testproject"
 
   local input
   input=$(printf '{"session_id":"%s","prompt":"hello","cwd":"%s"}' "${session_id}" "${cwd}")
 
-  run bash -c "CLAUDE_CODE_SESSION_ID='${session_id}' echo '${input}' | '${HOOKS_DIR}/user-prompt-submit.sh'"
+  run bash -c "CLAUDE_CODE_SESSION_ID='${session_id}' JP_QUALITY_INJECT_OFF=1 CLAUDE_CTX_FILE='${HOME}/_ctx_unset' CLAUDE_SERENA_FAIL_COUNT='${HOME}/_serena_unset' bash '${HOOKS_DIR}/user-prompt-submit.sh' <<< '${input}'"
   [ "$status" -eq 0 ]
   # stdout / stderr のどちらにも session-bloat が出ないこと
   [[ ! "$output" =~ "session-bloat" ]]

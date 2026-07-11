@@ -47,5 +47,8 @@ jobs:
           git config --global user.email "ci@example.com"
           git config --global user.name "ci"
           mkdir -p ~/.claude/logs ~/.claude/session-logs
+          # hook が実行時に読む synced 定義 (NG-DICTIONARY / rules 等) を repo から配置する
+          cp -R claude-code/guidelines ~/.claude/guidelines
+          cp -R claude-code/rules ~/.claude/rules
         working-directory: .
       - run: bats --jobs 4 --no-parallelize-within-files -r tests/
