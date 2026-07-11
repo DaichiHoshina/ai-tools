@@ -12,14 +12,16 @@
 | `endpoint_public_access` + `endpoint_private_access` | Both enabled recommended |
 | `enable_cluster_creator_admin_permissions` | `true` |
 
-### Required Add-ons
+### Add-ons
 
-| Add-on | Purpose |
-|--------|---------|
-| `coredns` | DNS resolution |
-| `vpc-cni` | Pod networking (PREFIX_DELEGATION recommended) |
-| `kube-proxy` | Service proxy |
-| `eks-pod-identity-agent` | IAM authentication |
+| Add-on | Purpose | Required |
+|--------|---------|----------|
+| `coredns` | DNS resolution | Yes |
+| `vpc-cni` | Pod networking (PREFIX_DELEGATION recommended) | Yes |
+| `kube-proxy` | Service proxy | Yes |
+| `eks-pod-identity-agent` | IAM authentication | Yes |
+| `aws-ebs-csi-driver` | EBS volumes (IRSA config required) | If using EBS |
+| `aws-efs-csi-driver` | EFS volumes | If using EFS |
 
 ---
 
@@ -80,19 +82,6 @@
 
 - `api`, `audit`, `authenticator`
 - `controllerManager`, `scheduler`
-
----
-
-## Recommended Add-ons
-
-| Add-on | Purpose |
-|--------|---------|
-| `vpc-cni` | Pod networking |
-| `coredns` | DNS resolution |
-| `kube-proxy` | Service proxy |
-| `eks-pod-identity-agent` | IAM authentication |
-| `aws-ebs-csi-driver` | EBS volumes (IRSA config required) |
-| `aws-efs-csi-driver` | EFS volumes |
 
 ---
 
