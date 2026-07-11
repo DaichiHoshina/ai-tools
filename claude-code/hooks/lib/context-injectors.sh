@@ -231,9 +231,9 @@ _inject_code_comment_rules() {
   touch "$_flag_file" 2>/dev/null || true
 
   local _cc_msg="【code comment 規範】新規 comment を検出した。canonical: guidelines/writing/code-comment.md
-- default = 書かない。書くなら WHY / Why not (採らなかった選択肢と理由) / 重要 memo のみ
-- 上限 2 行 (WHY 1 文 + 根拠 or Why not 1 文)。3 行以上は incident / 外部仕様由来の重要 memo のみ
-- what 言い換え / 開発経緯 / defensive 言い訳 (「念のため」等) / AI marker は禁止"
+- default = 書かない。書くなら Why not (採らなかった選択肢と理由) のみ。設計根拠 (WHY) は commit log へ
+- 例外 2 つ: 調べても辿り着きにくい外部 / 内部運用 memo (MEMO: prefix 必須) / 公開 API の 1 行 godoc。上限 2 行
+- what 言い換え / 開発経緯 / defensive 言い訳 (「念のため」等) / AI marker は禁止。書き直しで長くなるならまず削除を検討"
 
   if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
     ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_cc_msg}"

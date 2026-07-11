@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Grep, Edit
 name: code-comment
-description: "code comment の品質 check。WHY only / 擬人化 NG / AI marker 禁止を guidelines/writing/code-comment.md で適用。"
+description: "code comment の品質 check。Why not 中心・最小限 / 擬人化 NG / AI marker 禁止を guidelines/writing/code-comment.md で適用。"
 context: fork
 disallowed-tools:
   - Bash
@@ -10,7 +10,7 @@ disallowed-tools:
 
 # code-comment — コードコメント品質チェック & リライト
 
-Goal: code に対するコメントを 「WHY と重要 memo に限定」「コードから読める内容を残さない」「AI 時代の Comment Traps を避ける」 という業界 consensus に揃える。本 skill は判定基準を `guidelines/writing/code-comment.md` canonical を唯一の source of truth として参照する (本 skill は list を持たない)。
+Goal: code に対するコメントを 「Why not (採らなかった選択肢と理由) 中心・最小限」「コードから読める / 調べれば分かる内容を残さない」「AI 時代の Comment Traps を避ける」 に揃える。本 skill は判定基準を `guidelines/writing/code-comment.md` canonical を唯一の source of truth として参照する (本 skill は list を持たない)。
 
 ## Activation criteria
 
@@ -18,7 +18,7 @@ trigger 語 (skill auto-fire):
 - 「コメント書いて / 追加して」「godoc 書いて」「docstring 書いて」「JSDoc 書いて」
 - 「コメントレビューして / 整理して」「コメント audit」「Comment Traps」
 - code file 編集中に `// ` `# ` `-- ` `/* ` `<!-- ` を新規追加する場合
-- 既存コメントの WHY 不足 / what 重複 / 擬人化 を指摘・修正する場合
+- 既存コメントの Why not 不足 / what 重複 / 擬人化 を指摘・修正する場合
 
 非対象:
 - PR 本文 / commit message (`guidelines/writing/pr-description.md` + `commit-message.md` 担当)
@@ -32,7 +32,7 @@ trigger 語 (skill auto-fire):
    - ARGUMENTS に file path → 該当 file のコメント抽出
    - ARGUMENTS 空 → 直前 assistant turn の code block 内コメント
    - どちらもなし → 「対象 file 指定 or コメント貼り付け」と 1 行返す
-3. 抽出後、canonical の 13 カテゴリ table で **1 コメントずつ分類**
+3. 抽出後、canonical の 14 カテゴリ table で **1 コメントずつ分類**
 4. 削除・書き直しの対象には **Before / After ペア** を出力する (列挙で止めない)
 
 ## Decision flow (canonical 3 分類 + 9 削除)
@@ -41,8 +41,9 @@ trigger 語 (skill auto-fire):
 
 | 判定 | 対応 |
 |---|---|
-| **残す 3 分類** (WHY / 重要 memo / godoc) | そのまま、または日本語品質のみ rewrite |
-| **削除 9 カテゴリ + AI marker** (what / PR 文脈依存 / 自明 / defensive / 主観評価 / テスト不確実 / 重複 / 経過メモ / commented-out / AI marker) | 該当行を削除、または現在形の WHY に書き直し |
+| **残す 3 分類** (Why not / 調べても辿り着きにくい外部 memo / 公開 API の 1 行 godoc) | そのまま、または日本語品質のみ rewrite (長くなるなら削除を先に検討) |
+| **WHY (設計根拠)** | commit log へ移してコードからは削除 |
+| **削除 9 カテゴリ + AI marker** (what / PR 文脈依存 / 自明 / defensive / 主観評価 / テスト不確実 / 重複 / 経過メモ / commented-out / AI marker) | 該当行を削除 (書き直しより削除優先) |
 
 詳細判定基準・例・category table は **canonical を直接 Read** する。本 skill 内で list を再記載しない (重複は drift 源)。
 
@@ -72,12 +73,12 @@ i++
 After: (削除)
 ````
 
-信頼度が 80% 未満の判定は **discard** する (canonical `guidelines/writing/code-comment.md` の 13 分類 table と整合)。
+信頼度が 80% 未満の判定は **discard** する (canonical `guidelines/writing/code-comment.md` の 14 分類 table と整合)。
 
 ## 非対象 (誤発火を避ける)
 
 - 言語別 syntax の細部 (godoc 仕様 / JSDoc tag) → 言語公式 docs 参照
-- 仕様コメント自動生成 → 本 skill は **削除と rewrite 専門**、新規執筆は WHY を user が決めてから
+- 仕様コメント自動生成 → 本 skill は **削除と rewrite 専門**、新規執筆は Why not を user が決めてから
 - 1 行 typo 修正 → skill 起動せず inline Edit
 
 ## 関連
