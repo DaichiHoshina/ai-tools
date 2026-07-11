@@ -4,6 +4,8 @@
 
 > **原則**: ドキュメントは記憶ダンプではなく、読み手の判断と行動を助ける道具。書くたびに「誰のどの判断を助けるか」から逆算する。
 
+本文は全種別 (DesignDoc / PRD / RCA / local-docs HTML / Notion) で **開いた文章 (plain JP) + 簡潔ミニマル** を守る。箇条書き内も文として閉じ、体言止め羅列・助詞省略を禁止する。該当しない template section は見出しごと削除する (canonical: `rules/plain-jp.md`)。
+
 ## Writing Contextブロック (任意、draft冒頭)
 
 書き出し時に思考を散らさないため、4問の答えをコメントブロックでdraft冒頭に置く:
