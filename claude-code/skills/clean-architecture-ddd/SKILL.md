@@ -102,5 +102,5 @@ Zero findings / No layer structure (before CA/DDD):
 
 ## Related Guidelines / Context7
 
-- `guidelines/design/clean-architecture.md`, `design/domain-driven-design.md`
+- `guidelines/design/clean-architecture.md`, `guidelines/design/domain-driven-design.md`
 - Context7: "repository pattern", "dependency injection", "aggregate root", "value object immutable"

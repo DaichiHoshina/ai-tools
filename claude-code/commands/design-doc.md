@@ -64,7 +64,7 @@ If Q1-Q5 already settled in `/prd`, Design Doc **inherits without re-evaluation*
 | Step | Action |
 |------|------|
 | 1. Input identify | Priority: `--prd <path>` / if arg → topic / else → `git log/diff` + AskUserQuestion |
-| 2. Load guidelines | `guidelines/design/clean-architecture.md`, `domain-driven-design.md`, `references/design-doc-template.md`, `references/decision-quality-checklist.md`, `guidelines/writing/long-form-doc.md` |
+| 2. Load guidelines | `guidelines/design/clean-architecture.md`, `guidelines/design/domain-driven-design.md`, `references/design-doc-template.md`, `references/decision-quality-checklist.md`, `guidelines/writing/long-form-doc.md` |
 | 3. Analyze code | `mcp__serena__*` identify existing symbols & dependencies |
 | 4. Generate draft | 12-section template (type-adjusted, per `references/design-doc-template.md`). Weave in **4 questions & 5 principles from `guidelines/writing/long-form-doc.md` at generation time**. **For Q1-Q5 handling, see "Q1-Q5 inheritance rules" below** |
 | 5. Confirm design decisions | AskUserQuestion on option adoption / migration boundary / open items (3-5 questions) |

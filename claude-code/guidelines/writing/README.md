@@ -30,6 +30,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 | [commit-message.md](commit-message.md) | コミットメッセージ (抽象化 / NG/OK例) | `git commit` 前 |
 | [pr-description.md](pr-description.md) | PR本文 + レビュー応答 (must/imo/nits/q) | PR作成・修正対応時 |
 | [external-post.md](external-post.md) | 短文 (PRコメント / Slack / Issue / Notion) + 5軸採点 | 外部向け投稿前 |
+| [gh-issue.md](gh-issue.md) | GitHub issue 本文の書式 | issue 起票・編集時 |
 | [long-form-doc.md](long-form-doc.md) | 長文doc (DD / PRD / RCA / Notionページ) + ADR/PRD/EARSテンプレ | 長文doc執筆時 |
 | [design-doc-protocol.md](design-doc-protocol.md) | DesignDoc 4 Step + 10パターン + アンチパターン + セルフチェック18 | DD着手・レビュー対応時 |
 | [strategy.md](strategy.md) | ドキュメント戦略 (6種別役割分担 / 保存先 / 命名規則 / Bounded Context) | 「どこに何を書くか」判断時 |
