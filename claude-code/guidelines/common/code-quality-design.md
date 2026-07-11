@@ -15,11 +15,7 @@
 
 ### Comment Principles
 
-| Rule | Description |
-|------|-------------|
-| Language | Japanese (no formal tone needed) |
-| No obvious comments | Skip comments for self-evident code |
-| Explain intent/reason | Document the "why" and "purpose" of complex logic |
+Code comment canonical: `guidelines/writing/code-comment.md` 参照 (default 書かない / 上限 2 行 / Why not 中心)。
 
 ### Design Philosophy
 
@@ -39,10 +35,3 @@
 | `const MAX = 100;` | `const MAX_RETRY_COUNT = 100;` | Name expresses intent |
 | 200-line function | Split into 10-50-line functions | Improves readability and testability |
 | Importing components from other pages | Commonalize or copy | Maintains loose coupling |
-
-**Good comment example**:
-```ts
-// conform-to/reactの自動バリデーションを無効化しているため手動で実装
-```
-
-**Why**: Explains intent and reason
