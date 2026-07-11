@@ -24,10 +24,7 @@ TypeScript 6.0.3 (stable as of 2026). Common guidelines: `~/.claude/guidelines/c
 
 ## Type Definitions (strict)
 
-### Prohibitions
-- **no `any`**: use `unknown` + type guard
-- **no `as`**: narrow with type guard functions
-- **no `!`**: explicit null checks
+Prohibitions (no `any` / no `as` / no `!`): see `~/.claude/guidelines/common/type-safety-principles.md`.
 
 ### Type Usage
 - `interface` — object shape
@@ -136,7 +133,6 @@ Check `tsconfig.json` `target` and `package.json` TypeScript version before flag
 | `lodash.get(obj, 'a.b.c')` | Optional chaining `obj?.a?.b?.c` | TS3.7/ES2020 |
 | `x === null \|\| x === undefined` | `x ?? fallback` (Nullish Coalescing) | TS3.7/ES2020 |
 | `x != null ? x : fallback` | `x ?? fallback` | TS3.7/ES2020 |
-| class component (`extends React.Component`) | function component + Hooks | React 16.8+ |
 | `@decorator` (legacy/experimental) | Stage 3 Decorators | TS5.0 |
 | Repeated `typeof x === 'string'` | `satisfies` for type assurance | TS4.9 |
 

@@ -22,7 +22,7 @@ cache 対象外: ユーザー入力 / assistant 応答 / 途中で変化した s
 
 Claude の cache TTL は **5 分**。5 分以上アイドルになると cache が失効し、次のターンで再構築コストが発生する。
 
-session が長くなると cache_read の累積コストが上昇し続ける。CLAUDE.md の「Context Management」セクションで定義した msg 数閾値を超えたタイミングが `/clear` の目安となる。閾値の具体的な数値は CLAUDE.md § Context Management を参照する (派生値を繰り返さない)。
+session が長くなると cache_read の累積コストが上昇し続ける。`/clear` の目安は CLAUDE.md § Rewind / Context Management (`>40% → /compact`、`30 分 idle → /clear`) を参照する。
 
 `/clear` を実行した直後は cache が完全にリセットされる。そのため **タスク境界** で `/clear` するのが、再構築コストを最小にする最も効果的なタイミングとなる。
 
