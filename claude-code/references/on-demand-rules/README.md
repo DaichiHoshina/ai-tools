@@ -19,6 +19,7 @@
 | feature flag・maintenance flag・config 切替 release | `feature-flag-deploy-order.md` |
 | commit・PR・issue・外向き post 起草時 | `ai-output.md` |
 | `git worktree add` 発行・worktree 手順提案時 | `worktree-branch-name-match.md` |
+| ai-tools で作業開始・main 反映 (wt 隔離 / ff-merge / sync) 時 | `ai-tools-worktree-flow.md` |
 
 ## 運用
 

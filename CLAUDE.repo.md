@@ -37,5 +37,5 @@ commands/ skills/ agents/ の `.md` は毎 session token を消費する。Keep:
 ## Golden workflow (ai-tools 頻出)
 
 - skill 追加 → `/skill-add` / guideline 更新 → `/update-guidelines`
-- worktree 隔離 + commit + ff-merge + push (`[[ai-tools-worktree-workflow]]` canonical、**dir 名 slug と branch 名は必ず一致**)。前提: 未編集状態で切る。main 編集済なら branch commit に切替 (`[[project_worktree_fresh_baseref_uncommitted_trap]]`)。fallback 手順: `claude-code/references/on-demand-rules/worktree-branch-name-match.md`
+- worktree 隔離 + commit + ff-merge + push (canonical: `claude-code/references/on-demand-rules/ai-tools-worktree-flow.md`、**dir 名 slug と branch 名は必ず一致**)。前提: 未編集状態で切る。main 編集済なら branch commit に切替 (`[[project_worktree_fresh_baseref_uncommitted_trap]]`)。fallback 手順: `claude-code/references/on-demand-rules/worktree-branch-name-match.md`
 - memory write は `~/ai-tools/memory/` 固定 (`.gitignore` 済)。`~/.claude/projects/.../memory/` と Serena `.serena/memories/` への write 禁止

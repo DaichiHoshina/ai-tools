@@ -51,7 +51,7 @@ For objective-gate enforcement, both enforce the same gate semantics (exit code 
 
 ### Worktree
 
-Parallel branches without collision. In ai-tools, `[[ai-tools-worktree-workflow]]` is canonical (CLAUDE.md §Quick Reference). Each worktree is a fully isolated checkout; N agents can mutate separate file groups simultaneously without lock contention. Details: `references/PARALLEL-PATTERNS.md`.
+Parallel branches without collision. In ai-tools, `references/on-demand-rules/ai-tools-worktree-flow.md` is canonical (CLAUDE.md §Quick Reference). Each worktree is a fully isolated checkout; N agents can mutate separate file groups simultaneously without lock contention. Details: `references/PARALLEL-PATTERNS.md`.
 
 ### Skill
 
@@ -133,7 +133,7 @@ In ai-tools: `hooks/pre-tool-use.sh` blocks private-name leakage (see `rules/pub
 | 14-step concept | ai-tools existing | Gap |
 |---|---|---|
 | Automation (`/loop` `/goal`) | `commands/workflow.md` (deterministic fan-out) + `commands/goal.md` (`/goal` single-task gate) + `commands/flow.md --until-gate-green` (P0 loop を objective gate に切替) + `commands/loop.md` / `scripts/loop.sh` (external headless loop, launchd cadence 対応) | OK |
-| Worktree parallel | `[[ai-tools-worktree-workflow]]` + EnterWorktree | OK |
+| Worktree parallel | `on-demand-rules/ai-tools-worktree-flow.md` + EnterWorktree | OK |
 | Skills as compounding | `skills/` registry deployed (count via `ls skills/`) | OK |
 | MCP connectors | Serena / context7 / playwright + `gh` CLI | GitHub MCP not configured; `gh` CLI fills gap for most cases |
 | Maker/checker separation | `developer-agent` + `reviewer-agent` (Stage A 7-observation)。`/goal` は checker 別 model 必須 (Forbidden patterns)、`loop.sh` は layer-1 bash gate + layer-2 `--checker-model` (default haiku ≠ maker) の 2 層 | OK |
