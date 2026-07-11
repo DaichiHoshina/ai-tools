@@ -16,11 +16,13 @@
 
 ## Mode Operation Matrix
 
-| Aspect | strict | normal (default) | fast |
-|--------|--------|------------------|------|
-| **Operations requiring confirmation** | git commit/push/merge / file delete / config file change / package add / DB ops | git commit/push/merge / important file delete / config file change | git push / important file delete (src//.git/) |
-| **Auto-allowed operations** | File read / code analysis / suggestions | File read/edit / code analysis / npm install / lint | git commit (local) / file edit/delete / npm install / lint/test |
-| **Use scenario** | Production / critical refactor / security changes / large teams | Daily dev / feature add / bug fix | Prototype / exploratory dev / personal project |
+操作単位の confirm/auto 一覧 (git / file / package / config) は `guardrails.md` の Boundary table を正とする。session-modes.md では mode ごとの想定 use case のみ持つ。
+
+| Mode | Use scenario |
+|------|--------------|
+| strict | Production / critical refactor / security changes / large teams |
+| normal | Daily dev / feature add / bug fix |
+| fast | Prototype / exploratory dev / personal project |
 
 ---
 
@@ -46,23 +48,6 @@ content:
   activated_at: ISO8601
   previous_mode: string | null
 ```
-
----
-
-## Relationship to 8 Principles
-
-The 8 principles are **valid in all modes**. Mode only controls the strictness of the confirmation flow.
-
-| Principle | strict | normal | fast |
-|-----------|--------|--------|------|
-| mem (Serena memory) | ✅ | ✅ | ✅ |
-| serena (MCP use) | ✅ | ✅ | ✅ |
-| guidelines (auto-load) | ✅ | ✅ | ✅ |
-| No auto-processing | ✅ strict | ✅ | ⚡ relaxed |
-| Completion notification | ✅ | ✅ | ✅ |
-| Type safety | ✅ | ✅ | ✅ |
-| Command suggestion | ✅ | ✅ | ✅ |
-| Confirmed | ✅ strict | ✅ | ⚡ relaxed |
 
 ---
 
