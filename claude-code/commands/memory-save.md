@@ -1,7 +1,7 @@
 ---
 allowed-tools: Write, Read, Bash
-description: Quick auto-memory save — default = clear、<topic> で merge/new auto 判定
-argument-hint: "[<topic>]"
+description: Quick auto-memory save — default = clear、<topic> で merge/new auto 判定、exit で恒久ナレッジ化
+argument-hint: "[<topic> | exit]"
 effort: low
 ---
 
@@ -21,10 +21,11 @@ Save current work state in 1 command。**default (no arg) = clear** (MEMORY.md 1
 |---|---|---|
 | (empty) | **clear (default)** | topic は AI 決定、凝縮 body (30 行前後) で save |
 | `<topic>` (単語) | **auto merge / new** | 同日 `work-context-*-<topic>.md` あれば最古 file に merge、無ければ new file |
+| `exit` | **exit (task 終了)** | clear の全処理 + 恒久ナレッジ抽出 (`exit post-processing` 節) |
 
 どちらの mode も save 後に **saved path + `/reload <topic>` 案内を出力し、`/reload <topic>` を clipboard へコピー**する (復元経路は常に同一)。
 
-`<topic>` は kebab-case 推奨。空白含む場合は quote (`"reload fix"` → 内部で `-` 変換)。legacy arg `clear` / `exit` は default と同義に吸収、`--preview` は廃止 (body を見たい時は chat で頼む)。
+`<topic>` は kebab-case 推奨。空白含む場合は quote (`"reload fix"` → 内部で `-` 変換)。legacy arg `clear` は default と同義に吸収、`--preview` は廃止 (body を見たい時は chat で頼む)。
 
 ## Flow (auto merge/new mode)
 
@@ -72,6 +73,20 @@ metadata:
 6. 「memory 保存済 (index + `<saved-path>`)。`/reload <topic>` を clipboard にコピーした。`/clear` 可」を 1 行 chat
 
 次 session は session-start hook が MEMORY.md を auto-load (200 行まで注入)、明示復元は `/reload <topic>`。fallback chain: `commands/reload.md`。
+
+## `exit` post-processing (恒久ナレッジ化)
+
+task 終了時に呼ぶ。`clear` post-processing (step 1-6) を全て実行した後、session の task 情報を恒久ナレッジへ昇格させる。
+
+1. **恒久ナレッジ候補を抽出**: session を振り返り、次 session 以降も有効な知見だけ選ぶ。基準は `references/memory-usage.md` § Recording Targets (Compounding Engineering) と同じ:
+   - misbehavior 再発防止 (同 path error / 想定外の挙動と回避手順)
+   - non-obvious success (試行錯誤で当てた非標準 approach)
+   - repo / code から導出できない制約・決定とその理由
+   - 除外: 進捗 / commit hash / 一時的な作業状態 (work-context 側が持つ)。候補 0 件なら本節 step 2-4 を skip し、その旨を報告に含める
+2. **恒久 file write** (候補 1 件 = 1 file): name は `feedback-<slug>` (挙動修正・作法) / `project-<slug>` (project 制約・決定) で日付 prefix なし。同名・同趣旨の既存 memory があれば new file にせず既存へ merge する。frontmatter `type: feedback | project`、body は fact + `**Why:**` + `**How to apply:**` の 3 点で 10 行以内
+3. **MEMORY.md 更新**: file ごとに `bash ... update-index <name> <description> <hook>`
+4. **`/promote` 案内**: 候補のうち config 化 (CLAUDE.md / skill / rule / hook) がふさわしいもの (再現可能な手順 / 全 session 共通 rule) は `/promote <memory-file>` command を報告に添える。自動実行はしない (SoT 編集は user 承認 flow が必要)
+5. **Report**: clear の報告 1 行に「恒久ナレッジ N 件 (`<file名>...`)」を追記する
 
 ## Auto issue key suffix
 
