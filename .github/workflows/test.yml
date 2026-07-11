@@ -1,0 +1,44 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  jest:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: claude-code
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # package-lock.json は gitignore 済のため npm ci ではなく npm install を使う
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+
+  bats:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: claude-code
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps (parallel / jq)
+        run: sudo apt-get update && sudo apt-get install -y parallel jq
+        working-directory: .
+      - name: Install bats-core 1.13.0
+        run: |
+          git clone --depth 1 --branch v1.13.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          sudo /tmp/bats-core/install.sh /usr/local
+        working-directory: .
+      - name: Test environment setup
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "ci"
+          mkdir -p ~/.claude/logs ~/.claude/session-logs
+        working-directory: .
+      - run: bats --jobs 4 --no-parallelize-within-files -r tests/
