@@ -36,7 +36,7 @@ description: External headless loop — fresh context per iteration via scripts/
 ### run
 
 ```bash
-~/.claude/scripts/loop.sh --name <name> --gate "<cmd>" [--repo <path>] \
+~/.claude/scripts/loop.sh --name <name> --gate "<cmd>" [--repo <path>] [--add-dir <path>] \
   [--max-iter 10] [--max-minutes 60] [--max-cost-usd 5.00] [--model sonnet] \
   [--review] [--checker-model haiku] [--checker-cmd "<cmd>"] [--notify]
 ```
@@ -70,6 +70,10 @@ state.md を Read して 4 行で報告する: Status / 直近 ledger 行 / Less
 
 hard stop 3 種 (iter / time / cost) + no-progress 検出 + state heading 検証 + gate 出力の private term REDACT + SIGINT で aborted 記録 (自動再開しない)。permission は default `acceptEdits`、`--yolo` は user 明示指示時のみ。
 
+## Headless maker write scope (init 時に必ず考慮)
+
+headless `claude -p` (acceptEdits) の書込可否は 3 段になる: (1) cwd / `--add-dir` 配下の既存 file Edit = auto-accept (2) Write (新規 / 全文上書き) と Bash = deny (3) `~/.claude/` 配下は `--add-dir` を渡しても CLI 組込 guard が Edit ごと deny する。したがって **queue / lessons 等 maker が書く file は `--repo` 内 (untracked) に置き**、PROMPT の Constraints に「更新は Edit tool のみ」を明記する。repo 外で書かせたい dir (memory 等) は `--add-dir` で渡す。state.md への Lessons 書込は deny されるため lessons も repo 内 file に寄せる。実踏: 2026-07-11 memory-brushup loop (iter 空走 4 回)。
+
 ## Forbidden patterns
 
 | Pattern | Why |
@@ -77,6 +81,7 @@ hard stop 3 種 (iter / time / cost) + no-progress 検出 + state heading 検証
 | gate に merge / push / deploy を含める | 不可逆操作は human review 必須 (loop-engineering.md §30-second check) |
 | `run` 実績なしで `cron` | MVL 順序違反 — 「確実に間違い続ける loop」になる |
 | subjective gate ("良さそうなら OK") | exit code がなく loop が終了できない |
+| maker が書く queue / lessons を `~/.claude/` 配下に置く | CLI 組込 guard で Edit deny → 全 iteration 空振り (§Headless maker write scope) |
 
 ## Related
 

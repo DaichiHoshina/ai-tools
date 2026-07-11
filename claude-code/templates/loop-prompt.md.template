@@ -16,7 +16,8 @@ gate command がそのまま完了条件になる (verbatim):
 
 ## Constraints
 
-- 触ってよい範囲: <file / dir を列挙>
+- file 更新は Edit tool (既存 file の部分置換) のみ。Write (新規/全文上書き) と Bash は headless permission で deny される
+- 触ってよい範囲: <file / dir を列挙。queue 等お前が書く file は作業 repo 内に置いてある>
 - 触ってはいけない範囲: <Don't touch list。例: hooks/*.sh の block/warn logic>
 - <その他の制約。例: 依存追加禁止>
 
