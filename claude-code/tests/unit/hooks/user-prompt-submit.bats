@@ -31,9 +31,11 @@ teardown() {
 # =============================================================================
 
 # フックを実行してJSON出力を取得
+# hook は env CLAUDE_CODE_SESSION_ID を stdin より優先するため、test では env を落として
+# stdin の session_id を必ず有効にする (実 session の id 共有による並列 flake 防止)
 run_hook() {
   local input="$1"
-  echo "$input" | bash "$HOOK_FILE"
+  echo "$input" | env -u CLAUDE_CODE_SESSION_ID bash "$HOOK_FILE"
 }
 
 # JSON出力から systemMessage を抽出
@@ -250,17 +252,21 @@ get_additional_context() {
 @test "user-prompt-submit: dup-detect 同一prompt5秒以内で通知あり" {
   cd "$TEST_TMPDIR"
   local sid="dup-test-same-$$"
-  rm -f "/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
+  local dup_file="/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
+  rm -f "$dup_file"
 
-  local input='{"prompt":"これは20文字以上の長いテストプロンプトで重複検出","session_id":"'"$sid"'"}'
-  # 1回目: dup check skip, last-prompt 記録のみ
-  run_hook "$input" >/dev/null
-  # 2回目: 0秒経過 → 通知あり
+  # 実時間 2 回起動は並列実行 (bats --jobs) の負荷で 5 秒窓を超えて flake するため、
+  # 現在時刻の last-prompt を pre-seed して 1 回起動で判定する
+  local prompt_text="これは20文字以上の長いテストプロンプトで重複検出"
+  local hash=$(printf '%s' "$prompt_text" | shasum -a 1 | cut -d' ' -f1)
+  printf '%s\t%s' "$(date +%s)" "$hash" > "$dup_file"
+
+  local input='{"prompt":"'"$prompt_text"'","session_id":"'"$sid"'"}'
   local out=$(run_hook "$input")
 
   local ctx=$(get_additional_context "$out")
   [[ "$ctx" =~ "同一入力検出" ]]
-  rm -f "/tmp/claude-last-prompt-${sid}-$(date +%Y%m%d)"
+  rm -f "$dup_file"
 }
 
 @test "user-prompt-submit: dup-detect 異なるpromptは通知なし" {

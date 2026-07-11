@@ -11,9 +11,14 @@ setup() {
   export PROJECT_ROOT
   export HOOK_FILE="${PROJECT_ROOT}/hooks/pre-tool-use.sh"
   setup_test_tmpdir
+  # 並列実行 (bats --jobs) 時に他 test file の hook 呼び出しと
+  # dedup flag (/tmp/claude-today-commits-<session>-<date>) を共有しないよう
+  # test ごとに一意な session id を与える
+  export CLAUDE_CODE_SESSION_ID="tc-$$-${BATS_TEST_NUMBER}"
 }
 
 teardown() {
+  rm -f "/tmp/claude-today-commits-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
   teardown_test_tmpdir
 }
 
@@ -49,7 +54,7 @@ _teardown_git_stub() {
 @test "today-commit-inject: git commit Bash で additionalContext に今日の commit が出る" {
   _setup_git_stub
   # session 重複フラグをクリア（$$が変わるので通常不要だが念のため）
-  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+  rm -f "/tmp/claude-today-commits-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
 
   result=$(run_hook "Bash" '{"command": "git commit -m \"test fix\""}')
   _teardown_git_stub
@@ -61,7 +66,7 @@ _teardown_git_stub() {
 
 @test "today-commit-inject: Read tool では inject されない" {
   _setup_git_stub
-  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+  rm -f "/tmp/claude-today-commits-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
 
   result=$(run_hook "Read")
   _teardown_git_stub
@@ -72,7 +77,7 @@ _teardown_git_stub() {
 
 @test "today-commit-inject: Slack tool で inject される" {
   _setup_git_stub
-  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+  rm -f "/tmp/claude-today-commits-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
 
   result=$(run_hook "mcp__claude_ai_Slack__slack_send_message")
   _teardown_git_stub
@@ -83,7 +88,7 @@ _teardown_git_stub() {
 
 @test "today-commit-inject: Write tool で inject される" {
   _setup_git_stub
-  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+  rm -f "/tmp/claude-today-commits-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
 
   result=$(run_hook "Write" '{"file_path": "/tmp/test.md", "content": "hello"}')
   _teardown_git_stub
@@ -106,7 +111,7 @@ STUB
   chmod +x "$stub_dir/git"
   local _orig="$PATH"
   export PATH="$stub_dir:$PATH"
-  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+  rm -f "/tmp/claude-today-commits-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
 
   result=$(run_hook "Bash" '{"command": "git commit -m \"empty day\""}')
   export PATH="$_orig"
@@ -117,7 +122,7 @@ STUB
 
 @test "today-commit-inject: gh pr create Bash で inject される" {
   _setup_git_stub
-  rm -f /tmp/claude-today-commits-* 2>/dev/null || true
+  rm -f "/tmp/claude-today-commits-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
 
   result=$(run_hook "Bash" '{"command": "gh pr create --title \"feat\" --body \"desc\""}')
   _teardown_git_stub

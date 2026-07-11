@@ -8,8 +8,8 @@ setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
   export INSTALL_SH="${PROJECT_ROOT}/cursor/install.sh"
 
-  export TEST_HOME="${BATS_TMPDIR}/cursor-mem-${RANDOM}${RANDOM}"
-  mkdir -p "$TEST_HOME"
+  TEST_HOME="$(mktemp -d "${BATS_TMPDIR}/cursor-mem-XXXXXX")"
+  export TEST_HOME
 
   export HELPER="${TEST_HOME}/helper.sh"
   {

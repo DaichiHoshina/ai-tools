@@ -6,7 +6,8 @@
 setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
   export EVAL_SH="${PROJECT_ROOT}/claude-code/scripts/skill-eval.sh"
-  export FIXTURE_DIR="${BATS_TMPDIR}/skill-eval-fixture-${RANDOM}"
+  FIXTURE_DIR="$(mktemp -d "${BATS_TMPDIR}/skill-eval-fixture-XXXXXX")"
+  export FIXTURE_DIR
   mkdir -p "$FIXTURE_DIR/projects/proj-A"
   export CLAUDE_PROJECTS_DIR="$FIXTURE_DIR/projects"
 }

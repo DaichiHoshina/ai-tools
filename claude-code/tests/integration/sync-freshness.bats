@@ -6,8 +6,8 @@
 
 setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
-  export TEST_TMPDIR="${BATS_TMPDIR}/sync-freshness-${RANDOM}-$$"
-  mkdir -p "${TEST_TMPDIR}"
+  TEST_TMPDIR="$(mktemp -d "${BATS_TMPDIR}/sync-freshness-XXXXXX")"
+  export TEST_TMPDIR
 
   # NOTE: 関数本体は `^}$`（行頭の `}` 単独行）で終端判定している。
   # sync.sh 側で check_repo_freshness の中に `}` を独立行で書く構造（here-doc EOF

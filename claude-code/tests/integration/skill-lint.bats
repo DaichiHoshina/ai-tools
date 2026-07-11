@@ -6,8 +6,8 @@
 setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
   export LINTER="${PROJECT_ROOT}/claude-code/scripts/skill-lint.sh"
-  export FIXTURE_DIR="${BATS_TMPDIR}/skill-lint-fixture-${RANDOM}"
-  mkdir -p "$FIXTURE_DIR"
+  FIXTURE_DIR="$(mktemp -d "${BATS_TMPDIR}/skill-lint-fixture-XXXXXX")"
+  export FIXTURE_DIR
 }
 
 teardown() {

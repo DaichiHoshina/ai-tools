@@ -4,11 +4,16 @@
 # =============================================================================
 
 setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
+  load "../../helpers/common"
   export LIB_FILE="${PROJECT_ROOT}/lib/detect-from-keywords.sh"
 
-  # キャッシュをクリア（テスト間の干渉を防ぐ）
-  rm -f "${HOME}/.claude/cache/keyword-patterns.json"
+  # HOME を隔離: lib は $HOME/.claude/cache/keyword-patterns.json を読み書きするため、
+  # 実 HOME 共有だと並列実行 (bats --jobs) 中の他 file の hook 呼び出しと cache が競合する
+  setup_home_isolated
+}
+
+teardown() {
+  teardown_home_isolated
 }
 
 # =============================================================================

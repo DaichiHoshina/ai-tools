@@ -10,8 +10,8 @@ setup() {
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
   export INSTALL_SH="${PROJECT_ROOT}/codex/install.sh"
 
-  export TEST_HOME="${BATS_TMPDIR}/codex-mem-${RANDOM}${RANDOM}"
-  mkdir -p "$TEST_HOME"
+  TEST_HOME="$(mktemp -d "${BATS_TMPDIR}/codex-mem-XXXXXX")"
+  export TEST_HOME
 
   # install.sh の関数だけを取り込む（末尾の main 実行を避けるため source ではなく抽出）。
   # print_* は最小 stub を定義する。

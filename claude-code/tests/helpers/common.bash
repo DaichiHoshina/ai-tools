@@ -11,9 +11,10 @@ setup_test_tmpdir() {
 
 # TEST_TMPDIR を削除する
 teardown_test_tmpdir() {
+  rm -rf "$TEST_TMPDIR" 2>/dev/null && return 0
   # hook が async subshell (&) で起動した孫プロセス (sqlite3 等) が
   # TEST_TMPDIR 配下に書き込み中の場合、macOS の rm -rf が失敗することがある。
-  # 短い待機を入れて孫プロセスが終了するまで猶予を与える。
+  # 失敗時のみ短い待機を入れて孫プロセスが終了するまで猶予を与える。
   sleep 0.1
   rm -rf "$TEST_TMPDIR"
 }

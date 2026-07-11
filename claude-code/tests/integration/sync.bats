@@ -5,8 +5,8 @@
 
 setup() {
   # テスト用の一時ディレクトリを作成
-  export TEST_HOME="${BATS_TMPDIR}/claude-sync-test-${RANDOM}"
-  mkdir -p "$TEST_HOME"
+  TEST_HOME="$(mktemp -d "${BATS_TMPDIR}/claude-sync-test-XXXXXX")"
+  export TEST_HOME
 
   # PROJECT_ROOT を設定（tests/integration から ../../.. で ai-tools ルートへ）
   export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"

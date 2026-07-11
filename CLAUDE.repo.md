@@ -7,7 +7,7 @@ global 規範は `~/.claude/CLAUDE.md` を参照する。本 file は ai-tools r
 ```bash
 cd ~/ai-tools/claude-code
 npm test                    # jest (statusline 等 JS test)
-bats -r tests/              # bash hook / lib / scripts の bats 全実行
+bats --jobs 4 --no-parallelize-within-files -r tests/  # bats 全実行 (file 単位並列。GNU parallel なしなら --jobs 系 flag を外す)
 ./sync.sh to-local --yes    # repo → ~/.claude 反映 (非対話)
 ./scripts/hook-bench.sh     # hook latency 計測 (--log 保存 / --diff 前回比較 / install-hook-bench-cron.sh で週次 cron)
 ```
