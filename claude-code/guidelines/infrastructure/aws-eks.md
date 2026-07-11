@@ -8,7 +8,7 @@
 
 | Item | Setting |
 |------|---------|
-| `kubernetes_version` | Latest stable (e.g. `1.33`) |
+| `kubernetes_version` | Latest stable (e.g. `1.36`) |
 | `endpoint_public_access` + `endpoint_private_access` | Both enabled recommended |
 | `enable_cluster_creator_admin_permissions` | `true` |
 
