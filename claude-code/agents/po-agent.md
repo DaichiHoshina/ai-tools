@@ -31,7 +31,7 @@ All responses in English (preserve technical terms, tool names).
 
 ## When to use / not to use
 
-- **Use**: via `/flow` (Team strategy decision, `execution_mode: team` fixed) or `/plan` (strategy-only; no Manager follows — return decision for user, execution-mode judgment table in `commands/plan.md` applies)
+- **Use**: via `/flow` (Team strategy decision, `execution_mode: team` fixed) or `/plan` (strategy-only; no Manager follows — return decision for user, execution-mode judgment table in `~/.claude/commands/plan.md` applies)
 - **Not**: standalone implementation (developer-agent) / task decomposition (manager-agent) / ad-hoc investigation (explore-agent)
 
 ## Silent-fail guard
@@ -49,9 +49,9 @@ AskUserQuestion is auto-denied in subagent context (no error signal). On any dec
 
 ### Return format
 
-Canonical: `references/agent-team-contract.md` §1 (PO → parent). **Fill contract §1 YAML literal as-is** (do not alter field names / hierarchy / types).
+Canonical: `~/.claude/references/agent-team-contract.md` §1 (PO → parent). **Fill contract §1 YAML literal as-is** (do not alter field names / hierarchy / types).
 
-Trailer schema (`status` / `confidence` / `issues_blocking`): `references/agent-output-schema.md` — canonical, mandatory. Missing trailer → parent treats output as `failure`. Contract §1 YAML と trailer は 1 出力内の 2 block (§1 YAML → `---` → trailer)。
+Trailer schema (`status` / `confidence` / `issues_blocking`): `~/.claude/references/agent-output-schema.md` — canonical, mandatory. Missing trailer → parent treats output as `failure`. Contract §1 YAML と trailer は 1 出力内の 2 block (§1 YAML → `---` → trailer)。
 
 ```
 ---
@@ -61,9 +61,9 @@ issues_blocking: []
 ---
 ```
 
-Evidence label: `decision_reason` の根拠 claim に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `references/agent-output-schema.md` §Evidence label)。
+Evidence label: `decision_reason` の根拠 claim に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `~/.claude/references/agent-output-schema.md` §Evidence label)。
 
-Canonical: `references/agent-team-contract.md` §1 — full field list. Key required fields: `execution_mode` / `task_type` (enum 6 選は agent-team-contract.md §1 参照) / `decision_reason` / `worktree` (`{path, branch, base_branch}`) / `reviewer_qa_criteria` / `manager_instruction` (`{goal, constraints, priority}`).
+Canonical: `~/.claude/references/agent-team-contract.md` §1 — full field list. Key required fields: `execution_mode` / `task_type` (enum 6 選は agent-team-contract.md §1 参照) / `decision_reason` / `worktree` (`{path, branch, base_branch}`) / `reviewer_qa_criteria` / `manager_instruction` (`{goal, constraints, priority}`).
 
 **Prohibitions**: Adding fields not in contract §1 (`strategy` / `worktree.create` etc.) **forbidden** — consolidate into `decision_reason`.
 
@@ -87,11 +87,11 @@ On violation (PO returns `direct`), parent discards PO output and proceeds to Ma
 | **Don't create** | Bug fix (use existing) / minor improvement / doc update | **Continue current branch** (feature/bugfix keeps that branch, main starts from main). Confirm with `git rev-parse --abbrev-ref HEAD` |
 | **Unclear** | Neither above, boundary case | **User confirm before parent return** (no auto default; return `status: blocked` so parent asks worktree necessity) |
 
-`--auto` skip conditions (all 4) & formula detail: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`.
+`--auto` skip conditions (all 4) & formula detail: `~/.claude/references/PARALLEL-PATTERNS.md#worktree-applicability-flow`.
 
 ## Manager allocation oversight
 
-**Single-shot callback, no loop** (1 invocation per `/flow` run). Input schema: `references/agent-team-contract.md` §1.1.
+**Single-shot callback, no loop** (1 invocation per `/flow` run). Input schema: `~/.claude/references/agent-team-contract.md` §1.1.
 
 PO checks Manager allocation against initial `manager_instruction` on 3 criteria:
 

@@ -52,9 +52,9 @@ AskUserQuestion is auto-denied in subagent context. On decision fork requiring u
 
 ## Review Process
 
-7-phase フロー (Prep / Interaction / Responsiveness / Visual polish / Accessibility / Stability / Code health & content) の詳細は `commands/design-review.md` § "Review phases" を canonical として参照する。本 agent は同 command から delegate される想定。
+7-phase フロー (Prep / Interaction / Responsiveness / Visual polish / Accessibility / Stability / Code health & content) の詳細は `~/.claude/commands/design-review.md` § "Review phases" を canonical として参照する。本 agent は同 command から delegate される想定。
 
-- Phase 4 (Accessibility): a11y checklist は `references/wcag-a11y-checklist.md` (WCAG 2.2 AA) を使う
+- Phase 4 (Accessibility): a11y checklist は `~/.claude/references/wcag-a11y-checklist.md` (WCAG 2.2 AA) を使う
 - Triage matrix / Communication principles / Report structure も同 command を canonical とする
 
 ## Project-Specific Augmentation
@@ -71,16 +71,18 @@ AskUserQuestion is auto-denied in subagent context. On decision fork requiring u
 
 ## Output schema (required)
 
-詳細は `references/agent-output-schema.md` 参照。
+詳細は `~/.claude/references/agent-output-schema.md` 参照。
 
 `issues_blocking` への粒度: P0 (Blocker) finding のみ blocking 扱いで列挙。P1 (High-Priority) 以下は本文 Findings セクションに記載し `issues_blocking` には含めない。
 
 Trailer example:
 
 ```yaml
+---
 status: success
 confidence: 85
 issues_blocking: []
+---
 ```
 
 ## Source

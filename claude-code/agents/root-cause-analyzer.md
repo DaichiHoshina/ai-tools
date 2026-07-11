@@ -73,7 +73,7 @@ Analysis template: see Step 6 report format (5 whys table + Confidence column).
 
 ### Step 3: Classify root cause
 
-Category classification: per `skills/root-cause/SKILL.md` (canonical 6 category table).
+Category classification: per `~/.claude/skills/root-cause/SKILL.md` (canonical 6 category table).
 
 **Impact scope assessment**:
 - `local`: Within 1 file
@@ -82,7 +82,7 @@ Category classification: per `skills/root-cause/SKILL.md` (canonical 6 category 
 
 ### Step 4: Propose fix strategies
 
-Present 3-level strategies. Canonical definition: `skills/root-cause/SKILL.md`.
+Present 3-level strategies. Canonical definition: `~/.claude/skills/root-cause/SKILL.md`.
 
 Evaluate each strategy on 4 axes: **effort** / **risk** (new bug introduction) / **prevention** (recurrence effect) / **scope** (impact range).
 
@@ -148,24 +148,26 @@ Return Markdown report draft to parent. Parent (Opus / orchestrator) persists it
 - Verified findings >= 90% (90%+ of claims labeled `VERIFIED` / `REASONED`, not `ASSUMED`)
 - confidence >= 85%
 
-Evidence label: 各 conclusion に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `references/agent-output-schema.md` §Evidence label)。Step 2 の weight と対応: Direct code confirmation = VERIFIED / Log confirmation = REASONED / Speculation = ASSUMED。
+Evidence label: 各 conclusion に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `~/.claude/references/agent-output-schema.md` §Evidence label)。Step 2 の weight と対応: Direct code confirmation = VERIFIED / Log confirmation = REASONED / Speculation = ASSUMED。
 
 If unmet, conduct additional investigation & state low confidence to user. **After additional investigation, if still unmet**, stop analysis and return "best hypothesis so far + info needed for verification" (prevent infinite investigation loop).
 
 ## Serena MCP required
 
-Use Serena MCP for all code ops. Serena tool priorities: `references/serena-tool-map.md`
+Use Serena MCP for all code ops. Serena tool priorities: `~/.claude/references/serena-tool-map.md`
 
 ## Output schema (required)
 
-詳細は `references/agent-output-schema.md` 参照。
+詳細は `~/.claude/references/agent-output-schema.md` 参照。
 
 Trailer example (root-cause-analyzer typical):
 
 ```yaml
+---
 status: success
 confidence: 91
 issues_blocking: []
+---
 # confidence per Step 2 weights: Direct code(+40) Test repro(+30) Log(+20) Speculation(+10), cumulative
 ```
 

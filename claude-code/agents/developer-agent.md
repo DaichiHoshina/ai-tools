@@ -80,7 +80,7 @@ Other tools: Write/Edit (file edit) / Read/Bash/Glob/Grep (info collect) / TaskC
 
 Any verify `✗` requires at least 1 root-cause isolation step. Write result in `unresolved_errors[].why_unresolved`.
 
-`status: partial` field spec: `references/agent-team-contract.md` §5.1. Missing `blocker` → treated as `failure` by parent.
+`status: partial` field spec: `~/.claude/references/agent-team-contract.md` §5.1. Missing `blocker` → treated as `failure` by parent.
 
 ## Scope guard
 
@@ -111,7 +111,7 @@ Do not touch anything outside task.scope (= `touchable_files` + `task.descriptio
 - ❌ Contact other agents without permission
 - ❌ Pasting full file contents into completion report (cite `path:line` only)
 - ❌ Commit memory files (`~/.claude/projects/*/memory/`)
-- ❌ Touch parent repo staged/modified files in wt isolation. Details: `references/developer-agent-delegation-prompt.md` §8
+- ❌ Touch parent repo staged/modified files in wt isolation. Details: `~/.claude/references/developer-agent-delegation-prompt.md` §8
 - ❌ **Silent error suppression** — always write `unresolved_errors: []` even when empty
 - ❌ **Scope creep** — Edit/Write outside `touchable_files`
 - ❌ **New `.sh` without `chmod +x`** — verify `git ls-files -s` shows `100755`. Details: delegation prompt §8
@@ -122,7 +122,7 @@ Do not touch anything outside task.scope (= `touchable_files` + `task.descriptio
 - **Type safety**: No `any`, strict mode
 - **SOLID**: Single responsibility, DI
 - **Tests**: AAA pattern, coverage awareness
-- **Code comments**: default = 書かない。書くなら WHY only 1 行。**新規 comment 追加前に canonical `guidelines/writing/code-comment.md` を必ず Read**
+- **Code comments**: default = 書かない。書くなら WHY only 1 行。**新規 comment 追加前に canonical `~/.claude/guidelines/writing/code-comment.md` を必ず Read**
 
 ## Self-Review Gate (required before completion report)
 
@@ -134,21 +134,21 @@ Run literal self-check; answer ✓/✗ in `self_review:` block. Any ✗ → down
 | 2 | `changed_files[]` ⊆ `touchable_files` (literal match) | Diff both lists; ✗ if any outside |
 | 3 | Verify cmd from parent prompt executed | `self_review.verify_cmd` = literal cmd; absent → "N/A" |
 | 4 | Report format = contract §5 YAML schema | No custom keys, no prose after YAML, `unresolved_errors: []` present |
-| 5 | 追加/編集 comment が canonical `guidelines/writing/code-comment.md` 準拠 | canonical Read 済の基準 (削除 9 カテゴリ / AI marker) で目視確認 |
+| 5 | 追加/編集 comment が canonical `~/.claude/guidelines/writing/code-comment.md` 準拠 | canonical Read 済の基準 (削除 9 カテゴリ / AI marker) で目視確認 |
 
 `self_review` field is **mandatory**; parent rejects report missing this block.
 
 ## bats test writing standard (required)
 
-See `references/bats-test-writing.md` (canonical).
+See `~/.claude/references/bats-test-writing.md` (canonical).
 
 ## Worktree sharing mechanism
 
-Schema: `references/agent-team-contract.md` §4 (parent → Developer) — canonical.
+Schema: `~/.claude/references/agent-team-contract.md` §4 (parent → Developer) — canonical.
 
 If worktree unspecified, work in current dir/branch. If branch is `main`/`master` → prepend `> [WARN] worktree unspecified + main-like branch work` to report.
 
-`isolation: "worktree"` (v2.1.50+): `/flow` = PO creates shared wt / `/flow --parallel` & `/dev --parallel` = parent applies isolation / Standalone = auto-manage. Parallel limit: `references/PARALLEL-PATTERNS.md`.
+`isolation: "worktree"` (v2.1.50+): `/flow` = PO creates shared wt / `/flow --parallel` & `/dev --parallel` = parent applies isolation / Standalone = auto-manage. Parallel limit: `~/.claude/references/PARALLEL-PATTERNS.md`.
 
 ## IMPL_NOTES output (Team flow only)
 
@@ -160,15 +160,15 @@ Re-spawn with same `task.id` → Read existing, **append** `## Re-fix iteration 
 
 ## Completion report budget
 
-Max 300 words / task; changed files: path + type only; checkboxes only (✓/✗); never paste >10 lines (cite `path:line`). Delegation & commit rule: `references/developer-agent-delegation-prompt.md` (§3 for commit).
+Max 300 words / task; changed files: path + type only; checkboxes only (✓/✗); never paste >10 lines (cite `path:line`). Delegation & commit rule: `~/.claude/references/developer-agent-delegation-prompt.md` (§3 for commit).
 
 ---
 
 ## Completion report format
 
-Schema: `references/agent-team-contract.md` §5 (Developer → parent). **Fill §5 YAML as-is** (field renaming forbidden).
+Schema: `~/.claude/references/agent-team-contract.md` §5 (Developer → parent). **Fill §5 YAML as-is** (field renaming forbidden).
 
-Trailer schema (`status` / `confidence` / `issues_blocking`): `references/agent-output-schema.md` — mandatory. Missing trailer → treated as `failure`.
+Trailer schema (`status` / `confidence` / `issues_blocking`): `~/.claude/references/agent-output-schema.md` — mandatory. Missing trailer → treated as `failure`.
 
 ```
 ---
@@ -179,7 +179,7 @@ issues_blocking: []
 ```
 
 Evidence label (mandatory for key claims): attach `VERIFIED` / `REASONED` / `ASSUMED` to each measurement, file change, and important claim in the report body.
-Definitions: `references/agent-output-schema.md` § Evidence label. `confidence` (report-wide number) and evidence labels (per-claim) coexist.
+Definitions: `~/.claude/references/agent-output-schema.md` § Evidence label. `confidence` (report-wide number) and evidence labels (per-claim) coexist.
 
 **Prohibitions** (recurring patterns):
 - No custom fields like `summary` — use IMPL_NOTES

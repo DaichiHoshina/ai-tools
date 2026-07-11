@@ -56,7 +56,7 @@ Prompt includes "you are explore1" etc. at startup.
 
 ## Parallel execution behavior
 
-See `references/PARALLEL-PATTERNS.md` for full parallel behavior spec. Focus on own specialization; report only own findings; no contact with other Explore agents.
+See `~/.claude/references/PARALLEL-PATTERNS.md` for full parallel behavior spec. Focus on own specialization; report only own findings; no contact with other Explore agents.
 
 ## Base flow
 
@@ -139,7 +139,7 @@ Other tools: Read/Glob/Grep (info collect) / Bash read-only (git log, tree) / Ta
 
 ## Parallel fan-out / Background execution
 
-Canonical: `references/PARALLEL-PATTERNS.md` (split principles / background flag / `run_in_background: true` spec).
+Canonical: `~/.claude/references/PARALLEL-PATTERNS.md` (split principles / background flag / `run_in_background: true` spec).
 
 ## Diagram patterns (Mermaid)
 
@@ -147,15 +147,16 @@ Canonical: `references/PARALLEL-PATTERNS.md` (split principles / background flag
 
 ## Output schema (required)
 
-詳細は `references/agent-output-schema.md` 参照。
+詳細は `~/.claude/references/agent-output-schema.md` 参照。
 
-Evidence label: 重要 claim に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `references/agent-output-schema.md` §Evidence label)。per-finding の `confidence: XX%` と併存する (役割が違う)。
+Evidence label: 重要 claim に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `~/.claude/references/agent-output-schema.md` §Evidence label)。per-finding の `confidence: XX%` と併存する (役割が違う)。
 
 Trailer example (explore-agent typical):
 
 ```yaml
+---
 status: success
 confidence: 87
 issues_blocking: []
-# impl_notes: hit_count=14, domains=3
+---
 ```

@@ -54,7 +54,7 @@ AskUserQuestion is auto-denied in subagent context. On decision fork requiring u
 
 ## Input contract
 
-Schema: `references/agent-team-contract.md` §6 canonical. MERGED.md は read-only cross-check のみ (write は disallowedTools で block)。
+Schema: `~/.claude/references/agent-team-contract.md` §6 canonical. MERGED.md は read-only cross-check のみ (write は disallowedTools で block)。
 
 `task_type` は PO decision から parent 経由で渡される場合がある (enum 6 選は agent-team-contract.md §1 参照)。受け取った場合は review focus の参考情報として使用する。
 
@@ -82,14 +82,14 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
 |---|---|---|
 | **P0** Fix required | Type safety violations / Security vulns / Data corruption risk / Backward compat break | `any` abuse, SQL Injection, missing tx, no API migration path |
 | **P1** Fix recommended | Architecture violation / Error handling gaps / Test gaps / Performance | Layer boundary breach, N+1 query |
-| **P2** Improve | Duplication / Complexity / Unclear names / Doc gaps / **Comment 規約違反** | Long function, deep nesting, what comment / AI marker / commented-out code (canonical: `guidelines/writing/code-comment.md` 削除 9 カテゴリ) |
-| **P3** Nice-to-have | Code style / Minor refactor / Writing 品質 | Format issues, 擬人化 comment / 主語省略 (canonical: `guidelines/writing/PRINCIPLES.md`) |
+| **P2** Improve | Duplication / Complexity / Unclear names / Doc gaps / **Comment 規約違反** | Long function, deep nesting, what comment / AI marker / commented-out code (canonical: `~/.claude/guidelines/writing/code-comment.md` 削除 9 カテゴリ) |
+| **P3** Nice-to-have | Code style / Minor refactor / Writing 品質 | Format issues, 擬人化 comment / 主語省略 (canonical: `~/.claude/guidelines/writing/PRINCIPLES.md`) |
 
 ## Review process
 
 1. **Scope**: `git status && git diff` to identify range
-2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (see `references/serena-tool-map.md`). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
-3. **Per-viewpoint review**: Run `comprehensive-review` skill (canonical: `skills/comprehensive-review/SKILL.md`)
+2. **Code exploration**: If code (.go/.ts/.py/.rs/.java/.kt/.dart/.swift etc.), **Serena priority** (see `~/.claude/references/serena-tool-map.md`). Non-code (md/yaml/json/toml/lockfile/.env): Grep/Read
+3. **Per-viewpoint review**: Run `comprehensive-review` skill (canonical: `~/.claude/skills/comprehensive-review/SKILL.md`)
 
    **Coverage-first discovery**: During steps 1-3, surface every candidate finding — including uncertain or low-severity ones — with confidence and severity attached. Do not drop a finding during discovery because it seems minor; filtering happens only at step 4 (Self-Filter Gate) and downstream Stage A/B. Silently dropping a real bug is worse than surfacing one that gets filtered later.
 4. **Self-Filter Gate (moderate strictness)**: For every candidate P0/P1/P2, run the discard criteria below before emit:
@@ -104,7 +104,7 @@ P0/P1/P2/P3 defined here only. Output template & Team mode cite this classificat
    **Pre-emission sanity check**: discard findings phrased as "cleaner / more elegant / could be simpler / better naming" without a rule violation, or "verbose text / could be shorter" prose preferences, or restated known issues. Zero findings is a valid output — do not invent replacements.
 5. **Integrate result**: Output via template below
 
-Serena tool priorities: `references/serena-tool-map.md` 参照
+Serena tool priorities: `~/.claude/references/serena-tool-map.md` 参照
 
 ### Output template (common)
 
@@ -128,7 +128,7 @@ Serena tool priorities: `references/serena-tool-map.md` 参照
 ```
 
 Evidence label (mandatory for findings): attach `VERIFIED` / `REASONED` / `ASSUMED` to each finding line to state how it was confirmed.
-Definitions: `references/agent-output-schema.md` § Evidence label. Per-finding evidence labels coexist with the lens-mode `confidence` number.
+Definitions: `~/.claude/references/agent-output-schema.md` § Evidence label. Per-finding evidence labels coexist with the lens-mode `confidence` number.
 
 ## Writer/Reviewer parallel pattern
 
@@ -138,7 +138,7 @@ Definitions: `references/agent-output-schema.md` § Evidence label. Per-finding 
 
 ## `/flow` Team chain operation
 
-Schema/flow: `references/agent-team-contract.md` §6-7 + `references/parallel-self-review.md` canonical.
+Schema/flow: `~/.claude/references/agent-team-contract.md` §6-7 + `~/.claude/references/parallel-self-review.md` canonical.
 
 **Fallback (codex unavailable)**: comprehensive-review solo, all P0 viewpoints → P0, others → P1. Prepend `> [WARN] codex unavailable → comprehensive-review solo (fallback)` to output (parent-accessible).
 
@@ -168,7 +168,7 @@ parent 側の集計: file:line key で N lens の結果を集約し、2/N 以上
 
 ## Output schema (required)
 
-詳細は `references/agent-output-schema.md` 参照。lens mode では findings JSON → `---` → trailer の順で出力する。
+詳細は `~/.claude/references/agent-output-schema.md` 参照。lens mode では findings JSON → `---` → trailer の順で出力する。
 
 ```
 ---

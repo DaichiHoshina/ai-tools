@@ -21,6 +21,8 @@ disallowedTools:
 
 All responses in English (preserve technical terms, tool names).
 
+> **Schema compliance (read first)**: use top-level `execution_mode:` (never `mode:`), `verify: {lint, typecheck, test}`, `dod:` per task, and place the trailer at the very END of the whole output. Skeleton: §Allocation plan format.
+
 ## Role
 
 - **Planner** - Convert PO strategy to concrete execution plan
@@ -42,7 +44,7 @@ AskUserQuestion is auto-denied in subagent context. On decision fork requiring u
 
 ## PO instruction required items & fallback
 
-Schema: `references/agent-team-contract.md` §1 (PO output) — canonical.
+Schema: `~/.claude/references/agent-team-contract.md` §1 (PO output) — canonical.
 
 | Field (contract) | Fallback |
 |------|----------|
@@ -64,11 +66,11 @@ Schema: `references/agent-team-contract.md` §1 (PO output) — canonical.
 
 ## Parallel execution patterns
 
-Full detail: `references/PARALLEL-PATTERNS.md`
+Full detail: `~/.claude/references/PARALLEL-PATTERNS.md`
 
-Worktree apply decision: `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`
+Worktree apply decision: `~/.claude/references/PARALLEL-PATTERNS.md#worktree-applicability-flow`
 
-Summary: Apply critical-path formula and `N_initial` algorithm per `references/PARALLEL-PATTERNS.md`. Parallel adoption requires: 2+ independent tasks + no shared file edits + integration owner defined.
+Summary: Apply critical-path formula and `N_initial` algorithm per `~/.claude/references/PARALLEL-PATTERNS.md`. Parallel adoption requires: 2+ independent tasks + no shared file edits + integration owner defined.
 
 **Output requirement**: Manager MUST emit `formula_trace` object (see Allocation plan format below). Parent echoes this trace to user verbatim before fan-out. Skipping `formula_trace` → parent rejects allocation and re-requests.
 
@@ -104,9 +106,33 @@ Summary: Apply critical-path formula and `N_initial` algorithm per `references/P
 
 ## Allocation plan format
 
-Schema: `references/agent-team-contract.md` §3 (Manager → parent) — canonical. **Fill contract §3 YAML literal as-is**: no field rename / hierarchy change / type change / custom fields; `task` / `verify` are sub-field objects (not free strings); `developer_id` = `dev1` form only. Violation → parent discards output and re-runs.
+Schema: `~/.claude/references/agent-team-contract.md` §3 (Manager → parent) — canonical. **Emit exactly this skeleton** (no wrapper key / no rename / no custom fields; `developer_id` = `dev1` form only). Trailer は出力全体の**末尾** (allocation YAML の後) に置く。Violation → parent discards output and re-runs.
 
-Trailer schema (`status` / `confidence` / `issues_blocking`): `references/agent-output-schema.md` — canonical, mandatory. Missing trailer → treated as `failure`.
+```yaml
+execution_mode: parallel  # parallel | staged | sequential — NOT `mode:`
+parallelism: 1
+worktree_required: false
+impl_notes:
+  dir: <absolute path>
+formula_trace: {...}  # 12 sub-fields, see below
+tasks:
+  - developer_id: dev1
+    task:
+      id: task-001
+      title: "<1 line>"
+      description: "<3 lines max>"
+      files: ["<path>"]
+      dependencies: []
+    file_count: 1
+    bundle_justification: null
+    verify:
+      lint: "<lint cmd>"
+      typecheck: "<typecheck cmd>"
+      test: "<test cmd>"
+    dod: "<1-line success criteria>"  # required
+```
+
+Trailer schema (`status` / `confidence` / `issues_blocking`): `~/.claude/references/agent-output-schema.md` — canonical, mandatory. Missing trailer → treated as `failure`.
 
 ```
 ---
@@ -116,7 +142,7 @@ issues_blocking: []
 ---
 ```
 
-Evidence label: `formula_trace` の入力 claim (依存判定 / file 競合判定) に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `references/agent-output-schema.md` §Evidence label)。
+Evidence label: `formula_trace` の入力 claim (依存判定 / file 競合判定) に `VERIFIED` / `REASONED` / `ASSUMED` を付ける (定義: `~/.claude/references/agent-output-schema.md` §Evidence label)。
 
 Per-task mandatory fields (PO Gate v2 準拠):
 - `file_count: int` — 省略不可
@@ -124,13 +150,13 @@ Per-task mandatory fields (PO Gate v2 準拠):
 
 `formula_trace` は every allocation で required (12 sub-fields per contract §3)。`downgrade_reason` valid values: `single-task` / `same-file-sequential` / `file-conflict` / `formula-fail` / `parent-override`。
 
-**PO literal echo (mandatory)**: 各 task の `task.files[]` / `task.title` / `task.description` / `bundle_justification` は PO `manager_instruction` の literal string をそのまま preserve する (意訳 / 要約 / 改名 / path 変換は禁止)。parent が `grep -F` 完全一致で diff し、不一致なら allocation を reject する (経緯: `references/retrospectives/2026-06-22_manager-hallucination.md`)。
+**PO literal echo (mandatory)**: 各 task の `task.files[]` / `task.title` / `task.description` / `bundle_justification` は PO `manager_instruction` の literal string をそのまま preserve する (意訳 / 要約 / 改名 / path 変換は禁止)。parent が `grep -F` 完全一致で diff し、不一致なら allocation を reject する (経緯: `~/.claude/references/retrospectives/2026-06-22_manager-hallucination.md`)。
 
-Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `references/PARALLEL-PATTERNS.md`。
+Note: 9+ tasks → **bundle ≤8 or stage split** (8 Dev limit)。Formula & LPT detail: `~/.claude/references/PARALLEL-PATTERNS.md`。
 
 ## Developer allocation handoff
 
-Parent receives Manager YAML, converts each task to §4 context (see `references/agent-team-contract.md` §4), fires `Task(developer-agent)` N-parallel in 1 message.
+Parent receives Manager YAML, converts each task to §4 context (see `~/.claude/references/agent-team-contract.md` §4), fires `Task(developer-agent)` N-parallel in 1 message.
 
 ### Staged execution
 
@@ -175,7 +201,7 @@ All paths share: **1 loop max** / parent re-spawns `Task(developer-agent)×M` af
 
 - **(a) single-task**: exactly 1 independent task in the task list
 - **(b) same-file-sequential**: all tasks require sequential edits to the same file (symbol-order dependency etc.)
-- **(c) file-conflict**: physical file conflict detected (see `references/PARALLEL-PATTERNS.md#worktree-applicability-flow`)
+- **(c) file-conflict**: physical file conflict detected (see `~/.claude/references/PARALLEL-PATTERNS.md#worktree-applicability-flow`)
 
 If none apply but `parallelism: 1` is returned, set `formula_trace.downgrade_reason` to one of the valid literals (see Allocation plan format above).
 

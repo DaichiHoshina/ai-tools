@@ -147,7 +147,7 @@ AskUserQuestion is auto-denied in subagent context. On decision fork requiring u
 
 ## Output schema (required)
 
-詳細は `references/agent-output-schema.md` 参照。
+詳細は `~/.claude/references/agent-output-schema.md` 参照。
 
 内部判定 (Approved / Conditional / Rejected) から status enum へのマッピング:
 
@@ -159,12 +159,14 @@ AskUserQuestion is auto-denied in subagent context. On decision fork requiring u
 
 `dep_unresolved`: 依存 agent (build runner / test runner) の起動失敗で verify 続行不能の場合に使用。
 
-Evidence label: 各 stage verdict は command 実行結果なので `VERIFIED` 固定。実行できなかった stage への推測 verdict は禁止 (`—` + `ASSUMED` note で区別)。定義: `references/agent-output-schema.md` §Evidence label。
+Evidence label: 各 stage verdict は command 実行結果なので `VERIFIED` 固定。実行できなかった stage への推測 verdict は禁止 (`—` + `ASSUMED` note で区別)。定義: `~/.claude/references/agent-output-schema.md` §Evidence label。
 
 Trailer example:
 
 ```yaml
+---
 status: success
 confidence: 90
 issues_blocking: []
+---
 ```
