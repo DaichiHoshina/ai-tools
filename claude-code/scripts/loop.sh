@@ -28,6 +28,8 @@
 #   --checker-cmd "<cmd>"  checker を外部 command に差替 (stdin=prompt, stdout=VERDICT 行)
 #   --gate-retries <n>     gate flaky 対策の即時再実行回数 (default 1)
 #   --permission-mode <m>  claude -p の permission mode (default: acceptEdits)
+#   --add-dir <path>       maker の sandbox に repo 外 dir を追加 (複数可)。
+#                          state dir は常に自動追加 (maker が state.md を更新するため)
 #   --yolo                 --dangerously-skip-permissions で実行 (opt-in)
 #   --notify               完了 / abort 時に macOS notification
 #   --dry-run              組立 prompt と実行計画のみ表示
@@ -53,6 +55,7 @@ PERMISSION_MODE="acceptEdits"
 YOLO=0
 NOTIFY=0
 DRY_RUN=0
+ADD_DIRS=()
 
 usage() {
   awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"
@@ -73,6 +76,7 @@ while [[ $# -gt 0 ]]; do
     --checker-cmd) CHECKER_CMD="$2"; shift 2 ;;
     --gate-retries) GATE_RETRIES="$2"; shift 2 ;;
     --permission-mode) PERMISSION_MODE="$2"; shift 2 ;;
+    --add-dir) ADD_DIRS+=("$2"); shift 2 ;;
     --yolo) YOLO=1; shift ;;
     --notify) NOTIFY=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
@@ -96,6 +100,8 @@ LOG_DIR="${HOME}/.claude/logs"
 LOG="${LOG_DIR}/loop-${NAME}.log"
 PRIVATE_TERM_FILE="${HOME}/.claude/references-private/private-name-list.txt"
 mkdir -p "$LOOP_DIR" "$LOG_DIR"
+# state/queue は repo 外のため、--add-dir なしでは sandbox の maker から見えない
+ADD_DIRS=("$LOOP_DIR" ${ADD_DIRS[@]+"${ADD_DIRS[@]}"})
 
 [[ -f "$PROMPT_FILE" ]] || {
   echo "ERROR: PROMPT.md がない: ${PROMPT_FILE}" >&2
@@ -127,6 +133,13 @@ _tree_hash() {
     # untracked file は git diff に出ないため内容も指紋に含める
     git -C "$REPO" ls-files --others --exclude-standard -z \
       | (cd "$REPO" && xargs -0 shasum -a 256 2>/dev/null) || true
+    # repo 外の add-dir 成果 (memory / queue 等) も進捗として数える
+    local d
+    for d in ${ADD_DIRS[@]+"${ADD_DIRS[@]}"}; do
+      [[ -d "$d" ]] || continue
+      find "$d" -type f -not -path '*/.git/*' -print0 2>/dev/null \
+        | sort -z | xargs -0 shasum -a 256 2>/dev/null || true
+    done
   } | shasum -a 256 | cut -d' ' -f1
 }
 
@@ -234,7 +247,7 @@ _run_checker() {
   if [[ -n "$CHECKER_CMD" ]]; then
     out=$(printf '%s' "$cprompt" | bash -c "$CHECKER_CMD" 2>>"$LOG" || true)
   else
-    out=$(printf '%s' "$cprompt" | claude -p --model "$CHECKER_MODEL" --output-format json 2>>"$LOG" | jq -r '.result // empty' || true)
+    out=$(printf '%s' "$cprompt" | claude -p --model "$CHECKER_MODEL" --output-format json 2>>"$LOG" | jq -r 'if type=="array" then (.[-1].result // empty) else (.result // empty) end' || true)
   fi
   if grep -q 'VERDICT: APPROVE' <<< "$out"; then
     return 0
@@ -277,6 +290,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   echo "name=${NAME} repo=${REPO} model=${MODEL} gate=${GATE}"
   echo "max-iter=${MAX_ITER} max-minutes=${MAX_MINUTES} max-cost-usd=${MAX_COST_USD}"
   echo "review=${REVIEW} checker=${CHECKER_CMD:-claude:${CHECKER_MODEL}} gate-retries=${GATE_RETRIES}"
+  echo "add-dirs=${ADD_DIRS[*]}"
   echo ""
   echo "=== assembled prompt (iteration 1) ==="
   _build_prompt
@@ -287,6 +301,7 @@ trap _on_interrupt INT TERM
 
 PERM_ARGS=(--permission-mode "$PERMISSION_MODE")
 [[ "$YOLO" -eq 1 ]] && PERM_ARGS=(--dangerously-skip-permissions)
+for d in ${ADD_DIRS[@]+"${ADD_DIRS[@]}"}; do PERM_ARGS+=(--add-dir "$d"); done
 
 MAX_SECONDS=$((MAX_MINUTES * 60))
 iter=0
@@ -307,7 +322,8 @@ while [[ "$iter" -lt "$MAX_ITER" ]]; do
   _log "iter ${iter}/${MAX_ITER}: maker (${MODEL}) 起動"
 
   maker_json=$(_build_prompt | (cd "$REPO" && claude -p --model "$MODEL" --output-format json "${PERM_ARGS[@]}") 2>>"$LOG" || true)
-  iter_cost=$(jq -r '.total_cost_usd // 0' <<< "$maker_json" 2>/dev/null || echo 0)
+  # CLI 2.1.197 は --output-format json でも message 配列を返すことがある
+  iter_cost=$(jq -r 'if type=="array" then (.[-1].total_cost_usd // 0) else (.total_cost_usd // 0) end' <<< "$maker_json" 2>/dev/null || echo 0)
   total_cost=$(awk -v a="$total_cost" -v b="$iter_cost" 'BEGIN { printf "%.4f", a + b }')
 
   if ! _validate_state; then
