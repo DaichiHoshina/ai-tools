@@ -190,6 +190,7 @@ detect_from_keywords() {
     ['monitoring|alert|slo|burn.*rate|runbook|障害対応|アラート']=":incident-response"
     ['async.*job|queue|worker|job.*pattern|非同期|キュー|ワーカー|dlq|dead.*letter']=":backend-dev"
     ['(^|[^a-z])sync|同期して|同期する']=":sync-to-local"
+    ['issue *(ベース|起点|駆動)|issueから開発']=":issue-dev-flow"
   )
 
   # set -u対応

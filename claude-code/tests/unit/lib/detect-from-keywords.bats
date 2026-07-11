@@ -208,6 +208,37 @@ run_detect_from_keywords() {
 }
 
 # =============================================================================
+# 正常系テスト: issue-dev-flow検出
+# =============================================================================
+
+@test "detect-from-keywords: detects issue-dev-flow from 'issueベースで開発' keyword" {
+  run run_detect_from_keywords 'issueベースで開発して'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_flow=$(echo "$output" | jq '.skills | contains(["issue-dev-flow"])')
+  [ "$has_flow" = "true" ]
+}
+
+@test "detect-from-keywords: detects issue-dev-flow from 'issue 起点で' keyword" {
+  run run_detect_from_keywords 'issue 起点で進めて'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_flow=$(echo "$output" | jq '.skills | contains(["issue-dev-flow"])')
+  [ "$has_flow" = "true" ]
+}
+
+@test "detect-from-keywords: does not detect issue-dev-flow from plain 'issue' keyword" {
+  run run_detect_from_keywords 'issue にコメントして'
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+
+  local has_flow=$(echo "$output" | jq '.skills | contains(["issue-dev-flow"])')
+  [ "$has_flow" = "false" ]
+}
+
+# =============================================================================
 # 正常系テスト: Serena検出
 # =============================================================================
 

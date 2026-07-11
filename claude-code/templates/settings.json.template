@@ -453,6 +453,7 @@
     "refactor": "name-only",
     "schedule": "user-invocable-only",
     "serena-refresh": "user-invocable-only",
+    "issue-dev-flow": "name-only",
     "session-mode": "name-only",
     "skills-manage": "name-only",
     "slack-rich-copy": "name-only",
