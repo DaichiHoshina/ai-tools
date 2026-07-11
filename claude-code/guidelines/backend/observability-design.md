@@ -126,6 +126,17 @@ Client → API Gateway → Order Service → Payment Service
 
 ---
 
+## 8.5 Metric naming
+
+監視指標の命名は番号体系 (M1 / M-feature-1 等の prefix) を避け、機能名 + 業界標準語の説明的命名を採用する。番号体系は名前から意味を引き直す作業が要り、複数プロジェクトで混乱が繰り返された実例がある。
+
+- RED method / USE method / 4 Golden Signals の用語を参考に命名する
+- 命名が一貫していれば中央 catalog は不要になる
+- 既存番号体系の置換は一斉 rename せず gradual migration で行う
+- dashboard / runbook / DesignDoc の指標名を統一表記にする
+
+---
+
 ## 9. Alert design principles
 
 | Avoid | Use instead | Reason |

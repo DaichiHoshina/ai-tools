@@ -55,6 +55,10 @@ Read-only local queries (`git status` / `ls` / single `grep` / `find_symbol`) do
 
 Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any of 2+ files, 10+ lines, or 2+ symbols; **commit-bearing** → delegate immediately (no inline commit). Violations recorded in feedback memory.
 
+違反しやすい pattern (2026-06-04 観測): (1) new file を「軽量 housekeeping」と自己解釈して inline で Write する (2) 1 つの bash で 2+ file を触る操作 (`git mv A B && git mv C D` / `find ... -delete` 等) を inline 1 op と数える (3) 2 consecutive 到達後に counter をリセットし忘れて inline を続ける。new file と 2+ file 操作は内容を自分で書ける場合でも委譲する。各 inline op 直後に「inline 累積 N/2」を数え、2 到達で edit-class op は強制委譲にする。「全部やって」「修正して」等の口語起動 housekeeping ほど自己判定 bias が強く違反が多い。
+
+適用境界: CLAUDE.md Auto-Delegation 表の「iteration 前提 (CI fail / fixture / test 連鎖 / review feedback) → inline 固定」に該当する task は本 throttle の対象外とする (inline 固定が優先)。throttle は単発 housekeeping / 散発 edit の連鎖にのみ適用する。
+
 ## Auto-launch trigger table
 
 | Trigger | Auto-launch |

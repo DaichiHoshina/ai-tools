@@ -20,6 +20,9 @@
 | commit・PR・issue・外向き post 起草時 | `ai-output.md` |
 | `git worktree add` 発行・worktree 手順提案時 | `worktree-branch-name-match.md` |
 | ai-tools で作業開始・main 反映 (wt 隔離 / ff-merge / sync) 時 | `ai-tools-worktree-flow.md` |
+| git merge 承認判断・interrupt 後の再実行・既存 PR branch への push | `git-safety-ops.md` |
+| report / HTML 生成 command 実行・生成物の保存先指定 | `report-output-outside-repo.md` |
+| PR checks で集約 job のみ FAILURE (CI fail 調査時) | `ci-flaky-aggregate-job.md` |
 
 ## 運用
 

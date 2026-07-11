@@ -440,6 +440,8 @@ hook が動的抽出する NG 語 list は **[NG-DICTIONARY.md](NG-DICTIONARY.md
 | PR 文脈依存の表現 | 「DD §X-Y 参照」「incident (YYYY-MM-DD) で観測」等、半年〜1年後の読者に通じない社内文書参照・日付 | 必要情報は本文に書き起こし、社内URL・過去日付は削除する |
 | 時限的マーカー (merge 後意味喪失) | 「本 PR で新設」「本 commit で削除」「先週合意した通り」「上述の通り」「直近の incident で」等、merge / 投稿後の読者に通じない時限文言 | 削除 or timeless 表現に置換 (「実装初期」「初版」等は OK)、状態完了マーカー (「対策反映済み」) は timeless として残す |
 | 同 file 内 section 重複 (議論ポイント表 / 監視 / 採用理由 等) | 同論点が複数 section に分散、片方が要約 / 片方が詳細でも内容重複 | 詳細 section を残し、要約側は anchor link 1 行に圧縮。即統合できない場合は併存維持で別 task 化 |
+| 複合名詞スタック | タイトル / 見出しで複合名詞を 3 個以上連結し、動詞・助詞が抜ける | 複合名詞は 2 個まで。3 個以上は動詞文に変換する |
+| 自己物語導入 | 「本日のセッションで〜」「あわせて〜」等、書き手の作業経緯から書き始める | 読み手の判断に必要な事実から書き始める |
 
 ## 出力前セルフチェック (7項目、6項目以上で合格)
 
@@ -499,14 +501,6 @@ NG 語 canonical: [NG-DICTIONARY.md](NG-DICTIONARY.md)。全 key (AI定型語 / 
 - `references/writing-patterns.md` — 詳細パターン集 (textlint / 図表型 / 書き直しPhase / 専門用語置換)
 - `references/on-demand-rules/ai-output.md` — 強制ルール (PR/commit/code-comment禁止事項)
 
-## アンチパターン参照 (writing_failure_* memory)
+## アンチパターン (統合済)
 
-過去の失敗例は `~/.claude/projects/*/memory/writing_failure_*.md` に蓄積。commit / PR / Issue / Slack 前に該当 memory を確認する。
-
-| memory | 失敗パターン | 適用タイミング |
-|---|---|---|
-| `writing_failure_link_overdose` | URL網羅で本文が侵食、リンク密度過多 | issue / PRコメントで複数PR / dashboardリンクを並べる時 |
-| `writing_failure_compound_noun_stack` | 複合名詞3連以上 + 抽象→具体省略 + Why暗示 | commit messageタイトル / PR本文1段落目を書く時 |
-| `writing_failure_conclusion_missing` | 報告型docで冒頭結論行に数値抜け、結論ラベルだけ抽象、数値を別所配置、専門用語裸並び | 負荷試験 / 計測 / 障害 / 検証結果のissue / Notion / Slack共有時 |
-
-`/git-push --pr` `/post-comment` `/docs` 起動時に上記 3 種の memory を read し、生成 draft が同じパターンに陥っていないか self-check する。新規失敗を観測したら `/retrospective` Phase 3.5 で memory を追加する。
+旧 writing_failure_* memory は本 file と guideline に統合済み。複合名詞スタックは「避けるパターン」表、link 過多は [external-post.md](external-post.md) の「link 過多を避ける」、報告型 doc の冒頭結論 (最大値 / 測定条件 / 次アクション) は「媒体別構造 > 長文」を参照する。新規失敗を観測したら `/retrospective` Phase 3.5 で memory を追加する。

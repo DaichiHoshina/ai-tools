@@ -18,6 +18,9 @@ Detail for CLAUDE.md `## Session Efficiency`. CLAUDE.md keeps pointer only.
   - Mid-flow stage where result changes the next stage's premise
   Otherwise: inline echo of recommended option + immediate execution (e.g., "proceeding with B" → execute). `A/B/C options + which do you choose?` format degrades UX for unnecessary branches. Violations recorded in feedback memory.
 - **ROI gate**: even for "do everything" instructions, re-confirm individually if judgment deems low ROI
+- **Autonomous scope guard (自走対象は現 task scope 内)**: 現 task の repo / scope を逸脱した提案 (別 command / 別 output / 別 repo の作業) はしない。「こちらもやっておきますか?」系の追加提案は禁止で、user が明示依頼した場合のみ実施する。別 repo の改善案を思いついたら提案せず memory に記録して次の機会に回す
+- **管轄外 repo は報告のみ**: user が修正権限を持たない他チーム所有 repo の問題は、調査報告と Slack 報告文の作成提案までに留める。PR 作成 / commit / 修正コード提示はしない。判定基準は「user が日常的に commit している repo か」
+- **共有 resource の破壊操作は事前確認**: 依頼 scope に含まれない共有 stateful resource の破壊操作 (FLUSHALL / DROP TABLE / truncate / rm -rf) は、ローカル環境でも実行前に影響範囲を明示して確認する (`rules/minimize-questions.md` 質問許可条件 1 と同軸)。共有 resource (DB / cache / S3) は個人ローカル環境でも共有と扱う
 - **Bulk / exhaustive keyword**: requests containing 「全N件 / 網羅 / 一斉 / bulk / 大量」— consider Sonnet delegation first (read-only=`explore-agent` / edit=`developer-agent`) before parent inline sample reduction. Reducing sample under scale/cost rationale violates "Default delegate to Sonnet" principle `[[sonnet-delegate-bulk-readonly]]`
 - **pwd check**: verify existence before Read/Bash; check `pwd` before `cd`
 - **Pre-delegation git status check**: before delegating to developer-agent, run `git status` + `git log --oneline -3` to check for parallel session work (untracked/modified files you did not touch, recent commits not from you). If detected: confirm with user "parallel impl found, OK to proceed?"

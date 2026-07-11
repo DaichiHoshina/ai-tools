@@ -66,6 +66,8 @@ Physically parallelizes via worktree isolation. Parallelism eval = Manager force
 
 Natural language triggers: "全自動で" / "autoで" / "おまかせ" → `/flow --auto` (旧 `/flow-auto` は本 command に統合済)。
 
+- `--auto` 小規模 guard: `next` 等で対象 item が 1-2 file / 1 観点の小規模と判定できる場合、3 段 hierarchy を起動せず `/dev` か inline に降格する。`/flow --auto` は独立 dev task が 2 つ以上あり並列化が要る場合に限定する (1 行 fix に 3 agent を起動して過大 cost になった実績あり、2026-06)。
+
 ## Execution logic
 
 1. **git status check** → WIP confirm → step 2

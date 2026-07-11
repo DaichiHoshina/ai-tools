@@ -17,6 +17,10 @@ paths: ["**/*"]
 
 list に literal match しない場合でも、個人名 / 会社名 / 社内 codename・service 名・doc 名を出力しない。匿名化形式は `<person-name>` / `<company-name>` / `<project-name>` / `<service-name>` を使う。allowlist (block しない): 本人 (`daichi` / `DaichiHoshina` / `Daichi Hoshina`) / `Anthropic` / `Claude` / OSS・public product 名。
 
+## commit / PR draft 時の人名 self-check
+
+commit message / PR body / issue comment の draft 前に固有名詞を点検する (`@<handle>` / 「<姓名>さん」/ Slack display name / 社内 alias)。レビュー指摘を引用するときは handle を伏せて「レビュー指摘」と総称する。Co-Authored-By trailer の AI marker は人物ではないため対象外とする。
+
 ## hit 時の対応
 
 `~/.claude/references-private/` へ保存先を切替えるか、term を削除 / 匿名化して再実行する。自己除外 file list と詳細判定 logic は `hooks/lib/public-repo-guard.sh` を参照する。incident 経緯: `[[public-repo-social-hit-incident]]`、block log: `~/.claude/logs/social-hit-block.log`。

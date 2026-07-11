@@ -56,6 +56,8 @@ git switch -c <topic> && git add <files> && git commit   # 変更はそのまま
 git switch main && git merge --ff-only <topic> && git push origin main && git branch -d <topic>
 ```
 
+特定 file だけを別 PR に分けたいときは patch 退避を使う: (1) `git diff -- <file> > /tmp/x.patch` で差分を退避する (2) fresh worktree を作る (3) wt 側で `git apply /tmp/x.patch` を実行する。stash した変更は新 wt に自動では乗らないため、file 単位の切り出しには patch の方が確実だ。
+
 ## 適用範囲
 
 - 全 repo (ai-tools / 個人 repo / 業務 repo 問わず)

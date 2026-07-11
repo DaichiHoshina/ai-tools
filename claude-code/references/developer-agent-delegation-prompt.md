@@ -44,6 +44,7 @@ Do not accept agent report immediately — perform at least 1 cross-check parent
 - Numerical claim → verify formula/unit consistency
 - Measured claim → reproduce 1 sample parent inline
 - File change claim → `git diff --stat` to confirm line/file counts
+- Doc content claim (「file A は file B と重複」「§X が canonical と drift」「canonical 不在」) → plan の Phase に組み込む前に file B の該当 section を Read し、意味的 overlap を直接確認する。keyword hit と行数だけの重複判定は誤検出が多く、link 化で唯一の canonical を消す事故につながる。検証 cost が高い場合 (>5 file / >200 行 / 多数 cross-ref) は finding を保留に分類して user 判断に回す
 
 **Fact-check not needed**: when verify cmd is run agent-side and included in report, and verify cmd is deterministic (lint / typecheck / bats). 経緯: `[[parallel-fire-format-peak-concurrency]]`。
 
@@ -189,6 +190,16 @@ The result must match the branch specified in this delegation prompt exactly.
 If different: **stop immediately**, do not commit, report as blocker in `unresolved_errors[]`.
 
 Commit only files listed in `touchable_files` (§1 target files). Committing files outside the listed scope — even if modified — is a scope violation. Stage by explicit path (`git add path/to/file`), never `git add -A` or `git add .`.
+
+### Stage は commit 直前まで遅延する (並行 session 対策)
+
+git index は session 間で共有される単一状態だ。staged のまま放置すると、並行 session の `git commit` が意図せず取り込む (2026-07-10: subagent の `git mv` 6 rename が別 session の hooks fix commit に混入した)。
+
+- commit しない task では subagent に stage させない。`git mv` の代わりに `mv` を使い、親が commit 直前に `git add` する
+- commit する task では stage → commit を連続で実行し、staged 状態を跨いで放置しない
+- parent 側も commit 前に `git status` で自分の変更だけが staged かを確認する
+
+上記「Stage by explicit path」は commit を伴う task 前提の記述であり、commit しない task には適用しない。
 
 ### Shell script exec bit (new `.sh` files)
 

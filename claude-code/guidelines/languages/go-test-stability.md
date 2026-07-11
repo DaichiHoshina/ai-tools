@@ -40,6 +40,15 @@ sort.Slice(cp, ...) // Safe
 | Test data | Repository Test uses `testfixtures` (YAML) |
 | Mocks | Usecase Test uses `gomock` |
 
+## Log-only Branch Testing
+
+グローバル `var logger *zap.Logger` パターン (`Setup()` 経由で初期化) は、テスト差し替えフックがないと log 出力内容をアサートできない。log-only な分岐 (抑制条件 / 重複排除 / rate limit) の PR では以下の落とし所を採る。
+
+- 判定軸: setter フックの有無 / `zaptest` `zap/zaptest/observer` の使用例が codebase に 0 件なら観測フック未整備
+- log 分岐そのものはテストしない。PR body に「log-only 分岐なのでユニットテスト対象外」と明記する
+- 代わりに、その分岐に入ったときの他の副作用 (metric / return 値 / DB 状態) で挙動を担保する
+- observer 注入フックの新設は scope 超過 + over-edit 指摘対象になりやすい。「logger テストフック整備 + 該当分岐テスト追加」を follow-up issue に切り出す
+
 ## Flaky Test Prevention Checklist
 
 - [ ] No auto-generated IDs (DB auto_increment etc.) in expected values

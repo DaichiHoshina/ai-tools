@@ -66,6 +66,7 @@ Use worktree isolation (`isolation: 'worktree'`) **only for parallel edits to th
 1. `.filter(Boolean)` で捨てる前に null 数を数え、`log()` で warn する (`WARN: <stage> dropped N/M agents`)
 2. return に `dropped: <N>` を含める (parent が summary で user に報告する)
 3. checker / verifier / gate 判定の null は **fail-closed**: accept と見なさず loop を abort して `aborted: true` を return する
+4. rate limit 中は checker / fixer が null で返り loop が黙って止まる。gate が進まない時は rate limit を疑い、復帰後に inline で検証 (bats / jest) を手動再実行する
 
 Helper 実装と適用例: `references/workflow-templates.md` § 0 Null-guard helper。
 

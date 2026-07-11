@@ -24,6 +24,10 @@ Description and mapping of agents (autonomous sub-processes) used by Claude Code
 - **claude-code-guide**: plugin 由来。Claude Code CLI / SDK / API の仕様質問に使う (CLAUDE.global.md Discovery Routing 参照)
 - **silent-failure-hunter** 等: `pr-review-toolkit` plugin 由来 (6 agents)。`/review --deep` / `/goal --checker` で使う (`references/review-modes-advanced.md` 参照)。plugin 未導入環境では unknown subagent_type になる
 
+## Agent 定義編集の検証
+
+既存 session の Agent tool は session 開始時の定義 snapshot を使い続ける (編集は反映されない)。agent file 編集後の動作確認は新 session または headless (`claude -p`) で行う。
+
 ## Agent startup cost (highlights)
 
 - **Avoid**: `general-purpose` ~115s avg / 501s max

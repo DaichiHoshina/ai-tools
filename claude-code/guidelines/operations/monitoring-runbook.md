@@ -80,6 +80,27 @@ Execute fix or mitigation (LB empty response, scale out, add Reader)
 | HIGH | emergency channel | 6h window exceeded, security, payment outage |
 | MEDIUM | standard alert channel | burn rate warning, general prod alert |
 
+## Deploy Failure: ECR image expiry
+
+ECR lifecycle policy (例: `tagStatus: any countMoreThan 30`) が build → deploy 間の経過時間で image を expiry すると、ECS deploy が "failed to wait for service stable" で停止する。
+
+| 項目 | 内容 |
+|------|------|
+| 症状 | deploy job が service stable 待ちで timeout する |
+| 原因 | ECS が参照する image が ECR lifecycle policy で削除済 |
+| 対処 | empty commit を push して CI rebuild → re-deploy の正規パスを通す |
+| 予防 | deploy は build から 1h 以内に完了させる。間隔が空く運用なら countMoreThan 値を見直す |
+
+直接 task def を触る応急処置は取らない。commit push → CI rebuild → re-deploy を通せば ECS が確実に最新 image を参照する。
+
+## Runbook / SQL のテーブル名は完全名で書く
+
+runbook / SQL コードブロックには実 schema の完全テーブル名を書く。略称を SQL に流用すると `SHOW TABLES LIKE '<短縮名>'` が Empty set を返し、「table 不在」と誤検知して緊急 task 起票まで進む事故が起きる。
+
+- 本文の説明では略称を使ってよい。ただし初出で「`<完全名>` (以下 `<短縮名>` と略す)」と完全名を 1 度提示する
+- `LIKE` 句で略称を使うなら `LIKE '%短縮名%'` のようにワイルドカードを付ける。exact match の `LIKE '短縮名'` は危険
+- 既存 runbook の略称表記は次回大改修時に一括置換する (急いで一斉置換しない)
+
 ## Runbook Template
 
 Structure for new runbook creation:
