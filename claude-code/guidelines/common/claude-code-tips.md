@@ -23,11 +23,10 @@
 
 ## Sub-agents
 
+Delegation の使い分け (inline vs 並列 fan-out) は `CLAUDE.global.md` の Auto-Delegation 表が正。本節は CLI 操作のみ扱う。
+
 | Item | Detail |
 |------|--------|
-| 3-layer structure | PO → Manager → Developer (1-4) |
-| **Use** | Multi-file impl, parallel work, design→impl→review |
-| **Do not use** | Single-file edits, simple bug fixes |
 | Worktree isolation | `isolation: "worktree"` for independent copy per agent (v2.1.47+) |
 | Manage | `claude agents` to list running agents (CLI) |
 | Stop | Ctrl+F to stop background agents |
@@ -68,7 +67,7 @@
 
 | Problem | Fix |
 |---------|-----|
-| Unexpected behavior | Esc to stop generation → add instruction |
+| Unexpected behavior | Esc / rewind の使い分けは `references/checkpoint-rewind.md` 参照 |
 | Background runaway | Ctrl+F to stop background agent |
 | Frequent compaction | Restart after task completion |
 | Auth error | Check `claude auth status` → re-auth with `claude auth login` |
