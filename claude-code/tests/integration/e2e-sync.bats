@@ -3,20 +3,19 @@
 # E2E Tests for sync.sh - 実際にファイルコピーを実行して検証
 # =============================================================================
 
-setup() {
-  export PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
-  export ORIGINAL_HOME="$HOME"
-  export HOME="$(mktemp -d)"
+setup_file() {
+  local project_root
+  project_root="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../.." && pwd)"
+  echo "$project_root" > "$BATS_FILE_TMPDIR/project_root"
+  export HOME="$BATS_FILE_TMPDIR/home"
   mkdir -p "$HOME/.claude"
-  # 全テスト共通: sync to-local を1回実行（冪等性テストのみ2回目を実行）
-  echo "y" | bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local
+  # 全テスト共通: sync to-local をファイル単位で1回だけ実行（冪等性テストのみ2回目を実行）
+  echo "y" | bash "${project_root}/claude-code/sync.sh" to-local
 }
 
-teardown() {
-  if [[ -n "$HOME" && "$HOME" != "$ORIGINAL_HOME" ]]; then
-    rm -rf "$HOME"
-  fi
-  export HOME="$ORIGINAL_HOME"
+setup() {
+  export PROJECT_ROOT="$(cat "$BATS_FILE_TMPDIR/project_root")"
+  export HOME="$BATS_FILE_TMPDIR/home"
 }
 
 # クロスプラットフォーム対応チェックサム

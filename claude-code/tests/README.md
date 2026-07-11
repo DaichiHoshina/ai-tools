@@ -33,8 +33,8 @@ brew install jq shellcheck
 ### 全テスト実行
 
 ```bash
-# claude-code/ ディレクトリで実行
-bats tests/
+# claude-code/ ディレクトリで実行 (-j 8 並列で直列比 2.4 倍。GNU parallel が必要: brew install parallel)
+bats -r -j 8 tests/
 
 # または、個別ファイル指定
 bats tests/unit/lib/security-functions.bats
@@ -86,9 +86,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: brew install bats-core jq shellcheck
+        run: brew install bats-core jq shellcheck parallel
       - name: Run tests
-        run: bats tests/
+        run: bats -r -j 8 tests/
       - name: Run shellcheck
         run: shellcheck lib/*.sh hooks/*.sh scripts/*.sh
 ```

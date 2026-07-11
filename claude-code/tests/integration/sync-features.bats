@@ -125,7 +125,7 @@ sync_once() {
 }
 
 @test "lock: 生きている process の lock 中は実行を拒否する" {
-  sleep 30 &
+  sleep 5 &
   local live_pid=$!
   mkdir -p "$CLAUDE_DIR/.sync.lock"
   echo "$live_pid" > "$CLAUDE_DIR/.sync.lock/pid"
