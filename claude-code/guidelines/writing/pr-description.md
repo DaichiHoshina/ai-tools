@@ -13,6 +13,8 @@
 
 ## 本文の書き方
 
+- **開いた文章 (plain JP) 必須**: bullet 内も「〜する / 〜した」で文として閉じる。体言止め羅列・助詞省略・英語名詞ぶつ切りを body 全体で禁止する (canonical: `rules/plain-jp.md`)
+- **簡潔ミニマル**: 該当しない template section は見出しごと削除する。空 section・「特になし」placeholder を残さない。自明な変更の body は 3-5 行で足りる
 - **箇条書きファースト**: 散文段落を避け、bulletで構造化。レビュアーがscanできる形に
 - **階層で関係を表現**: 親子・因果・包含関係はインデント / サブbullet。散文で接続詞を重ねない
 - **構造（場所）で束ねる**: 変更を「ファイル / モジュール / レイヤー」単位でグループ化。**「what / why / how」など抽象観点でsectionを割らない**
@@ -34,6 +36,7 @@
 ```
 
 - ai-tools canonical を全 repo で project template (`.github/pull_request_template.md` 等) より優先する
+- テンプレは上限であって必須構成ではない。該当する section だけ残す (小変更なら 背景 / 実装概要 / 動作確認 の 3 section で十分)
 - 関連Issueは必ず紐付け (`Closes #XXX`)
 - 別repoのIssueは `org/repo#XXX` 形式
 - project template に label / checkbox 等の固有要素 (例: `operation check` label / `- [ ] マニュアルテスト実施可否`) があれば該当 section に転記する

@@ -5,6 +5,8 @@
 ## 原則
 
 - **簡易 pattern (背景 / やること / 補足) を default にする**
+- **開いた文章 (plain JP) 必須**: 箇条書き内も「〜する / 〜した」で文として閉じる。体言止め羅列・助詞省略を body 全体で禁止する (canonical: `rules/plain-jp.md`)
+- **簡潔ミニマル**: 該当しない section は見出しごと削除する。空 section・「特になし」を残さない
 - template 系 (What / Why / To Do / Acceptance Criteria の 4 節構造) は section 数が多く読みづらい。避ける
 - design doc がある場合は背景末尾に doc path を 1 行 link、issue 本文は doc の anchor 指定で詳細を委譲する
 
