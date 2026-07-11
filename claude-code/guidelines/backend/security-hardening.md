@@ -172,5 +172,5 @@ X-RateLimit-Reset: 1700000000
 
 ## 12. References
 
-- OWASP Top 10: 2021 edition (2026 update expected)
+- OWASP Top 10: 2025 edition (2026-01 final release。Broken Access Control が #1 継続、Software Supply Chain Failures / Mishandling of Exceptional Conditions が新規)
 - Related: `rules/enterprise-security.md` (foundations), `backend/observability-design.md` (audit log integration), `backend/multi-tenancy.md` (tenant isolation, RLS)
