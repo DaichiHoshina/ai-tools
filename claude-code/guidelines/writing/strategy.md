@@ -107,9 +107,9 @@ docs/
 ## AI対応ルール (RAG精度)
 
 - 1ナレッジ=1ドキュメント、800-1500字目安 (2000字超は分割)、見出し H1-H3まで
-- 文体: 主語明示 / 指示語禁止 (「これ」「上記」→具体名) / 略語初出フル / 「適宜」禁止 (IF-THEN明文化) / 日付 YYYY-MM-DD
+- 文体 (主語明示 / 指示語禁止 / 日付YYYY-MM-DD等) は [PRINCIPLES.md](PRINCIPLES.md) 参照。本section固有は略語初出フル / 「適宜」禁止 (IF-THEN明文化)
 - 構造: 画像はテキスト併記、テーブルはセル結合禁止 (空欄=「なし」)、色識別禁止、臨時運用は【臨時運用】+解除条件冒頭
-- 詳細文体ルール: [PRINCIPLES.md](PRINCIPLES.md) + [long-form-doc.md](long-form-doc.md)、Notion固有: `guidelines/common/notion-writing.md`
+- 詳細: [long-form-doc.md](long-form-doc.md)、Notion固有: `guidelines/common/notion-writing.md`
 
 ## ドキュメント専用リポジトリvsコード同居
 
