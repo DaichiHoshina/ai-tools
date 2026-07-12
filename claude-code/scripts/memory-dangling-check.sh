@@ -13,9 +13,9 @@
 set -euo pipefail
 
 # --- デフォルト対象 dir ---
-# Claude Code の project dir 命名規則: パス区切り "/" → "-"、"." → "-" に変換する
-_user_slug=$(whoami | tr '.' '-')
-DEFAULT_MEM_DIR="${HOME}/.claude/projects/-Users-${_user_slug}-ai-tools/memory"
+# auto-memory SoT = <repo>/memory (CLAUDE.md § Compounding Engineering)。repo root は sync.sh が記録する
+_AI_TOOLS_ROOT=$(cat "${HOME}/.claude/.ai-tools-root" 2>/dev/null || true)
+DEFAULT_MEM_DIR="${_AI_TOOLS_ROOT:-${HOME}/ghq/github.com/DaichiHoshina/ai-tools}/memory"
 
 # --- 引数パース ---
 MEM_DIR="${DEFAULT_MEM_DIR}"
@@ -25,7 +25,7 @@ usage() {
 Usage: memory-dangling-check.sh [--dir <memory-dir>]
 
 Options:
-  --dir <path>   memory dir を指定 (default: ~/.claude/projects/-Users-<user>-ai-tools/memory)
+  --dir <path>   memory dir を指定 (default: <ai-tools repo root>/memory)
   --help         usage 表示
 EOF
 }
