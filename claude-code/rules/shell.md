@@ -45,6 +45,7 @@ hooks/ の bash 編集で繰り返し踏む落とし穴を 10 件まとめる。
 | timestamp filter が常に true | epoch の単位 (s / ms) を確認せず `now` と比較する | `head -1 \| jq '.<field>'` で桁数を確認してから式を書く (10 桁 = s / 13 桁 = ms、ms は `(now - X) * 1000` で揃える) |
 | symlink 配置 script の path 解決 bug を見逃す | target 直実行で検証し `BASH_SOURCE` の解決経路差を踏まない | 検証は必ず symlink 経由 (`.git/hooks/pre-push` 等) で実行し、`readlink` loop で絶対 path に解決する |
 | 新規 .sh が配置先で Permission denied | Write tool default の 644 のまま commit する | 作成直後に `chmod +x`、`git ls-files --stage` で 100755 を確認して commit する |
+| bash 4+ 記法が macOS で無言失敗する | `${args[-1]}` (負 index) や `readarray` を `#!/bin/bash` (= macOS では 3.2) で使う | bash 4+ 記法を書く前に実行環境の version を確認し、末尾要素は `${args[$((${#args[@]} - 1))]}` 形式で書く |
 
 ## Claude Code Bash tool 環境
 
