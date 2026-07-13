@@ -563,6 +563,11 @@ copy_templates() {
             "$CODEX_DIR/AGENTS.md" \
             "codex-memory" \
             "AGENTS.md (memory 節)"
+        sync_managed_block \
+            "$SCRIPT_DIR/AGENTS.md.example" \
+            "$CODEX_DIR/AGENTS.md" \
+            "codex-thinking" \
+            "AGENTS.md (思考原則節)"
     fi
 
     # COMMANDS.md
