@@ -10,6 +10,9 @@
 - `commands/design-doc.md` — 同上
 - `commands/prd.md` — 同上
 - `guidelines/writing/*.md` (全 file、canonical: `ls guidelines/writing/*.md` で導出) — 執筆規約・NG 辞書・JP 文体規範
+- `rules/thinking-principles.md` — JP 文言が `tests/integration/thinking-principles-sync.bats` の anchor
+- `../codex/AGENTS.md.example` の managed:codex-thinking block — 同上 (3 tool 同期 anchor)
+- `../cursor/rules/ai-tools-thinking.mdc` — 同上 (3 tool 同期 anchor)
 
 ## Section 単位 (file 内一部のみ JP 維持)
 
