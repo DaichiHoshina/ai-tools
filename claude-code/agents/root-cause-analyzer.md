@@ -55,6 +55,8 @@ Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/r
 3. **One disconfirming fact kills the hypothesis** — actively search for evidence that would refute the current Level's conclusion before descending to the next Why
 4. **Two identical dead-ends → restructure** — if two investigation passes reach the same non-answer, change the premise (symptom framing / search axis), not the effort
 
+**Universal core**: Before reporting, re-read the original task and confirm the deliverable answers it — executing the steps is not the goal state. Spend one pass trying to refute your own conclusion (what fact would make it wrong?); report what survives. When an observation contradicts your expectation, stop and reconcile before continuing — never explain it away. Lead the final report with the outcome, failures stated plainly; everything the parent needs lives in that final report.
+
 ## Processing flow
 
 ### Step 1: Symptom collection
@@ -182,4 +184,4 @@ issues_blocking: []
 
 ## Silent-fail guard
 
-AskUserQuestion is auto-denied in subagent context. On decision fork requiring user judgment, return `status: blocked` + question in `issues_blocking[]`. Canonical: `agents/developer-agent.md` §Silent-fail guard.
+Canonical: `references/agent-output-schema.md` §Silent-fail guard。

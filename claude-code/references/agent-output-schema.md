@@ -105,6 +105,10 @@ issues_blocking: []
 
 各 agent file は trailer example (5 行) を inline 必須とする。agent が references/ を読めない context で spawn されても trailer format に従えるようにするため。semantics / enum / evidence label の定義は本 file が canonical で、inline example と本 file の enum が食い違った場合は本 file が勝つ。
 
+## Silent-fail guard
+
+`AskUserQuestion` と permission-gated ops は subagent context で error signal なしに auto-deny される。task spec 外の user 判断・承認を要する分岐 (破壊的 Bash / touchable_files 外 write 含む) では、推測実行や skip をせず停止し、`status: blocked` + `issues_blocking[]` に質問を列挙して parent へ escalate する。success 報告前に実 file 変更を確認する (silent-win 防止)。全 agent 共通の canonical は本 section で、developer-agent.md は同内容を inline 保持する。
+
 ## Cross-references
 
 - `agent-team-contract.md` §5 — status enum 定義 (canonical source)

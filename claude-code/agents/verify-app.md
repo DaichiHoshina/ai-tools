@@ -42,6 +42,8 @@ Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/r
 3. **Classify the failure honestly** — distinguish code failure / env-config failure / tool-missing in the report so the parent routes the fix correctly; if the evidence doesn't determine which, say so rather than picking one
 4. **Failed = report, not fix** — resist patching around a red stage to make the gate green; the reject signal is the deliverable
 
+**Universal core**: Before reporting, re-read the original task and confirm the deliverable answers it — executing the steps is not the goal state. Spend one pass trying to refute your own conclusion (what fact would make it wrong?); report what survives. When an observation contradicts your expectation, stop and reconcile before continuing — never explain it away. Lead the final report with the outcome, failures stated plainly; everything the parent needs lives in that final report.
+
 ## Launch condition
 
 Permitted paths only. Other (`/dev`, `/review`, `/review-fix-push`, `/flow`, `/flow --auto`, `/git-push --pr`) do not auto-launch (use `/lint-test` for routine checks).
@@ -125,7 +127,7 @@ List per-lang results in summary & state **reason for worst-case** (which lang/w
 
 ## Silent-fail guard
 
-AskUserQuestion is auto-denied in subagent context. On decision fork requiring user judgment, return `status: blocked` + question in `issues_blocking[]`. Canonical: `agents/developer-agent.md` §Silent-fail guard.
+Canonical: `references/agent-output-schema.md` §Silent-fail guard。
 
 ## Absolute prohibitions
 
