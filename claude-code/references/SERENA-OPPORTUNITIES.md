@@ -35,7 +35,7 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 - context/mode path-detection guard [pre-release]: `--context <name>` no longer mis-reads a local file of the same name. Bug fix, no config impact
 - `query_project` read-only tool relaxation [pre-release]: allows read-only tools even if excluded by current context. Behavior improvement, no config change
 - `oslex` shell-arg quoting [pre-release]: Windows arg escaping. macOS unaffected, out of scope
-- `tool_names` mapping in prompt generation [pre-release]: prompts use language-backend-matched tool names directly, removing extra name-difference prompts — review at: only if using cc-system-prompt-override; regenerate `~/.claude/serena-cc-prompt.txt` when this reaches a tag-release (Phase 5 step 5)
+- `tool_names` mapping in prompt generation [pre-release]: prompts use language-backend-matched tool names directly, removing extra name-difference prompts. Out of scope (2026-07-13: cc-system-prompt-override 一式を撤去したため関係なくなった)
 - MCP-level explicit error surfacing [pre-release]: tool call errors now raised as MCP protocol errors. Behavior improvement, no config change
 - `JuliaLanguageServer` stdio fix [pre-release]: Julia LS exiting after initialize. Julia not used, out of scope
 
@@ -45,5 +45,5 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 
 Adoption candidates but ROI unclear / existing custom impl working — **hold until trigger condition met**.
 
-- [ ] **`cc-system-prompt-override` adoption** (Opus 4.7 bias mitigation): System prompt override to guide bias away from Claude Code built-in tools (Read/Edit/Grep) toward Serena tools. Details in `serena/docs/02-usage/030_clients.md`, setup example `references/serena-cc-prompt-setup.md` — **trigger**: when user feels the bias of Read-spamming in contexts where Serena should be used (symbol search / symbol-level edit). Preemptive action is major surgery (CC launch alias change or full CLAUDE.md rewrite), ROI unclear (judged 2026-05-15)
+- ~~**`cc-system-prompt-override` adoption**~~ 棄却 (2026-07-13): Opus 4.7 bias mitigation の system prompt override 案。2026-05-15 に「ROI 不明、trigger 待ち dormant」判定で保留、以後 trigger 発火なく `ccs` shell function / prompt file / setup 手順を撤去した。再検討する場合は `serena/docs/02-usage/030_clients.md` から起こし直す
 - [ ] **Serena reminder hooks integration** (`serena-hooks remind/activate/cleanup/auto-approve`): Integrate Serena official hooks into PreToolUse / SessionStart / Stop, consider replacing current custom sh system. Details in `serena/docs/02-usage/030_clients.md` — **trigger**: when repeatedly troubled by Serena MCP issues (reconnection needed / state inconsistency / project activate failure). Currently working with custom hooks; replacement has regression risk, no preemptive action (judged 2026-05-15)

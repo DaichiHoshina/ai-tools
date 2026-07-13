@@ -77,12 +77,7 @@ After auto-apply, show all diffs, then ask-apply.
 2. verify: `claude mcp list` show `serena: ... ✓ Connected`
 3. if template changed, run `./sync.sh to-local --yes`
 4. update Opportunity tracking (Phase 3-B diff)
-5. regen CC system prompt override (if cc-system-prompt-override in use):
-   ```bash
-   PYTHONWARNINGS=ignore uv run --directory ~/serena serena prompts print-cc-system-prompt-override > ~/.claude/serena-cc-prompt.txt
-   ```
-   ops detail: `references/serena-cc-prompt-setup.md`
-6. if 3+ file changes OR non-trivial judgment, save to Claude Code auto-memory (`~/.claude/projects/<project>/memory/serena-update-YYYYMMDD.md` via `Write`) — Serena `write_memory` forbidden (2026-06-10)
+5. if 3+ file changes OR non-trivial judgment, save to Claude Code auto-memory (`~/.claude/projects/<project>/memory/serena-update-YYYYMMDD.md` via `Write`) — Serena `write_memory` forbidden (2026-06-10)
 
 ## Notes
 

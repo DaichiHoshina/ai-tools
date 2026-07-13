@@ -83,7 +83,6 @@ On-demand index from CLAUDE.md.
 
 | Topic | File |
 |-------|------|
-| Serena cc-system-prompt-override setup | `serena-cc-prompt-setup.md` |
 | Serena tool 用途マップ (per-agent canonical) + 事故防止ルール | `serena-tool-map.md` |
 
 ## Other
