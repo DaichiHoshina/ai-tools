@@ -15,6 +15,10 @@ command / skill / agent / rule / guideline / hook / reference の定義 file は
 
 **On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下。trigger 一覧: `references/on-demand-rules/README.md`。
 
+## Serena 必須化
+
+Serena MCP が connect 済の project では、**session 内で最初にコード関連 tool (Read / Grep / Glob / Edit 等) を使う前に必ず `mcp__serena__initial_instructions` を 1 回呼ぶ**。呼び出し済なら再呼び出し不要。雑談 / model 切替 / config 相談など code に触れない turn では発火しない。
+
 ## Discovery / Investigation Routing (anti-overuse)
 
 Agent startup is the biggest cost source (dozens of seconds to minutes).
