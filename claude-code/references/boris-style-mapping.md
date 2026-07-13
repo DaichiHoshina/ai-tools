@@ -2,7 +2,7 @@
 
 Boris Cherny 流 ([howborisusesclaudecode.com](https://howborisusesclaudecode.com/)) と公式 best practice ([code.claude.com/docs/en/best-practices](https://code.claude.com/docs/en/best-practices)) の主要 tip を ai-tools 既存機能に照合する。実装方針が異なる箇所は「方針差」列に明記する。
 
-## 取り込み対応表 (14/14 反映済)
+## 取り込み対応表 (2026-06-20 初回照合 14 件 + 2026-07-13 再照合 4 件)
 
 | Boris / 公式 tip | ai-tools 既存機能 | 方針差 |
 |---|---|---|
@@ -21,6 +21,10 @@ Boris Cherny 流 ([howborisusesclaudecode.com](https://howborisusesclaudecode.co
 | fan-out workflow orchestration | `/workflow` (Workflow tool で deterministic pipeline / parallel / 多数決を script 化、5 テンプレ提供) | `/flow` (PO/Manager/Dev) と直交。review / migrate / research / understand / judge-panel の軽量 fan-out 用 |
 | objective stop-condition loop (`/goal`, Ralph Wiggum guard) | `commands/goal.md` (maker-checker 分離 + objective gate 必須 + hard stop 3 種) | Loop engineering 14-step canonical は `references/loop-engineering.md` |
 | `/loop` / `/schedule` (cadence loop) | `commands/loop.md` + `scripts/loop.sh` (external headless loop) + `scripts/install-loop-cron.sh` (launchd) | schedule は manual run 実績 (Status: done) を持つ loop のみ許可 (MVL 順序 enforcement) |
+| `CLAUDE_CODE_AUTO_COMPACT_WINDOW` で早期 auto-compact | 採用しない。手動 「>40% → /compact」 rule (CLAUDE.md) を維持 | 値は model context 上限で cap されるため 200k 級では無意味。公式も 1M context model 以外は未設定を推奨 ([env-vars docs](https://code.claude.com/docs/en/env-vars.md)、2026-07-13 確認) |
+| PR comment `@.claude` → CLAUDE.md 自動更新 | `/retrospective` + `/promote` (知見 → CLAUDE.md / skill 昇格 flow) | PR comment 起点でなく session 起点。昇格先を CLAUDE.md 限定にせず skill / rule も選ぶ |
+| verify → simplify → ship (`/go` pattern) | `/review-fix-push` (review → fix → 回帰 check → push) + code-simplifier agent | 同方針。simplify は必須 step でなく必要時のみ |
+| `claude agents` control plane / `--teleport` / `--name` / `/color` | 対象外 (CLI product 機能で config 化する要素がない) | — |
 
 ## 関連 memory
 
