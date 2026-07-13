@@ -20,6 +20,8 @@ trigger 語 (skill auto-fire):
 - code file 編集中に `// ` `# ` `-- ` `/* ` `<!-- ` を新規追加する場合
 - 既存コメントの Why not 不足 / what 重複 / 擬人化 を指摘・修正する場合
 
+**skill 非発火時も同 rule を適用する**: chat inline での code 生成 / Edit tool 直接呼びの場合も、canonical `guidelines/writing/code-comment.md` の 3 rule (default 書かない / 該当行の真上 / 見ればわかる what は削除) を守る。skill 起動が overhead になる小規模編集で rule を落とさないための保険で、判定基準は canonical 単一 SoT のまま。
+
 非対象:
 - PR 本文 / commit message (`guidelines/writing/pr-description.md` + `commit-message.md` 担当)
 - 散文 docs / RCA / postmortem (`guidelines/writing/long-form-doc.md` 担当)

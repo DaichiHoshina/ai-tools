@@ -95,6 +95,23 @@ Detailed mapping: `references/command-resource-map.md`.
 3. Architecture patterns
 4. Testability
 
+## Smoke test 完了報告 template (required)
+
+実装完了報告には smoke test 実行結果を必ず含める。CLAUDE.md `## Definition of Done` の「1 smoke test 必須」と整合し、user 側の「全部完了したか再度チェックして」churn を防ぐ。
+
+| 状態 | 表記 | 用例 |
+|---|---|---|
+| 実行済 | `Smoke test: <cmd> 実行、<結果 1 行>` | `Smoke test: bats tests/unit/foo.bats 実行、12/12 pass` |
+| 未実行 | `Smoke test: 未実行 (理由: <1 行>)` | `Smoke test: 未実行 (理由: GUI 起動不能で手動確認要)` |
+
+未実行 の理由は具体化する (「時間がなかった」等の主観的理由は不可)。想定される正当理由:
+- 環境不備 (test target が local で起動しない / dev server 未起動)
+- GUI / TUI で自動 smoke 不能 (user 側で目視確認要)
+- test target 特定不能 (broad refactor で影響 test を絞り込めない)
+- 変更が config / doc のみで smoke 対象なし
+
+理由が「変更が config / doc のみ」の場合も、変更 file 名 + `git diff --stat` の 1 行要約を添えて代替する。
+
 ## Post-impl quality checks (required)
 
 After completion: `/lint-test` auto-detects lang + runs all checks (lint/typecheck/test/build). 0 errors → report done, else → try auto-fix.
