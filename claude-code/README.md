@@ -42,7 +42,7 @@ When in doubt, use just these three.
 - **Design phase**: `/brainstorm`→`/prd`→`/design-doc`→`/plan` (order: `references/design-phase-flow.md`)
 - **Documentation**: `/docs`
 - **Investigation**: `/analytics` (`--ui`) / `/retrospective` / `/cursor-review`
-- **Utilities**: `/reload` / `/memory-save` / `/memory-clean` / `/protection-mode` / `/claude-update-fix` / `/serena-update-fix`
+- **Utilities**: `/reload` / `/memory-save` / `/memory-clean` / `/onboard` / `/protection-mode` / `/claude-update-fix` / `/serena-update-fix`
 
 Full command list: `commands/` directory.
 
