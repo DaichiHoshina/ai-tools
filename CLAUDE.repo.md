@@ -7,7 +7,7 @@ global 規範は `~/.claude/CLAUDE.md` を参照する。本 file は ai-tools r
 ```bash
 cd ~/ai-tools/claude-code
 npm test                    # jest (statusline 等 JS test)
-bats --jobs 8 --no-parallelize-within-files -r tests/  # bats 全実行 (file 単位並列。GNU parallel なしなら --jobs 系 flag を外す)
+npm run test:bats           # bats 全実行 (parallel 有無を自動分岐。unit → integration)
 ./sync.sh to-local --yes    # repo → ~/.claude 反映 (非対話。--dry-run 事前確認 / --only=hooks,commands 部分同期 / --no-backup)
 ./sync.sh status            # version / 最終 sync / backup 世代 / 差分の一覧
 ./sync.sh rollback --yes    # 誤 sync 復旧: 直近 backup (自動 3 世代保持) を ~/.claude に復元
