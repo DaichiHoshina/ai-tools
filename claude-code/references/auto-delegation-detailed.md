@@ -12,15 +12,23 @@ Delegate on uncertainty. Under-delegation risk > over-delegation cost. Parent ha
 
 Fastest makespan wins for all routing. Always fire in parallel except physical constraints (same-file edit / result dependency). Cap default 8 (parent + Dev×8 = 9 concurrent). Adopt if makespan improvement ≥5%. When in doubt: parallel + delegate (under-parallel risk > over-parallel cost). Details: `references/PARALLEL-PATTERNS.md`
 
-**same-file の複数独立修正を「並列不可」と早合点しない**。同一 file の別箇所を複数 agent で直列実装するのは遅い。read-only で **patch (old_string/new_string ペア) を並列生成** させ、**親が順次 apply → verify を 1 回**にまとめれば書き込み競合なしで並列化できる。worktree 分離は不要 (worktree は別 file 群を同時 mutate する時のみ)。判断を親が手動でせず迷う場合は `/flow` に委ね、Manager に並列度・分担・worktree 要否を決めさせる (`[[feedback-samefile-patch-parallel-2026-06-14]]`)。
+**same-file の複数独立修正を「並列不可」と早合点しない**。同一 file の別箇所を複数 agent で直列実装するのは遅い。read-only で **patch (old_string/new_string ペア) を並列生成** させ、**親が順次 apply → verify を 1 回**にまとめれば書き込み競合なしで並列化できる。worktree 分離は不要 (worktree は別 file 群を同時 mutate する時のみ)。判断を親が手動でせず迷う場合は `/flow` に委ね、Manager に並列度・分担・worktree 要否を決めさせる。
 
 ## Bundle prohibition (split obligation)
 
-Never bundle 2+ domains (different file groups / root causes / verify systems) in 1 prompt. Fire per-domain as multiple Agent tool_use in a single message. Bundling causes sequential processing inside subagent, cumulating makespan `[[parallel-brushup-makespan-2026-05-31]]`.
+Never bundle 2+ domains (different file groups / root causes / verify systems) in 1 prompt. Fire per-domain as multiple Agent tool_use in a single message. Bundling causes sequential processing inside subagent, cumulating makespan.
+
+### Per-agent scope cap (1 Task 詰め込み禁止)
+
+1 Task prompt の scope 上限は file 3-5 / 観点 1-2 (CLAUDE.md 掲載値)。超えたら N Agent に分割して単一 message で並列発火する。詰め込みは context overflow で後半 file が雑になり、出力が要約化し、lens 直交性が消え、失敗時 retry cost も膨らむ。直列 chain (PO→Manager→Dev) でも各 step 内に複数 file / 観点があれば step 内で fan-out する (直列 = 単発 1 体丸投げと誤判定しない)。fire 前 self-check: (1) この prompt を agent が 1 pass で書ききれる量か — No なら分割 (2) この step 内に分割可能な単位が 2+ あるか — あれば step 内 fan-out。
+
+### 「速さ重視」の軸確認
+
+user が「速さ / 最速 / fast / quick」を指定したら、実装速度 (time-to-merge) / 効果速度 (KPI 改善 lead time) / response 速度 (1 turn latency) のどれかを冒頭で確定する。文脈から自明なら確認せず「実装速度重視のため X を選んだ」と軸を明示して進める。委譲は agent startup overhead (数十秒〜分) があり、実装速度の軸では単 file 微修正は inline が最速。誤解したまま進めると plan やり直しになる。
 
 ## Parallel fire format (mandatory)
 
-For N independent tasks: **place N `Agent` tool_use calls in a single assistant message**. Repeating 1-message-1-Agent over N messages serializes on previous agent's STOP, reducing peak concurrency to 1 (formula PASS / cap 8 does not guarantee simultaneity `[[parallel-fire-format-peak-concurrency]]`). **The act of bundling tool_use in 1 message IS the parallelization**; cap/formula only sets the upper limit on fire count. Verify: `scripts/flow-baseline.sh --summary` `peak_concurrency distribution` — heavy 1s indicates serialization.
+For N independent tasks: **place N `Agent` tool_use calls in a single assistant message**. Repeating 1-message-1-Agent over N messages serializes on previous agent's STOP, reducing peak concurrency to 1 (formula PASS / cap 8 does not guarantee simultaneity). **The act of bundling tool_use in 1 message IS the parallelization**; cap/formula only sets the upper limit on fire count. Verify: `scripts/flow-baseline.sh --summary` `peak_concurrency distribution` — heavy 1s indicates serialization.
 
 ### Upfront decomposition (before the FIRST Task fire)
 

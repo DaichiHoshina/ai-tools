@@ -115,6 +115,12 @@ echo '{}' | ~/.claude/hooks/stop.sh
 }
 ```
 
+## Hook 実装の path 解決 rule
+
+- hook から参照する規範 file (PRINCIPLES.md 等) は **`$HOME/.claude/` 固定** で指す。source dir (`~/ghq/.../claude-code/`) 参照は sync 後の実行環境に不在で silent 不発火になる (AI 定型語 block が 2026-05-30〜06-20 無動作だった実例)。bats で「実 path 存在 + grep 出力 ≥1 行」を assert する
+- ai-tools 配下の path prefix 判定は `_is_aitools_path` / `_aitools_relpath` (`lib/hook-utils.sh`) を経由する。literal prefix 直書きは symlink 表記と ghq 実 path の差で外れる (social-hit block が半年不発だった実例)
+- 新規 hook は bats と併せて実 path smoke を 1 発実行する (`bash hooks/xxx.sh < payload.json; echo $?`。file 経由 stdin の理由: `references/bats-test-writing.md` § Execution pitfalls)
+
 ## トラブルシューティング
 
 | 問題 | 対処 |

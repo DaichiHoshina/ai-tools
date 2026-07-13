@@ -44,6 +44,7 @@ description: External headless loop — fresh context per iteration via scripts/
 - 初回は必ず `--dry-run` で組立 prompt を確認してから実行する
 - `--bg` 指定時は Bash `run_in_background: true` で起動し、完了通知を待つ
 - 破壊的 gate (deploy / merge を含む cmd) は禁止。gate は test / lint / build 系の read-only 検証に限る
+- 完走 (exit 0) を成功と同一視しない。gate は queue しか見ず PROMPT の制約は確率的にしか効かないため、直後に `git status --short` + `git log <base>..HEAD --name-only` で maker の scope 逸脱 (未 commit の範囲外変更 / commit への範囲外 file 混入) を点検し、逸脱は `git checkout` で復元する (2026-07-11 実踏: 制約違反の 4 file 削除が混入)
 
 ### status
 

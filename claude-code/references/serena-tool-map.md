@@ -50,6 +50,14 @@ Primary: `get_symbols_overview` / `find_symbol` / `replace_symbol_body` / `inser
 
 ## Accident prevention rules (dotall greedy incident 2026-05-18)
 
+### activate_project は絶対 path 必須
+
+`activate_project(".")` は Serena server の cwd 誤認で別 repo を activate しうる (2026-06-13 に oraios/serena が誤 activate された)。常に絶対 path を渡し、応答の `Programming languages:` が対象 repo と整合するか確認する (ai-tools なら bash)。誤 activate しても絶対 path で再 activate すれば復帰する。
+
+### worktree 作業では Serena 書込系を使わない
+
+Serena の project root は main repo に固定され、subagent 側に activate_project がなく worktree へ切替できない。書込系 (`insert_after_symbol` / `replace_content` 等) は worktree でなく main repo の同名 file を誤編集する (2026-07-13 /flow 並列で実害)。worktree で作業する agent への delegation prompt に「Serena は read-only 用途のみ、編集は Read/Edit/Write/Bash を worktree 絶対 path で行う」と明記し、parent は統合前に main repo の `git status --porcelain` で誤爆残留を点検する。
+
 ### search_for_pattern: specify `multiline=False` for single-line scope searches
 
 `multiline=False` opt-out added in v1.5.0 (default is `multiline=True` with `re.DOTALL|MULTILINE` enabled).

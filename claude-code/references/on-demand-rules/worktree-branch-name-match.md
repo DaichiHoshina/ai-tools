@@ -34,7 +34,7 @@ git worktree add ../size-selection-doc -b size-selection-doc
 ## Why
 
 - `git worktree list` と `git branch` の突合が目視 diff になると、誤 branch 上での commit / push を誘発する
-- 並列 fan-out 時に dev agent が dir 名から branch 名を推測できず、誤 branch 共有事故を再発する (`[[feedback-worktree-branch-scope-guard]]` 2026-06-19 incident と同系)
+- 並列 fan-out 時に dev agent が dir 名から branch 名を推測できず、誤 branch 共有事故を再発する (2026-06-19 incident と同系)
 - 事後の cleanup (`git worktree remove` + `git branch -d`) で対象 slug を 1 つ指定するだけで済む
 
 ## wt 内で branch 切替禁止
@@ -45,7 +45,7 @@ wt は単一 branch 専用の作業 dir とする。wt 内で `git switch` / `gi
 
 ## Fallback パターン (A)/(B)
 
-worktree pattern は「clean な状態から wt を作り、wt 内で初めて編集する」流れ。**既に main の working tree を編集済みなら worktree を使わない** (`git stash` した変更は新 wt に持ち込まれず取り残される罠、`[[worktree-fresh-baseref-uncommitted-trap]]`)。既編集時は (B) fallback を使う。
+worktree pattern は「clean な状態から wt を作り、wt 内で初めて編集する」流れ。**既に main の working tree を編集済みなら worktree を使わない** (`git stash` した変更は新 wt に持ち込まれず取り残される罠)。既編集時は (B) fallback を使う。
 
 ```bash
 # (A) 未着手から: worktree で隔離

@@ -22,6 +22,17 @@ CLAUDE.md `## Editing Rule (data-loss guard)` の詳細委譲先。
 - `hooks`: 既存 live hook と template を merge
 - `skillOverrides`: 既存 override を保持して template と merge
 
+## sync.sh 運用注意
+
+- `to-local` / `from-local` は確認プロンプトで止まる。非対話実行は `--yes` (`-y`) 必須 (`--apply` / `--force` / `--dry-run` は reject される)。実行後は live 反映を grep で検証する (新文言 count ≥1 / 旧文言 count 0)
+- `from-local` は live の縮退状態を template に無条件 back-sync する事故装置。実行前に `jq '.permissions.deny | length' ~/.claude/settings.json` で deny rule 数を確認し、template (70+) より大幅に少なければ中止する。設定追加は live 直編集でなく template 編集 → `to-local` に統一する
+- hooks merge は matcher 単位 dedup (template entry が canonical、live 独自 matcher のみ末尾保持)。merge logic を触る前に `tests/unit/scripts/settings-validator-hooks-merge.bats` で挙動を確認する
+
+## 定義 file の削除・派生値
+
+- `commands/*.md` は slash command の登録実体で、削除するとコマンド自体が呼べなくなる。重複解消は削除でなく最小リダイレクト (~10 行) への圧縮で行う
+- canonical source から導出可能な値 (count / sum / list 長 / 集計値) を別 file に literal で書かない。参照か動的取得に切替える (例外: 不変 magic number / test fixture の expected count)
+
 ## VERSION / SERENA_VERSION
 
 `VERSION` / `SERENA_VERSION` の bump 条件:

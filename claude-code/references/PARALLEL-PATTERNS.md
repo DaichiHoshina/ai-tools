@@ -189,6 +189,13 @@ Formula PASS and 2+ independent tasks
 - Worktree no changes: auto-delete
 - Merge conflict: downgrade to sequential, leave worktree for user
 
+### Agent tool `isolation: "worktree"` の実挙動
+
+- subagent が commit を作ると cleanup phase で parent branch (main) に**自動 merge される** (Anthropic 標準の想定動作)。不要 commit も乗るため、委譲は commit-worthy な task に限り、試験的編集は inline で行う。失敗 commit は `git revert` で戻す
+- 非 commit 完了は 2 分岐する: 単発なら working tree 変更が main に uncommitted 残留 / 並列 + untracked file なら worktree path 自体が残存する
+- 検知: 完了報告後に `git log --oneline -3` で申告 commit を確認し、見えなければ `git status`。並列発火時は `git worktree list` で agent-* 残存も確認し、残っていれば `git worktree remove --force <path>` + branch 削除で手動 cleanup する
+- 予防: 委譲 prompt に「commit 必須 (commit message 含めて完了)」を明記する
+
 ## Responsibility separation
 
 | Role | Owner |

@@ -30,6 +30,8 @@ commands/ skills/ agents/ の `.md` は毎 session token を消費する。Keep:
 
 **EN-conversion-protected files/sections**: `claude-code/references/on-demand-rules/en-conversion-protected.md` (誤訳が rule / bats / JP trigger を壊す)。
 
+`skills/.system/` 配下は upstream vendored skill (license.txt 同梱) で行数目標の対象外。改変は upstream merge conflict 源になるため、行数超過を理由にした圧縮 / 分離 TODO を立てない。
+
 ## Hook 編集 baseline rule
 
 `hooks/*.sh` の block / warn 系編集前に **`claude-code/references/on-demand-rules/measure-before-hook-change.md` を Read + `./scripts/hook-bench.sh --log` で baseline 計測**。skip すると latency regression が 24-48h 後に判明する (`[[2026-06-24 cd70e4e]]`)。
@@ -37,5 +39,5 @@ commands/ skills/ agents/ の `.md` は毎 session token を消費する。Keep:
 ## Golden workflow (ai-tools 頻出)
 
 - skill 追加 → `/skill-add` / guideline 更新 → `/update-guidelines`
-- worktree 隔離 + commit + ff-merge + push (canonical: `claude-code/references/on-demand-rules/ai-tools-worktree-flow.md`、**dir 名 slug と branch 名は必ず一致**)。前提: 未編集状態で切る。main 編集済なら branch commit に切替 (`[[project_worktree_fresh_baseref_uncommitted_trap]]`)。fallback 手順: `claude-code/references/on-demand-rules/worktree-branch-name-match.md`
+- worktree 隔離 + commit + ff-merge + push (canonical: `claude-code/references/on-demand-rules/ai-tools-worktree-flow.md`、**dir 名 slug と branch 名は必ず一致**)。前提: 未編集状態で切る。main 編集済なら branch commit に切替。fallback 手順: `claude-code/references/on-demand-rules/worktree-branch-name-match.md`
 - memory write は `~/ai-tools/memory/` 固定 (`.gitignore` 済)。`~/.claude/projects/.../memory/` と Serena `.serena/memories/` への write 禁止

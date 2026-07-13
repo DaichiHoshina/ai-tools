@@ -27,9 +27,16 @@ Specified in each agent's frontmatter.
 
 決定履歴:
 
-- 2026-06-16: judgment 系を Opus 4.7 に pin (Opus 4.8 regression 回避 — see [[opus-4-8-regression-2026-06]])
+- 2026-06-16: judgment 系を Opus 4.7 に pin (Opus 4.8 regression 回避)
 - 2026-07-10: 実行系を Sonnet 5 に切替 (judge-panel 34 対 27 で採用)
 - 2026-07-11: Opus 4.7 pin 解除。po-agent = Fable 5、判断系他 3 agent (manager / developer / RCA) = Sonnet 5 (user 決定: 初手判断のみ Fable、他は Sonnet 5 相当が適切)
+
+## Subagent / Workflow の model downgrade
+
+subagent は default で session model を継承する。Fable session では機械的な段を明示 downgrade する: search / fetch / 機械抽出 = `haiku`、verify / judge / synthesize = `sonnet`、最終品質が要る段のみ継承 (省略)。走行中の workflow へ適用するには TaskStop → script に model 追記 → `resumeFromRunId` 再開 (完了済 agent は cache が効く)。
+
+- 実測 (2026-07-13 deep-research): downgrade 後でも 102 agent / 355 万 subagent tokens / 約 10 分。全段 Fable 継承なら数倍かかる。徹底調査系は発火前に「claims 上限 × 3 票 ≒ verify agent 数」で概算し、必要なら claims 縮小か budget 指定 (`+500k` 形式) を添える
+- 1M context 変種 (`[1m]`) は attention overhead で応答が体感遅い。大規模 codebase 探索など必要な時のみ `/model` で都度切替する
 
 ## Effort levels
 

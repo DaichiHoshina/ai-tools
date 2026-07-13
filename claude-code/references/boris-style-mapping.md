@@ -29,6 +29,4 @@ Boris Cherny 流 ([howborisusesclaudecode.com](https://howborisusesclaudecode.co
 
 ## 関連 memory
 
-- `[[work-context-20260620-boris-uptake]]` 2026-06-20 一括取り込み記録
-- `[[verifier-panel-first-run-2026-06-20]]` `/review --verifier-panel=3` 初実走計測
 - 2026-07-13 deep-research workflow で 19 source / 71 claims → 3 票反証検証で 22 claims confirmed、本表の再照合 5 件はその結果

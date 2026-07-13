@@ -46,7 +46,7 @@ Do not accept agent report immediately — perform at least 1 cross-check parent
 - File change claim → `git diff --stat` to confirm line/file counts
 - Doc content claim (「file A は file B と重複」「§X が canonical と drift」「canonical 不在」) → plan の Phase に組み込む前に file B の該当 section を Read し、意味的 overlap を直接確認する。keyword hit と行数だけの重複判定は誤検出が多く、link 化で唯一の canonical を消す事故につながる。検証 cost が高い場合 (>5 file / >200 行 / 多数 cross-ref) は finding を保留に分類して user 判断に回す
 
-**Fact-check not needed**: when verify cmd is run agent-side and included in report, and verify cmd is deterministic (lint / typecheck / bats). 経緯: `[[parallel-fire-format-peak-concurrency]]`。
+**Fact-check not needed**: when verify cmd is run agent-side and included in report, and verify cmd is deterministic (lint / typecheck / bats).
 
 ## 1. Target files & edits
 
@@ -203,7 +203,7 @@ git index は session 間で共有される単一状態だ。staged のまま放
 
 ### Shell script exec bit (new `.sh` files)
 
-Write tool は mode 644 で file を作るため、新規 `.sh` は `100644` のまま commit されると runtime で `Permission denied` になる。New `*.sh` 作成時: (1) Write 直後に `chmod +x`、(2) commit 前に `git ls-files -s` で `100755` を確認、(3) `claude-code/hooks/` 配下なら exec-bit smoke test (`tests/unit/hooks/<name>.bats`) を追加する。経緯: `[[new-shell-script-exec-bit-rule]]`。
+Write tool は mode 644 で file を作るため、新規 `.sh` は `100644` のまま commit されると runtime で `Permission denied` になる。New `*.sh` 作成時: (1) Write 直後に `chmod +x`、(2) commit 前に `git ls-files -s` で `100755` を確認、(3) `claude-code/hooks/` 配下なら exec-bit smoke test (`tests/unit/hooks/<name>.bats`) を追加する。
 
 ### Hook command path convention
 

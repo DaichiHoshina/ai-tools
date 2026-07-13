@@ -184,7 +184,7 @@ claude mcp add serena -s user -- \
 
 確認: `claude mcp list` で `serena` が出れば OK。`--project-from-cwd` で session 起動時の cwd を自動 activate するため、project ごとの `.mcp.json` 配置は不要。
 
-> **注意**: `--directory` ではなく `--project` を使う。`--directory` は uv の cwd を変更する flag で、`--project-from-cwd` (serena 側) が拾う cwd が oraios/serena 固定になり、全 repo で誤った project を掴む不具合になる (`[[serena-mcp-cwd-fix]]`)。`--project` は uv の workspace 指定だけで cwd を変えないため、session cwd が正しく serena に渡る。
+> **注意**: `--directory` ではなく `--project` を使う。`--directory` は uv の cwd を変更する flag で、`--project-from-cwd` (serena 側) が拾う cwd が oraios/serena 固定になり、全 repo で誤った project を掴む不具合になる。`--project` は uv の workspace 指定だけで cwd を変えないため、session cwd が正しく serena に渡る。
 
 **Codex (required)**
 

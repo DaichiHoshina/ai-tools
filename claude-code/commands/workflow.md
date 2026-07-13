@@ -74,7 +74,7 @@ Helper 実装と適用例: `references/workflow-templates.md` § 0 Null-guard he
 
 - Default subagent_type is Workflow native subagent. Use `agentType: 'explore-agent'` etc. to specify ai-tools agents
 - Barrier vs pipeline decision inside `Workflow` tool: follow "DEFAULT TO pipeline()" in [Workflow tool description]
-- 1-message bundle constraint (`[[parallel-fire-format-peak-concurrency]]`) applies to `/flow` only; Workflow tool internal fan-out is a separate system (peak governed by tool-side cap)
+- 1-message bundle constraint applies to `/flow` only; Workflow tool internal fan-out is a separate system (peak governed by tool-side cap)
 - `nested workflow()` allowed 1 level only
 
 ARGUMENTS: $ARGUMENTS

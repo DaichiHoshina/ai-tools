@@ -45,6 +45,8 @@ If structural → Step 3. Otherwise → standard fix.
 
 Hook is highest priority: zero cognitive load for user/Claude, detects before commit. Skill / CLAUDE.md have load cost + interpretation variance.
 
+**CLAUDE.md 自己約束の hook 昇格基準**: 「〜を避ける」型の自己約束を CLAUDE.md に足しても、1 週間 (または同種 block ≥50 件/週) で効果が出なければ user-prompt-submit の additionalContext inject (`_inject_*_if_trigger` パターン) に昇格する。自己 restraint は反復タスクで破綻し、pre-tool-use の後段 block は retry loop で token と makespan を浪費する。生成前の文脈に置くのが構造解 (実例: commit-ng-pre-sweep `d921fc0`、追記当日 603 件 block → inject 化)。list は log / canonical file から動的抽出し literal 直書きしない。
+
 ### Step 4: Measure Effectiveness
 
 Verify same-type findings don't recur after fix:

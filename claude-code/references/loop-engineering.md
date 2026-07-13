@@ -151,7 +151,7 @@ Loop の学習を捨てない経路を固定する:
 
 ## When NOT to build a loop
 
-Single well-aimed prompt wins for: architecture rewrites / auth / payments (`[[feedback-db-change-review-blind-spot]]`) / production deploys (`[[feedback-rollback-via-revert-pr]]`) / vague product work / any code without automated verification.
+Single well-aimed prompt wins for: architecture rewrites / auth / payments / production deploys / vague product work / any code without automated verification.
 
 Rule of thumb: if a human would need to think deeply about each output before accepting it, don't loop it.
 
@@ -181,7 +181,7 @@ A production loop needs both. Atomic gate per iteration (cheap, blocks bad singl
 - Before any merge / push / deploy gate
 - On `/compact` or session boundary (catches drift hidden by summarization)
 
-Cross-ref: `[[feedback-db-change-review-blind-spot]]` (DB change 4-path holistic check), `[[feedback-no-derived-literals]]` (cross-file consistency = holistic property).
+Cross-ref: CLAUDE.md DoD (7) DB-change 4-path check, 派生値 literal 禁止 (`references/editing-rule-detailed.md`).
 
 ## Related
 
@@ -194,4 +194,4 @@ Cross-ref: `[[feedback-db-change-review-blind-spot]]` (DB change 4-path holistic
 | `references/auto-delegation-detailed.md` | parent=Opus orchestrate / subagent=Sonnet delegation (maker/checker separation basis) |
 | `references/PARALLEL-PATTERNS.md` | Parallel N adoption threshold, worktree pattern |
 | CLAUDE.md §Quick Reference | ai-tools worktree workflow canonical |
-| CLAUDE.md `[[feedback-no-retry-after-interrupt]]` | Interrupt → no auto-retry (loop hard stop reinforcement) |
+| CLAUDE.md interrupt 再試行禁止 rule | Interrupt → no auto-retry (loop hard stop reinforcement) |

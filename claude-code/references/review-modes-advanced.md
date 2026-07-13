@@ -43,6 +43,17 @@ Aggregation: confidence <80 → downgrade to Warning; same file:line with differ
 
 Include: changed files (git diff), newly added. Exclude: auto-generated, vendor/node_modules, lock files.
 
+## 実測に基づく review mode 選択 (2026-06-20 実走、PR #48 同一 target 比較)
+
+| 状況 | 選択 |
+|---|---|
+| small diff (≤5 file or ≤200 行) | `/review` 単発 1 lens |
+| 中規模 doc PR (5-20 file / 200-1000 行) | `/review --verifier-panel=3` (≈214k subagent tokens) |
+| 中-大 code PR (≥20 file or ≥1000 行) / 規約違反検出が重要な refactor | `/workflow review` (≈686k = 3.2x、adversarial verify が false positive 27% を提示前に discard し、直叩きの見逃し 5 件を追加で拾った) |
+| cost 優先 / 1 shot | Agent 直叩き panel (token 1/3) / 再走 iteration は `/workflow review` + `resumeFromRunId` で cache |
+
+多数決 (2/3 lens hit) が効くのは同一 root cause を複数 lens が捉える重大 logic bug のみで、doc PR では 4 finding 全て lens 単独 hit だった。doc PR は 1-2 lens で足りる。workflow 側は default subagent に reviewer rule (`review-noise-discard.md` 等) が乗らないため、prompt へ明示注入する。
+
 ## difit integration: comment JSON format
 
 ```json
