@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Write, Edit
 name: frontend-design
-description: Guidance for distinctive, intentional visual design when building new UI or reshaping existing UI. Helps with aesthetic direction, typography, and choices that avoid templated defaults. — 実装後の review には使わない
+description: Guidance for distinctive, intentional visual design when building or reshaping UI (aesthetic direction, typography, non-templated choices). — 実装後の review には使わない
 license: Complete terms in LICENSE.txt
 ---
 

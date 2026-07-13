@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Grep
 name: jp-writing
-description: "Japanese output readability check & rewrite. Evaluates NG terms, sentence-level quality, and structure using PRINCIPLES.md canonical. Used when /jp-writing is invoked."
+description: "Japanese output readability check & rewrite (PRINCIPLES.md canonical). Used when /jp-writing is invoked."
 context: fork
 disallowed-tools:
   - Bash
@@ -11,7 +11,7 @@ disallowed-tools:
 
 # jp-writing — 日本語の可読性チェック & リライト
 
-Goal: reduce cognitive load for the reader, not just reject NG terms. All evaluation criteria come from `guidelines/writing/PRINCIPLES.md` canonical (no list literals inside this skill).
+Goal: reduce cognitive load for the reader, not just reject NG terms. Evaluates NG terms, sentence-level quality, and structure. All evaluation criteria come from `guidelines/writing/PRINCIPLES.md` canonical (no list literals inside this skill).
 
 ## Startup behavior
 

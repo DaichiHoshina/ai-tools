@@ -52,7 +52,7 @@ Q1-Q5 詳細と complement rule は `references/decision-quality-checklist.md` �
 
 ### Phase 2: Auto-generate PRD
 
-Overview, user stories, service dependencies (Mermaid), external API spec, state transitions, acceptance criteria. Reference `guidelines/writing/long-form-doc.md` 4-question principle for prose quality.
+Overview, user stories, service dependencies (Mermaid), external API spec, state transitions, acceptance criteria. Reference `guidelines/writing/long-form-doc.md` 冒頭 Writing Context 節 (4-question principle) のみ Read (全文 load 不要)。
 
 ### Phase 3: Multi-angle Review (11 personas)
 

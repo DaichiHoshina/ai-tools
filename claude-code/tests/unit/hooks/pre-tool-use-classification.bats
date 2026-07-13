@@ -63,9 +63,16 @@ _run_bash_forbidden() {
 
 @test "pre-tool-use: Task はSafe (並列 self-review inject あり)" {
   # subagent_type 必須化後は explore-agent など明示が前提
-  local input
-  input=$(jq -n '{tool_name:"Task", tool_input:{subagent_type:"explore-agent", prompt:"x"}}')
-  result=$(echo "$input" | bash "$HOOK_FILE")
+  # PARALLEL_REVIEW は session 1 回のみ inject (flag: /tmp/claude-parallel-review-<key>-<date>)。
+  # 他 test との flag 衝突を避けるため test 固有 session_id を使い、実行後に flag を消す。
+  local input session_id flag_file today
+  session_id="test-parallel-review-$$"
+  input=$(jq -n --arg sid "$session_id" '{session_id:$sid, tool_name:"Task", tool_input:{subagent_type:"explore-agent", prompt:"x"}}')
+  today=$(date +%Y%m%d)
+  flag_file="/tmp/claude-parallel-review-${session_id}-${today}"
+  rm -f "$flag_file"
+  result=$(echo "$input" | CLAUDE_CODE_SESSION_ID="$session_id" bash "$HOOK_FILE")
+  rm -f "$flag_file"
   echo "$result" | grep -q "並列 self-review"
 }
 

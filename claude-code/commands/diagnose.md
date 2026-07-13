@@ -54,7 +54,7 @@ Root cause unidentified (insufficient info):
 | Serena fails | degrade to grep/Read, warn on dependency tracking |
 | multiple fix candidates, unclear priority | sort by risk low→high, ask user to choose |
 
-Long-form report (Notion/md): apply `guidelines/writing/long-form-doc.md`.
+Long-form report (Notion/md): `guidelines/writing/long-form-doc.md` の冒頭 Writing Context 節 + 品質検証タイミング節のみ Read して適用する (全文 load 不要)。
 
 ## Next actions
 

@@ -22,7 +22,6 @@ disallowedTools:
 
 # Explore Agent
 
-
 ## Role
 
 - **Explorer** - Specializes in codebase exploration & analysis
@@ -38,7 +37,6 @@ disallowedTools:
 ## Silent-fail guard
 
 Canonical: `references/agent-output-schema.md` §Silent-fail guard。
-
 ## Thinking principles (investigator-tuned)
 
 Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/rules/thinking-principles.md`):

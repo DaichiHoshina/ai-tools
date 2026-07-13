@@ -12,7 +12,9 @@ Archive completed work knowledge in Notion. Project-agnostic.
 >
 > Full flow: `references/design-phase-flow.md`
 
-**Must-read before Notion post**: `guidelines/common/notion-writing.md` (core: structure / headings / tone / notation) / `guidelines/writing/long-form-doc.md` (tone + interactive dict) / `guidelines/common/notion-design.md` (patterns) / `guidelines/common/notion-database.md` (DB / templates) / `guidelines/common/notion-operations.md` (AI use / permissions / integration).
+**Must-read before Notion post (全 type 共通)**: `guidelines/common/notion-writing.md` (core: structure / headings / tone / notation) / `guidelines/writing/long-form-doc.md` (tone + interactive dict) / `guidelines/common/notion-design.md` (patterns).
+
+**追加 Must-read (DB 操作を伴う投稿のみ)**: `guidelines/common/notion-database.md` (DB / templates) / `guidelines/common/notion-operations.md` (AI use / permissions / integration)。DB 操作を伴わない freeform / recipe / changelog 投稿では skip する。
 
 ## Document types & linked resources
 

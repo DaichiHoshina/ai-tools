@@ -663,8 +663,16 @@ PYEOF
     # ただし general-purpose は CLAUDE.md「絶対禁止」最大コスト源 → hard block (GP_BLOCK_OFF=1 で warn に緩和)
     SUBAGENT_TYPE=$(jq -r '.tool_input.subagent_type // empty' <<< "$INPUT")
 
-    # 並列判定 self-review (全 Task 発火時に inject)
-    PARALLEL_REVIEW=$'【並列 self-review (強制 echo、default=並列/委譲)】\n0. default: 並列発火 + Sonnet 委譲。単発・inline 選択時は「なぜ並列/委譲しないか」を 1 行 echo。迷ったら並列・委譲側\n1. Manager 経由は formula_trace、直接 Task は judgment 行を echo (書式: references/PARALLEL-PATTERNS.md)\n2. 独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1)\n3. echo 抜けは under-parallel risk'
+    # 並列判定 self-review (session 1 回のみ inject、同一 session 内の Task 連発による重複を抑制)
+    PARALLEL_REVIEW=""
+    _PR_NL=""
+    _PR_TODAY=""; printf -v _PR_TODAY '%(%Y%m%d)T' -1
+    _PARALLEL_REVIEW_FLAG="/tmp/claude-parallel-review-$(_stable_session_key)-${_PR_TODAY}"
+    if [[ ! -f "${_PARALLEL_REVIEW_FLAG}" ]]; then
+      PARALLEL_REVIEW=$'【並列 self-review (強制 echo、default=並列/委譲)】\n0. default: 並列発火 + Sonnet 委譲。単発・inline 選択時は「なぜ並列/委譲しないか」を 1 行 echo。迷ったら並列・委譲側\n1. Manager 経由は formula_trace、直接 Task は judgment 行を echo (書式: references/PARALLEL-PATTERNS.md)\n2. 独立 task ≥2 なら 1 message に N 個 Agent を並べる (逐次発火だと peak=1)\n3. echo 抜けは under-parallel risk'
+      _PR_NL=$'\n'
+      touch "${_PARALLEL_REVIEW_FLAG}" 2>/dev/null || true
+    fi
 
     # parent 事前準備 missing 検出 (warn-only、block しない)
     TASK_PROMPT=$(jq -r '.tool_input.prompt // empty' <<< "$INPUT")
@@ -699,8 +707,7 @@ PYEOF
       if [ "${GP_BLOCK_OFF:-0}" = "1" ]; then
         GUARD_CLASS="Boundary"
         MESSAGE="${ICON_WARNING} general-purpose agent（CLAUDE.md「原則使わない」、最大コスト源）"
-        ADDITIONAL_CONTEXT="代替: claude-code-guide / Explore / 直接 grep+find / serena MCP（references/performance-insights.md 参照）
-${PARALLEL_REVIEW}${PREP_WARN}"
+        ADDITIONAL_CONTEXT="代替: claude-code-guide / Explore / 直接 grep+find / serena MCP（references/performance-insights.md 参照）${_PR_NL}${PARALLEL_REVIEW}${PREP_WARN}"
       else
         GUARD_CLASS="Forbidden"
         MESSAGE="${ICON_CRITICAL} general-purpose agent は禁止 (CLAUDE.md、最大コスト源 実測 max 501s)。代替: explore-agent (検索) / claude-code-guide (CLI/SDK) / developer-agent (実装)"
@@ -711,8 +718,7 @@ ${PARALLEL_REVIEW}${PREP_WARN}"
       if [ "${SUBTYPE_EMPTY_BLOCK_OFF:-0}" = "1" ]; then
         GUARD_CLASS="Boundary"
         MESSAGE="${ICON_WARNING} subagent_type 未指定の Task (CLAUDE.md「subagent_type must be explicit」)"
-        ADDITIONAL_CONTEXT="代替: explore-agent (検索) / claude-code-guide (CLI/SDK) / developer-agent (実装)
-${PARALLEL_REVIEW}${PREP_WARN}"
+        ADDITIONAL_CONTEXT="代替: explore-agent (検索) / claude-code-guide (CLI/SDK) / developer-agent (実装)${_PR_NL}${PARALLEL_REVIEW}${PREP_WARN}"
       else
         GUARD_CLASS="Forbidden"
         MESSAGE="${ICON_CRITICAL} subagent_type 未指定の Task は禁止 (CLAUDE.md「subagent_type must be explicit on every Task call」)。代替: explore-agent (検索) / claude-code-guide (CLI/SDK) / developer-agent (実装)"

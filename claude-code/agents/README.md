@@ -85,6 +85,8 @@ Claude Code sub-agent spec: sub-agents cannot spawn other sub-agents. **Parent (
 
 Per-agent Trigger / Role / Feature 詳細は各 `.md` 参照 (重複防止)。
 
+全 agent 共通 default: All responses in English (preserve technical terms, tool names)。
+
 ## Agent hierarchy
 
 Large tasks: PO → Manager → Developer×N → Reviewer (details: `/flow workflow` section above).

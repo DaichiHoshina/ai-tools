@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit, Write, Bash, Task, AskUserQuestion, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 argument-hint: "[--inline|--quick|--plan <file>] <task-description>"
-description: Default = developer-agent delegation. Inline for 1-symbol fix only. --inline forces inline, --quick for short prompts, Team via /flow
+description: Default = developer-agent delegation. Inline for 1-symbol fix only. Flag detail: see Default delegation table below.
 ---
 
 ## /dev - Implementation mode
@@ -60,7 +60,7 @@ Flow: identify file → fix (Serena MCP) → verify (lint/type) → propose comm
 
 ## Step 0: Guideline loading (conditional)
 
-**Always-on (skip 不可)**: code comment (`// ` `# ` `-- ` `/* ` `<!-- `) を新規追加/編集する場合は canonical `guidelines/writing/code-comment.md` を Read して適用する (`--quick` でも skip しない)。
+**Always-on (skip 不可)**: code comment (`// ` `# ` `-- ` `/* ` `<!-- `) を新規追加/編集する場合は hook 注入の要約で判定し、迷ったときのみ canonical `guidelines/writing/code-comment.md` を Read する (`--quick` でも skip しない)。
 
 | Scenario | Action |
 |----------|--------|

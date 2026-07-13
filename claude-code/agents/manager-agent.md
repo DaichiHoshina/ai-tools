@@ -19,7 +19,6 @@ disallowedTools:
 
 # Manager Agent
 
-
 > **Schema compliance (read first)**: use top-level `execution_mode:` (never `mode:`), `verify: {lint, typecheck, test}`, `dod:` per task, and place the trailer at the very END of the whole output. Skeleton: §Allocation plan format.
 
 ## Role
@@ -39,7 +38,7 @@ disallowedTools:
 
 ## Silent-fail guard
 
-AskUserQuestion is auto-denied in subagent context. On decision fork requiring user judgment, return `status: blocked` + question in `issues_blocking[]`. Canonical: `agents/developer-agent.md` §Subagent silent-fail guard.
+Canonical: `references/agent-output-schema.md` §Silent-fail guard。
 
 ## Thinking principles (planner-tuned)
 

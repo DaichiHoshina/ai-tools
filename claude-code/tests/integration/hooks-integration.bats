@@ -449,8 +449,16 @@ teardown() {
 
 @test "integration: pre-tool-use injects parallel self-review reminder for Task" {
   # subagent_type 必須化後は subagent_type 明示が前提
-  local input='{"tool_name": "Task", "tool_input": {"subagent_type": "explore-agent"}}'
+  # PARALLEL_REVIEW は session 1 回のみ inject (flag: /tmp/claude-parallel-review-<key>-<date>)。
+  # 他 test との flag 衝突を避けるため test 固有 session_id を使い、実行後に flag を消す。
+  local session_id today flag_file
+  session_id="test-parallel-review-integration-$$"
+  today=$(date +%Y%m%d)
+  flag_file="/tmp/claude-parallel-review-${session_id}-${today}"
+  rm -f "$flag_file"
+  local input="{\"session_id\": \"${session_id}\", \"tool_name\": \"Task\", \"tool_input\": {\"subagent_type\": \"explore-agent\"}}"
   run bash -c "echo '${input}' | ${HOOKS_DIR}/pre-tool-use.sh"
+  rm -f "$flag_file"
   [ "$status" -eq 0 ]
   echo "$output" | jq -e '.additionalContext | contains("並列 self-review")' >/dev/null
 }

@@ -1,6 +1,6 @@
 ---
 name: reviewer-agent
-description: Reviewer Agent - Code review owner (P0-P3 findings, Generator-Verifier の Verifier). Use for diff review / /flow Reviewer step / lens panel. No fixes (developer-agent), no build verification (verify-app).
+description: Reviewer Agent - Code review owner (P0-P3 findings, Generator-Verifier の Verifier). Use for diff review / /flow Reviewer step / lens panel.
 model: claude-sonnet-5
 color: blue
 permissionMode: fast
@@ -25,7 +25,6 @@ disallowedTools:
 
 # Reviewer Agent
 
-
 ## Pattern: Generator-Verifier (Anthropic official pattern)
 
 This agent operates as the **Verifier** in the Generator-Verifier pattern.
@@ -44,7 +43,6 @@ This agent operates as the **Verifier** in the Generator-Verifier pattern.
 ## Silent-fail guard
 
 Canonical: `references/agent-output-schema.md` §Silent-fail guard。
-
 ## Thinking principles (verifier-tuned)
 
 Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/rules/thinking-principles.md`):

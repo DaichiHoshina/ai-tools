@@ -102,7 +102,7 @@ A/B mandatory on orchestration path; `--sequential` exempts A/B. `/dev --paralle
 
 Required: impl → /lint-test → /review → review-fix → /git-push. 2× fail same approach → `/clear` → re-organize.
 
-**Code comment enforcement (always-on)**: 各 developer-agent の delegation prompt に canonical `guidelines/writing/code-comment.md` 準拠 (Read 必須) を明示する。Self-Review Gate 5 (developer-agent.md) で comment 混入を目視確認する。
+**Code comment enforcement (always-on)**: 各 developer-agent の delegation prompt に canonical `guidelines/writing/code-comment.md` 準拠を明示する (hook 要約で判定、迷ったときのみ Read)。Self-Review Gate 5 (developer-agent.md) で comment 混入を目視確認する。
 
 ### Completion actions
 

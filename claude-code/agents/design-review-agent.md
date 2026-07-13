@@ -49,7 +49,6 @@ World-class UI/UX design review specialist. Stripe / Airbnb / Linear 準拠。**
 ## Silent-fail guard
 
 Canonical: `references/agent-output-schema.md` §Silent-fail guard。
-
 ## Thinking principles (observer-tuned)
 
 Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/rules/thinking-principles.md`):

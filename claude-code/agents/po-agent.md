@@ -19,7 +19,6 @@ disallowedTools:
 
 # PO (Product Owner) Agent
 
-
 ## Role
 
 - **Strategy decider** - Set project direction & implementation approach
@@ -35,7 +34,7 @@ disallowedTools:
 
 ## Silent-fail guard
 
-AskUserQuestion is auto-denied in subagent context (no error signal). On any decision fork requiring user judgment (worktree confirm etc.), return `status: blocked` + the question in `issues_blocking[]` — parent asks the user and re-spawns. Canonical: `agents/developer-agent.md` §Subagent silent-fail guard.
+Canonical: `references/agent-output-schema.md` §Silent-fail guard (worktree confirm 等の decision fork も同様に扱う。parent が user に確認して re-spawn する)。
 
 ## Thinking principles (strategist-tuned)
 

@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash, Read, Grep, Glob, mcp__serena__find_symbol, mcp__serena__find_referencing_symbols, mcp__serena__get_symbols_overview
 name: issue-dev-flow
-description: GitHub issue 起点の開発 flow skill。PRD / DesignDoc を SoT に、モノリス影響分析 → PR 分割 → フロント非影響先行 merge で進める。「issueベースで開発」「issue 起点で」で起動。— DD 生成は /design-doc、実装は /dev・/flow を使う
+description: GitHub issue 起点の開発 flow skill。PRD/DesignDoc を SoT に影響分析 → PR 分割 → 先行 merge で進める。「issueベースで開発」で起動。— DD 生成は /design-doc、実装は /dev・/flow を使う
 requires-guidelines:
   - common
 ---

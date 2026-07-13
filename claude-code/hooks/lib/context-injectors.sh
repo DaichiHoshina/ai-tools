@@ -6,6 +6,16 @@ if [[ "${_CONTEXT_INJECTORS_LOADED:-}" == "1" ]]; then
 fi
 _CONTEXT_INJECTORS_LOADED=1
 
+# SESSION_ID 空時、$$ (PID) は hook 起動毎に変わり session 内 dedup が機能しないため、
+# cwd の hash を安定 key として使う。
+_stable_session_key() {
+  if [[ -n "${SESSION_ID:-}" ]]; then
+    printf '%s' "${SESSION_ID}"
+    return 0
+  fi
+  printf 'cwd%s' "$(cksum <<< "${CLAUDE_PROJECT_DIR:-${PWD:-$HOME}}" | cut -d' ' -f1)"
+}
+
 # ====================================
 # 今日の commit inject
 # 書く系 tool (Write/Edit/Bash commit・gh・glab・Slack/Notion MCP) の直前に
@@ -17,9 +27,8 @@ _inject_today_commits() {
   local _inject_log_file="${_inject_log_dir}/today-commit-inject.log"
 
   # session 重複抑制: stdin .session_id ベース (CLAUDE_CODE_SESSION_ID env 優先)
-  # session_id が取得できた場合はそれを使用 (session 単位で確実に重複抑制)
-  # 取得できない場合は $$ fallback (毎 hook 起動別PIDで重複抑制は機能しないが inject 自体は行う)
-  local _session_key="${SESSION_ID:-$$}"
+  # 取得できない場合は cwd hash fallback (_stable_session_key、session 単位の重複抑制を維持)
+  local _session_key; _session_key="$(_stable_session_key)"
   local _today; printf -v _today '%(%Y%m%d)T' -1
   local _flag_file="/tmp/claude-today-commits-${_session_key}-${_today}"
   if [[ -f "$_flag_file" ]]; then
@@ -110,7 +119,7 @@ _inject_today_commits() {
 # trigger: git commit / gh pr create / gh pr edit / gh pr review / gh issue create / glab 系コマンド
 # 重複抑制: SESSION_ID ベースの flag file で 1 session 1 回のみ inject
 _inject_ng_dict_on_commit_compose() {
-  local _session_key="${SESSION_ID:-$$}"
+  local _session_key; _session_key="$(_stable_session_key)"
   local _today; printf -v _today '%(%Y%m%d)T' -1
   local _flag_file="/tmp/claude-ng-inject-${_session_key}-${_today}"
   if [[ -f "$_flag_file" ]]; then
@@ -213,7 +222,7 @@ _inject_code_comment_rules() {
   esac
 
   # session 重複抑制
-  local _session_key="${SESSION_ID:-$$}"
+  local _session_key; _session_key="$(_stable_session_key)"
   local _today; printf -v _today '%(%Y%m%d)T' -1
   local _flag_file="/tmp/claude-comment-inject-${_session_key}-${_today}"
   if [[ -f "$_flag_file" ]]; then

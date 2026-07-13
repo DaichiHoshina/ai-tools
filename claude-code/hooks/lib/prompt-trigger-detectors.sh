@@ -38,7 +38,7 @@ _inject_outward_mode_if_trigger() {
 # === delegation trigger → developer-agent §0 checklist + scope allowlist inject ===
 # 委譲意図 keyword 検出時に parent 向け checklist を additionalContext として注入する。
 # 目的: scope creep / 直列 chain / verify 省略 / Gate 素通り の構造的予防。
-# throttle: session 内 5min に 1 回 (flag: /tmp/claude-deleg-checklist-<sid>-<date>)。
+# throttle: session 1 回のみ (flag: /tmp/claude-deleg-checklist-<sid>-<date>)。
 _inject_delegation_checklist_if_trigger() {
   local prompt="$1"
   local session_id="$2"
@@ -53,26 +53,14 @@ _inject_delegation_checklist_if_trigger() {
   local trigger_re='(実装|修正|編集|リファクタ|refactor|impl|fix bug|developer-agent|task\(developer|/dev |/flow|並列で|並列に|分担で|分担して)'
   [[ "${prompt_lower}" =~ ${trigger_re} ]] || return 1
 
-  # throttle: 5min 以内に 1 回 inject 済ならスキップ
+  # throttle: session 1 回 inject 済ならスキップ
   [[ -n "${session_id}" && "${session_id}" != "unknown" ]] || return 1
   local _FLAG="/tmp/claude-deleg-checklist-${session_id}-${date_today}"
   if [[ -f "${_FLAG}" ]]; then
-    local _LAST_TS _NOW _SINCE
-    read -r _LAST_TS < "${_FLAG}" 2>/dev/null || _LAST_TS=""
-    # flag は存在するが TS が空 / 非数値 / 0 = 直前 write が壊れた / 競合 → throttle 継続
-    if [[ ! "${_LAST_TS}" =~ ^[0-9]+$ ]] || (( _LAST_TS == 0 )); then
-      return 1
-    fi
-    printf -v _NOW '%(%s)T' -1
-    _SINCE=$(( _NOW - _LAST_TS ))
-    if (( _SINCE >= 0 && _SINCE < 300 )); then
-      return 1
-    fi
+    return 1
   fi
 
-  # flag 更新
-  printf -v _NOW '%(%s)T' -1
-  printf '%s\n' "${_NOW}" > "${_FLAG}" 2>/dev/null || true
+  touch "${_FLAG}" 2>/dev/null || true
 
   printf '%s\n' "[delegation-checklist] developer-agent 委譲意図検出。発火前に §0 checklist 7 項目を満たすこと: (1) target file:line 特定済 (2) verify cmd bash literal 確定 (3) DoD 1 行化 (4) 単 domain (5) touchable_files: YAML block を delegation prompt §1 に literal 記載 (6) blocker-on-stop 方針記載 (7) Self-Review Gate 明示。touchable_files 欠落で発火 = subagent 側 partial 停止。Return 時は §0.5 B fact-check (数値 formula 確認 / 測定値 1 sample 再現 / file 変更 git diff --stat) を最低 1 つ実行。source: references/developer-agent-delegation-prompt.md §0, §0.5, §1"
   return 0

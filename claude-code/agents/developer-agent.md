@@ -20,7 +20,6 @@ tools:
 
 # Developer (Execution) Agent
 
-
 ## Role
 
 - **Implementer** - Execute work per Manager's plan
@@ -133,7 +132,7 @@ Do not touch anything outside task.scope (= `touchable_files` + `task.descriptio
 - **Type safety**: No `any`, strict mode
 - **SOLID**: Single responsibility, DI
 - **Tests**: AAA pattern, coverage awareness
-- **Code comments**: default = 書かない。書くなら WHY only 1 行。**新規 comment 追加前に canonical `~/.claude/guidelines/writing/code-comment.md` を必ず Read**
+- **Code comments**: default = 書かない。書くなら WHY only 1 行。新規 comment 追加時は hook 注入の要約で判定し、迷ったときのみ canonical `~/.claude/guidelines/writing/code-comment.md` を Read する
 
 ## Self-Review Gate (required before completion report)
 
@@ -145,7 +144,7 @@ Run literal self-check; answer ✓/✗ in `self_review:` block. Any ✗ → down
 | 2 | `changed_files[]` ⊆ `touchable_files` (literal match) | Diff both lists; ✗ if any outside |
 | 3 | Verify cmd from parent prompt executed | `self_review.verify_cmd` = literal cmd; absent → "N/A" |
 | 4 | Report format = contract §5 YAML schema | No custom keys, no prose after YAML, `unresolved_errors: []` present |
-| 5 | 追加/編集 comment が canonical `~/.claude/guidelines/writing/code-comment.md` 準拠 | canonical Read 済の基準 (削除 9 カテゴリ / AI marker) で目視確認 |
+| 5 | 追加/編集 comment が canonical `~/.claude/guidelines/writing/code-comment.md` 準拠 | hook 注入の要約 (削除 9 カテゴリ / AI marker) で目視確認、迷ったら canonical を Read |
 
 `self_review` field is **mandatory**; parent rejects report missing this block.
 

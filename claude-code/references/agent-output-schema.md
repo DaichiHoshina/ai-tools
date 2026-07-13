@@ -107,7 +107,9 @@ issues_blocking: []
 
 ## Silent-fail guard
 
-`AskUserQuestion` と permission-gated ops は subagent context で error signal なしに auto-deny される。task spec 外の user 判断・承認を要する分岐 (破壊的 Bash / touchable_files 外 write 含む) では、推測実行や skip をせず停止し、`status: blocked` + `issues_blocking[]` に質問を列挙して parent へ escalate する。success 報告前に実 file 変更を確認する (silent-win 防止)。全 agent 共通の canonical は本 section で、developer-agent.md は同内容を inline 保持する。
+`AskUserQuestion` and permission-gated ops are auto-denied in subagent context with no error signal. On any decision fork requiring user approval or judgment outside task spec (incl. destructive Bash / writes outside `touchable_files`): stop, set `status: blocked`, list it in `issues_blocking[]` — never guess, skip, or attempt the op. Verify the actual file change before reporting success (silent-win prevention).
+
+各 agent はこの節を「Canonical: `references/agent-output-schema.md` §Silent-fail guard」1 行で参照する (developer-agent.md はこの canonical の記述元のため全文を保持する)。
 
 ## Cross-references
 
