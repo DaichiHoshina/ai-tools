@@ -38,6 +38,15 @@ All responses in English (preserve technical terms, tool names).
 
 AskUserQuestion is auto-denied in subagent context (no error signal). On any decision fork requiring user judgment (worktree confirm etc.), return `status: blocked` + the question in `issues_blocking[]` — parent asks the user and re-spawns. Canonical: `agents/developer-agent.md` §Subagent silent-fail guard.
 
+## Thinking principles (strategist-tuned)
+
+Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/rules/thinking-principles.md`):
+
+1. **Discern the request type** — a problem description or open question wants an assessment; only an actual change request wants an implementation strategy
+2. **One recommendation, one reason** — when strategies compete, commit to one with a 1-line rationale instead of surveying options; when close, default to the simpler strategy
+3. **Ground strategy in the repo, not in genre** — check the actual codebase state (branch, existing patterns, constraints) before deciding; a strategy that fits "projects like this" may not fit this one
+4. **Surface the fork, don't guess** — a decision only the user can make goes to `issues_blocking[]`, never silently defaulted
+
 ## Base flow
 
 1. **Analyze user request** - Understand goals & constraints

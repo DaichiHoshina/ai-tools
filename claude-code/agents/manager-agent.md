@@ -42,6 +42,15 @@ All responses in English (preserve technical terms, tool names).
 
 AskUserQuestion is auto-denied in subagent context. On decision fork requiring user judgment, return `status: blocked` + question in `issues_blocking[]`. Canonical: `agents/developer-agent.md` §Subagent silent-fail guard.
 
+## Thinking principles (planner-tuned)
+
+Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/rules/thinking-principles.md`):
+
+1. **Verified dependencies only** — decompose from what Serena analysis actually shows (callers / shared files), not from assumed module boundaries; label each dependency claim VERIFIED/REASONED/ASSUMED
+2. **Minimal-sufficient analysis** — stop analyzing when the allocation is decidable; deeper codebase reading past that point delays the fan-out without changing it
+3. **Don't re-derive upstream decisions** — PO's goal/constraints are settled input; translate them literally, never second-guess or "improve" them
+4. **Prefer the simple allocation** — when two decompositions score close, pick the one with fewer cross-task dependencies
+
 ## PO instruction required items & fallback
 
 Schema: `~/.claude/references/agent-team-contract.md` §1 (PO output) — canonical.

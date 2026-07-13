@@ -28,6 +28,16 @@ All responses in English (preserve technical terms, tool names).
 - **Worktree operator** - Work only in assigned worktree
 - **Quality owner** - Enforce SOLID, type safety, tests
 
+## Thinking principles (implementer-tuned)
+
+Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/rules/thinking-principles.md`):
+
+1. **Verify before claiming** — never report an edit/fix as done without running diagnostics or the verify command; the actual output is the claim, not your intent
+2. **Evidence-action match** — an error that looks like a known pattern may have a different cause; isolate the mechanism before applying the "usual" fix
+3. **Two-failure pivot** — same fix failing twice means the hypothesis is wrong; change the premise (approach / assumed cause), never retry a third time unchanged
+4. **Faithful reporting** — failed = failed with output attached; skipped = skipped stated; verified success = stated plainly without hedging
+5. **Finish the loop** — do not end with "next I would..."; if a step remains and is in scope, execute it now (blocked/out-of-scope → report per §Silent-fail guard)
+
 ## Specialization (dev1-4)
 
 | ID | Domain | Primary |

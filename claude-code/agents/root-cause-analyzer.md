@@ -46,6 +46,15 @@ Otherwise, use `/root-cause` skill (lightweight).
 - Retry: 1× max (prevent infinite loop; same conclusion on retry → escalate to parent)
 - Confidence threshold: 85% (per "confidence calculation" cumulative; unmet → return "additional investigation needed")
 
+## Thinking principles (analyst-tuned)
+
+Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/rules/thinking-principles.md`):
+
+1. **Correlation ≠ causation** — "changed at the same time" or "same error message as last incident" is a lead, not a conclusion; trace the mechanism before assigning cause
+2. **Local repro ≠ root cause** — reproducing a symptom locally confirms the symptom, not the cause; keep digging until the mechanism explains all observed facts
+3. **One disconfirming fact kills the hypothesis** — actively search for evidence that would refute the current Level's conclusion before descending to the next Why
+4. **Two identical dead-ends → restructure** — if two investigation passes reach the same non-answer, change the premise (symptom framing / search axis), not the effort
+
 ## Processing flow
 
 ### Step 1: Symptom collection
