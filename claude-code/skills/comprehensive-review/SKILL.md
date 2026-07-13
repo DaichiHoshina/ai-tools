@@ -95,9 +95,7 @@ Score 0-100: **80+** (low 90+, high 70+) → Critical / **50-79** → Warning / 
 | Actionability | Author can fix in this change |
 | Severity | Matches real impact and confidence; style backed by documented guideline |
 
-Discard: "cleaner / more elegant" / "consider X" without defect. Zero findings valid — never invent.
-
-**Step 5-6**: Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.jsonl`.
+Discard: "cleaner / more elegant" / "consider X" without defect. Zero findings valid — never invent. **Step 5-6**: Append confirmed Critical/Warning (confidence ≥25) to `.claude/review-history.jsonl`.
 
 ## Output Format
 
@@ -128,4 +126,4 @@ confidence-80 filter は両 check に適用する。comment 品質の詳細規�
 
 ## Multi-lens panel (`/review --panel` only)
 
-`--panel` passes `reviewer-agent` × 3 (style / security / test-coverage) verdicts as pre-Step-1 input. Lens count canonical: `commands/review.md` §Multi-lens panel. Each verdict passes Stage A 7-point filter. Duplicates (same file:line, different lens, same root cause) → merge to 1. Merged list flows through Step 4.5 → Stage A → Stage B.
+`--panel` passes `reviewer-agent` × 3 (style / security / test-coverage) verdicts as pre-Step-1 input (lens count canonical: `commands/review.md` §Multi-lens panel). Each verdict passes Stage A 7-point filter. Duplicates (same file:line, different lens, same root cause) → merge to 1. Merged list flows through Step 4.5 → Stage A → Stage B.

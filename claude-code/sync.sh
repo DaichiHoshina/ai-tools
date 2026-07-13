@@ -332,7 +332,7 @@ acquire_sync_lock() {
 BACKUP_KEEP=3
 
 create_backup() {
-    local ts backup_dir item copied=0
+    local ts backup_dir item copied=0 failed=0
     ts=$(date +%Y%m%d-%H%M%S)
     backup_dir="$CLAUDE_DIR/.sync-backups/$ts"
     mkdir -p "$backup_dir"
@@ -341,9 +341,14 @@ create_backup() {
         if cp -a "$CLAUDE_DIR/$item" "$backup_dir/"; then
             copied=$((copied + 1))
         else
+            failed=$((failed + 1))
             print_warning "backup 失敗: $item"
         fi
     done
+    if [ "$failed" -gt 0 ]; then
+        print_error "backup が不完全なため中断する（成功 ${copied} / 失敗 ${failed}、不完全な backup は残置: $backup_dir）"
+        return 1
+    fi
     if [ "$copied" -eq 0 ]; then
         rmdir "$backup_dir" 2>/dev/null || true
         return 0
@@ -419,7 +424,7 @@ sync_to_local() {
     # 同時実行 guard + 誤 sync 復旧用 backup（./sync.sh rollback で戻せる）
     acquire_sync_lock || return 1
     if [ "${NO_BACKUP:-false}" != "true" ]; then
-        create_backup
+        create_backup || { print_error "backup 失敗のため上書きを中断する"; return 1; }
     fi
 
     local items=("${SYNC_ITEMS[@]}")
@@ -865,6 +870,32 @@ show_diff() {
     return 1
 }
 
+# --dry-run 専用: settings.json の hooks/skillOverrides/permissions/root keys
+# merge 結果を実 file を書き換えずに diff 表示する（実反映は sync_settings_* と同じ関数を再利用）。
+show_settings_diff() {
+    check_jq || return 0
+    local template="$SCRIPT_DIR/templates/settings.json.template"
+    local live="$CLAUDE_DIR/settings.json"
+    [ -f "$template" ] && [ -f "$live" ] || return 0
+
+    local tmp_claude_dir
+    tmp_claude_dir=$(mktemp -d)
+    cp "$live" "$tmp_claude_dir/settings.json"
+
+    (
+        CLAUDE_DIR="$tmp_claude_dir" sync_settings_hooks
+        CLAUDE_DIR="$tmp_claude_dir" sync_settings_skill_overrides
+        CLAUDE_DIR="$tmp_claude_dir" sync_settings_permissions
+        CLAUDE_DIR="$tmp_claude_dir" sync_settings_root_keys
+    ) > /dev/null 2>&1
+
+    if ! diff -q "$live" "$tmp_claude_dir/settings.json" > /dev/null 2>&1; then
+        echo -e "${YELLOW}settings.json (merge 予定):${NC}"
+        diff -u "$live" "$tmp_claude_dir/settings.json" | tail -n +3 || true
+    fi
+    rm -rf "$tmp_claude_dir"
+}
+
 # =============================================================================
 # Status
 # version / 最終 sync / backup 世代 / repo 鮮度 / 差分を 1 画面にまとめる。
@@ -1085,6 +1116,9 @@ main() {
         to-local)
             if [ "$dry_run" = true ]; then
                 show_diff full || true
+                if [ -z "$ONLY_ITEMS" ]; then
+                    show_settings_diff || true
+                fi
                 print_info "dry-run のため反映しない"
                 exit 0
             fi

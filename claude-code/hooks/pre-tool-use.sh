@@ -63,6 +63,13 @@ source "${BASH_SOURCE[0]%/*}/lib/context-injectors.sh"
 # JSON入力を読み込む
 INPUT=$(cat)
 
+# 不正 JSON fail-close: 後続 read の exit 1 は Claude Code に hook error 扱いされ
+# tool 実行が素通りする (fail-open) ため、検証時点で exit 2 block に倒す。
+if ! jq -e . >/dev/null 2>&1 <<< "$INPUT"; then
+  echo "[pre-tool-use] 不正な JSON stdin を検出、fail-close で block" >&2
+  exit 2
+fi
+
 # ツール名 + セッションID を jq 1 回で取得 (fork 削減、@tsv + read。他 hook と同方式)
 # stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は前 session 値が leak することがあり
 # (Claude Code が session 切替時に reset しない silent bug)、stdin が空のときのみ fallback として使う。

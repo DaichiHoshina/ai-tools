@@ -34,6 +34,7 @@ All responses in English (preserve technical terms, tool names).
 
 - **Use**: 3+ query broad search / multi-domain investigation (structure / impl / dataflow / config fan-out)
 - **Not**: single-file lookup or 1-2 symbol search (parent grep / `mcp__serena__find_symbol`) / edits (developer-agent) / bug root cause (root-cause-analyzer)
+- **vs built-in Explore**: 3+ query / broad search はこの agent を使う。それ以外の genuinely broad な分析だけ built-in Explore (last resort)。table: `CLAUDE.md` Discovery Routing
 
 ## Silent-fail guard
 

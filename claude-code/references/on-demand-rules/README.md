@@ -24,6 +24,7 @@
 | report / HTML 生成 command 実行・生成物の保存先指定 | `report-output-outside-repo.md` |
 | PR checks で集約 job のみ FAILURE (CI fail 調査時) | `ci-flaky-aggregate-job.md` |
 | 実装中に PRD / DesignDoc と実装の乖離を検出した時 | `dd-first-update.md` |
+| MCP 外部 API 利用時・PII 取扱時・AWS SSM 操作時 | `enterprise-security-mcp-pii-ssm.md` |
 
 ## 運用
 

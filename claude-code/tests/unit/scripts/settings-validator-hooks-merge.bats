@@ -134,6 +134,81 @@ EOF
   jq -e '.hooks.Stop[] | select(.matcher == "*")'    "$LIVE_FILE" >/dev/null
 }
 
+@test "matcher なし hook: template と command が異なる live 独自 hook は merge 後も残る" {
+  cat > "$TEMPLATE_FILE" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [{"type": "command", "command": "~/.claude/hooks/session-start.sh"}]
+      }
+    ]
+  }
+}
+EOF
+  cat > "$LIVE_FILE" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [{"type": "command", "command": "~/.claude/hooks/session-start.sh"}]
+      },
+      {
+        "hooks": [{"type": "command", "command": "~/.claude/hooks/custom-user-hook.sh"}]
+      }
+    ]
+  }
+}
+EOF
+
+  run_sync_hooks
+  [ "$?" -eq 0 ]
+
+  # template の matcher なし entry + live 独自の matcher なし entry で 2 件
+  local n
+  n=$(jq '.hooks.SessionStart | length' "$LIVE_FILE")
+  [ "$n" -eq 2 ]
+
+  jq -e '.hooks.SessionStart[] | select(.hooks[0].command == "~/.claude/hooks/custom-user-hook.sh")' "$LIVE_FILE" >/dev/null
+}
+
+@test "matcher なし hook: template と完全同一 entry の重複は従来どおり排除される" {
+  cat > "$TEMPLATE_FILE" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [{"type": "command", "command": "~/.claude/hooks/session-start.sh"}]
+      }
+    ]
+  }
+}
+EOF
+  # live に template と完全同一 (matcher なし + 同一 command) の entry が重複している状態
+  cat > "$LIVE_FILE" <<'EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [{"type": "command", "command": "~/.claude/hooks/session-start.sh"}]
+      },
+      {
+        "hooks": [{"type": "command", "command": "~/.claude/hooks/session-start.sh"}]
+      }
+    ]
+  }
+}
+EOF
+
+  run_sync_hooks
+  [ "$?" -eq 0 ]
+
+  # template 側 1 件のみ残り、live 側の重複は dedup される
+  local n
+  n=$(jq '.hooks.SessionStart | length' "$LIVE_FILE")
+  [ "$n" -eq 1 ]
+}
+
 @test "live に hooks section がなくても template から initial populate される" {
   cat > "$TEMPLATE_FILE" <<'EOF'
 {

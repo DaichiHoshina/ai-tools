@@ -41,7 +41,7 @@ _make_long_prompt_no_prep() {
   local long_prompt
   long_prompt=$(_make_long_prompt_no_prep)
   # 関数単体を source して exit code を直接 assert
-  run bash -c "source '${HOOK_FILE}' && _check_parent_prep_missing '${long_prompt}'"
+  run bash -c "source '${HOOK_FILE}' <<< '{}' && _check_parent_prep_missing '${long_prompt}'"
   # exit 0 = missing 検出
   [ "$status" -eq 0 ]
 }
@@ -52,7 +52,7 @@ _make_long_prompt_no_prep() {
   local long_prompt
   long_prompt=$(_make_long_prompt_no_prep)
   long_prompt="${long_prompt} src/foo.ts:42"
-  run bash -c "source '${HOOK_FILE}' && _check_parent_prep_missing '${long_prompt}'"
+  run bash -c "source '${HOOK_FILE}' <<< '{}' && _check_parent_prep_missing '${long_prompt}'"
   # exit 1 = 事前準備済 (warn しない)
   [ "$status" -eq 1 ]
 }
@@ -64,7 +64,7 @@ _make_long_prompt_no_prep() {
   for i in $(seq 1 100); do
     short_prompt="${short_prompt}lorem "
   done
-  run bash -c "source '${HOOK_FILE}' && _check_parent_prep_missing '${short_prompt}'"
+  run bash -c "source '${HOOK_FILE}' <<< '{}' && _check_parent_prep_missing '${short_prompt}'"
   # exit 1 = 短 prompt、warn しない
   [ "$status" -eq 1 ]
 }
@@ -75,7 +75,7 @@ _make_long_prompt_no_prep() {
   local long_prompt
   long_prompt=$(printf "We targeted the service layer for refactoring. %.0s" {1..30})
   long_prompt="${long_prompt} $(_make_long_prompt_no_prep)"
-  run bash -c "source '${HOOK_FILE}' && _check_parent_prep_missing \"\$1\"" _ "${long_prompt}"
+  run bash -c "source '${HOOK_FILE}' <<< '{}' && _check_parent_prep_missing \"\$1\"" _ "${long_prompt}"
   # exit 0 = missing 検出 — natural 'target' word should NOT suppress warn
   [ "$status" -eq 0 ]
 }
@@ -86,7 +86,7 @@ _make_long_prompt_no_prep() {
   local long_prompt
   long_prompt=$(printf "Please verify the output carefully. %.0s" {1..30})
   long_prompt="${long_prompt} $(_make_long_prompt_no_prep)"
-  run bash -c "source '${HOOK_FILE}' && _check_parent_prep_missing \"\$1\"" _ "${long_prompt}"
+  run bash -c "source '${HOOK_FILE}' <<< '{}' && _check_parent_prep_missing \"\$1\"" _ "${long_prompt}"
   # exit 0 = missing 検出 — natural 'verify' word should NOT suppress warn
   [ "$status" -eq 0 ]
 }
@@ -96,7 +96,7 @@ _make_long_prompt_no_prep() {
   # label 付き形式は事前準備済とみなす
   local long_prompt
   long_prompt="$(_make_long_prompt_no_prep) verify cmd: bats tests/foo.bats"
-  run bash -c "source '${HOOK_FILE}' && _check_parent_prep_missing \"\$1\"" _ "${long_prompt}"
+  run bash -c "source '${HOOK_FILE}' <<< '{}' && _check_parent_prep_missing \"\$1\"" _ "${long_prompt}"
   # exit 1 = 事前準備済 (warn しない) — label 付き verify cmd は trigger 抑制
   [ "$status" -eq 1 ]
 }
@@ -106,7 +106,7 @@ _make_long_prompt_no_prep() {
   # URL+port (https://example.com:8080) は file:line ではないので warn 抑制しない
   local long_prompt
   long_prompt="$(_make_long_prompt_no_prep) See https://example.com:8080/docs for details"
-  run bash -c "source '$HOOK_FILE' && _check_parent_prep_missing \"\$1\"" _ "$long_prompt"
+  run bash -c "source '$HOOK_FILE' <<< '{}' && _check_parent_prep_missing \"\$1\"" _ "$long_prompt"
   # exit 0 = missing 検出 — URL host:port は file:line と判定しない
   [ "$status" -eq 0 ]
 }
@@ -116,7 +116,7 @@ _make_long_prompt_no_prep() {
   # 行頭の file:line は正常検出
   local long_prompt
   long_prompt="src/foo.ts:42 $(_make_long_prompt_no_prep)"
-  run bash -c "source '$HOOK_FILE' && _check_parent_prep_missing \"\$1\"" _ "$long_prompt"
+  run bash -c "source '$HOOK_FILE' <<< '{}' && _check_parent_prep_missing \"\$1\"" _ "$long_prompt"
   # exit 1 = 事前準備済 (warn しない)
   [ "$status" -eq 1 ]
 }
@@ -140,7 +140,7 @@ _make_long_prompt_no_prep() {
   local HOOK_FILE="${HOOKS_DIR}/pre-tool-use.sh"
   # 口語起動 marker (お任せ) + file:line なし → warn 対象 (exit 0)
   local prompt="お任せで全部やっておいて。あとはうまくやってほしい。作業はそちらに委ねる。"
-  run bash -c "source '${HOOK_FILE}' && _check_colloquial_trigger_missing_delegation \"\$1\"" _ "${prompt}"
+  run bash -c "source '${HOOK_FILE}' <<< '{}' && _check_colloquial_trigger_missing_delegation \"\$1\"" _ "${prompt}"
   [ "$status" -eq 0 ]
 }
 
@@ -148,7 +148,7 @@ _make_long_prompt_no_prep() {
   local HOOK_FILE="${HOOKS_DIR}/pre-tool-use.sh"
   # 「全部」を含むが file:line 明示あり → warn しない (exit 1)
   local prompt="全部修正して欲しい。対象: src/hooks/pre-tool-use.sh:670 の関数を更新する。verify cmd: shellcheck を実行する。"
-  run bash -c "source '${HOOK_FILE}' && _check_colloquial_trigger_missing_delegation \"\$1\"" _ "${prompt}"
+  run bash -c "source '${HOOK_FILE}' <<< '{}' && _check_colloquial_trigger_missing_delegation \"\$1\"" _ "${prompt}"
   [ "$status" -eq 1 ]
 }
 

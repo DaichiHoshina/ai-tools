@@ -10,7 +10,7 @@ description: Debug support — error log analysis, root-cause identification, fi
 
 1. **Info collection** — error logs, stack traces, repro steps
 2. **Serena analysis** — pinpoint error, trace dependencies, analyze data flow
-3. **Root cause** — identify underlying cause, not just symptom
+3. **Root cause** — エラーを特定できて軽微なら直接修正案を出す。根本原因の深掘りが要るときは Skill(`root-cause`) へ委譲する (5 Why)
 4. **Fix suggestions** — multiple options w/ priority
 5. **Implement** (post-approval) — apply fix, confirm tests
 
