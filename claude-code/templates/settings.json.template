@@ -480,7 +480,7 @@
     ]
   },
   "effortLevel": "medium",
-  "autoUpdatesChannel": "stable",
+  "autoUpdatesChannel": "latest",
   "showThinkingSummaries": false,
   "verbose": true,
   "preferredNotifChannel": "none",
