@@ -295,16 +295,16 @@ fi
 # trigger A: MEMORY.md 50 行超 / trigger B: 同 prefix 3 file 以上
 # 詳細: ~/.claude/references-private/memory-promotion-flow.md §6
 _PROMOTE_STATE_DIR="${HOME}/.claude/state"
-# project dir 名は Claude harness が生成する slug 形式 (cwd の "/" "." を "-" に置換した形)
-# _CWD を slug 化して直接 path 解決
-_MEMORY_INDEX=""
+# memory は 2026-07-09 集約で ~/ai-tools/memory/ に一本化済 (3 tool 共有 SoT、cwd 非依存)。
+# 旧実装は ~/.claude/projects/<encoded-cwd>/memory/MEMORY.md を見ていたが、そこに実 file が
+# 無く trigger が常に空振りしていた (2026-07-13 修正)。実 SoT path を直接指す。
+_MEMORY_INDEX="${MEMORY_SAVE_DIR:-${HOME}/ai-tools/memory}/MEMORY.md"
+[[ -f "${_MEMORY_INDEX}" ]] || _MEMORY_INDEX=""
+# state file の分離 key は cwd slug を維持 (promote 提示の 1 日 1 回上限は project 単位)
 _CWD_SLUG=""
 if [[ -n "${_CWD:-}" ]]; then
-    # sed fork 削減: bash parameter expansion で / と . を - に置換
     _CWD_SLUG="${_CWD//\//-}"
     _CWD_SLUG="${_CWD_SLUG//./-}"
-    _MEMORY_INDEX="${HOME}/.claude/projects/${_CWD_SLUG}/memory/MEMORY.md"
-    [[ -f "${_MEMORY_INDEX}" ]] || _MEMORY_INDEX=""
 fi
 # state file は project 別 (memory も project 別、reminder も project 単位で 1 日 1 回)
 _PROMOTE_STATE_FILE="${_PROMOTE_STATE_DIR}/promote-prompted-${_CWD_SLUG:-default}-${_SS_DATE_TODAY}"

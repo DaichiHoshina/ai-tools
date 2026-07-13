@@ -118,6 +118,64 @@ teardown() {
 }
 
 # =============================================================================
+# resolve-permanent-dir: exit の恒久 file を Tier 判定で ai-tools/memory (Tier A) か
+# references-private/snkr-knowledge (Tier B) へ振り分ける。逆流防止の恒久 guard。
+# canonical: commands/memory-save.md § exit post-processing step 2 (Tier B routing)
+# term literal は canonical rule file から抽出するため、test は override rule で固定する。
+# =============================================================================
+
+# social-hit term を含む本文 → private dir (Tier B)
+@test "resolve-permanent-dir: social-hit term 含む本文は private dir を返す" {
+  local rule; rule=$(mktemp)
+  printf '**social-hit (block)**: foobar / bazqux\n' > "$rule"
+  local priv; priv=$(mktemp -d)
+  run bash -c "printf '%s' 'this text mentions foobar here' | MEMORY_SOCIAL_HIT_RULE='$rule' MEMORY_PRIVATE_DIR='$priv' '$HELPER' resolve-permanent-dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$priv" ]
+  rm -f "$rule"; rm -rf "$priv"
+}
+
+# term を含まない汎用本文 → ai-tools/memory (Tier A = MEMORY_SAVE_DIR)
+@test "resolve-permanent-dir: term 無い汎用本文は ai-tools/memory (Tier A) を返す" {
+  local rule; rule=$(mktemp)
+  printf '**social-hit (block)**: foobar / bazqux\n' > "$rule"
+  run bash -c "printf '%s' 'a generic lesson about bash set -e pitfalls' | MEMORY_SOCIAL_HIT_RULE='$rule' '$HELPER' resolve-permanent-dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$MEMORY_SAVE_DIR" ]
+  rm -f "$rule"
+}
+
+# 大文字小文字を無視して match する (grep -i)
+@test "resolve-permanent-dir: term 判定は大文字小文字を無視する" {
+  local rule; rule=$(mktemp)
+  printf '**social-hit (block)**: FooBar\n' > "$rule"
+  local priv; priv=$(mktemp -d)
+  run bash -c "printf '%s' 'lowercase foobar mention' | MEMORY_SOCIAL_HIT_RULE='$rule' MEMORY_PRIVATE_DIR='$priv' '$HELPER' resolve-permanent-dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$priv" ]
+  rm -f "$rule"; rm -rf "$priv"
+}
+
+# rule file 不在時は安全側 (Tier A) に倒す (term 抽出 0 件 → 全て ai-tools/memory)
+@test "resolve-permanent-dir: rule file 不在時は Tier A に倒す" {
+  run bash -c "printf '%s' 'any content snkrdunk-like' | MEMORY_SOCIAL_HIT_RULE='/nonexistent/rule.md' '$HELPER' resolve-permanent-dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$MEMORY_SAVE_DIR" ]
+}
+
+# canonical rule file 経由で実 term (snkrdunk) を含む本文が private へ振られる (回帰防止)
+@test "resolve-permanent-dir: canonical rule の実 term snkrdunk は private へ振る" {
+  local canonical="${HOME}/.claude/rules/public-repo-private-data-block.md"
+  if [ ! -f "$canonical" ]; then skip "canonical rule file 不在 (sync 前環境)"; fi
+  if ! grep -q '^\*\*social-hit (block)\*\*:.*snkrdunk' "$canonical"; then skip "canonical に snkrdunk term 無し"; fi
+  local priv; priv=$(mktemp -d)
+  run bash -c "printf '%s' 'snkrdunk.com の v2 実装メモ' | MEMORY_PRIVATE_DIR='$priv' '$HELPER' resolve-permanent-dir"
+  [ "$status" -eq 0 ]
+  [ "$output" = "$priv" ]
+  rm -rf "$priv"
+}
+
+# =============================================================================
 # append-clear-line: /memory-save clear 用、個別 file なしで MEMORY.md に 1 行 prepend
 # canonical: commands/memory-save.md § "clear" post-processing (2026-06-30 改訂)
 # =============================================================================

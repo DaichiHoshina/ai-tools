@@ -4,7 +4,8 @@
 
 | Memory | Purpose | Auto-loaded |
 |--------|---------|------------|
-| auto-memory (`~/ai-tools/memory/`、`.gitignore` 済) | work-context (進捗) + 恒久ナレッジ (feedback / project / user / reference) | `MEMORY.md` を session-start hook が 200 行まで自動注入。個別 file 本文は `/reload <topic>` で明示復元する |
+| auto-memory (`~/ai-tools/memory/`、`.gitignore` 済) | 汎用 work-context (進捗) + 汎用の恒久ナレッジ (feedback / project / user / reference) | session-start hook が「実作業開始時に `MEMORY.md` を read せよ」と指示する (hook 自身は本文を注入しない)。個別 file 本文は `/reload <topic>` で明示復元する |
+| private raw 保管 (`~/.claude/references-private/snkr-knowledge/`) | project 固有名詞を含む恒久ナレッジ (Tier B) | auto-load しない。作業時に必要 file だけ on-demand read。canonical: `memory-relocation-pattern.md` |
 | Serena memory | write 禁止 (`.serena/memories/`)。過去分の read は可だが新規保存には使わない | — |
 
 `~/.claude/projects/{project}/memory/` は post-compact hook が一時 file (`compact-restore-*.md`) を書く場所のみで、`/reload` がその場で read + rm する使い捨て経路になる (auto-memory の保存先とは別物)。

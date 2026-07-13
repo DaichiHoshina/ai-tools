@@ -3,6 +3,8 @@
 #
 # 機能:
 #   1. resolve-dir         — save 先 dir を解決して echo (default: ~/ai-tools/memory)
+#   1b. resolve-permanent-dir — 恒久 file 本文を stdin で受け、Tier 判定で保存先を echo
+#       (snkrdunk 固有名詞含む → references-private/snkr-knowledge、無 → ai-tools/memory)
 #   2. list-today          — 同日 work-context-YYYYMMDD-*.md を改行区切りで列挙
 #   3. resolve-name        — name collision 回避 (-2/-3 suffix 付与)
 #   4. update-index        — MEMORY.md 先頭に `- YYYY-MM-DD [desc](file.md) — hook` を追記 (重複 dedup)
@@ -24,6 +26,53 @@ _resolve_memory_dir() {
     return 0
   fi
   printf '%s\n' "${HOME}/ai-tools/memory"
+}
+
+# private 退避先 (Tier B = project 固有知識、on-demand read の raw 保管)。
+# canonical: references/memory-relocation-pattern.md / 2026-07-09 memory-consolidation。
+# $MEMORY_PRIVATE_DIR override 可 (test 用)。
+_resolve_private_dir() {
+  if [ -n "${MEMORY_PRIVATE_DIR:-}" ]; then
+    printf '%s\n' "$MEMORY_PRIVATE_DIR"
+    return 0
+  fi
+  printf '%s\n' "${HOME}/.claude/references-private/snkr-knowledge"
+}
+
+# social-hit term の canonical rule file。term literal は複製せず本 file から抽出する
+# (no-derived-literals 遵守)。$MEMORY_SOCIAL_HIT_RULE override 可 (test 用)。
+_social_hit_rule_file() {
+  printf '%s\n' "${MEMORY_SOCIAL_HIT_RULE:-${HOME}/.claude/rules/public-repo-private-data-block.md}"
+}
+
+# rule file の「**social-hit (block)**: 語1 / 語2 / ...」行から term を 1 行 1 語で抽出。
+# hooks/lib/jp-quality/term-extraction.sh:_extract_term_list と同じ抽出規則
+# (hook lib は hook 依存変数が絡むため source せず抽出ロジックのみ移植)。
+_memory_social_hit_terms() {
+  local rule; rule=$(_social_hit_rule_file)
+  [ -f "$rule" ] || return 0
+  local line; line=$(grep -m1 '^\*\*social-hit (block)\*\*:' "$rule" 2>/dev/null || true)
+  [ -z "$line" ] && return 0
+  local body="${line#*: }"
+  printf '%s' "$body" | tr '/' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' || true
+}
+
+# 恒久 file (feedback/project) の保存先を Tier 判定で解決する。
+# 引数: file 本文 (heredoc / cat で渡す) を stdin から読む。
+# social-hit term を 1 つでも含めば private dir (Tier B)、含まなければ ai-tools/memory (Tier A) を echo。
+# canonical: commands/memory-save.md § exit post-processing (Tier B routing)。
+cmd_resolve_permanent_dir() {
+  local content; content=$(cat)
+  local ai_dir; ai_dir=$(_resolve_memory_dir)
+  local term
+  while IFS= read -r term; do
+    [ -z "$term" ] && continue
+    if printf '%s' "$content" | grep -qiF -- "$term"; then
+      _resolve_private_dir
+      return 0
+    fi
+  done < <(_memory_social_hit_terms)
+  printf '%s\n' "$ai_dir"
 }
 
 MEMORY_DIR=$(_resolve_memory_dir)
@@ -188,6 +237,7 @@ main() {
   local sub="${1:-}"; shift || true
   case "$sub" in
     resolve-dir)   cmd_resolve_dir "$@" ;;
+    resolve-permanent-dir) cmd_resolve_permanent_dir "$@" ;;
     list-today)    cmd_list_today "$@" ;;
     resolve-name)  cmd_resolve_name "$@" ;;
     update-index)  cmd_update_index "$@" ;;
