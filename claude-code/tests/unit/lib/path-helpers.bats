@@ -114,3 +114,83 @@ setup() {
   run bash -c "source '$LIB_FILE' && ensure_worktree_memory_link '/nonexistent/path/xyz'"
   [ "$status" -eq 0 ]
 }
+
+# =============================================================================
+# _worktree_main_repo / _resolve_worktree_owner_claude_md
+# =============================================================================
+
+@test "_worktree_main_repo: worktree → main repo path を返す" {
+  local tmp; tmp="$(mktemp -d)"
+  local main_repo="${tmp}/org/repo"
+  local wt_root="${tmp}/wt1"
+  mkdir -p "${main_repo}"
+  git -C "${main_repo}" init -q
+  git -C "${main_repo}" worktree add "${wt_root}" -q 2>/dev/null
+
+  run bash -c "source '$LIB_FILE' && _worktree_main_repo '${wt_root}'"
+  [ "$status" -eq 0 ]
+  # realpath 正規化後の main repo と一致 (macOS /tmp → /private/tmp symlink 対策)
+  local want; want="$(python3 -c "import os;print(os.path.realpath('${main_repo}'))")"
+  [ "$output" = "$want" ]
+  rm -rf "$tmp"
+}
+
+@test "_worktree_main_repo: 通常 clone (worktree でない) → rc=1" {
+  local tmp; tmp="$(mktemp -d)"
+  git -C "${tmp}" init -q
+  run bash -c "source '$LIB_FILE' && _worktree_main_repo '${tmp}'"
+  [ "$status" -eq 1 ]
+  [ -z "$output" ]
+  rm -rf "$tmp"
+}
+
+@test "_worktree_main_repo: git 外 → rc=1" {
+  local tmp; tmp="$(mktemp -d)"
+  run bash -c "source '$LIB_FILE' && _worktree_main_repo '${tmp}'"
+  [ "$status" -eq 1 ]
+  rm -rf "$tmp"
+}
+
+@test "_resolve_worktree_owner_claude_md: org 階層 CLAUDE.md 実在 → path を返す" {
+  local tmp; tmp="$(mktemp -d)"
+  local org="${tmp}/org"
+  local main_repo="${org}/repo"
+  local wt_root="${tmp}/wt1"
+  mkdir -p "${main_repo}"
+  # org 階層 (main repo の親) に owner CLAUDE.md を置く
+  printf '# org rule\n' > "${org}/CLAUDE.md"
+  git -C "${main_repo}" init -q
+  git -C "${main_repo}" worktree add "${wt_root}" -q 2>/dev/null
+
+  run bash -c "source '$LIB_FILE' && _resolve_worktree_owner_claude_md '${wt_root}'"
+  [ "$status" -eq 0 ]
+  local want; want="$(python3 -c "import os;print(os.path.realpath('${org}'))")/CLAUDE.md"
+  [ "$output" = "$want" ]
+  rm -rf "$tmp"
+}
+
+@test "_resolve_worktree_owner_claude_md: owner CLAUDE.md 不在 → rc=1" {
+  local tmp; tmp="$(mktemp -d)"
+  local main_repo="${tmp}/org/repo"
+  local wt_root="${tmp}/wt1"
+  mkdir -p "${main_repo}"
+  git -C "${main_repo}" init -q
+  git -C "${main_repo}" worktree add "${wt_root}" -q 2>/dev/null
+
+  run bash -c "source '$LIB_FILE' && _resolve_worktree_owner_claude_md '${wt_root}'"
+  [ "$status" -eq 1 ]
+  [ -z "$output" ]
+  rm -rf "$tmp"
+}
+
+@test "_resolve_worktree_owner_claude_md: 通常 clone → rc=1 (worktree でないため skip)" {
+  local tmp; tmp="$(mktemp -d)"
+  # 親 dir に CLAUDE.md があっても worktree でなければ解決しない
+  printf '# x\n' > "${tmp}/CLAUDE.md"
+  local repo="${tmp}/repo"
+  mkdir -p "${repo}"
+  git -C "${repo}" init -q
+  run bash -c "source '$LIB_FILE' && _resolve_worktree_owner_claude_md '${repo}'"
+  [ "$status" -eq 1 ]
+  rm -rf "$tmp"
+}

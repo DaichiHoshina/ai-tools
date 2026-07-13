@@ -165,6 +165,44 @@ if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
   fi
 fi
 
+# --- linked worktree の owner CLAUDE.md auto-load ---
+# linked worktree (~/ghq/worktrees/<repo>-*) は親 org dir の外にあるため、
+# org 階層 owner CLAUDE.md (~/ghq/github.com/<org>/CLAUDE.md) が
+# directory-based auto-load されない。session 開始時に hook が中身を読み context 注入し、
+# AI の自発判断 / onboarding 経由に依存せず org 規範を効かせる。
+# cache は owner CLAUDE.md の mtime 追従 (org 規範更新を取りこぼさない)。
+_WT_OWNER_MSG=""
+if [[ "${_SS_IS_GIT}" == "true" ]] && [[ -n "${_CWD:-}" ]]; then
+  _WT_OWNER_CLAUDE="$(_resolve_worktree_owner_claude_md "${_CWD}" 2>/dev/null || true)"
+  if [[ -n "${_WT_OWNER_CLAUDE}" ]] && [[ -f "${_WT_OWNER_CLAUDE}" ]]; then
+    _WT_OWNER_SAFE="${_CWD//\//_}"
+    _WT_OWNER_CACHE="${HOME}/.claude/cache/wt-owner-claude-${_WT_OWNER_SAFE}.cache"
+    _WT_OWNER_CACHE_HIT=false
+    # cache が owner CLAUDE.md より新しければ再読込しない (source mtime 追従)
+    if [[ -f "${_WT_OWNER_CACHE}" ]]; then
+      _WT_OWNER_CACHE_MT=$(stat ${_SS_STAT_FLAG} "${_WT_OWNER_CACHE}" 2>/dev/null || echo 0)
+      _WT_OWNER_SRC_MT=$(stat ${_SS_STAT_FLAG} "${_WT_OWNER_CLAUDE}" 2>/dev/null || echo 0)
+      if [[ ${_WT_OWNER_CACHE_MT} -ge ${_WT_OWNER_SRC_MT} ]]; then
+        _WT_OWNER_MSG=$(<"${_WT_OWNER_CACHE}")
+        _WT_OWNER_CACHE_HIT=true
+      fi
+    fi
+    if [[ "${_WT_OWNER_CACHE_HIT}" == "false" ]]; then
+      # サイズ安全弁: 16KB 超は全文でなく先頭 200 行 + 明示 Read 促進で肥大回避
+      _WT_OWNER_BYTES=$(wc -c < "${_WT_OWNER_CLAUDE}" 2>/dev/null || echo 0)
+      _WT_OWNER_HEAD="${ICON_WARNING} **linked worktree で作業中**: 親 org owner CLAUDE.md (\`${_WT_OWNER_CLAUDE}\`) は親 dir 外のため auto-load されない。以下の org 規範に従うこと。\n\n"
+      if [[ "${_WT_OWNER_BYTES}" -gt 16384 ]]; then
+        _WT_OWNER_BODY="$(head -200 "${_WT_OWNER_CLAUDE}")\n\n(以下省略。全文は上記 path を Read すること)"
+      else
+        _WT_OWNER_BODY="$(<"${_WT_OWNER_CLAUDE}")"
+      fi
+      _WT_OWNER_MSG="${_WT_OWNER_HEAD}---\n${_WT_OWNER_BODY}\n---\n"
+      mkdir -p "$(dirname "${_WT_OWNER_CACHE}")"
+      printf '%s' "${_WT_OWNER_MSG}" > "${_WT_OWNER_CACHE}"
+    fi
+  fi
+fi
+
 # NOTE: project-scope .mcp.json 自動再生成は user-scope MCP 登録に移行したため撤去
 # (2026-06-17)。Serena MCP は ~/.claude.json の mcpServers で --project-from-cwd 起動。
 
@@ -278,12 +316,15 @@ fi
 
 # --- 出力組み立て ---
 _SM_PREFIX="${ICON_SUCCESS}"
-if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]]; then
+if [[ ${#_HARNESS_WARNINGS[@]} -gt 0 ]] || [[ -n "${_CWD_GUARD_MSG}" ]] || [[ -n "${_WT_OWNER_MSG}" ]]; then
   _SM_PREFIX="${ICON_WARNING}"
 fi
 
 _AC_BASE="**memory 読込 (条件付き、token 節約)**: 実作業 (編集 / 実装 / 調査 / debug) を開始する時のみ \`~/ai-tools/memory/MEMORY.md\` (3 tool 共有 index) を read し、関連 topic の個別 file を必要時に read する。質問応答や軽い確認のみの session では読まない。\`mcp__serena__list_memories\` も同条件 (project は --project-from-cwd で自動 activate 済)\n\n**追加推奨**: コーディング作業を開始する場合、最初の編集前に \`/load-guidelines\` を実行"
 _AC_PREFIX=""
+if [[ -n "${_WT_OWNER_MSG}" ]]; then
+    _AC_PREFIX+="${_WT_OWNER_MSG}"
+fi
 if [[ -n "${_CWD_GUARD_MSG}" ]]; then
     _AC_PREFIX+="${_CWD_GUARD_MSG}"
 fi

@@ -7,31 +7,62 @@ if [[ "${_HOOK_UTILS_PATH_HELPERS_LOADED:-}" == "1" ]]; then
 fi
 _HOOK_UTILS_PATH_HELPERS_LOADED=1
 
+# git worktree の main リポジトリ絶対 path を解決する。
+# linked worktree のときだけ main repo path を stdout へ出力し rc=0。
+# worktree でない (通常 clone) / git 外なら stdout 空で rc=1 を返す。
+# Usage: main_repo=$(_worktree_main_repo "/path/to/cwd") || return 0
+_worktree_main_repo() {
+  local target_dir="$1"
+  [[ -z "${target_dir}" ]] && return 1
+
+  # git-dir と common-dir を 1 コールで取得 (git fork を 2 → 1 に削減)。
+  # 出力は 2 行 (1 行目=git-dir, 2 行目=common-dir)。
+  local rp git_dir common_dir
+  rp=$(git -C "${target_dir}" rev-parse --git-dir --git-common-dir 2>/dev/null) || return 1
+  git_dir=$(printf '%s' "${rp}" | sed -n '1p')
+  common_dir=$(printf '%s' "${rp}" | sed -n '2p')
+  [[ -n "${git_dir}" && -n "${common_dir}" ]] || return 1
+
+  # 相対パスなら絶対パスに変換
+  [[ "${git_dir}" != /* ]] && git_dir="${target_dir}/${git_dir}"
+  [[ "${common_dir}" != /* ]] && common_dir="${target_dir}/${common_dir}"
+
+  # python3 でパス正規化を 1 コールで両方処理 (cd+pwd は chpwd フック等で余計な出力が混入する)
+  local abs_git abs_common
+  { read -r abs_git; read -r abs_common; } < <(python3 -c "import os,sys; [print(os.path.realpath(p)) for p in sys.argv[1:]]" "${git_dir}" "${common_dir}")
+
+  # git-dir と common-dir が一致 = worktree でない
+  [[ "${abs_git}" == "${abs_common}" ]] && return 1
+
+  # メインリポジトリのパス = git-common-dirの親
+  dirname "${abs_common}"
+}
+
+# linked worktree の親 org 階層 owner CLAUDE.md path を解決する。
+# main repo の親 dir (= org 階層) の CLAUDE.md が実在すれば絶対 path を stdout、rc=0。
+# worktree でない / owner CLAUDE.md 不在なら stdout 空で rc=1 を返す。
+# linked worktree は親 dir 外にあり directory-based auto-load が効かないため、
+# session-start hook がこの path で owner CLAUDE.md を読み context 注入するのに使う。
+# Usage: owner=$(_resolve_worktree_owner_claude_md "/path/to/cwd") || return 0
+_resolve_worktree_owner_claude_md() {
+  local target_dir="$1"
+  local main_repo owner_claude
+  main_repo=$(_worktree_main_repo "${target_dir}") || return 1
+  # org 階層 = main repo の親。owner CLAUDE.md はそこ直下の CLAUDE.md。
+  owner_claude="$(dirname "${main_repo}")/CLAUDE.md"
+  [[ -f "${owner_claude}" ]] || return 1
+  printf '%s' "${owner_claude}"
+}
+
 # git worktreeのmemoryディレクトリをメインリポジトリにシンボリックリンク
 # Usage: ensure_worktree_memory_link "/path/to/worktree"
 ensure_worktree_memory_link() {
   local target_dir="$1"
   [[ -z "${target_dir}" ]] && return 0
 
-  local git_dir common_dir
-  git_dir=$(git -C "${target_dir}" rev-parse --git-dir 2>/dev/null) || return 0
-  common_dir=$(git -C "${target_dir}" rev-parse --git-common-dir 2>/dev/null) || return 0
-
-  # 相対パスなら絶対パスに変換
-  [[ "${git_dir}" != /* ]] && git_dir="${target_dir}/${git_dir}"
-  [[ "${common_dir}" != /* ]] && common_dir="${target_dir}/${common_dir}"
-
-  # python3でパス正規化（cd+pwdはchpwdフック等で余計な出力が混入する）
-  local abs_git abs_common
-  abs_git=$(python3 -c "import os; print(os.path.realpath('${git_dir}'))")
-  abs_common=$(python3 -c "import os; print(os.path.realpath('${common_dir}'))")
-
-  # worktreeでなければ何もしない
-  [[ "${abs_git}" == "${abs_common}" ]] && return 0
-
-  # メインリポジトリのパス = git-common-dirの親
+  # メインリポジトリのパス (linked worktree のときのみ非空)
   local main_repo
-  main_repo=$(dirname "${abs_common}")
+  main_repo=$(_worktree_main_repo "${target_dir}") || return 0
 
   # パスをプロジェクトIDに変換（/ → -）
   local wt_id main_id

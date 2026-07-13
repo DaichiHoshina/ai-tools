@@ -56,6 +56,13 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
+@test "onboard.md: 収集フェーズが worktree の org 階層 CLAUDE.md Read 手順を含む" {
+  run grep -qF 'git rev-parse --git-common-dir' "$ONBOARD_FILE"
+  [ "$status" -eq 0 ]
+  run grep -qF 'org 階層 CLAUDE.md' "$ONBOARD_FILE"
+  [ "$status" -eq 0 ]
+}
+
 @test "onboard.md: File format に metadata / type: project を含む" {
   run grep -qF 'metadata:' "$ONBOARD_FILE"
   [ "$status" -eq 0 ]
