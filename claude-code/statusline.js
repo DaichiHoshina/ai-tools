@@ -223,18 +223,20 @@ function displayStatusLine(data) {
   if (git.ahead) markStr += `${C.green}⇡${git.ahead}`;
   if (git.behind) markStr += `${C.red}⇣${git.behind}`;
   if (markStr) markStr += C.R;
-  // worktree 標識は branch 直前に固定 (幅圧縮でも落ちない位置)
-  const wtTag = wt ? `${C.yellow}wt:${C.R}` : "";
-
-  // location部を幅に収まるよう構築 (branch 名を最優先、dir は () で補助的に付与)
+  // worktree 時は wt:<worktree 名> を最優先で残し、branch 名を () に回す
+  // 通常 repo は branch 名を最優先で残し、dir 名を () に回す
   const buildLoc = (maxLen, showDir) => {
     if (git.branch === "?") {
-      return `${C.cyan}◈ ${wtTag}${C.gray}${trunc(dirName, Math.max(maxLen - 2 - (wt ? 1 : 0), 2))}${C.R}`;
+      return `${C.cyan}◈ ${C.gray}${trunc(dirName, Math.max(maxLen - 2, 2))}${C.R}`;
     }
-    const dirPart = showDir ? ` ${C.dim}(${dirName})${C.R}` : "";
-    const overhead = 2 + w(wtTag) + w(markStr) + w(dirPart);
-    const b = trunc(git.branch, Math.max(maxLen - overhead, 2));
-    return `${C.cyan}◈ ${wtTag}${C.branchColor}${b}${C.R}${markStr}${dirPart}`;
+    const primary = wt ? dirName : git.branch;
+    const secondary = wt ? git.branch : dirName;
+    const wtPrefix = wt ? `${C.yellow}wt:${C.R}` : "";
+    const primaryColor = wt ? C.yellow : C.branchColor;
+    const secPart = showDir ? ` ${C.dim}(${secondary})${C.R}` : "";
+    const overhead = 2 + w(wtPrefix) + w(markStr) + w(secPart);
+    const p = trunc(primary, Math.max(maxLen - overhead, 2));
+    return `${C.cyan}◈ ${wtPrefix}${primaryColor}${p}${C.R}${markStr}${secPart}`;
   };
 
   const sepStr = ` ${C.darkGray}│${C.R} `;
