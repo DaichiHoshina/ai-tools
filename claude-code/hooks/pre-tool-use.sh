@@ -560,6 +560,14 @@ PYEOF
       fi
     fi
 
+    # go build ./... / go test ./... の全体実行を block (linker 並列でマシン停止 + docker fixture 起動地獄)
+    # canonical: feedback_go_build_scope_limit.md
+    if [ "$GUARD_CLASS" != "Forbidden" ] && _is_go_full_build_or_test "$COMMAND"; then
+      GUARD_CLASS="Forbidden"
+      MESSAGE="${ICON_CRITICAL:-🚫} 禁止: go build/test ./... 全体実行 (linker 並走で machine 停止、test は docker fixture 起動)"
+      ADDITIONAL_CONTEXT="変更 package 限定 (\`go build ./pkg/foo/...\` / \`go test ./pkg/foo/...\`) か \`go vet ./...\` を使う。全体が本当に要る時のみ \`-p 4\` 付き。canonical: ~/ai-tools/memory/feedback_go_build_scope_limit.md"
+    fi
+
     # Read tool substitution hint: cat <doc/config file> は Read ツールで代替可能
     # 対象: cat .md/.json/.yaml/.toml/.txt/.sh/.bats (write 系・pipe 系は除外済み)
     if [ "$GUARD_CLASS" != "Forbidden" ] && _is_cat_simple_read "$COMMAND"; then

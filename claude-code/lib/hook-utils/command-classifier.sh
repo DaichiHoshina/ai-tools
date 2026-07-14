@@ -74,6 +74,27 @@ _is_cat_simple_read() {
   return 1
 }
 
+# `go build ./...` / `go test ./...` の全体実行を検出する
+# 過去 linker 14+ 並列で machine が停止した実例あり (canonical: feedback_go_build_scope_limit.md)
+# 通す条件: path 絞り込み (./pkg/... 等)、引数無し (現 dir のみ)、`-p N` で N<=4 明示、go vet
+# block 条件: `go build ./...` / `go test ./...` (途中に `-tags` 等 flag があっても検出)
+_is_go_full_build_or_test() {
+  local cmd="$1"
+  # go build / go test に ./... または .../... が含まれる (引数末尾でも中間でも)
+  if ! [[ "$cmd" =~ (^|[[:space:]\;\&\|\(])go[[:space:]]+(build|test)([[:space:]]|$) ]]; then
+    return 1
+  fi
+  # 対象 subcommand の引数群に ./... が現れるか (現 dir . のみ、path 絞り込みは対象外)
+  if ! [[ "$cmd" =~ (^|[[:space:]])\./\.\.\.($|[[:space:]\;\&\|]) ]]; then
+    return 1
+  fi
+  # -p N (N=1-4) 明示は escape
+  if [[ "$cmd" =~ -p[[:space:]]+[1-4]([[:space:]]|$) ]]; then
+    return 1
+  fi
+  return 0
+}
+
 classify_bash_command() {
   local cmd="$1"
   local cmd_without_msg_arg
