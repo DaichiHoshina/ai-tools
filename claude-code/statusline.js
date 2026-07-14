@@ -159,7 +159,7 @@ function displayStatusLine(data) {
   const maxWidth = Math.min(termWidth, 80);
   const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
   // 実端末での表示幅: 一部の記号 / 絵文字は 2 桁分として占有する
-  const WIDE = /[‼-㊙\u{1F000}-\u{1FFFF}⚠⛔◈█░⇡⇣▲⑃]/u;
+  const WIDE = /[‼-㊙\u{1F000}-\u{1FFFF}⚠⛔◈█░⇡⇣▲]/u;
   const w = (s) => {
     const stripped = stripAnsi(s);
     let n = 0;
@@ -223,8 +223,8 @@ function displayStatusLine(data) {
   if (git.ahead) markStr += `${C.green}⇡${git.ahead}`;
   if (git.behind) markStr += `${C.red}⇣${git.behind}`;
   if (markStr) markStr += C.R;
-  // worktree 標識は branch 直後に固定 (幅圧縮でも落ちない位置)
-  const wtTag = wt ? `${C.yellow}⑃${C.R}` : "";
+  // worktree 標識は branch 直前に固定 (幅圧縮でも落ちない位置)
+  const wtTag = wt ? `${C.yellow}wt:${C.R}` : "";
 
   // location部を幅に収まるよう構築 (branch 名を最優先、dir は () で補助的に付与)
   const buildLoc = (maxLen, showDir) => {
