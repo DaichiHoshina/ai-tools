@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: ◈ dir:branch [wt] │ Opus 4.6 │ 34%  (幅超過時は段階的省略)
+// 表示: 34% │ Opus 4.6 │ ◈ dir:branch [wt]  (幅超過時は段階的省略)
 
 const path = require("path");
 
@@ -127,6 +127,8 @@ function displayStatusLine(data) {
 
   const sep = `${C.darkGray}\u2502${C.R}`;
   const termWidth = process.stdout.columns || 80;
+  // 広い端末でも全幅まで伸ばさない (視認性優先の上限)
+  const maxWidth = Math.min(termWidth, 60);
 
   const effortLevel =
     (data.effort && data.effort.level) || data.effort_level || null;
@@ -165,11 +167,8 @@ function displayStatusLine(data) {
   const modelPart = `${C.modelColor}${model}${C.R}${badgeStr}`;
   const pctPart = `${pctColor}${C.bold}${pct}%${C.R}${suffix}`;
 
-  // 右寄せ出力
-  const emit = (text) => {
-    const pad = Math.max(0, termWidth - stripAnsi(text).length);
-    console.log(" ".repeat(pad) + text);
-  };
+  // 左寄せ出力 (stdout が TTY でなく実端末幅を取れないため、右寄せは % が見切れる)
+  const emit = (text) => console.log(text);
 
   // Tier 4: 極小端末 → pctのみ
   if (termWidth < 60) {
@@ -181,53 +180,57 @@ function displayStatusLine(data) {
   const trunc = (s, max) =>
     s.length > max && max > 1 ? s.slice(0, max - 1) + "\u2026" : s;
 
-  // location部を幅に収まるよう構築
+  // location部を幅に収まるよう構築 (branch 名の全表示を dir より優先する)
   const buildLoc = (maxLen) => {
     const overhead = 2 + 1 + (wt ? 5 : 0); // "◈ " + ":" + " [wt]"
     const avail = maxLen - overhead;
+    const minDir = 3;
     let d = dirName,
       b = branch;
-    if (avail > 0 && d.length + b.length > avail) {
-      const minDir = 3;
-      const bMax = Math.min(b.length, avail - minDir);
-      const dMax = avail - bMax;
-      d = trunc(d, Math.max(dMax, 2));
-      b = trunc(b, Math.max(bMax, 2));
-    } else if (avail <= 0) {
-      d = trunc(d, 2);
+    if (avail <= 0) {
+      d = "";
       b = trunc(b, 2);
+    } else if (d.length + b.length > avail) {
+      if (b.length + minDir <= avail) {
+        d = trunc(d, avail - b.length); // branch は全表示、dir を削る
+      } else {
+        d = ""; // dir を落としてでも branch を残す (":" 分の 1 桁を回収)
+        b = trunc(b, avail + 1);
+      }
     }
-    return `${C.cyan}\u25C8 ${d}${C.gray}:${C.branchColor}${b}${wtTag}${C.R}`;
+    return d
+      ? `${C.cyan}◈ ${d}${C.gray}:${C.branchColor}${b}${wtTag}${C.R}`
+      : `${C.cyan}◈ ${C.branchColor}${b}${wtTag}${C.R}`;
   };
 
   const sepStr = ` ${sep} `;
   const sepLen = 3; // " │ "
 
-  // Tier 1: フル表示 — ◈ dir:branch [wt] │ Model │ 34% suffix
+  // Tier 1: フル表示 — 34% suffix │ Model │ ◈ dir:branch [wt]
   const fixed1 =
     sepLen * 2 + stripAnsi(modelPart).length + stripAnsi(pctPart).length;
-  const loc1 = buildLoc(termWidth - fixed1);
-  const text1 = [loc1, modelPart, pctPart].join(sepStr);
-  if (stripAnsi(text1).length <= termWidth) {
+  const loc1 = buildLoc(maxWidth - fixed1);
+  const text1 = [pctPart, modelPart, loc1].join(sepStr);
+  if (stripAnsi(text1).length <= maxWidth) {
     emit(text1);
     return;
   }
 
-  // Tier 2: suffix省略 — ◈ dir:branch [wt] │ Model │ 34%
+  // Tier 2: suffix省略 — 34% │ Model │ ◈ dir:branch [wt]
   const fixed2 =
     sepLen * 2 + stripAnsi(modelPart).length + stripAnsi(pctOnly).length;
-  const loc2 = buildLoc(termWidth - fixed2);
-  const text2 = [loc2, modelPart, pctOnly].join(sepStr);
-  if (stripAnsi(text2).length <= termWidth) {
+  const loc2 = buildLoc(maxWidth - fixed2);
+  const text2 = [pctOnly, modelPart, loc2].join(sepStr);
+  if (stripAnsi(text2).length <= maxWidth) {
     emit(text2);
     return;
   }
 
-  // Tier 3: モデル省略 — ◈ dir:branch [wt] │ 34% suffix
+  // Tier 3: モデル省略 — 34% suffix │ ◈ dir:branch [wt]
   const fixed3 = sepLen + stripAnsi(pctPart).length;
-  const loc3 = buildLoc(termWidth - fixed3);
-  const text3 = [loc3, pctPart].join(sepStr);
-  if (stripAnsi(text3).length <= termWidth) {
+  const loc3 = buildLoc(maxWidth - fixed3);
+  const text3 = [pctPart, loc3].join(sepStr);
+  if (stripAnsi(text3).length <= maxWidth) {
     emit(text3);
     return;
   }
