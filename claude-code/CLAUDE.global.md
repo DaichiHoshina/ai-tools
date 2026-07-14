@@ -13,7 +13,7 @@
 
 command / skill / agent / rule / guideline / hook / reference の定義 file は `~/ai-tools/claude-code/` のみ Read し、`~/ghq/<repo>/.claude/` 等の同名定義は読み込まない。memory file (`~/ai-tools/memory/`、`~/ghq/<repo>/memory/`) は Read OK。repo 配下 CLAUDE.md は repo 固有 lint / format / CI / license / 法務 footer 等の project 必須情報のみ参照する。repo 配下 code / config edit は repo の方針に従う (SoT 適用外)。
 
-**repo 配下 `.claude/` 配下 doc (rules / skills / workflows / deep 等) の扱い**: 基本 Read しない。ai-tools 側の対応 doc を優先する。repo 固有事実 (DB schema / build 手順 / bounded_context 構造 / v2 architecture の具体 file 位置等) を確認する必要が生じたときのみ、該当 file を pinpoint Read する (先に ai-tools 側で該当話題の一般論を読み、足りない具体だけ repo 側で補う順序)。一般論 (文体 / 思考原則 / commit / PR / delegation / model 選定 / test 戦略 / error handling 方針等) は常に ai-tools 側が正、repo 側と食い違ったら ai-tools 側を採用する。
+**repo 配下 `.claude/` 配下 doc (rules / skills / workflows / deep 等) の扱い**: 基本 Read しない。repo ごとに「新規実装規範 digest」memory を持ち、そちらを参照して判断する (例: snkrdunk.com → [[snkrdunk-claude-dir-digest]] + 既存修正時の実態は [[snkrdunk-guideline-gap]])。実 code / DB schema / bounded_context 構造は必要時に pinpoint Read (Serena `find_symbol` / repo の `make db-schema` 等経由)。**判断フロー**: (1) 既存 file 修正 → gap file の実態列 + 周辺 code (2) 新規 file 作成 → digest file の規範 (3) 迷ったら参照実装 file を pinpoint Read。一般論 (文体 / 思考原則 / commit / PR / delegation / model 選定) は常に ai-tools 側が正。repo 側 digest がまだない project は、初回に snkr と同じ pattern で digest を作る (agent fan-out で 148 file 規模を 1 session で集約可)。
 
 **On-demand rules (auto-load 対象外、trigger 時のみ Read)**: `references/on-demand-rules/` 配下。trigger 一覧: `references/on-demand-rules/README.md`。
 
