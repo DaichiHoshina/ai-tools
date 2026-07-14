@@ -9,11 +9,20 @@ effort: low
 
 Save current work state in 1 command。**default (no arg) = clear** (MEMORY.md 1 行 index prepend + 個別 file に凝縮本文 write の 2 段構成、`/reload <topic>` 復元を担保)。CLAUDE.md 規約 (Serena `.serena/memories/` と `~/.claude/projects/.../memory/` への write 禁止) に従う。clear でも個別 file を必ず書く (MEMORY.md 1 行だけでは次 session 復元時に scope 再質問を誘発するため)。肥大化は `/memory-clean` で別途対処する。
 
+## Phase 0: dest 確認 (先頭 step、全 mode 共通)
+
+保存前に dest を確定する。順序は **dest 決定 → 既存 file 確認 → merge/new 判定**。
+
+1. **dest 候補**: (a) `~/ai-tools/memory/` (canonical、3 ツール共有 SoT) / (b) project 階層 CLAUDE.md が宣言する auto-memory dir (宣言時のみ)
+2. **即決 signal (質問しない)**: project CLAUDE.md に宣言あり + cwd がその project 配下 → (b) を推奨し根拠 1 行を chat に出して即決。宣言なし → (a) を即決 (現行 default 維持)。`$ARGUMENTS` が非空 (topic/exit 指定あり) → 上記いずれかで即決 (質問 skip)
+3. **質問は例外のみ**: `$ARGUMENTS` が空 (default clear) かつ宣言が競合・cwd 判定不能で dest を 1 つに絞れない時だけ、AskUserQuestion を 1 問 (ai-tools / project の 2 択) 発火する
+4. dest 確定後、(b) を選んだ場合は `MEMORY_SAVE_DIR` にその path を export してから以降の helper 呼び出しへ進む。既存 file 確認 (`list-today`) は確定後の dest 配下で行う
+
 ## Save target dir
 
-**work-context / clear は常に `${HOME}/ai-tools/memory/` に固定** (cwd 非依存、Claude Code / Codex / Cursor の 3 ツール共有 SoT)。環境変数 `MEMORY_SAVE_DIR` が set されていれば最優先する。canonical: `scripts/memory-save-helper.sh:_resolve_memory_dir`。
+**work-context / clear の default dest は `${HOME}/ai-tools/memory/`** (cwd 非依存、Claude Code / Codex / Cursor の 3 ツール共有 SoT)。Phase 0 で project 側 dest を即決 / 選択した場合はそちらが優先、環境変数 `MEMORY_SAVE_DIR` が set されていれば最優先する。canonical: `scripts/memory-save-helper.sh:_resolve_memory_dir`。
 
-**例外 — exit の恒久 file (feedback/project) のみ Tier 判定で分岐**: 本文が snkrdunk 等の project 固有名詞を含めば `references-private/snkr-knowledge/` へ振る (Tier B、下記 exit post-processing step 2 参照)。work-context / clear はこの分岐対象外 (常に ai-tools/memory)。
+**例外 — exit の恒久 file (feedback/project) のみ Tier 判定で分岐**: 本文が snkrdunk 等の project 固有名詞を含めば `references-private/snkr-knowledge/` へ振る (Tier B、下記 exit post-processing step 2 参照)。
 
 > **Helper script 必須**: MEMORY.md 更新 / collision 回避 / 同日 list 取得は `scripts/memory-save-helper.sh` 経由 (AI の Write/Edit ばらつき排除)。本体 body の Write のみ AI 側担当。
 
