@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: 34% │ Opus 4.6 │ ◈ dir:branch [wt]  (幅超過時は段階的省略)
+// 表示: 46% █░░░░ │ Fable 5 H │ ◈ main*⇡1 (dir) [wt] │ +12/-3 │ $1.23
+// 幅超過時は右の情報 (cost → lines → bar → suffix → dir → model) から段階的に省略
 
 const path = require("path");
 
@@ -66,6 +67,33 @@ function getGitBranch(cwd) {
 }
 
 /**
+ * Git状態をまとめて取得 (1回のシェル呼び出し)
+ * @param {string} cwd
+ * @returns {{branch: string, dirty: number, ahead: number, behind: number}}
+ */
+function gitInfo(cwd) {
+  try {
+    const { execSync } = require("child_process");
+    const out = execSync(
+      'b=$(git rev-parse --abbrev-ref HEAD); ' +
+        "s=$(git status --porcelain 2>/dev/null | wc -l); " +
+        'ab=$(git rev-list --left-right --count "@{u}...HEAD" 2>/dev/null || printf "0\\t0"); ' +
+        'printf "%s\\n%s\\n%s" "$b" "$s" "$ab"',
+      { cwd, encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] },
+    ).split("\n");
+    const branch = (out[0] || "?").trim() || "?";
+    const dirty = parseInt(out[1], 10) || 0;
+    // rev-list --left-right --count @{u}...HEAD → "behind<TAB>ahead"
+    const ab = (out[2] || "").trim().split(/\s+/);
+    const behind = parseInt(ab[0], 10) || 0;
+    const ahead = parseInt(ab[1], 10) || 0;
+    return { branch, dirty, ahead, behind };
+  } catch {
+    return { branch: "?", dirty: 0, ahead: 0, behind: 0 };
+  }
+}
+
+/**
  * ワークツリー内かどうか判定
  * @param {string} cwd
  * @returns {boolean}
@@ -121,15 +149,27 @@ function displayStatusLine(data) {
     }
   }
   const dirName = path.basename(cwd);
-  const branch = getGitBranch(cwd);
+  const git = gitInfo(cwd);
+  const wt = isWorktree(cwd);
   const rawModel = (data.model && data.model.display_name) || "?";
   const model = rawModel.replace(/^Claude\s+/i, "").replace(/\s*\(.*?\)$/, "");
 
-  const sep = `${C.darkGray}\u2502${C.R}`;
   const termWidth = process.stdout.columns || 80;
   // 広い端末でも全幅まで伸ばさない (視認性優先の上限)
-  const maxWidth = Math.min(termWidth, 60);
+  const maxWidth = Math.min(termWidth, 80);
+  const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
+  // 実端末での表示幅: 一部の記号 / 絵文字は 2 桁分として占有する
+  const WIDE = /[‼-㊙\u{1F000}-\u{1FFFF}⚠⛔◈█░⇡⇣▲]/u;
+  const w = (s) => {
+    const stripped = stripAnsi(s);
+    let n = 0;
+    for (const ch of stripped) n += WIDE.test(ch) ? 2 : 1;
+    return n;
+  };
+  const trunc = (s, max) =>
+    s.length > max && max > 1 ? s.slice(0, max - 1) + "…" : s;
 
+  // effort / thinking バッジ
   const effortLevel =
     (data.effort && data.effort.level) || data.effort_level || null;
   const thinkingOn =
@@ -146,97 +186,93 @@ function displayStatusLine(data) {
   if (thinkingOn) badges.push(`${C.magenta}\u{1F4AD}${C.R}`);
   const badgeStr = badges.length ? ` ${badges.join(" ")}` : "";
 
+  // コンテキスト使用率 (常に先頭 = 絶対に見切れない)
   let pctColor;
   let suffix = "";
   if (pct >= 90) {
     pctColor = C.red;
-    suffix = ` ${C.bold}${C.red}\u26D4 /reload${C.R}`;
+    suffix = ` ${C.bold}${C.red}⛔ /reload${C.R}`;
   } else if (pct >= 70) {
     pctColor = C.yellow;
-    suffix = ` ${C.bold}${C.yellow}\u26A0 /compact${C.R}`;
+    suffix = ` ${C.bold}${C.yellow}⚠ /compact${C.R}`;
   } else if (pct >= 50) {
     pctColor = C.yellow;
-    suffix = ` ${C.dim}${C.yellow}\u25B2${C.R}`;
+    suffix = ` ${C.dim}${C.yellow}▲${C.R}`;
   } else {
     pctColor = C.green;
   }
+  const pctCore = `${pctColor}${C.bold}${pct}%${C.R}`;
+  const bar = progressBar(pct, 5);
 
-  const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
-  const wt = isWorktree(cwd);
-  const wtTag = wt ? ` ${C.yellow}[wt]` : "";
-  const modelPart = `${C.modelColor}${model}${C.R}${badgeStr}`;
-  const pctPart = `${pctColor}${C.bold}${pct}%${C.R}${suffix}`;
+  const modelSeg = `${C.modelColor}${model}${C.R}${badgeStr}`;
 
-  // 左寄せ出力 (stdout が TTY でなく実端末幅を取れないため、右寄せは % が見切れる)
-  const emit = (text) => console.log(text);
+  // セッション成果 (行数増減 / コスト)
+  const cost = data.cost || {};
+  const added = cost.total_lines_added || 0;
+  const removed = cost.total_lines_removed || 0;
+  const linesSeg =
+    added || removed
+      ? `${C.green}+${added}${C.gray}/${C.red}-${removed}${C.R}`
+      : "";
+  const usd = cost.total_cost_usd || 0;
+  const costSeg = usd >= 0.005 ? `${C.tokenColor}$${usd.toFixed(2)}${C.R}` : "";
 
-  // Tier 4: 極小端末 → pctのみ
-  if (termWidth < 60) {
-    emit(pctPart);
-    return;
-  }
+  // git 状態マーク: * = 未コミット変更, ⇡ n = push 待ち, ⇣ n = pull 待ち
+  let markStr = "";
+  if (git.dirty) markStr += `${C.yellow}*`;
+  if (git.ahead) markStr += `${C.green}⇡${git.ahead}`;
+  if (git.behind) markStr += `${C.red}⇣${git.behind}`;
+  if (markStr) markStr += C.R;
+  const wtTag = wt ? ` ${C.yellow}[wt]${C.R}` : "";
 
-  const pctOnly = `${pctColor}${C.bold}${pct}%${C.R}`;
-  const trunc = (s, max) =>
-    s.length > max && max > 1 ? s.slice(0, max - 1) + "\u2026" : s;
-
-  // location部を幅に収まるよう構築 (branch 名の全表示を dir より優先する)
-  const buildLoc = (maxLen) => {
-    const overhead = 2 + 1 + (wt ? 5 : 0); // "◈ " + ":" + " [wt]"
-    const avail = maxLen - overhead;
-    const minDir = 3;
-    let d = dirName,
-      b = branch;
-    if (avail <= 0) {
-      d = "";
-      b = trunc(b, 2);
-    } else if (d.length + b.length > avail) {
-      if (b.length + minDir <= avail) {
-        d = trunc(d, avail - b.length); // branch は全表示、dir を削る
-      } else {
-        d = ""; // dir を落としてでも branch を残す (":" 分の 1 桁を回収)
-        b = trunc(b, avail + 1);
-      }
+  // location部を幅に収まるよう構築 (branch 名を最優先、dir は () で補助的に付与)
+  const buildLoc = (maxLen, showDir) => {
+    if (git.branch === "?") {
+      return `${C.cyan}◈ ${C.gray}${trunc(dirName, Math.max(maxLen - 2, 2))}${C.R}`;
     }
-    return d
-      ? `${C.cyan}◈ ${d}${C.gray}:${C.branchColor}${b}${wtTag}${C.R}`
-      : `${C.cyan}◈ ${C.branchColor}${b}${wtTag}${C.R}`;
+    const dirPart = showDir ? ` ${C.dim}(${dirName})${C.R}` : "";
+    const overhead = 2 + w(markStr) + w(dirPart) + (wt ? 5 : 0);
+    const b = trunc(git.branch, Math.max(maxLen - overhead, 2));
+    return `${C.cyan}◈ ${C.branchColor}${b}${C.R}${markStr}${dirPart}${wtTag}`;
   };
 
-  const sepStr = ` ${sep} `;
+  const sepStr = ` ${C.darkGray}│${C.R} `;
   const sepLen = 3; // " │ "
 
-  // Tier 1: フル表示 — 34% suffix │ Model │ ◈ dir:branch [wt]
-  const fixed1 =
-    sepLen * 2 + stripAnsi(modelPart).length + stripAnsi(pctPart).length;
-  const loc1 = buildLoc(maxWidth - fixed1);
-  const text1 = [pctPart, modelPart, loc1].join(sepStr);
-  if (stripAnsi(text1).length <= maxWidth) {
-    emit(text1);
+  const emit = (text) => console.log(text);
+
+  // 極小端末 → pctのみ
+  if (termWidth < 40) {
+    emit(pctCore + suffix);
     return;
   }
 
-  // Tier 2: suffix省略 — 34% │ Model │ ◈ dir:branch [wt]
-  const fixed2 =
-    sepLen * 2 + stripAnsi(modelPart).length + stripAnsi(pctOnly).length;
-  const loc2 = buildLoc(maxWidth - fixed2);
-  const text2 = [pctOnly, modelPart, loc2].join(sepStr);
-  if (stripAnsi(text2).length <= maxWidth) {
-    emit(text2);
-    return;
+  // 後ろの要素ほど先に落とす (cost → lines → bar → suffix → dir → model)
+  const features = ["model", "dir", "suffix", "bar", "lines", "cost"];
+  const LOC = Symbol("loc");
+  for (let drop = 0; drop <= features.length; drop++) {
+    const on = new Set(features.slice(0, features.length - drop));
+    let pctSeg = pctCore;
+    if (on.has("bar")) pctSeg += ` ${bar}`;
+    if (on.has("suffix")) pctSeg += suffix;
+    /** @type {any[]} */
+    const segs = [pctSeg];
+    if (on.has("model")) segs.push(modelSeg);
+    segs.push(LOC);
+    if (on.has("lines") && linesSeg) segs.push(linesSeg);
+    if (on.has("cost") && costSeg) segs.push(costSeg);
+    const fixed =
+      segs.filter((s) => s !== LOC).reduce((a, s) => a + w(s), 0) +
+      sepLen * (segs.length - 1);
+    const loc = buildLoc(maxWidth - fixed, on.has("dir"));
+    const text = segs.map((s) => (s === LOC ? loc : s)).join(sepStr);
+    if (w(text) <= maxWidth) {
+      emit(text);
+      return;
+    }
   }
 
-  // Tier 3: モデル省略 — 34% suffix │ ◈ dir:branch [wt]
-  const fixed3 = sepLen + stripAnsi(pctPart).length;
-  const loc3 = buildLoc(maxWidth - fixed3);
-  const text3 = [pctPart, loc3].join(sepStr);
-  if (stripAnsi(text3).length <= maxWidth) {
-    emit(text3);
-    return;
-  }
-
-  // Tier 4 fallback: pctのみ
-  emit(pctPart);
+  emit(pctCore);
 }
 
 if (require.main === module) {
@@ -252,5 +288,11 @@ if (require.main === module) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { displayStatusLine, getGitBranch, isWorktree, progressBar };
+  module.exports = {
+    displayStatusLine,
+    getGitBranch,
+    gitInfo,
+    isWorktree,
+    progressBar,
+  };
 }
