@@ -85,4 +85,4 @@ commit 前に `git log -1 --format=%B` で以下を確認する。
 - 禁止語が混入していないか
 - 体言止め / 漢語連発 / 主語省略になっていないか (詳細: `PRINCIPLES.md` の「chat 草稿 → 外向き翻訳の 8 観点 sweep」)
 
-機械検出 (**長文 / 多 commit 時は必須**): commit message を draft file に書き出して `scripts/jp-textlint.sh <draft>` で NG辞書 / 連続漢字 / 読点 / 文長を一括チェックする。commit message は AI定型語 block の最多発生源 (週 787 件)、24h 内 retrospective でも連続漢字≥5 warn 15+ / 読点≥4 warn 4+ 発生。draft → textlint → fix → commit の順で retry を減らせる。short 1 line subject のみは省略可。
+機械検出 (**長文 / 多 commit 時は必須**): commit message を draft file に書き出して `scripts/jp-textlint.sh <draft>` を通す (詳細列挙は [PRINCIPLES.md § 機械検出 grep](PRINCIPLES.md#機械検出-grep-出力前-sweep) canonical)。commit message は AI定型語 block の最多発生源 (週 787 件)、24h 内 retrospective でも連続漢字≥5 warn 15+ / 読点≥4 warn 4+ 発生。draft → textlint → fix → commit の順で retry を減らせる。short 1 line subject のみは省略可。

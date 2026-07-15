@@ -12,7 +12,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 
 迷ったときは rules で禁止リストを確認し、guidelines/writing/ で原則と適用先を確認し、references/ で詳細パターンを参照する。
 
-**機械検出**: 出力前に `scripts/jp-textlint.sh <file>` で 連続漢字≥5 / 読点≥4 / 文長>100 / NG辞書 hit を一括チェックできる。外向き書込時は `pre-tool-use.sh` が連続漢字・読点を warn-only で自動検出する (block はしない)。NG辞書 canonical: [NG-DICTIONARY.md](NG-DICTIONARY.md)、置換例: [PRINCIPLES-word-replace.md](PRINCIPLES-word-replace.md)。
+**機械検出**: 出力前に `scripts/jp-textlint.sh <file>` を通す (詳細列挙は [PRINCIPLES.md § 機械検出 grep](PRINCIPLES.md#機械検出-grep-出力前-sweep) canonical)。外向き書込時は `pre-tool-use.sh` が連続漢字・読点を warn-only で自動検出する (block はしない)。NG辞書 canonical: [NG-DICTIONARY.md](NG-DICTIONARY.md)、置換例: [PRINCIPLES-word-replace.md](PRINCIPLES-word-replace.md)。
 
 ## ファイル一覧
 
