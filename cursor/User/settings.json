@@ -18,6 +18,8 @@
   "editor.minimap.enabled": false,
   "editor.stickyScroll.enabled": true,
   "editor.bracketPairColorization.enabled": true,
+  "chat.textSizeScale": 1.15,
+  "chat.codeBlockWordWrap": true,
   "editor.guides.bracketPairs": "active",
   "editor.renderLineHighlight": "all",
   "editor.cursorSurroundingLines": 5,

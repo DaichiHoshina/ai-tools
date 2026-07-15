@@ -1,6 +1,6 @@
 # claude-code Directory Config
 
-文体 default は plain JP 常体 (canonical: `rules/plain-jp.md`)、質問抑制 default (canonical: `rules/minimize-questions.md`)、思考原則 (事実検証 / 証拠一致 / turn 完結 / 結論先行) の canonical は `rules/thinking-principles.md`。いずれも auto-load 済のため詳細は本 file に書かない。
+文体 default は plain JP 常体 (canonical: `rules/plain-jp.md`)、質問抑制 default (canonical: `rules/minimize-questions.md`)、思考原則 (事実検証 / 証拠一致 / turn 完結 / 結論先行) の canonical は `rules/thinking-principles.md`。いずれも auto-load 済のため詳細は本 file に書かない。**turn 締め self-check (必須)**: 送信直前に最後の 1 文が「完了 / 〜済 / 次に」で終わっていないか、100 字超になっていないかを毎回見直す (7 日 warn 424 / 97 件、rule 記述だけでは効かない実績)。
 
 `~/ai-tools/claude-code/` が Claude Code config の SoT で、`sync.sh` で `~/.claude/` へ同期する。**ai-tools repo 固有 rule (Quick Reference / Repo layout / Editing Rule / Token Saving / Hook baseline) は `~/ghq/github.com/DaichiHoshina/ai-tools/CLAUDE.repo.md` に分離済 (owner 階層 `~/ghq/github.com/DaichiHoshina/CLAUDE.md` の import 経由で load、repo 直下 CLAUDE.md は `claudeMdExcludes` で除外)**。`~/.claude/` を直接編集しない (sync で wipe される)。
 
