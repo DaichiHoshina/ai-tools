@@ -187,6 +187,29 @@ result := newCalculate(input)
 result := newCalculate(input)
 ```
 
+## 意図的な冗長 (defensive redundancy) は 1 行 comment で明示する
+
+「(4) defensive 言い訳」で削除するのは「念のため」等の**不確かさ表明**である。区別して、**故意に条件を二重に書いた保険的な冗長**は残す。ただし意図が読み取れない冗長は refactor で消されるため、**1 行 comment で「何を守るか」を必ず添える**。
+
+典型例は SELECT で絞った id を UPDATE / DELETE に渡す構造で、UPDATE / DELETE 側にも同じ where 条件を重ねて書くパターン。SELECT filter が守っている前提では UPDATE 側の条件は理論上 noop に見えるが、SELECT filter が将来 refactor で壊れた場合の最後の砦として機能する。
+
+```sql
+-- NG: 意図が読み取れず「重複だから消そう」となりやすい
+SELECT id FROM oripa_orders WHERE is_last_one_prize = 0 AND drawn_at IS NULL FOR UPDATE;
+UPDATE oripa_orders SET drawn_at = NOW() WHERE id IN (...) AND is_last_one_prize = 0;
+
+-- OK: SELECT filter が破れても drawn_at (仕様上常に NULL) が上書きされないよう UPDATE 側でも守る保険。
+UPDATE oripa_orders SET drawn_at = NOW() WHERE id IN (...) AND is_last_one_prize = 0;
+```
+
+**判定基準**:
+
+- SELECT で絞った id を UPDATE / DELETE に渡す構造で、UPDATE / DELETE 側にも同じ where があったら意図を確認する
+- 意図的な保険なら 1 行 comment で「どのカラムが守られるか」を残すよう指摘する
+- 逆に「重複だから消したい」を見つけたら、SELECT 側の filter が絶対に外れない保証があるか確認してから消す
+
+同じ判定は API 層の権限チェック二重化 (route middleware + handler assertion)、frontend の入力バリデーション二重化 (client-side + server-side) にも当てはまる。**二層目が理論上 noop に見える場合、意図 comment がないと片方が消される。**
+
 ## AI 時代のコメント
 
 ### AI 生成マーカー禁止
