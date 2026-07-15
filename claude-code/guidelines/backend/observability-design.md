@@ -1,6 +1,6 @@
 # Observability Design Guidelines
 
-> **Purpose**: Reference for building SLI/SLO, distributed tracing, and metric/log/trace correlation. Follows OpenTelemetry semconv 2025.
+> **Purpose**: Reference for building SLI/SLO, distributed tracing, and metric/log/trace correlation. Follows OpenTelemetry semconv v1.43.0 (2026-07-03).
 
 ## Tier classification
 
@@ -150,15 +150,15 @@ Client → API Gateway → Order Service → Payment Service
 
 ---
 
-## 10. OpenTelemetry Semantic Conventions 2025
+## 10. OpenTelemetry Semantic Conventions v1.43.0
 
 Key semconv:
 - HTTP: `http.request.method`, `http.response.status_code`
 - DB: `db.system.name`, `db.operation.name`
 - Messaging: `messaging.system`, `messaging.operation.type`
-- GenAI: `gen_ai.system`, `gen_ai.request.model` (new in 2025)
+- GenAI: `gen_ai.system`, `gen_ai.request.model`
 
-**2025 stable areas**: HTTP, Database, Messaging, GenAI (new).
+**Stable areas**: HTTP, Database, Messaging, GenAI。
 
 ---
 

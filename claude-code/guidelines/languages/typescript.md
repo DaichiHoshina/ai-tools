@@ -1,6 +1,6 @@
 # TypeScript Guidelines
 
-TypeScript 6.0.3 (stable as of 2026). Common guidelines: `~/.claude/guidelines/common/`.
+TypeScript 7.0 (released 2026-07-08, native port). Common guidelines: `~/.claude/guidelines/common/`.
 
 ---
 

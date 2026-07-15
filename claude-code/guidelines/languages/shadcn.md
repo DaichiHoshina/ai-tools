@@ -1,6 +1,6 @@
 # shadcn/ui Guidelines
 
-shadcn CLI v4.11.0 (2026). Common guidelines: `~/.claude/guidelines/common/`.
+shadcn CLI v4.13.0 (2026-07-03). Common guidelines: `~/.claude/guidelines/common/`.
 
 ---
 
