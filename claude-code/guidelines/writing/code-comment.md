@@ -195,11 +195,11 @@ result := newCalculate(input)
 
 ```sql
 -- NG: 意図が読み取れず「重複だから消そう」となりやすい
-SELECT id FROM oripa_orders WHERE is_last_one_prize = 0 AND drawn_at IS NULL FOR UPDATE;
-UPDATE oripa_orders SET drawn_at = NOW() WHERE id IN (...) AND is_last_one_prize = 0;
+SELECT id FROM orders WHERE reserved_flag = 0 AND processed_at IS NULL FOR UPDATE;
+UPDATE orders SET processed_at = NOW() WHERE id IN (...) AND reserved_flag = 0;
 
--- OK: SELECT filter が破れても drawn_at (仕様上常に NULL) が上書きされないよう UPDATE 側でも守る保険。
-UPDATE oripa_orders SET drawn_at = NOW() WHERE id IN (...) AND is_last_one_prize = 0;
+-- OK: SELECT filter が破れても processed_at (仕様上常に NULL) が上書きされないよう UPDATE 側でも守る保険。
+UPDATE orders SET processed_at = NOW() WHERE id IN (...) AND reserved_flag = 0;
 ```
 
 **判定基準**:
