@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # =============================================================================
 # BATS Tests for hooks/pre-tool-use.sh
-# 残余 test 集約 file: social-hit block / cat-read-hint / inject-log (skip)
+# 残余 test 集約 file: social-hit block / cat-read-hint
 # 他の test は下記に分割済み:
 #   - pre-tool-use-classification.bats (Safe/Boundary/Forbidden 分類)
 #   - pre-tool-use-dangerous.bats       (detect_dangerous_patterns / HEREDOC)
@@ -27,38 +27,6 @@ setup() {
 
 teardown() {
   teardown_test_tmpdir
-}
-
-# =============================================================================
-# inject byte size log テスト
-# _append_jp_quality_inject_log: 外向き text block/warn 判定直前に byte 数を記録する
-# =============================================================================
-
-@test "inject-log: commit message チェック時に jp-quality-inject.log が追記される" {
-  skip "実装 (_append_jp_quality_inject_log) が hooks/pre-tool-use.sh から削除済み。log 追記機能は復活時に unskip"
-  local log_file="$HOME/.claude/logs/jp-quality-inject.log"
-  local before_lines=0
-  [[ -f "$log_file" ]] && before_lines=$(wc -l < "$log_file")
-
-  # 難読漢語 block で _block_if_ai_jargon → inject log が書かれる
-  local input
-  input=$(jq -n --arg c 'git commit -m "鑑みると修正する"' \
-    '{tool_name:"Bash", tool_input:{command:$c}}')
-  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
-  # exit 2 (block) を期待するが、log 書き込みを確認するために status は問わない
-
-  [[ -f "$log_file" ]]
-  local after_lines
-  after_lines=$(wc -l < "$log_file")
-  [[ "$after_lines" -gt "$before_lines" ]]
-
-  # 最終行に期待フォーマットが含まれること
-  local last_line
-  last_line=$(tail -1 "$log_file")
-  [[ "$last_line" =~ "tool=commit message" ]]
-  [[ "$last_line" =~ "bytes=" ]]
-  [[ "$last_line" =~ "threshold=1500" ]]
-  [[ "$last_line" =~ "status=" ]]
 }
 
 # =============================================================================
