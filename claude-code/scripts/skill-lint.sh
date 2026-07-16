@@ -17,7 +17,7 @@ source "$LIB_DIR/print-functions.sh"
 
 DESC_MIN=30
 DESC_MAX=200
-TRIGGER_PATTERN='時|使用|対応|向け|Use |When|時に'
+TRIGGER_PATTERN='時|使用|使う|ときに|対応|向け|Use |When|時に'
 
 STRICT=0
 TARGET_SKILL=""

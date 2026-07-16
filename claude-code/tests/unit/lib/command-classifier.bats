@@ -96,3 +96,57 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" =~ "SSRF" ]]
 }
+
+# =============================================================================
+# _is_go_full_build_or_test
+# =============================================================================
+
+@test "_is_go_full_build_or_test: go build ./... は block" {
+  run bash -c "source '$LIB_FILE' && _is_go_full_build_or_test 'go build ./...'"
+  [ "$status" -eq 0 ]
+}
+
+@test "_is_go_full_build_or_test: go test -v ./... (flag 挟み) は block" {
+  run bash -c "source '$LIB_FILE' && _is_go_full_build_or_test 'go test -v -tags integration ./...'"
+  [ "$status" -eq 0 ]
+}
+
+@test "_is_go_full_build_or_test: cd 連結の go test ./... は block" {
+  run bash -c "source '$LIB_FILE' && _is_go_full_build_or_test 'cd backend && go test ./...'"
+  [ "$status" -eq 0 ]
+}
+
+@test "_is_go_full_build_or_test: path 絞り込み (./pkg/foo/...) は通す" {
+  run bash -c "source '$LIB_FILE' && _is_go_full_build_or_test 'go test ./pkg/foo/...'"
+  [ "$status" -eq 1 ]
+}
+
+@test "_is_go_full_build_or_test: go vet ./... は通す" {
+  run bash -c "source '$LIB_FILE' && _is_go_full_build_or_test 'go vet ./...'"
+  [ "$status" -eq 1 ]
+}
+
+@test "_is_go_full_build_or_test: -p 4 明示は通す" {
+  run bash -c "source '$LIB_FILE' && _is_go_full_build_or_test 'go build -p 4 ./...'"
+  [ "$status" -eq 1 ]
+}
+
+@test "_is_go_full_build_or_test: commit message 内の literal は誤 block しない" {
+  run bash -c "source '$LIB_FILE' && _is_go_full_build_or_test \"git commit -m 'stop running go test ./... on CI'\""
+  [ "$status" -eq 1 ]
+}
+
+@test "_is_go_full_build_or_test: heredoc 本文内の literal は誤 block しない" {
+  cmd='cat <<EOS
+go test ./...
+EOS'
+  run bash -c "source '$LIB_FILE' && _is_go_full_build_or_test \"\$1\"" _ "$cmd"
+  [ "$status" -eq 1 ]
+}
+
+@test "_strip_message_args: commit message を除去し他は保持する" {
+  run bash -c "source '$LIB_FILE' && _strip_message_args \"git commit -m 'go test ./...' && go vet ./pkg\""
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"go test ./..."* ]]
+  [[ "$output" == *"go vet ./pkg"* ]]
+}
