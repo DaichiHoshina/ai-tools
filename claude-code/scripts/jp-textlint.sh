@@ -84,7 +84,29 @@ for s in re.split("。", "\n".join(lines)):
   fi
 fi
 
-# 4. NG-DICTIONARY 語 hit (case-insensitive)
+# 4. 受身 2 連 /「の」3 連鎖 (文単位、references/writing-sentence-rules.md 準拠)
+if command -v python3 >/dev/null 2>&1; then
+  gram=$(printf '%s' "$clean" | python3 -c '
+import sys, re
+lines = [l for l in sys.stdin.read().splitlines() if l.strip() and not l.lstrip().startswith("#")]
+for s in re.split("。", "\n".join(lines)):
+    s = s.strip().replace("\n", " ")
+    if not s:
+        continue
+    n = len(re.findall(r"(?:され|られ)(?:、|て|た|る|ます)", s))
+    if n >= 2:
+        print(f"  受身{n}回: {s[:45]}…" if len(s) > 45 else f"  受身{n}回: {s}")
+    if re.search(r"の[^、。\s]{1,7}の[^、。\s]{1,7}の", s):
+        print(f"  「の」3連鎖: {s[:45]}…" if len(s) > 45 else f"  「の」3連鎖: {s}")
+' 2>/dev/null || true)
+  if [[ -n "$gram" ]]; then
+    echo ""; echo "### 受身 2 連 /「の」3 連鎖 (能動化 / 語順・動詞化で言い換え)"
+    printf '%s\n' "$gram"
+    issues=$(( issues + $(printf '%s\n' "$gram" | grep -c .) ))
+  fi
+fi
+
+# 5. NG-DICTIONARY 語 hit (case-insensitive)
 if [[ -f "$NGDICT" ]]; then
   ng_out=""
   for key in "AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)" "弱い表現 (block)" "冗長表現 (block)" "断定語 (warn-only)"; do
