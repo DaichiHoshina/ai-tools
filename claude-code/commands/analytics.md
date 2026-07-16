@@ -1,4 +1,5 @@
 ---
+allowed-tools: Bash, Read
 argument-hint: "[--ui]"
 description: Analyze Claude Code usage & present insights (--ui launches dashboard)
 ---
