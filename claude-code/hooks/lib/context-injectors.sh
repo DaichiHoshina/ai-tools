@@ -7,13 +7,15 @@ fi
 _CONTEXT_INJECTORS_LOADED=1
 
 # SESSION_ID 空時、$$ (PID) は hook 起動毎に変わり session 内 dedup が機能しないため、
-# cwd の hash を安定 key として使う。
+# cwd の hash を安定 key として使う。cwd hash 単独だと同 repo の別 session が同日 flag を
+# 共有して 2 本目に guard 注入が入らないため、親 process (session 単位で安定) の PID を混ぜる。
+# 親 PID が呼び出し毎に変わる環境では over-injection 側に倒れる (under-injection より安全)。
 _stable_session_key() {
   if [[ -n "${SESSION_ID:-}" ]]; then
     printf '%s' "${SESSION_ID}"
     return 0
   fi
-  printf 'cwd%s' "$(cksum <<< "${CLAUDE_PROJECT_DIR:-${PWD:-$HOME}}" | cut -d' ' -f1)"
+  printf 'cwd%s-p%s' "$(cksum <<< "${CLAUDE_PROJECT_DIR:-${PWD:-$HOME}}" | cut -d' ' -f1)" "${PPID:-0}"
 }
 
 # ====================================

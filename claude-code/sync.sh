@@ -481,6 +481,18 @@ sync_to_local() {
                     rm -rf "$dst/.system" 2>/dev/null || true
                     print_info "  → skills/.system/ を除外"
                 fi
+                # mino suite の upstream 保守用 payload (runtime 未使用、~430K) を除外
+                # evaluations/ (fixtures/oracles 含む) / scripts/ (validator) / agents/ (Codex metadata)
+                if [ "$item" = "skills" ]; then
+                    local _mino_dir
+                    for _mino_dir in "$dst"/mino-*/; do
+                        [ -d "$_mino_dir" ] || continue
+                        rm -rf "${_mino_dir}evaluations" "${_mino_dir}scripts" "${_mino_dir}agents" 2>/dev/null || true
+                    done
+                    if compgen -G "$dst/mino-*" > /dev/null 2>&1; then
+                        print_info "  → skills/mino-*/{evaluations,scripts,agents}/ を除外"
+                    fi
+                fi
                 # 退避していた gh skill 管理スキルを復元
                 if [ -n "$gh_bak" ]; then
                     restore_gh_skills "$dst" "$gh_bak"
@@ -606,7 +618,7 @@ verify_to_local_sync() {
             # skills は gh skill 管理ぶんと .system/ (OpenAI Codex 向け、sync 除外対象) を除外
             if [ "$item" = "skills" ] && [ -n "$diff_output" ]; then
                 # grep -v は全行 filter 時に exit 1 を返すため || true で pipefail 落ちを防ぐ
-                diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$' || true; } | while IFS= read -r line; do
+                diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$|/skills/mino-[^/]+/(evaluations|scripts|agents)(/|$)|/skills/mino-[^/]+: (evaluations|scripts|agents)$' || true; } | while IFS= read -r line; do
                     name=$(echo "$line" | sed -E 's|.*/skills/([^/]+)/.*|\1|')
                     [ -n "$name" ] && [ -f "$CLAUDE_DIR/skills/$name/skill.md" ] && \
                         has_gh_skill_metadata "$CLAUDE_DIR/skills/$name/skill.md" && continue
@@ -827,9 +839,9 @@ show_diff() {
             if [ -d "$src" ]; then
                 local diff_output
                 diff_output=$(diff -rq "$src" "$dst" 2>/dev/null || true)
-                # skills/.system/ は to-local で除外するため差分扱いしない
+                # skills/.system/ と mino 保守用 payload は to-local で除外するため差分扱いしない
                 if [ "$item" = "skills" ] && [ -n "$diff_output" ]; then
-                    diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$' || true; })
+                    diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$|/skills/mino-[^/]+/(evaluations|scripts|agents)(/|$)|/skills/mino-[^/]+: (evaluations|scripts|agents)$' || true; })
                 fi
                 if [ -n "$diff_output" ]; then
                     echo -e "${YELLOW}$item/:${NC}"

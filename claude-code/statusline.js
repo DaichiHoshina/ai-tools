@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: 46% █░░░░ │ Fable 5 H │ ◈ main*⇡1 (dir) [wt] │ +12/-3 │ $1.23
+// 表示: 46% █░░░░ │ Fable 5 H │ ◈ main*⇡1 (dir) │ +12/-3 │ $1.23
+// worktree 時: ◈ wt:<worktree名>*⇡1 (branch)
 // 幅超過時は右の情報 (cost → lines → bar → suffix → dir → model) から段階的に省略
 
 const path = require("path");
@@ -33,7 +34,8 @@ const C = {
  * @returns {string}
  */
 function progressBar(pct, width) {
-  const filled = Math.round((pct / 100) * width);
+  // pct が 0-100 域外でも repeat(負数) の RangeError で行全体を失わないよう clamp
+  const filled = Math.max(0, Math.min(width, Math.round((pct / 100) * width)));
   const empty = width - filled;
   const filledChar = "\u2588"; // █
   const emptyChar = "\u2591"; // ░
@@ -59,6 +61,7 @@ function getGitBranch(cwd) {
         cwd,
         encoding: "utf8",
         stdio: ["pipe", "pipe", "ignore"],
+        timeout: 2000,
       }).trim() || "?"
     );
   } catch {
@@ -79,7 +82,7 @@ function gitInfo(cwd) {
         "s=$(git status --porcelain 2>/dev/null | wc -l); " +
         'ab=$(git rev-list --left-right --count "@{u}...HEAD" 2>/dev/null || printf "0\\t0"); ' +
         'printf "%s\\n%s\\n%s" "$b" "$s" "$ab"',
-      { cwd, encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] },
+      { cwd, encoding: "utf8", stdio: ["pipe", "pipe", "ignore"], timeout: 2000 },
     ).split("\n");
     const branch = (out[0] || "?").trim() || "?";
     const dirty = parseInt(out[1], 10) || 0;
@@ -101,7 +104,12 @@ function gitInfo(cwd) {
 function isWorktree(cwd) {
   try {
     const { execSync } = require("child_process");
-    const opts = { cwd, encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] };
+    const opts = {
+      cwd,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "ignore"],
+      timeout: 2000,
+    };
     // 1回のシェル呼び出しで両方取得
     const out = execSync(
       'echo "$(git rev-parse --git-dir)\n$(git rev-parse --git-common-dir)"',
@@ -158,16 +166,29 @@ function displayStatusLine(data) {
   // 広い端末でも全幅まで伸ばさない (視認性優先の上限)
   const maxWidth = Math.min(termWidth, 80);
   const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
-  // 実端末での表示幅: 一部の記号 / 絵文字は 2 桁分として占有する
-  const WIDE = /[‼-㊙\u{1F000}-\u{1FFFF}⚠⛔◈█░⇡⇣▲]/u;
+  // 実端末での表示幅: East Asian Wide (CJK/かな/ハングル/全角) と絵文字、実測 2 桁の記号のみ 2 と数える
+  // (旧 ‼-㊙ の広域 range は │ や矢印など幅 1 の記号まで 2 と数え、幅予算を狂わせていた)
+  const WIDE =
+    /[ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦\u{1F000}-\u{1FFFF}⚠⛔◈█░⇡⇣▲💭]/u;
   const w = (s) => {
     const stripped = stripAnsi(s);
     let n = 0;
     for (const ch of stripped) n += WIDE.test(ch) ? 2 : 1;
     return n;
   };
-  const trunc = (s, max) =>
-    s.length > max && max > 1 ? s.slice(0, max - 1) + "…" : s;
+  // 表示幅基準で切り詰める (code unit 基準だと wide 文字入り名で幅超過し、絵文字を分断する)
+  const trunc = (s, max) => {
+    if (max <= 1 || w(s) <= max) return s;
+    let out = "";
+    let n = 0;
+    for (const ch of s) {
+      const cw = WIDE.test(ch) ? 2 : 1;
+      if (n + cw > max - 1) break;
+      out += ch;
+      n += cw;
+    }
+    return out + "…";
+  };
 
   // effort / thinking バッジ
   const effortLevel =
@@ -225,7 +246,9 @@ function displayStatusLine(data) {
   if (markStr) markStr += C.R;
   // worktree 時は wt:<worktree 名> を最優先で残し、branch 名を () に回す
   // 通常 repo は branch 名を最優先で残し、dir 名を () に回す
-  const buildLoc = (maxLen, showDir) => {
+  // primary をこれ未満に潰すくらいなら後方 feature を落とす (allowSqueeze 時のみ強行)
+  const MIN_PRIMARY = 8;
+  const buildLoc = (maxLen, showDir, allowSqueeze) => {
     if (git.branch === "?") {
       return `${C.cyan}◈ ${C.gray}${trunc(dirName, Math.max(maxLen - 2, 2))}${C.R}`;
     }
@@ -234,13 +257,17 @@ function displayStatusLine(data) {
     const wtPrefix = wt ? `${C.yellow}wt:${C.R}` : "";
     const primaryColor = wt ? C.yellow : C.branchColor;
     const secPart = showDir ? ` ${C.dim}(${secondary})${C.R}` : "";
-    const overhead = 2 + w(wtPrefix) + w(markStr) + w(secPart);
-    const p = trunc(primary, Math.max(maxLen - overhead, 2));
+    const overhead = w("◈ ") + w(wtPrefix) + w(markStr) + w(secPart);
+    const budget = maxLen - overhead;
+    if (!allowSqueeze && budget < Math.min(w(primary), MIN_PRIMARY)) {
+      return null;
+    }
+    const p = trunc(primary, Math.max(budget, 2));
     return `${C.cyan}◈ ${wtPrefix}${primaryColor}${p}${C.R}${markStr}${secPart}`;
   };
 
   const sepStr = ` ${C.darkGray}│${C.R} `;
-  const sepLen = 3; // " │ "
+  const sepLen = w(sepStr); // 幅予算と最終 check (w(text)) の基準を一致させる
 
   const emit = (text) => console.log(text);
 
@@ -267,7 +294,8 @@ function displayStatusLine(data) {
     const fixed =
       segs.filter((s) => s !== LOC).reduce((a, s) => a + w(s), 0) +
       sepLen * (segs.length - 1);
-    const loc = buildLoc(maxWidth - fixed, on.has("dir"));
+    const loc = buildLoc(maxWidth - fixed, on.has("dir"), drop === features.length);
+    if (loc === null) continue;
     const text = segs.map((s) => (s === LOC ? loc : s)).join(sepStr);
     if (w(text) <= maxWidth) {
       emit(text);

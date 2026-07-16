@@ -74,43 +74,18 @@ _is_cat_simple_read() {
   return 1
 }
 
-# `go build ./...` / `go test ./...` の全体実行を検出する
-# 過去 linker 14+ 並列で machine が停止した実例あり (canonical: feedback_go_build_scope_limit.md)
-# 通す条件: path 絞り込み (./pkg/... 等)、引数無し (現 dir のみ)、`-p N` で N<=4 明示、go vet
-# block 条件: `go build ./...` / `go test ./...` (途中に `-tags` 等 flag があっても検出)
-_is_go_full_build_or_test() {
+# commit message / heredoc 本文を除去した command を返す
+# 危険語 match 前の前処理を classify_bash_command と危険 command 個別判定で共用する
+_strip_message_args() {
   local cmd="$1"
-  # go build / go test に ./... または .../... が含まれる (引数末尾でも中間でも)
-  if ! [[ "$cmd" =~ (^|[[:space:]\;\&\|\(])go[[:space:]]+(build|test)([[:space:]]|$) ]]; then
-    return 1
-  fi
-  # 対象 subcommand の引数群に ./... が現れるか (現 dir . のみ、path 絞り込みは対象外)
-  if ! [[ "$cmd" =~ (^|[[:space:]])\./\.\.\.($|[[:space:]\;\&\|]) ]]; then
-    return 1
-  fi
-  # -p N (N=1-4) 明示は escape
-  if [[ "$cmd" =~ -p[[:space:]]+[1-4]([[:space:]]|$) ]]; then
-    return 1
-  fi
-  return 0
-}
-
-classify_bash_command() {
-  local cmd="$1"
-  local cmd_without_msg_arg
-
-  # commit message 内の危険語リテラル誤発火を防止
-  # git commit -m "..." / -m '...' / -F file の引数値内容を除外してから危険語マッチ評価
-  # v2.2.3: ヒアドキュメント (cat <<EOF...EOF) 本文も除去（git commit -m "$(cat <<'EOF' ... EOF)" 対策）
-  cmd_without_msg_arg="$cmd"
 
   # HEREDOC 本文除去（POSIX awk 互換、行ごと処理）
   # 開始: <<-?[[:space:]]*['"]?DELIM['"]? を検出 → in_h=1、開始行のマーカー以降を切り捨て
   # 終端: 行全体が DELIM と一致（<<- は先頭タブ削減許容）→ in_h=0、終端行はスキップ
   # <<<here-string は <<<DELIM が "[A-Za-z_]" 直前の文字制約で不一致のため誤検出されない
-  case "$cmd_without_msg_arg" in
+  case "$cmd" in
     *'<<'*)
-      cmd_without_msg_arg=$(printf '%s' "$cmd_without_msg_arg" | awk '
+      cmd=$(printf '%s' "$cmd" | awk '
         BEGIN { in_h = 0; delim = ""; tab_strip = 0 }
         {
           if (in_h) {
@@ -137,12 +112,46 @@ classify_bash_command() {
       ;;
   esac
 
-  if [[ "$cmd_without_msg_arg" =~ git[[:space:]]+commit[[:space:]] ]]; then
-    cmd_without_msg_arg=$(printf '%s' "$cmd_without_msg_arg" \
+  if [[ "$cmd" =~ git[[:space:]]+commit[[:space:]] ]]; then
+    cmd=$(printf '%s' "$cmd" \
       | sed -E 's/-m[[:space:]]*"[^"]*"/ /g' \
       | sed -E "s/-m[[:space:]]*'[^']*'/ /g" \
       | sed -E 's/-F[[:space:]]+[^[:space:]]+/ /g')
   fi
+
+  printf '%s' "$cmd"
+}
+
+# `go build ./...` / `go test ./...` の全体実行を検出する
+# 過去 linker 14+ 並列で machine が停止した実例あり (canonical: feedback_go_build_scope_limit.md)
+# 通す条件: path 絞り込み (./pkg/... 等)、引数無し (現 dir のみ)、`-p N` で N<=4 明示、go vet
+# block 条件: `go build ./...` / `go test ./...` (途中に `-tags` 等 flag があっても検出)
+_is_go_full_build_or_test() {
+  # commit message / heredoc 内の literal (`git commit -m 'go test ./...'`) で誤 block しない
+  local cmd
+  cmd="$(_strip_message_args "$1")"
+  # go build / go test に ./... または .../... が含まれる (引数末尾でも中間でも)
+  if ! [[ "$cmd" =~ (^|[[:space:]\;\&\|\(])go[[:space:]]+(build|test)([[:space:]]|$) ]]; then
+    return 1
+  fi
+  # 対象 subcommand の引数群に ./... が現れるか (現 dir . のみ、path 絞り込みは対象外)
+  if ! [[ "$cmd" =~ (^|[[:space:]])\./\.\.\.($|[[:space:]\;\&\|]) ]]; then
+    return 1
+  fi
+  # -p N (N=1-4) 明示は escape
+  if [[ "$cmd" =~ -p[[:space:]]+[1-4]([[:space:]]|$) ]]; then
+    return 1
+  fi
+  return 0
+}
+
+classify_bash_command() {
+  local cmd="$1"
+  local cmd_without_msg_arg
+
+  # commit message 内の危険語リテラル誤発火を防止
+  # git commit -m "..." / -m '...' / -F file の引数値内容と heredoc 本文を除外してから危険語マッチ評価
+  cmd_without_msg_arg="$(_strip_message_args "$cmd")"
 
   # 禁止操作チェック（危険なコマンド）
   # grep外部プロセスを bash [[ =~ ]] に置換して高速化（v2.2.1）

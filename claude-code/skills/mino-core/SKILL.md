@@ -32,9 +32,8 @@ description: 関連Skillで、問題定義、前提監査、Context Packet、要
 - 既存挙動、legacy、migration、段階導入を変えるときは`skills/mino-core/references/change-safety.md`を読む。
 - filesystem、process、shell、toolchain、test実行、またはWindows / Linux対応を扱う前に`skills/mino-core/references/platform-compatibility.md`を読み、Platform Contextとplatform別検証結果を作る。
 - Skill更新と`reproduction-test`だけで`skills/mino-core/references/benchmark.md`を読む。
-- Windowsでは`skills/mino-core/scripts/validate-suite.ps1`、Linuxでは`skills/mino-core/scripts/validate-suite.sh`でsuite構造を検証する。
-- validator契約を変更したときは、Windowsで`skills/mino-core/scripts/test-validator-fixtures.ps1`、Linuxで`skills/mino-core/scripts/test-validator-fixtures.sh`を実行し、共通のpositive / negative fixtureを検証する。
-- 両validatorは`skills/mino-core/scripts/suite-manifest.txt`をversion、owner、Skill一覧のsource of truthとして読む。
+- suite 構造 validator (`skills/mino-core/scripts/validate-suite.{sh,ps1}` / `test-validator-fixtures.{sh,ps1}`) は upstream 保守用で、この環境 (macOS) では実行しない。bash 3.2 非対応 (`declare -A`) と BSD iconv 差異で常に失敗し、冒頭の attribution note 追記も upstream の path 規則上 error になる。upstream へ還元するときのみ Linux 環境で使う。
+- validator は `skills/mino-core/scripts/suite-manifest.txt` をversion、owner、Skill一覧のsource of truthとして読む。
 
 ## Windows / Linux Compatibility
 

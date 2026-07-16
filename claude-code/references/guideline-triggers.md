@@ -30,6 +30,7 @@ Referenced by `load-guidelines` skill when subtopic triggers fire. When the foll
 |------------------|---------|
 | escape analysis, pprof, GOGC, GOMEMLIMIT, sync.Pool, PGO, allocation, benchstat | `~/.claude/guidelines/languages/go-performance.md` |
 | goroutine, GOMAXPROCS, scheduler, channel buffer, leak, mutex contention, race condition | `~/.claude/guidelines/languages/go-concurrency.md` |
+| Dart, Flutter, Widget, pubspec, Riverpod, BLoC | `~/.claude/guidelines/languages/dart-flutter.md` |
 
 ## Common subtopics
 

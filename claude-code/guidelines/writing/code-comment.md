@@ -198,7 +198,9 @@ result := newCalculate(input)
 SELECT id FROM orders WHERE reserved_flag = 0 AND processed_at IS NULL FOR UPDATE;
 UPDATE orders SET processed_at = NOW() WHERE id IN (...) AND reserved_flag = 0;
 
--- OK: SELECT filter が破れても processed_at (仕様上常に NULL) が上書きされないよう UPDATE 側でも守る保険。
+-- OK: comment で保険の意図を明示する (構造は NG と同じ)
+SELECT id FROM orders WHERE reserved_flag = 0 AND processed_at IS NULL FOR UPDATE;
+-- SELECT filter が破れても予約済み row (reserved_flag = 1) を書き換えないよう UPDATE 側でも守る保険。
 UPDATE orders SET processed_at = NOW() WHERE id IN (...) AND reserved_flag = 0;
 ```
 
@@ -388,7 +390,7 @@ grep -rn '^[[:space:]]*//' <対象ディレクトリ> | head -50
 
 ### 分類・報告フォーマット
 
-抽出したコメントを以下 14 カテゴリで分類し、削除 / 書き直し対象を特定する。
+抽出したコメントを以下 14 カテゴリ (本文の「残す 3 分類」+「削除する 9 カテゴリ」に、WHY 移動と AI 生成マーカーを加えた監査用の全量) で分類し、削除 / 書き直し対象を特定する。
 
 | カテゴリ | 判定基準 | アクション |
 |---|---|---|
