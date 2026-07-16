@@ -1,6 +1,6 @@
 ---
 name: mino-reproducible-development
-description: 複数の専門成果物を統合する中規模以上のdesign・implementation・review、end-to-endの要件再現性検証、または複数runのreproduction-testで使うrouter。単一成果物や、公開契約・data meaningに触れない小規模機械変更には使わない。
+description: 複数の専門成果物を統合する中規模以上のdesign・implementation・review、end-to-endの要件再現性検証、または複数runのreproduction-test時に使うrouter。単一成果物や、公開契約・data meaningに触れない小規模機械変更には使わない。
 ---
 
 > **Source**: 公開資料再構成の非公式版 [my-take-dev/inspired-mino-design-skills](https://github.com/my-take-dev/inspired-mino-design-skills) (Suite v0.8.0 Experimental / Preview)。ミノ駆動氏本人の監修なし。

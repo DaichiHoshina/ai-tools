@@ -20,11 +20,13 @@ Match keywords top-down, **first hit wins**. If mixed, ask user. `*impl*` = expa
 | # | Keywords | Task | Workflow |
 |---|-----------|--------|------------|
 | 0 | 相談, ブレスト, brainstorm | Design consultation | /brainstorm → /prd → /plan |
+| 0.5 | 問題整理, 前提整理, 要件が曖昧 | Problem framing | Skill(mino-problem-framing) → /plan |
 | 1 | 緊急, hotfix, 本番, critical | Urgent | /diagnose → *impl* → /lint-test → /git-push --pr |
 | 1.5 | インシデント, 障害, エラーログ貼付 | Incident | Skill(incident-response) → /diagnose → *impl* → /lint-test → /git-push --pr |
 | 2 | 根本原因, rca, 再発防止 | RCA | /diagnose → Skill(root-cause) → *impl* → /lint-test → /git-push --pr |
 | 3 | 修正, fix, バグ, 不具合 | Bug fix | /diagnose → *impl* → /lint-test → /git-push --pr |
 | 4 | リファクタ, refactor, 構造改善 | Refactor | /plan → *impl* → /lint-test → /test → /review → /git-push --pr |
+| 4.5 | 契約設計, 契約テスト, 事前条件 | Design by contract | Skill(mino-design-by-contract) → *impl* → /test → /git-push --pr |
 | 5 | ドキュメント, docs, README | Docs | /docs → /review → /git-push --pr |
 | 6 | テスト作成, test追加, spec | Testing | /test → /review → /lint-test → /git-push --pr |
 | 7 | 追加, 実装, 新規, 機能, add | New feature | /prd → /plan → *impl* → /test → /review → /lint-test → /git-push --pr |

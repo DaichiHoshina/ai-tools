@@ -1,6 +1,6 @@
 ---
 name: mino-interface-implementation-separation
-description: 利用者が知る目的・操作・契約と内部の技術・手順を分離し、長大処理の技術漏出、caller側分岐、誤った責務境界を監査・設計するときに使う。単なるif削減、interface型量産、system全体のarchitecture選定には使わない。
+description: 利用者が知る目的・操作・契約と内部の技術・手順を分離し、長大処理の技術漏出、caller側分岐、誤った責務境界を監査・設計する時に使う。単なるif削減、interface型量産、system全体のarchitecture選定には使わない。
 ---
 
 > **Source**: 公開資料再構成の非公式版 [my-take-dev/inspired-mino-design-skills](https://github.com/my-take-dev/inspired-mino-design-skills) (Suite v0.8.0 Experimental / Preview)。ミノ駆動氏本人の監修なし。

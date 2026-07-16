@@ -1,6 +1,6 @@
 ---
 name: mino-core
-description: 関連Skillで、問題定義、前提監査、Context Packet、要件正規化、traceability、Evidence、権限、共通gateを共有するときに使う内部基盤。単独で専門設計や実装を完結させる用途には使わない。
+description: 関連Skillで、問題定義、前提監査、Context Packet、要件正規化、traceability、Evidence、権限、共通gateを共有する時に使う内部基盤。単独で専門設計や実装を完結させる用途には使わない。
 ---
 
 > **Source**: 公開資料再構成の非公式版 [my-take-dev/inspired-mino-design-skills](https://github.com/my-take-dev/inspired-mino-design-skills) (Suite v0.8.0 Experimental / Preview)。ミノ駆動氏本人の監修なし。

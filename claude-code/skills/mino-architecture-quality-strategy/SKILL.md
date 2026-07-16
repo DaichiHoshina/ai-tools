@@ -1,6 +1,6 @@
 ---
 name: mino-architecture-quality-strategy
-description: 複数module・data ownership・system-wide trade-off・公開契約・target/transition architecture・migration/recoveryを、product valueと品質scenarioから設計するときに使う。局所class改善、流行architecture選定、単一契約抽出には使わない。
+description: 複数module・data ownership・system-wide trade-off・公開契約・target/transition architecture・migration/recoveryを、product valueと品質scenarioから設計する時に使う。局所class改善、流行architecture選定、単一契約抽出には使わない。
 ---
 
 > **Source**: 公開資料再構成の非公式版 [my-take-dev/inspired-mino-design-skills](https://github.com/my-take-dev/inspired-mino-design-skills) (Suite v0.8.0 Experimental / Preview)。ミノ駆動氏本人の監修なし。

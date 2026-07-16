@@ -1,6 +1,6 @@
 ---
 name: mino-domain-model-completeness
-description: 対象ユースケースに必要な業務用語・context・概念・値制約・状態・遷移・振る舞い・失敗・writer/readerの欠落と誤配置を監査するときに使う。現実全体のモデル化、図だけ、一般DDD解説には使わない。
+description: 対象ユースケースに必要な業務用語・context・概念・値制約・状態・遷移・振る舞い・失敗・writer/readerの欠落と誤配置を監査する時に使う。現実全体のモデル化、図だけ、一般DDD解説には使わない。
 ---
 
 > **Source**: 公開資料再構成の非公式版 [my-take-dev/inspired-mino-design-skills](https://github.com/my-take-dev/inspired-mino-design-skills) (Suite v0.8.0 Experimental / Preview)。ミノ駆動氏本人の監修なし。

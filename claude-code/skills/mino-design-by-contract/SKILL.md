@@ -1,6 +1,6 @@
 ---
 name: mino-design-by-contract
-description: 契約による設計で、自然言語要件を事前条件・事後条件・不変条件・失敗保証・冪等性・契約テスト仕様へ変換するときに使う。一般的なテスト追加、UI入力検証だけ、統合実装全体には使わない。
+description: 契約による設計で、自然言語要件を事前条件・事後条件・不変条件・失敗保証・冪等性・契約テスト仕様へ変換する時に使う。一般的なテスト追加、UI入力検証だけ、統合実装全体には使わない。
 ---
 
 > **Source**: 公開資料再構成の非公式版 [my-take-dev/inspired-mino-design-skills](https://github.com/my-take-dev/inspired-mino-design-skills) (Suite v0.8.0 Experimental / Preview)。ミノ駆動氏本人の監修なし。

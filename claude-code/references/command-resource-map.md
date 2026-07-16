@@ -35,7 +35,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 | Resource | Details |
 |----------|---------|
 | **guideline** | **Required**: `design/clean-architecture.md`, `design/domain-driven-design.md` / Conditional: `infrastructure/terraform.md` (Terraform), `languages/golang.md` (Go), etc. |
-| **skill** | Recommended: `clean-architecture-ddd`, `api-design`, `microservices-monorepo` (when detected), `load-guidelines`, `terraform` (IaC planning) |
+| **skill** | Recommended: `clean-architecture-ddd`, `api-design`, `microservices-monorepo` (when detected), `load-guidelines`, `terraform` (IaC planning) / mino design suite: 設計前提整理 `mino-problem-framing`, モデル欠落監査 `mino-domain-model-completeness`, 契約化 `mino-design-by-contract`, system-wide 品質 `mino-architecture-quality-strategy` |
 | **agent** | po-agent (for complex planning) |
 | **hook** | Common across all commands (see Legend) |
 | **rule** | plain JP style, markdown rules, git merge prohibition (auto-applied) |
@@ -49,7 +49,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 | Resource | Details |
 |----------|---------|
 | **guideline** | **Required**: `common/code-quality-design.md` / Conditional: `load-guidelines` auto-loads on language/framework detection |
-| **skill** | Recommended: `comprehensive-review` (main), Conditional: `uiux-review` (UI), `cleanup-enforcement` |
+| **skill** | Recommended: `comprehensive-review` (main), Conditional: `uiux-review` (UI), `cleanup-enforcement`, 設計レビュー時: `mino-domain-model-completeness` / `mino-interface-implementation-separation` |
 | **agent** | reviewer-agent (via PO/Manager path), pr-review-toolkit:* 6 types (with `--deep` option) |
 | **hook** | Common across all commands (see Legend) |
 | **rule** | AI output rules (auto-applied, generated comment prohibition) |
@@ -63,7 +63,7 @@ Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/
 | Resource | Details |
 |----------|---------|
 | **guideline** | Loads guideline of matched skill after task-type determination (e.g., RCA loads `root-cause` skill guidelines) |
-| **skill** | Dynamically selected by task type: design consultation → `clean-architecture-ddd`, incident → `incident-response`, root cause → `root-cause`, data analysis → `data-analysis`, IaC → `terraform` |
+| **skill** | Dynamically selected by task type: design consultation → `clean-architecture-ddd`, 問題定義 → `mino-problem-framing`, 契約設計 → `mino-design-by-contract`, incident → `incident-response`, root cause → `root-cause`, data analysis → `data-analysis`, IaC → `terraform` |
 | **agent** | po-agent (Step 1) → manager-agent (Step 2) → developer-agent×N (Step 3) → reviewer-agent (final review) |
 | **hook** | Common across all commands (see Legend) |
 | **rule** | plain JP style, markdown rules, git merge prohibition, root cause analysis rules (auto-applied) |
