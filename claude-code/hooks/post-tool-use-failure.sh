@@ -28,18 +28,20 @@ printf -v TIMESTAMP '%(%Y-%m-%d %H:%M:%S)T' -1
 mapfile -t _FIELDS < <(
   jq -r '
     .tool_name // "unknown",
-    (.session_id // "unknown"),
+    (.session_id // ""),
     (.cwd // "."),
     (.duration_ms // .tool_response.duration_ms // "" | tostring),
     (.error // "" | gsub("\n"; " "))
-  ' <<< "$INPUT" 2>/dev/null || printf '%s\n%s\n%s\n%s\n%s\n' "unknown" "unknown" "." "" ""
+  ' <<< "$INPUT" 2>/dev/null || printf '%s\n%s\n%s\n%s\n%s\n' "unknown" "" "." "" ""
 )
 TOOL_NAME="${_FIELDS[0]:-unknown}"
-_SESSION_ID_JSON="${_FIELDS[1]:-unknown}"
+_SESSION_ID_JSON="${_FIELDS[1]:-}"
 CWD="${_FIELDS[2]:-.}"
 DURATION_MS="${_FIELDS[3]:-}"
 RAW_ERROR="${_FIELDS[4]:-}"
-SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SESSION_ID_JSON}}"
+# stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は session 切替時に
+# 前 session 値が leak することがあり fallback 専用にする (incident 2026-06-25)
+SESSION_ID="${_SESSION_ID_JSON:-${CLAUDE_CODE_SESSION_ID:-unknown}}"
 
 # ERROR: raw が空なら fallback（jq 追加呼び出し不要）
 if [[ -z "${RAW_ERROR}" ]]; then

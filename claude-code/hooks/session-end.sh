@@ -24,7 +24,7 @@ INPUT=$(cat)
 # SessionEnd hook 入力には token フィールドが含まれないため transcript_path を取得して後で集計する
 IFS=$'\t' read -r SESSION_ID PROJECT_DIR TOTAL_TOKENS TOTAL_MESSAGES DURATION _MODEL _GIT_BRANCH < <(
   extract_json_fields "$INPUT" \
-    '.session_id // "unknown"' \
+    '.session_id // ""' \
     '.cwd // "."' \
     '.total_tokens // 0' \
     '.total_messages // 0' \
@@ -34,7 +34,9 @@ IFS=$'\t' read -r SESSION_ID PROJECT_DIR TOTAL_TOKENS TOTAL_MESSAGES DURATION _M
 )
 # transcript_path は空フィールドとの IFS read 混在を避けるため単独取得
 _TRANSCRIPT_PATH=$(jq -r '.transcript_path // ""' <<< "$INPUT" 2>/dev/null || true)
-SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
+# stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は session 切替時に
+# 前 session 値が leak することがあり fallback 専用にする (incident 2026-06-25)
+SESSION_ID="${SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-unknown}}"
 PROJECT_NAME=$(basename "$PROJECT_DIR")
 
 # token 集計: transcript_path の JSONL から assistant message の usage を合計する

@@ -36,8 +36,10 @@ fi
 require_jq
 
 # JSON入力を読み込み、jq 1回で全フィールド取得（v2.2.1 fork削減 / _SS_INPUT 変数廃止）
-eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "unknown") _CWD=\(.cwd // "")"')"
-_SS_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SS_SESSION_ID}}"
+eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "") _CWD=\(.cwd // "")"')"
+# stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は session 切替時に
+# 前 session 値が leak することがあり fallback 専用にする (incident 2026-06-25)
+_SS_SESSION_ID="${_SS_SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-unknown}}"
 _SS_PROJECT=$(basename "${_CWD:-.}")
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
 printf -v _SS_DATE_TODAY '%(%Y%m%d)T' -1

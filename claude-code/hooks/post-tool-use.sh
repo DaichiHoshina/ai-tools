@@ -23,7 +23,9 @@ INPUT=$(cat)
 # 全フィールドを1回のjqで取得（fork削減）
 # BASH_STDOUT は Bash 時のみ実値、それ以外は空文字（巨大 stdout のメモリ転送回避）
 eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") RELATIVE_PATH=\(.tool_input.relative_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "") BASH_STDOUT=\(if .tool_name == "Bash" then (.tool_response.stdout // "") else "" end)"' <<< "$INPUT")"
-SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
+# stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は session 切替時に
+# 前 session 値が leak することがあり fallback 専用にする (incident 2026-06-25)
+SESSION_ID="${SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-}}"
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
 printf -v DATE_TODAY '%(%Y%m%d)T' -1
 

@@ -17,10 +17,12 @@ INPUT=$(cat)
 IFS=$'\t' read -r TOOL_NAME SESSION_ID CWD < <(
   extract_json_fields "$INPUT" \
     '.tool_name // "unknown"' \
-    '.session_id // "unknown"' \
+    '.session_id // ""' \
     '.cwd // "."'
 )
-SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${SESSION_ID}}"
+# stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は session 切替時に
+# 前 session 値が leak することがあり fallback 専用にする (incident 2026-06-25)
+SESSION_ID="${SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-unknown}}"
 PROJECT=$(basename "$CWD")
 
 # --- Analytics記録 ---
