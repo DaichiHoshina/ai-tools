@@ -44,8 +44,21 @@ teardown() {
 # =============================================================================
 
 @test "install.sh: creates ~/.claude directory structure (dry-run)" {
-  skip "Requires non-interactive mode implementation"
-  # 将来的に --dry-run オプションを実装した際に有効化
+  # claude-code を隔離用の一時コピーへ複製し、実 repo (.git / .mcp.json) への
+  # 副作用を避けつつ --yes (非対話モード) で install.sh を実行する
+  local ISOLATED_ROOT="${TEST_HOME}/isolated"
+  mkdir -p "$ISOLATED_ROOT"
+  cp -R "${PROJECT_ROOT}/claude-code" "${ISOLATED_ROOT}/claude-code"
+
+  run env HOME="$TEST_HOME" bash "${ISOLATED_ROOT}/claude-code/install.sh" --yes
+  [ "$status" -eq 0 ]
+
+  [ -d "${CLAUDE_DIR}" ]
+  [ -d "${CLAUDE_DIR}/commands" ]
+  [ -d "${CLAUDE_DIR}/agents" ]
+  [ -d "${CLAUDE_DIR}/skills" ]
+  [ -d "${CLAUDE_DIR}/lib" ]
+  [ -f "${CLAUDE_DIR}/CLAUDE.md" ]
 }
 
 @test "install.sh: handles existing ~/.claude directory" {
@@ -99,8 +112,17 @@ teardown() {
 # =============================================================================
 
 @test "install.sh: is idempotent (can be run multiple times)" {
-  skip "Requires non-interactive mode implementation"
-  # 複数回実行しても同じ結果になることを確認
+  local ISOLATED_ROOT="${TEST_HOME}/isolated"
+  mkdir -p "$ISOLATED_ROOT"
+  cp -R "${PROJECT_ROOT}/claude-code" "${ISOLATED_ROOT}/claude-code"
+
+  run env HOME="$TEST_HOME" bash "${ISOLATED_ROOT}/claude-code/install.sh" --yes
+  [ "$status" -eq 0 ]
+
+  run env HOME="$TEST_HOME" bash "${ISOLATED_ROOT}/claude-code/install.sh" --yes
+  [ "$status" -eq 0 ]
+
+  [ -f "${CLAUDE_DIR}/CLAUDE.md" ]
 }
 
 # =============================================================================

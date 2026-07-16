@@ -32,10 +32,19 @@ print_info() {
 }
 
 # 確認プロンプト
+# INSTALL_NONINTERACTIVE=1 の場合は prompt を出さず default を採用する
 confirm() {
     local message="$1"
     local default="${2:-n}"
     local answer
+
+    if [ "${INSTALL_NONINTERACTIVE:-0}" = "1" ]; then
+        if [ "$default" = "y" ]; then
+            return 0
+        else
+            return 1
+        fi
+    fi
 
     if [ "$default" = "y" ]; then
         read -rp "$message [Y/n]: " answer

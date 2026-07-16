@@ -301,7 +301,25 @@ install_settings() {
 
 # Main
 
+usage_main() {
+    echo "Usage: $0 [--yes|-y]"
+    echo ""
+    echo "  --yes, -y   確認プロンプトと環境変数の対話入力をスキップ (CI / test 用)"
+}
+
 main() {
+    for arg in "$@"; do
+        case "$arg" in
+            --yes|-y)
+                export INSTALL_NONINTERACTIVE=1
+                ;;
+            --help|-h)
+                usage_main
+                exit 0
+                ;;
+        esac
+    done
+
     print_header "Claude Code Configuration Installer"
 
     echo "このスクリプトは Claude Code の設定を新しいPCにインストールします。"
