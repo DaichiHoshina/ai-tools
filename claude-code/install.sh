@@ -124,8 +124,12 @@ copy_directory_contents() {
         print_success "${label} をコピーしました"
     }
 
-    # CLAUDE.md（常に上書き）
-    cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+    # CLAUDE.md（常に上書き。repo 側は CLAUDE.global.md 名で保持するため rename して copy — sync.sh と同じ対応）
+    if [ -f "$SCRIPT_DIR/CLAUDE.md" ]; then
+        cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+    else
+        cp "$SCRIPT_DIR/CLAUDE.global.md" "$CLAUDE_DIR/CLAUDE.md"
+    fi
     print_success "CLAUDE.md をコピーしました"
 
     # CANONICAL.md（常に上書き）
