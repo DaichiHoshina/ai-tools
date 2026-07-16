@@ -18,12 +18,25 @@ set -euo pipefail
 
 # save 先 dir 解決ルール (canonical: commands/memory-save.md § "Save target dir"):
 #   1. $MEMORY_SAVE_DIR が set されていればそれを使う (override、test 用)
-#   2. それ以外は常に ${HOME}/ai-tools/memory (3 tool 共有 SoT 固定、CLAUDE.md L188)
-#      Codex / Cursor が symlink で同 dir を読む前提。project 別 memory dir は使わない
+#   2. cwd の repo origin が ~/ghq/github.com/<org>/ 配下で <org-root>/memory/ が存在すれば
+#      <org-root>/memory/<repo> (org 作業 memory、2026-07-16 分離)。worktree も origin URL で同判定
+#   3. それ以外は ${HOME}/ai-tools/memory (3 tool 共有 SoT、汎用知見)
 _resolve_memory_dir() {
   if [ -n "${MEMORY_SAVE_DIR:-}" ]; then
     printf '%s\n' "$MEMORY_SAVE_DIR"
     return 0
+  fi
+  local origin org repo org_mem
+  origin=$(git config --get remote.origin.url 2>/dev/null || true)
+  if [ -n "$origin" ]; then
+    org=$(printf '%s' "$origin" | sed -E 's#^(git@[^:]+:|ssh://[^/]+/|https?://[^/]+/)##; s#\.git$##' | cut -d/ -f1)
+    repo=$(printf '%s' "$origin" | sed -E 's#^(git@[^:]+:|ssh://[^/]+/|https?://[^/]+/)##; s#\.git$##' | cut -d/ -f2)
+    org_mem="${HOME}/ghq/github.com/${org}/memory"
+    if [ -n "$org" ] && [ -n "$repo" ] && [ -d "$org_mem" ]; then
+      mkdir -p "${org_mem}/${repo}"
+      printf '%s\n' "${org_mem}/${repo}"
+      return 0
+    fi
   fi
   printf '%s\n' "${HOME}/ai-tools/memory"
 }
@@ -64,6 +77,14 @@ _memory_social_hit_terms() {
 cmd_resolve_permanent_dir() {
   local content; content=$(cat)
   local ai_dir; ai_dir=$(_resolve_memory_dir)
+  # org 作業 memory (git 管理外の private dir) が dest なら social-hit 退避は不要。
+  # path pattern で限定し、MEMORY_SAVE_DIR override (test 等) では従来どおり退避判定する
+  case "$ai_dir" in
+    "${HOME}"/ghq/github.com/*/memory/*)
+      printf '%s\n' "$ai_dir"
+      return 0
+      ;;
+  esac
   local term
   while IFS= read -r term; do
     [ -z "$term" ] && continue

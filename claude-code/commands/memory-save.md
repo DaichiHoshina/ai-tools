@@ -13,16 +13,16 @@ Save current work state in 1 command。**default (no arg) = clear** (MEMORY.md 1
 
 保存前に dest を確定する。順序は **dest 決定 → 既存 file 確認 → merge/new 判定**。
 
-1. **dest 候補**: (a) `~/ai-tools/memory/` (canonical、3 ツール共有 SoT) / (b) project 階層 CLAUDE.md が宣言する auto-memory dir (宣言時のみ)
-2. **即決 signal (質問しない)**: project CLAUDE.md に宣言あり + cwd がその project 配下 → (b) を推奨し根拠 1 行を chat に出して即決。宣言なし → (a) を即決 (現行 default 維持)。`$ARGUMENTS` が非空 (topic/exit 指定あり) → 上記いずれかで即決 (質問 skip)
+1. **dest 候補**: (a) `~/ai-tools/memory/` (汎用知見、3 ツール共有 SoT) / (b) org 作業 memory `~/ghq/github.com/<org>/memory/<repo>/` (cwd の repo origin が org 配下 + org memory dir 実在時。helper `resolve-dir` が自動判定、2026-07-16 分離) / (c) project 階層 CLAUDE.md が宣言する auto-memory dir (宣言時のみ)
+2. **即決 signal (質問しない)**: helper `resolve-dir` の出力をそのまま採用して根拠 1 行を chat に出す (org 配下なら (b)、それ以外 (a))。project CLAUDE.md 宣言あり + cwd がその project 配下 → (c) を優先。`$ARGUMENTS` が非空 (topic/exit 指定あり) → 上記いずれかで即決 (質問 skip)
 3. **質問は例外のみ**: `$ARGUMENTS` が空 (default clear) かつ宣言が競合・cwd 判定不能で dest を 1 つに絞れない時だけ、AskUserQuestion を 1 問 (ai-tools / project の 2 択) 発火する
 4. dest 確定後、(b) を選んだ場合は `MEMORY_SAVE_DIR` にその path を export してから以降の helper 呼び出しへ進む。既存 file 確認 (`list-today`) は確定後の dest 配下で行う
 
 ## Save target dir
 
-**work-context / clear の default dest は `${HOME}/ai-tools/memory/`** (cwd 非依存、Claude Code / Codex / Cursor の 3 ツール共有 SoT)。Phase 0 で project 側 dest を即決 / 選択した場合はそちらが優先、環境変数 `MEMORY_SAVE_DIR` が set されていれば最優先する。canonical: `scripts/memory-save-helper.sh:_resolve_memory_dir`。
+**work-context / clear の default dest は helper `resolve-dir` の出力** (org 配下 repo / worktree → `~/ghq/github.com/<org>/memory/<repo>/`、それ以外 → `${HOME}/ai-tools/memory/`)。Phase 0 で project 側 dest を即決 / 選択した場合はそちらが優先、環境変数 `MEMORY_SAVE_DIR` が set されていれば最優先する。canonical: `scripts/memory-save-helper.sh:_resolve_memory_dir`。
 
-**例外 — exit の恒久 file (feedback/project) のみ Tier 判定で分岐**: 本文が snkrdunk 等の project 固有名詞を含めば `references-private/snkr-knowledge/` へ振る (Tier B、下記 exit post-processing step 2 参照)。
+**例外 — exit の恒久 file (feedback/project) のみ Tier 判定で分岐**: dest が `~/ai-tools/memory/` (public repo 配下) の場合に限り、本文が project 固有名詞 (social-hit term) を含めば `references-private/snkr-knowledge/` へ振る (Tier B、下記 exit post-processing step 2 参照)。dest が org 作業 memory (git 管理外) なら固有名詞を含んでよく、Tier B 退避は不要 (helper が自動 skip)。
 
 > **Helper script 必須**: MEMORY.md 更新 / collision 回避 / 同日 list 取得は `scripts/memory-save-helper.sh` 経由 (AI の Write/Edit ばらつき排除)。本体 body の Write のみ AI 側担当。
 
