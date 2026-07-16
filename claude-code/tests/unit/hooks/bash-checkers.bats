@@ -10,6 +10,10 @@ setup() {
   export PROJECT_ROOT
   export HOOK_FILE="${PROJECT_ROOT}/hooks/pre-tool-use.sh"
   setup_test_tmpdir
+  # hint 系の session dedup を test 単位で隔離 (bash-checkers.sh の flag file)
+  export CLAUDE_CODE_SESSION_ID="bc-$$-${BATS_TEST_NUMBER}"
+  rm -f "/tmp/claude-serena-hint-${CLAUDE_CODE_SESSION_ID}-"* \
+        "/tmp/claude-cat-read-hint-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
 }
 
 teardown() {
