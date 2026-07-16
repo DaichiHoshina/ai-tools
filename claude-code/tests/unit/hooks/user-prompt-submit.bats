@@ -31,8 +31,8 @@ teardown() {
 # =============================================================================
 
 # フックを実行してJSON出力を取得
-# hook は env CLAUDE_CODE_SESSION_ID を stdin より優先するため、test では env を落として
-# stdin の session_id を必ず有効にする (実 session の id 共有による並列 flake 防止)
+# 実行環境に前 session の CLAUDE_CODE_SESSION_ID が残っていても影響しないよう、
+# test では env を落として stdin の session_id を必ず有効にする (並列 flake 防止)
 run_hook() {
   local input="$1"
   echo "$input" | env -u CLAUDE_CODE_SESSION_ID bash "$HOOK_FILE"
@@ -371,6 +371,20 @@ get_additional_context() {
   local out=$(run_hook "$input")
   local ctx=$(get_additional_context "$out")
   [[ ! "$ctx" =~ "前 turn の chat 文体 warn" ]]
+}
+
+@test "user-prompt-submit: CLAUDE_CODE_SESSION_ID env に別値が入っていても stdin の session_id で warn file を読める" {
+  cd "$TEST_TMPDIR"
+  local sid="batsjpqstdinprio$$"
+  local warn_file="/tmp/claude-stop-jpq-warn-${sid}-$(date +%Y%m%d)"
+  printf '%s' "▲ chat 文体 warn: 体言止めbullet: 3行" > "$warn_file"
+  local input='{"prompt":"コードをリファクタリングして","session_id":"'"$sid"'"}'
+  # env に前 session の別値を残したまま実行 (session 切替時の leak を模擬)、stdin 優先で読めることを確認
+  local out=$(echo "$input" | CLAUDE_CODE_SESSION_ID="stale-leaked-session-id" bash "$HOOK_FILE")
+  local ctx=$(get_additional_context "$out")
+  [[ "$ctx" =~ "前 turn の chat 文体 warn" ]]
+  [[ "$ctx" =~ "体言止めbullet" ]]
+  [[ ! -f "$warn_file" ]]
 }
 
 # =============================================================================

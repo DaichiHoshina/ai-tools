@@ -52,10 +52,11 @@ if ! validate_json "$input"; then
 fi
 
 # === session_id / cwd / 日付早期取得: _CTX_FILE / _SERENA_COUNTER / _DUP_FILE の default path に suffix 付与 ===
-# env CLAUDE_CODE_SESSION_ID 優先、無ければ stdin JSON から抽出、それも無ければ unknown
+# stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は session 切替時に前 session 値が
+# leak することがあるため (incident 2026-06-25)、stdin が空のときのみ fallback として使う。
 # session_id + cwd を jq 1 回で取得 (fork 削減、eval 禁止のため @tsv + read で代替)
-IFS=$'\t' read -r _SESSION_ID _INIT_CWD < <(jq -r '[.session_id // "unknown", .cwd // ""] | @tsv' <<< "$input")
-_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_SESSION_ID}}"
+IFS=$'\t' read -r _SESSION_ID _INIT_CWD < <(jq -r '[.session_id // "", .cwd // ""] | @tsv' <<< "$input")
+_SESSION_ID="${_SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-unknown}}"
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
 printf -v _DATE_TODAY '%(%Y%m%d)T' -1
 
@@ -178,8 +179,10 @@ if [[ "$prompt" == /* ]]; then
     if [[ -n "${_CMD_NAME}" && -f "${LIB_DIR}/analytics-writer.sh" ]]; then
         source "${LIB_DIR}/analytics-writer.sh"
         # jq 1回で session_id と cwd を取得
-        eval "$(jq -r '@sh "_CMD_SESSION_ID=\(.session_id // "unknown") _CMD_CWD=\(.cwd // ".")"' <<< "$input")"
-        _CMD_SESSION_ID="${CLAUDE_CODE_SESSION_ID:-${_CMD_SESSION_ID}}"
+        # stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は session 切替時に前 session 値が
+        # leak することがあるため (incident 2026-06-25)、stdin が空のときのみ fallback として使う。
+        eval "$(jq -r '@sh "_CMD_SESSION_ID=\(.session_id // "") _CMD_CWD=\(.cwd // ".")"' <<< "$input")"
+        _CMD_SESSION_ID="${_CMD_SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-unknown}}"
         _CMD_PROJECT=$(basename "$_CMD_CWD")
         analytics_insert_tool_event "${_CMD_SESSION_ID}" "${_CMD_PROJECT}" "SlashCommand" "${_CMD_NAME}" 2>/dev/null || true
     fi
