@@ -1,4 +1,6 @@
-# Changelog
+# Changelog (凍結済)
+
+> **この file は 2026-07-16 で更新を終了した。** 変更履歴は git log (Conventional Commits 準拠の commit message) と [VERSION](VERSION) (CLI 追跡番号) を見る。版付き entry の起票が [2.1.39] (2026-02-23) で止まり、以降は commit message が実質の changelog として機能していたため、二重管理をやめて git log に一本化した。以下は凍結時点の内容をそのまま残した archive。
 
 このリポジトリの主要な変更履歴。[Conventional Commits](https://www.conventionalcommits.org/) に準拠。
 
