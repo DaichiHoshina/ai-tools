@@ -11,6 +11,7 @@
 | handler・controller・resolver・api・endpoint 実装 | `api-design.md` |
 | `/review`・`/review-fix-push`・`comprehensive-review` skill 発火時 | `review-noise-discard.md` |
 | `hooks/` の block・warn 系編集時 | `measure-before-hook-change.md` |
+| hook 新規実装・logic 追加・NG list 変更時 | `hook-implementation-pitfalls.md` |
 | `commands/`・`agents/`・`references/` の heading・YAML key・step 番号改変時 | `sync-canonical-with-bats.md` |
 | incident 調査 (5xx・latency・lock 障害の RCA) | `incident-local-repro-not-root-cause.md` |
 | 機能の複数 PR 分割・release 順設計 | `pr-release-order.md` |

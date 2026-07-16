@@ -34,7 +34,7 @@ commands/ skills/ agents/ の `.md` は毎 session token を消費する。Keep:
 
 ## Hook 編集 baseline rule
 
-`hooks/*.sh` の block / warn 系編集前に **`claude-code/references/on-demand-rules/measure-before-hook-change.md` を Read + `./scripts/hook-bench.sh --log` で baseline 計測**。skip すると latency regression が 24-48h 後に判明する (`[[2026-06-24 cd70e4e]]`)。
+`hooks/*.sh` の block / warn 系編集前に **`claude-code/references/on-demand-rules/measure-before-hook-change.md` を Read + `./scripts/hook-bench.sh --log` で baseline 計測**。skip すると latency regression が 24-48h 後に判明する (`[[2026-06-24 cd70e4e]]`)。実装内容側の罠 (NG list 追加 / session_id 取得 / option 判定 / 存在チェック / block 昇格判断) は `claude-code/references/on-demand-rules/hook-implementation-pitfalls.md` を Read する。
 
 ## Golden workflow (ai-tools 頻出)
 
