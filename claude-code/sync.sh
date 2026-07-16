@@ -538,6 +538,9 @@ sync_to_local() {
         # Codex / Cursor 側も同期する。各ツール未使用 PC では dir 不在のためスキップ。
         sync_codex
         sync_cursor
+
+        # Serena live 設定の宣言的補正 (alwaysLoad 削除 / excluded_tools union)。対象不在 PC は script 側で skip
+        "$CLAUDE_CODE_DIR/scripts/sync-serena-config.sh" || print_warning "Serena 設定補正に失敗した"
     else
         print_info "--only 指定のため settings / pre-push hook / Codex / Cursor 同期を skip"
     fi
