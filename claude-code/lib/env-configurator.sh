@@ -46,6 +46,11 @@ setup_env_file() {
 # =============================================================================
 
 setup_env_interactive() {
+    if [ "${INSTALL_NONINTERACTIVE:-0}" = "1" ]; then
+        print_info "非対話モードのため環境変数の入力をスキップします"
+        return 0
+    fi
+
     echo ""
     print_info "環境変数を設定します（空欄でスキップ）"
     echo ""

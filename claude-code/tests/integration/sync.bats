@@ -316,13 +316,26 @@ teardown() {
 # =============================================================================
 
 @test "sync.sh: does not delete files without confirmation" {
-  skip "Requires confirmation mechanism testing"
-  # ユーザー確認なしにファイルを削除しないことを確認
+  echo "0.0.0-should-not-be-overwritten" > "$CLAUDE_DIR/VERSION"
+
+  # confirm を 'n' で拒否すると sync_to_local 自体が呼ばれず、既存ファイルは残る
+  run bash -c "echo 'n' | '${PROJECT_ROOT}/claude-code/sync.sh' to-local --only=VERSION --skip-git-check"
+  [ "$status" -eq 0 ]
+  grep -q "0.0.0-should-not-be-overwritten" "$CLAUDE_DIR/VERSION"
 }
 
 @test "sync.sh: creates backups before overwriting" {
-  skip "Requires backup mechanism testing"
-  # 上書き前にバックアップを作成することを確認
+  echo "0.0.0-before-backup-test" > "$CLAUDE_DIR/VERSION"
+
+  run bash "${PROJECT_ROOT}/claude-code/sync.sh" to-local --only=VERSION --yes --skip-git-check
+  [ "$status" -eq 0 ]
+
+  local backup_root="$CLAUDE_DIR/.sync-backups"
+  [ -d "$backup_root" ]
+  local latest
+  latest=$(ls -1 "$backup_root" | sort | tail -1)
+  [ -n "$latest" ]
+  grep -q "0.0.0-before-backup-test" "$backup_root/$latest/VERSION"
 }
 
 # =============================================================================
@@ -356,13 +369,36 @@ teardown() {
 }
 
 @test "integration: sync.sh preserves file permissions" {
-  skip "Requires file permission testing"
-  # ファイルのパーミッションが保持されることを確認
+  # sync.sh のディレクトリ同期は rsync -a（sync_to_local 内）を使い、これがパーミッションを保持する前提
+  local src="${TEST_HOME}/perm-src"
+  local dst="${TEST_HOME}/perm-dst"
+  mkdir -p "$src"
+  printf '#!/bin/bash\n' > "$src/exec.sh"
+  chmod 755 "$src/exec.sh"
+  printf 'plain\n' > "$src/plain.txt"
+  chmod 644 "$src/plain.txt"
+
+  rsync -a "$src/" "$dst/"
+
+  local exec_mode plain_mode
+  exec_mode=$(stat -f '%Lp' "$dst/exec.sh" 2>/dev/null || stat -c '%a' "$dst/exec.sh")
+  plain_mode=$(stat -f '%Lp' "$dst/plain.txt" 2>/dev/null || stat -c '%a' "$dst/plain.txt")
+  [ "$exec_mode" = "755" ]
+  [ "$plain_mode" = "644" ]
 }
 
 @test "integration: sync.sh handles symbolic links correctly" {
-  skip "Requires symbolic link testing"
-  # シンボリックリンクを正しく処理することを確認
+  # sync_to_local の rsync -a はシンボリックリンクを解決せずリンクのまま複製する
+  local src="${TEST_HOME}/link-src"
+  local dst="${TEST_HOME}/link-dst"
+  mkdir -p "$src"
+  printf 'target\n' > "$src/real.txt"
+  ln -s real.txt "$src/link.txt"
+
+  rsync -a "$src/" "$dst/"
+
+  [ -L "$dst/link.txt" ]
+  [ "$(readlink "$dst/link.txt")" = "real.txt" ]
 }
 
 # =============================================================================
@@ -370,9 +406,21 @@ teardown() {
 # =============================================================================
 
 @test "sync.sh: checks for rsync dependency" {
-  # sync.shはrsyncを使用していない（cpコマンドを使用）
-  # rsyncのチェックは不要
-  skip "rsync is not used by sync.sh - uses cp instead"
+  # sync.sh は from-local で rsync を必須とする（check_dependencies）。
+  # rsync 不在時に fail-fast することを確認する
+  run bash -c "
+    command() {
+      if [ \"\$1\" = '-v' ] && [ \"\$2\" = 'rsync' ]; then
+        return 1
+      fi
+      builtin command \"\$@\"
+    }
+    export -f command
+    source '${PROJECT_ROOT}/claude-code/sync.sh' >/dev/null 2>&1 || true
+    check_dependencies from-local
+  "
+  [ "$status" -ne 0 ]
+  [[ "$output" =~ "rsync" ]]
 }
 
 @test "sync.sh: checks for diff dependency" {

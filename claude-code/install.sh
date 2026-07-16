@@ -124,8 +124,12 @@ copy_directory_contents() {
         print_success "${label} をコピーしました"
     }
 
-    # CLAUDE.md（常に上書き）
-    cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+    # CLAUDE.md（常に上書き。repo 側は CLAUDE.global.md 名で保持するため rename して copy — sync.sh と同じ対応）
+    if [ -f "$SCRIPT_DIR/CLAUDE.md" ]; then
+        cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+    else
+        cp "$SCRIPT_DIR/CLAUDE.global.md" "$CLAUDE_DIR/CLAUDE.md"
+    fi
     print_success "CLAUDE.md をコピーしました"
 
     # CANONICAL.md（常に上書き）
@@ -301,7 +305,25 @@ install_settings() {
 
 # Main
 
+usage_main() {
+    echo "Usage: $0 [--yes|-y]"
+    echo ""
+    echo "  --yes, -y   確認プロンプトと環境変数の対話入力をスキップ (CI / test 用)"
+}
+
 main() {
+    for arg in "$@"; do
+        case "$arg" in
+            --yes|-y)
+                export INSTALL_NONINTERACTIVE=1
+                ;;
+            --help|-h)
+                usage_main
+                exit 0
+                ;;
+        esac
+    done
+
     print_header "Claude Code Configuration Installer"
 
     echo "このスクリプトは Claude Code の設定を新しいPCにインストールします。"
