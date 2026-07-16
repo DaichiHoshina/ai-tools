@@ -175,9 +175,9 @@ classify_bash_command() {
   fi
 
   # 変更系コマンド
+  # MESSAGE なし: 毎回の「🔶 要確認: 変更系コマンド」表示は noise (permission prompt 側で確認される)
   if [[ "$cmd" =~ (git[[:space:]]commit|git[[:space:]]push|git[[:space:]]merge|git[[:space:]]rebase|npm[[:space:]]install|pip[[:space:]]install|go[[:space:]]mod|docker[[:space:]]build|docker[[:space:]]push) ]]; then
     GUARD_CLASS="Boundary"
-    MESSAGE="🔶 要確認: 変更系コマンド"
     return
   fi
 

@@ -278,28 +278,28 @@ _run_bash_forbidden() {
 # Bash 変更系コマンド（Boundary）
 # =============================================================================
 
-@test "pre-tool-use: Bash git commit はBoundary" {
+@test "pre-tool-use: Bash git commit はBoundary (静的 message なし)" {
   result=$(run_hook "Bash" '{"command": "git commit -m \"test\""}')
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
-@test "pre-tool-use: Bash git push はBoundary" {
+@test "pre-tool-use: Bash git push はBoundary (静的 message なし)" {
   result=$(run_hook "Bash" '{"command": "git push origin main"}')
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
-@test "pre-tool-use: Bash npm install はBoundary" {
+@test "pre-tool-use: Bash npm install はBoundary (静的 message なし)" {
   result=$(run_hook "Bash" '{"command": "npm install express"}')
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
-@test "pre-tool-use: Bash docker build はBoundary" {
+@test "pre-tool-use: Bash docker build はBoundary (静的 message なし)" {
   result=$(run_hook "Bash" '{"command": "docker build -t myapp ."}')
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
+  [ -z "$msg" ]
 }
 
 # =============================================================================
@@ -386,29 +386,29 @@ _run_bash_forbidden() {
   result=$(run_hook "Bash" '{"command": "git commit -m \"git push --force を防止する hook 修正\""}')
   msg=$(get_system_message "$result")
   # git commit は変更系（Boundary）。commit message 内の危険語は検出対象外になるため、禁止にはならない
-  [[ "$msg" =~ "要確認" ]]
-  [[ ! "$msg" =~ "禁止" ]]
+  # 変更系 Boundary は静的 message なし。禁止 (Forbidden) 昇格していないことだけ確認
+  [ -z "$msg" ]
 }
 
 @test "pre-tool-use: commit message 内の危険語リテラル（rm -rf）は Forbidden ではなく Boundary" {
   result=$(run_hook "Bash" '{"command": "git commit -m \"rm -rf を禁止\""}')
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
-  [[ ! "$msg" =~ "禁止" ]]
+  # 変更系 Boundary は静的 message なし。禁止 (Forbidden) 昇格していないことだけ確認
+  [ -z "$msg" ]
 }
 
 @test "pre-tool-use: commit message single quote 内の危険語は Forbidden ではなく Boundary" {
   result=$(run_hook "Bash" "{\"command\": \"git commit -m 'git push --force を防止'\"}")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
-  [[ ! "$msg" =~ "禁止" ]]
+  # 変更系 Boundary は静的 message なし。禁止 (Forbidden) 昇格していないことだけ確認
+  [ -z "$msg" ]
 }
 
 @test "pre-tool-use: commit message -F file 形式は引数値を除外" {
   result=$(run_hook "Bash" '{"command": "git commit -F /tmp/git-push-force-msg.txt"}')
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
-  [[ ! "$msg" =~ "禁止" ]]
+  # 変更系 Boundary は静的 message なし。禁止 (Forbidden) 昇格していないことだけ確認
+  [ -z "$msg" ]
 }
 
 # =============================================================================
@@ -423,8 +423,8 @@ _run_bash_forbidden() {
   input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
   result=$(echo "$input" | bash "$HOOK_FILE")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
-  [[ ! "$msg" =~ "禁止" ]]
+  # 変更系 Boundary は静的 message なし。禁止 (Forbidden) 昇格していないことだけ確認
+  [ -z "$msg" ]
 }
 
 @test "pre-tool-use: HEREDOC 内の git push --force リテラルは Boundary" {
@@ -434,8 +434,8 @@ _run_bash_forbidden() {
   input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
   result=$(echo "$input" | bash "$HOOK_FILE")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
-  [[ ! "$msg" =~ "禁止" ]]
+  # 変更系 Boundary は静的 message なし。禁止 (Forbidden) 昇格していないことだけ確認
+  [ -z "$msg" ]
 }
 
 @test "pre-tool-use: <<-DELIM (タブ削減) ヒアドキュメント本文も除去" {
@@ -446,8 +446,8 @@ _run_bash_forbidden() {
   input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
   result=$(echo "$input" | bash "$HOOK_FILE")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
-  [[ ! "$msg" =~ "禁止" ]]
+  # 変更系 Boundary は静的 message なし。禁止 (Forbidden) 昇格していないことだけ確認
+  [ -z "$msg" ]
 }
 
 @test "pre-tool-use: HEREDOC 終端後の rm -rf / は Forbidden（除去対象外）" {
@@ -467,8 +467,8 @@ _run_bash_forbidden() {
   input=$(jq -n --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')
   result=$(echo "$input" | bash "$HOOK_FILE")
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
-  [[ ! "$msg" =~ "禁止" ]]
+  # 変更系 Boundary は静的 message なし。禁止 (Forbidden) 昇格していないことだけ確認
+  [ -z "$msg" ]
 }
 
 @test "pre-tool-use: commit 以外で git push --force は引き続き Forbidden" {
