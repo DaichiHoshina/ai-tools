@@ -1,4 +1,12 @@
-# Git / PR 操作の安全確認 (interrupt / merge 承認 / CODEOWNERS)
+# Git / PR 操作の安全確認 (interrupt / merge 承認 / CODEOWNERS / 他者 comment)
+
+## 他者 comment の編集・削除禁止
+
+GitHub Issue / PR の comment 整理では、自分の comment だけを削除・編集の対象にする。他者の comment を minimize・削除・編集するのは発言権の侵害で、collaboration の信頼を損なう。
+
+- `gh api` 等で comment を操作する前に投稿者を確認し、自分の comment のみ対象にする
+- 整理 script を書くときは `--author=@me` 等の絞り込みを必ず付ける
+- 他者の情報を統合したいときは、自分の comment に引用・参照する形にする
 
 ## interrupt 後の再試行禁止
 
