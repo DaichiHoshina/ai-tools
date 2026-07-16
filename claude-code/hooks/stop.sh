@@ -67,6 +67,12 @@ if [[ "${JP_QUALITY_STOP_CHECK:-1}" == "1" && "${_STOP_HOOK_ACTIVE}" != "true" &
   elif [[ -n "${_CHAT_WARN_MSG}" ]]; then
     _JPQ_WARN_MSG="${_CHAT_WARN_MSG}"
   fi
+  # warn は systemMessage だけだと AI に矯正が働かないため、state file 経由で
+  # 次 turn の UserPromptSubmit (additionalContext) に還流する (read-and-delete)。
+  if [[ -n "${_JPQ_WARN_MSG}" ]]; then
+    printf -v _JPQ_WARN_DATE '%(%Y%m%d)T' -1
+    printf '%s' "${_JPQ_WARN_MSG}" > "/tmp/claude-stop-jpq-warn-${_STOP_SESSION_ID:-$$}-${_JPQ_WARN_DATE}" 2>/dev/null || true
+  fi
 fi
 
 # === SQL auto-pbcopy: 最終応答中の最後の ```sql ブロックを clipboard へ ===

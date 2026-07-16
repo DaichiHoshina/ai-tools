@@ -349,6 +349,31 @@ get_additional_context() {
 }
 
 # =============================================================================
+# chat 文体 warn 還流 (stop.sh が書いた state file を read-and-delete して inject)
+# =============================================================================
+
+@test "user-prompt-submit: 前 turn の warn state file が additionalContext に inject され file が消える" {
+  cd "$TEST_TMPDIR"
+  local sid="batsjpqfeed$$"
+  local warn_file="/tmp/claude-stop-jpq-warn-${sid}-$(date +%Y%m%d)"
+  printf '%s' "▲ chat 文体 warn: 体言止めbullet: 2行" > "$warn_file"
+  local input='{"prompt":"コードをリファクタリングして","session_id":"'"$sid"'"}'
+  local out=$(run_hook "$input")
+  local ctx=$(get_additional_context "$out")
+  [[ "$ctx" =~ "前 turn の chat 文体 warn" ]]
+  [[ "$ctx" =~ "体言止めbullet" ]]
+  [[ ! -f "$warn_file" ]]
+}
+
+@test "user-prompt-submit: warn state file なしでは warn 還流 inject されない" {
+  cd "$TEST_TMPDIR"
+  local input='{"prompt":"コードをリファクタリングして","session_id":"batsjpqnofeed"}'
+  local out=$(run_hook "$input")
+  local ctx=$(get_additional_context "$out")
+  [[ ! "$ctx" =~ "前 turn の chat 文体 warn" ]]
+}
+
+# =============================================================================
 # N1: _DUP_FILE に YYYYMMDD が付与されること
 # =============================================================================
 

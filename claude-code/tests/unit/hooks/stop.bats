@@ -166,10 +166,37 @@ _stop_out() {
   printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
 }
 
-@test "stop: warn 系のみ ('念のため') は block せず systemMessage に warn" {
+@test "stop: ヘッジ '念のため' は block (2026-07 昇格)" {
   _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
   local out
   out=$(_stop_out "念のため設定を確認した。")
+  printf '%s' "${out}" | jq -e '.decision == "block"' >/dev/null
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+}
+
+@test "stop: warn 系のみ ('見込み') は block せず systemMessage に warn + state file 生成" {
+  _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-warn-batsjpq-*
+  local out
+  out=$(_stop_out "回復の見込みがある状態だ。")
   printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
   printf '%s' "${out}" | jq -e '.systemMessage | contains("chat 文体 warn")' >/dev/null
+  # warn 還流用 state file が書かれている (次 turn の UserPromptSubmit が read-and-delete する)
+  local warn_file
+  warn_file=$(compgen -G "/tmp/claude-stop-jpq-warn-batsjpq-*" | head -1)
+  [[ -n "${warn_file}" ]]
+  [[ "$(cat "${warn_file}")" == *"見込み"* ]]
+  rm -f /tmp/claude-stop-jpq-warn-batsjpq-*
+}
+
+@test "stop: 体言止め bullet は語彙 hit ゼロでも block (構造昇格)" {
+  _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+  local out
+  out=$(_stop_out "- 実装を修正
+本文は文として閉じている。")
+  printf '%s' "${out}" | jq -e '.decision == "block"' >/dev/null
+  printf '%s' "${out}" | jq -e '.reason | contains("体言止め")' >/dev/null
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
 }

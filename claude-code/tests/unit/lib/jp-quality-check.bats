@@ -35,6 +35,8 @@ _make_ng_dict() {
 
 **カタカナ造語禁止**: シームレス / シームレスに / ロバスト / スケーラブル / 直感的 / 直感的に / 革新的 / 革新的な / 包括的 / 包括的な / 堅牢 / 堅牢な / フレキシブル / インテリジェント / スマート / リッチ / モダン / クリーン / ハイレベル / ローレベル / クリティカル / クリティカルに / セキュア
 
+**主体不明断定 (warn-only)**: と言われる / と考えられている / とされている
+
 **置換候補 (頻出)**: 踏襲→引き継ぐ / 鑑みる→踏まえる / 喫緊→直近 / leverage→活かす / utilize→使う / mitigate→緩和する
 NGDICT
 }
@@ -624,15 +626,94 @@ _run_sentence_structure() {
   [ "$status" -eq 0 ]
 }
 
-@test "chat-quality: 弱い表現 'かもしれない' は block せず _CHAT_WARN_MSG に降格" {
+@test "chat-quality: 弱い表現 'かもしれない' は block (2026-07 昇格)" {
   _make_ng_dict "$TEST_TMPDIR"
   run bash -c "
     export HOME='${TEST_TMPDIR}'
     # shellcheck disable=SC1090
     source '${LIB_FILE}'
     _chat_quality_check '原因は設定かもしれない。'
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q 'かもしれない' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: AI段取り定型 'まず' / ヘッジ '念のため' は block (2026-07 昇格)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check 'まず設定を見る。念のため再起動もした。'
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q 'まず' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '念のため' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: 断定語 '完了' 単体は block せず warn 据え置き" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '移行は完了とみなせる状態だ。'
     [ -z \"\${_CHAT_BLOCK_REASON}\" ] || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
-    printf '%s' \"\${_CHAT_WARN_MSG}\" | grep -q 'かもしれない' || { echo \"WARN=\${_CHAT_WARN_MSG}\" >&2; exit 1; }
+    printf '%s' \"\${_CHAT_WARN_MSG}\" | grep -q '完了' || { echo \"WARN=\${_CHAT_WARN_MSG}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: 主体不明断定 'と言われる' は warn (新 key)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check 'この方式は速いと言われる。'
+    [ -z \"\${_CHAT_BLOCK_REASON}\" ] || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+    printf '%s' \"\${_CHAT_WARN_MSG}\" | grep -q 'と言われる' || { echo \"WARN=\${_CHAT_WARN_MSG}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: 体言止め bullet は語彙 hit ゼロでも block (構造昇格)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '- 実装を修正
+本文は文として閉じている。'
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '体言止めbullet' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: 矢印チェーンは block (構造昇格)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '流れは 入力 → 変換 → 出力 になる。'
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '矢印チェーン' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: 100字超文は 1 文なら warn、2 文で block" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _long=\$(printf 'あ%.0s' {1..105})
+    _chat_quality_check \"\${_long}。\"
+    [ -z \"\${_CHAT_BLOCK_REASON}\" ] || { echo \"BLOCK(1文)=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+    printf '%s' \"\${_CHAT_WARN_MSG}\" | grep -q '100字超文' || { echo \"WARN=\${_CHAT_WARN_MSG}\" >&2; exit 1; }
+    _chat_quality_check \"\${_long}。\${_long}。\"
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '100字超文' || { echo \"BLOCK(2文)=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
   "
   [ "$status" -eq 0 ]
 }

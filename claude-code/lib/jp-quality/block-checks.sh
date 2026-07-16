@@ -189,7 +189,8 @@ ${_ref_lines}"
   fi
 }
 
-# chat 応答 (stop hook 経路) の文体検査。高精度 5 key のみ block し、低精度 key + 構造検査は warn に降格する。
+# chat 応答 (stop hook 経路) の文体検査。誤爆の低い語彙 8 key + 構造 3 種 (体言止め bullet / 矢印 / 100字超≥2) を block し、
+# 誤爆リスクのある key + 残りの構造検査は warn に降格する。
 # 出力契約: _CHAT_BLOCK_REASON (block hit 時のみ非空) / _CHAT_WARN_MSG (warn hit 時のみ非空) の 2 変数。
 # _assert_required_keys は呼ばない (exit 2 が stop hook では block に化けるため)。dict 不在は graceful return。
 _chat_quality_check() {
@@ -200,8 +201,10 @@ _chat_quality_check() {
   [[ -f "$_principles_file" ]] || return 0
   _preload_term_lists
 
-  local _cq_block_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)" "冗長表現 (block)")
-  local _cq_warn_keys=("弱い表現 (block)" "AI段取り定型 (block)" "ヘッジ濫用 (block)" "過剰丁寧 (block)" "断定語 (warn-only)" "英語jargon (warn-only)")
+  # 弱い表現 / AI段取り / ヘッジは外向き経路で block 実績があり誤爆が低いため chat でも block (2026-07-16 昇格)。
+  # 断定語 (「完了」がタスク名引用で誤爆) / 英語jargon / 過剰丁寧 (UI コピー draft の正当用法) は warn 据え置き。
+  local _cq_block_keys=("AI定型語" "カタカナ造語禁止" "難読漢語 (block)" "非日常英語 (block)" "冗長表現 (block)" "弱い表現 (block)" "AI段取り定型 (block)" "ヘッジ濫用 (block)")
+  local _cq_warn_keys=("過剰丁寧 (block)" "断定語 (warn-only)" "英語jargon (warn-only)" "主体不明断定 (warn-only)")
 
   # fast path: 全 key の語 union を 1 回の grep で検査し、hit ゼロ (大多数) なら per-key loop を省く
   local _cq_clean
@@ -244,22 +247,42 @@ _chat_quality_check() {
     done
   fi
 
-  # 構造検査 (常に warn)。chat は常体規範なので敬体 check on + 可読性 (連続漢字/読点) 同梱で python 1 fork
-  local _cq_struct
-  _cq_struct=$(_check_sentence_structure "$text" 1 1)
+  # 構造検査。chat は常体規範なので敬体 check on + 可読性 (連続漢字/読点) 同梱で python 1 fork。
+  # 語彙 hit ゼロでも構造 block は発生するため fast path (_cq_any) の外で判定する。
+  # block 昇格 (2026-07-16): 体言止め bullet / 矢印チェーン (判定 guard が厚く誤爆低) と 100字超文≥2
+  # (全 block だと loop 上限 5 を序盤で使い切るため閾値 2 文。1 文は warn 据え置き、log で見直す)。
+  # 同一文末 / 敬体 (UI コピー draft) / 連続漢字・読点 (固有名詞誤爆) は warn 据え置き。
+  _check_sentence_structure_counts "$text" 1 1
+  local _cq_struct_block="" _cq_struct_warn=""
+  (( _SS_TAIGEN > 0 )) && _cq_struct_block="体言止めbullet ${_SS_TAIGEN}行 (各 bullet を「〜する/〜した/〜だ」の文で閉じる); "
+  (( _SS_ARROW > 0 )) && _cq_struct_block="${_cq_struct_block}矢印チェーン ${_SS_ARROW}行 (矢印列を動詞を持つ文章に展開する); "
+  (( _SS_LONG >= 2 )) && _cq_struct_block="${_cq_struct_block}100字超文 ${_SS_LONG}文 (句点で 2 文以上に分割する); "
+  (( _SS_LONG == 1 )) && _cq_struct_warn="100字超文: 1文 → 文分割; "
+  (( _SS_KANJI_CNT > 0 )) && _cq_struct_warn="${_cq_struct_warn}連続漢字≥5: ${_SS_KANJI_CNT}種 (${_SS_KANJI_SAMPLE}) → 助詞挿入/訓読み開く; "
+  (( _SS_TOUTEN > 0 )) && _cq_struct_warn="${_cq_struct_warn}読点≥4の文: ${_SS_TOUTEN}個 → 文分割; "
+  (( _SS_REP > 0 )) && _cq_struct_warn="${_cq_struct_warn}同一文末3連続: ${_SS_REP}箇所 → 文末を変える; "
+  (( _SS_POLITE > 0 )) && _cq_struct_warn="${_cq_struct_warn}敬体混入: ${_SS_POLITE}文 → 常体に統一; "
 
+  local _cq_block_detail=""
   if [[ -n "$_cq_block_terms" ]]; then
     _append_jp_quality_log "chat" "$_cq_block_terms" "block"
-    _CHAT_BLOCK_REASON="chat 応答に NG 用語がある: ${_cq_detail%; } — 直前の応答本文だけを NG 用語なしの plain JP に書き直して再送する。source: guidelines/writing/NG-DICTIONARY.md"
+    _cq_block_detail="${_cq_detail%; }"
+  fi
+  if [[ -n "$_cq_struct_block" ]]; then
+    _append_jp_quality_log "chat" "structural: ${_cq_struct_block%; }" "block"
+    _cq_block_detail="${_cq_block_detail:+${_cq_block_detail}; }構造: ${_cq_struct_block%; }"
+  fi
+  if [[ -n "$_cq_block_detail" ]]; then
+    _CHAT_BLOCK_REASON="chat 応答が plain JP 規範に反する: ${_cq_block_detail} — 直前の応答本文だけを規範に沿った開いた日本語に書き直して再送する。source: guidelines/writing/NG-DICTIONARY.md + rules/plain-jp.md"
   fi
   local _cq_warn_out=""
   if [[ -n "$_cq_warn_terms" ]]; then
     _append_jp_quality_log "chat" "$_cq_warn_terms" "warn"
     _cq_warn_out="語: ${_cq_warn_terms}"
   fi
-  if [[ -n "$_cq_struct" ]]; then
-    _append_jp_quality_log "chat" "structural: ${_cq_struct}" "warn"
-    _cq_warn_out="${_cq_warn_out:+${_cq_warn_out}; }${_cq_struct}"
+  if [[ -n "$_cq_struct_warn" ]]; then
+    _append_jp_quality_log "chat" "structural: ${_cq_struct_warn%; }" "warn"
+    _cq_warn_out="${_cq_warn_out:+${_cq_warn_out}; }${_cq_struct_warn%; }"
   fi
   if [[ -n "$_cq_warn_out" ]]; then
     _CHAT_WARN_MSG="${ICON_WARNING:-▲} chat 文体 warn: ${_cq_warn_out} — 次の応答は plain JP 規範 (rules/plain-jp.md) に沿って直す"

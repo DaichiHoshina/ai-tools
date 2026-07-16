@@ -44,16 +44,19 @@ print(f"{len(h)}\t"+" ".join(h[:3]))' 2>/dev/null || printf '0\t')
   return 0
 }
 
-# 文構造の機械検出 (体言止め bullet / 矢印チェーン / 同一文末3連続 / 100字超文 / 敬体混入)。warn-only。
+# 文構造の機械検出の count 版。検出数を global 変数 8 個にセットする (出力なし)。
+# chat 経路 (_chat_quality_check) が体言止め / 矢印 / 100字超を block 判定に使うため、
+# warn 文字列でなく数値で返す。warn 文字列が要る経路は wrapper の _check_sentence_structure を使う。
 # 引数: text, polite_check (1 で です/ます 混入も検査。外向き doc は敬体が正のケースがあるため default 0),
 #       include_readability (1 で連続漢字≥5 / 読点≥4 も同じ python 1 fork で検査。
 #       chat 経路用: _check_structural_quality との 2 重 fork を避ける。外向き経路は既存関数のまま)
-# 出力: warn 文字列 (検出ゼロなら空)。python3 不在なら graceful skip。
+# python3 不在なら全 count 0 で graceful skip。
 # 体言止め suffix は NG-DICTIONARY.md「体言止め末尾 (structural)」key から取得 (欠落時は builtin fallback)。
-_check_sentence_structure() {
+_check_sentence_structure_counts() {
   local text="$1"
   local polite_check="${2:-0}"
   local include_readability="${3:-0}"
+  _SS_TAIGEN=0 _SS_ARROW=0 _SS_REP=0 _SS_LONG=0 _SS_POLITE=0 _SS_KANJI_CNT=0 _SS_KANJI_SAMPLE="" _SS_TOUTEN=0
   [[ -z "$text" ]] && return 0
   command -v python3 &>/dev/null || return 0
   local clean
@@ -124,14 +127,30 @@ print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_samp
 ' 2>/dev/null || printf '0\t0\t0\t0\t0\t0\t\t0')
   local _tg _ar _rp _lg _pl _kc _ks _tt
   IFS=$'\t' read -r _tg _ar _rp _lg _pl _kc _ks _tt <<< "$result"
+  [[ "${_tg:-0}" =~ ^[0-9]+$ ]] && _SS_TAIGEN="$_tg"
+  [[ "${_ar:-0}" =~ ^[0-9]+$ ]] && _SS_ARROW="$_ar"
+  [[ "${_rp:-0}" =~ ^[0-9]+$ ]] && _SS_REP="$_rp"
+  [[ "${_lg:-0}" =~ ^[0-9]+$ ]] && _SS_LONG="$_lg"
+  [[ "${_pl:-0}" =~ ^[0-9]+$ ]] && _SS_POLITE="$_pl"
+  [[ "${_kc:-0}" =~ ^[0-9]+$ ]] && _SS_KANJI_CNT="$_kc"
+  _SS_KANJI_SAMPLE="${_ks:-}"
+  [[ "${_tt:-0}" =~ ^[0-9]+$ ]] && _SS_TOUTEN="$_tt"
+  return 0
+}
+
+# 文構造の機械検出 (体言止め bullet / 矢印チェーン / 同一文末3連続 / 100字超文 / 敬体混入)。warn-only。
+# _check_sentence_structure_counts の wrapper。引数は counts 版と同一。
+# 出力: warn 文字列 (検出ゼロなら空)。外向き経路 (_block_if_ai_jargon) はこちらを使う。
+_check_sentence_structure() {
+  _check_sentence_structure_counts "$1" "${2:-0}" "${3:-0}"
   local out=""
-  [[ "${_kc:-0}" =~ ^[0-9]+$ ]] && (( _kc > 0 )) && out="連続漢字≥5: ${_kc}種 (${_ks}) → 助詞挿入/訓読み開く; "
-  [[ "${_tt:-0}" =~ ^[0-9]+$ ]] && (( _tt > 0 )) && out="${out}読点≥4の文: ${_tt}個 → 文分割; "
-  [[ "${_tg:-0}" =~ ^[0-9]+$ ]] && (( _tg > 0 )) && out="${out}体言止めbullet: ${_tg}行 → 文として閉じる (〜する/〜した); "
-  [[ "${_ar:-0}" =~ ^[0-9]+$ ]] && (( _ar > 0 )) && out="${out}矢印チェーン: ${_ar}行 → 文章に展開; "
-  [[ "${_rp:-0}" =~ ^[0-9]+$ ]] && (( _rp > 0 )) && out="${out}同一文末3連続: ${_rp}箇所 → 文末を変える; "
-  [[ "${_lg:-0}" =~ ^[0-9]+$ ]] && (( _lg > 0 )) && out="${out}100字超文: ${_lg}文 → 文分割; "
-  [[ "${_pl:-0}" =~ ^[0-9]+$ ]] && (( _pl > 0 )) && out="${out}敬体混入: ${_pl}文 → 常体に統一; "
+  (( _SS_KANJI_CNT > 0 )) && out="連続漢字≥5: ${_SS_KANJI_CNT}種 (${_SS_KANJI_SAMPLE}) → 助詞挿入/訓読み開く; "
+  (( _SS_TOUTEN > 0 )) && out="${out}読点≥4の文: ${_SS_TOUTEN}個 → 文分割; "
+  (( _SS_TAIGEN > 0 )) && out="${out}体言止めbullet: ${_SS_TAIGEN}行 → 文として閉じる (〜する/〜した); "
+  (( _SS_ARROW > 0 )) && out="${out}矢印チェーン: ${_SS_ARROW}行 → 文章に展開; "
+  (( _SS_REP > 0 )) && out="${out}同一文末3連続: ${_SS_REP}箇所 → 文末を変える; "
+  (( _SS_LONG > 0 )) && out="${out}100字超文: ${_SS_LONG}文 → 文分割; "
+  (( _SS_POLITE > 0 )) && out="${out}敬体混入: ${_SS_POLITE}文 → 常体に統一; "
   [[ -n "$out" ]] && printf '%s' "${out%; }"
   return 0
 }

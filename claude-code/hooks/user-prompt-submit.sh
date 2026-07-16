@@ -278,6 +278,23 @@ ${_DELEG_CHECKLIST_CTX}"
       fi
     fi
 
+    # 前 turn の chat 文体 warn 還流: stop.sh が書いた state file を read-and-delete して注入
+    # (warn は systemMessage だけだと AI に見えないため、次 turn の additionalContext で矯正する)
+    _JPQ_WARN_FILE="/tmp/claude-stop-jpq-warn-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
+    if [[ -f "${_JPQ_WARN_FILE}" ]]; then
+      _JPQ_WARN_PREV=$(cat "${_JPQ_WARN_FILE}" 2>/dev/null || true)
+      rm -f "${_JPQ_WARN_FILE}" 2>/dev/null || true
+      if [[ -n "${_JPQ_WARN_PREV}" ]]; then
+        _JPQ_FEEDBACK_CTX="[前 turn の chat 文体 warn] ${_JPQ_WARN_PREV} — 今回の応答で同じ違反を出さない。"
+        if [[ -n "${_AI_TERMS_CTX}" ]]; then
+          _AI_TERMS_CTX="${_AI_TERMS_CTX}
+${_JPQ_FEEDBACK_CTX}"
+        else
+          _AI_TERMS_CTX="${_JPQ_FEEDBACK_CTX}"
+        fi
+      fi
+    fi
+
     # token 増分 monitor: 1500 byte 超のみ log ファイルに記録 (stderr は Claude に届かないため log に切替)
     _INJECT_SIZE=${#_AI_TERMS_CTX}
     if [[ "${_INJECT_SIZE}" -gt 1500 ]]; then
