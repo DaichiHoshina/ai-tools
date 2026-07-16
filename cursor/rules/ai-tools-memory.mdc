@@ -10,8 +10,9 @@ alwaysApply: true
 ## 読み方
 
 1. セッション開始時にまず `~/ai-tools/memory/MEMORY.md` (index) を読む。1 行 1 memory の要約が並ぶ。
-2. index の中から現タスクに関連しそうな memory を選び、`~/ai-tools/memory/<name>.md` の本体を読む。
-3. `~/.cursor/memory` は `~/ai-tools/memory` への symlink なので、どちらの path からでも同じ内容を読める。
+2. 作業対象 repo が `~/ghq/github.com/<org>/` 配下 (linked worktree 含む、origin URL で判定) の場合、`~/ghq/github.com/<org>/memory/MEMORY.md` (org 作業 memory の top index) が存在すればそれも読む。work-context / repo 規範などの作業 memory は 2026-07-16 からこちらに分離した。
+3. index の中から現タスクに関連しそうな memory を選び、該当 dir の `<name>.md` の本体を読む。
+4. `~/.cursor/memory` は `~/ai-tools/memory` への symlink なので、どちらの path からでも同じ内容を読める (org 作業 memory は symlink 対象外、実 path で読む)。
 
 ## 書き込み
 
