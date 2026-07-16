@@ -221,3 +221,222 @@ _check_local_docs_template() {
   mkdir -p "$(dirname "$_log")" 2>/dev/null || true
   printf '[%s] block: %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$file_path" >> "$_log" 2>/dev/null || true
 }
+
+# ====================================
+# "Edit"|"Write"|"MultiEdit"|"NotebookEdit" tool 分岐の本体。pre-tool-use.sh の
+# case "$TOOL_NAME" in "Edit"|"Write"|"MultiEdit"|"NotebookEdit") から
+# 挙動を変えずに切り出したもの。GUARD_CLASS / ADDITIONAL_CONTEXT は
+# 呼び出し元 (pre-tool-use.sh) のグローバル変数をそのまま読み書きする。
+# ====================================
+_handle_edit_write_tool() {
+  local INPUT="$1"
+  local TOOL_NAME="$2"
+  local SESSION_ID="$3"
+
+  # MESSAGE なし: 毎 Edit 発火の静的 header は noise。下流 check が必要時のみ context を積む
+  GUARD_CLASS="Boundary"
+
+  # touchable_files allowlist guard (subagent context)
+  # parent (user-prompt-submit hook) が developer-agent fire 時に
+  # ~/.claude/state/touchable-<session>.txt へ allowlist を write。
+  # state file が存在する間は Edit/Write/MultiEdit/NotebookEdit の
+  # file_path を literal match で照合し、違反は exit 2 で block。
+  # state file 不在 (= 通常 parent context) は noop。
+  local _TF_PATH
+  while IFS= read -r _TF_PATH; do
+    [[ -z "$_TF_PATH" ]] && continue
+    if ! _touchable_check "$SESSION_ID" "$_TF_PATH"; then
+      local _TS_TF
+      _TS_TF=$(date '+%Y-%m-%dT%H:%M:%S')
+      mkdir -p "${HOME}/.claude/logs" 2>/dev/null || true
+      _rotate_log_if_needed "${HOME}/.claude/logs/touchable-files-block.log"
+      printf '%s | %s | %s | target=%s\n' \
+        "$_TS_TF" "$SESSION_ID" "$TOOL_NAME" "$_TF_PATH" \
+        >> "${HOME}/.claude/logs/touchable-files-block.log" 2>/dev/null || true
+      echo "[touchable-files-block] ${TOOL_NAME} target '${_TF_PATH}' は touchable_files allowlist 外 (scope creep)。parent から受領した prompt §1 touchable_files を確認するか、allowlist 拡張を parent に escalate (status: partial + scope creep blocker)。opt-out: env CLAUDE_TOUCHABLE_ENFORCE=0" >&2
+      exit 2
+    fi
+  done < <(jq -r '[.tool_input.file_path, (.tool_input.edits[]?.file_path)] | .[] | select(. != null and . != "")' <<< "$INPUT")
+
+  # worktree session 内 main repo 直接 Edit guard
+  # MultiEdit は top-level file_path に加え edits[].file_path も持つため両方検査する
+  local _CWD_GUARD_PATH
+  while IFS= read -r _CWD_GUARD_PATH; do
+    [[ -z "$_CWD_GUARD_PATH" ]] && continue
+    _check_worktree_cwd_guard "$_CWD_GUARD_PATH"
+    [[ "$GUARD_CLASS" == "Forbidden" ]] && break
+  done < <(jq -r '[.tool_input.file_path, (.tool_input.edits[]?.file_path)] | .[] | select(. != null and . != "")' <<< "$INPUT")
+  # Forbidden が立った場合は以降の処理をスキップ
+  if [[ "$GUARD_CLASS" == "Forbidden" ]]; then
+    :
+  else
+
+  # jq 集約: Write/Edit で必要な 4 フィールドを 1 回取得 (fork 削減)
+  local _EDIT_FILE_PATH EDIT_CONTENT _OLD_STRING _NEW_STRING
+  IFS=$'\t' read -r _EDIT_FILE_PATH EDIT_CONTENT _OLD_STRING _NEW_STRING < <(
+    extract_json_fields "$INPUT" \
+      '.tool_input.file_path // ""' \
+      'if .tool_input.content then .tool_input.content elif .tool_input.new_string then .tool_input.new_string elif .tool_input.edits then [.tool_input.edits[].new_string] | join("\n") else "" end' \
+      '.tool_input.old_string // ""' \
+      '.tool_input.new_string // ""'
+  )
+
+  # large-repo 連続 Edit 委譲 signal (warn-only)
+  _check_large_repo_consecutive_edit "$SESSION_ID" "$_EDIT_FILE_PATH"
+
+  # 直編集ガード: ~/.claude/{synced_dir}/... で repo source 存在時に redirect 推奨
+  # sync.sh to-local で上書き消失するため、必ず repo source を編集する規約
+  local _EDIT_PATH="$_EDIT_FILE_PATH"
+  if [ -n "$_EDIT_PATH" ] && [[ "$_EDIT_PATH" == "$HOME/.claude/"* ]]; then
+    local _REL_PATH="${_EDIT_PATH#"$HOME/.claude/"}"
+    local _FIRST_COMP="${_REL_PATH%%/*}"
+    case "$_FIRST_COMP" in
+      commands|skills|hooks|agents|rules|guidelines|config|references|CLAUDE.md)
+        local _REPO_PATH
+        _REPO_PATH="$(_aitools_dir)/claude-code/$_REL_PATH"
+        if [ -f "$_REPO_PATH" ]; then
+          local _DIRECT_EDIT_WARN="⚠ 直編集警告: ${_EDIT_PATH} は sync.sh to-local で上書き消失します。代わりに repo source ${_REPO_PATH} を編集してください。"
+          if [ -n "$ADDITIONAL_CONTEXT" ]; then
+            ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_DIRECT_EDIT_WARN}"
+          else
+            ADDITIONAL_CONTEXT="${_DIRECT_EDIT_WARN}"
+          fi
+        fi
+        ;;
+    esac
+  fi
+
+  # 危険パターン検出（機密リテラル/SSRF/SQL injection）
+  if [ -n "$EDIT_CONTENT" ]; then
+    detect_dangerous_patterns "$EDIT_CONTENT"
+  fi
+
+  # social-hit block (Edit/Write): 恒久的に無効化 (2026-07-09、git commit / gh / glab 系のみ block)
+  # 理由: local reversible な file 書込を毎回止めるとメモ集約作業等が回らない。
+  # 不可逆な公開経路 (git push 経由 remote) は Bash 側の _check_social_hit_in_text で防ぐ。
+
+  # live-doc warn: library API method 直書き検出 → context7 / WebFetch 確認を促す (warn-only)
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+    _check_live_doc_required "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
+  fi
+
+  # hook-bench warn: hooks/*.sh 編集前 baseline 鮮度確認 (warn-only)
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ]; then
+    _check_hook_edit_baseline_missing "$_EDIT_FILE_PATH"
+  fi
+
+  # local-docs テンプレ準拠 block (Write のみ、新規 .html を _templates 由来でない content で Write したら block)
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [[ "$TOOL_NAME" == "Write" ]] && [ -n "$EDIT_CONTENT" ]; then
+    _check_local_docs_template "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
+  fi
+
+  # private-name block (Edit/Write): 恒久的に無効化 (2026-07-09、git commit / gh / glab 系のみ block)
+  # 理由: local reversible な file 書込を毎回止めるとメモ集約作業等が回らない。
+  # 不可逆な公開経路 (git push 経由 remote) は Bash 側の _check_private_name で防ぐ。
+
+  # .serena/memories/ block: CLAUDE.md 規約違反パスへの書き込みを block
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ]; then
+    _check_serena_memory_path "$_EDIT_FILE_PATH"
+  fi
+
+  # ~/.claude/projects/*/ai-tools*/memory/ block: ai-tools repo の legacy auto-memory path を block
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ]; then
+    _check_legacy_auto_memory_path "$_EDIT_FILE_PATH"
+  fi
+
+  # AI定型語 block: 作業 repo の .md / .txt への書き込みを検査
+  # ai-tools 配下は除外 (guidelines / NG-DICTIONARY など NG 語を literal 保持する設定 md の誤爆防止)
+  # auto-memory dir (~/.claude/projects/*/memory/) も除外 (AI 自己分析の生記録、外向き prose 規則対象外)
+  # ~/.claude/plans/ も除外 (`/plan` 出力は AI の作業計画、外向き prose ではない)
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+    local _AJ_EXT="${_EDIT_FILE_PATH##*.}"
+    if [[ "$_AJ_EXT" == "md" || "$_AJ_EXT" == "txt" ]]; then
+      if ! _is_aitools_path "$_EDIT_FILE_PATH" && ! _is_auto_memory_path "$_EDIT_FILE_PATH" && ! _is_plans_path "$_EDIT_FILE_PATH" && ! _is_references_private_path "$_EDIT_FILE_PATH" && ! _is_memory_path "$_EDIT_FILE_PATH"; then
+        local _AJ_BASENAME
+        _AJ_BASENAME=$(basename "${_EDIT_FILE_PATH:-file}")
+        _block_if_ai_jargon "$EDIT_CONTENT" "ファイル: ${_AJ_BASENAME}"
+      fi
+    fi
+  fi
+
+  # Rename propagation detection (Edit tool only has old_string/new_string)
+  if [ -n "$_OLD_STRING" ] && [ -n "$_NEW_STRING" ]; then
+    detect_rename_propagation "$_OLD_STRING" "$_NEW_STRING" "$_EDIT_FILE_PATH"
+  fi
+
+  # Sonnet delegation declaration grep (CLAUDE.md Auto-Delegation "Edit/Write declaration rule")
+  # fetch last 30 lines of latest assistant message from transcript_path; check for "Inline exception" / "Inline prohibited"
+  # session+transcript mtime キャッシュ: transcript 更新がない場合は python3 fork を skip
+  local _TRANSCRIPT
+  _TRANSCRIPT=$(jq -r '.transcript_path // empty' <<< "$INPUT")
+  if [ -n "$_TRANSCRIPT" ] && [ -f "$_TRANSCRIPT" ]; then
+    local _TRANSCRIPT_MTIME
+    _TRANSCRIPT_MTIME=$(portable_stat_mtime "$_TRANSCRIPT")
+    local _TRANSCRIPT_CACHE_FLAG="/tmp/claude-transcript-decl-${SESSION_ID:-$$}-${_TRANSCRIPT_MTIME}"
+    local _DECL_FOUND
+    if [[ -f "$_TRANSCRIPT_CACHE_FLAG" ]]; then
+      _DECL_FOUND=$(cat "$_TRANSCRIPT_CACHE_FLAG" 2>/dev/null || true)
+    else
+      # 古いキャッシュ (同セッション・異なる mtime) を削除してから scan
+      rm -f "/tmp/claude-transcript-decl-${SESSION_ID:-$$}"-* 2>/dev/null || true
+      _DECL_FOUND=$(python3 - "$_TRANSCRIPT" <<'PYEOF'
+import sys, json
+path = sys.argv[1]
+lines = []
+try:
+    with open(path, encoding='utf-8') as f:
+        lines = f.readlines()
+except Exception:
+    sys.exit(0)
+# scan from the end to find the latest assistant entry and extract its text
+for raw in reversed(lines):
+    raw = raw.strip()
+    if not raw:
+        continue
+    try:
+        d = json.loads(raw)
+    except Exception:
+        continue
+    if d.get('type') != 'assistant':
+        continue
+    content = d.get('message', {}).get('content', [])
+    text = ''
+    for c in content:
+        if isinstance(c, dict) and c.get('type') == 'text':
+            text = c.get('text', '')
+            break
+    if not text:
+        continue
+    tail = '\n'.join(text.splitlines()[-30:])
+    if 'Inline exception' in tail or 'Inline prohibited' in tail:
+        print('found')
+    sys.exit(0)
+PYEOF
+      )
+      # scan 結果を mtime キャッシュとして保存
+      printf '%s' "${_DECL_FOUND:-}" > "$_TRANSCRIPT_CACHE_FLAG" 2>/dev/null || true
+    fi  # end: cache hit / miss
+    if [ "$_DECL_FOUND" != "found" ]; then
+      # session 1 回 dedup: 同一警告の毎 Edit/Write 再注入は token を浪費する (2026-07-16 実測)
+      local _decl_today _DECL_WARN_FLAG
+      printf -v _decl_today '%(%Y%m%d)T' -1
+      _DECL_WARN_FLAG="/tmp/claude-decl-warn-$(_stable_session_key)-${_decl_today}"
+      if [ ! -f "$_DECL_WARN_FLAG" ]; then
+        : > "$_DECL_WARN_FLAG" 2>/dev/null || true
+        local _DECL_WARN="⚠ Sonnet 委譲宣言抜け: Edit/Write 前に 'Inline exception (reason: ...)' か 'Inline prohibited (reason: ...)' を 1 行宣言 (throttle 等詳細: references/auto-delegation-detailed.md)"
+        if [ -n "$ADDITIONAL_CONTEXT" ]; then
+          ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_DECL_WARN}"
+        else
+          ADDITIONAL_CONTEXT="${_DECL_WARN}"
+        fi
+      fi
+    fi
+  fi
+
+  # 書く系 tool: 今日の commit inject（writing 規約更新を最新規範で反映させる）
+  _inject_today_commits
+
+  # code comment 規範 inject: code file への comment 追加を検出したら digest を 1 session 1 回 inject
+  _inject_code_comment_rules "$_EDIT_FILE_PATH" "$EDIT_CONTENT"
+  fi  # end: cwd-guard Forbidden skip
+}
