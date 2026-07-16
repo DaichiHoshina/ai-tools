@@ -118,7 +118,7 @@ No new opportunities. Range 2.1.192–2.1.193 が新 stable tag として確定 
 
 Range 2.1.188–2.1.191 が新 stable tag として確定 (2.1.191 = `dist-tags.stable`)。CLI 既に 2.1.191 一致、VERSION のみ 2.1.187 → 2.1.191 bump。2.1.188 / 2.1.189 は npm 未公開の skipped release、2.1.190 は bugfix-only。2.1.191 の主要変更を評価した結果、config 必須変更なし。
 
-- **`/rewind` が `/clear` 越えの resume 対応** [2.1.191]: built-in `/rewind` が `/clear` 前の会話まで遡って resume 可能に。repo の `commands/rewind.md` は独自 skill (CLAUDE.md + auto-memory reload) で built-in と用途別、影響なし。CLAUDE.md § Rewind / Context Management の記述 (「Esc ×2 or `/rewind`: restore to checkpoint」) は `references/checkpoint-rewind.md` 側の詳細更新が候補だが、参照先が既に built-in checkpoint 動作を汎用的に説明していれば追記不要。Track only。
+- **`/rewind` が `/clear` 越えの resume 対応** [2.1.191]: built-in `/rewind` が `/clear` 前の会話まで遡って resume 可能に。repo の `commands/reload.md` は独自 skill (CLAUDE.md + auto-memory reload) で built-in と用途別、影響なし。CLAUDE.md § Rewind / Context Management の記述 (「Esc ×2 or `/rewind`: restore to checkpoint」) は `references/checkpoint-rewind.md` 側の詳細更新が候補だが、参照先が既に built-in checkpoint 動作を汎用的に説明していれば追記不要。Track only。
 - **hooks comma-separated matcher fix** [2.1.191]: `"Bash,PowerShell"` 型 matcher が silently fire しなかった bug の fix。現 `templates/settings.json.template` は matcher を全て `*` / `""` / 単一 pattern (`mcp__serena__*`) で記述、comma-separated 未使用のため影響なし。将来 tool 別 hook を分岐する余地が生まれた (例: `"Bash,mcp__serena__execute_shell_command"` で shell 系のみ block)。Opportunity 候補、現状は tool 別 matcher 分割の必要性なし。Track only。
 - **`forceRemoteSettingsRefresh` の MDM/file policy 反映 fix** [2.1.191]: managed settings 用 fix、個人 CLI 環境 (MDM 非適用) で対象外。Info。
 - **sandbox network permission 記憶** [2.1.191]: 「Yes」で許可した host を session 中は再質問しない改善。harness 内蔵動作で config 変更不要。恩恵のみ受ける。Info。
