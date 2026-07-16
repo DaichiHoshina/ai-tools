@@ -296,11 +296,17 @@ PYEOF
         printf '%s' "${_DECL_FOUND:-}" > "$_TRANSCRIPT_CACHE_FLAG" 2>/dev/null || true
       fi  # end: cache hit / miss
       if [ "$_DECL_FOUND" != "found" ]; then
-        _DECL_WARN="⚠ Sonnet 委譲宣言抜け: Edit/Write 前に 'Inline exception (reason: ...)' か 'Inline prohibited (reason: ...)' を 1 行宣言 (throttle 等詳細: references/auto-delegation-detailed.md)"
-        if [ -n "$ADDITIONAL_CONTEXT" ]; then
-          ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_DECL_WARN}"
-        else
-          ADDITIONAL_CONTEXT="${_DECL_WARN}"
+        # session 1 回 dedup: 同一警告の毎 Edit/Write 再注入は token を浪費する (2026-07-16 実測)
+        printf -v _decl_today '%(%Y%m%d)T' -1
+        _DECL_WARN_FLAG="/tmp/claude-decl-warn-$(_stable_session_key)-${_decl_today}"
+        if [ ! -f "$_DECL_WARN_FLAG" ]; then
+          : > "$_DECL_WARN_FLAG" 2>/dev/null || true
+          _DECL_WARN="⚠ Sonnet 委譲宣言抜け: Edit/Write 前に 'Inline exception (reason: ...)' か 'Inline prohibited (reason: ...)' を 1 行宣言 (throttle 等詳細: references/auto-delegation-detailed.md)"
+          if [ -n "$ADDITIONAL_CONTEXT" ]; then
+            ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_DECL_WARN}"
+          else
+            ADDITIONAL_CONTEXT="${_DECL_WARN}"
+          fi
         fi
       fi
     fi
@@ -553,10 +559,16 @@ PYEOF
     # Serena substitution hint: notify Claude when Bash code-file read is detected
     # structurally prevents Bash ratio 51% (analytics) violating CLAUDE.md "Tool selection" principle
     if [ "$GUARD_CLASS" != "Forbidden" ] && _is_serena_replaceable "$COMMAND"; then
-      if [ -n "$ADDITIONAL_CONTEXT" ]; then
-        ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}; 🔍 Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols"
-      else
-        ADDITIONAL_CONTEXT="🔍 Bash でコードファイル参照検出、Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols"
+      # session 1 回 dedup (同 pattern 反復時の再注入抑止)
+      printf -v _serena_hint_today '%(%Y%m%d)T' -1
+      _SERENA_HINT_FLAG="/tmp/claude-serena-hint-$(_stable_session_key)-${_serena_hint_today}"
+      if [ ! -f "$_SERENA_HINT_FLAG" ]; then
+        : > "$_SERENA_HINT_FLAG" 2>/dev/null || true
+        if [ -n "$ADDITIONAL_CONTEXT" ]; then
+          ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}; 🔍 Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols"
+        else
+          ADDITIONAL_CONTEXT="🔍 Bash でコードファイル参照検出、Serena 振替推奨: get_symbols_overview / find_symbol(include_body=true) / find_referencing_symbols"
+        fi
       fi
     fi
 
@@ -571,11 +583,17 @@ PYEOF
     # Read tool substitution hint: cat <doc/config file> は Read ツールで代替可能
     # 対象: cat .md/.json/.yaml/.toml/.txt/.sh/.bats (write 系・pipe 系は除外済み)
     if [ "$GUARD_CLASS" != "Forbidden" ] && _is_cat_simple_read "$COMMAND"; then
-      _read_hint="📖 cat でファイル読み取り検出: Read ツールを使うこと (IMPORTANT: Avoid using this tool to run \`cat\`)"
-      if [ -n "$ADDITIONAL_CONTEXT" ]; then
-        ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_read_hint}"
-      else
-        ADDITIONAL_CONTEXT="${_read_hint}"
+      # 注入は session 1 回 dedup。観測 log は発火頻度計測のため無条件で記録し続ける
+      printf -v _read_hint_today '%(%Y%m%d)T' -1
+      _READ_HINT_FLAG="/tmp/claude-cat-read-hint-$(_stable_session_key)-${_read_hint_today}"
+      if [ ! -f "$_READ_HINT_FLAG" ]; then
+        : > "$_READ_HINT_FLAG" 2>/dev/null || true
+        _read_hint="📖 cat でファイル読み取り検出: Read ツールを使うこと (IMPORTANT: Avoid using this tool to run \`cat\`)"
+        if [ -n "$ADDITIONAL_CONTEXT" ]; then
+          ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_read_hint}"
+        else
+          ADDITIONAL_CONTEXT="${_read_hint}"
+        fi
       fi
       # 観測 log: 1 週間の発火頻度と誤検出パターンを記録
       _rotate_log_if_needed "$HOME/.claude/logs/cat-read-hint.log"

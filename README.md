@@ -92,7 +92,7 @@ Hooksがプロンプトやツール呼び出しに応じて、適切な設定を
 - **`/resume`**: 検索ボックスに PR URL 貼付で該当セッション復元（GitHub/GHE/GitLab/Bitbucket）
 - **`claude ultrareview <PR>`**: 非対話 subcommand を CI 連携用に [`commands/review.md`](./claude-code/commands/review.md) に追記（`--json` 出力でゲート化）
 - **`comprehensive-review` skill**: `${CLAUDE_EFFORT}` 連動で信頼度閾値が変動（low: 90+ / medium: 80+ / high: 70+）
-- **serena MCP**: `alwaysLoad: true` で tool-search deferral を排除しレイテンシ改善
+- **serena MCP**: tool-search deferred (default)。schema 約 10KB を先頭 load しない (2026-07-16 に `alwaysLoad: true` から転換、token 固定費 > 初回 1 hop のレイテンシ)
 
 ### スキルとガイドライン
 

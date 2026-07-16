@@ -12,6 +12,11 @@ setup() {
   # 共有 helper: HOME を tmp dir に隔離 (本番ログ汚染防止)
   load "../helpers/common"
   setup_home_isolated
+  # hint 系の session dedup を test 単位で隔離 (pre-tool-use.sh の flag file)
+  export CLAUDE_CODE_SESSION_ID="hi-$$-${BATS_TEST_NUMBER}"
+  rm -f "/tmp/claude-serena-hint-${CLAUDE_CODE_SESSION_ID}-"* \
+        "/tmp/claude-cat-read-hint-${CLAUDE_CODE_SESSION_ID}-"* \
+        "/tmp/claude-decl-warn-${CLAUDE_CODE_SESSION_ID}-"* 2>/dev/null || true
 }
 
 teardown() {
