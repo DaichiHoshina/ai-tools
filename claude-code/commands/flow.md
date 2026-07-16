@@ -20,7 +20,7 @@ Match keywords top-down, **first hit wins**. If mixed, ask user. `*impl*` = expa
 | # | Keywords | Task | Workflow |
 |---|-----------|--------|------------|
 | 0 | 相談, ブレスト, brainstorm | Design consultation | /brainstorm → /prd → /plan |
-| 0.5 | 問題整理, 前提整理, 要件が曖昧 | Problem framing | Skill(mino-problem-framing) → /plan |
+| 0.5 | 設計, 問題整理, 前提整理, 要件が曖昧 | Problem framing | Skill(mino-problem-framing) → /plan |
 | 1 | 緊急, hotfix, 本番, critical | Urgent | /diagnose → *impl* → /lint-test → /git-push --pr |
 | 1.5 | インシデント, 障害, エラーログ貼付 | Incident | Skill(incident-response) → /diagnose → *impl* → /lint-test → /git-push --pr |
 | 2 | 根本原因, rca, 再発防止 | RCA | /diagnose → Skill(root-cause) → *impl* → /lint-test → /git-push --pr |

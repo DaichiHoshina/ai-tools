@@ -9,7 +9,7 @@
 - 公開資料再構成の非公式版 [my-take-dev/inspired-mino-design-skills](https://github.com/my-take-dev/inspired-mino-design-skills) v0.8.0 の 7 skill (`mino-core` / `mino-problem-framing` / `mino-domain-model-completeness` / `mino-design-by-contract` / `mino-interface-implementation-separation` / `mino-architecture-quality-strategy` / `mino-reproducible-development`) を `claude-code/skills/` へ vendored、各 SKILL.md に出典と環境差分 note を追加
 - `command-resource-map.md` の /plan・/review・/flow resource 表へ mino 設計 skill を登録
 - `commands/flow.md` task-type 表に row 0.5 (問題整理 → mino-problem-framing) と row 4.5 (契約設計 → mino-design-by-contract) を追加
-- `natural-language-triggers.md` に「問題整理して」「モデル監査して」「契約に落として」の 3 trigger を追加
+- `natural-language-triggers.md` に「設計して」「問題整理して」「モデル監査して」「契約に落として」の 4 trigger を追加 (「設計検討」「設計レビュー」「API 設計」は既存 trigger 優先)。/flow row 0.5 の keyword にも「設計」を追加
 
 ## [Unreleased] - 2026-04-30
 

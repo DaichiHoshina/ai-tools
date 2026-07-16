@@ -22,6 +22,7 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "リリース前レビュー", "PR最終レビュー", "全部入りレビュー", "全力レビュー" | `/review --multi <PR>` (4 methods parallel, max cost) |
 | "クラウドでレビュー", "ultrareview" | `/ultrareview` (cloud parallel, separate billing) |
 | "ブレスト", "設計検討", "アイデア出し" | `/brainstorm` (interactive design refinement) |
+| "設計して", "設計相談", "設計から入りたい" | `mino-problem-framing` skill 起点で mino design suite を選択 (問題整理 → 必要な設計 skill へ)。「設計検討」「設計レビュー」「API 設計」はより具体的な既存 trigger が優先 |
 | "問題整理して", "前提整理して", "問題を定義して" | `mino-problem-framing` skill (観測・解釈・問題・候補手段の分離 → Problem Framing Package) |
 | "モデル監査して", "モデル漏れ確認" | `mino-domain-model-completeness` skill (概念・状態・制約・失敗の欠落監査) |
 | "契約に落として", "契約テスト仕様にして" | `mino-design-by-contract` skill (事前/事後/不変条件・失敗保証・契約テスト) |
