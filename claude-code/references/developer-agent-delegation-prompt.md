@@ -1,10 +1,10 @@
 # Developer Agent Delegation Prompt Template
 
-Copy this template, fill all 6 sections (no placeholder left blank), paste to `Task(developer-agent)`.
+§1-§8 + Code comment policy を埋めて (no placeholder left blank) `Task(developer-agent)` に paste する。**§0 / §0.5 は parent 専用の事前 checklist で、delegation prompt には含めない** (agent に無関係な token を積むだけ)。
 
 ## Prompt assembly order (cache hit 率改善)
 
-**"Static first, dynamic last"** (Anthropic 公式): 静的 section を先、動的データを末尾に置くと prompt cache が効く。Parent は §番号順でなく、静的 prefix (§0 / §0.5 / §2-§8) → 動的 suffix (§1 Target files & edits) の順で連結する。§1 を中央に挟むと以降が全部 cache miss になる。
+**"Static first, dynamic last"** (Anthropic 公式): 静的 section を先、動的データを末尾に置くと prompt cache が効く。Parent は §番号順でなく、静的 prefix (§2-§8 + Code comment policy) → 動的 suffix (§1 Target files & edits) の順で連結する。§1 を中央に挟むと以降が全部 cache miss になる。
 
 
 ## 0. Parent pre-delegation checklist
@@ -13,22 +13,23 @@ Copy this template, fill all 6 sections (no placeholder left blank), paste to `T
 - [ ] verify cmd 確定済 (build / typecheck / test / bats — single runnable cmd)
 - [ ] DoD 1 行化済
 - [ ] 単 domain (no mixed file groups / root causes)
+- [ ] 判断 fork 解消済 (未決の設計判断・却下済み案の結論を prompt に書き切る。subagent は質問できず silent fail するため、fork が残る task は投げず inline に戻す — `agents/developer-agent.md` §Silent-fail guard)
 - [ ] scope 明示 (`touchable_files:` YAML block + 任意の `additional_files:`、`touchable_files` / `additional_files` に記載のない path は scope creep 違反 — §1 参照)
 - [ ] blocker-on-stop 方針記載 ("blocker 検出時は独断進行禁止、`unresolved_errors[]` に書いて `status: partial` で停止")
-- [ ] Self-Review Gate 明示 ("完了報告前に `agents/developer-agent.md` §Self-Review Gate 4 項目を literal 実行、`self_review:` block を report YAML に含める。欠落時 parent reject")
+- [ ] Self-Review Gate 明示 ("完了報告前に `agents/developer-agent.md` §Self-Review Gate 5 項目を literal 実行、`self_review:` block を report YAML に含める。欠落時 parent reject")
 
-All 7 must be ✓ before firing. Parent completes these; do not push exploration to subagent. 最後 3 項目 (scope / blocker-on-stop / Self-Review) は completion 力低下対策のため delegation prompt に literal で含める。
+All 8 must be ✓ before firing. Parent completes these; do not push exploration to subagent. 最後 3 項目 (scope / blocker-on-stop / Self-Review) は completion 力低下対策のため delegation prompt に literal で含める。
 
 ## Parent reject criteria (report 受領時)
 
 報告受領後、parent は以下を **literal 確認**してから採用判定する。1 つでも欠落 → parent 側で `status: failure` 扱い、re-run か別 agent への振り直し。
 
-1. `self_review:` block 存在 (4 項目全 ✓ または ✗ 理由付き)
+1. `self_review:` block 存在 (5 項目全 ✓ または ✗ 理由付き)
 2. `unresolved_errors:` field 存在 (空でも `[]` literal、欠落は failure 同等)
 3. `changed_files[]` の各 path が `touchable_files` literal 含有
-4. verify cmd 結果が report に literal 反映 (`agent_verify_output` or `parent_verify_planned`)
+4. verify cmd 結果が report に literal 反映 (`self_review.verify_cmd` + `verification:` の verdict。parent-side verify (§2 default) の task は `verify_cmd: "N/A (parent-side)"` を許容し、parent が受領直後に inline 実行する)
 
-上記 self_review / unresolved_errors / changed_files / verify cmd の 4 field が無ければ「report は受け取らず再投入」を default 挙動とする。fact-check (§0.5 B) は 4 chunk 通過後の最終 layer。
+上記 self_review / unresolved_errors / changed_files / verify cmd の 4 点が無ければ「report は受け取らず再投入」を default 挙動とする。fact-check (§0.5 B) は 4 点通過後の最終 layer。
 
 ## 0.5 Prompt quality rules
 
@@ -130,26 +131,26 @@ git push origin <worktree-branch>
 
 ## 5. Report format (≤300 words)
 
-```
-## Task completed
-[1 sentence summary]
+**Canonical**: `references/agent-team-contract.md` §5 (YAML schema)。markdown 自由形式の report は Self-Review Gate #4 (`report_schema`) で ✗ になるため禁止。
 
-## Changed files
-- `/path/to/file.md`: [change] (N lines)
-
-## Verification
-- [x] Lint: pass (or N/A)
-- [x] Smoke: grep confirmed [pattern] at L<X>
-
-Git: [hash] pushed to origin/<branch>
-```
-
-Skip: command output / full diffs / code >10 lines / AI footer.
+- 必須 field: `status` / `changed_files[]` / `verification` / `self_review` (5 key) / `unresolved_errors` (空でも `[]` literal)
+- checkbox は `✓ / ✗ / —` のみ (`[x]` / `[ ]` 禁止)
+- `partial` / `failure` 時の追加 field (`remaining` / `blocker` / `progress_pct`) は contract §5.1
+- Skip: command output / full diffs / code >10 lines / AI footer
 
 ## 6. Scope (no reverse delegation)
 
-Execute parent's instruction fully. No scope creep, no reverse questions — report blockers to manager.
+Execute parent's instruction fully. No scope creep, no reverse questions — report blockers to parent (team flow では Manager)。
 Parent observes via completion report + `git diff` + push log.
+
+### 定型 directive (§0 最後 3 項目のうち 2 つ、prompt にこのまま含める)
+
+```
+Blocker 検出時は独断進行禁止。`unresolved_errors[]` に書いて `status: partial` で停止する。
+完了報告前に `agents/developer-agent.md` §Self-Review Gate 5 項目を literal 実行し、`self_review:` block を report YAML に含める (欠落は parent reject)。
+```
+
+(scope の literal 化は §1 `touchable_files` block が担う)
 
 ## 7. Markdown heading rename guard (when applicable)
 
