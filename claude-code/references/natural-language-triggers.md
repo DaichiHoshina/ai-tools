@@ -42,6 +42,7 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "定期実行して", "毎朝回して", "cron にして" | `/loop cron` (manual run の Status: done 実績が必須、なければ先に `/loop run`) |
 | "夜通しで回して", "無人で回して" | `/loop run --bg` (external headless loop を background 起動) |
 | "fableで", "fable に聞いて", "fable で考えて" | `/fable <task>` (難所のみ model override 委譲、"fable に聞いて" は `--consult`) |
+| "ブラッシュアップして", "セルフレビュー繰り返して", "磨き込んで" | `/brushup <target>` (実物突き合わせ self-review 反復。"cursor ブラッシュアップ" は `/cursor-review` が優先) |
 | "Slack に投げて", "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message` (confirm channel/DM first) |
 | "Notion に書いて", "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages` (confirm parent page first) |
 | "PR コメント残して", "レビューコメント残して" | `/post-comment` (PR number/URL required) |
