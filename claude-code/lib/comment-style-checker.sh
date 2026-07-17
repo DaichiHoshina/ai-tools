@@ -99,9 +99,6 @@ run_comment_style_check() {
     return 0
   fi
 
-  # extract_json_fields (@tsv) 経由の content は newline が literal \n に escape されるため復元
-  _content="${_content//\\n/$'\n'}"
-
   local _bad_lines=()
   local _line _body _lineno=0
   while IFS= read -r _line; do
