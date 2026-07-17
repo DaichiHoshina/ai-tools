@@ -54,7 +54,7 @@ setup() {
 }
 
 # =============================================================================
-# skip pattern: MEMO: / TODO: 等の prefix は判定対象外
+# skip pattern: MEMO: / TODO: 等の prefix は判定対象外にする
 # =============================================================================
 
 @test "comment-style: MEMO prefix is skipped" {
@@ -83,8 +83,9 @@ setup() {
 }
 
 # =============================================================================
-# MultiEdit: post-tool-use.sh の jq 抽出が edits[].new_string を join することの間接確認
-# regression: 過去に .tool_input.new_string を top-level 参照しており MultiEdit で常に空
+# MultiEdit: post-tool-use.sh の jq 抽出が edits[].new_string を join することを間接的に確認する
+# regression: 過去に .tool_input.new_string を top-level 参照しており MultiEdit では常に空になっていた
+# MEMO: 下記 jq filter は post-tool-use.sh:25 と手動同期で維持する (変更時は両方直す)
 # =============================================================================
 
 @test "post-tool-use: MultiEdit input yields joined new_string from edits[]" {
