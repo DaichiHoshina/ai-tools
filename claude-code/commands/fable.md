@@ -41,6 +41,16 @@ fable 送り条件 (いずれか 1 つで送る):
 
 prompt に「助言のみ / code を書かない / 出力は要点 10 行以内」を明記する (advisor の出力を絞っても品質劣化しない測定知見に準拠)。出力を絞った 1 call で済むため、`--consult` は Step 1 判定を skip してそのまま発火してよい。
 
+### advisor mode を default 発火する pattern
+
+相談 turn (slash command / plain chat 問わず) で、実装に入る前の最初の write の前に `--consult` で fable に助言を求める (実装は現 model のまま。これは (a) approach 確定前の一例。調査 Read は先行可、fable prompt に文脈を書き切るために先行 Read が必須)。trigger:
+
+- rule / 定義 file (`commands/` `skills/` `rules/` `hooks/`) を触る前の方針相談
+- user が「大事」「重要」「慎重に」を明示した task
+- user の疑問が既決の設計判断への異議で、かつ対象が Step 1 条件 (可逆性低 / security / 複数 subsystem) or 定義 file に該当するとき (単純確認 = yes/no で閉じる質問は inline 回答)
+
+**advisor と実装代行を混同しない**: fable は助言 text を返すだけで、実装 (Read / Edit / Bash / Task 発火) は現 model の inline が行う。Step 2 の委譲 table (実装込み) には進めない。
+
 ## 運用前提
 
 - 日常 session は `/model` → sonnet or auto にしておく (settings.json.template の default 変更は別判断)
