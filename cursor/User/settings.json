@@ -18,8 +18,6 @@
   "editor.minimap.enabled": false,
   "editor.stickyScroll.enabled": true,
   "editor.bracketPairColorization.enabled": true,
-  "chat.textSizeScale": 1.15,
-  "chat.codeBlockWordWrap": true,
   "editor.guides.bracketPairs": "active",
   "editor.renderLineHighlight": "all",
   "editor.cursorSurroundingLines": 5,
@@ -468,4 +466,6 @@
   "markdown-preview-enhanced.revealjsTheme": "beige.css",
   "cursor.composer.editorConversationDensity": "compact-all-grouped",
   "terminal.integrated.tabs.enabled": false,
+  "cursor.composer.textSizeScale": 1.15,
+  "cursor.composer.codeBlockWordWrap": true,
 }

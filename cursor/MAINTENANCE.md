@@ -77,6 +77,14 @@ cd ~/ai-tools/cursor && ./sync.sh diff
 | F2 | rules symlink | `ls -la ~/.cursor/rules/` |
 | F3 | 別マシン反映手順が通る | `git pull && ./install.sh` |
 
+### G. Cursor upgrade 時の key rename チェック
+
+Cursor 本体の upgrade で settings key が rename されることがある (例: `chat.textSizeScale` → `cursor.composer.textSizeScale`)。upgrade 直後は以下を実施する。
+
+- upgrade 後に `cd ~/ai-tools/cursor && ./sync.sh diff` を実行し、SoT (`cursor/User/settings.json`) とローカル設定の差分を確認する
+- key drift（同じ意味の設定が新旧 key で分裂している状態）を検出したら SoT 側を新 key 名に追随更新する（旧 key 削除 + 新 key 追加）
+- 過去事例を参照する: 2026-07-15 retrospective D（`chat.textSizeScale` 追加）→ 2026-07-17 retrospective D（`chat.textSizeScale` / `chat.codeBlockWordWrap` を `cursor.composer.*` へ rename、本対応）
+
 ### チェックボックス（/retrospective が未完了項目を読む）
 
 - [ ] A1: `sync.sh diff` が空
@@ -99,6 +107,7 @@ cd ~/ai-tools/cursor && ./sync.sh diff
 - [ ] F1: User settings symlink が有効
 - [ ] F2: rules symlink が有効
 - [ ] F3: `git pull && ./install.sh` が通る
+- [ ] G1: Cursor upgrade 後の key rename チェック（`sync.sh diff` で drift 検出 → SoT 追随更新）
 
 ---
 
