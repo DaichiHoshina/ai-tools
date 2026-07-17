@@ -7,7 +7,7 @@ effort: low
 
 # /memory-save - Quick auto-memory save
 
-Save current work state in 1 command。**default (no arg) = clear** (MEMORY.md 1 行 index prepend + 個別 file に凝縮本文 write の 2 段構成、`/reload <topic>` 復元を担保)。CLAUDE.md 規約 (Serena `.serena/memories/` と `~/.claude/projects/.../memory/` への write 禁止) に従う。clear でも個別 file を必ず書く (MEMORY.md 1 行だけでは次 session 復元時に scope 再質問を誘発するため)。肥大化は `/memory-clean` で別途対処する。
+Save current work state in 1 command。**default (no arg) = clear**、MEMORY.md 1 行 index prepend + 個別 file に凝縮本文 write の 2 段構成で `/reload <topic>` 復元を担保する。CLAUDE.md 規約 (Serena `.serena/memories/` と `~/.claude/projects/.../memory/` への write 禁止) に従う。clear でも個別 file を必ず書く (MEMORY.md 1 行だけでは次 session 復元時に scope 再質問を誘発するため)。肥大化は `/memory-clean` で別途対処する。
 
 ## Phase 0: dest 確認 (先頭 step、全 mode 共通)
 
@@ -20,7 +20,11 @@ Save current work state in 1 command。**default (no arg) = clear** (MEMORY.md 1
 
 ## Save target dir
 
-**work-context / clear の default dest は helper `resolve-dir` の出力** (org 配下 repo / worktree → `~/ghq/github.com/<org>/memory/<repo>/`、それ以外 → `${HOME}/ai-tools/memory/`)。Phase 0 で project 側 dest を即決 / 選択した場合はそちらが優先、環境変数 `MEMORY_SAVE_DIR` が set されていれば最優先する。canonical: `scripts/memory-save-helper.sh:_resolve_memory_dir`。
+dest 決定の詳細は Phase 0 が canonical。ここでは helper 呼び出しの参照先だけ書く。
+
+- work-context / clear の default dest は `bash ~/.claude/scripts/memory-save-helper.sh resolve-dir` の出力 (org 配下 repo / worktree → `~/ghq/github.com/<org>/memory/<repo>/`、それ以外 → `${HOME}/ai-tools/memory/`)
+- 環境変数 `MEMORY_SAVE_DIR` が set されていれば helper 出力より優先する
+- helper 実装 canonical: `scripts/memory-save-helper.sh:_resolve_memory_dir` (subcommand `resolve-dir` は薄い wrapper)
 
 **例外 — exit の恒久 file (feedback/project) のみ Tier 判定で分岐**: dest が `~/ai-tools/memory/` (public repo 配下) の場合に限り、本文が project 固有名詞 (social-hit term) を含めば `references-private/snkr-knowledge/` へ振る (Tier B、下記 exit post-processing step 2 参照)。dest が org 作業 memory (git 管理外) なら固有名詞を含んでよく、Tier B 退避は不要 (helper が自動 skip)。
 
@@ -36,13 +40,13 @@ Save current work state in 1 command。**default (no arg) = clear** (MEMORY.md 1
 
 どちらの mode も save 後に **saved path + `/reload <topic>` 案内を出力し、`/reload <topic>` を clipboard へコピー**する (復元経路は常に同一)。
 
-`<topic>` は kebab-case 推奨。空白含む場合は quote (`"reload fix"` → 内部で `-` 変換)。legacy arg `clear` は default と同義に吸収、`--preview` は廃止 (body を見たい時は chat で頼む)。
+`<topic>` は kebab-case で書く (空白は使わない)。legacy arg `clear` は default と同義に吸収、`--preview` は廃止 (body を見たい時は chat で頼む)。
 
 ## Flow (auto merge/new mode)
 
 > default (empty arg) は step 1-6 を skip し `clear post-processing` へ。以下は `<topic>` 指定時の flow。
 
-1. **同 topic 同日 file 検出**: `bash ~/.claude/scripts/memory-save-helper.sh list-today` の出力を `work-context-YYYYMMDD-*-<topic>.md` の **exact suffix match** で filter (issue key prefix は無視)。hit 1+ 件 → 最古 file に auto merge (質問なし)、0 件 → new file
+1. **同 topic 同日 file 検出**: `bash ~/.claude/scripts/memory-save-helper.sh find-topic-match <topic>` を呼ぶ (helper が同日 `work-context-YYYYMMDD-*-<topic>.md` を exact suffix match で filter、issue key prefix は無視)。hit 1+ 件 → 最古 file に auto merge (質問なし)、0 件 → new file
 2. **Body 生成** (3 必須 + 4 optional、`File format` 節参照)。merge 時は既存 body を Read して差分追記
 3. **Name 解決** (new のみ): `bash ... resolve-name work-context-YYYYMMDD-<topic>` (collision 時 `-2/-3` suffix 自動)。名前組み立て前に `bash ... extract-issue-key` を呼び、検出できたら topic 先頭に prefix (`Auto issue key suffix` 節参照)
 4. **Write**: `<save-dir>/<name>.md` (merge 時は最古 file を上書き)

@@ -23,7 +23,7 @@ Use after compaction (conversation compression) or when saying "continue". Resto
 /reload foo                                      # prefix match、無ければ MEMORY.md の [clear] foo entry を拾う
 ```
 
-`/memory-save` (全 mode) が pbcopy する `/reload <topic>` が paste されると名指し経路で復元する。どの mode も個別 file を書くため通常は step 1-3 の Read で復元し、個別 file を持たない旧 clear 保存分のみ MEMORY.md の `[clear] <topic>` entry を直近 state の source として拾う (名指し fast path step 4)。`/memory-save exit` が生成する `feedback-<slug>.md` / `project-<slug>.md` (恒久ナレッジ) も日付 prefix なしの通常 file のため、`/reload <slug>` の step 2 (`~/ai-tools/memory/<arg>.md`) でそのまま復元できる。
+`/memory-save` (全 mode) が pbcopy する `/reload <topic>` が paste されると名指し経路で復元する。どの mode も個別 file を書くため通常は step 1-3 の Read で復元する。個別 file を持たない旧 clear 保存分のみ MEMORY.md の `[clear] <topic>` entry を直近 state の source として拾う (名指し fast path step 4)。`/memory-save exit` が生成する恒久ナレッジ (`feedback-<slug>.md` / `project-<slug>.md`) も日付 prefix なしの通常 file なので、`/reload <slug>` の step 2 (`~/ai-tools/memory/<arg>.md`) でそのまま復元できる。
 
 ## Task Execution
 
