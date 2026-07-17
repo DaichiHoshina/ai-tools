@@ -68,6 +68,10 @@ writing check: `references/writing-check-protocol.md` 参照 (対象: issue / PR
 
 候補は `## 📝 Post candidate (target)` + `### Title/Summary` + `### Body (chars)` + `### self-check` ([1]-[4] ✓/✗) + `### Post command` (`gh issue comment <n> --body-file ...` 等) の section で構成する。user が "post this" と言えば AI が実行 (`--dry-run` 推奨)。
 
+### Step 3.5: PR-scoped memory update (`gh-pr-review` のみ)
+
+target が `gh-pr-review` かつ `~/ai-tools/memory/pr_<repo>_<number>_review.md` (命名規約・template: `commands/review.md` `## PR-scoped Memory (read → append)`) が存在する場合、**実際に post した後**に該当観点の行を更新する (draft 表示時点では更新しない、post 未確定の状態を先取りしない)。更新内容: status 列 (例: `対応中` → `check済`)、comment link 列に実際に post した URL、更新日。対応する観点が memory 側に無ければ新規行を追加する。
+
 ## Options
 
 | Arg | Behavior |

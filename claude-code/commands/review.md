@@ -23,6 +23,48 @@ Skill Step 4.5 既に 7 angle primary eval 済 (Evidence / Scope / Overreach / A
 
 Stage A findings を JSON list で `reviewer-agent --stage-b` へ渡す (fresh context aggregate が post-impl bias を抑える)。Delegate: `Task(subagent_type: "reviewer-agent")`。Prompt: `"Stage B aggregate review. Input: Stage A filtered findings (JSON list). Apply: (1) phase consolidation, (2) detail-level alignment, (3) convention alignment, (4) Zero-phase valid (no padding). Return: confirmed findings as JSON {p0/p1/p2}. Filter only — no new findings. Noise policy: references/on-demand-rules/review-noise-discard.md (confidence <80 / style nitpick / hypothetical edge / scope-out は discard)。"`。Parent は Stage A のみ担当、Stage B 結果を `/review-fix-push` Step 3 へ渡す。判定 log は plan file / chat に出さず Stage B 結果のみ表示する。
 
+## PR-scoped Memory (read → append)
+
+対象が PR (URL/番号引数、または `gh pr view` で取得できる状態) のときのみ発動する。ローカル diff review (対象引数なし) はこの step をスキップする。
+
+**目的**: 同一 PR への review が worktree / session をまたいで反復されるとき、観点別の既存 status を引き継ぎ、check 済みの観点を毎回まっさらから洗い直さないようにする。
+
+### Read (Step 0 の前)
+
+1. 対象 repo (org 内の short name) と PR 番号を特定する
+2. `~/ai-tools/memory/pr_<repo>_<number>_review.md` の存在を確認する。あれば Read し、観点別 status table を今回 scope の判断材料に組み込む。`check済` / `user却下` の観点は再提示せず、`保留` / `対応中` の観点を優先して再検証する
+3. なければ新規作成用の template (下記) を用意し、review 完了後の Append で初回 write する
+
+### Append (Stage B 完了後)
+
+該当 memory file を更新する。既存観点は status 列だけ更新し行は残す。新規に見つかった観点は行を追加する。
+
+### 命名規約・template
+
+- path: `~/ai-tools/memory/pr_<repo>_<number>_review.md` (`<repo>` は org 内の short name、`<number>` は PR 番号)
+- frontmatter:
+
+```yaml
+---
+name: pr_<repo>_<number>_review
+description: <repo> PR #<number> review 状態追跡
+metadata:
+  type: knowledge
+---
+```
+
+- body (観点別 status table):
+
+| 観点 | status | comment link | 更新日 |
+|---|---|---|---|
+| (例) N+1 query | 対応中 | `<PR comment URL>` | 2026-07-17 |
+
+status 値: `check済` / `user却下` / `保留` / `対応中`。
+
+**MEMORY.md sync は対象外**: `pr_*_review.md` は PR 単位で作成・破棄される一時 state で `/memory-save` の Tier 判定を通らないため、`~/ai-tools/memory/MEMORY.md` へは自動追記しない (index 肥大化を避けるため)。長期知見に昇格させたい内容が出たときだけ手動で `/memory-save` するか 1 行 append する。
+
+関連: 返信文生成前の分類方針は `feedback_pr_review_reply_scope.md` (SoT)。post-comment 実行時の memory 更新連携は `commands/post-comment.md` `### Step 3.5` を参照。
+
 ## Step 0: Auto-infer Mode (no flags)
 
 No flags on launch → present recommended mode, execute after user confirm (heavy modes must not auto-run without consent).
