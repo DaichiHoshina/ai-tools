@@ -18,12 +18,46 @@
 - **開いた文章 (plain JP) 必須**: bullet 内も「〜する / 〜した」で文として閉じる。体言止め羅列・助詞省略・英語名詞ぶつ切りを body 全体で禁止する (canonical: `rules/plain-jp.md`)
 - **簡潔ミニマル**: 該当しない template section は見出しごと削除する。空 section・「特になし」placeholder を残さない。自明な変更の body は 3-5 行で足りる
 - **箇条書きは変更内容の列挙に使う**: 変更の列挙 = bullet、論点説明 = 段落、で使い分ける。bullet は「並列の事実 3 個以内」のときだけ使い、4 個以上や論理の流れを持つ内容は段落に戻す。1 行で書ける論点を bullet 3-4 個に切り刻まない。逆に接続詞過多の長段落は 1 文にまとめる
-- **階層で関係を表現**: 親子・因果・包含関係はインデント / サブbullet。散文で接続詞を重ねない
+- **階層で関係を表現**: 親子・因果・包含関係はインデント / サブbullet。散文で接続詞を重ねない。詳細 pattern と NG/OK 例は `PRINCIPLES.md` `## 箇条書き階層化` `### checkable pattern` 参照
 - **構造（場所）で束ねる**: 変更を「ファイル / モジュール / レイヤー」単位でグループ化。**「what / why / how」など抽象観点でsectionを割らない**
 - **section重複を避ける**: 同じ事実は1ヶ所のみ。背景・原因・影響範囲で同内容を繰り返さない
 - **必要な識別子は書く**: クラス名・設定キー・関数名は変更スコープ明示に必要なら記載OK。逆にdiffから自明な変数名の羅列・実装詳細は省く
 - **長さは内容に従う**: 自明な変更は数行、設計判断を含む変更は原因や代替案も記述
 - **Web 可読性**: GitHub / GitLab PRは scan 前提。1 文 60 字 / 主張型 heading / 太字 scan 化 — 詳細 `PRINCIPLES.md` `## Web 可読性`
+
+### 変更 bullet の型 (親 = 変更 1 文 / 子 = why / how)
+
+変更を bullet で列挙するときは、親 bullet を「何を変えたか 1 文」に絞り、その理由 (why) や実装詳細 (how) は子 bullet (`  - `) にぶら下げる。同レベル bullet に「変更」と「変更の理由」を並列に置かない (階層構造が消えて読み手が結論と根拠を区別できなくなる)。
+
+OK:
+
+```markdown
+- 親商品の識別子を writer で NULL にする。
+  - `has_variant=true` のとき、親の `items` 側の識別子を NULL にする。
+  - svc 側に置くと usecase ごとに同じ判定を書くため、writer に寄せた。
+- `svc/admin/item_variant_code` に get を 1 本追加する。
+  - 親商品 ID から variant 行一覧を返す。
+  - create / update / delete は後段の別 PR で入れる。
+```
+
+NG (平坦・結論と根拠が並列):
+
+```markdown
+- 親商品の識別子を writer で NULL にする
+- has_variant=true のとき、親の items 側の識別子を NULL にする
+- このルールを svc に置くと usecase ごとに同じ判定が必要になるので、writer に寄せる
+- svc/admin/item_variant_code に get を追加する
+- 親商品 ID から variant 行一覧を返す get を 1 本追加する
+```
+
+### 時限マーカー禁止 (merge 後に意味を失う表現)
+
+PR body / commit / issue に、merge 後や数か月後の読み手が解決できない時限参照を書かない。canonical: `PRINCIPLES.md` `## 避けるパターン` 「時限的マーカー」行。
+
+- NG: `<domain> 4/7 [<project>] variant マスタの admin GET endpoint を公開する (#30472) #36362 以降`
+- NG: 「本 PR で新設」「先週合意した通り」「直近の incident で」
+- OK: 「後段 PR」「後続の chain」「別 PR で追加する」など、具体番号を持たない時制中立表現に書き換える。参照 PR / issue が必須なら `#36362` 単体で書き、「以降」「これから」などの時制語を付けない
+- 例外: `Closes #XXX` の関連付け行、`Depends on #XXX` の依存関係行は残す (書式が確立していて時制語ではない)
 
 ## 設計を選んだ理由 section (設計判断を含む PR で推奨)
 

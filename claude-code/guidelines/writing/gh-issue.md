@@ -6,9 +6,11 @@
 
 - **簡易 pattern (背景 / やること / 補足) を default にする**
 - **開いた文章 (plain JP) 必須**: 箇条書き内も「〜する / 〜した」で文として閉じる。体言止め羅列・助詞省略を body 全体で禁止する (canonical: `rules/plain-jp.md`)
+- **階層で結論と根拠を分ける**: 同レベル bullet に「変更」と「変更の理由」を並列に置かない。親 = 変更 1 文、子 = 理由 / 補足 の形にする (詳細 pattern と NG/OK 例は `PRINCIPLES.md` `## 箇条書き階層化` `### checkable pattern` + `pr-description.md` `### 変更 bullet の型`)
 - **簡潔ミニマル**: 該当しない section は見出しごと削除する。空 section・「特になし」を残さない
 - template 系 (What / Why / To Do / Acceptance Criteria の 4 節構造) は section 数が多く読みづらい。避ける
 - design doc がある場合は背景末尾に doc path を 1 行 link、issue 本文は doc の anchor 指定で詳細を委譲する
+- **時限マーカー禁止**: 「本 issue で新設」「先週合意した」「#XXX 以降」等、merge / 投稿後の読み手が解決できない時制参照を書かない (canonical: `pr-description.md` `### 時限マーカー禁止`)
 
 ## Canonical format
 

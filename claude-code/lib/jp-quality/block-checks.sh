@@ -262,6 +262,8 @@ _chat_quality_check() {
   (( _SS_TOUTEN > 0 )) && _cq_struct_warn="${_cq_struct_warn}読点≥4の文: ${_SS_TOUTEN}個 → 文分割; "
   (( _SS_REP > 0 )) && _cq_struct_warn="${_cq_struct_warn}同一文末3連続: ${_SS_REP}箇所 → 文末を変える; "
   (( _SS_POLITE > 0 )) && _cq_struct_warn="${_cq_struct_warn}敬体混入: ${_SS_POLITE}文 → 常体に統一; "
+  (( _SS_FLAT > 0 )) && _cq_struct_warn="${_cq_struct_warn}平坦bullet≥11+理由語: ${_SS_FLAT}group → 親子に組み替え (PRINCIPLES.md ## 箇条書き階層化); "
+  (( _SS_TIME > 0 )) && _cq_struct_warn="${_cq_struct_warn}時限マーカー: ${_SS_TIME}件 (${_SS_TIME_SAMPLE}) → 時制中立表現 (pr-description.md ### 時限マーカー禁止); "
 
   local _cq_block_detail=""
   if [[ -n "$_cq_block_terms" ]]; then

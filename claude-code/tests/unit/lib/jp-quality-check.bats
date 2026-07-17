@@ -717,3 +717,55 @@ _run_sentence_structure() {
   "
   [ "$status" -eq 0 ]
 }
+
+# =============================================================================
+# 階層 warn / 時限マーカー warn (2026-07-17 追加): 同レベル bullet ≥11 + 理由語含み / #\d+ 以降 等
+# =============================================================================
+
+@test "sentence-structure: 平坦 bullet 11 個 + 理由語 → 平坦 bullet warn 検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '- item1 なので採用した
+- item2
+- item3
+- item4
+- item5
+- item6
+- item7
+- item8
+- item9
+- item10
+- item11'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"平坦 bullet ≥11 + 理由語含み"* ]]
+}
+
+@test "sentence-structure: 平坦 bullet 10 個 + 理由語 → 平坦 bullet 非検出 (閾値未満)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure '- item1 なので採用した
+- item2
+- item3
+- item4
+- item5
+- item6
+- item7
+- item8
+- item9
+- item10'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"平坦 bullet"* ]]
+}
+
+@test "sentence-structure: 時限マーカー '#36362 以降' → 時限マーカー warn 検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure 'この修正は PR #36362 以降で入れる。'
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"時限マーカー"* ]]
+}
+
+@test "sentence-structure: 'Closes #123' 単体は時限マーカー非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure 'Closes #123
+Depends on #456'
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"時限マーカー"* ]]
+}

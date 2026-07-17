@@ -57,6 +57,7 @@ _check_sentence_structure_counts() {
   local polite_check="${2:-0}"
   local include_readability="${3:-0}"
   _SS_TAIGEN=0 _SS_ARROW=0 _SS_REP=0 _SS_LONG=0 _SS_POLITE=0 _SS_KANJI_CNT=0 _SS_KANJI_SAMPLE="" _SS_TOUTEN=0
+  _SS_FLAT=0 _SS_TIME=0 _SS_TIME_SAMPLE=""
   [[ -z "$text" ]] && return 0
   command -v python3 &>/dev/null || return 0
   local clean
@@ -72,13 +73,13 @@ lines = text.splitlines()
 suf = os.environ.get("TAIGEN_SUF") or "済|済み|完了|可能|必要|対応|中|なし|あり|予定|実施|確認|追加|削除|修正|更新|化"
 suffixes = tuple(s for s in suf.split("|") if s)
 verb_end = re.compile(r"(する|した|して|している|だ|である|ます|ました|です|ない|いる|ある|なる|なった|れる|れた|られる|られた|できる|できた)$")
-bullet = re.compile(r"^\s*([-*・]|\d+\.)\s+(.+)$")
+bullet = re.compile(r"^(\s*)([-*・]|\d+\.)\s+(.+)$")
 taigen = 0
 for ln in lines:
     m = bullet.match(ln)
     if not m:
         continue
-    body = m.group(2)
+    body = m.group(3)
     if "|" in body:
         continue
     body = body.rstrip().rstrip("。)）`").rstrip()
@@ -115,18 +116,64 @@ if os.environ.get("POLITE_CHECK") == "1":
     polite = sum(1 for s in sents if pol.search(s))
 
 kanji_cnt = 0
-kanji_sample = ""
+kanji_sample = "-"
 touten = 0
 if os.environ.get("INCLUDE_READABILITY") == "1":
     runs = sorted(set(re.findall(r"[一-龯]{5,}", text)))
     kanji_cnt = len(runs)
-    kanji_sample = " ".join(runs[:3])
+    kanji_sample = " ".join(runs[:3]) or "-"
     touten = sum(1 for s in sents if s.count("、") >= 4)
 
-print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_sample}\t{touten}")
-' 2>/dev/null || printf '0\t0\t0\t0\t0\t0\t\t0')
-  local _tg _ar _rp _lg _pl _kc _ks _tt
-  IFS=$'\t' read -r _tg _ar _rp _lg _pl _kc _ks _tt <<< "$result"
+# 階層 warn: 同一インデント (連続) の bullet が 11 個以上並び、うち 1 個以上に理由語 (〜ので/〜ため/〜だから/〜なので) を含む状態を検出する。
+# 閾値 ≥11 で既存 pattern 集 (list of N items) の誤爆を抑える。連続 group で判定するため途中で親子が挟まればリセットする。
+# 理由語は文中どこでも match してよい (bullet 末尾に限らない)。code fence 内は _strip_code_blocks で除去済のため考慮しない。
+reason_re = re.compile(r"(ので|ため|だから|なので)")
+flat = 0
+cur_indent = None
+cur_group = []
+def check_group(g):
+    if len(g) < 11:
+        return 0
+    return 1 if any(reason_re.search(b) for b in g) else 0
+for ln in lines:
+    m = bullet.match(ln)
+    if not m:
+        if cur_group:
+            flat += check_group(cur_group)
+            cur_group = []
+            cur_indent = None
+        continue
+    indent = len(m.group(1).replace("\t", "  "))
+    body = m.group(3)
+    if cur_indent is None or indent != cur_indent:
+        if cur_group:
+            flat += check_group(cur_group)
+        cur_indent = indent
+        cur_group = [body]
+    else:
+        cur_group.append(body)
+if cur_group:
+    flat += check_group(cur_group)
+
+# 時限マーカー warn: merge / 投稿後の読み手が解決できない時制参照を検出する。誤爆抑制のため保守的 pattern に絞る。
+# 対象 pattern は下 time_patterns の 5 種のみ (PR 番号 + 以降 / 「本 PR で新設」等 / 相対日付 + 合意) に限定する。
+# code fence 内 pattern (`Depends on #123`) は _strip_code_blocks 済のため素の text だけ match する。
+time_patterns = [
+    r"#\d+\s*以降",
+    r"本\s*PR\s*で\s*(新設|追加|導入|削除)",
+    r"本\s*commit\s*で\s*(新設|追加|導入|削除)",
+    r"本\s*issue\s*で\s*(新設|追加|導入|削除)",
+    r"(先週|昨日|一昨日|先月|直近)\s*(合意|決定|議論|の\s*incident)",
+]
+time_re = re.compile("|".join(time_patterns))
+time_hits = list(dict.fromkeys(m.group(0) for m in time_re.finditer(text)))
+time_cnt = len(time_hits)
+time_sample = " / ".join(time_hits[:3]) or "-"
+
+print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_sample}\t{touten}\t{flat}\t{time_cnt}\t{time_sample}")
+' 2>/dev/null || printf '0\t0\t0\t0\t0\t0\t-\t0\t0\t0\t-')
+  local _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts
+  IFS=$'\t' read -r _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts <<< "$result"
   [[ "${_tg:-0}" =~ ^[0-9]+$ ]] && _SS_TAIGEN="$_tg"
   [[ "${_ar:-0}" =~ ^[0-9]+$ ]] && _SS_ARROW="$_ar"
   [[ "${_rp:-0}" =~ ^[0-9]+$ ]] && _SS_REP="$_rp"
@@ -134,7 +181,12 @@ print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_samp
   [[ "${_pl:-0}" =~ ^[0-9]+$ ]] && _SS_POLITE="$_pl"
   [[ "${_kc:-0}" =~ ^[0-9]+$ ]] && _SS_KANJI_CNT="$_kc"
   _SS_KANJI_SAMPLE="${_ks:-}"
+  [[ "$_SS_KANJI_SAMPLE" == "-" ]] && _SS_KANJI_SAMPLE=""
   [[ "${_tt:-0}" =~ ^[0-9]+$ ]] && _SS_TOUTEN="$_tt"
+  [[ "${_fl:-0}" =~ ^[0-9]+$ ]] && _SS_FLAT="$_fl"
+  [[ "${_tc:-0}" =~ ^[0-9]+$ ]] && _SS_TIME="$_tc"
+  _SS_TIME_SAMPLE="${_ts:-}"
+  [[ "$_SS_TIME_SAMPLE" == "-" ]] && _SS_TIME_SAMPLE=""
   return 0
 }
 
@@ -151,6 +203,8 @@ _check_sentence_structure() {
   (( _SS_REP > 0 )) && out="${out}同一文末3連続: ${_SS_REP}箇所 → 文末を変える; "
   (( _SS_LONG > 0 )) && out="${out}100字超文: ${_SS_LONG}文 → 文分割; "
   (( _SS_POLITE > 0 )) && out="${out}敬体混入: ${_SS_POLITE}文 → 常体に統一; "
+  (( _SS_FLAT > 0 )) && out="${out}平坦 bullet ≥11 + 理由語含み: ${_SS_FLAT}group → 親子に組み替え (PRINCIPLES.md ## 箇条書き階層化); "
+  (( _SS_TIME > 0 )) && out="${out}時限マーカー: ${_SS_TIME}件 (${_SS_TIME_SAMPLE}) → 時制中立表現に (pr-description.md ### 時限マーカー禁止); "
   [[ -n "$out" ]] && printf '%s' "${out%; }"
   return 0
 }
