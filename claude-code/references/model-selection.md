@@ -14,6 +14,8 @@ Default: **Fable 5** (`claude-fable-5`、settings.json.template `model` key cano
 
 **Use explicit `/model` for switching** (natural language triggers risk misfire).
 
+**Fable 節約運用**: 日常 session を sonnet / auto にし、難所だけ `/fable <task>` で model override 委譲する (`commands/fable.md`)。
+
 **Auto Mode** (v2.1.111+): `/model` → auto で有効化すると Claude が task 難易度で model を自動切替する (`--enable-auto-mode` flag は不要になった)。
 
 ## Per-agent auto-assignment
