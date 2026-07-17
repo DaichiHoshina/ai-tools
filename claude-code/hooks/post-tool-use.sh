@@ -22,7 +22,7 @@ INPUT=$(cat)
 
 # 全フィールドを1回のjqで取得（fork削減）
 # BASH_STDOUT は Bash 時のみ実値、それ以外は空文字（巨大 stdout のメモリ転送回避）
-eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") RELATIVE_PATH=\(.tool_input.relative_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "") BASH_STDOUT=\(if .tool_name == "Bash" then (.tool_response.stdout // "") else "" end) NEW_STRING=\(if (.tool_name == "Edit" or .tool_name == "MultiEdit") then (.tool_input.new_string // "") else "" end) CONTENT=\(if (.tool_name == "Write") then (.tool_input.content // "") else "" end)"' <<< "$INPUT")"
+eval "$(jq -r '@sh "TOOL_NAME=\(.tool_name // "") FILE_PATH=\(.tool_input.file_path // "") RELATIVE_PATH=\(.tool_input.relative_path // "") COMMAND=\(.tool_input.command // "") SESSION_ID=\(.session_id // "") CWD=\(.cwd // ".") SKILL_NAME=\(.tool_input.skill // "") AGENT_TYPE=\(.tool_input.subagent_type // "") DURATION_MS=\(.duration_ms // .tool_response.duration_ms // "") BASH_STDOUT=\(if .tool_name == "Bash" then (.tool_response.stdout // "") else "" end) NEW_STRING=\(if .tool_name == "Edit" then (.tool_input.new_string // "") elif .tool_name == "MultiEdit" then ([.tool_input.edits[]?.new_string // empty] | join("\n")) else "" end) CONTENT=\(if (.tool_name == "Write") then (.tool_input.content // "") else "" end)"' <<< "$INPUT")"
 # stdin JSON が canonical source。env CLAUDE_CODE_SESSION_ID は session 切替時に
 # 前 session 値が leak することがあり fallback 専用にする (incident 2026-06-25)
 SESSION_ID="${SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-}}"
