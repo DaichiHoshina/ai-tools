@@ -138,6 +138,53 @@ _inject_commit_ng_top6_if_trigger() {
   return 0
 }
 
+# === chat self-check 強制 trigger (100 字超文 反復 signal) ===
+# 直前 assistant turn の stop.sh warn state file に「100字超文」signal があり、
+# かつ直近 24h の jp-quality-block.log にも同種 signal が反復している (単発誤爆除外) 場合、
+# 次 turn 頭に強い self-check 指示を注入する。
+# 背景: rule 記述だけでは効かず (7日 warn 424件)、生成前 self-check hook 強制が必要 (2026-07-17 retrospective A案)。
+# throttle: 同一 session で 300 秒以内の再 inject を抑制 (_inject_commit_ng_top6_if_trigger と同 pattern)。
+_inject_chat_selfcheck_if_signal() {
+  local session_id="$1"
+  local date_today="$2"
+
+  [[ -n "${session_id}" && "${session_id}" != "unknown" ]] || return 1
+
+  # signal 1: 直前 assistant turn の 100字超文 warn (stop.sh が書く state file)
+  local _JPQ_WARN_FILE="/tmp/claude-stop-jpq-warn-${session_id}-${date_today:-0}"
+  [[ -f "${_JPQ_WARN_FILE}" ]] || return 1
+  grep -q '100字超文' "${_JPQ_WARN_FILE}" 2>/dev/null || return 1
+
+  # signal 2: 直近 24h の log にも同種 signal が反復しているか (単発誤爆除外)
+  local _LOG="${HOME}/.claude/logs/jp-quality-block.log"
+  [[ -f "${_LOG}" ]] || return 1
+  local _SC_NOW _SC_CUTOFF_STR
+  printf -v _SC_NOW '%(%s)T' -1
+  printf -v _SC_CUTOFF_STR '%(%Y-%m-%dT%H:%M:%S)T' "$(( _SC_NOW - 86400 ))"
+  local _SC_RECENT_HITS
+  _SC_RECENT_HITS=$(awk -F'|' -v cutoff="${_SC_CUTOFF_STR}" '
+    $0 ~ /100字超文/ && substr($1,1,19) >= cutoff { c++ } END { print c+0 }
+  ' "${_LOG}" 2>/dev/null) || _SC_RECENT_HITS=0
+  (( _SC_RECENT_HITS >= 2 )) || return 1
+
+  # throttle: 300 秒 dedup
+  local _SC_FLAG="/tmp/claude-chat-selfcheck-${session_id}-${date_today:-0}"
+  if [[ -f "${_SC_FLAG}" ]]; then
+    local _SC_LAST _SC_SINCE
+    read -r _SC_LAST < "${_SC_FLAG}" 2>/dev/null || _SC_LAST=""
+    if [[ "${_SC_LAST}" =~ ^[0-9]+$ ]] && (( _SC_LAST != 0 )); then
+      _SC_SINCE=$(( _SC_NOW - _SC_LAST ))
+      if (( _SC_SINCE >= 0 && _SC_SINCE < 300 )); then
+        return 1
+      fi
+    fi
+  fi
+  printf '%s\n' "${_SC_NOW}" > "${_SC_FLAG}" 2>/dev/null || true
+
+  printf '%s\n' "[chat-selfcheck] 送信前に (1) 全文 100 字以内で句点 (2) 「完了 / 解消 / さらに / まず / trigger / canonical / throttle」語なし (3) 体言止め bullet なし の 3 点 self-check せよ"
+  return 0
+}
+
 # === 外向き文書 trigger 判定 (外向き文書品質 + 断定語注意 の発火条件) ===
 # 永続化文書を書く意図を広めに検出。hit 時のみ [外向き文書品質] / [断定語注意] を注入し、
 # 毎-turn 固定費を削る。trigger 漏れ時も pre-tool-use.sh の hook block が最終防壁。
