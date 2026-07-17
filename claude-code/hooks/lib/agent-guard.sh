@@ -106,7 +106,7 @@ _check_session_split() {
     printf -v _TS_FORCE '%(%Y-%m-%dT%H:%M:%S%z)T' -1
     printf '%s | %s | level=force | msg=%s\n' "$_TS_FORCE" "$session_id" "$_MSG_COUNT" \
       >> "${HOME}/.claude/logs/session-split-warn.log" 2>/dev/null || true
-    local _FORCE_MSG="[session-split-force] messages=${_MSG_COUNT} >= ${_TH_SESSION_MSG_FORCE}。context 常駐が肥大している。現在の step を完了させたら新しい subtask に着手せず、/memory-save で work-context を保存して user に /clear を提案すること"
+    local _FORCE_MSG="[session-split-force] messages=${_MSG_COUNT} >= ${_TH_SESSION_MSG_FORCE}。context 常駐が肥大している。この turn で新規 subtask に着手せず、即座に user へ /clear または /compact を提案し、/memory-save で work-context を保存すること"
     if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
       ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_FORCE_MSG}"
     else
@@ -133,7 +133,7 @@ _check_session_split() {
   printf '%s | %s | %s | msg=%s\n' "$_TS_LABEL" "$session_id" "age=${_AGE_H}h" "$_MSG_COUNT" \
     >> "${HOME}/.claude/logs/session-split-warn.log" 2>/dev/null || true
 
-  local _WARN_MSG="[session-split-warn] ${_REASON} exceeds threshold (3h / ${_TH_SESSION_MSG} msg). Suggest /clear or /compact to refresh cache TTL"
+  local _WARN_MSG="[session-split-warn] ${_REASON} exceeds threshold (3h / ${_TH_SESSION_MSG} msg). Reply to the user's next turn with a /compact suggestion FIRST, before any other work. Ignoring this leads to force-split at msg=${_TH_SESSION_MSG_FORCE}."
   if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
     ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_WARN_MSG}"
   else

@@ -93,6 +93,8 @@ _make_session_jsonl() {
 
   [ "$status" -eq 0 ]
   [[ "$output" =~ "session-split-warn" ]]
+  # 2026-07-17 retrospective C: warn を「reply the next turn FIRST」の強い指示に格上げ
+  [[ "$output" =~ "next turn with a /compact suggestion FIRST" ]]
 }
 
 # =============================================================================
@@ -167,6 +169,8 @@ _make_session_jsonl() {
     '${hook}' < '${input_file}'"
   [ "$status" -eq 0 ]
   [[ "$output" =~ "session-split-force" ]]
+  # 2026-07-17 retrospective C: force を「即座に user へ提案 + この turn で新規 subtask 禁止」の明示に強化
+  [[ "$output" =~ "この turn で新規 subtask に着手せず" ]]
   [ -f "${home_dir}/.claude/logs/.session-split-forced-${session_id}" ]
 
   # 2 回目: force が出ない (warn / force 両 state file 済 → skip)

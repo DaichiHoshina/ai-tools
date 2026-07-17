@@ -281,6 +281,18 @@ ${_DELEG_CHECKLIST_CTX}"
       fi
     fi
 
+    # chat self-check 強制 trigger: 直前 turn + 直近 24h 反復の 100字超文 signal → self-check inject
+    # (前 turn warn 還流 block が state file を rm するため、その前に読む)
+    _CHAT_SELFCHECK_CTX=""
+    if _CHAT_SELFCHECK_CTX=$(_inject_chat_selfcheck_if_signal "${_SESSION_ID}" "${_DATE_TODAY}" 2>/dev/null); then
+      if [[ -n "${_AI_TERMS_CTX}" ]]; then
+        _AI_TERMS_CTX="${_AI_TERMS_CTX}
+${_CHAT_SELFCHECK_CTX}"
+      else
+        _AI_TERMS_CTX="${_CHAT_SELFCHECK_CTX}"
+      fi
+    fi
+
     # 前 turn の chat 文体 warn 還流: stop.sh が書いた state file を read-and-delete して注入
     # (warn は systemMessage だけだと AI に見えないため、次 turn の additionalContext で矯正する)
     _JPQ_WARN_FILE="/tmp/claude-stop-jpq-warn-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
