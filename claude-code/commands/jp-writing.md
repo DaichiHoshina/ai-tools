@@ -69,6 +69,7 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 | Design Doc / ADR / RCA | `guidelines/writing/design-doc-protocol.md` |
 | PR / pull request | `guidelines/writing/pr-description.md` |
 | rewrite | `references/document-iteration-patterns.md` + `references/writing-patterns.md` "Rewrite Phase 1-8" |
+| 外向き長文 doc (記事 / DD / RCA) の review / rewrite | `references/on-demand-rules/natural-japanese-lint.md` を load し、parent 側で lint を Bash 実行して JSON を 5-Axis の補助入力に渡す (skill は Bash 禁止のため実行しない) |
 
 ## 5-Axis Check (review/rewrite required)
 

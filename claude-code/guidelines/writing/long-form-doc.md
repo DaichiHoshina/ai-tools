@@ -29,6 +29,10 @@
 - **検証していない数値・log・metric を書かない**。「不明」「未測定」と書いてレビュー時に補完する方が事故が少ない
 - **「分からない場合は答えない」を貫く**。空欄や `TBD` を残す方が、もっともらしい誤情報より安全
 
+### AI 臭の機械検出 (draft 完成後)
+
+外向き長文の draft が書き上がったら natural-japanese lint で文書全体の統計指標 (文長リズム / 段落均質性 / 対比構文反復 等) を検査する。実行手順と detector 裁定は `references/on-demand-rules/natural-japanese-lint.md` を参照する。
+
 ## 品質検証タイミング
 
 各 command の self-check 発動タイミングと合格ライン・loop 上限は `references/writing-check-protocol.md` を canonical とする (`/design-doc` Step 8.5 / `/prd` Phase 4.5 / `/docs` Step 4.8 / `/post-comment` Step 2.5 / `/git-push` Step 2・5.5)。`/retrospective` `/diagnose` 長文は出力前に4問 + 共通セルフチェック7を適用する。

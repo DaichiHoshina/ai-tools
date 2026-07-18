@@ -33,6 +33,8 @@ Sentence length and style standards vary by medium (canonical: PRINCIPLES.md `##
 
 評価軸 canonical: `commands/jp-writing.md` §5-Axis Check ([A]-[E]) 参照。PRINCIPLES.md はコア層 (冒頭 index table「check / rewrite 実行」行の section) のみ load して A→E 順で評価する。全文 load は深い書き直し時のみ。
 
+parent から natural-japanese lint の JSON (`references/on-demand-rules/natural-japanese-lint.md` 参照) が渡された場合、findings を [A] / [E] の評価材料に含める。`nominal_ending` (体言止めゼロ) は plain-jp 優先の裁定により不採用とする。
+
 ## Rewrite output format
 
 Do not stop at hit enumeration. Output **Before → After** with rewritten text. After must use concrete action, state, or number.
