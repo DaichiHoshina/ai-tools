@@ -183,6 +183,20 @@ Formula PASS and 2+ independent tasks
 3. No branch / worktree name conflict
 4. Auto-fallback on creation failure
 
+### Worktree setup (dependency resolution)
+
+worktree は依存物 (install 済 package / env file / local DB) を継承しないため、fan-out 前に親側で解決手順を決めておく。setup が Developer ごとに数分かかるなら並列の利得が消える (formula の overhead(N) に加算して再判定する)。
+
+| Project 種別 | 手順 |
+|---|---|
+| Node (npm / yarn) | worktree 作成後に `ln -s <parent>/node_modules node_modules`。native module の rebuild が要る場合のみ install に切替える |
+| Node (pnpm) | store が global 共有のため各 worktree で `pnpm install --offline` (数秒で完了する) |
+| Go | module cache (`GOMODCACHE`) が global 共有のため追加作業なし |
+| env / secret | `.env*` は git 管理外で継承されない。`cp <parent>/.env .env` を setup に含める |
+| DB / port | 並列 process が同一 port・同一 local DB を触ると干渉する。port offset か compose project 名の分離を Developer prompt に明記する |
+
+setup command は fan-out の委譲 prompt に 1 行で埋め込み、Developer 側の試行錯誤に任せない。
+
 ### Cleanup policy (common)
 
 - Worktree with changes: return branch, parent merges, delete worktree

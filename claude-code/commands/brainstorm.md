@@ -13,6 +13,7 @@ argument-hint: "[topic]"
 | Command | Use |
 |---------|-----|
 | `/brainstorm` | design unclear, multiple options exist |
+| `/grill` | design 案あり、確定前に前提の穴を詰問する (read-only) |
 | `/plan` | design settled, create impl plan |
 | `/dev` | design+plan done, implement now |
 
