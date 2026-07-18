@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
-# code comment 体言止め検出 (warn-only)
-# 目的: canonical (guidelines/writing/code-comment.md) の「本文は常体で閉じる」を新規 comment 行で検出する
-# 対象: Edit/Write/MultiEdit/serena の差分で新規追加された comment 行のみ (既存 comment は対象外)
-# 出力: warn 件数 + 先頭 3 行を stdout に返す。呼び出し側で MESSAGE に append する
+# code-comment.md 規範「本文は常体で閉じる」への違反を、新規追加された comment 行から検出する。
+# 出力は件数 + 先頭 3 行で、呼び出し側が MESSAGE に append する。
 
 set -euo pipefail
 
 # 常体で閉じている / 対象外と判定する末尾 pattern
-# - 常体動詞・形容詞末尾 (五段活用終止形の全行 う/く/ぐ/す/つ/ぬ/ぶ/む/る を含む): る / た / だ / い / う / く / ぐ / す / つ / ず / ぬ / ぶ / む / ん
-#   (block 化前は「書く」等が誤検出されていた旧 bug、2026-07-18 修正)
-# - 助詞・終助詞: よ / ね / か / な / と / も
-# - ASCII 記号・英数字 (英語 comment / 数値 / URL / 識別子末尾)
-# 注意: [[:alnum:]] は locale 依存で日本語 letter を含むため使わない。ASCII を明示する
+# 五段活用終止形の く/ぐ/つ/ぶ/む が漏れて「書く」等を誤検出していたため 2026-07-18 に追加した。
+# [[:alnum:]] は locale 依存で日本語 letter を含むため使わず、ASCII を明示する。
 _COMMENT_STYLE_OK_TAIL_RE='(る|た|だ|い|う|く|ぐ|す|つ|ず|ぬ|ぶ|む|ん|よ|ね|か|な|と|も|[a-zA-Z0-9_/@#%&*+=<>~^-])$'
 
 # 対象外 prefix (機械 marker / example label は文体判定を skip)
@@ -32,9 +27,7 @@ _comment_style_marker_re_for() {
   esac
 }
 
-# 引数: file_path content (content は実 newline 前提、tsv escape は呼び出し側で解除済みとする)
-# 戻り値: 0=対象拡張子 (comment 行抽出、0 件時も 0) / 1=非対象拡張子 (呼び出し側で skip)
-# 出力: comment 本文を marker 除去のうえ改行区切りで連結 (stdout)
+# 拡張子ごとに marker 定義が違うため、既存の _comment_style_marker_re_for を再利用して抽出する。
 _extract_comment_body_text() {
   local _file="$1"
   local _content="$2"
@@ -166,10 +159,8 @@ run_comment_style_check() {
   printf '  canonical: guidelines/writing/code-comment.md § 日本語品質 (常体で閉じる)\n'
 }
 
-# Write tool 用: disk 上の既存 file と新規 content を line diff し、追加行のみ抽出する。
-# file が未存在なら新規 content 全体を「追加行」として返す。
-# 既存 file の読込に失敗した場合は非 0 を返す (呼び出し側は block を見送り warn に留める)。
-# 引数: file_path new_content (実 newline 前提)
+# Write は content が全文なので、disk の既存 file と diff して新規行だけに絞り込む。
+# file 未存在は全体を新規行扱い、既存 file の読込失敗は 1 を返し呼び出し側に block を見送らせる。
 run_comment_style_new_lines_for_write() {
   local _file="$1"
   local _new_content="$2"
@@ -186,10 +177,8 @@ run_comment_style_new_lines_for_write() {
   return 0
 }
 
-# comment 体言止め block: 呼び出し側で新規行に限定済みの content を判定し、hit 時に
-# GUARD_CLASS=Forbidden をセットする (PreToolUse block 化、2026-07-18)。
-# GUARD_CLASS / MESSAGE / ADDITIONAL_CONTEXT は呼び出し元スコープの global を直接更新する。
-# 引数: file_path new_only_content (新規行に限定済みの実 newline content)
+# 新規行に絞り込み済みの content だけを判定し、体言止め hit で GUARD_CLASS を Forbidden にする。
+# 呼び出し元スコープの GUARD_CLASS / MESSAGE / ADDITIONAL_CONTEXT を直接更新する。
 run_comment_style_block_check() {
   local _file="$1"
   local _content="$2"

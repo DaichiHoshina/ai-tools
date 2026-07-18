@@ -56,7 +56,7 @@ _check_live_doc_required() {
   # 空 content はスキップ
   [ -z "$content" ] && return 0
 
-  # .sh / .bats / hook 自身 / tests/ は除外 (実装例を含む設定 file での誤爆防止)
+  # 実装例を含む設定 file で誤爆するため、.sh / .bats / hook 自身 / tests/ は除外する
   case "$file_path" in
     *.sh|*.bats) return 0 ;;
     */tests/*|*/hooks/*) return 0 ;;
@@ -232,11 +232,8 @@ _check_local_docs_template() {
 # 呼び出し元 (pre-tool-use.sh) のグローバル変数をそのまま読み書きする。
 # ====================================
 
-# AI定型語 block を path/拡張子で振り分けて実行する共通関数。
-# .md / .txt は全文検査、code 拡張子 (comment-style-checker の対象拡張子) は comment 行のみ抽出して検査する。
-# md/txt 以外かつ非 code 拡張子 (json/yaml 等) は対象外で silent skip する。
-# 呼び出し元: write-checkers.sh の Edit/Write 経路 + pre-tool-use.sh の Serena write 系 case。
-# 引数: file_path content (content は実 newline 前提、呼び出し側で @tsv unescape 済みとする)
+# code 拡張子は comment 行だけを抽出して判定する。全文判定だと識別子や URL に誤爆する。
+# md/txt は全文、対象外拡張子は silent skip する。
 _run_ai_jargon_check() {
   local _path="$1"
   local _content="$2"
@@ -374,18 +371,14 @@ _handle_edit_write_tool() {
     _check_legacy_auto_memory_path "$_EDIT_FILE_PATH"
   fi
 
-  # AI定型語 block: 作業 repo の .md / .txt / code file への書き込みを検査
-  # ai-tools 配下は除外 (guidelines / NG-DICTIONARY など NG 語を literal 保持する設定 md の誤爆防止)
-  # auto-memory dir (~/.claude/projects/*/memory/) も除外 (AI 自己分析の生記録、外向き prose 規則対象外)
-  # ~/.claude/plans/ も除外 (`/plan` 出力は AI の作業計画、外向き prose ではない)
-  # EDIT_CONTENT は @tsv 経由取得のため embedded newline が literal \n に escape されている。unescape してから渡す
+  # AI定型語 block: code file も対象にする。ai-tools 配下等は NG 語 literal 保持のため除外する。
+  # EDIT_CONTENT は @tsv 経由で改行が \n にエスケープされるため、渡す前に実改行へ戻す。
   if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
     _run_ai_jargon_check "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
   fi
 
-  # code comment 体言止め block (PreToolUse 移設、2026-07-18): 新規 comment 行限定で block する
-  # Write は disk 上の既存 file と diff して新規行のみ判定する。diff 不能 (file 読込失敗) 時は
-  # 誤爆優先で保守的に block を見送り、PostToolUse 側の既存 warn に委ねる
+  # comment 体言止め block: 新規 comment 行だけを対象にする。
+  # Write は disk と diff して新規行を絞り込み、diff 不能時は block を見送り既存 warn に委ねる。
   if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ] && [ -n "$EDIT_CONTENT" ]; then
     local _CS_CONTENT="${EDIT_CONTENT//\\n/$'\n'}"
     if [[ "$TOOL_NAME" == "Write" ]]; then
