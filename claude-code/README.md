@@ -50,11 +50,11 @@ Full command list: `commands/` directory.
 
 | Directory / File | Content | Details |
 |---|---|---|
-| `commands/` | 34 slash commands | `commands/*.md` |
-| `skills/` | 22 skills | `skills/<name>/SKILL.md` |
-| `agents/` | 7 agents (po/manager/developer/explore/reviewer/verify-app/root-cause-analyzer) | [agents/README.md](agents/README.md) |
-| `guidelines/` | 67 guidelines (language/design/infra/ops/quality) | By category |
-| `hooks/` | 18 event hooks | [hooks/README.md](hooks/README.md) |
+| `commands/` | Slash commands | `commands/*.md` |
+| `skills/` | Skills | `skills/<name>/SKILL.md` |
+| `agents/` | Agents (po/manager/developer etc.) | [agents/README.md](agents/README.md) |
+| `guidelines/` | Guidelines (language/design/infra/ops/quality) | By category |
+| `hooks/` | Event hooks | [hooks/README.md](hooks/README.md) |
 | `templates/` | settings / MCP / keybindings / workflow templates | [templates/README.md](templates/README.md) |
 | `output-styles/` | Response format definitions | [output-styles/README.md](output-styles/README.md) |
 | `references/` | Detailed references | `references/*.md` |

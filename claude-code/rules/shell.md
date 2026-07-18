@@ -12,7 +12,7 @@ paths:
 
 ## Prohibited
 
-- eval forbidden
+- eval forbidden (例外: jq `@sh` で quote した出力を受ける `eval "$(jq -r '@sh ...')"` の fork 削減 idiom のみ許可)
 - rm -rf / forbidden
 - Undefined variable references forbidden
 

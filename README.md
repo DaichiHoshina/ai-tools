@@ -16,7 +16,7 @@
 /git-push                           → コミット→push→PR/MR作成を1コマンドで
 ```
 
-他にも `/test`, `/refactor`, `/docs`, `/flow` など34コマンドを収録。
+他にも `/test`, `/refactor`, `/docs`, `/flow` などのコマンドを収録。
 
 ---
 
@@ -42,11 +42,11 @@ cp .mcp.json.example .mcp.json
 ```
 ai-tools/
 ├── claude-code/
-│   ├── commands/        # 34コマンド（/dev, /review, /plan, /cursor-review ...）
-│   ├── skills/          # 23スキル（レビュー、開発、インフラ、ユーティリティ）
-│   ├── agents/          # 8エージェント（PO, Manager, Developer ...）
-│   ├── guidelines/      # 62ガイドライン（言語・設計・インフラ・運用）
-│   ├── hooks/           # 18イベントHook
+│   ├── commands/        # スラッシュコマンド（/dev, /review, /plan ...）
+│   ├── skills/          # スキル（レビュー、開発、インフラ、ユーティリティ）
+│   ├── agents/          # エージェント（PO, Manager, Developer ...）
+│   ├── guidelines/      # ガイドライン（言語・設計・インフラ・運用）
+│   ├── hooks/           # イベントHook
 │   ├── output-styles/   # 返信フォーマット定義
 │   ├── scripts/         # ユーティリティスクリプト
 │   ├── templates/       # テンプレート
