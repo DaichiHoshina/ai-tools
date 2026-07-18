@@ -15,7 +15,10 @@ Goal: reduce cognitive load for the reader, not just reject NG terms. Evaluates 
 
 ## Startup behavior
 
-On `/jp-fix`, apply all self-checks below to the target text. For each hit, output the **rewritten sentence (After)** — do not stop at enumeration.
+On `/jp-fix`, apply all self-checks below to the target text. Output form depends on submode.
+
+- `write` / `rewrite`: hit ごとに書き直し文 (After) まで出す
+- `review`: Findings のみで書き直し文は出さない (`commands/jp-fix.md` §Output Format `review` 行と §Forbidden の `Edit/Write in review submode` が該当箇所)
 
 Target priority (**never ask back**):
 
@@ -37,7 +40,7 @@ parent から natural-japanese lint の JSON (`references/on-demand-rules/natura
 
 ## Rewrite output format
 
-Do not stop at hit enumeration. Output **Before → After** with rewritten text. After must use concrete action, state, or number.
+`write` / `rewrite` 時のみ適用する (`review` は Findings のみで書き直し文を出さない、Startup behavior 参照)。hit enumerate で止めず **Before → After** で書き直し文を出す。After は具体的な動作・状態・数値を含める。
 
 ```
 Before: 本機能はシームレスな連携を効率的に実現します。
