@@ -981,3 +981,43 @@ Depends on #456'
   [ "$status" -eq 0 ]
   [[ "$output" != *"時限マーカー"* ]]
 }
+
+@test "sentence-structure: 句点なし複数行は行ごとに数えて 100字超 非検出 (trailer 連結誤爆 regression)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure "$(printf 'あ%.0s' {1..60})
+$(printf 'い%.0s' {1..60})"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"100字超文"* ]]
+}
+
+@test "sentence-structure: 句点なしでも 1 行 110 字は 100字超 検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure "$(printf 'あ%.0s' {1..110})"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"100字超文: 1文"* ]]
+}
+
+@test "block: 100字超文の外向き text → 構造 block で GUARD_CLASS=Forbidden (2026-07-18 昇格)" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon \"\$(printf 'あ%.0s' {1..120})。\" 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ]
+    printf '%s' \"\${MESSAGE}\" | grep -q '100字超文'
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "sentence-structure: 裸 URL は 100 字カウントから除外して非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure "詳細: https://example.com/$(printf 'a%.0s' {1..110})"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"100字超文"* ]]
+}

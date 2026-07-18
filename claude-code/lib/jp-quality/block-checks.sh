@@ -86,9 +86,18 @@ _block_if_ai_jargon() {
   # 構造的可読性 warn (連続漢字 / 読点)。block しない、additionalContext に追記
   local _struct_warn
   _struct_warn=$(_check_structural_quality "$text")
-  # 文構造 warn (体言止め bullet / 矢印チェーン / 文末反復 / 100字超)。敬体 check は外向き doc で off
-  local _sent_warn
-  _sent_warn=$(_check_sentence_structure "$text" 0)
+  # counts 版を直接呼ぶ ($() subshell だと _SS_* が親に残らないため wrapper は使えない)
+  _check_sentence_structure_counts "$text" 0 0
+  local _sent_warn=""
+  (( _SS_TAIGEN > 0 )) && _sent_warn="${_sent_warn}体言止めbullet: ${_SS_TAIGEN}行 → 文として閉じる (〜する/〜した); "
+  (( _SS_ARROW > 0 )) && _sent_warn="${_sent_warn}矢印チェーン: ${_SS_ARROW}行 → 文章に展開; "
+  (( _SS_REP > 0 )) && _sent_warn="${_sent_warn}同一文末3連続: ${_SS_REP}箇所 → 文末を変える; "
+  (( _SS_FLAT > 0 )) && _sent_warn="${_sent_warn}平坦 bullet ≥11 + 理由語含み: ${_SS_FLAT}group → 親子に組み替え (PRINCIPLES.md ## 箇条書き階層化); "
+  (( _SS_TIME > 0 )) && _sent_warn="${_sent_warn}時限マーカー: ${_SS_TIME}件 (${_SS_TIME_SAMPLE}) → 時制中立表現に (pr-description.md ### 時限マーカー禁止); "
+  _sent_warn="${_sent_warn%; }"
+  # 100字超文のみ block へ昇格 (2026-07-18)。改行 = 文境界修正で trailer / bullet 連結の誤爆源を除去済のため chat 経路と基準を揃えた
+  local _struct_block=""
+  (( _SS_LONG > 0 )) && _struct_block="100字超文: ${_SS_LONG}文 → 句点で 2 文以上に分割する"
   if [[ -n "$_sent_warn" ]]; then
     _struct_warn="${_struct_warn:+${_struct_warn}; }${_sent_warn}"
   fi
@@ -106,7 +115,7 @@ _block_if_ai_jargon() {
   fi
 
   # block なし → return (構造 warn があれば additionalContext に載せる)
-  if [[ "$_has_block" -eq 0 ]]; then
+  if [[ "$_has_block" -eq 0 && -z "$_struct_block" ]]; then
     if [[ -n "$_struct_msg" ]]; then
       if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
         ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_struct_msg}"
@@ -158,10 +167,18 @@ _block_if_ai_jargon() {
   done
 
   # log は全 hit 用語をカンマ区切りで1行
-  _append_jp_quality_log "$context_label" "$_all_terms_list" "block"
+  [[ -n "$_all_terms_list" ]] && _append_jp_quality_log "$context_label" "$_all_terms_list" "block"
+  if [[ -n "$_struct_block" ]]; then
+    _append_jp_quality_log "$context_label" "structural: ${_struct_block}" "block"
+    _detail_lines="${_detail_lines}  構造 block: ${_struct_block}"$'\n'
+  fi
 
-  # systemMessage: 検出用語一覧
-  MESSAGE="${ICON_CRITICAL} NG用語 block (${context_label}): [${_all_terms_list}]"
+  # systemMessage: 検出用語一覧 (構造 block 単独時は構造理由を表示)
+  if [[ -n "$_all_terms_list" ]]; then
+    MESSAGE="${ICON_CRITICAL} NG用語 block (${context_label}): [${_all_terms_list}]${_struct_block:+ + ${_struct_block}}"
+  else
+    MESSAGE="${ICON_CRITICAL} NG構造 block (${context_label}): ${_struct_block}"
+  fi
 
   # additionalContext: category 別詳細 + source
   ADDITIONAL_CONTEXT="以下のNG用語を修正して再実行してください。source: guidelines/writing/NG-DICTIONARY.md

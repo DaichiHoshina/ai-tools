@@ -95,7 +95,9 @@ for ln in lines:
     if any(re.search(r"→.*→", seg) for seg in ln.split("/")):
         arrow += 1
 
-sents = [s.strip() for s in re.split(r"。", text) if s.strip()]
+# 改行も文境界に含める。句点なしの行 (commit subject + trailer / bullet 列) が
+# 1 文に連結カウントされて 100 字超に誤爆するのを防ぐ (2026-07-18)。
+sents = [s.strip() for s in re.split(r"[。\n]", text) if s.strip()]
 tail = re.compile(r"(した|する|です|ます|ました|ません|ない|だ|である|いる|ある)$")
 labels = [(m.group(1) if (m := tail.search(s)) else "") for s in sents]
 rep = 0
@@ -108,8 +110,8 @@ for i in range(1, len(labels)):
     else:
         run = 1
 
-# inline code span (`...`) は path/command 由来の長文誤爆源のため、100 字カウントのみ除去してから測る
-_long_src = [re.sub(r"`[^`]*`", "", s) for s in sents]
+# inline code span (`...`) と裸 URL は path/link 由来の長文誤爆源のため、100 字カウントのみ除去してから測る
+_long_src = [re.sub(r"`[^`]*`|https?://\S+", "", s) for s in sents]
 long_cnt = sum(1 for s in _long_src if len(s.replace("\n", "")) >= 100)
 
 polite = 0

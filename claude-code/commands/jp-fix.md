@@ -85,6 +85,8 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 
 Each 0-3 pts, total 11/15+ pass. 5-axis = evaluate output quality; 6-item pre-output (PRINCIPLES.md) = gate just-before-output. Both pass = done.
 
+**機械採点優先 (自己採点の客観化)**: lint JSON (file 対象時に parent が Bash 実行) がある場合、機械判定できる項目は lint 結果から採点する — [A] 文長 / 読点 / 連続漢字、[E] NG hit / 鋳型・文頭反復。該当項目の自己採点は禁止し (lint finding 1 件でも該当軸満点にしない)、自己採点は [B] [C] [D] と lint 非対応項目に限る。lint JSON なし (paste / chat 対象) のみ従来の目視評価に fallback する。
+
 ## Output Format
 
 - **write / rewrite**: `## Draft` (body) + `## Design Memo (≤3 line)` (reader / argument order / dropped topic)
