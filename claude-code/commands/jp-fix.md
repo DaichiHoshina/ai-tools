@@ -69,16 +69,18 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 | Design Doc / ADR / RCA | `guidelines/writing/design-doc-protocol.md` |
 | PR / pull request | `guidelines/writing/pr-description.md` |
 | rewrite | `references/document-iteration-patterns.md` + `references/writing-patterns.md` "Rewrite Phase 1-8" |
-| 外向き長文 doc (記事 / DD / RCA) の review / rewrite | `references/on-demand-rules/natural-japanese-lint.md` を load し、parent 側で lint を Bash 実行して JSON を 5-Axis の補助入力に渡す (skill は Bash 禁止のため実行しない) |
+| file 対象の review / rewrite | `references/on-demand-rules/natural-japanese-lint.md` を load し、parent 側で lint を Bash 実行して JSON を 5-Axis の補助入力に渡す (skill は Bash 禁止のため実行しない)。短文でも省略しない (禁止語 / 翻訳調は文 1 つでも検出される)。統計系 detector (文長リズム / 段落均質 / 語彙多様性) は外向き長文 doc のみ採用する |
+| paste / chat 対象の review / rewrite | lint CLI が使えないため、natural-japanese 観点 (語順 / 読点位置 / 一文一義 / 主語述語の距離 / 鋳型・文頭反復 / 翻訳調) を [A] / [E] で目視評価する |
+| AI 臭さの採点依頼 / full 精査の明示 | `natural-japanese:natural-japanese` skill (score / full) へ委譲する。jp-fix 側は結果を 5-Axis に転記して締める |
 
 ## 5-Axis Check (review/rewrite required)
 
 ```
-[A] readability: 1 sentence ≤60 chars (web/short) or ≤100 (tech doc) / 読点 ≤3 / 連続漢字 ≤4 / paragraph 3-5 sentences / explicit subject
+[A] readability: 1 sentence ≤60 chars (web/short) or ≤100 (tech doc) / 読点 ≤3 / 連続漢字 ≤4 / paragraph 3-5 sentences / explicit subject / 語順・読点位置・一文一義・主語述語の距離 (natural-japanese 観点)
 [B] visibility: heading hierarchy / bullet use / tables for types
 [C] signal: PREP or TL;DR+detail / conclusion first
 [D] evidence: praise word + number/case (AI smell 3-transform)
-[E] coherence: term consistency / no duplication / NG dict hit 0
+[E] coherence: term consistency / no duplication / NG dict hit 0 / 同一鋳型・文頭反復なし・翻訳調 0 (natural-japanese 観点)
 ```
 
 Each 0-3 pts, total 11/15+ pass. 5-axis = evaluate output quality; 6-item pre-output (PRINCIPLES.md) = gate just-before-output. Both pass = done.
