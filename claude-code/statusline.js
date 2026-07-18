@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: 46% █░░░░ │ Fable 5 H │ ◈ main*⇡1 (dir) │ +12/-3 │ $1.23
+// 表示: 46% █░░░░ │ Fable 5 H │ ◈ main*⇡1 (dir) │ $1.23
 // worktree 時: ◈ wt:<worktree名>*⇡1 (branch)
-// 幅超過時は右の情報 (cost → lines → bar → suffix → dir → model) から段階的に省略
+// 幅超過時は右の情報を cost, bar, suffix, dir, model の順に段階的へ省略する
 
 const path = require("path");
 
@@ -227,14 +227,7 @@ function displayStatusLine(data) {
 
   const modelSeg = `${C.modelColor}${model}${C.R}${badgeStr}`;
 
-  // セッション成果 (行数増減 / コスト)
   const cost = data.cost || {};
-  const added = cost.total_lines_added || 0;
-  const removed = cost.total_lines_removed || 0;
-  const linesSeg =
-    added || removed
-      ? `${C.green}+${added}${C.gray}/${C.red}-${removed}${C.R}`
-      : "";
   const usd = cost.total_cost_usd || 0;
   const costSeg = usd >= 0.005 ? `${C.tokenColor}$${usd.toFixed(2)}${C.R}` : "";
 
@@ -277,8 +270,8 @@ function displayStatusLine(data) {
     return;
   }
 
-  // 後ろの要素ほど先に落とす (cost → lines → bar → suffix → dir → model)
-  const features = ["model", "dir", "suffix", "bar", "lines", "cost"];
+  // 後ろの要素ほど先に落とす (cost → bar → suffix → dir → model)
+  const features = ["model", "dir", "suffix", "bar", "cost"];
   const LOC = Symbol("loc");
   for (let drop = 0; drop <= features.length; drop++) {
     const on = new Set(features.slice(0, features.length - drop));
@@ -289,7 +282,6 @@ function displayStatusLine(data) {
     const segs = [pctSeg];
     if (on.has("model")) segs.push(modelSeg);
     segs.push(LOC);
-    if (on.has("lines") && linesSeg) segs.push(linesSeg);
     if (on.has("cost") && costSeg) segs.push(costSeg);
     const fixed =
       segs.filter((s) => s !== LOC).reduce((a, s) => a + w(s), 0) +
