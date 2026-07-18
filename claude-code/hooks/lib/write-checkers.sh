@@ -377,17 +377,22 @@ _handle_edit_write_tool() {
     _run_ai_jargon_check "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
   fi
 
-  # comment 体言止め block: 新規 comment 行だけを対象にする。
+  # comment 体言止め block + comment 量 gate: 新規 comment 行だけを対象にする。
   # Write は disk と diff して新規行を絞り込み、diff 不能時は block を見送り既存 warn に委ねる。
   if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ] && [ -n "$EDIT_CONTENT" ]; then
     local _CS_CONTENT="${EDIT_CONTENT//\\n/$'\n'}"
+    local _CS_TARGET=""
     if [[ "$TOOL_NAME" == "Write" ]]; then
       local _CS_NEW_ONLY
       if _CS_NEW_ONLY="$(run_comment_style_new_lines_for_write "$_EDIT_FILE_PATH" "$_CS_CONTENT")"; then
-        [ -n "$_CS_NEW_ONLY" ] && run_comment_style_block_check "$_EDIT_FILE_PATH" "$_CS_NEW_ONLY"
+        _CS_TARGET="$_CS_NEW_ONLY"
       fi
     else
-      run_comment_style_block_check "$_EDIT_FILE_PATH" "$_CS_CONTENT"
+      _CS_TARGET="$_CS_CONTENT"
+    fi
+    if [ -n "$_CS_TARGET" ]; then
+      run_comment_style_block_check "$_EDIT_FILE_PATH" "$_CS_TARGET"
+      run_comment_quantity_gate_check "$_EDIT_FILE_PATH" "$_CS_TARGET"
     fi
   fi
 
