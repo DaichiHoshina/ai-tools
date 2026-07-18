@@ -116,7 +116,7 @@ describe("displayStatusLine", () => {
     expect(output).toContain("0%");
   });
 
-  test("rate_limitsで5h/7dの使用率とreset時刻を表示", () => {
+  test("rate_limitsで5h/7dの使用率を表示 (70%未満はreset時刻なし)", () => {
     displayStatusLine({
       context_window: { used_percentage: 40 },
       rate_limits: {
@@ -129,6 +129,18 @@ describe("displayStatusLine", () => {
     expect(output).toContain("26%");
     expect(output).toContain("7d");
     expect(output).toContain("12%");
+    expect(output).not.toContain("↺");
+  });
+
+  test("5hが70%以上ならreset時刻を表示", () => {
+    displayStatusLine({
+      context_window: { used_percentage: 40 },
+      rate_limits: {
+        five_hour: { used_percentage: 82, resets_at: 1752825600 },
+        seven_day: { used_percentage: 12 },
+      },
+    });
+    const output = consoleSpy.mock.calls[0][0];
     expect(output).toContain("↺");
   });
 

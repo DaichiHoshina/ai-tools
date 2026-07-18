@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: 46% █░░░░ │ Fable 5 H │ ◈ main*⇡1 (dir) │ 5h 26% ↺17:00 · 7d 12%
-// worktree 時: ◈ wt:<worktree名>*⇡1 (branch)
+// 表示: 46% █░░│Fable 5 H│◈main*⇡1(dir)│5h26%·7d12% (5h≥70% 時のみ ↺HH:MM を付ける)
+// worktree 時: ◈wt:<worktree名>*⇡1(branch)
 // 幅超過時は右の情報を rate, bar, suffix, dir, model の順に段階的へ省略する
 
 const path = require("path");
@@ -134,12 +134,13 @@ function rateLimitSeg(rl) {
     let color = C.green;
     if (p >= 90) color = C.red;
     else if (p >= 70) color = C.yellow;
-    let s = `${C.dim}${label} ${C.R}${color}${p}%${C.R}`;
-    if (withReset && typeof win.resets_at === "number") {
+    let s = `${C.dim}${label}${C.R}${color}${p}%${C.R}`;
+    // reset 時刻は残量が気になる 70% 以上のときだけ出す
+    if (withReset && p >= 70 && typeof win.resets_at === "number") {
       const d = new Date(win.resets_at * 1000);
       const hh = String(d.getHours()).padStart(2, "0");
       const mm = String(d.getMinutes()).padStart(2, "0");
-      s += ` ${C.gray}↺${hh}:${mm}${C.R}`;
+      s += `${C.gray}↺${hh}:${mm}${C.R}`;
     }
     return s;
   };
@@ -148,7 +149,7 @@ function rateLimitSeg(rl) {
     part("5h", rl && rl.five_hour, true),
     part("7d", rl && rl.seven_day, false),
   ].filter(Boolean);
-  return parts.join(` ${C.darkGray}·${C.R} `);
+  return parts.join(`${C.darkGray}·${C.R}`);
 }
 
 /**
@@ -252,7 +253,7 @@ function displayStatusLine(data) {
     pctColor = C.green;
   }
   const pctCore = `${pctColor}${C.bold}${pct}%${C.R}`;
-  const bar = progressBar(pct, 5);
+  const bar = progressBar(pct, 3);
 
   const modelSeg = `${C.modelColor}${model}${C.R}${badgeStr}`;
 
@@ -270,23 +271,23 @@ function displayStatusLine(data) {
   const MIN_PRIMARY = 8;
   const buildLoc = (maxLen, showDir, allowSqueeze) => {
     if (git.branch === "?") {
-      return `${C.cyan}◈ ${C.gray}${trunc(dirName, Math.max(maxLen - 2, 2))}${C.R}`;
+      return `${C.cyan}◈${C.gray}${trunc(dirName, Math.max(maxLen - 2, 2))}${C.R}`;
     }
     const primary = wt ? dirName : git.branch;
     const secondary = wt ? git.branch : dirName;
     const wtPrefix = wt ? `${C.yellow}wt:${C.R}` : "";
     const primaryColor = wt ? C.yellow : C.branchColor;
-    const secPart = showDir ? ` ${C.dim}(${secondary})${C.R}` : "";
-    const overhead = w("◈ ") + w(wtPrefix) + w(markStr) + w(secPart);
+    const secPart = showDir ? `${C.dim}(${secondary})${C.R}` : "";
+    const overhead = w("◈") + w(wtPrefix) + w(markStr) + w(secPart);
     const budget = maxLen - overhead;
     if (!allowSqueeze && budget < Math.min(w(primary), MIN_PRIMARY)) {
       return null;
     }
     const p = trunc(primary, Math.max(budget, 2));
-    return `${C.cyan}◈ ${wtPrefix}${primaryColor}${p}${C.R}${markStr}${secPart}`;
+    return `${C.cyan}◈${wtPrefix}${primaryColor}${p}${C.R}${markStr}${secPart}`;
   };
 
-  const sepStr = ` ${C.darkGray}│${C.R} `;
+  const sepStr = `${C.darkGray}│${C.R}`;
   const sepLen = w(sepStr); // 幅予算と最終 check (w(text)) の基準を一致させる
 
   const emit = (text) => console.log(text);
