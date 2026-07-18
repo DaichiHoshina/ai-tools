@@ -249,9 +249,8 @@ _chat_quality_check() {
 
   # 構造検査。chat は常体規範なので敬体 check on + 可読性 (連続漢字/読点) 同梱で python 1 fork。
   # 語彙 hit ゼロでも構造 block は発生するため fast path (_cq_any) の外で判定する。
-  # block 昇格 (2026-07-16): 体言止め bullet / 矢印チェーン (判定 guard が厚く誤爆低) と 100字超文。
-  # 100字超文は inline code span 除去済 (structural-checks.sh) で誤爆源を潰した上、1 文から block に昇格 (2026-07-18)。
-  # 同一文末 / 敬体 (UI コピー draft) / 連続漢字・読点 (固有名詞誤爆) は warn 据え置き。
+  # 体言止め bullet / 矢印チェーン / 100字超文は誤爆源を潰した上で block へ昇格済だから block 側で扱う。
+  # 同一文末 / 敬体 / 連続漢字・読点は UI コピーや固有名詞で誤爆するため warn に据え置く。
   _check_sentence_structure_counts "$text" 1 1
   local _cq_struct_block="" _cq_struct_warn=""
   (( _SS_TAIGEN > 0 )) && _cq_struct_block="体言止めbullet ${_SS_TAIGEN}行 (各 bullet を「〜する/〜した/〜だ」の文で閉じる); "
