@@ -116,6 +116,38 @@ describe("displayStatusLine", () => {
     expect(output).toContain("0%");
   });
 
+  test("rate_limitsで5h/7dの使用率とreset時刻を表示", () => {
+    displayStatusLine({
+      context_window: { used_percentage: 40 },
+      rate_limits: {
+        five_hour: { used_percentage: 26, resets_at: 1752825600 },
+        seven_day: { used_percentage: 12, resets_at: 1753000000 },
+      },
+    });
+    const output = consoleSpy.mock.calls[0][0];
+    expect(output).toContain("5h");
+    expect(output).toContain("26%");
+    expect(output).toContain("7d");
+    expect(output).toContain("12%");
+    expect(output).toContain("↺");
+  });
+
+  test("rate_limits不在なら5h/7dを表示しない", () => {
+    displayStatusLine({ context_window: { used_percentage: 40 } });
+    const output = consoleSpy.mock.calls[0][0];
+    expect(output).not.toContain("5h");
+    expect(output).not.toContain("7d");
+  });
+
+  test("cost.total_cost_usdがあっても$表示しない", () => {
+    displayStatusLine({
+      context_window: { used_percentage: 40 },
+      cost: { total_cost_usd: 1.86 },
+    });
+    const output = consoleSpy.mock.calls[0][0];
+    expect(output).not.toContain("$");
+  });
+
   test("モデル名からClaudeプレフィックスを除去", () => {
     displayStatusLine({
       model: { display_name: "Claude Opus 4.6" },

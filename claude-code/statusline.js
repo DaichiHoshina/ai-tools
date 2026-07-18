@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // @ts-check
 // statusline.js - Claude Code statusline
-// 表示: 46% █░░░░ │ Fable 5 H │ ◈ main*⇡1 (dir) │ $1.23
+// 表示: 46% █░░░░ │ Fable 5 H │ ◈ main*⇡1 (dir) │ 5h 26% ↺17:00 · 7d 12%
 // worktree 時: ◈ wt:<worktree名>*⇡1 (branch)
-// 幅超過時は右の情報を cost, bar, suffix, dir, model の順に段階的へ省略する
+// 幅超過時は右の情報を rate, bar, suffix, dir, model の順に段階的へ省略する
 
 const path = require("path");
 
@@ -123,6 +123,35 @@ function isWorktree(cwd) {
 }
 
 /**
+ * rate limit segment を生成 (5h / 7d window)。field 不在なら空文字
+ * @param {any} rl - data.rate_limits
+ * @returns {string}
+ */
+function rateLimitSeg(rl) {
+  const part = (label, win, withReset) => {
+    if (!win || typeof win.used_percentage !== "number") return "";
+    const p = Math.round(win.used_percentage);
+    let color = C.green;
+    if (p >= 90) color = C.red;
+    else if (p >= 70) color = C.yellow;
+    let s = `${C.dim}${label} ${C.R}${color}${p}%${C.R}`;
+    if (withReset && typeof win.resets_at === "number") {
+      const d = new Date(win.resets_at * 1000);
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      s += ` ${C.gray}↺${hh}:${mm}${C.R}`;
+    }
+    return s;
+  };
+  // 7d の reset は HH:MM で表せないため 5h 側のみ reset 時刻を付ける
+  const parts = [
+    part("5h", rl && rl.five_hour, true),
+    part("7d", rl && rl.seven_day, false),
+  ].filter(Boolean);
+  return parts.join(` ${C.darkGray}·${C.R} `);
+}
+
+/**
  * @param {any} data - Claude Codeから渡されるJSON
  */
 function displayStatusLine(data) {
@@ -227,9 +256,7 @@ function displayStatusLine(data) {
 
   const modelSeg = `${C.modelColor}${model}${C.R}${badgeStr}`;
 
-  const cost = data.cost || {};
-  const usd = cost.total_cost_usd || 0;
-  const costSeg = usd >= 0.005 ? `${C.tokenColor}$${usd.toFixed(2)}${C.R}` : "";
+  const rateSeg = rateLimitSeg(data.rate_limits);
 
   // git 状態マーク: * = 未コミット変更, ⇡ n = push 待ち, ⇣ n = pull 待ち
   let markStr = "";
@@ -270,8 +297,8 @@ function displayStatusLine(data) {
     return;
   }
 
-  // 後ろの要素ほど先に落とす (cost → bar → suffix → dir → model)
-  const features = ["model", "dir", "suffix", "bar", "cost"];
+  // 後ろの要素ほど先に落とす (rate → bar → suffix → dir → model)
+  const features = ["model", "dir", "suffix", "bar", "rate"];
   const LOC = Symbol("loc");
   for (let drop = 0; drop <= features.length; drop++) {
     const on = new Set(features.slice(0, features.length - drop));
@@ -282,7 +309,7 @@ function displayStatusLine(data) {
     const segs = [pctSeg];
     if (on.has("model")) segs.push(modelSeg);
     segs.push(LOC);
-    if (on.has("cost") && costSeg) segs.push(costSeg);
+    if (on.has("rate") && rateSeg) segs.push(rateSeg);
     const fixed =
       segs.filter((s) => s !== LOC).reduce((a, s) => a + w(s), 0) +
       sepLen * (segs.length - 1);
