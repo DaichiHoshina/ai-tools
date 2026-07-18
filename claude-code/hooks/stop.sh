@@ -53,7 +53,10 @@ if [[ "${JP_QUALITY_STOP_CHECK:-1}" == "1" && "${_STOP_HOOK_ACTIVE}" != "true" &
   # shellcheck source=../lib/jp-quality-check.sh
   source "${SCRIPT_DIR}/../lib/jp-quality-check.sh"
   _chat_quality_check "$LAST_MSG"
-  if [[ -n "${_CHAT_BLOCK_REASON}" ]]; then
+  if [[ -n "${_CHAT_BLOCK_REASON}" && "${JP_QUALITY_BLOCK_OFF:-0}" == "1" ]]; then
+    _append_jp_quality_log "chat" "${_CHAT_BLOCK_REASON}" "log-only-downgrade"
+    _JPQ_WARN_MSG="${ICON_WARNING:-▲} chat NG 語 (JP_QUALITY_BLOCK_OFF=1 で warn 降格): ${_CHAT_BLOCK_REASON}"
+  elif [[ -n "${_CHAT_BLOCK_REASON}" ]]; then
     printf -v _JPQ_DATE '%(%Y%m%d)T' -1
     _JPQ_COUNT_FILE="/tmp/claude-stop-jpq-count-${_STOP_SESSION_ID:-$$}-${_JPQ_DATE}"
     _JPQ_COUNT=$(cat "${_JPQ_COUNT_FILE}" 2>/dev/null || echo 0)

@@ -4,6 +4,10 @@
 
 `~/ai-tools/claude-code/` が Claude Code config の SoT で、`sync.sh` で `~/.claude/` へ同期する。**ai-tools repo 固有 rule (Quick Reference / Repo layout / Editing Rule / Token Saving / Hook baseline) は `~/ghq/github.com/DaichiHoshina/ai-tools/CLAUDE.repo.md` に分離済 (owner 階層 `~/ghq/github.com/DaichiHoshina/CLAUDE.md` の import 経由で load、repo 直下 CLAUDE.md は `claudeMdExcludes` で除外)**。`~/.claude/` を直接編集しない (sync で wipe される)。
 
+## Turn pre-flight check-in
+
+chat 出力前に (a) 最終文が 完了/〜済/次に で終わっていないか (b) 100 字超えていないか (c) 矢印チェーンを prose 化したか の 3 点を先に決めてから書く。turn 締め self-check (下記) と対称の最終 gate。
+
 ## Golden workflow
 
 - 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal / /loop の 7 択。/goal = session 内短期 objective gate 限定、/loop = cadence / 無人 / >5 iter の external headless 限定)。plan → 実装は Next command block (`/dev --plan <file>` 等)、`/plan --go` は判定 mode のまま continue。mode 判定のみなら `/mode <task>` (inline / agent 並列の 2 択、判定後そのまま実装)

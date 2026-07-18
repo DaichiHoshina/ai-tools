@@ -124,6 +124,22 @@ echo '{}' | ~/.claude/hooks/stop.sh
 - ai-tools 配下の path prefix 判定は `_is_aitools_path` / `_aitools_relpath` (実体は `lib/hook-utils/path-helpers.sh`、`lib/hook-utils.sh` 経由で source) を経由する。literal prefix 直書きは symlink 表記と ghq 実 path の差で外れる (social-hit block が半年不発だった実例)
 - 新規 hook は bats と併せて実 path smoke を 1 発実行する (`bash hooks/xxx.sh < payload.json; echo $?`。file 経由 stdin の理由: `references/bats-test-writing.md` § Execution pitfalls)
 
+## chat 文体検査 (jp-quality) の env kill switch
+
+`stop.sh` の chat 文体検査 (`lib/jp-quality/block-checks.sh`) は 3 種の env で段階的に降格できる。
+
+| env | 効果 |
+|-----|------|
+| `JP_QUALITY_STOP_CHECK=0` | 検査自体を skip する (block も warn も出ない) |
+| `JP_QUALITY_INJECT_OFF=1` | 辞書 inject を skip する (検査は動くが additionalContext 注入なし) |
+| `JP_QUALITY_BLOCK_OFF=1` | 検査は続けるが block を warn に降格する (log には block として残る) |
+
+### rollback 手順
+
+1. 即時降格: `export JP_QUALITY_BLOCK_OFF=1` で block を止めて warn 通知だけにする
+2. 恒久 revert: `lib/jp-quality/block-checks.sh` の該当 regex / category を直前の commit へ戻す
+3. `bash ~/ai-tools/sync.sh --yes` で `~/.claude/` へ反映する
+
 ## トラブルシューティング
 
 | 問題 | 対処 |
