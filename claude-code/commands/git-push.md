@@ -40,7 +40,7 @@ Execute commit → push → PR/MR creation in single command.
 ### pr mode
 
 3. `git push -u origin <branch>`
-4. **IMPL_NOTES detection** (skip on `--no-impl-notes`): `~/.claude/plans/impl-notes/` 配下で current branch (kebab-case 正規化) に一致する `<feature-slug>` dir を探索。複数なら timestamp prefix 最新を選び、`MERGED.md` があれば **Design decisions** + **Open questions** を PR body draft 候補として user confirm step に提示する (auto-insert はしない)。No match は silent skip。
+4. **IMPL_NOTES detection** (skip on `--no-impl-notes`): `~/.claude/plans/impl-notes/` 配下で current branch (kebab-case 正規化) に一致する `<feature-slug>` dir を探索。複数なら timestamp prefix 最新を選び、`MERGED.md` があれば **Design decisions** + **Open questions** を PR body draft 候補として user confirm step に提示する (auto-insert はしない)。Open questions は `guidelines/writing/pr-description.md` `## 残論点 (Open questions) の書き方` の形式 (各案の利点・代償 + 推奨 + 理由) へ整形してから提示する。No match は silent skip。
 5. `gh pr create` / `glab mr create` (auto-detect remote)
 5.5. **writing check (PR body)**: `references/writing-check-protocol.md` 参照 (対象: PR body draft)。PR body の issue/PR URL は `gh issue view` / `gh pr view` で番号存在を事前検証する (`references/on-demand-rules/ai-output.md` `## URL / Issue & PR Number Validation`)。
 6. Display PR/MR URL
