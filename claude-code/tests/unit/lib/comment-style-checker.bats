@@ -41,6 +41,24 @@ setup() {
 }
 
 # =============================================================================
+# 末尾閉じ括弧の剥がし (動詞 + 括弧補足の誤検出防止、2026-07-18)
+# =============================================================================
+
+@test "comment-style: verb + closing bracket (動詞 + 括弧補足) is not flagged" {
+  local content=$'package main\n// 体言止めを検出する (canonical: guidelines/writing/code-comment.md)\nfunc main() {}'
+  run bash -c "source '$LIB_FILE' && run_comment_style_check '/tmp/x.go' \"\$1\"" _ "$content"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "comment-style: noun + closing bracket (体言止め + 括弧) is still flagged" {
+  local content=$'package main\n// 誤爆防止)\nfunc main() {}'
+  run bash -c "source '$LIB_FILE' && run_comment_style_check '/tmp/x.go' \"\$1\"" _ "$content"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "誤爆防止" ]]
+}
+
+# =============================================================================
 # 偽陽性防止: literal \n (backslash+n の 2 文字) を含む content で誤分断されない
 # regression: 過去に unescape 処理が literal \n を実改行に変換し、
 # 「// 改行文字\nを検出する」の 1 行が「改行文字」で分断され誤検出されていた

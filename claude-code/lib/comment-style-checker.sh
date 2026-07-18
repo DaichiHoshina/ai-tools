@@ -82,6 +82,18 @@ _comment_style_has_japanese() {
   LC_ALL=C printf '%s' "$_text" | LC_ALL=C grep -q '[^ -~]' 2>/dev/null
 }
 
+# 末尾の閉じ括弧類を剥がす (動詞 + 括弧補足「〜する (canonical: ...)」の誤検出防止用、判定専用で表示用 body は変えない)
+_comment_style_strip_trailing_closers() {
+  local _t="$1"
+  while :; do
+    case "$_t" in
+      *[\)）」』]) _t="${_t%?}" ;;
+      *) break ;;
+    esac
+  done
+  printf '%s' "$_t"
+}
+
 # 常体で閉じているか判定 (閉じていれば OK=0)
 _comment_style_is_closed() {
   local _body="$1"
@@ -93,8 +105,10 @@ _comment_style_is_closed() {
   if ! _comment_style_has_japanese "$_body"; then
     return 0
   fi
-  # 末尾判定
-  if [[ "$_body" =~ $_COMMENT_STYLE_OK_TAIL_RE ]]; then
+  # 末尾判定 (閉じ括弧を剥がしたうえで判定する)
+  local _tail_body
+  _tail_body="$(_comment_style_strip_trailing_closers "$_body")"
+  if [[ "$_tail_body" =~ $_COMMENT_STYLE_OK_TAIL_RE ]]; then
     return 0
   fi
   return 1
