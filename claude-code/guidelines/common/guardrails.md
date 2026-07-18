@@ -1,6 +1,7 @@
 # Guardrails
 
 > **Purpose**: Classify operations into 3 layers (Safe/Boundary/Forbidden) to guarantee safety.
+> Operation Guard 定義の canonical は本 file とする (`references/AI-THINKING-ESSENTIALS.md` は参照のみ)。
 
 ## Operation Guard
 

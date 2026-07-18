@@ -6,13 +6,7 @@ Core thinking patterns for Claude agents.
 
 ### 1. Operation Guard (3-tier classification)
 
-Classify every operation by safety: `Guard : Action → {Allow, AskUser, Deny}`
-
-| Tier | Handling | Examples |
-|----|------|-----|
-| **Safe** | Execute immediately | File read, git status, analysis, proposals |
-| **Confirm** | Execute after approval | git commit/push, file edit/delete, config change |
-| **Deny** | Never execute | rm -rf /, secret leak, git push --force, YAGNI violations |
+Canonical: `guidelines/common/guardrails.md` (Safe/Boundary/Forbidden → Allow/AskUser/Deny)。tier 定義表はそちらを参照し、本 file では再掲しない (Safety Theorems と flow 図は本 file 固有の運用手順として残す)。本 file の "Confirm" は guardrails の Boundary tier を指す。
 
 Confirm flow: detect → afplay (notification) → wait approval → execute or cancel.
 
