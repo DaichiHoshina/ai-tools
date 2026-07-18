@@ -51,3 +51,4 @@ hooks/ の bash 編集で繰り返し踏む落とし穴を 10 件まとめる。
 
 - Bash tool は `.zshrc` でなく `~/.claude/shell-snapshots/` の snapshot を source する。rc 編集は現行 session に反映されない (即時反映するには現行 snapshot にも同修正を入れる)
 - script 内の非対話 / Claude 判定は `CLAUDECODE` 環境変数で行う (interactive / tty 判定はどちらも空振りする)
+- zsh の echo は single quote 内でも `\n` を実改行に展開する。hook への JSON 入力は `printf '%s' '<json>' | hook.sh` で渡す (echo だと JSON が複数行に割れて fail-close block になり、本来の判定を検証できない)

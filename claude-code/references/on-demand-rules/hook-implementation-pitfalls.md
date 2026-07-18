@@ -63,6 +63,14 @@ settings.json の `command` field は `hook.sh cleanup` のような引数付き
 - warn を次 turn へ届けたい場合は `/tmp/claude-stop-jpq-warn-*` 経由の additionalContext 還流を使う (commit `a3c1485`)
 - 誤爆が多い検査 (断定語「完了」、連続漢字) は block にしない。loop 上限 5 を浪費して機構全体が log-only へ降格する
 
+## 罠 6: 語彙 denylist は意味を判定できない、量 gate が構造対応
+
+NG 語ゼロ + 常体で閉じた What 言い換え comment は文字列照合を必ず通過する (2026-07-18 実測)。意味の判定を hook でやろうとせず、量 (新規日本語 comment の行数上限) を機械強制する方が構造対応になる。参照実装: `lib/comment-style-checker.sh` の comment 量 gate。
+
+## 罠 7: checker 自己改修中の stale warn はノイズ
+
+worktree で checker 自体を改修している間は、sync 前の古い live checker が新規範では正しい行 (動詞終止・動詞 + 閉じ括弧等) に warn を出し続ける (2026-07-18 実踏)。この warn は sync 後に消えるため、1 件ずつ追わず「新 checker で判定し直して本物だけ直す」で切り分ける。
+
 ## 関連
 
 - `measure-before-hook-change.md` — hook 編集前の latency baseline 計測

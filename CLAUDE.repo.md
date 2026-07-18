@@ -36,6 +36,10 @@ commands/ skills/ agents/ の `.md` は毎 session token を消費する。Keep:
 
 `hooks/*.sh` の block / warn 系編集前に **`claude-code/references/on-demand-rules/measure-before-hook-change.md` を Read + `./scripts/hook-bench.sh --log` で baseline 計測**。skip すると latency regression が 24-48h 後に判明する (`[[2026-06-24 cd70e4e]]`)。実装内容側の罠 (NG list 追加 / session_id 取得 / option 判定 / 存在チェック / block 昇格判断) は `claude-code/references/on-demand-rules/hook-implementation-pitfalls.md` を Read する。
 
+## CI 追加禁止
+
+GitHub Actions 等の CI を追加しない (user 決定 2026-07-18。fb56614 で再追加 → 815e249 で撤去した再発が 2 回ある)。回帰検知は `npm test` / `npm run test:bats` / pre-push githooks の範囲で担保する。評価 / retrospective / review で「CI がない」を問題点や改善提案として挙げない。
+
 ## Golden workflow (ai-tools 頻出)
 
 - skill 追加 → `/skill-add` / guideline 更新 → `/update-guidelines`

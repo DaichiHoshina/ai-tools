@@ -16,6 +16,8 @@ Default: **Fable 5** (`claude-fable-5`、settings.json.template `model` key cano
 
 **Fable 節約運用**: 日常 session を sonnet / auto にし、難所だけ `/fable <task>` で model override 委譲する (`commands/fable.md`)。
 
+**Fable 思考専用運用** (user 指示 2026-07-13、2 回明示): Fable session では判断・設計・統合方針の決定だけを parent が持ち、内容が確定した編集 / commit / 定型生成は developer-agent (Sonnet) へ委譲する。inline 例外 (1 行 fix 等) でも Fable の長文生成を伴うなら委譲を優先する。
+
 **Auto Mode** (v2.1.111+): `/model` → auto で有効化すると Claude が task 難易度で model を自動切替する (`--enable-auto-mode` flag は不要になった)。
 
 ## Per-agent auto-assignment
