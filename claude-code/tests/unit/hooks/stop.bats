@@ -158,6 +158,17 @@ _stop_out() {
   printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
 }
 
+@test "stop: JP_QUALITY_BLOCK_OFF=1 なら block ではなく systemMessage warn に降格する" {
+  _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+  local out
+  out=$(jq -n '{last_assistant_message:"過去の経緯を鑑みると妥当だ。", cwd:"/tmp", session_id:"batsjpq"}' \
+    | JP_QUALITY_BLOCK_OFF=1 bash "${HOOK_FILE}" 2>/dev/null)
+  printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
+  printf '%s' "${out}" | jq -e '.systemMessage | contains("鑑みる")' >/dev/null
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+}
+
 @test "stop: backtick 内の NG 語は検査対象外で PASS" {
   _make_stop_ng_dict
   rm -f /tmp/claude-stop-jpq-count-batsjpq-*
