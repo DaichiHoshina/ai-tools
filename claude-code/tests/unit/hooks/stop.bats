@@ -190,15 +190,27 @@ _stop_out() {
   rm -f /tmp/claude-stop-jpq-warn-batsjpq-*
 }
 
-@test "stop: 体言止め bullet は語彙 hit ゼロでも block (構造昇格)" {
+@test "stop: 体言止め bullet 連発 (2 行) は語彙 hit ゼロでも block (構造昇格)" {
   _make_stop_ng_dict
   rm -f /tmp/claude-stop-jpq-count-batsjpq-*
   local out
   out=$(_stop_out "- 実装を修正
+- test を追加
 本文は文として閉じている。")
   printf '%s' "${out}" | jq -e '.decision == "block"' >/dev/null
   printf '%s' "${out}" | jq -e '.reason | contains("体言止め")' >/dev/null
   rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+}
+
+@test "stop: 体言止め bullet 単発は block せず warn に留まる (2026-07-18 緩和)" {
+  _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-* /tmp/claude-stop-jpq-warn-batsjpq-*
+  local out
+  out=$(_stop_out "- 実装を修正
+本文は文として閉じている。")
+  printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
+  printf '%s' "${out}" | jq -e '.systemMessage | contains("体言止め")' >/dev/null
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-* /tmp/claude-stop-jpq-warn-batsjpq-*
 }
 
 @test "stop: 100字超文は 1 文でも block (2026-07-18 昇格)" {

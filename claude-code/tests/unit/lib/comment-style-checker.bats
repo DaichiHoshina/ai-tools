@@ -106,6 +106,28 @@ setup() {
 # MEMO: 下記 jq filter は post-tool-use.sh:25 と手動同期で維持する (変更時は両方直す)
 # =============================================================================
 
+# =============================================================================
+# block 閾値: 連発 (3 件以上 or 連続 2 行) のみ Forbidden、単発は warn (2026-07-18 緩和)
+# =============================================================================
+
+@test "comment-style-block: 単発の体言止めは Forbidden にせず warn context を積む" {
+  local content=$'#!/bin/bash\n# 改行文字の処理\necho ok'
+  run bash -c "source '$LIB_FILE' && GUARD_CLASS='' ADDITIONAL_CONTEXT='' && run_comment_style_block_check '/tmp/x.sh' \"\$1\" && [[ \"\$GUARD_CLASS\" != 'Forbidden' ]] && [[ \"\$ADDITIONAL_CONTEXT\" == *'単発は許容'* ]]" _ "$content"
+  [ "$status" -eq 0 ]
+}
+
+@test "comment-style-block: 連続 2 行の体言止めは Forbidden" {
+  local content=$'#!/bin/bash\n# 改行文字の処理\n# 空白文字の除去\necho ok'
+  run bash -c "source '$LIB_FILE' && GUARD_CLASS='' ADDITIONAL_CONTEXT='' && run_comment_style_block_check '/tmp/x.sh' \"\$1\" && [[ \"\$GUARD_CLASS\" == 'Forbidden' ]]" _ "$content"
+  [ "$status" -eq 0 ]
+}
+
+@test "comment-style-block: 非連続でも 3 件の体言止めは Forbidden" {
+  local content=$'#!/bin/bash\n# 改行文字の処理\necho a\n# 空白文字の除去\necho b\n# 末尾記号の削除\necho c'
+  run bash -c "source '$LIB_FILE' && GUARD_CLASS='' ADDITIONAL_CONTEXT='' && run_comment_style_block_check '/tmp/x.sh' \"\$1\" && [[ \"\$GUARD_CLASS\" == 'Forbidden' ]]" _ "$content"
+  [ "$status" -eq 0 ]
+}
+
 @test "post-tool-use: MultiEdit input yields joined new_string from edits[]" {
   local input='{"tool_name":"MultiEdit","tool_input":{"file_path":"/tmp/x.sh","edits":[{"old_string":"a","new_string":"# 体言止めコメント"},{"old_string":"b","new_string":"echo ok"}]}}'
   local extracted

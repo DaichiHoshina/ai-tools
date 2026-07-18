@@ -114,22 +114,15 @@ _comment_style_is_closed() {
   return 1
 }
 
-# 引数: file_path new_content
-# 出力: warn message (件数 > 0 の時のみ、それ以外は空)
-# 副作用: ~/.claude/logs/comment-style-warn.log に 1 行 append (件数 > 0 の時)
-run_comment_style_check() {
+# 引数: file_path content / 違反行を "lineno<TAB>body先頭80字" で 1 行ずつ返す (0 件は空、log には書かない)
+_comment_style_collect_bad() {
   local _file="$1"
   local _content="$2"
-  if [[ -z "$_file" || -z "$_content" ]]; then
-    return 0
-  fi
   local _ext="${_file##*.}"
   local _marker_re
   if ! _marker_re="$(_comment_style_marker_re_for "$_ext")"; then
     return 0
   fi
-
-  local _bad_lines=()
   local _line _body _lineno=0
   while IFS= read -r _line; do
     _lineno=$((_lineno + 1))
@@ -143,15 +136,30 @@ run_comment_style_check() {
     if _comment_style_is_closed "$_body"; then
       continue
     fi
-    _bad_lines+=("${_lineno}: ${_body:0:80}")
+    printf '%s\t%s\n' "$_lineno" "${_body:0:80}"
   done <<< "$_content"
+}
+
+# 引数: file_path new_content / 件数 > 0 の時のみ warn message を stdout に出し、log にも 1 行ずつ append する
+run_comment_style_check() {
+  local _file="$1"
+  local _content="$2"
+  if [[ -z "$_file" || -z "$_content" ]]; then
+    return 0
+  fi
+
+  local _bad_lines=()
+  local _bad_lineno _bad_body
+  while IFS=$'\t' read -r _bad_lineno _bad_body; do
+    [[ -z "$_bad_lineno" ]] && continue
+    _bad_lines+=("${_bad_lineno}: ${_bad_body}")
+  done < <(_comment_style_collect_bad "$_file" "$_content")
 
   local _count="${#_bad_lines[@]}"
   if [[ "$_count" -eq 0 ]]; then
     return 0
   fi
 
-  # log に append
   local _log_dir="${HOME}/.claude/logs"
   local _log_file="${_log_dir}/comment-style-warn.log"
   mkdir -p "$_log_dir" 2>/dev/null || true
@@ -161,7 +169,6 @@ run_comment_style_check() {
     printf '%s\t%s\t%s\t%s\n' "$_ts" "${SESSION_ID:-unknown}" "$_file" "$_bad" >> "$_log_file" 2>/dev/null || true
   done
 
-  # stdout に warn message (先頭 3 行 + 件数)
   local _head_n=3
   local _shown=("${_bad_lines[@]:0:$_head_n}")
   local _extra=$((_count - _head_n))
@@ -191,8 +198,8 @@ run_comment_style_new_lines_for_write() {
   return 0
 }
 
-# 新規行に絞り込み済みの content だけを判定し、体言止め hit で GUARD_CLASS を Forbidden にする。
-# 呼び出し元スコープの GUARD_CLASS / MESSAGE / ADDITIONAL_CONTEXT を直接更新する。
+# 連発 (3 件以上 or 連続 2 行) のみ Forbidden にし、単発 1-2 件は warn に留める。
+# 全面 block は文末が均質化して逆に AI 臭くなるため採らない (natural-japanese コーパス分析、2026-07-18 に緩和した)。
 run_comment_style_block_check() {
   local _file="$1"
   local _content="$2"
@@ -201,14 +208,36 @@ run_comment_style_block_check() {
   local _hits
   _hits=$(run_comment_style_check "$_file" "$_content" || true)
   [[ -z "$_hits" ]] && return 0
-  GUARD_CLASS="Forbidden"
-  MESSAGE="${ICON_CRITICAL:-◉} code comment 体言止め block: ${_file}"
-  local _ctx="新規追加 comment が体言止めで終わっている。常体で閉じる (〜する/〜した/〜だ)。canonical: guidelines/writing/code-comment.md
+
+  local _count=0 _consecutive=0 _prev=-9 _ln _rest
+  while IFS=$'\t' read -r _ln _rest; do
+    [[ -z "$_ln" ]] && continue
+    _count=$((_count + 1))
+    if [[ "$_ln" -eq $((_prev + 1)) ]]; then
+      _consecutive=1
+    fi
+    _prev="$_ln"
+  done < <(_comment_style_collect_bad "$_file" "$_content")
+
+  if [[ "$_count" -ge 3 || "$_consecutive" -eq 1 ]]; then
+    GUARD_CLASS="Forbidden"
+    MESSAGE="${ICON_CRITICAL:-◉} code comment 体言止め連発 block: ${_file}"
+    local _ctx="新規 comment の体言止めが連発している (${_count} 件)。羅列をやめて大半を常体で閉じる (〜する/〜した/〜だ)。canonical: guidelines/writing/code-comment.md
+${_hits}"
+    if [[ -n "${ADDITIONAL_CONTEXT:-}" ]]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_ctx}"
+    else
+      ADDITIONAL_CONTEXT="$_ctx"
+    fi
+    return 0
+  fi
+
+  local _warn_ctx="${ICON_WARNING:-▲} comment 体言止め warn (${_count} 件、単発は許容): 意図した文末変化なら残してよい。羅列になるなら常体で閉じる。
 ${_hits}"
   if [[ -n "${ADDITIONAL_CONTEXT:-}" ]]; then
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_ctx}"
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_warn_ctx}"
   else
-    ADDITIONAL_CONTEXT="$_ctx"
+    ADDITIONAL_CONTEXT="$_warn_ctx"
   fi
 }
 

@@ -686,7 +686,21 @@ _run_sentence_structure() {
   [ "$status" -eq 0 ]
 }
 
-@test "chat-quality: 体言止め bullet は語彙 hit ゼロでも block (構造昇格)" {
+@test "chat-quality: 体言止め bullet 連発 (2 行) は語彙 hit ゼロでも block (構造昇格)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '- 実装を修正
+- test を追加
+本文は文として閉じている。'
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '体言止めbullet' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: 体言止め bullet 単発は block せず warn に留まる (2026-07-18 緩和)" {
   _make_ng_dict "$TEST_TMPDIR"
   run bash -c "
     export HOME='${TEST_TMPDIR}'
@@ -694,7 +708,8 @@ _run_sentence_structure() {
     source '${LIB_FILE}'
     _chat_quality_check '- 実装を修正
 本文は文として閉じている。'
-    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '体言止めbullet' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '体言止めbullet' && { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+    printf '%s' \"\${_CHAT_WARN_MSG}\" | grep -q '体言止めbullet' || { echo \"WARN=\${_CHAT_WARN_MSG}\" >&2; exit 1; }
   "
   [ "$status" -eq 0 ]
 }

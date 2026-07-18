@@ -388,6 +388,7 @@ dryRun := cfg.GetBoolSafe("dry_run", true)
 
 - 1 行 godoc の要約行 (慣習的に名詞句で始める)
 - 短い WHY ラベル (前後の文脈で主語が明確な場合)
+- 単発の体言止め (文末の変化として許容する。連続 2 行 / 1 編集 3 件以上の連発は hook が block する)
 
 ```go
 // ProcessBatch はバッチ処理のエントリーポイント。 ← 1 行 godoc: OK

@@ -189,7 +189,7 @@ ${_ref_lines}"
   fi
 }
 
-# chat 応答 (stop hook 経路) の文体検査。誤爆の低い語彙 8 key + 構造 3 種 (体言止め bullet / 矢印 / 100字超≥2) を block し、
+# chat 応答 (stop hook 経路) の文体検査。誤爆の低い語彙 8 key + 構造 3 種 (体言止め bullet 連発 / 矢印 / 100字超≥2) を block し、
 # 誤爆リスクのある key + 残りの構造検査は warn に降格する。
 # 出力契約: _CHAT_BLOCK_REASON (block hit 時のみ非空) / _CHAT_WARN_MSG (warn hit 時のみ非空) の 2 変数。
 # _assert_required_keys は呼ばない (exit 2 が stop hook では block に化けるため)。dict 不在は graceful return。
@@ -249,11 +249,13 @@ _chat_quality_check() {
 
   # 構造検査。chat は常体規範なので敬体 check on + 可読性 (連続漢字/読点) 同梱で python 1 fork。
   # 語彙 hit ゼロでも構造 block は発生するため fast path (_cq_any) の外で判定する。
-  # 体言止め bullet / 矢印チェーン / 100字超文は誤爆源を潰した上で block へ昇格済だから block 側で扱う。
+  # 矢印チェーン / 100字超文は誤爆源を潰した上で block へ昇格済だから block 側で扱う。
+  # 体言止め bullet は連発 (2 行以上) のみ block し、単発は warn に留める (natural-japanese 分析で 2026-07-18 に緩和した)。
   # 同一文末 / 敬体 / 連続漢字・読点は UI コピーや固有名詞で誤爆するため warn に据え置く。
   _check_sentence_structure_counts "$text" 1 1
   local _cq_struct_block="" _cq_struct_warn=""
-  (( _SS_TAIGEN > 0 )) && _cq_struct_block="体言止めbullet ${_SS_TAIGEN}行 (各 bullet を「〜する/〜した/〜だ」の文で閉じる); "
+  (( _SS_TAIGEN > 1 )) && _cq_struct_block="体言止めbullet ${_SS_TAIGEN}行 (連発。大半の bullet を「〜する/〜した/〜だ」の文で閉じる); "
+  (( _SS_TAIGEN == 1 )) && _cq_struct_warn="${_cq_struct_warn}体言止めbullet 1行 (単発は許容。羅列にはしない); "
   (( _SS_ARROW > 0 )) && _cq_struct_block="${_cq_struct_block}矢印チェーン ${_SS_ARROW}行 (矢印列を動詞を持つ文章に展開する); "
   (( _SS_LONG > 0 )) && _cq_struct_block="${_cq_struct_block}100字超文 ${_SS_LONG}文 (句点で 2 文以上に分割する); "
   (( _SS_KANJI_CNT > 0 )) && _cq_struct_warn="${_cq_struct_warn}連続漢字≥5: ${_SS_KANJI_CNT}種 (${_SS_KANJI_SAMPLE}) → 助詞挿入/訓読み開く; "

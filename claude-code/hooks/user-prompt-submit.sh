@@ -231,7 +231,7 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
     # 1 session 1 回のみ inject する (毎 prompt 固定費 ~170B × 全 turn 再送を削減、内容は session 内で不変)
     _STYLE_CTX_FLAG="/tmp/claude-style-ctx-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
     if [[ ! -f "${_STYLE_CTX_FLAG}" ]] && { [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; }; then
-      _AI_TERMS_CTX="[chat応答文体強化] chat 応答で禁止: AI定型語 / カタカナ造語 / 日本語で言える一般語の英語化 (digest→要約 等) / 体言止め・助詞省略 / 冗長 (結論と根拠だけ書く)。模範: 「実装完了。テスト通過」→「実装した。テストは通過した」/「robust な設計」→「壊れにくい設計」/「まず A を確認し、次に B」→「A を確認してから B を確認する」。canonical: rules/plain-jp.md + guidelines/writing/NG-DICTIONARY.md。"
+      _AI_TERMS_CTX="[chat応答文体強化] chat 応答で禁止: AI定型語 / カタカナ造語 / 日本語で言える一般語の英語化 (digest→要約 等) / 体言止めの連発 (単発は可)・助詞省略 / 冗長 (結論と根拠だけ書く)。模範: 「実装完了。テスト通過」→「実装した。テストは通過した」/「robust な設計」→「壊れにくい設計」/「まず A を確認し、次に B」→「A を確認してから B を確認する」。canonical: rules/plain-jp.md + guidelines/writing/NG-DICTIONARY.md。"
       touch "${_STYLE_CTX_FLAG}" 2>/dev/null || true
     fi
 
