@@ -1,5 +1,6 @@
 ---
 name: mino-architecture-quality-strategy
+allowed-tools: Read, Glob, Grep
 description: 複数module・data ownership・system-wide trade-off・公開契約・target/transition architecture・migration/recoveryを、product valueと品質scenarioから設計する時に使う。局所class改善、流行architecture選定、単一契約抽出には使わない。
 ---
 

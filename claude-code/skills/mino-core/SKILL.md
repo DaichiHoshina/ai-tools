@@ -1,5 +1,6 @@
 ---
 name: mino-core
+allowed-tools: Read, Glob, Grep
 description: 関連Skillで、問題定義、前提監査、Context Packet、要件正規化、traceability、Evidence、権限、共通gateを共有する時に使う内部基盤。単独で専門設計や実装を完結させる用途には使わない。
 ---
 

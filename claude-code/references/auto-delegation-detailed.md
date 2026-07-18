@@ -91,7 +91,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
   - 多 file 横断 review (10+ file)
   - `/flow` PO/Manager orchestration (judgment hierarchy)
   - Manager hallucination 防止が要る case
-- 切替方法: `/model opus` で session 単位
+- 切替方法: `/model opus` で session 単位 (agent frontmatter は sonnet 固定のまま。manager-agent の hallucination 対策は literal echo 強制で手当済)
 
 ## Subagent silent-fail guard 詳細
 

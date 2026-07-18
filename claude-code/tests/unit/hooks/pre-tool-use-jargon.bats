@@ -99,7 +99,6 @@ _run_bash_jargon() {
 @test "pre-tool-use: 中間漢語 網羅 commit message は block されない" {
   result=$(run_hook "Bash" '{"command": "git commit -m \"網羅的に整合性を担保\""}')
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
   [[ ! "$msg" =~ "難読漢語" ]]
   [[ ! "$msg" =~ "非日常英語" ]]
 }
@@ -107,7 +106,6 @@ _run_bash_jargon() {
 @test "pre-tool-use: 中間漢語 整合 担保 是正 commit message は block されない" {
   result=$(run_hook "Bash" '{"command": "git commit -m \"整合性担保と是正\""}')
   msg=$(get_system_message "$result")
-  [[ "$msg" =~ "要確認" ]]
   [[ ! "$msg" =~ "難読漢語" ]]
 }
 

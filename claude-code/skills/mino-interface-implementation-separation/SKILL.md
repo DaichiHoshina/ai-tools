@@ -1,5 +1,6 @@
 ---
 name: mino-interface-implementation-separation
+allowed-tools: Read, Glob, Grep
 description: 利用者が知る目的・操作・契約と内部の技術・手順を分離し、長大処理の技術漏出、caller側分岐、誤った責務境界を監査・設計する時に使う。単なるif削減、interface型量産、system全体のarchitecture選定には使わない。
 ---
 

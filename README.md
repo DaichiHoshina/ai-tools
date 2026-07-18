@@ -23,10 +23,13 @@
 ## クイックスタート
 
 ```bash
-git clone https://github.com/DaichiHoshina/ai-tools.git ~/ai-tools
+git clone https://github.com/DaichiHoshina/ai-tools.git ~/ghq/github.com/DaichiHoshina/ai-tools
+ln -s ~/ghq/github.com/DaichiHoshina/ai-tools ~/ai-tools
 cd ~/ai-tools && ./claude-code/install.sh
 claude
 ```
+
+clone 先は owner 階層 `~/ghq/github.com/DaichiHoshina/CLAUDE.md` の `@ai-tools/CLAUDE.repo.md` import が前提とする path で、`~/ai-tools` は symlink として運用する。
 
 MCP連携（Serena等）を使う場合:
 

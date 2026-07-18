@@ -1,5 +1,6 @@
 ---
 name: mino-reproducible-development
+allowed-tools: Read, Glob, Grep
 description: 複数の専門成果物を統合する中規模以上のdesign・implementation・review、end-to-endの要件再現性検証、または複数runのreproduction-test時に使うrouter。単一成果物や、公開契約・data meaningに触れない小規模機械変更には使わない。
 ---
 

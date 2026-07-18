@@ -485,14 +485,6 @@
     "実装完了後は必ずverify-app実行"
   ],
   "skipDangerousModePermissionPrompt": true,
-  "extraKnownMarketplaces": {
-    "genshijin": {
-      "source": {
-        "source": "github",
-        "repo": "InterfaceX-co-jp/genshijin"
-      }
-    }
-  },
   "awaySummaryEnabled": false,
   "availableModels": [
     "claude-opus-4-7",

@@ -6,7 +6,7 @@ On-demand index from CLAUDE.md.
 - `*-template.md` (exception: `performance-issue-template.md` included as operational procedure)
 - `*-OPPORTUNITIES.md` (feature backlog tracker, unsuitable for index)
 - `*-detailed.md` (CLAUDE.md から直接参照される detail 系: `auto-delegation-detailed.md` / `editing-rule-detailed.md` / `session-efficiency-detailed.md` / `memory-clean-detail.md`)
-- `health-snapshots/` (monthly snapshots, reference dir directly)
+- `health-snapshots/` (不定期 snapshot、最終 2026-05-17。reference dir directly)
 - `retrospectives/` / `on-demand-rules/` / `_archive/` (reference dir directly)
 - `INDEX.md` (this file)
 

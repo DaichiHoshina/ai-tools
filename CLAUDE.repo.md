@@ -26,7 +26,7 @@ dir 構成 (commands / skills / agents / hooks / rules / guidelines / references
 
 ## Definition File Token Saving
 
-commands/ skills/ agents/ の `.md` は毎 session token を消費する。Keep: decision table / workflow 定義 / guard / 禁止事項 / example 1 つ。Remove: sample impl / 重複説明 / 詳細 usage。Target: agent ≤300 / command ≤150 / skill 100-130 行。
+commands/ skills/ agents/ の `.md` は毎 session token を消費する。Keep: decision table / workflow 定義 / guard / 禁止事項 / example 1 つ。Remove: sample impl / 重複説明 / 詳細 usage。Target: agent ≤300 / command ≤150 / skill ≤130 行 (guidelines へ委譲する薄い skill は下限なし)。
 
 **EN-conversion-protected files/sections**: `claude-code/references/on-demand-rules/en-conversion-protected.md` (誤訳が rule / bats / JP trigger を壊す)。
 
