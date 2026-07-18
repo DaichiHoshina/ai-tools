@@ -108,7 +108,9 @@ for i in range(1, len(labels)):
     else:
         run = 1
 
-long_cnt = sum(1 for s in sents if len(s.replace("\n", "")) >= 100)
+# inline code span (`...`) は path/command 由来の長文誤爆源のため、100 字カウントのみ除去してから測る
+_long_src = [re.sub(r"`[^`]*`", "", s) for s in sents]
+long_cnt = sum(1 for s in _long_src if len(s.replace("\n", "")) >= 100)
 
 polite = 0
 if os.environ.get("POLITE_CHECK") == "1":

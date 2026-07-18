@@ -63,6 +63,7 @@ if [[ "${JP_QUALITY_STOP_CHECK:-1}" == "1" && "${_STOP_HOOK_ACTIVE}" != "true" &
       jq -n --arg reason "${_CHAT_BLOCK_REASON}" '{decision: "block", reason: $reason}'
       exit 0
     fi
+    _append_jp_quality_log "chat" "${_CHAT_BLOCK_REASON}" "log-only-downgrade"
     _JPQ_WARN_MSG="${ICON_WARNING:-▲} chat NG 語 (block ${_JPQ_COUNT} 回到達で log-only 降格): ${_CHAT_BLOCK_REASON}"
   elif [[ -n "${_CHAT_WARN_MSG}" ]]; then
     _JPQ_WARN_MSG="${_CHAT_WARN_MSG}"

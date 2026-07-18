@@ -585,6 +585,15 @@ _run_sentence_structure() {
   [[ "$output" != *"100字超文"* ]]
 }
 
+@test "sentence-structure: inline code span 除去後 100 字未満なら非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  local _path
+  _path=$(printf 'a%.0s' {1..110})
+  _run_sentence_structure "\`${_path}\`は短い文だ。"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"100字超文"* ]]
+}
+
 @test "sentence-structure: polite flag=1 で敬体 'しました' → warn 検出" {
   _make_ng_dict "$TEST_TMPDIR"
   _run_sentence_structure '実装しました。' 1
@@ -702,7 +711,7 @@ _run_sentence_structure() {
   [ "$status" -eq 0 ]
 }
 
-@test "chat-quality: 100字超文は 1 文なら warn、2 文で block" {
+@test "chat-quality: 100字超文は 1 文でも block (2026-07-18 昇格)" {
   _make_ng_dict "$TEST_TMPDIR"
   run bash -c "
     export HOME='${TEST_TMPDIR}'
@@ -710,10 +719,20 @@ _run_sentence_structure() {
     source '${LIB_FILE}'
     _long=\$(printf 'あ%.0s' {1..105})
     _chat_quality_check \"\${_long}。\"
-    [ -z \"\${_CHAT_BLOCK_REASON}\" ] || { echo \"BLOCK(1文)=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
-    printf '%s' \"\${_CHAT_WARN_MSG}\" | grep -q '100字超文' || { echo \"WARN=\${_CHAT_WARN_MSG}\" >&2; exit 1; }
-    _chat_quality_check \"\${_long}。\${_long}。\"
-    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '100字超文' || { echo \"BLOCK(2文)=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '100字超文' || { echo \"BLOCK(1文)=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: 100字超文でも inline code span 除去後は非 block" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _path=\$(printf 'a%.0s' {1..105})
+    _chat_quality_check \"\\\`\${_path}\\\`は短い文だ。\"
+    [ -z \"\${_CHAT_BLOCK_REASON}\" ] || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
   "
   [ "$status" -eq 0 ]
 }

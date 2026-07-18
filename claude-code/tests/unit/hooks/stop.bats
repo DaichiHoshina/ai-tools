@@ -200,3 +200,33 @@ _stop_out() {
   printf '%s' "${out}" | jq -e '.reason | contains("体言止め")' >/dev/null
   rm -f /tmp/claude-stop-jpq-count-batsjpq-*
 }
+
+@test "stop: 100字超文は 1 文でも block (2026-07-18 昇格)" {
+  _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+  local long
+  long=$(printf 'あ%.0s' {1..105})
+  local out
+  out=$(_stop_out "${long}。")
+  printf '%s' "${out}" | jq -e '.decision == "block"' >/dev/null
+  printf '%s' "${out}" | jq -e '.reason | contains("100字超文")' >/dev/null
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+}
+
+@test "stop: block 5 回到達で log-only 降格し jp-quality-block.log に 1 行残す" {
+  _make_stop_ng_dict
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+  local log_file="${TEST_TMPDIR}/.claude/logs/jp-quality-block.log"
+  rm -f "${log_file}"
+  # _append_jp_quality_log は bats 実行中の log 汚染回避で BATS_TEST_FILENAME 有無を見て skip する設計のため、
+  # この test だけ unset して log 書込を有効化する (log 先は TEST_TMPDIR 配下で隔離済)
+  local i out
+  for i in 1 2 3 4 5 6; do
+    out=$(jq -n '{last_assistant_message:"念のため設定を確認した。", cwd:"/tmp", session_id:"batsjpq"}' \
+      | env -u BATS_TEST_FILENAME bash "${HOOK_FILE}" 2>/dev/null)
+  done
+  printf '%s' "${out}" | jq -e 'has("decision") | not' >/dev/null
+  printf '%s' "${out}" | jq -e '.systemMessage | contains("log-only 降格")' >/dev/null
+  grep -q "log-only-downgrade" "${log_file}"
+  rm -f /tmp/claude-stop-jpq-count-batsjpq-*
+}

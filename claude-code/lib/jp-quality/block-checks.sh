@@ -249,15 +249,14 @@ _chat_quality_check() {
 
   # 構造検査。chat は常体規範なので敬体 check on + 可読性 (連続漢字/読点) 同梱で python 1 fork。
   # 語彙 hit ゼロでも構造 block は発生するため fast path (_cq_any) の外で判定する。
-  # block 昇格 (2026-07-16): 体言止め bullet / 矢印チェーン (判定 guard が厚く誤爆低) と 100字超文≥2
-  # (全 block だと loop 上限 5 を序盤で使い切るため閾値 2 文。1 文は warn 据え置き、log で見直す)。
+  # block 昇格 (2026-07-16): 体言止め bullet / 矢印チェーン (判定 guard が厚く誤爆低) と 100字超文。
+  # 100字超文は inline code span 除去済 (structural-checks.sh) で誤爆源を潰した上、1 文から block に昇格 (2026-07-18)。
   # 同一文末 / 敬体 (UI コピー draft) / 連続漢字・読点 (固有名詞誤爆) は warn 据え置き。
   _check_sentence_structure_counts "$text" 1 1
   local _cq_struct_block="" _cq_struct_warn=""
   (( _SS_TAIGEN > 0 )) && _cq_struct_block="体言止めbullet ${_SS_TAIGEN}行 (各 bullet を「〜する/〜した/〜だ」の文で閉じる); "
   (( _SS_ARROW > 0 )) && _cq_struct_block="${_cq_struct_block}矢印チェーン ${_SS_ARROW}行 (矢印列を動詞を持つ文章に展開する); "
-  (( _SS_LONG >= 2 )) && _cq_struct_block="${_cq_struct_block}100字超文 ${_SS_LONG}文 (句点で 2 文以上に分割する); "
-  (( _SS_LONG == 1 )) && _cq_struct_warn="100字超文: 1文 → 文分割; "
+  (( _SS_LONG > 0 )) && _cq_struct_block="${_cq_struct_block}100字超文 ${_SS_LONG}文 (句点で 2 文以上に分割する); "
   (( _SS_KANJI_CNT > 0 )) && _cq_struct_warn="${_cq_struct_warn}連続漢字≥5: ${_SS_KANJI_CNT}種 (${_SS_KANJI_SAMPLE}) → 助詞挿入/訓読み開く; "
   (( _SS_TOUTEN > 0 )) && _cq_struct_warn="${_cq_struct_warn}読点≥4の文: ${_SS_TOUTEN}個 → 文分割; "
   (( _SS_REP > 0 )) && _cq_struct_warn="${_cq_struct_warn}同一文末3連続: ${_SS_REP}箇所 → 文末を変える; "
