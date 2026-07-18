@@ -4,12 +4,9 @@ chat も外向き text も **常体 plain JP (開いた文章)** で書く。隣
 
 ## 不要な英語 jargon の禁止
 
-日本語で自然に言える一般語を英語のまま書かない。書き手の作業語彙 (digest / inject / sweep / canonical / trigger / fan-out / stale 等) は読み手の語彙ではない。
+日本語で自然に言える一般語を英語のまま書かない。書き手の作業語彙 (「英語jargon」欄の語) は読み手の語彙ではない。
 
-- NG: digest / inject / sweep / canonical / trigger / fan-out / stale
-- OK: 要約 / 差し込む / 点検 / 正 (基準) / きっかけ / 並列展開 / 古い
-
-詳細置換表: `guidelines/writing/PRINCIPLES-word-replace.md`。迷ったら日本語側を選ぶ。
+NG 語一覧・置換候補は `guidelines/writing/NG-DICTIONARY.md` の「英語jargon」欄が canonical (本 file に実体を持たない)。詳細置換表: `guidelines/writing/PRINCIPLES-word-replace.md`。迷ったら日本語側を選ぶ。
 
 ### 模範ペア (3 つの欠点を同時に直す例)
 
@@ -33,7 +30,7 @@ turn 締めを「完了」「〜完了」「〜済」で終えない。事実を
 - OK: 「baseline を更新して push した。」
 - 「〜済」も同じ理由で default 禁止する (事実だけ書けば伝わる)
 
-送信前に 4 点を確かめる: (1) **turn 最終文 self-check** — 最後の 1 文が「完了 / 〜済 / 次に / 加えて」で終わっていないか、100 字を超えていないか。この 2 点は 7 日で warn 424 件 / 100 字超 97 件と最多違反、rule 記述だけでは効かない実績があるため毎 turn 明示的に見直す (2) 全文が「〜する / 〜した / 〜だ」で閉じているか (3) 削っても意味が変わらない文がないか (4) 日本語で言える英語が残っていないか + `guidelines/writing/NG-DICTIONARY.md` の禁止語 (「完了」「次に」「加えて」「さらに」「まず」「最後に」「影響なし」「クリーン」「comprehensive」「包括的」「堅牢」「最適化」「踏襲」「念のため」「〜を行う」等) が残っていないか。禁止語が入っていたら出力前に日本語で言い直す。
+送信前に 4 点を確かめる: (1) **turn 最終文 self-check** — 最後の 1 文が `完了` / `〜済` / `次に` / `加えて` で終わっていないか、100 字を超えていないか。この 2 点は直近実測 (2026-07-11〜18、集計元: `~/.claude/logs/jp-quality-block.log`) で warn 639 件 / block 44 件のうち最頻 (`完了` 141 件・100 字超文 127 件) であり、rule 記述だけでは効かない実績があるため毎 turn 明示的に見直す (2) 全文が「〜する / 〜した / 〜だ」で閉じているか (3) 削っても意味が変わらない文がないか (4) 日本語で言える英語が残っていないか + `guidelines/writing/NG-DICTIONARY.md` の禁止語 (全 key は同 file が canonical、本 file には実体を持たない) が残っていないか。禁止語が入っていたら出力前に日本語で言い直す。
 
 ## 適用範囲
 

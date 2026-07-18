@@ -10,7 +10,7 @@ hook (`lib/jp-quality-check.sh:_extract_term_list`、`hooks/pre-tool-use.sh` か
 
 > 連続漢字≥5 の頻出 NG 例 (structural warn 対象、warn-only): 動作確認手順 / 回答案検討 / 回答案確定 / 対応方針決定 / 参照箇所影響範囲確認 / 上流下流関係 / 再投稿完了 / 同梱未対応。「動作の 確認手順」「回答案を 検討」のように助詞挿入か訓読み開きで分解する。
 
-**英語jargon (warn-only)**: digest / inject / sweep / canonical / trigger / fan out / stale / orchestrate / delegate / salience / priming / fallback / dedup / throttle / insight / takeaway / deep dive / edge case / align
+**英語jargon (warn-only)**: digest / inject / sweep / canonical / trigger / fan out / fan-out / stale / orchestrate / delegate / salience / priming / fallback / dedup / throttle / insight / takeaway / deep dive / edge case / align
 
 > 英語jargon は warn-only。日本語で言える一般語は日本語化する (digest→要約 / inject→差し込む / sweep→点検 / canonical→正 / trigger→きっかけ / stale→古い / fallback→代替 / edge case→境界事例 / align→そろえる)。識別子・command 名として正当に使う場合は backtick で囲むと検査対象外になる。追加根拠は user 指摘「専門用語使いすぎ」(2026-07-10) の incident。
 
