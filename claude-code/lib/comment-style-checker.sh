@@ -31,6 +31,28 @@ _comment_style_marker_re_for() {
   esac
 }
 
+# 引数: file_path content (content は実 newline 前提、tsv escape は呼び出し側で解除済みとする)
+# 戻り値: 0=対象拡張子 (comment 行抽出、0 件時も 0) / 1=非対象拡張子 (呼び出し側で skip)
+# 出力: comment 本文を marker 除去のうえ改行区切りで連結 (stdout)
+_extract_comment_body_text() {
+  local _file="$1"
+  local _content="$2"
+  local _ext="${_file##*.}"
+  local _marker_re
+  if ! _marker_re="$(_comment_style_marker_re_for "$_ext")"; then
+    return 1
+  fi
+  local _out="" _line _body
+  while IFS= read -r _line; do
+    grep -qE "$_marker_re" <<< "$_line" || continue
+    _body="$(_comment_style_strip_marker "$_line")"
+    [[ -z "$_body" ]] && continue
+    _out="${_out}${_body}"$'\n'
+  done <<< "$_content"
+  printf '%s' "$_out"
+  return 0
+}
+
 # comment marker を剥がして本文だけ返す
 _comment_style_strip_marker() {
   local _line="$1"

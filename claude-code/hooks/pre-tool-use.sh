@@ -145,11 +145,17 @@ case "$TOOL_NAME" in
       _check_serena_memory_path "$_SERENA_PATH"
     fi
 
-    # code comment 規範 inject: serena 編集系 (content / body / repl param) も Write/Edit と同様に検査
+    # code comment 規範 inject + AI定型語 block: serena 編集系 (content / body / repl param) も Write/Edit と同様に検査
     case "$TOOL_NAME" in
       "mcp__serena__create_text_file"|"mcp__serena__replace_regex"|"mcp__serena__replace_content"|"mcp__serena__replace_symbol_body"|"mcp__serena__insert_after_symbol"|"mcp__serena__insert_before_symbol")
         _SERENA_NEW_CONTENT=$(jq -r '[.tool_input.content // empty, .tool_input.body // empty, .tool_input.repl // empty] | join("\n")' <<< "$INPUT")
         _inject_code_comment_rules "$_SERENA_PATH" "$_SERENA_NEW_CONTENT"
+        # relative_path は project root (cwd) 起点。絶対 path 除外判定 (_is_aitools_path 等) のため cwd と結合する
+        _SERENA_ABS_PATH="$_SERENA_PATH"
+        if [[ -n "$_SERENA_PATH" && "$_SERENA_PATH" != /* && -n "$_CWD_FOR_SPLIT" ]]; then
+          _SERENA_ABS_PATH="${_CWD_FOR_SPLIT%/}/${_SERENA_PATH}"
+        fi
+        _run_ai_jargon_check "$_SERENA_ABS_PATH" "$_SERENA_NEW_CONTENT"
         ;;
     esac
     ;;

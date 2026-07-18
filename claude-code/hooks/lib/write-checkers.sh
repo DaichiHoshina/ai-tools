@@ -9,6 +9,9 @@ _WRITE_CHECKERS_LOADED=1
 # thresholds.sh は portable_stat_mtime 前後で使う値には直接依存しないが、他 module と source 順を揃える
 # shellcheck source=thresholds.sh
 source "${BASH_SOURCE[0]%/*}/thresholds.sh"
+# comment marker 抽出 (_comment_style_marker_re_for / _extract_comment_body_text) を AI 定型語 block で再利用する
+# shellcheck source=../../lib/comment-style-checker.sh
+source "${BASH_SOURCE[0]%/*}/../../lib/comment-style-checker.sh"
 
 # ====================================
 # Live Doc Required (warn-only)
@@ -228,6 +231,33 @@ _check_local_docs_template() {
 # 挙動を変えずに切り出したもの。GUARD_CLASS / ADDITIONAL_CONTEXT は
 # 呼び出し元 (pre-tool-use.sh) のグローバル変数をそのまま読み書きする。
 # ====================================
+
+# AI定型語 block を path/拡張子で振り分けて実行する共通関数。
+# .md / .txt は全文検査、code 拡張子 (comment-style-checker の対象拡張子) は comment 行のみ抽出して検査する。
+# md/txt 以外かつ非 code 拡張子 (json/yaml 等) は対象外で silent skip する。
+# 呼び出し元: write-checkers.sh の Edit/Write 経路 + pre-tool-use.sh の Serena write 系 case。
+# 引数: file_path content (content は実 newline 前提、呼び出し側で @tsv unescape 済みとする)
+_run_ai_jargon_check() {
+  local _path="$1"
+  local _content="$2"
+  [[ "$GUARD_CLASS" == "Forbidden" ]] && return 0
+  [[ -z "$_content" ]] && return 0
+  if _is_aitools_path "$_path" || _is_auto_memory_path "$_path" || _is_plans_path "$_path" || _is_references_private_path "$_path" || _is_memory_path "$_path"; then
+    return 0
+  fi
+  local _ext="${_path##*.}"
+  local _bn
+  _bn=$(basename "${_path:-file}")
+  if [[ "$_ext" == "md" || "$_ext" == "txt" ]]; then
+    _block_if_ai_jargon "$_content" "ファイル: ${_bn}"
+    return 0
+  fi
+  local _comment_text
+  if _comment_text="$(_extract_comment_body_text "$_path" "$_content")" && [[ -n "$_comment_text" ]]; then
+    _block_if_ai_jargon "$_comment_text" "ファイル: ${_bn} (comment)"
+  fi
+}
+
 _handle_edit_write_tool() {
   local INPUT="$1"
   local TOOL_NAME="$2"
@@ -344,19 +374,13 @@ _handle_edit_write_tool() {
     _check_legacy_auto_memory_path "$_EDIT_FILE_PATH"
   fi
 
-  # AI定型語 block: 作業 repo の .md / .txt への書き込みを検査
+  # AI定型語 block: 作業 repo の .md / .txt / code file への書き込みを検査
   # ai-tools 配下は除外 (guidelines / NG-DICTIONARY など NG 語を literal 保持する設定 md の誤爆防止)
   # auto-memory dir (~/.claude/projects/*/memory/) も除外 (AI 自己分析の生記録、外向き prose 規則対象外)
   # ~/.claude/plans/ も除外 (`/plan` 出力は AI の作業計画、外向き prose ではない)
+  # EDIT_CONTENT は @tsv 経由取得のため embedded newline が literal \n に escape されている。unescape してから渡す
   if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
-    local _AJ_EXT="${_EDIT_FILE_PATH##*.}"
-    if [[ "$_AJ_EXT" == "md" || "$_AJ_EXT" == "txt" ]]; then
-      if ! _is_aitools_path "$_EDIT_FILE_PATH" && ! _is_auto_memory_path "$_EDIT_FILE_PATH" && ! _is_plans_path "$_EDIT_FILE_PATH" && ! _is_references_private_path "$_EDIT_FILE_PATH" && ! _is_memory_path "$_EDIT_FILE_PATH"; then
-        local _AJ_BASENAME
-        _AJ_BASENAME=$(basename "${_EDIT_FILE_PATH:-file}")
-        _block_if_ai_jargon "$EDIT_CONTENT" "ファイル: ${_AJ_BASENAME}"
-      fi
-    fi
+    _run_ai_jargon_check "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
   fi
 
   # Rename propagation detection (Edit tool only has old_string/new_string)

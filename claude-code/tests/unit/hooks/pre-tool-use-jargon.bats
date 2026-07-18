@@ -460,3 +460,52 @@ _run_write_jargon() {
   run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
   [ "$status" -ne 2 ]
 }
+
+# =============================================================================
+# gap 4: code file comment 内 NG 語 block (Write/Edit + Serena write 系) (2026-07-18)
+# =============================================================================
+
+@test "gap4: code file (.go) comment に NG 語 leverage を Write → exit 2 block" {
+  local input
+  input=$(jq -n '{tool_name:"Write", tool_input:{file_path:"/tmp/test-gap4.go", content:"package main\n// leverage existing infra\nfunc main() {}\n"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "leverage" ]]
+}
+
+@test "gap4: code file (.go) comment に NG 語なし → block されない" {
+  local input
+  input=$(jq -n '{tool_name:"Write", tool_input:{file_path:"/tmp/test-gap4-clean.go", content:"package main\n// 通常の説明comment\nfunc main() {}\n"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -ne 2 ]
+}
+
+@test "gap4: code 以外の行 (comment ではない) に NG 語があっても block されない" {
+  local input
+  input=$(jq -n '{tool_name:"Write", tool_input:{file_path:"/tmp/test-gap4-noncomment.sh", content:"echo leverage existing infra"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -ne 2 ]
+}
+
+@test "gap4: Serena replace_symbol_body の body comment に NG 語 leverage → exit 2 block" {
+  local input
+  input=$(jq -n '{tool_name:"mcp__serena__replace_symbol_body", tool_input:{relative_path:"pkg/foo.go", name_path:"Foo", body:"func Foo() {\n\t// leverage existing infra\n}"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "leverage" ]]
+}
+
+@test "gap4: Serena replace_content の repl comment に NG 語なし → block されない" {
+  local input
+  input=$(jq -n '{tool_name:"mcp__serena__replace_content", tool_input:{relative_path:"pkg/foo.go", needle:"x", repl:"// 通常の説明comment\nfoo()", mode:"literal"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -ne 2 ]
+}
+
+@test "gap4: Serena create_text_file の content comment に NG 語 utilize → exit 2 block" {
+  local input
+  input=$(jq -n '{tool_name:"mcp__serena__create_text_file", tool_input:{relative_path:"pkg/bar.go", content:"package pkg\n// utilize the cache\nfunc Bar() {}\n"}}')
+  run bash -c 'echo "$1" | bash "$2"' _ "$input" "$HOOK_FILE"
+  [ "$status" -eq 2 ]
+  [[ "$output" =~ "非日常英語 block" ]] || [[ "$output" =~ "utilize" ]]
+}
