@@ -468,4 +468,5 @@
   "terminal.integrated.tabs.enabled": false,
   "cursor.composer.textSizeScale": 1.15,
   "cursor.composer.codeBlockWordWrap": true,
+  "chatgpt.localeOverride": "ja-JP",
 }
