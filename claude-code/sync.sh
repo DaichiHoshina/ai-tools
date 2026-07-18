@@ -617,7 +617,7 @@ verify_to_local_sync() {
         dst="$CLAUDE_DIR/$item"
         [ -e "$src" ] && [ -e "$dst" ] || continue
         if [ -d "$src" ]; then
-            diff_output=$(diff -rq "$src" "$dst" 2>/dev/null || true)
+            diff_output=$(diff -rq "$src" "$dst" 2>/dev/null | grep -v -E '(/|: )(private-|local-)' || true)
             # skills は gh skill 管理ぶんと .system/ (OpenAI Codex 向け、sync 除外対象) を除外
             if [ "$item" = "skills" ] && [ -n "$diff_output" ]; then
                 # grep -v は全行 filter 時に exit 1 を返すため || true で pipefail 落ちを防ぐ
@@ -671,7 +671,7 @@ _check_overwrite_guard() {
         local raw_diff
         if [ -d "$src" ]; then
             raw_diff=$(diff -rq "$src" "$dst" 2>/dev/null | \
-                grep -v -E '/(private-|local-)' | \
+                grep -v -E '(/|: )(private-|local-)' | \
                 grep -v '/test-[^/]+\.sh' || true)
             # skills: gh skill 管理ぶんを除外
             if [ "$item" = "skills" ] && [ -n "$raw_diff" ]; then
@@ -841,7 +841,8 @@ show_diff() {
         if [ -e "$src" ] && [ -e "$dst" ]; then
             if [ -d "$src" ]; then
                 local diff_output
-                diff_output=$(diff -rq "$src" "$dst" 2>/dev/null || true)
+                # private-*/local-* は sync 保護対象 (local 専用) のため差分扱いしない
+                diff_output=$(diff -rq "$src" "$dst" 2>/dev/null | grep -v -E '(/|: )(private-|local-)' || true)
                 # skills/.system/ と mino 保守用 payload は to-local で除外するため差分扱いしない
                 if [ "$item" = "skills" ] && [ -n "$diff_output" ]; then
                     diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$|/skills/mino-[^/]+/(evaluations|scripts|agents)(/|$)|/skills/mino-[^/]+: (evaluations|scripts|agents)$' || true; })
