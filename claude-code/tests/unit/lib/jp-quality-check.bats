@@ -851,6 +851,54 @@ _run_sentence_structure() {
   [ "$status" -eq 0 ]
 }
 
+@test "chat-quality: turn 締め語 '次に検討する' は文中利用のため block しない" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '次に検討する。'
+    [ -z \"\${_CHAT_BLOCK_REASON}\" ] || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: turn 締め語 '次に。' は文末単独のため block する" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '次に。'
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q 'turn締め語文末' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: turn 締め語 '完了報告' は文中利用のため block しない" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '完了報告'
+    [ -z \"\${_CHAT_BLOCK_REASON}\" ] || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "chat-quality: turn 締め語 '実装は完了。' は文末単独のため block する" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _chat_quality_check '実装は完了。'
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q 'turn締め語文末' || { echo \"BLOCK=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
 @test "chat-quality: 主体不明断定 'と言われる' は warn (新 key)" {
   _make_ng_dict "$TEST_TMPDIR"
   run bash -c "

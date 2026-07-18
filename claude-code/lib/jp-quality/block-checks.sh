@@ -210,6 +210,21 @@ ${_ref_lines}"
 # 誤爆リスクのある key + 残りの構造検査は warn に降格する。
 # 出力契約: _CHAT_BLOCK_REASON (block hit 時のみ非空) / _CHAT_WARN_MSG (warn hit 時のみ非空) の 2 変数。
 # _assert_required_keys は呼ばない (exit 2 が stop hook では block に化けるため)。dict 不在は graceful return。
+# turn 締め語 (完了/次に/済/済み) は行末に単独で現れる場合だけ block 対象にする。文中利用は対象外にする。
+_check_turn_closing_tail() {
+  local text="$1"
+  local clean
+  clean=$(_strip_code_blocks "$text")
+  local words=("完了" "次に" "済み" "済")
+  local hits="" w
+  for w in "${words[@]}"; do
+    if printf '%s\n' "$clean" | grep -qE "${w}。?[[:space:]]*\$"; then
+      hits="${hits:+${hits},}${w}"
+    fi
+  done
+  printf '%s' "$hits"
+}
+
 _chat_quality_check() {
   local text="$1"
   _CHAT_BLOCK_REASON=""
@@ -239,11 +254,19 @@ _chat_quality_check() {
     _cq_any=$(printf '%s' "$_cq_clean" | grep -ioFf <(printf '%s\n' "${_cq_all_words[@]}") | sort -u || true)
   fi
 
+  # turn 締め語 (完了/次に/済/済み) は文末 anchor 一致のみ block 対象。「次に」は AI段取り定型 の lead 判定より優先する。
+  local _cq_tail_hits
+  _cq_tail_hits=$(_check_turn_closing_tail "$text")
+
   local _cq_block_terms="" _cq_detail="" _cq_warn_terms=""
   if [[ -n "$_cq_any" ]]; then
     local _cq_hits _cq_list
     for _cq_key in "${_cq_block_keys[@]}"; do
       if ! _cq_hits=$(_check_term_list "$text" "$_cq_key"); then
+        if [[ "$_cq_key" == "AI段取り定型 (block)" && "$_cq_tail_hits" != *"次に"* ]]; then
+          _cq_hits=$(printf '%s\n' "$_cq_hits" | grep -v '^次に$' || true)
+          [[ -z "$_cq_hits" ]] && continue
+        fi
         _cq_list=$(printf '%s' "$_cq_hits" | tr '\n' ',' | sed 's/,$//')
         _cq_block_terms="${_cq_block_terms:+${_cq_block_terms},}${_cq_list}"
         # 置換候補を併記して自己修正の 1 発成功率を上げる
@@ -290,6 +313,10 @@ _chat_quality_check() {
   if [[ -n "$_cq_struct_block" ]]; then
     _append_jp_quality_log "chat" "structural: ${_cq_struct_block%; }" "block"
     _cq_block_detail="${_cq_block_detail:+${_cq_block_detail}; }構造: ${_cq_struct_block%; }"
+  fi
+  if [[ -n "$_cq_tail_hits" ]]; then
+    _append_jp_quality_log "chat" "turn締め語文末: ${_cq_tail_hits}" "block"
+    _cq_block_detail="${_cq_block_detail:+${_cq_block_detail}; }turn締め語文末: ${_cq_tail_hits} (言い切って終えず、次の行に実際の内容を続けて書く)"
   fi
   if [[ -n "$_cq_block_detail" ]]; then
     _CHAT_BLOCK_REASON="chat 応答が plain JP 規範に反する: ${_cq_block_detail} — 直前の応答本文だけを規範に沿った開いた日本語に書き直して再送する。source: guidelines/writing/NG-DICTIONARY.md + rules/plain-jp.md"
