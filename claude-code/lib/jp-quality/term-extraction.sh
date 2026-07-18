@@ -220,9 +220,35 @@ _check_term_list() {
   # -i: 英語 NG 語 (leverage / Leverage / LEVERAGE 等) の大文字小文字差を取りこぼさない。JP 語は無影響
   local found
   found=$(printf '%s' "$clean_text" | grep -ioFf <(printf '%s\n' "${words[@]}") | sort -u || true)
-  if [[ -n "$found" ]]; then
-    printf '%s\n' "$found"
-    return 1
+  [[ -z "$found" ]] && return 0
+  if [[ "$key" == "AI段取り定型 (block)" ]]; then
+    _filter_dandori_by_position found "$clean_text"
+    [[ -z "$found" ]] && return 0
   fi
-  return 0
+  printf '%s\n' "$found"
+  return 1
+}
+
+# AI 段取り短語 (まず/次に/…) は「気まずい」等に部分一致するため段落 lead 位置のみ block
+_filter_dandori_by_position() {
+  local -n _found_ref="$1"
+  local _text="$2"
+  local _leads=("まず" "次に" "最後に" "続いて" "加えて" "さらに" "それでは")
+  local _kept="" _hit _is_lead _lead
+  while IFS= read -r _hit; do
+    [[ -z "$_hit" ]] && continue
+    _is_lead=0
+    for _lead in "${_leads[@]}"; do
+      [[ "$_hit" == "$_lead" ]] && { _is_lead=1; break; }
+    done
+    if [[ $_is_lead -eq 0 ]]; then
+      _kept="${_kept:+${_kept}$'\n'}${_hit}"
+      continue
+    fi
+    if printf '%s' "$_text" | grep -qE "(^|[\n。、」』])${_hit}" && \
+       ! printf '%s' "$_text" | grep -qE "(^|[\n。、」』])${_hit}${_hit}"; then
+      _kept="${_kept:+${_kept}$'\n'}${_hit}"
+    fi
+  done <<< "$_found_ref"
+  _found_ref="$_kept"
 }

@@ -423,6 +423,78 @@ teardown() {
 }
 
 # =============================================================================
+# Case 9c: AI 段取り短語の部分一致誤爆回避 — 文中の一般語は block されない (2026-07-18 緩和)
+# =============================================================================
+
+@test "block: '気まずくなる' の部分一致 'まず' は block されない (段落 lead 位置のみ block)" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '指摘したら気まずくなるのではという感覚があった。' 'commit message'
+
+    [ -z \"\${GUARD_CLASS}\" ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: 'まずまず良い' の反復語は block されない" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'まずまず良い結果になった。' 'commit message'
+
+    [ -z \"\${GUARD_CLASS}\" ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: '順次に処理' の部分一致 '次に' は block されない" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'queue の項目を順次に処理する。' 'commit message'
+
+    [ -z \"\${GUARD_CLASS}\" ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: 読点直後の '次に' は従来通り block される (正爆維持)" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '設定を確認し、次に編集へ進む。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+# =============================================================================
 # Case 10: ヘッジ濫用 block — 念のため を含む text は block される
 # =============================================================================
 
