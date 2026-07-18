@@ -15,7 +15,9 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 
 ---
 
-## main pre-release (detected 2026-06-08, re-confirmed 2026-07-02, still pre-release on next tag)
+## v1.6.0 (released 2026-07-16, tracked 2026-07-18)
+
+v1.5.3 → v1.6.0 で、下記の pre-release / post-v1.5.3 として先取り評価済みの項目が正式リリースされた。schema breaking な CONFIG 変更・auto-apply 対象 (tool rename / template arg / user-scope 再登録) はいずれも無く、判定を据え置く。`replace_in_files` は wildcard `mcp__serena__*` 採用の 4 agent (explore / manager / developer / po) で自動有効、新 key (`trusted_project_path_patterns` / `activation_command`) は global config・project.yml に Serena 側 template 生成で反映済みかつ `ls_specific_settings: {}` empty のため影響ゼロ。`main` 冒頭の Unreleased 群 (search_for_pattern / safe_delete 等の bugfix) は次 tag で拾う pre-release、config 影響なし。
 
 - [ ] **`replace_in_files` 新 tool** (added 2026-06-10, `4dc0cd14`): 複数 file 横断の literal/regex 置換 tool 新設、`src/serena/tools/file_tools.py` で実装 — review at: wildcard `mcp__serena__*` 採用済 agent (explore / manager / developer / po / commands) は自動有効。explicit list の reviewer / root-cause-analyzer / verify-app は read-only 用途のため追加不要。実装で `replace_content` 既存使い方と比較推奨
 - [ ] **`get_symbols_overview depth=-1` default** (added 2026-06-12, `75410c78`): overview tools の `depth` default が language-specific になり `-1` 指定で有効化 — review at: repo 内で `depth=` 明示指定なし (grep ゼロ) のため影響なし、新規 caller で `depth=-1` を使う場面で活用
