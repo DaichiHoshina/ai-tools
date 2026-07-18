@@ -74,25 +74,6 @@ tests/
 |---------|:--------:|:----------:|
 | lib/security-functions.sh | 15 | 95% |
 
-## CI/CD統合（今後）
-
-```yaml
-# .github/workflows/test.yml
-name: Test
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: brew install bats-core jq shellcheck parallel
-      - name: Run tests
-        run: bats -r -j 8 tests/
-      - name: Run shellcheck
-        run: shellcheck lib/*.sh hooks/*.sh scripts/*.sh
-```
-
 ## テスト追加ガイド
 
 ### 新しい単体テスト追加
