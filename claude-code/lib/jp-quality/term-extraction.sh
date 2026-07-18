@@ -234,7 +234,8 @@ _filter_dandori_by_position() {
   local -n _found_ref="$1"
   local _text="$2"
   local _leads=("まず" "次に" "最後に" "続いて" "加えて" "さらに" "それでは")
-  local _kept="" _hit _is_lead _lead
+  local _lead_prefix='(^|[。、」』])[[:space:]]*([-*・]|[0-9]+[.)])?[[:space:]]*'
+  local _kept="" _hit _is_lead _lead _exclude
   while IFS= read -r _hit; do
     [[ -z "$_hit" ]] && continue
     _is_lead=0
@@ -245,8 +246,13 @@ _filter_dandori_by_position() {
       _kept="${_kept:+${_kept}$'\n'}${_hit}"
       continue
     fi
-    if printf '%s' "$_text" | grep -qE "(^|[\n。、」』])${_hit}" && \
-       ! printf '%s' "$_text" | grep -qE "(^|[\n。、」』])${_hit}${_hit}"; then
+    if [[ "$_hit" == "まず" ]]; then
+      _exclude="(まずまず|まず[いくかけさそ])"
+    else
+      _exclude="${_hit}${_hit}"
+    fi
+    if printf '%s' "$_text" | grep -qE "${_lead_prefix}${_hit}" && \
+       ! printf '%s' "$_text" | grep -qE "${_lead_prefix}${_exclude}"; then
       _kept="${_kept:+${_kept}$'\n'}${_hit}"
     fi
   done <<< "$_found_ref"

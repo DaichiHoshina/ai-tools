@@ -477,6 +477,112 @@ teardown() {
   [ "$status" -eq 0 ]
 }
 
+# =============================================================================
+# Case 9d: 位置判定 filter の誤爆是正 (2026-07-18 corpus 検証で確定した 3+3 件)
+# =============================================================================
+
+@test "block: 'まずい設計' の形容詞連続は block されない" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'まずい設計だと気づいた。' 'commit message'
+
+    [ -z \"\${GUARD_CLASS}\" ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: 読点直後の 'まずい事態' は block されない" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'そこで、まずい事態になった。' 'commit message'
+
+    [ -z \"\${GUARD_CLASS}\" ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: ASCII 'n' 直後の '次に' は block されない (regex class 誤 match の回帰)" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon 'カラムxn次に依存する。' 'commit message'
+
+    [ -z \"\${GUARD_CLASS}\" ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: bullet 行頭の '- まず設定を開く' は block される" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '- まず設定を開く。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: 番号 list 行頭の '1. まず設定を開く' は block される" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '1. まず設定を開く。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: 句点+半角space 直後の 'まず起動する' は block される" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon '手順は以下。 まず起動する。' 'commit message'
+
+    [ \"\${GUARD_CLASS}\" = 'Forbidden' ] || { echo \"GUARD_CLASS=\${GUARD_CLASS}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
 @test "block: 読点直後の '次に' は従来通り block される (正爆維持)" {
   _make_ng_dict "$TEST_TMPDIR"
 
