@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Bash, Edit, Write, MultiEdit
 name: backend-dev
-description: Backend dev (Go/TS/Python/Rust). Auto-detect lang. Use for backend impl. — API 設計は api-design、アーキテクチャ判断は clean-architecture-ddd を使う
+description: Backend dev (Go/TS/Python/Rust). Auto-detect lang. Use for backend impl. 「backend 実装して」で起動。 — API 設計は api-design、アーキテクチャ判断は clean-architecture-ddd を使う
 requires-guidelines:
   - common
   - clean-architecture

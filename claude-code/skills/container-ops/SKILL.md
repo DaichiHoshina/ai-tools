@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash, Read, Glob, Grep, mcp__serena__*
 name: container-ops
-description: Docker/Kubernetes/Podman ops. Auto-detect platform. Use when operating.
+description: Docker/Kubernetes/Podman ops. Auto-detect platform. Use for container ops. 「Docker/K8s 操作して」「container 見て」で起動。
 requires-guidelines:
   - kubernetes  # if platform=kubernetes
   - common

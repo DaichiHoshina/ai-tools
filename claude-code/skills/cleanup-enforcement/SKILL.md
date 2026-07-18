@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash, Edit, MultiEdit, Read, Grep, mcp__serena__*
 name: cleanup-enforcement
-description: Cleanup enforcement: remove compat remnants, unused code. Use for cleanup.
+description: Cleanup enforcement: remove compat remnants, unused code. Use for code cleanup. 「不要 code 削除して」「compat 残骸消して」で起動。 — local-docs の整理は local-docs-cleanup を使う
 requires-guidelines:
   - common
   - typescript  # if lang=typescript

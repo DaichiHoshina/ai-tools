@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash, Read, Write
 name: incident-response
-description: Incident response: error→impact→cause→ticket→doc. Use when responding.
+description: Incident response: error→impact→cause→ticket→doc. Use when responding to incidents. 「障害対応して」「incident 対応」で起動。Jira/Confluence MCP 未接続時は draft を local 出力する。
 requires-guidelines:
   - operations
 ---

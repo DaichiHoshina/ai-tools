@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash, Read, Edit
 name: grpc-protobuf
-description: gRPC/Protobuf: proto design, codegen, backend impl. Use for gRPC services.
+description: gRPC/Protobuf: proto design, codegen, backend impl. Use for gRPC services. 「gRPC/proto 設計して」で起動。 — 一般 backend 実装は backend-dev を使う
 requires-guidelines:
   - golang
   - common

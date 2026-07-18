@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep, Edit, MultiEdit
 name: react-best-practices
-description: React/Next.js optimization: 45 rules, 8 categories. Use for React/Next.js impl.
+description: React/Next.js optimization: 45 rules, 8 categories. Use for React/Next.js impl. 「React/Next.js 実装して」で起動。
 requires-guidelines:
   - nextjs-react
 ---

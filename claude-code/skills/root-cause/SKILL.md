@@ -1,6 +1,6 @@
 ---
 name: root-cause
-description: Root cause analysis (5 Why): bugs to recurrence prevention. Use for RCA.
+description: Root cause analysis (5 Why): bugs to recurrence prevention. Use for RCA. 「原因調査して」「RCA して」で起動。
 allowed-tools: Read, Write, Glob, Grep, Bash, Task, AskUserQuestion, mcp__serena__*
 model: claude-sonnet-5
 requires-guidelines:

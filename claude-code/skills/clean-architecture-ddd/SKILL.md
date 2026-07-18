@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep
 name: clean-architecture-ddd
-description: Clean arch & DDD: layer sep, domain model, deps. Use for design decisions. — 実装は backend-dev を使う
+description: Clean arch & DDD: layer sep, domain model, deps. Use for design decisions. 「設計判断して」「layer 構成見て」で起動。 — 実装は backend-dev を使う
 requires-guidelines:
   - common
   - clean-architecture

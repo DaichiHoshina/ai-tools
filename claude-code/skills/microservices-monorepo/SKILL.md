@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Glob, Grep
 name: microservices-monorepo
-description: Microservices & monorepo: service split, comms, structure. Use for arch design. — 単一 service 実装には使わない
+description: Microservices & monorepo: service split, comms, structure. Use for arch design. 「service 分割して」「monorepo 構成して」で起動。 — 単一 service 実装には使わない
 requires-guidelines:
   - common
   - clean-architecture
