@@ -383,6 +383,21 @@ _handle_edit_write_tool() {
     _run_ai_jargon_check "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
   fi
 
+  # code comment 体言止め block (PreToolUse 移設、2026-07-18): 新規 comment 行限定で block する
+  # Write は disk 上の既存 file と diff して新規行のみ判定する。diff 不能 (file 読込失敗) 時は
+  # 誤爆優先で保守的に block を見送り、PostToolUse 側の既存 warn に委ねる
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ] && [ -n "$EDIT_CONTENT" ]; then
+    local _CS_CONTENT="${EDIT_CONTENT//\\n/$'\n'}"
+    if [[ "$TOOL_NAME" == "Write" ]]; then
+      local _CS_NEW_ONLY
+      if _CS_NEW_ONLY="$(run_comment_style_new_lines_for_write "$_EDIT_FILE_PATH" "$_CS_CONTENT")"; then
+        [ -n "$_CS_NEW_ONLY" ] && run_comment_style_block_check "$_EDIT_FILE_PATH" "$_CS_NEW_ONLY"
+      fi
+    else
+      run_comment_style_block_check "$_EDIT_FILE_PATH" "$_CS_CONTENT"
+    fi
+  fi
+
   # Rename propagation detection (Edit tool only has old_string/new_string)
   if [ -n "$_OLD_STRING" ] && [ -n "$_NEW_STRING" ]; then
     detect_rename_propagation "$_OLD_STRING" "$_NEW_STRING" "$_EDIT_FILE_PATH"

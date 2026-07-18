@@ -7,11 +7,12 @@
 set -euo pipefail
 
 # 常体で閉じている / 対象外と判定する末尾 pattern
-# - 常体動詞・形容詞末尾: る / た / だ / い / う / す / ず / ぬ / ん
+# - 常体動詞・形容詞末尾 (五段活用終止形の全行 う/く/ぐ/す/つ/ぬ/ぶ/む/る を含む): る / た / だ / い / う / く / ぐ / す / つ / ず / ぬ / ぶ / む / ん
+#   (block 化前は「書く」等が誤検出されていた旧 bug、2026-07-18 修正)
 # - 助詞・終助詞: よ / ね / か / な / と / も
 # - ASCII 記号・英数字 (英語 comment / 数値 / URL / 識別子末尾)
 # 注意: [[:alnum:]] は locale 依存で日本語 letter を含むため使わない。ASCII を明示する
-_COMMENT_STYLE_OK_TAIL_RE='(る|た|だ|い|う|す|ず|ぬ|ん|よ|ね|か|な|と|も|[a-zA-Z0-9_/@#%&*+=<>~^-])$'
+_COMMENT_STYLE_OK_TAIL_RE='(る|た|だ|い|う|く|ぐ|す|つ|ず|ぬ|ぶ|む|ん|よ|ね|か|な|と|も|[a-zA-Z0-9_/@#%&*+=<>~^-])$'
 
 # 対象外 prefix (機械 marker / example label は文体判定を skip)
 _COMMENT_STYLE_SKIP_PREFIX_RE='^(MEMO|TODO|FIXME|NOTE|XXX|HACK|WARN|NB|NG|OK|Bad|Good|例):'
@@ -163,4 +164,47 @@ run_comment_style_check() {
     printf '  ... (他 %d 件、full log: ~/.claude/logs/comment-style-warn.log)\n' "$_extra"
   fi
   printf '  canonical: guidelines/writing/code-comment.md § 日本語品質 (常体で閉じる)\n'
+}
+
+# Write tool 用: disk 上の既存 file と新規 content を line diff し、追加行のみ抽出する。
+# file が未存在なら新規 content 全体を「追加行」として返す。
+# 既存 file の読込に失敗した場合は非 0 を返す (呼び出し側は block を見送り warn に留める)。
+# 引数: file_path new_content (実 newline 前提)
+run_comment_style_new_lines_for_write() {
+  local _file="$1"
+  local _new_content="$2"
+  if [[ ! -e "$_file" ]]; then
+    printf '%s' "$_new_content"
+    return 0
+  fi
+  local _old_content
+  if ! _old_content="$(cat "$_file" 2>/dev/null)"; then
+    return 1
+  fi
+  diff <(printf '%s\n' "$_old_content") <(printf '%s\n' "$_new_content") 2>/dev/null \
+    | grep '^> ' | sed 's/^> //'
+  return 0
+}
+
+# comment 体言止め block: 呼び出し側で新規行に限定済みの content を判定し、hit 時に
+# GUARD_CLASS=Forbidden をセットする (PreToolUse block 化、2026-07-18)。
+# GUARD_CLASS / MESSAGE / ADDITIONAL_CONTEXT は呼び出し元スコープの global を直接更新する。
+# 引数: file_path new_only_content (新規行に限定済みの実 newline content)
+run_comment_style_block_check() {
+  local _file="$1"
+  local _content="$2"
+  [[ "${GUARD_CLASS:-}" == "Forbidden" ]] && return 0
+  [[ -z "$_file" || -z "$_content" ]] && return 0
+  local _hits
+  _hits=$(run_comment_style_check "$_file" "$_content" || true)
+  [[ -z "$_hits" ]] && return 0
+  GUARD_CLASS="Forbidden"
+  MESSAGE="${ICON_CRITICAL:-◉} code comment 体言止め block: ${_file}"
+  local _ctx="新規追加 comment が体言止めで終わっている。常体で閉じる (〜する/〜した/〜だ)。canonical: guidelines/writing/code-comment.md
+${_hits}"
+  if [[ -n "${ADDITIONAL_CONTEXT:-}" ]]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_ctx}"
+  else
+    ADDITIONAL_CONTEXT="$_ctx"
+  fi
 }

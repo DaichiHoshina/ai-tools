@@ -156,6 +156,8 @@ case "$TOOL_NAME" in
           _SERENA_ABS_PATH="${_CWD_FOR_SPLIT%/}/${_SERENA_PATH}"
         fi
         _run_ai_jargon_check "$_SERENA_ABS_PATH" "$_SERENA_NEW_CONTENT"
+        # comment 体言止め block: Serena の repl/body/content は元々「新規追加分」相当のため diff 不要
+        run_comment_style_block_check "$_SERENA_ABS_PATH" "$_SERENA_NEW_CONTENT"
         ;;
     esac
     ;;

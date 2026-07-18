@@ -106,7 +106,7 @@ _clear_comment_flag() {
 
   local result
   result=$(_run_hook_with_session "Write" \
-    '{"file_path":"/tmp/x.sh","content":"#!/usr/bin/env bash\n# retry 上限は外部 API の rate limit 由来\necho ok"}' "$sid")
+    '{"file_path":"/tmp/x.sh","content":"#!/usr/bin/env bash\n# retry 上限は外部 API の rate limit に由来する\necho ok"}' "$sid")
   _clear_comment_flag "$sid"
 
   [[ "$(get_additional_context "$result")" =~ "code comment 規範" ]]
