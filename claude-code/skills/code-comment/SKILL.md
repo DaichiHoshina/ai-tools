@@ -25,7 +25,7 @@ trigger 語 (skill auto-fire):
 非対象:
 - PR 本文 / commit message (`guidelines/writing/pr-description.md` + `commit-message.md` 担当)
 - 散文 docs / RCA / postmortem (`guidelines/writing/long-form-doc.md` 担当)
-- 日本語可読性のみ (`/jp-writing` 担当)
+- 日本語可読性のみ (`/jp-fix` 担当)
 
 ## Startup behavior
 

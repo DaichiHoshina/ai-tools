@@ -5,7 +5,7 @@
 ## File 単位 (body 全文 JP 維持)
 
 - `rules/plain-jp.md` — 規約 file 自体が JP、EN 化で規約と矛盾
-- `commands/jp-writing.md` — JP writing 例示が規範 (frontmatter は EN OK、body のみ保護)
+- `commands/jp-fix.md` — JP writing 例示が規範 (frontmatter は EN OK、body のみ保護)
 - `commands/post-comment.md` — 同上
 - `commands/design-doc.md` — 同上
 - `commands/prd.md` — 同上

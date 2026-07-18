@@ -128,7 +128,7 @@ Misbehavior / non-obvious success → 即 document → 次 session で auto-avoi
 - **記述対象の使い分け (超重要)**: code = How / test = What / commit log = Why / code comment = Why not (採らなかった選択肢と理由)。comment は **default 書かない / 上限 2 行 / what 言い換え禁止** (canonical: `guidelines/writing/code-comment.md`、hook が digest を inject)
 - 外向き text 前に today's commits を確認する (hook が write-type tool 前に auto-inject)
 - 文体規範 canonical: `guidelines/writing/PRINCIPLES.md` + `guidelines/writing/NG-DICTIONARY.md` (AI 定型語 hook block、書込前に先手 sweep)。1 文 100 字 (短文 60 字) 上限
-- 外向き doc は種別 guideline を on-demand で 1 本だけ読む (一覧: `guidelines/writing/README.md`)。深い書き直しのみ `/jp-writing`
+- 外向き doc は種別 guideline を on-demand で 1 本だけ読む (一覧: `guidelines/writing/README.md`)。深い書き直しのみ `/jp-fix`
 - 優先順: (1) `guidelines/writing/` → (2) `rules/` → (3) project template。例外 (project 優先): lint / format / CI / license / 法務 footer
 
 ## References

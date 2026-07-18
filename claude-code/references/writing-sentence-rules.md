@@ -1,6 +1,6 @@
 # 文単位の品質規約 (詳細)
 
-`guidelines/writing/PRINCIPLES.md` の `## 文単位の品質規約` の詳細層。段落 / 媒体構造は PRINCIPLES.md 本体が扱い、本 file は 1 文単位の品質を定量規範化する。textlint preset (ja-technical-writing / JTF-style) の運用知見を取り込む。深い書き直し / `/jp-writing` 実行時に参照する (毎回 auto-load 不要のため reference へ分離)。
+`guidelines/writing/PRINCIPLES.md` の `## 文単位の品質規約` の詳細層。段落 / 媒体構造は PRINCIPLES.md 本体が扱い、本 file は 1 文単位の品質を定量規範化する。textlint preset (ja-technical-writing / JTF-style) の運用知見を取り込む。深い書き直し / `/jp-fix` 実行時に参照する (毎回 auto-load 不要のため reference へ分離)。
 
 ## 文長 (媒体別 2 段)
 

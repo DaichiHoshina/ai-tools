@@ -28,7 +28,7 @@
 | 実装中に PRD / DesignDoc と実装の乖離を検出した時 | `dd-first-update.md` |
 | MCP 外部 API 利用時・PII 取扱時・AWS SSM 操作時 | `enterprise-security-mcp-pii-ssm.md` |
 | public-repo-private-data-block の incident 経緯を確認したい時 | `public-repo-incident-history.md` |
-| 外向き長文 doc (記事・DD・RCA) の draft 完成時、`/jp-writing` の長文 review / rewrite 時 | `natural-japanese-lint.md` |
+| 外向き長文 doc (記事・DD・RCA) の draft 完成時、`/jp-fix` の長文 review / rewrite 時 | `natural-japanese-lint.md` |
 
 ## 運用
 

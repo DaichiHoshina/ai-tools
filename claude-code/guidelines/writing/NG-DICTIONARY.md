@@ -20,13 +20,13 @@ hook (`lib/jp-quality-check.sh:_extract_term_list`、`hooks/pre-tool-use.sh` か
 
 **主体不明断定 (skill-only)**: 多くの〜 / 一般に〜 / 一般的に〜 / よく〜される / 〜と言われる / 〜だろう / 〜と考えられている
 
-> `(skill-only)` mode は hook 抽出対象外。`/jp-writing` skill self-check 経由でのみ参照する。技術 README 等で正当な総称表現として使う場面があり、hook 自動 block / warn は誤爆コストが高いため。語源は PRINCIPLES.md `## AI臭の根本: 書き手不在` `(1) 主体を明示する`。
+> `(skill-only)` mode は hook 抽出対象外。`/jp-fix` skill self-check 経由でのみ参照する。技術 README 等で正当な総称表現として使う場面があり、hook 自動 block / warn は誤爆コストが高いため。語源は PRINCIPLES.md `## AI臭の根本: 書き手不在` `(1) 主体を明示する`。
 
 **主体不明断定 (warn-only)**: と言われる / と考えられている / とされている
 
 > hook (chat 経路) が warn する grep-safe subset。上の skill-only key は「〜」placeholder 入りで literal grep に載らないため別 key として分離した。「一般的に」「だろう」は正当用法が多く誤爆コストが高いので含めない。
 
-**jp-writing 固有 NG (skill-only)**:
+**jp-fix 固有 NG (skill-only)**:
 
 | NG | OK |
 |----|-----|

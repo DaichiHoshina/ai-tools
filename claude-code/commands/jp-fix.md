@@ -4,7 +4,7 @@ description: Human-facing prose quality mode (JP 規範統合)
 argument-hint: "[file or text]"
 ---
 
-## /jp-writing - Writing Quality Command
+## /jp-fix - Writing Quality Command
 
 Improve human-facing prose (PR body, Design Doc body, Notion, blog, Slack, email) **readability, visibility, clarity**.
 
@@ -13,7 +13,7 @@ Code body, code comments, docstrings out of scope.
 > **Responsibility split**:
 > - `/docs` = format/structure/template compliance (Notion post/API docs/README)
 > - `/design-doc` = assemble design decision document
-> - `/jp-writing` = **prose quality itself** (vocab, sentence length, paragraph, signal)
+> - `/jp-fix` = **prose quality itself** (vocab, sentence length, paragraph, signal)
 
 ## JP 執筆規範 (write/rewrite 時に必須適用)
 
@@ -21,7 +21,7 @@ Code body, code comments, docstrings out of scope.
 
 ### NG 辞書 (独自部分)
 
-NG 辞書の詳細 (体言止め擬人化 / 連用形否定 / 口語動詞 / 英動詞化 / 専門用語 / 社内造語) は `guidelines/writing/NG-DICTIONARY.md` § `jp-writing 固有 NG (skill-only)` 参照。
+NG 辞書の詳細 (体言止め擬人化 / 連用形否定 / 口語動詞 / 英動詞化 / 専門用語 / 社内造語) は `guidelines/writing/NG-DICTIONARY.md` § `jp-fix 固有 NG (skill-only)` 参照。
 
 ### 「変に略さない」原則
 

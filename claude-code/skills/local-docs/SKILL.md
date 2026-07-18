@@ -94,7 +94,7 @@ cp _templates/{type}.html {dir}/{name}.html
 | 手順 | 内容 |
 |---|---|
 | 7-1 | type 別品質 check を本文に適用 |
-| 7-2 | `jp-writing` skill を実行 (skill 本体を起動) |
+| 7-2 | `jp-fix` skill を実行 (skill 本体を起動) |
 | 7-3 | Critical 1+ or Warning 4+ で書き直し (最大 2 loop、3 loop 残存は user 報告) |
 | 7-4 | body に `textlint` を実行 |
 | 7-5 | `node _index/build.mjs` を実行、exit 0 確認 |

@@ -23,7 +23,7 @@ cd ~/ai-tools && for f in claude-code/commands/*.md; do n=$(basename "$f" .md); 
 | /flow | Orchestration-first workflow — parent-led parallel fan-out (orchestrate + parallel forced) |
 | /git-push | Git integration — commit → push → PR/MR creation in one command. Auto-detect mode. |
 | /goal | Run agent until objective stop-condition holds, with maker-checker separation (Ralph Wiggum loop guard). |
-| /jp-writing | Human-facing prose quality mode (JP 規範統合) |
+| /jp-fix | Human-facing prose quality mode (JP 規範統合) |
 | /lint-test | Run CI-equivalent checks locally in batch (build, lint, test, typecheck etc) |
 | /memory-clean | Auto-memory housekeeping — 自 memory の trash / prune / audit を全部 default 有効化、`--import=<src-dir>` で他 repo memory から汎用 knowledge を取込む。Default は dry-run、`--apply` で実行。 |
 | /memory-save | Quick auto-memory save — default = clear、<topic> で merge/new auto 判定 |
