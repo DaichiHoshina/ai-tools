@@ -47,6 +47,10 @@ DesignDoc / PRD / RCA など Git 管理長文 md に適用する規約。詳細:
 
 長さ・分割の基準は `PRINCIPLES.md` の「### 長文 (Design Doc / PRD / RCA / Notionページ)」を参照。
 
+## 濃淡設計 (全節同厚の禁止)
+
+全 section を同じ厚みで書くと、それ自体が「整いすぎた不自然さ」= AI 臭になる。重要な節を厚く、軽い節は正直に 1〜2 文で書く。書くことがない section はテンプレにあっても空埋めや「特になし」の埋め草で残さず、削るか「該当なし」1 行にする。全節同厚の検出は natural-japanese の構造レビュー (skeleton 通読 / outline.py) が受け持つ。
+
 ## 分離 / 統合の判断軸
 
 複数 doc / 1 doc 内 cell 構成の判断:
