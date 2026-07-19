@@ -66,7 +66,9 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 | Detect Keyword | Extra Load |
 |---------|-----------|
 | Notion / page | `guidelines/common/notion-writing.md` |
-| Design Doc / ADR / RCA | `guidelines/writing/design-doc-protocol.md` |
+| blog / エッセイ / note 記事 / 読み物系 | `guidelines/writing/narrative-writing.md` (構造原則: 円環設計 / 認知順配列)。読後に読み手が判断・行動する文書 (PR / RCA / DD) には適用しない (結論先出しが正) |
+| Design Doc | `guidelines/writing/design-doc-protocol.md` (テンプレ補足: `long-form-doc.md`) |
+| PRD / ADR / RCA / 長文技術 doc | `guidelines/writing/long-form-doc.md` (TL;DR 型。読み物系と違い結論先出しが正) |
 | PR / pull request | `guidelines/writing/pr-description.md` |
 | rewrite | `references/document-iteration-patterns.md` + `references/writing-patterns.md` "Rewrite Phase 1-8" |
 | write / rewrite (natural-japanese skill 利用可能時) | `natural-japanese` skill を quick mode で執筆・改稿 engine として起動する。draft は一時 file 経由で lint → 収束させ (中間 file は skill 側の後片付けで削除)、skill が出した最終 lint JSON を 5-Axis の機械採点に再利用する (parent 側で lint を重複実行しない)。4-question の回答を skill の設計工程 (読者・主メッセージ) の入力に渡して二重確認しない。衝突時は house 規範 (plain-jp 常体 / NG-DICTIONARY / `nominal_ending` 不採用 / 聞き返さない) を優先する。skill 不在の環境は本行を skip し、下記の現行経路で単独成立させる |
