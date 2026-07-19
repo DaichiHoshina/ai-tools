@@ -82,6 +82,7 @@ headless `claude -p` (acceptEdits) の書込可否は 3 段になる: (1) cwd / 
 | gate に merge / push / deploy を含める | 不可逆操作は human review 必須 (loop-engineering.md §30-second check) |
 | `run` 実績なしで `cron` | MVL 順序違反 — 「確実に間違い続ける loop」になる |
 | subjective gate ("良さそうなら OK") | exit code がなく loop が終了できない |
+| gate に達成不能・info 級の指標を含める (lint の info finding / 文書全体統計 TTR 等) | maker が届かない目標を追って cost cap まで空費する (2026-07-19 実踏: TTR 追いで $6.88/$3 超過)。lint 系 gate は severity か category で達成可能な集合に絞る |
 | maker が書く queue / lessons を `~/.claude/` 配下に置く | CLI 組込 guard で Edit deny → 全 iteration 空振り (§Headless maker write scope) |
 
 ## Related
