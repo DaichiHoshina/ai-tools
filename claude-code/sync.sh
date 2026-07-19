@@ -239,6 +239,20 @@ restore_gh_skills() {
 # 個人レポ管理外（~/.claude/ 直置き）の非公開設定を維持するための仕組み。
 # =============================================================================
 
+# 同期の中途失敗時に退避内容を dst へ戻してから一時 dir を片付ける (rm -rf 直行は退避 skill / private の全損になる)
+salvage_baks_on_fail() {
+    local dst="$1" gh_bak="$2" private_bak="$3"
+    mkdir -p "$dst" 2>/dev/null || true
+    if [ -n "$gh_bak" ]; then
+        restore_gh_skills "$dst" "$gh_bak"
+        rm -rf "$gh_bak"
+    fi
+    if [ -n "$private_bak" ]; then
+        restore_private "$dst" "$private_bak"
+        rm -rf "$private_bak"
+    fi
+}
+
 preserve_private() {
     local dst="$1" bak_dir="$2"
     [ -d "$dst" ] || return 0
@@ -478,22 +492,19 @@ sync_to_local() {
                 if command -v rsync &> /dev/null; then
                     if ! rsync -a --delete "$src/" "$dst/"; then
                         print_error "同期失敗: $src -> $dst"
-                        [ -n "$gh_bak" ] && rm -rf "$gh_bak"
-                        [ -n "$private_bak" ] && rm -rf "$private_bak"
+                        salvage_baks_on_fail "$dst" "$gh_bak" "$private_bak"
                         return 1
                     fi
                 else
                     # 例外伝播の明示化（Critical #7対策）
                     if ! rm -rf "${dst:?}"; then
                         print_error "削除失敗: $dst"
-                        [ -n "$gh_bak" ] && rm -rf "$gh_bak"
-                        [ -n "$private_bak" ] && rm -rf "$private_bak"
+                        salvage_baks_on_fail "$dst" "$gh_bak" "$private_bak"
                         return 1
                     fi
                     if ! cp -r "$src" "$dst"; then
                         print_error "コピー失敗: $src -> $dst"
-                        [ -n "$gh_bak" ] && rm -rf "$gh_bak"
-                        [ -n "$private_bak" ] && rm -rf "$private_bak"
+                        salvage_baks_on_fail "$dst" "$gh_bak" "$private_bak"
                         return 1
                     fi
                 fi
