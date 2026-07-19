@@ -103,6 +103,7 @@ Note: **impl** = logic addition / new file / multi-symbol edit; **edit** = any o
   - `/flow` PO/Manager orchestration (judgment hierarchy)
   - Manager hallucination 防止が要る case
 - 切替方法: `/model opus` で session 単位 (agent frontmatter は sonnet 固定のまま。manager-agent の hallucination 対策は literal echo 強制で手当済)
+- 現状 (2026-07-19): 上記 Opus 4.7 用途は Fable 5 (session default) と `/fable` 委譲へ移行した。本節は経緯 log として残す (canonical: `references/model-selection.md`)
 
 ## Subagent silent-fail guard 詳細
 
