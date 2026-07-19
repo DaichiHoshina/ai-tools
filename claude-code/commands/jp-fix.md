@@ -59,16 +59,15 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 
 ### 2. Load Resources
 
-`guidelines/writing/PRINCIPLES.md` はコア層 (冒頭 index table の「check / rewrite 実行」行に列挙した section) のみ load する。詳細層 (AI臭を消す3変換 / 避けるパターン / Web 可読性詳細) と全文 load は深い書き直し (`rewrite` mode) 時のみ。詳細 pattern は `references/writing-patterns.md` on demand。
+`guidelines/writing/PRINCIPLES.md` はコア層 (冒頭 index table の「check / rewrite 実行」行に列挙した section) のみ load する。詳細層 (AI臭を消す3変換 / 避けるパターン / Web 可読性詳細) と全文 load は深い書き直し (`rewrite` mode) 時のみ。詳細 pattern は `references/writing-patterns.md` on demand。`guidelines/writing/narrative-writing.md` は対象種別に関わらず**毎回必ず load** し、適用可否は同 file 冒頭の適用範囲宣言で判定する (読み物系のみ適用、技術文書は結論先出しのまま)。
 
 ### 3. Dynamic Load by Type
 
 | Detect Keyword | Extra Load |
 |---------|-----------|
 | Notion / page | `guidelines/common/notion-writing.md` |
-| blog / エッセイ / note 記事 / 読み物系 | `guidelines/writing/narrative-writing.md` (構造原則: 円環設計 / 認知順配列)。読後に読み手が判断・行動する文書 (PR / RCA / DD) には適用しない (結論先出しが正) |
 | Design Doc | `guidelines/writing/design-doc-protocol.md` (テンプレ補足: `long-form-doc.md`) |
-| PRD / ADR / RCA / 長文技術 doc | `guidelines/writing/long-form-doc.md` (TL;DR 型。読み物系と違い結論先出しが正) |
+| 長文 doc 全般 (PRD / ADR / RCA / 手順書ほか。種別 keyword 不一致でも見出し複数 or 1,000 字超なら該当) | `guidelines/writing/long-form-doc.md` を default で load する (TL;DR 型、結論先出しが正)。読み物系は `narrative-writing.md`、Design Doc は `design-doc-protocol.md` の行が優先する |
 | PR / pull request | `guidelines/writing/pr-description.md` |
 | rewrite | `references/document-iteration-patterns.md` + `references/writing-patterns.md` "Rewrite Phase 1-8" |
 | write / rewrite (natural-japanese skill 利用可能時) | `natural-japanese` skill を quick mode で執筆・改稿 engine として起動する。draft は一時 file 経由で lint → 収束させ (中間 file は skill 側の後片付けで削除)、skill が出した最終 lint JSON を 5-Axis の機械採点に再利用する (parent 側で lint を重複実行しない)。4-question の回答を skill の設計工程 (読者・主メッセージ) の入力に渡して二重確認しない。衝突時は house 規範 (plain-jp 常体 / NG-DICTIONARY / `nominal_ending` 不採用 / 聞き返さない) を優先する。skill 不在の環境は本行を skip し、下記の現行経路で単独成立させる |
@@ -88,7 +87,7 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 
 Each 0-3 pts, total 11/15+ pass. 5-axis = evaluate output quality; 6-item pre-output (PRINCIPLES.md) = gate just-before-output. Both pass = done.
 
-**機械採点優先 (自己採点の客観化)**: lint JSON (file 対象時に parent が Bash 実行) がある場合、機械判定できる項目は lint 結果から採点する — [A] 文長 / 読点 / 連続漢字、[E] NG hit / 鋳型・文頭反復。該当項目の自己採点は禁止し (lint finding 1 件でも該当軸満点にしない)、自己採点は [B] [C] [D] と lint 非対応項目に限る。lint JSON なし (paste / chat 対象) のみ従来の目視評価に fallback する。
+**機械採点優先 (自己採点の客観化)**: lint JSON (file 対象時に parent が Bash 実行) がある場合、機械判定できる項目は lint 結果から採点する — [A] 文長 / 読点 / 連続漢字、[E] NG hit / 鋳型・文頭反復。[E] では findings に加えて `stats.nominal_ending_ratio` を必ず読み、技術文書で 0.2 超なら体言止め連発 (圧縮文体の漏出) として書き直し対象にする (detector は「体言止めゼロ」方向しか発火しないため stats 値でしか検出できない)。該当項目の自己採点は禁止し (lint finding 1 件でも該当軸満点にしない)、自己採点は [B] [C] [D] と lint 非対応項目に限る。lint JSON なし (paste / chat 対象) のみ従来の目視評価に fallback する。
 
 ## Output Format
 
