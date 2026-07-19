@@ -401,6 +401,24 @@ if [[ -f "${_MEMORY_INDEX}" ]] && [[ ! -f "${_PROMOTE_STATE_FILE}" ]]; then
         touch "${_PROMOTE_STATE_FILE}"
     fi
 fi
+# --- sleep proposals 通知 (staged があれば /sleep-review を案内) ---
+_SLEEP_MEMORY_DIR="${MEMORY_SAVE_DIR:-${HOME}/ai-tools/memory}"
+_SLEEP_STAGED=0
+if [[ -d "${_SLEEP_MEMORY_DIR}" ]]; then
+    for _spf in "${_SLEEP_MEMORY_DIR}"/sleep-proposals-*.md; do
+        [[ -f "${_spf}" ]] || continue
+        case "${_spf}" in *.rejected.md|*.adopted.md) continue ;; esac
+        _SLEEP_STAGED=$(( _SLEEP_STAGED + 1 ))
+    done
+    unset _spf
+fi
+if (( _SLEEP_STAGED > 0 )); then
+    _AC_PREFIX+="${ICON_WARNING} sleep proposals ${_SLEEP_STAGED} 件 staged → \`/sleep-review\` で triage\n\n"
+fi
+if [[ -f "${HOME}/.claude/sleep/tracked-change-warn" ]]; then
+    _AC_PREFIX+="${ICON_WARNING} 夜間 sleep maker が tracked file に触れて restore された → \`/sleep-review\` で確認\n\n"
+fi
+
 if [[ -n "${_AC_PREFIX}" ]]; then
     _AC_FULL="${_AC_PREFIX}\n${_AC_BASE}"
 else

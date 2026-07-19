@@ -112,16 +112,9 @@ ADD_DIRS=("$LOOP_DIR" ${ADD_DIRS[@]+"${ADD_DIRS[@]}"})
 _log() { printf '%s %s\n' "$(date '+%F %T')" "$*" | tee -a "$LOG" >&2; }
 
 # public repo guard 整合: state に書く gate 出力は private term を伏せる
-_redact() {
-  local sed_args=() term
-  if [[ -s "$PRIVATE_TERM_FILE" ]]; then
-    while IFS= read -r term; do
-      [[ -n "$term" ]] || continue
-      sed_args+=(-e "s|${term}|[REDACTED]|g")
-    done < "$PRIVATE_TERM_FILE"
-  fi
-  if [[ ${#sed_args[@]} -gt 0 ]]; then sed "${sed_args[@]}"; else cat; fi
-}
+# shellcheck source=../lib/redact.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/redact.sh"
+_redact() { PRIVATE_TERM_FILE="$PRIVATE_TERM_FILE" redact_private_terms; }
 
 # working tree 全体 (HEAD + staged + unstaged + untracked 一覧) の指紋
 _tree_hash() {

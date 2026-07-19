@@ -45,6 +45,8 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
 | JP quality blocks  | `awk -F' \| ' '$1 >= "2026-06-29T11:21:24+0900" { print }' ~/.claude/logs/jp-quality-block.log \| tail -n 50`  |
 | session split logs | `tail -n 20 ~/.claude/logs/session-split-warn.log`                                                             |
 | /flow baseline TSV | `~/.claude/scripts/flow-baseline.sh --since 7d` (generates `~/.claude/logs/flow-baseline-$(date +%Y%m%d).tsv`) |
+| sleep harvest digest | `~/ai-tools/claude-code/scripts/sleep-harvest.sh --days 7` (churn / logs / skill-eval を一括集計する。上記個別 command の代替に使ってよい) |
+| sleep proposals | `Glob ~/ai-tools/memory/sleep-proposals-*.md` — staged は `/sleep-review` へ誘導し、`.rejected.md` は reject 理由を signal として読む |
 
 **Cursor sources** (skip with 1-line note if missing):
 
