@@ -17,7 +17,7 @@
 #       memory file 本体の write は /memory-save command (AI 側) が担当する。
 set -euo pipefail
 
-# save 先 dir 解決ルール (canonical: commands/memory-save.md § "Save target dir"):
+# save 先 dir 解決ルール (canonical: commands/memory-save.md § Flow step 1):
 #   1. $MEMORY_SAVE_DIR が set されていればそれを使う (override、test 用)
 #   2. cwd の repo origin が ~/ghq/github.com/<org>/ 配下で <org-root>/memory/ が存在すれば
 #      <org-root>/memory/<repo> (org 作業 memory、2026-07-16 分離)。worktree も origin URL で同判定
@@ -155,7 +155,7 @@ cmd_update_index() {
 }
 
 # /memory-save clear 専用: 個別 file を作らず MEMORY.md に 1 行 entry を prepend する。
-# canonical: commands/memory-save.md § "clear" post-processing (2026-06-30 改訂: 肥大化対策で file なしに変更)
+# canonical: commands/memory-save.md § Flow step 3
 # format: - `YYYY-MM-DD` [clear] <topic> — <1 行 summary> (commit: <hash>)
 cmd_append_clear_line() {
   local topic="${1:?topic required}" summary="${2:?summary required}" commit="${3:-}"
@@ -192,7 +192,7 @@ cmd_append_clear_line() {
 #   3. `issue-123` / `issue/123` 形式
 # 引数で branch 名を明示可 (test 用)。省略時は `git branch --show-current`。
 # 抽出できなければ空を返し exit 0。
-# canonical: commands/memory-save.md § "Auto issue key suffix"
+# canonical: commands/memory-save.md § Flow step 1 (issue key prefix)
 cmd_extract_issue_key() {
   local branch="${1:-}"
   if [ -z "$branch" ]; then
@@ -220,7 +220,7 @@ cmd_extract_issue_key() {
 # 同日 work-context-*-<topic>.md を exact suffix match で filter する。
 # issue key prefix (`PROJ-123` 等) を無視して `<topic>` 部分のみで match するので、
 # branch 切替後も同 topic を merge 対象として拾える。
-# canonical: commands/memory-save.md § Flow (auto merge/new mode) step 1
+# canonical: commands/memory-save.md § Flow step 1 (merge-new 判定)
 cmd_find_topic_match() {
   local topic="${1:?topic required}"
   local today; today=$(_today)
@@ -240,7 +240,7 @@ cmd_find_clear_entry() {
 
 # `/reload <topic>` を clipboard へコピーする。pbcopy 不在環境 (Linux/CI) は
 # silent skip し exit 0 (fail させない)。実際にコピーしたコマンド文字列を stdout に返す。
-# canonical: commands/memory-save.md § clear post-processing
+# canonical: commands/memory-save.md § Flow step 3
 cmd_pbcopy_reload() {
   local topic="${1:?topic required}"
   local cmd="/reload ${topic}"
