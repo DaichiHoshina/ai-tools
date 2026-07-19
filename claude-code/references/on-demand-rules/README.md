@@ -29,6 +29,7 @@
 | MCP 外部 API 利用時・PII 取扱時・AWS SSM 操作時 | `enterprise-security-mcp-pii-ssm.md` |
 | public-repo-private-data-block の incident 経緯を確認したい時 | `public-repo-incident-history.md` |
 | 外向き長文 doc (記事・DD・RCA) の draft 完成時、`/jp-fix` の長文 review / rewrite 時 | `natural-japanese-lint.md` |
+| repo 外 file (個人 doc 等) を `jp-fix` / `natural-japanese` 等の skill 経由で編集する時 | `skill-fork-write-outside-sandbox.md` |
 
 ## 運用
 
