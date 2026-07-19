@@ -34,10 +34,15 @@ OUTCOME_CACHE_TTL_HOURS = 24        # SQLite cache TTL
 # 除外対象 org（feedback 準拠: private/company repos は analytics 対象外）
 _EXCLUDED_ORG_FRAGMENT = "".join(["s", "n", "k", "r", "d", "u", "n", "k"])
 
+# USD/MTok、cache_write は 5m 単価。sonnet-5 は 2026-08-31 まで introductory price ($3/$15 へ改定予定)
 MODEL_PRICING: dict[str, dict[str, float]] = {
+    "claude-fable-5": {"input": 10.0, "output": 50.0, "cache_read": 1.00, "cache_write": 12.50},
+    "claude-opus-4-8": {"input": 5.0, "output": 25.0, "cache_read": 0.50, "cache_write": 6.25},
+    "claude-opus-4-7": {"input": 5.0, "output": 25.0, "cache_read": 0.50, "cache_write": 6.25},
+    "claude-opus-4-6": {"input": 5.0, "output": 25.0, "cache_read": 0.50, "cache_write": 6.25},
+    "claude-sonnet-5": {"input": 2.0, "output": 10.0, "cache_read": 0.20, "cache_write": 2.50},
     "claude-sonnet-4-6": {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_write": 3.75},
-    "claude-opus-4-6": {"input": 15.0, "output": 75.0, "cache_read": 1.50, "cache_write": 18.75},
-    "claude-haiku-4-5": {"input": 0.80, "output": 4.0, "cache_read": 0.08, "cache_write": 1.0},
+    "claude-haiku-4-5": {"input": 1.0, "output": 5.0, "cache_read": 0.10, "cache_write": 1.25},
 }
 DEFAULT_PRICING = {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_write": 3.75}
 

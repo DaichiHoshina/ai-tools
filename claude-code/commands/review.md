@@ -63,7 +63,7 @@ status 値: `check済` / `user却下` / `保留` / `対応中`。
 
 **MEMORY.md sync は対象外**: `pr_*_review.md` は PR 単位で作成・破棄される一時 state で `/memory-save` の Tier 判定を通らないため、`~/ai-tools/memory/MEMORY.md` へは自動追記しない (index 肥大化を避けるため)。長期知見に昇格させたい内容が出たときだけ手動で `/memory-save` するか 1 行 append する。
 
-関連: 返信文生成前の分類方針は `feedback_pr_review_reply_scope.md` (SoT)。post-comment 実行時の memory 更新連携は `commands/post-comment.md` `### Step 3.5` を参照。
+関連: post-comment 実行時の memory 更新連携は `commands/post-comment.md` `### Step 3.5` を参照。
 
 ## Step 0: Auto-infer Mode (no flags)
 

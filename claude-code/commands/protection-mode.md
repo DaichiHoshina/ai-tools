@@ -9,7 +9,7 @@ argument-hint: "[on|off]"
 ## Execution Logic
 
 1. **Check load flag**: `~/ai-tools/memory/protection-mode-loaded-{project}.md` exists → skip
-2. **First-time file load**: `skill.md` + `guardrails.md` (with `full` arg, also `session-modes.md`)
+2. **First-time file load**: `SKILL.md` + `guardrails.md` (with `full` arg, also `session-modes.md`)
 3. **Apply session mode**: Skill(session-mode) applies strict/normal/fast operation guards
 4. **Save flag**: `Write` `~/ai-tools/memory/protection-mode-loaded-{project}.md` ({loaded_at, summary}) — projects/memory への Write は hook block 対象、`~/ai-tools/memory/` 固定 (CLAUDE.md `## Compounding Engineering`)。Serena `write_memory` forbidden (2026-06-10 decision); warn if save fails, proceed to Step 5
 5. **Report application**: display current constraints (format below)

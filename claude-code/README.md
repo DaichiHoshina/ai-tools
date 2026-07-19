@@ -68,7 +68,7 @@ Full command list: `commands/` directory.
 | `CLAUDE.md` | Global instructions specific to claude-code | |
 | `VERSION` | CLI tracking version (manual update: `/claude-update-fix`) | |
 
-## Skills (22)
+## Skills
 
 Most skills are **auto-selected**. No explicit invocation needed. `UserPromptSubmit Hook` detects tech stack, `/review` selects skills by problem type, `requires-guidelines` auto-loads related guidelines.
 
@@ -98,7 +98,7 @@ Most skills are **auto-selected**. No explicit invocation needed. `UserPromptSub
 - `scripts/skill-eval.sh` — measure activation rate, surface unused skills
 - `/skill-add <name>` — skill-creator → lint → sync in one step
 
-## Agents (7)
+## Agents
 
 | Agent | Role |
 |---|---|
@@ -109,6 +109,7 @@ Most skills are **auto-selected**. No explicit invocation needed. `UserPromptSub
 | `reviewer-agent` | Review |
 | `verify-app` | Build/test verification |
 | `root-cause-analyzer` | Root cause analysis |
+| `design-review-agent` | Live UI/UX review (Playwright MCP) |
 
 Details, cost, command mapping: [agents/README.md](agents/README.md)
 
@@ -116,7 +117,7 @@ Details, cost, command mapping: [agents/README.md](agents/README.md)
 
 - **Agent**: Role executor launched by `Task` tool
 - **MCP** (Model Context Protocol): External tool integration protocol (serena / context7 / codex etc.)
-- **Hook**: Script auto-executed on specific events (18 total, details: [hooks/README.md](hooks/README.md))
+- **Hook**: Script auto-executed on specific events (details: [hooks/README.md](hooks/README.md))
 - **Skill**: Specialized knowledge set for a specific technical domain, invoked with `/skill-name`
 - **Command**: Shortcut in `/command` format
 - **Guideline**: Language/framework-specific best practices (on-demand load)

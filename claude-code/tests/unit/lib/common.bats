@@ -94,34 +94,6 @@ teardown() {
 }
 
 # =============================================================================
-# common_version 関数テスト
-# =============================================================================
-
-@test "common_version: outputs version information" {
-  run bash -c "source '$LIB_FILE' && common_version"
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "common.sh" ]]
-  [[ "$output" =~ "bash:" ]]
-}
-
-# =============================================================================
-# common_list_loaded 関数テスト
-# =============================================================================
-
-@test "common_list_loaded: lists loaded functions" {
-  run bash -c "source '$LIB_FILE' && common_list_loaded"
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "Loaded libraries:" ]]
-  [[ "$output" =~ "load_lib" ]]
-}
-
-@test "common_list_loaded: includes print_ functions" {
-  run bash -c "source '$LIB_FILE' && common_list_loaded"
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "print_" ]] || [[ "$output" =~ "common_" ]]
-}
-
-# =============================================================================
 # 依存ライブラリ読み込みテスト
 # =============================================================================
 

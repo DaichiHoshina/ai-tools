@@ -95,20 +95,6 @@ load_lib() {
     fi
 }
 
-# バージョン情報出力
-common_version() {
-    echo "common.sh v1.0.0"
-    echo "  bash: ${BASH_VERSION}"
-    echo "  lib_dir: ${_COMMON_LIB_DIR}"
-    echo "  loaded_libs: colors, print-functions, security-functions, hook-utils"
-}
-
-# 読み込み済みライブラリ一覧表示
-common_list_loaded() {
-    echo "Loaded libraries:"
-    declare -F | awk '{print $3}' | grep -E '^(print_|validate_|escape_|msg|load_lib|common_)' | sort | uniq
-}
-
 # =============================================================================
 # プラットフォーム互換性ヘルパー関数
 # =============================================================================

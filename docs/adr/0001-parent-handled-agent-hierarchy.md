@@ -33,7 +33,7 @@ Additional defenses:
 
 - **Spec-compliant**: Aligns with the intended use of Claude Code's sub-agent mechanism
 - **Physical violation blocking**: `disallowedTools` rejects Write/Edit if PO/Manager attempts implementation
-- **Regression prevention**: bats tests guard invariants. Future change believing "self-orchestrating is more efficient" will be caught by CI
+- **Regression prevention**: bats tests guard invariants. Future change believing "self-orchestrating is more efficient" will be caught by `npm run test:bats` / pre-push githooks (CI was removed on 2026-07-18; see CLAUDE.repo.md "CI 追加禁止")
 - **Parallelism preserved**: parent can call multiple `Task(developer-agent)` in 1 message for parallel launch
 
 ### Drawbacks / accepted tradeoffs

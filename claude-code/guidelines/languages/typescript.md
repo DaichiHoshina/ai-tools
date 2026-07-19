@@ -140,7 +140,7 @@ Check `tsconfig.json` `target` and `package.json` TypeScript version before flag
 
 | Item | Detail | Since |
 |------|--------|-------|
-| TS 7.0 (Project Corsa) | native compiler for 10x speedup; 6.0 is last JS version | planned 2026 |
+| TS 7.0 (Project Corsa) | native compiler for 10x speedup; 6.0 is last JS version | released 2026-07-08 |
 | `--erasableSyntaxOnly` | detect runtime-affecting syntax | TS5.8 |
 
 ---
