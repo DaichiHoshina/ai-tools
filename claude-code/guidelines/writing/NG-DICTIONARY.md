@@ -12,7 +12,7 @@ hook (`lib/jp-quality-check.sh:_extract_term_list`、`hooks/pre-tool-use.sh` か
 
 **英語jargon (warn-only)**: digest / inject / sweep / canonical / trigger / fan out / fan-out / stale / orchestrate / delegate / salience / priming / fallback / dedup / throttle / insight / takeaway / deep dive / edge case / align
 
-> 英語jargon は warn-only。日本語で言える一般語は日本語化する (digest→要約 / inject→差し込む / sweep→点検 / canonical→正 / trigger→きっかけ / stale→古い / fallback→代替 / edge case→境界事例 / align→そろえる)。識別子・command 名として正当に使う場合は backtick で囲むと検査対象外になる。追加根拠は user 指摘「専門用語使いすぎ」(2026-07-10) の incident。
+> 英語jargon は warn-only。日本語で言える一般語は日本語化する (digest→要約 / inject→差し込む / sweep→点検 / canonical→正 / trigger→きっかけ / stale→古い / fallback→代替 / edge case→境界事例 / align→そろえる)。識別子・command 名として正当に使う場合は backtick で囲むと検査対象外になる。追加根拠は user 指摘「専門用語使いすぎ」(2026-07-10) の incident。chat 経路はこの denylist に加えて許可一覧方式を併用する。`guidelines/writing/allowed-en-terms.txt` (ジュニア IT エンジニアが分かる定着語のみ、user 決定 2026-07-19) に載らない小文字英単語も warn になる (`lib/jp-quality/block-checks.sh:_check_unknown_en_terms`)。
 
 **体言止め末尾 (structural)**: 済 / 済み / 完了 / 可能 / 必要 / 対応 / 中 / なし / あり / 予定 / 実施 / 確認 / 追加 / 削除 / 修正 / 更新 / 化
 

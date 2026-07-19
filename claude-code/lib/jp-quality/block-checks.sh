@@ -225,6 +225,20 @@ _check_turn_closing_tail() {
   printf '%s' "$hits"
 }
 
+# 許可一覧に載らない小文字英単語 (3 字以上) を返す。denylist 追補でなく反転方式にしたのは語追いが終わらないためだ。
+# 大文字含みの語と backtick 内と複合識別子は対象外にする。escape hatch: JP_EN_ALLOWLIST_CHECK=0
+_allowed_en_terms_file="$HOME/.claude/guidelines/writing/allowed-en-terms.txt"
+_check_unknown_en_terms() {
+  local text="$1"
+  [[ "${JP_EN_ALLOWLIST_CHECK:-1}" == "1" ]] || return 0
+  [[ -f "$_allowed_en_terms_file" ]] || return 0
+  local clean
+  clean=$(_strip_code_blocks "$text")
+  clean=$(printf '%s' "$clean" | sed -E 's#[A-Za-z0-9~]+([/._~-]+[A-Za-z0-9~]+)+# #g')
+  printf '%s\n' "$clean" | tr -c 'A-Za-z0-9\n' '\n' | grep -E '^[a-z]{3,}$' | sort -u \
+    | grep -Fxv -f "$_allowed_en_terms_file" || true
+}
+
 _chat_quality_check() {
   local text="$1"
   _CHAT_BLOCK_REASON=""
@@ -325,6 +339,13 @@ _chat_quality_check() {
   if [[ -n "$_cq_warn_terms" ]]; then
     _append_jp_quality_log "chat" "$_cq_warn_terms" "warn"
     _cq_warn_out="語: ${_cq_warn_terms}"
+  fi
+  # 許可一覧外英単語 (反転方式)。上限 10 語で message 肥大を防ぐ
+  local _cq_unknown_en
+  _cq_unknown_en=$(_check_unknown_en_terms "$text" | head -10 | tr '\n' ',' | sed 's/,$//')
+  if [[ -n "$_cq_unknown_en" ]]; then
+    _append_jp_quality_log "chat" "unknown-en: ${_cq_unknown_en}" "warn"
+    _cq_warn_out="${_cq_warn_out:+${_cq_warn_out}; }許可一覧外の英単語: ${_cq_unknown_en} → 日本語化するか backtick で囲む。定着語なら guidelines/writing/allowed-en-terms.txt に追加"
   fi
   if [[ -n "$_cq_struct_warn" ]]; then
     _append_jp_quality_log "chat" "structural: ${_cq_struct_warn%; }" "warn"
