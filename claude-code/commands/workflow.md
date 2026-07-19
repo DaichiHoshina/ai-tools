@@ -25,8 +25,9 @@ Decision guidance:
 - Review **then auto-create PR** → `/flow --auto`
 - Migrate N files via fan-out → `/workflow migrate`
 - New feature (needs PO) → `/flow`
+- Repo-scale rule-engine sweep → `/workflow scan`
 
-## Templates (5 types)
+## Templates (6 types)
 
 Each template passes script inline to `Workflow` tool. Arguments via `args`. Code examples: `references/workflow-templates.md`.
 
@@ -37,6 +38,7 @@ Each template passes script inline to `Workflow` tool. Arguments via `args`. Cod
 | 3 | research | parallel fan-out across angles → deep-read top hits → synthesize cited report |
 | 4 | understand | parallel map N subsystems (entry / deps / data flow) → return structured |
 | 5 | judge-panel | parallel N design drafts → judge-score → winner + graft runner-up ideas |
+| 6 | scan | directory-batch rule-engine sweep (deterministic) → per-hit agent triage, file:line:rule-id findings at repo scale |
 
 ## Invocation spec
 
@@ -46,7 +48,7 @@ User input examples:
 - `/workflow migrate <pattern> <replacement>` (args.pattern / args.replacement)
 
 Parent (Opus) responsibilities:
-1. Select template (match from 5 above)
+1. Select template (match from 6 above)
 2. Build `args` (pass user input as JSON value; no stringified arrays)
 3. Fire `Workflow({ script: ..., args: ... })` once
 4. On `<task-notification>`, summarize result to user in 1-3 prose lines

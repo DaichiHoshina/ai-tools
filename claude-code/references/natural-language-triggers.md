@@ -37,7 +37,7 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "wt 分けて" | `/flow --parallel` (same) |
 | "team で", "agent team で" | `/flow` (force PO/Manager/Dev hierarchy) |
 | "分担で", "本格的に" | `/flow` (same, skip lightweight task pre-check) |
-| "workflow で", "pipeline で", "多数決で" | `/workflow` (deterministic fan-out via Workflow tool; 5 templates: review / migrate / research / understand / judge-panel) |
+| "workflow で", "pipeline で", "多数決で" | `/workflow` (deterministic fan-out via Workflow tool; 6 templates: review / migrate / research / understand / judge-panel / scan) |
 | "ループで回して", "回し続けて", "通るまで回して" | `/loop` (gate 明示あり → init→run、なし → 4 条件 pre-check から。≤5 iter 見込みの短期は `/goal` を優先) |
 | "定期実行して", "毎朝回して", "cron にして" | `/loop cron` (manual run の Status: done 実績が必須、なければ先に `/loop run`) |
 | "夜通しで回して", "無人で回して" | `/loop run --bg` (external headless loop を background 起動) |

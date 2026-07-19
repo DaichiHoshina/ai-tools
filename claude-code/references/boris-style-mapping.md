@@ -18,7 +18,7 @@ Boris Cherny 流 ([howborisusesclaudecode.com](https://howborisusesclaudecode.co
 | Stop hook で verify を確実に実行 (bash + Go / TS / Py) | `hooks/stop-verify.sh` (opt-in、`STOP_VERIFY_ENFORCE=1`、言語別 runner 自動判定 + 不在は graceful skip) | opt-in。Boris の用途 (test 失敗時に完了報告を止めて修正継続) と一致を 2026-07-13 に確認 |
 | perspective-diverse verifier panel | `/review --verifier-panel=N` (default OFF、N=3 で 3 lens correctness / consistency / boundary fan-out + 多数決) | opt-in、token N 倍 cost |
 | institutional memory (訂正→CLAUDE.md) | auto-memory + `@path` import + retrospective | 同方針 |
-| fan-out workflow orchestration | `/workflow` (Workflow tool で deterministic pipeline / parallel / 多数決を script 化、5 テンプレ提供) | `/flow` (PO/Manager/Dev) と直交。review / migrate / research / understand / judge-panel の軽量 fan-out 用 |
+| fan-out workflow orchestration | `/workflow` (Workflow tool で deterministic pipeline / parallel / 多数決を script 化、6 テンプレ提供) | `/flow` (PO/Manager/Dev) と直交。review / migrate / research / understand / judge-panel / scan の軽量 fan-out 用 |
 | objective stop-condition loop (`/goal`, Ralph Wiggum guard) | `commands/goal.md` (maker-checker 分離 + objective gate 必須 + hard stop 3 種) | Loop engineering 14-step canonical は `references/loop-engineering.md` |
 | `/loop` / `/schedule` (cadence loop) | `commands/loop.md` + `scripts/loop.sh` (external headless loop) + `scripts/install-loop-cron.sh` (launchd) | schedule は manual run 実績 (Status: done) を持つ loop のみ許可 (MVL 順序 enforcement) |
 | `CLAUDE_CODE_AUTO_COMPACT_WINDOW` で早期 auto-compact | 採用しない。手動 「>40% → /compact」 rule (CLAUDE.md) を維持 | 値は model context 上限で cap されるため 200k 級では無意味。公式も 1M context model 以外は未設定を推奨 ([env-vars docs](https://code.claude.com/docs/en/env-vars.md)、2026-07-13 確認) |

@@ -95,3 +95,55 @@ const winner = scored.reduce((a, b) => a.score > b.score ? a : b)
 return await agent(`Synthesize final from winner + graft top runner-up ideas: ${JSON.stringify(scored)}`,
   { schema: FINAL_SCHEMA })
 ```
+
+## 6. scan (rule-engine sweep + agent triage, directory-batch fan-out for large codebases)
+
+Deterministic rule-engine sweep per directory batch (agent executes a fixed command, no interpretation) → agent triage confirms true/false positive with file:line:rule-id and severity. pipeline default; triage fans out per raw hit. Batch count scales to Workflow tool's tens-hundreds queue depth; actual concurrency is tool-capped automatically, no manual throttling needed.
+
+```javascript
+export const meta = {
+  name: 'scan-vulnerabilities',
+  description: 'Directory-batch rule-engine sweep (RuleScan) + per-hit agent triage (Triage) for repo-scale vulnerability scanning',
+  phases: [{ title: 'RuleScan' }, { title: 'Triage' }],
+}
+const HITS_SCHEMA = {
+  type: 'object',
+  properties: { hits: { type: 'array', items: {
+    type: 'object',
+    properties: {
+      file: { type: 'string' }, line: { type: 'integer', minimum: 1 },
+      ruleId: { type: 'string' }, snippet: { type: 'string' },
+    },
+    required: ['file', 'line', 'ruleId'],
+  } } },
+  required: ['hits'],
+}
+const VERDICT_SCHEMA = {
+  type: 'object',
+  properties: {
+    severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+    verdict: { type: 'string', enum: ['true-positive', 'false-positive', 'needs-review'] },
+    fix: { type: 'string' },
+  },
+  required: ['severity', 'verdict'],
+}
+// args.batches: [{ dir, ruleCmd }] — directories enumerated by parent (e.g. `git ls-files | xargs -n1 dirname | sort -u`)
+// before firing; file-level enumeration stays inside each RuleScan agent so 100k+-file repos never
+// materialize a full file list in parent/script context.
+const results = await pipeline(args.batches,
+  b => agent(`Run exactly: ${b.ruleCmd} scoped to ${b.dir}. Enumerate files yourself; split per-file if any file exceeds ~5k lines. No interpretation — return raw hits only.`,
+    { phase: 'RuleScan', schema: HITS_SCHEMA }
+  ).then(r => { if (r == null) log(`WARN: RuleScan dropped batch ${b.dir}`); return r }),
+  raw => parallel((raw?.hits ?? []).map(h => () =>
+    agent(`Triage rule hit ${h.ruleId} at ${h.file}:${h.line} (snippet: ${h.snippet}). Confirm true/false positive, assign severity, 1-line fix.`,
+      { phase: 'Triage', schema: VERDICT_SCHEMA }).then(v => v && { ...h, ...v })
+  ))
+)
+const flat = results.flat()
+return {
+  confirmed: flat.filter(Boolean).filter(f => f.verdict === 'true-positive'),
+  needsReview: flat.filter(Boolean).filter(f => f.verdict === 'needs-review'),
+  dropped: dropped(flat, 'Triage'),
+  batchesScanned: args.batches.length,
+}
+```
