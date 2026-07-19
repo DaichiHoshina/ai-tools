@@ -57,7 +57,7 @@ _check_sentence_structure_counts() {
   local polite_check="${2:-0}"
   local include_readability="${3:-0}"
   _SS_TAIGEN=0 _SS_ARROW=0 _SS_REP=0 _SS_LONG=0 _SS_POLITE=0 _SS_KANJI_CNT=0 _SS_KANJI_SAMPLE="" _SS_TOUTEN=0
-  _SS_FLAT=0 _SS_TIME=0 _SS_TIME_SAMPLE=""
+  _SS_FLAT=0 _SS_TIME=0 _SS_TIME_SAMPLE="" _SS_STUFF=0 _SS_STUFF_SAMPLE=""
   [[ -z "$text" ]] && return 0
   command -v python3 &>/dev/null || return 0
   local clean
@@ -174,10 +174,21 @@ time_hits = list(dict.fromkeys(m.group(0) for m in time_re.finditer(text)))
 time_cnt = len(time_hits)
 time_sample = " / ".join(time_hits[:3]) or "-"
 
-print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_sample}\t{touten}\t{flat}\t{time_cnt}\t{time_sample}")
-' 2>/dev/null || printf '0\t0\t0\t0\t0\t0\t-\t0\t0\t0\t-')
-  local _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts
-  IFS=$'\t' read -r _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts <<< "$result"
+# 括弧詰め込み warn: 読点 2 個以上 + 動詞なしの括弧は書き手 memo の圧縮で、初読で意味が取れない。
+# 「(A、B、C)」の名詞羅列だけを拾い、動詞を含む補足文の括弧は対象外にして誤爆を抑える。
+paren_verb = re.compile(r"(する|した|して|される|された|とする|になる|使う|返す|できる|残す|だ|です|ない)")
+stuff_hits = []
+for m in re.finditer(r"[（(]([^（）()]{1,120})[）)]", text):
+    inner = m.group(1)
+    if inner.count("、") >= 2 and not paren_verb.search(inner):
+        stuff_hits.append(inner[:24])
+stuff_cnt = len(stuff_hits)
+stuff_sample = " / ".join(stuff_hits[:2]) or "-"
+
+print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_sample}\t{touten}\t{flat}\t{time_cnt}\t{time_sample}\t{stuff_cnt}\t{stuff_sample}")
+' 2>/dev/null || printf '0\t0\t0\t0\t0\t0\t-\t0\t0\t0\t-\t0\t-')
+  local _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts _sc _ss
+  IFS=$'\t' read -r _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts _sc _ss <<< "$result"
   [[ "${_tg:-0}" =~ ^[0-9]+$ ]] && _SS_TAIGEN="$_tg"
   [[ "${_ar:-0}" =~ ^[0-9]+$ ]] && _SS_ARROW="$_ar"
   [[ "${_rp:-0}" =~ ^[0-9]+$ ]] && _SS_REP="$_rp"
@@ -191,6 +202,9 @@ print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_samp
   [[ "${_tc:-0}" =~ ^[0-9]+$ ]] && _SS_TIME="$_tc"
   _SS_TIME_SAMPLE="${_ts:-}"
   [[ "$_SS_TIME_SAMPLE" == "-" ]] && _SS_TIME_SAMPLE=""
+  [[ "${_sc:-0}" =~ ^[0-9]+$ ]] && _SS_STUFF="$_sc"
+  _SS_STUFF_SAMPLE="${_ss:-}"
+  [[ "$_SS_STUFF_SAMPLE" == "-" ]] && _SS_STUFF_SAMPLE=""
   return 0
 }
 
@@ -209,6 +223,7 @@ _check_sentence_structure() {
   (( _SS_POLITE > 0 )) && out="${out}敬体混入: ${_SS_POLITE}文 → 常体に統一; "
   (( _SS_FLAT > 0 )) && out="${out}平坦 bullet ≥11 + 理由語含み: ${_SS_FLAT}group → 親子に組み替え (PRINCIPLES.md ## 箇条書き階層化); "
   (( _SS_TIME > 0 )) && out="${out}時限マーカー: ${_SS_TIME}件 (${_SS_TIME_SAMPLE}) → 時制中立表現に (pr-description.md ### 時限マーカー禁止); "
+  (( _SS_STUFF > 0 )) && out="${out}括弧詰め込み: ${_SS_STUFF}件 (${_SS_STUFF_SAMPLE}) → 括弧の名詞羅列を本文の文に開く (PRINCIPLES.md ### 圧縮文を開く); "
   [[ -n "$out" ]] && printf '%s' "${out%; }"
   return 0
 }

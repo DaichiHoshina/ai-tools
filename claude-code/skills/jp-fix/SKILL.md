@@ -36,7 +36,7 @@ Sentence length and style standards vary by medium (canonical: PRINCIPLES.md `##
 
 評価軸 canonical: `commands/jp-fix.md` §5-Axis Check ([A]-[E]) 参照。PRINCIPLES.md はコア層 (冒頭 index table「check / rewrite 実行」行の section) のみ load して A→E 順で評価する。全文 load は深い書き直し時のみ。
 
-parent から natural-japanese lint の JSON (parent が直接実行したもの、または write / rewrite で発火した natural-japanese skill quick 工程の最終 lint。`references/on-demand-rules/natural-japanese-lint.md` 参照) が渡された場合、findings を [A] / [E] の評価材料に含める。機械判定できる項目 ([A] 文長 / 読点 / 連続漢字、[E] NG hit / 鋳型反復) は lint 結果をそのまま採点に使い、自己採点で上書きしない (canonical: `commands/jp-fix.md` §5-Axis Check 機械採点優先)。`nominal_ending` (体言止めゼロ) は plain-jp 優先の裁定により不採用とする。JSON が無い場合 (paste / chat 対象) も、natural-japanese 観点 (語順 / 読点位置 / 一文一義 / 主語述語の距離 / 鋳型・文頭反復 / 翻訳調) を [A] / [E] の必須評価項目として目視で見る。
+parent から natural-japanese lint の JSON (parent が直接実行したもの、または write / rewrite で発火した natural-japanese skill quick 工程の最終 lint。`references/on-demand-rules/natural-japanese-lint.md` 参照) が渡された場合、findings を [A] / [E] の評価材料に含める。機械判定できる項目 ([A] 文長 / 読点 / 連続漢字、[E] NG hit / 鋳型反復) は lint 結果をそのまま採点に使い、自己採点で上書きしない (canonical: `commands/jp-fix.md` §5-Axis Check 機械採点優先)。`nominal_ending` (体言止めゼロ) は plain-jp 優先の裁定により不採用とする。JSON が無い場合 (paste / chat 対象) も、natural-japanese 観点 (語順 / 読点位置 / 一文一義 / 主語述語の距離 / 鋳型・文頭反復 / 翻訳調) を [A] / [E] の必須評価項目として目視で見る。圧縮文の開き (括弧への名詞詰め込み / 識別子で始まる主語なし文 / 役割説明のない flag・関数名。canonical: PRINCIPLES.md `### 圧縮文を開く`) も [A] / [C] の必須評価項目に含める。
 
 ## Rewrite output format
 
