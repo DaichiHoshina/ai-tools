@@ -69,7 +69,8 @@ no arg or `write` → write mode. First token vs subcommand match; no match → 
 | Design Doc / ADR / RCA | `guidelines/writing/design-doc-protocol.md` |
 | PR / pull request | `guidelines/writing/pr-description.md` |
 | rewrite | `references/document-iteration-patterns.md` + `references/writing-patterns.md` "Rewrite Phase 1-8" |
-| file 対象の review / rewrite | `references/on-demand-rules/natural-japanese-lint.md` を load し、parent 側で lint を Bash 実行して JSON を 5-Axis の補助入力に渡す (skill は Bash 禁止のため実行しない)。短文でも省略しない (禁止語 / 翻訳調は文 1 つでも検出される)。統計系 detector (文長リズム / 段落均質 / 語彙多様性) は外向き長文 doc のみ採用する |
+| write / rewrite (natural-japanese skill 利用可能時) | `natural-japanese` skill を quick mode で執筆・改稿 engine として起動する。draft は一時 file 経由で lint → 収束させ (中間 file は skill 側の後片付けで削除)、skill が出した最終 lint JSON を 5-Axis の機械採点に再利用する (parent 側で lint を重複実行しない)。4-question の回答を skill の設計工程 (読者・主メッセージ) の入力に渡して二重確認しない。衝突時は house 規範 (plain-jp 常体 / NG-DICTIONARY / `nominal_ending` 不採用 / 聞き返さない) を優先する。skill 不在の環境は本行を skip し、下記の現行経路で単独成立させる |
+| file 対象の review / rewrite (natural-japanese quick 不発火時) | `references/on-demand-rules/natural-japanese-lint.md` を load し、parent 側で lint を Bash 実行して JSON を 5-Axis の補助入力に渡す (skill は Bash 禁止のため実行しない)。短文でも省略しない (禁止語 / 翻訳調は文 1 つでも検出される)。統計系 detector (文長リズム / 段落均質 / 語彙多様性) は外向き長文 doc のみ採用する |
 | paste / chat 対象の review / rewrite | lint CLI が使えないため、natural-japanese 観点 (語順 / 読点位置 / 一文一義 / 主語述語の距離 / 鋳型・文頭反復 / 翻訳調) を [A] / [E] で目視評価する |
 | AI 臭さの採点依頼 / full 精査の明示 | `natural-japanese:natural-japanese` skill (score / full) へ委譲する。jp-fix 側は結果を 5-Axis に転記して締める |
 
