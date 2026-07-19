@@ -695,3 +695,129 @@ _make_session_jsonl() {
         "${log_dir}/.dev-agent-fire-bundlesize-${session_id}" \
         "${log_dir}/.bundle-violation-warned-${session_id}"
 }
+
+# =============================================================================
+# Case S1-K: scope: i/N≥2 宣言済 solo fire の直後に単発発火すると、既存 2 発目
+# threshold を待たず scope_declared_mismatch warn を前倒し注入する。
+# =============================================================================
+@test "bundle-violation: scope declared N>=2 but solo fire injects mismatch warn" {
+  local session_id="bundle-scope-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # 直前 fire: solo bundle (size=1)、scope: 1/3 宣言済、counter=0 (未確定)
+  printf '0\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  printf '1\n' > "${log_dir}/.dev-agent-fire-bundlesize-${session_id}"
+  printf '3\n' > "${log_dir}/.dev-agent-fire-scopeN-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "bundle-violation-warn" ]]
+  grep -q "scope_declared_mismatch" "${log_dir}/bundle-violation-warn.log"
+  grep -q "declared_n=3" "${log_dir}/bundle-violation-warn.log"
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}" \
+        "${log_dir}/.dev-agent-fire-bundlesize-${session_id}" \
+        "${log_dir}/.dev-agent-fire-scopeN-${session_id}" \
+        "${log_dir}/.scope-mismatch-warned-${session_id}"
+}
+
+# =============================================================================
+# Case S1-L: scope 宣言なしの逐次発火は従来挙動 (2 発目 warn / 3 発目 block) が不変
+# =============================================================================
+@test "bundle-violation: no scope declaration keeps legacy warn/block timing" {
+  local session_id="bundle-noscope-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter=1 (1 発目 fire 済)、scope 宣言なし、lastts 35 秒前 → 2 発目 warn
+  printf '1\n' > "${log_dir}/.dev-agent-fire-count-${session_id}"
+  local _past_ns
+  _past_ns=$(( $(date +%s%N) - 35000000000 ))
+  printf '%s\n' "$_past_ns" > "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"impl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "bundle-violation-warn" ]]
+  [[ ! "$output" =~ "scope_declared_mismatch" ]]
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}" \
+        "${log_dir}/.dev-agent-fire-bundlesize-${session_id}" \
+        "${log_dir}/.bundle-violation-warned-${session_id}" \
+        "${log_dir}/.dev-agent-fire-scopeN-${session_id}"
+}
+
+# =============================================================================
+# Case S1-M: session 初回 (lastts なし) の serial_reason 発火は elapsed_ms=0 を記録する
+# (epoch ns がそのまま入る旧 bug の regression test)
+# =============================================================================
+@test "bundle-violation: first-fire serial_reason logs elapsed_ms=0" {
+  local session_id="bundle-firstserial-$(date +%s%N | tail -c 8)"
+  local log_dir="${HOME}/.claude/logs"
+  mkdir -p "${log_dir}"
+
+  local hook="${HOOKS_DIR}/pre-tool-use.sh"
+  local home_dir="${HOME}"
+
+  # counter / lastts なし = session 初回 fire
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}"
+
+  local input_file
+  input_file=$(mktemp)
+  jq -n \
+    --arg sid "${session_id}" \
+    '{"session_id":$sid,"tool_name":"Task","tool_input":{"subagent_type":"developer-agent","prompt":"serial_reason: 前 agent の結果を反映\nimpl task"},"cwd":"/tmp"}' \
+    > "${input_file}"
+
+  run bash -c "HOME='${home_dir}' CLAUDE_CODE_SESSION_ID='${session_id}' \
+    JP_QUALITY_INJECT_OFF=1 \
+    CLAUDE_CTX_FILE='${home_dir}/_ctx_unset' \
+    '${hook}' < '${input_file}'"
+  rm -f "${input_file}"
+
+  [ "$status" -eq 0 ]
+  grep -q "serial_reason_declared | elapsed_ms=0" "${log_dir}/bundle-violation-warn.log"
+
+  # cleanup
+  rm -f "${log_dir}/.dev-agent-fire-count-${session_id}" \
+        "${log_dir}/.dev-agent-fire-lastts-${session_id}" \
+        "${log_dir}/.dev-agent-fire-bundlesize-${session_id}"
+}

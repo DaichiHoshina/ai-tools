@@ -119,6 +119,8 @@ echo "[${_SE_TS}] $SESSION_ID | $PROJECT_NAME | msg:$TOTAL_MESSAGES | tok:$TOTAL
     ".agent-fire-count-*"
     ".agent-fire-lastts-*"
     ".sequential-fire-warned-*"
+    ".dev-agent-fire-scopeN-*"
+    ".scope-mismatch-warned-*"
   )
   for _pat in "${STATE_FILE_PATTERNS[@]}"; do
     while IFS= read -r -d '' _f; do

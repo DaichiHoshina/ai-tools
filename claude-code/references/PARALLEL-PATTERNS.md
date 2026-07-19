@@ -19,7 +19,19 @@
 
 `Concurrent sessions = parent + Developer × N <= 9`, so `N <= 8`. Cap raised from 4 to 8 on 2026-05-30 — notification flood handled by aggregate receipt; parent context handled by /compact. Time-first principle applied.
 
+## Runtime quick rules
+
+Use at fire time, no formula lookup needed. Formula below is 設計根拠のみ。閾値再調整時のみ読む。
+
+- Single task, expected >60s or touches 2+ files → 委譲 (developer-agent)
+- 2+ independent tasks → bundle N `Agent` tool_use calls in one message
+- N = min(independent task count, 8)
+- Same-file edits → patch generation in parallel, parent applies sequentially
+- Dependency chain only → sequential fire with `serial_reason: <dependency, 1 line>`
+
 ## Critical-path reduction formula
+
+> 設計根拠 (runtime では参照しない)。`0.95` threshold や cost 定数を再調整するときのみ読む。
 
 ### Common form
 

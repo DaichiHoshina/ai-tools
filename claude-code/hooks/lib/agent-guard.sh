@@ -292,8 +292,9 @@ _check_developer_agent_bundle_violation() {
   if [[ -n "$task_prompt" && "$task_prompt" == *"serial_reason:"* ]]; then
     local _TS_SERIAL
     printf -v _TS_SERIAL '%(%Y-%m-%dT%H:%M:%S)T' -1
+    # session 初回 fire (_LAST_NS==0) は epoch ns がそのまま入るバグを避け 0 にする
     printf '%s | %s | serial_reason_declared | elapsed_ms=%s\n' \
-      "$_TS_SERIAL" "$session_id" "$(( _ELAPSED / 1000000 ))" \
+      "$_TS_SERIAL" "$session_id" "$(( _LAST_NS == 0 ? 0 : _ELAPSED / 1000000 ))" \
       >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
     # size=0 (exempt marker): 次の bundle 開始時に solo として count させない
     printf '0\n' > "$_SIZE_FILE" 2>/dev/null || true
@@ -314,6 +315,37 @@ _check_developer_agent_bundle_violation() {
   [[ "$_PREV_SIZE" =~ ^[0-9]+$ ]] || _PREV_SIZE=0
   printf '1\n' > "$_SIZE_FILE" 2>/dev/null || true
 
+  # scope: <i>/<N> 宣言 mismatch の前倒し warn (直前 fire が solo かつ N≥2)
+  local _SCOPEN_FILE="${_LOG_DIR}/.dev-agent-fire-scopeN-${session_id}"
+  local _SCOPE_FENCE_FILE="${_LOG_DIR}/.scope-mismatch-warned-${session_id}"
+  local _PREV_SCOPE_N=0
+  [[ -f "$_SCOPEN_FILE" ]] && read -r _PREV_SCOPE_N < "$_SCOPEN_FILE" 2>/dev/null || _PREV_SCOPE_N=0
+  [[ "$_PREV_SCOPE_N" =~ ^[0-9]+$ ]] || _PREV_SCOPE_N=0
+
+  if (( _PREV_SIZE == 1 && _PREV_SCOPE_N >= 2 )) && [[ ! -f "$_SCOPE_FENCE_FILE" ]]; then
+    touch "$_SCOPE_FENCE_FILE" 2>/dev/null || true
+    local _TS_SCOPE
+    printf -v _TS_SCOPE '%(%Y-%m-%dT%H:%M:%S)T' -1
+    printf '%s | %s | scope_declared_mismatch | declared_n=%s | elapsed_ms=%s\n' \
+      "$_TS_SCOPE" "$session_id" "$_PREV_SCOPE_N" "$(( _ELAPSED / 1000000 ))" \
+      >> "${_LOG_DIR}/bundle-violation-warn.log" 2>/dev/null || true
+
+    local _SCOPE_SUGGEST="[bundle-violation-warn] 直前 Task prompt が scope: <i>/${_PREV_SCOPE_N} を宣言していたが単発発火だった。独立 task ${_PREV_SCOPE_N} 件を 1 message に N tool_use で bundle 発火する (依存 chain なら serial_reason: を明記)"
+    if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_SCOPE_SUGGEST}"
+    else
+      ADDITIONAL_CONTEXT="${_SCOPE_SUGGEST}"
+    fi
+  fi
+
+  # 次回呼出し用に今回の scope 宣言を保存する (宣言なしは 0)
+  local _CUR_SCOPE_N=0
+  if [[ -n "$task_prompt" && "$task_prompt" =~ scope:[[:space:]]*[0-9]+[[:space:]]*/[[:space:]]*([0-9]+) ]]; then
+    _CUR_SCOPE_N="${BASH_REMATCH[1]}"
+  fi
+  [[ "$_CUR_SCOPE_N" =~ ^[0-9]+$ ]] || _CUR_SCOPE_N=0
+  printf '%s\n' "$_CUR_SCOPE_N" > "$_SCOPEN_FILE" 2>/dev/null || true
+
   local _CONFIRMED=0
   [[ -f "$_COUNT_FILE" ]] && read -r _CONFIRMED < "$_COUNT_FILE" 2>/dev/null || _CONFIRMED=0
   [[ "$_CONFIRMED" =~ ^[0-9]+$ ]] || _CONFIRMED=0
@@ -328,7 +360,7 @@ _check_developer_agent_bundle_violation() {
   # 30d 実測 (flow-baseline n=22) で peak_concurrency=1 が 10 回 = 45% あり、
   # 発火前の task 全列挙を促すのが最大の並列化 lever。
   if (( _PREV_SIZE == 0 && _CONFIRMED == 0 )); then
-    local _PRE_CHECK="[bundle-pre-check] developer-agent 初回発火。残 task を今全列挙し、独立 task が残るなら次は 1 message に N tool_use で bundle 発火する (逐次発火は 2 発目 warn / ${_TH_BUNDLE_HARD_BLOCK_SEQ} 発目 hard block)。前 agent の結果に依存する逐次発火は prompt に serial_reason: <依存内容 1 行> を書く (counter 対象外)"
+    local _PRE_CHECK="[bundle-pre-check] developer-agent 初回発火。残 task を今全列挙し、独立 task が 2+ あるなら各 prompt に scope: i/N を書いて 1 message に N tool_use で bundle 発火する (逐次発火は 2 発目 warn / ${_TH_BUNDLE_HARD_BLOCK_SEQ} 発目 hard block)。前 agent の結果に依存する逐次発火は prompt に serial_reason: <依存内容 1 行> を書く (counter 対象外)"
     if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
       ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_PRE_CHECK}"
     else

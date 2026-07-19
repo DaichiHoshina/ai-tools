@@ -34,6 +34,17 @@ For N independent tasks: **place N `Agent` tool_use calls in a single assistant 
 
 Enumerate ALL independent tasks **before firing the first developer-agent**, and include every independent task in the first bundle message. The fire-one-read-result-fire-next loop drops peak concurrency to 1 (30d measured: 10 of 22 flow runs at peak=1). Hook injects `[bundle-pre-check]` on the first dev fire as a reminder — at that point the parallelization decision for the current turn is already made, so enumeration must happen at planning time, not after.
 
+#### `scope: i/N` declaration
+
+- Format: write `scope: i/N` (example `scope: 2/3`) near the top of each Task prompt
+- N = count of independent tasks enumerated above, i = this task's 1-based position
+- N=1 (single task, no fan-out) may omit the declaration
+- A false `scope: 1/1` used to hide an independent task from the bundle is forbidden
+- Same abuse class as `serial_reason` misuse below
+- A fire declares N≥2 but the actual bundle that turn was solo (size 1)
+- The hook then warns `scope_declared_mismatch`
+- Logged to `bundle-violation-warn.log` as an audit signal, not a hard block
+
 ### serial_reason declaration (dependent sequential fires)
 
 A sequential developer-agent fire that **depends on a previous agent's output** (implement → reviewer reject → re-implement / patch apply → follow-up fix) is legitimate, not a bundle violation. Declare it by writing `serial_reason: <dependency, 1 line>` in the Task prompt. The hook excludes declared fires from the sequential counter (no warn / no hard block) and records `serial_reason_declared` in `bundle-violation-warn.log` for audit.
