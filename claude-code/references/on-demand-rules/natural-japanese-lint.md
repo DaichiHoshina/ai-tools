@@ -1,6 +1,6 @@
 # natural-japanese lint (外向き長文 doc の AI 臭検出)
 
-[coji/natural-japanese](https://github.com/coji/natural-japanese) の lint script を、外向き長文 doc (記事 / DesignDoc / RCA / long-form) の draft 完成後に on-demand で実行する。sudachipy 形態素解析による決定的検出で、既存 jp-quality 体系 (NG 語 / 100 字上限 = 文単位 rule) が持たない文書全体の統計指標を補完する。plugin 導入は token 常時消費を避けて見送り、CLI 直叩きだけ使う。
+[coji/natural-japanese](https://github.com/coji/natural-japanese) の lint script を、外向き長文 doc (記事 / DesignDoc / RCA / long-form) の draft 完成後に on-demand で実行する。sudachipy 形態素解析による決定的検出で、既存 jp-quality 体系 (NG 語 / 100 字上限 = 文単位 rule) が持たない文書全体の統計指標を補完する。2026-07-19 に skill 版も導入した (`npx skills add coji/natural-japanese`、実体は `~/.agents/skills/`、`~/.claude/skills/` へ symlink、sync.sh が symlink skill を wipe から保護する)。skill は文書執筆・校正 turn で発火し、本 file の CLI 直叩きは lint 単独実行や収束ループ用に残す。
 
 ## 実行
 
