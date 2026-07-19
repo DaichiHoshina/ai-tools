@@ -222,13 +222,14 @@ case "$TOOL_NAME" in
     # statusline マーカー更新ロジック
     # 1. cd 検出時: cd 先で書く（worktree/repo 移動の明示的追跡）
     # 2. cd 無し時: data.cwd で書く（session 認識する cwd へ巻き戻し）
-    # ただし既存マーカーが worktree (/private/tmp/wt-* または ~/ghq/worktrees/*) を指す場合は保護
-    # （/snkr-issue 等の長期worktree作業で cd 含まない Bash 続行ケース）
+    # ただし既存マーカーが実在 worktree (/private/tmp/wt-* / */worktrees/* / *-wt-*) を指す間は上書きしない
     if [ -n "$SESSION_ID" ]; then
       MARKER_PATH="/tmp/claude-wt-${SESSION_ID}-${DATE_TODAY}"
       CD_TARGET=""
-      if [ -n "$COMMAND" ] && [[ "$COMMAND" =~ cd[[:space:]]+([^[:space:]\&\|\;]+) ]]; then
-        CD_TARGET="${BASH_REMATCH[1]}"
+      if [ -n "$COMMAND" ] && [[ "$COMMAND" =~ .*(^|[[:space:]\;\&\|])cd[[:space:]]+([^[:space:]\&\|\;]+) ]]; then
+        # 先頭 .* greedy で複合 command の最後の cd を採り、最終 cwd と一致させる
+        CD_TARGET="${BASH_REMATCH[2]}"
+        CD_TARGET="${CD_TARGET/#\~/$HOME}"
       fi
       if [ -n "$CD_TARGET" ] && [ -d "$CD_TARGET" ]; then
         # cd 検出 → cd 先で書く
@@ -241,7 +242,11 @@ case "$TOOL_NAME" in
         # cd 無し → CWD で更新（worktree マーカーは保護）
         EXISTING_MARKER=""
         [ -f "${MARKER_PATH}" ] && EXISTING_MARKER=$(cat "${MARKER_PATH}" 2>/dev/null)
-        if [[ ! "${EXISTING_MARKER}" =~ ^/private/tmp/wt- ]] && [[ ! "${EXISTING_MARKER}" =~ /worktrees?/ ]]; then
+        _WT_PROTECT=0
+        if [[ "${EXISTING_MARKER}" =~ ^/private/tmp/wt-|/worktrees?/|-wt- ]] && [ -d "${EXISTING_MARKER}" ]; then
+          _WT_PROTECT=1
+        fi
+        if [ "${_WT_PROTECT}" -eq 0 ]; then
           if git -C "$CWD" rev-parse --git-dir >/dev/null 2>&1; then
             ABS_CWD=$(cd "$CWD" && pwd)
             if [ "$ABS_CWD" != "${EXISTING_MARKER}" ]; then
