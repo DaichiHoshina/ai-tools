@@ -336,3 +336,62 @@ teardown() {
   [ "$status" -eq 0 ]
   [ "$output" = "/reload my-topic" ]
 }
+
+@test "prepare: MEMORY_SAVE_DIR override が dir= に反映される" {
+  run "$HELPER" prepare foo
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "^dir=${MEMORY_SAVE_DIR}$"
+}
+
+@test "prepare: 既存 file なしは new_name に today + topic、merge_target は空" {
+  run "$HELPER" prepare foo
+  [ "$status" -eq 0 ]
+  local today; today=$(date +%Y%m%d)
+  echo "$output" | grep -q "^new_name=work-context-${today}-foo$"
+  echo "$output" | grep -q '^merge_target=$'
+}
+
+@test "prepare: 同日同 topic file ありは merge_target を返し new_name は空" {
+  local today; today=$(date +%Y%m%d)
+  touch "${MEMORY_SAVE_DIR}/work-context-${today}-foo.md"
+  run "$HELPER" prepare foo
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "^merge_target=${MEMORY_SAVE_DIR}/work-context-${today}-foo.md$"
+  echo "$output" | grep -q '^new_name=$'
+}
+
+@test "prepare: branch 引数の issue key が new_name に prefix される" {
+  run "$HELPER" prepare login "feature/PROJ-123-add-login"
+  [ "$status" -eq 0 ]
+  local today; today=$(date +%Y%m%d)
+  echo "$output" | grep -q "^issue_key=PROJ-123$"
+  echo "$output" | grep -q "^new_name=work-context-${today}-PROJ-123-login$"
+}
+
+@test "prepare: 非 git dir でも exit 0 で worktree / branch は空" {
+  local nogit; nogit=$(mktemp -d)
+  run env MEMORY_SAVE_DIR="$MEMORY_SAVE_DIR" bash -c "cd '$nogit' && '$HELPER' prepare foo"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q '^worktree=$'
+  echo "$output" | grep -q '^branch=$'
+  rm -rf "$nogit"
+}
+
+@test "finalize clear: MEMORY.md prepend + stdout は /reload <topic>" {
+  run "$HELPER" finalize clear my-topic "1 行 summary" abc1234
+  [ "$status" -eq 0 ]
+  [ "$output" = "/reload my-topic" ]
+  head -1 "${MEMORY_SAVE_DIR}/MEMORY.md" | grep -qF '[clear] my-topic — 1 行 summary (commit: abc1234)'
+}
+
+@test "finalize topic: update-index 相当の行を書き stdout は /reload <topic>" {
+  run "$HELPER" finalize topic work-context-20260101-foo foo "desc text" "hook text"
+  [ "$status" -eq 0 ]
+  [ "$output" = "/reload foo" ]
+  head -1 "${MEMORY_SAVE_DIR}/MEMORY.md" | grep -qF '[desc text](work-context-20260101-foo.md) — hook text'
+}
+
+@test "finalize: 不明 mode は非 0 で終了する" {
+  run "$HELPER" finalize bogus foo bar
+  [ "$status" -ne 0 ]
+}

@@ -11,6 +11,7 @@
 #   5. append-clear-line   — /memory-save clear 用、MEMORY.md に `- YYYY-MM-DD [clear] <topic> — <summary> (commit: <hash>)` を prepend (dedup なし)
 #   6. extract-issue-key   — 現 branch 名から issue key (`PROJ-123` / `#123` / `issue-123`) を抽出して echo、無ければ空
 #   7. find-topic-match    — 同日 work-context-*-<topic>.md を exact suffix match で filter (issue key prefix は無視)
+#   8. prepare / 9. finalize — 前段 metadata の一括返却と index 更新 + pbcopy 統合で往復を減らす
 #
 # 注意: 本 script は AI 経由の Write/Edit ばらつきを排除するための deterministic helper。
 #       memory file 本体の write は /memory-save command (AI 側) が担当する。
@@ -249,8 +250,63 @@ cmd_pbcopy_reload() {
   printf '%s\n' "$cmd"
 }
 
+# /memory-save 前段の dir / worktree / issue key / merge-new 判定を 1 call に統合して往復を減らす。
+# merge_target 非空なら最古 file へ merge し、空なら new_name を使う (第 2 引数は test 用の branch 明示)。
+cmd_prepare() {
+  local topic="${1:?topic required}" branch_override="${2:-}"
+  local today today_iso; today=$(_today); today_iso=$(_today_iso)
+  local worktree="" branch="" toplevel
+  toplevel=$(git rev-parse --show-toplevel 2>/dev/null || true)
+  if [ -n "$toplevel" ]; then
+    branch=$(git branch --show-current 2>/dev/null || true)
+    if [ -f "${toplevel}/.git" ]; then
+      worktree="$toplevel"
+    fi
+  fi
+  local issue_key; issue_key=$(cmd_extract_issue_key "$branch_override")
+  local merge_target new_name=""
+  merge_target=$(cmd_find_topic_match "$topic" | head -1)
+  if [ -z "$merge_target" ]; then
+    local base="work-context-${today}-${topic}"
+    if [ -n "$issue_key" ]; then
+      base="work-context-${today}-${issue_key}-${topic}"
+    fi
+    new_name=$(cmd_resolve_name "$base")
+  fi
+  printf 'dir=%s\n' "$MEMORY_DIR"
+  printf 'today=%s\n' "$today"
+  printf 'today_iso=%s\n' "$today_iso"
+  printf 'worktree=%s\n' "$worktree"
+  printf 'branch=%s\n' "$branch"
+  printf 'issue_key=%s\n' "$issue_key"
+  printf 'merge_target=%s\n' "$merge_target"
+  printf 'new_name=%s\n' "$new_name"
+}
+
+# index 更新と pbcopy-reload を 1 call に束ねて往復を減らす。stdout は `/reload <topic>` の 1 行だ。
+# mode は clear (append-clear-line 相当) と topic (update-index 相当) の 2 系統を持つ。
+cmd_finalize() {
+  local mode="${1:?mode (clear|topic) required}"; shift
+  case "$mode" in
+    clear)
+      local topic="${1:?topic required}" summary="${2:?summary required}" commit="${3:-}"
+      cmd_append_clear_line "$topic" "$summary" "$commit"
+      cmd_pbcopy_reload "$topic"
+      ;;
+    topic)
+      local name="${1:?name required}" topic="${2:?topic required}" desc="${3:?description required}" hook="${4:-}"
+      cmd_update_index "$name" "$desc" "$hook"
+      cmd_pbcopy_reload "$topic"
+      ;;
+    *)
+      printf 'unknown finalize mode: %s\n' "$mode" >&2
+      return 1
+      ;;
+  esac
+}
+
 usage() {
-  sed -n '2,15p' "$0"
+  sed -n '2,16p' "$0"
   exit "${1:-0}"
 }
 
@@ -267,6 +323,8 @@ main() {
     find-topic-match)  cmd_find_topic_match "$@" ;;
     find-clear-entry)  cmd_find_clear_entry "$@" ;;
     pbcopy-reload)     cmd_pbcopy_reload "$@" ;;
+    prepare)           cmd_prepare "$@" ;;
+    finalize)          cmd_finalize "$@" ;;
     -h|--help|help|"") usage 0 ;;
     *) printf 'unknown subcommand: %s\n' "$sub" >&2; usage 1 ;;
   esac
