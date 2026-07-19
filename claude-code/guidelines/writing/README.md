@@ -32,6 +32,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 | [stacked-pr-chain.md](stacked-pr-chain.md) | stacked PR chain 運用 (worktree / rename 伝播 / build gate / 分割 audit / 前倒し統一) | 3 本以上の直列 chain PR 運用時 |
 | [external-post.md](external-post.md) | 短文 (PRコメント / Slack / Issue / Notion) + 5軸採点 | 外部向け投稿前 |
 | [gh-issue.md](gh-issue.md) | GitHub issue 本文の書式 | issue 起票・編集時 |
+| [narrative-writing.md](narrative-writing.md) | 読み物系 (blog / エッセイ / 取材記事) の構造原則。技術文書は対象外 | 読み物系の執筆時 |
 | [long-form-doc.md](long-form-doc.md) | 長文doc (DD / PRD / RCA / Notionページ) + ADR/PRD/EARSテンプレ | 長文doc執筆時 |
 | [design-doc-protocol.md](design-doc-protocol.md) | DesignDoc 4 Step + 10パターン + アンチパターン + セルフチェック18 | DD着手・レビュー対応時 |
 | [strategy.md](strategy.md) | ドキュメント戦略 (6種別役割分担 / 保存先 / 命名規則 / Bounded Context) | 「どこに何を書くか」判断時 |
