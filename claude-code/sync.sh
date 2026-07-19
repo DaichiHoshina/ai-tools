@@ -182,11 +182,36 @@ has_gh_skill_metadata() {
     grep -qE "^[[:space:]]+github-repo:[[:space:]]+https://github\.com/" "$skill_file" 2>/dev/null
 }
 
+# skills の diff 行から外部管理 skill (symlink / gh skill metadata 付き) を除外する
+filter_managed_skill_diff() {
+    local line name
+    while IFS= read -r line; do
+        name=$(echo "$line" | sed -E 's|.*/skills/([^/]+)/.*|\1|')
+        case "$line" in
+            "Only in "*"/skills: "*) name="${line##*: }" ;;
+        esac
+        if [ -n "$name" ]; then
+            [ -L "$CLAUDE_DIR/skills/$name" ] && continue
+            [ -f "$CLAUDE_DIR/skills/$name/skill.md" ] && \
+                has_gh_skill_metadata "$CLAUDE_DIR/skills/$name/skill.md" && continue
+            [ -f "$CLAUDE_DIR/skills/$name/SKILL.md" ] && \
+                has_gh_skill_metadata "$CLAUDE_DIR/skills/$name/SKILL.md" && continue
+        fi
+        echo "$line"
+    done
+}
+
 preserve_gh_skills() {
     local dst="$1" bak_dir="$2"
     [ -d "$dst" ] || return 0
-    local d skill_file
+    local d entry skill_file
     for d in "${dst}"/*/; do
+        entry="${d%/}"
+        # symlink は外部 skill manager (skills.sh 等が ~/.agents/skills へ実体を置く) 管理のため無条件で退避する
+        if [ -L "$entry" ]; then
+            mv "$entry" "${bak_dir}/"
+            continue
+        fi
         [ -d "$d" ] || continue
         skill_file=""
         [ -f "${d}SKILL.md" ] && skill_file="${d}SKILL.md"
@@ -201,8 +226,9 @@ restore_gh_skills() {
     local dst="$1" bak_dir="$2"
     [ -d "$bak_dir" ] || return 0
     local d
-    for d in "${bak_dir}"/*/; do
-        [ -d "$d" ] || continue
+    # 退避中の symlink は link 先が相対 path だと解決できず */ glob に載らないため、素の glob で回す
+    for d in "${bak_dir}"/*; do
+        [ -e "$d" ] || [ -L "$d" ] || continue
         mv "$d" "${dst}/"
     done
 }
@@ -621,14 +647,7 @@ verify_to_local_sync() {
             # skills は gh skill 管理ぶんと .system/ (OpenAI Codex 向け、sync 除外対象) を除外
             if [ "$item" = "skills" ] && [ -n "$diff_output" ]; then
                 # grep -v は全行 filter 時に exit 1 を返すため || true で pipefail 落ちを防ぐ
-                diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$|/skills/mino-[^/]+/(evaluations|scripts|agents)(/|$)|/skills/mino-[^/]+: (evaluations|scripts|agents)$' || true; } | while IFS= read -r line; do
-                    name=$(echo "$line" | sed -E 's|.*/skills/([^/]+)/.*|\1|')
-                    [ -n "$name" ] && [ -f "$CLAUDE_DIR/skills/$name/skill.md" ] && \
-                        has_gh_skill_metadata "$CLAUDE_DIR/skills/$name/skill.md" && continue
-                    [ -n "$name" ] && [ -f "$CLAUDE_DIR/skills/$name/SKILL.md" ] && \
-                        has_gh_skill_metadata "$CLAUDE_DIR/skills/$name/SKILL.md" && continue
-                    echo "$line"
-                done)
+                diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$|/skills/mino-[^/]+/(evaluations|scripts|agents)(/|$)|/skills/mino-[^/]+: (evaluations|scripts|agents)$' || true; } | filter_managed_skill_diff)
             fi
             [ -n "$diff_output" ] && mismatched+=("$item")
         else
@@ -843,9 +862,9 @@ show_diff() {
                 local diff_output
                 # private-*/local-* は sync 保護対象 (local 専用) のため差分扱いしない
                 diff_output=$(diff -rq "$src" "$dst" 2>/dev/null | grep -v -E '(/|: )(private-|local-)' || true)
-                # skills/.system/ と mino 保守用 payload は to-local で除外するため差分扱いしない
+                # skills/.system/ と mino 保守用 payload と外部管理 skill は to-local で除外するため差分扱いしない
                 if [ "$item" = "skills" ] && [ -n "$diff_output" ]; then
-                    diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$|/skills/mino-[^/]+/(evaluations|scripts|agents)(/|$)|/skills/mino-[^/]+: (evaluations|scripts|agents)$' || true; })
+                    diff_output=$(echo "$diff_output" | { grep -v -E '/skills/\.system(/|$)|skills: \.system$|/skills/mino-[^/]+/(evaluations|scripts|agents)(/|$)|/skills/mino-[^/]+: (evaluations|scripts|agents)$' || true; } | filter_managed_skill_diff)
                 fi
                 if [ -n "$diff_output" ]; then
                     echo -e "${YELLOW}$item/:${NC}"
