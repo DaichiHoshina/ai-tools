@@ -55,13 +55,12 @@ Full command list: `commands/` directory.
 | `agents/` | Agents (po/manager/developer etc.) | [agents/README.md](agents/README.md) |
 | `guidelines/` | Guidelines (language/design/infra/ops/quality) | By category |
 | `hooks/` | Event hooks | [hooks/README.md](hooks/README.md) |
-| `templates/` | settings / MCP / keybindings / workflow templates | [templates/README.md](templates/README.md) |
+| `templates/` | settings / MCP / workflow templates | [templates/README.md](templates/README.md) |
 | `output-styles/` | Response format definitions | [output-styles/README.md](output-styles/README.md) |
 | `references/` | Detailed references | `references/*.md` |
 | `rules/` | Output rules common to all projects | |
 | `scripts/` | analytics / dashboard / cleanup helpers | |
 | `lib/` | Shell utilities | [lib/README.md](lib/README.md) |
-| `tutorials/` | Tutorials | [tutorials/README.md](tutorials/README.md) |
 | `tests/` | Hook / lib tests | [tests/README.md](tests/README.md) |
 | `settings/` | MCP server settings | |
 | `config/` | Shell utility settings | |

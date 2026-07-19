@@ -21,23 +21,6 @@ Claude Code設定に使用されるテンプレートファイルの説明。
 
 ## 手動使用テンプレート（必要に応じてコピー）
 
-### keybindings.json.template
-
-Claude Codeのキーボードショートカット設定テンプレート。
-
-**使い方**:
-```bash
-cp ~/.claude/templates/keybindings.json.template ~/.claude/keybindings.json
-# 必要に応じて編集
-```
-
-**定義済みショートカット**（一部抜粋。全リストは `keybindings.json.template` 参照）:
-- `Ctrl+Shift+F`: `/flow`
-- `Ctrl+Shift+C`: `/git-push --pr`
-- `Ctrl+Shift+R`: `/review`
-- `Ctrl+Shift+T`: `/test`
-- `Ctrl+Shift+V`: `/lint-test`
-
 ### workflow-config.yaml.template
 
 カスタムワークフロー設定テンプレート（実験的機能）。
@@ -51,32 +34,6 @@ cp ~/.claude/templates/workflow-config.yaml.template ~/.claude/workflow-config.y
 **用途**:
 - プロジェクト固有のビルド・テスト・デプロイ手順
 - カスタムコマンドチェーン
-
-## Serena MCPメモリーテンプレート
-
-### serena-memories/
-
-Serena MCPで使用するメモリーテンプレート（プロジェクト知識の初期構造）。
-
-| ファイル | 用途 |
-|---------|------|
-| **common-tasks.template.md** | よく使うタスクの記録テンプレート |
-| **development-guidelines.template.md** | プロジェクト固有の開発ガイドライン |
-| **project-overview.template.md** | プロジェクト概要・アーキテクチャ |
-| **troubleshooting.template.md** | トラブルシューティング・FAQ |
-
-**使い方**:
-```bash
-# 新規プロジェクトでSerenaメモリーを初期化する場合
-cp ~/.claude/templates/serena-memories/*.template.md ~/.serena/memories/
-# .template.md サフィックスを削除して使用
-```
-
-**メモリー管理**:
-- `/memory-save` で現在の作業状態をメモリに記録
-- `mcp__serena__write_memory` / `mcp__serena__read_memory` で直接操作
-
----
 
 ## テンプレート追加ガイドライン
 
