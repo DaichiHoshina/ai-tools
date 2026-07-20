@@ -580,9 +580,11 @@ sync_to_local() {
     if [ -z "$ONLY_ITEMS" ]; then
         # pre-push hook のシンボリックリンクを配置
         setup_pre_push_hook
+        _step_mark "prepush:done"
 
         # repo root を記録（clone 先が機体ごとに違っても hooks が path 解決できるようにする）
         record_repo_root
+        _step_mark "reporoot:done"
 
         # Codex / Cursor 側も同期する。各ツール未使用 PC では dir 不在のためスキップ。
         sync_codex
