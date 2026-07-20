@@ -18,6 +18,12 @@ if [[ ! -f "$TARGET_MD" ]]; then
   exit 2
 fi
 
+today_header="### 昇格候補 $(date +%Y-%m-%d)"
+if tail -n 40 "$TARGET_MD" 2>/dev/null | grep -qF -- "$today_header"; then
+  echo "skip: same-day block already exists in $TARGET_MD"
+  exit 0
+fi
+
 block="### 昇格候補 $(date +%Y-%m-%d) (window: ${CUTOFF} 以降、閾値超のみ)"$'\n'
 
 if [[ ! -f "$LOG_FILE" ]]; then
@@ -30,7 +36,8 @@ fi
 hit_count=0
 while IFS=$'\t' read -r id pattern rule threshold; do
   [[ -z "$id" || "$id" == \#* ]] && continue
-  count="$(awk -F' [|] ' -v c="$CUTOFF" '$1 >= c { print $3 }' "$LOG_FILE" | grep -c -- "$pattern")"
+  [[ "$threshold" =~ ^[0-9]+$ ]] || continue
+  count="$(awk -F' [|] ' -v c="$CUTOFF" '$1 >= c { print $3 }' "$LOG_FILE" | grep -F -c -- "$pattern")"
   count="${count:-0}"
   if (( count > threshold )); then
     block+="- ${id}: ${count} 件 (${pattern} → ${rule}、閾値 ${threshold})"$'\n'

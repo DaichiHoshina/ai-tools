@@ -71,3 +71,55 @@ teardown() { rm -rf "$TMPDIR_T"; }
   [ "$status" -eq 2 ]
   [ "$(cat "$RECALL_TARGET_MD")" = "$before" ]
 }
+
+@test "pattern に regex metachar が入っても literal 一致で数える" {
+  {
+    printf '# id\tpattern\trule\tthreshold\n'
+    printf 'p-metachar\t100.超文\trules/plain-jp.md\t0\n'
+  } > "$RECALL_PATTERNS_TSV"
+  {
+    printf '2026-07-14T10:00:00+0900 | chat | structural: 100.超文 1文 | warn\n'
+    printf '2026-07-15T10:00:00+0900 | chat | structural: 100X超文 1文 | warn\n'
+    printf '2026-07-16T10:00:00+0900 | chat | structural: 100Y超文 1文 | warn\n'
+  } > "$RECALL_LOG"
+  run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  grep -q '^- p-metachar: 1 件 (100\.超文' "$RECALL_TARGET_MD"
+}
+
+@test "同日 2 回実行しても block は 1 個だけ (2 回目は skip)" {
+  run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  today_header_count="$(grep -c '^### 昇格候補 ' "$RECALL_TARGET_MD")"
+  [ "$today_header_count" -eq 1 ]
+}
+
+@test "非数値 threshold の行は skip される (0 件で surface しない)" {
+  {
+    printf '# id\tpattern\trule\tthreshold\n'
+    printf 'p-negative\t絶対に出ない\trules/plain-jp.md\t-1\n'
+    printf 'p-empty\t絶対に出ない\trules/plain-jp.md\t\n'
+  } > "$RECALL_PATTERNS_TSV"
+  run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  ! grep -q '^- p-negative:' "$RECALL_TARGET_MD"
+  ! grep -q '^- p-empty:' "$RECALL_TARGET_MD"
+}
+
+@test "count == threshold は surface されない (strict >)" {
+  {
+    printf '# id\tpattern\trule\tthreshold\n'
+    printf 'p-boundary\t100字超文\trules/plain-jp.md\t3\n'
+  } > "$RECALL_PATTERNS_TSV"
+  # 3 件 hit vs threshold 3 (equal) → surface されない、「該当なし」1 行が出る
+  {
+    printf '2026-07-14T10:00:00+0900 | chat | structural: 100字超文 4文 | warn\n'
+    printf '2026-07-15T10:00:00+0900 | chat | structural: 100字超文 2文 | block\n'
+    printf '2026-07-16T10:00:00+0900 | chat | structural: 100字超文 5文 | warn\n'
+  } > "$RECALL_LOG"
+  run bash "$SCRIPT"
+  ! grep -q '^- p-boundary:' "$RECALL_TARGET_MD"
+  grep -q '^- 該当なし' "$RECALL_TARGET_MD"
+}
