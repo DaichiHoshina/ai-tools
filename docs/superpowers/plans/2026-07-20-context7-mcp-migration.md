@@ -260,3 +260,19 @@ skill は curl 実装に戻り、hook 側は温存されているので影響な
 - Task 3 の skill 書き換え文面は Task 2 完了後に確定する。それまで固定文面は書かない (verification 原則)
 - Failure Behavior 表の 4 パターンのうち「代替キーワード suggest」「libraryId 候補 3 件 fallback」は MCP tool 側が自動でやる可能性がある。Task 2 Step 4 で挙動確認し、自動化されていれば skill 記述を「MCP 側で自動処理される」に更新する
 - npm 経由の MCP server は npx がキャッシュを持たない場合、初回起動が遅い。permission auto-accept 設定 (settings.json の allow list) に `mcp__context7__*` を追加すべきか、Task 5 Step 3 の smoke 結果で判断
+
+## 実装差分メモ (2026-07-20 実行時に判明)
+
+- **`claude mcp add` の scope**: default は project local (`~/.claude.json` の該当 project 節) に書かれるため、全 project から使える user scope が要る場合は `--scope user` を明示する。実装時は最初 project scope で登録してしまい、`claude mcp remove` して user scope で入れ直した (実測)
+- **tool 名確定**: 公式 README (github.com/upstash/context7) の MCP Tools 節で `resolve-library-id` (params: `query`, `libraryName`) と `query-docs` (params: `libraryId`, `query`) を確認。skill file の allowed-tools frontmatter と Workflow 節はこの signature に合わせて記述
+- **Failure Behavior は温存**: MCP server 側が代替 keyword suggest / libraryId fallback を自動でやる保証がないため、skill 使用者向け指示として 4 パターン全て残した
+- **hook / CLAUDE.md 変更なし**: pre-tool-use.sh:124 が `mcp__context7__resolve-library-id` / `mcp__context7__query-docs` を既に GUARD_CLASS=Safe 認識済であり、write-checkers.sh の skill skip rule も温存で問題なし
+- **jp-quality hook で 2 回 block を食らった**: 冒頭 description + Overview 冒頭が 100 字超で block、句点分割で通過。この過程自体は verification-before-completion の効果例 (無検証で通したかった書き方が block された)
+
+## 効果測定
+
+- **before (2026-07-20)**: skill 内 curl call 実装、network 例外は skill 使用者が読み解く、jq / URL-encode の Bash tips を skill file に持つ
+- **after (2026-07-20 実装済)**: `mcp__context7__resolve-library-id` / `mcp__context7__query-docs` の MCP tool 呼び出しに置換、`~/.claude.json` の user scope に context7 server 登録済、`claude mcp list` で Connected 確認済
+- **判定基準**: 1 週間後 (2026-07-27) に (a) `claude mcp list` で context7 が Connected を保っている (b) skill 発火 log で MCP tool call の成功件数を確認する。失敗が続けば Rollback 手順へ
+- **副作用監視**: `~/.claude/logs/pre-tool-use.log` (もしあれば) で `mcp__context7__*` 呼び出し時の permission 挙動を確認。auto-accept が要るなら settings.json allow list に追加する検討
+- **計測 command**: `claude mcp list | grep context7`
