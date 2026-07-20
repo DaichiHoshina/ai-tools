@@ -40,4 +40,13 @@ if ! "${REPO_ROOT}/scripts/first-ctx-check.sh" --log >> "$log_file" 2>&1; then
   printf 'WARN: first-ctx threshold 超過 session あり\n' >> "$log_file"
 fi
 
+# 第 1 月曜のみ月次棚卸しを出す (weekly 月曜実行 × 日付 gate)
+if [[ "$(date +%d | sed 's/^0//')" -le 7 ]]; then
+  printf '=== toolchain-health-report (%s) ===\n' "$(date '+%F %T')" >> "$log_file"
+  "${REPO_ROOT}/scripts/toolchain-health-report.sh" >> "$log_file" 2>&1 \
+    || printf 'WARN: toolchain-health-report failed\n' >> "$log_file"
+else
+  printf 'skip: toolchain-health-report (第 1 月曜のみ)\n' >> "$log_file"
+fi
+
 echo "done: ${log_file}"

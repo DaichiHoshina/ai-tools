@@ -11,7 +11,7 @@
 ```markdown
 ### P1: <一行タイトル>
 
-- Type: new-skill|skill-edit|claude-md|hook|command|cursor のどれか 1 つ
+- Type: new-skill|skill-edit|claude-md|hook|command|cursor|remove のどれか 1 つ
 - Target: <対象 path (repo 相対、`/Users/...` の絶対 path 禁止)。new-skill は新設予定 path を書く>
 - Evidence: <digest 内の実データ引用。数値を最低 1 つ含める>
 - Change: <変更内容を 1-3 文で書く>
@@ -23,6 +23,8 @@
 - file 更新は Edit tool のみを使う (Write / Bash は permission で deny される)
 - 編集してよい file は `{{TARGET_FILE}}` だけだ。他の file に触らない
 - 提案は最大 5 件。digest から evidence を引けない提案は書かない
+- Evidence の要求水準は非対称にする: 追加系 (new-skill / skill-edit / claude-md / hook / command / cursor) は実 session の摩擦事例を必須とし、「あると便利」型は書かない。remove (未使用資産の archive 提案) は digest 内の利用ゼロ実測 (skill-eval / usage-stats の数値) だけで提案してよい
+- 迷ったら remove 側を優先する。この toolchain は追加より削減に価値がある
 - digest の "pending improvements" に既載の項目は再提案しない
 - digest の "過去の rejected proposals" にある提案は再生成しない
 - 提案が 1 件もなければ file 先頭行に `NO-PROPOSAL: <理由 1 行>` と書く

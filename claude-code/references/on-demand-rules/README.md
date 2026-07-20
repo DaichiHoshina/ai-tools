@@ -30,6 +30,7 @@
 | public-repo-private-data-block の incident 経緯を確認したい時 | `public-repo-incident-history.md` |
 | 外向き長文 doc (記事・DD・RCA) の draft 完成時、`/jp-fix` の長文 review / rewrite 時 | `natural-japanese-lint.md` |
 | `jp-fix` の fork 結果が file 書き換えを permission denied で返した時 | `jp-fix-write-delegates-to-developer-agent.md` |
+| skill / command / hook / cron / loop の新設・archive 判断時、health report 閲覧時 | `toolchain-lifecycle.md` |
 
 ## 運用
 

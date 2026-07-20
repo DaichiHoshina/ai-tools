@@ -87,6 +87,8 @@ Group signals by domain. ≥2 signals in a domain → `developer-agent` parallel
 
 Delegation rule: 1 domain = 1 agent call. Never bundle multiple domains into 1 prompt.
 
+追加系の提案 (new skill / hook / command) は lifecycle gate (摩擦 evidence + cap、`references/on-demand-rules/toolchain-lifecycle.md`) を通る前提で書く。
+
 ### Phase 3.5: Accumulate Writing Failure Examples (Compounding Engineering)
 
 If writing failures detected (user feedback "hard to read" / "AI-smelling" / "so what?"), accumulate examples to memory for next session's hook reference.

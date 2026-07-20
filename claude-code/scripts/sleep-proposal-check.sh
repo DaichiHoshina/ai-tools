@@ -53,8 +53,8 @@ prev_start=""
 _check_block() {
   local s="$1" e="$2" block type target
   block=$(sed -n "${s},${e}p" "${FILE}")
-  grep -Eq '^- Type: (new-skill|skill-edit|claude-md|hook|command|cursor)$' <<< "${block}" \
-    || _ng "block L${s}: Type が enum (new-skill|skill-edit|claude-md|hook|command|cursor) にない"
+  grep -Eq '^- Type: (new-skill|skill-edit|claude-md|hook|command|cursor|remove)$' <<< "${block}" \
+    || _ng "block L${s}: Type が enum (new-skill|skill-edit|claude-md|hook|command|cursor|remove) にない"
   target=$(sed -n 's/^- Target: //p' <<< "${block}" | head -1)
   [[ -n "${target}" ]] || _ng "block L${s}: Target がない"
   grep -Eq '^- Evidence: .*[0-9]' <<< "${block}" \
@@ -63,7 +63,7 @@ _check_block() {
   grep -q '^- Risk: ' <<< "${block}" || _ng "block L${s}: Risk がない"
   type=$(sed -n 's/^- Type: //p' <<< "${block}" | head -1)
   case "${type}" in
-    skill-edit|hook|command)
+    skill-edit|hook|command|remove)
       local tpath="${REPO}/${target}"
       [[ "${target}" == /* ]] && tpath="${target}"
       [[ -e "${tpath}" ]] || _ng "block L${s}: Target が実在しない: ${target}"

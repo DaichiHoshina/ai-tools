@@ -32,6 +32,7 @@ steps:
       - kebab-case only (`^[a-z][a-z0-9-]+$`)
       - no existing skill name duplicate (`skills/<name>/` must not exist)
       - if dup, offer alternative names + stop
+      - lifecycle gate: 摩擦 evidence 1 件 + cap 判定 (`references/on-demand-rules/toolchain-lifecycle.md`)
 
   - id: create-dir
     action: mkdir -p claude-code/skills/<name>

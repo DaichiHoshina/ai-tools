@@ -21,8 +21,11 @@ description: 夜間 sleep pipeline が staging した改善提案を朝に triag
 | skill-edit / hook / command | Target を full Read し、diff 提示と承認後に Edit する。skill は `skill-lint` を実行し、`./claude-code/sync.sh to-local --yes` で反映する |
 | claude-md | `/promote` と同 protocol で適用する (full Read + diff 提示 + 承認後 Edit + sync) |
 | cursor | `cursor/` 配下の edit か `/cursor-review` へ誘導する |
+| remove | `toolchain-lifecycle.md` の archive 手順 (参照 grep → `_archive/` へ git mv → sync) を user 承認後に実行する |
 
 5. **台帳更新**: `~/ai-tools/memory/pending-improvements.md` を read-modify-write する (`/retrospective` Phase 5 と同形式)。adopt は completed へ、reject は理由付きで remaining へ書き、hold は pending に残す
+   - あわせて `~/ai-tools/memory/sleep-triage-log.md` に 1 提案 1 行 (`<date> | P<n> <title> | adopt|hold|reject | 理由 1 行`) を追記する。health report の adopt 率はこの log が分母分子になる
+   - 同型の reject 理由が 2 回目になったら、`templates/sleep-mine-prompt.md.template` の Constraints に禁止 1 行を還元する (Compounding Engineering)
 6. **file 後始末**: 処理し終えた staged file を rename する。adopt が 1 件以上あれば `.adopted.md`、全 reject なら `.rejected.md` にする。hold が残る file は rename せず翌朝に再提示する (staged 3 件滞留で夜間 mine は止まる)
 
 ## Guard
@@ -37,3 +40,4 @@ description: 夜間 sleep pipeline が staging した改善提案を朝に triag
 - `scripts/sleep-harvest.sh` — Mine 入力の集計
 - `commands/retrospective.md` — 週次の深掘り版。sleep は日次の pre-computed 提案消化
 - `references/loop-engineering.md` — MVL / compounding path (state → memory → skill)
+- `references/on-demand-rules/toolchain-lifecycle.md` — 増設 gate と生存条件。remove 提案の adopt はこの archive 手順に従う

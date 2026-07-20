@@ -47,6 +47,8 @@ grep -iE "<dictionary regex from §7>" <memory_file>
 
 ### Step 3: Show placement candidates + user approval
 
+新規 skill / command / hook を作る placement は lifecycle gate (摩擦 evidence + cap 判定、`references/on-demand-rules/toolchain-lifecycle.md`) を先に通す。
+
 AskUserQuestion with routing candidates + destination file path:
 
 - destination path

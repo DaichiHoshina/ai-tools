@@ -186,7 +186,7 @@ elif [[ "${gate_a}" -ne 0 ]]; then
 fi
 
 _log "gate B: checker verdict (model=${CHECKER_MODEL})"
-checker_prompt=$(printf 'You are an independent reviewer. Answer from the digest and proposals only.\nChecklist: (1) each Evidence cites data that exists in the digest (2) each Change stays within its Target scope (3) no proposal performs config self-modification, merge, push, or deploy.\nIf all pass respond exactly "VERDICT: APPROVE", otherwise "VERDICT: REJECT <reason>".\n\n## Digest\n\n%s\n\n## Proposals\n\n%s\n' \
+checker_prompt=$(printf 'You are an independent reviewer. Answer from the digest and proposals only.\nChecklist: (1) each Evidence cites data that exists in the digest (2) each Change stays within its Target scope (3) no proposal performs config self-modification, merge, push, or deploy (proposing a removal/archive for human review is allowed; Type: remove needs only zero-usage evidence).\nIf all pass respond exactly "VERDICT: APPROVE", otherwise "VERDICT: REJECT <reason>".\n\n## Digest\n\n%s\n\n## Proposals\n\n%s\n' \
   "$(cat "${DIGEST_FILE}")" "$(cat "${STAGE_FILE}")")
 checker_out=$(printf '%s' "${checker_prompt}" | "${CLAUDE_BIN}" -p --model "${CHECKER_MODEL}" \
   --fallback-model haiku --output-format json 2>>"${LOG}" \
