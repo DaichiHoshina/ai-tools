@@ -58,6 +58,12 @@ SYNC_ITEMS=(
 
 ONLY_ITEMS=""
 
+# hang (2026-07-16 / 07-20 再発) の位置を特定するため、timestamp 付き到達 mark を残す。次回 hang 時は最終行が止まった step を指す
+SYNC_STEP_LOG="${HOME}/.claude/logs/sync-steps.log"
+_step_mark() {
+    printf '%s pid=%s %s\n' "$(date '+%F %T')" "$$" "$1" >> "$SYNC_STEP_LOG" 2>/dev/null || true
+}
+
 item_selected() {
     local item="$1"
     [ -z "$ONLY_ITEMS" ] && return 0
@@ -454,18 +460,21 @@ sync_to_local() {
 
     # 別 PC 初回セットアップ対応: ~/.claude 不在時の自動作成
     mkdir -p "$CLAUDE_DIR"
+    _step_mark "to-local:start"
 
     # race condition 対策: push 直後の origin/main 未取り込み状態で
     # workspace が古いまま反映されると、追加されたファイルが取りこぼされる。
     if [ "${SKIP_GIT_CHECK:-false}" != "true" ]; then
         check_repo_freshness || true
     fi
+    _step_mark "freshness:done"
 
     # 同時実行 guard + 誤 sync 復旧用 backup（./sync.sh rollback で戻せる）
     acquire_sync_lock || return 1
     if [ "${NO_BACKUP:-false}" != "true" ]; then
         create_backup || { print_error "backup 失敗のため上書きを中断する"; return 1; }
     fi
+    _step_mark "lock+backup:done"
 
     local items=("${SYNC_ITEMS[@]}")
 
@@ -548,6 +557,7 @@ sync_to_local() {
                 fi
             fi
             print_success "$item"
+            _step_mark "item:${item}:done"
         else
             print_warning "$item が見つかりません"
         fi
@@ -560,10 +570,12 @@ sync_to_local() {
         sync_settings_permissions       || print_warning "settings.json 同期不完全 (permissions)"
         sync_settings_root_keys         || print_warning "settings.json 同期不完全 (root keys)"
     fi
+    _step_mark "settings:done"
 
     # post-sync 整合性検証: 同期後に差分が残るのは異常（過去の直編集残骸 / コピー失敗の検出）
     # gh skill 管理スキル除外のため skills ディレクトリは個別判定する。
     verify_to_local_sync
+    _step_mark "verify:done"
 
     if [ -z "$ONLY_ITEMS" ]; then
         # pre-push hook のシンボリックリンクを配置
@@ -574,15 +586,19 @@ sync_to_local() {
 
         # Codex / Cursor 側も同期する。各ツール未使用 PC では dir 不在のためスキップ。
         sync_codex
+        _step_mark "codex:done"
         sync_cursor
+        _step_mark "cursor:done"
 
         # Serena live 設定の宣言的補正 (alwaysLoad 削除 / excluded_tools union)。対象不在 PC は script 側で skip
         "$CLAUDE_CODE_DIR/scripts/sync-serena-config.sh" || print_warning "Serena 設定補正に失敗した"
+        _step_mark "serena:done"
     else
         print_info "--only 指定のため settings / pre-push hook / Codex / Cursor 同期を skip"
     fi
 
     record_last_sync "to-local"
+    _step_mark "to-local:finish"
     print_success "ローカルへの同期が完了しました"
 }
 
