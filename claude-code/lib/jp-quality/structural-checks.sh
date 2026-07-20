@@ -56,7 +56,7 @@ _check_sentence_structure_counts() {
   local text="$1"
   local polite_check="${2:-0}"
   local include_readability="${3:-0}"
-  _SS_TAIGEN=0 _SS_ARROW=0 _SS_REP=0 _SS_LONG=0 _SS_POLITE=0 _SS_KANJI_CNT=0 _SS_KANJI_SAMPLE="" _SS_TOUTEN=0
+  _SS_TAIGEN=0 _SS_ARROW=0 _SS_REP=0 _SS_LONG=0 _SS_POLITE=0 _SS_KANJI_CNT=0 _SS_KANJI_SAMPLE="" _SS_TOUTEN=0 _SS_LONG_SAMPLE=""
   _SS_FLAT=0 _SS_TIME=0 _SS_TIME_SAMPLE="" _SS_STUFF=0 _SS_STUFF_SAMPLE=""
   [[ -z "$text" ]] && return 0
   command -v python3 &>/dev/null || return 0
@@ -111,8 +111,11 @@ for i in range(1, len(labels)):
         run = 1
 
 # inline code span (`...`) と裸 URL は path/link 由来の長文誤爆源のため、100 字カウントのみ除去してから測る
-_long_src = [re.sub(r"`[^`]*`|https?://\S+", "", s) for s in sents]
-long_cnt = sum(1 for s in _long_src if len(s.replace("\n", "")) >= 100)
+# 「 / 」3 個以上の行は辞書・列挙の data 行 (NG-DICTIONARY 等) で散文でないため、100 字判定から除外する
+_long_src = [re.sub(r"`[^`]*`|https?://\S+", "", s) for s in sents if s.count(" / ") < 3]
+_long_hits = [s.replace("\n", "").replace("\t", " ") for s in _long_src if len(s.replace("\n", "")) >= 100]
+long_cnt = len(_long_hits)
+long_sample = " ⧸ ".join(h[:32] for h in _long_hits[:2]) or "-"
 
 polite = 0
 if os.environ.get("POLITE_CHECK") == "1":
@@ -185,10 +188,10 @@ for m in re.finditer(r"[（(]([^（）()]{1,120})[）)]", text):
 stuff_cnt = len(stuff_hits)
 stuff_sample = " / ".join(stuff_hits[:2]) or "-"
 
-print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_sample}\t{touten}\t{flat}\t{time_cnt}\t{time_sample}\t{stuff_cnt}\t{stuff_sample}")
-' 2>/dev/null || printf '0\t0\t0\t0\t0\t0\t-\t0\t0\t0\t-\t0\t-')
-  local _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts _sc _ss
-  IFS=$'\t' read -r _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts _sc _ss <<< "$result"
+print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_sample}\t{touten}\t{flat}\t{time_cnt}\t{time_sample}\t{stuff_cnt}\t{stuff_sample}\t{long_sample}")
+' 2>/dev/null || printf '0\t0\t0\t0\t0\t0\t-\t0\t0\t0\t-\t0\t-\t-')
+  local _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts _sc _ss _lgs
+  IFS=$'\t' read -r _tg _ar _rp _lg _pl _kc _ks _tt _fl _tc _ts _sc _ss _lgs <<< "$result"
   [[ "${_tg:-0}" =~ ^[0-9]+$ ]] && _SS_TAIGEN="$_tg"
   [[ "${_ar:-0}" =~ ^[0-9]+$ ]] && _SS_ARROW="$_ar"
   [[ "${_rp:-0}" =~ ^[0-9]+$ ]] && _SS_REP="$_rp"
@@ -205,6 +208,8 @@ print(f"{taigen}\t{arrow}\t{rep}\t{long_cnt}\t{polite}\t{kanji_cnt}\t{kanji_samp
   [[ "${_sc:-0}" =~ ^[0-9]+$ ]] && _SS_STUFF="$_sc"
   _SS_STUFF_SAMPLE="${_ss:-}"
   [[ "$_SS_STUFF_SAMPLE" == "-" ]] && _SS_STUFF_SAMPLE=""
+  _SS_LONG_SAMPLE="${_lgs:-}"
+  [[ "$_SS_LONG_SAMPLE" == "-" ]] && _SS_LONG_SAMPLE=""
   return 0
 }
 
