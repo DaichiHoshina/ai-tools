@@ -43,8 +43,10 @@ teardown() { rm -rf "$TMPDIR_T"; }
 
 @test "閾値未満の pattern は列挙されない" {
   run bash "$SCRIPT"
-  ! grep -q '^- p-under:' "$RECALL_TARGET_MD"
-  ! grep -q '^- p-zero:' "$RECALL_TARGET_MD"
+  run grep -q '^- p-under:' "$RECALL_TARGET_MD"
+  [ "$status" -ne 0 ]
+  run grep -q '^- p-zero:' "$RECALL_TARGET_MD"
+  [ "$status" -ne 0 ]
 }
 
 @test "全 pattern が閾値未満なら「該当なし」1 行だけ出す" {
@@ -104,8 +106,10 @@ teardown() { rm -rf "$TMPDIR_T"; }
   } > "$RECALL_PATTERNS_TSV"
   run bash "$SCRIPT"
   [ "$status" -eq 0 ]
-  ! grep -q '^- p-negative:' "$RECALL_TARGET_MD"
-  ! grep -q '^- p-empty:' "$RECALL_TARGET_MD"
+  run grep -q '^- p-negative:' "$RECALL_TARGET_MD"
+  [ "$status" -ne 0 ]
+  run grep -q '^- p-empty:' "$RECALL_TARGET_MD"
+  [ "$status" -ne 0 ]
 }
 
 @test "count == threshold は surface されない (strict >)" {
