@@ -87,3 +87,26 @@ teardown() { rm -rf "$TMPDIR_T"; }
   after="$(cat "$counter_file" 2>/dev/null || echo missing)"
   [ "$after" = "31" ]
 }
+
+@test "実 hook: 30 turn 分進めた後の呼び出しで inject 文言が stdout に現れる (gate 実発火 lock)" {
+  local sess="test-session-reinject-gate"
+  local date_today; printf -v date_today '%(%Y%m%d)T' -1
+  local counter_file="$TMPDIR_T/claude-style-ctx-turn-${sess}-${date_today}"
+  printf '30' > "$counter_file"
+  export CLAUDE_CODE_SESSION_ID="$sess"
+  local out
+  out="$(echo '{"prompt":"hello","session_id":"'"$sess"'"}' | TMPDIR="$TMPDIR_T" bash "$HOOK" 2>&1)"
+  echo "$out" | grep -q 'chat応答文体強化'
+}
+
+@test "実 hook: 30 turn 未満 (turn 15) は inject 文言が stdout に現れない (skip 経路 lock)" {
+  local sess="test-session-reinject-skip"
+  local date_today; printf -v date_today '%(%Y%m%d)T' -1
+  local counter_file="$TMPDIR_T/claude-style-ctx-turn-${sess}-${date_today}"
+  printf '15' > "$counter_file"
+  export CLAUDE_CODE_SESSION_ID="$sess"
+  local out
+  out="$(echo '{"prompt":"hello","session_id":"'"$sess"'"}' | TMPDIR="$TMPDIR_T" bash "$HOOK" 2>&1)"
+  run bash -c "echo \"\$1\" | grep -q 'chat応答文体強化'" _ "$out"
+  [ "$status" -ne 0 ]
+}
