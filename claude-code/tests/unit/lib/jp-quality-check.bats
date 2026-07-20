@@ -965,6 +965,19 @@ _run_sentence_structure() {
   [ "$status" -eq 0 ]
 }
 
+@test "chat-quality: 100字超文 block message に修正例テンプレが含まれる (S2 2026-07-20)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+    _long=\$(printf 'あ%.0s' {1..105})
+    _chat_quality_check \"\${_long}。\"
+    printf '%s' \"\${_CHAT_BLOCK_REASON}\" | grep -q '修正例' || { echo \"NO_HINT=\${_CHAT_BLOCK_REASON}\" >&2; exit 1; }
+  "
+  [ "$status" -eq 0 ]
+}
+
 @test "chat-quality: 100字超文でも inline code span 除去後は非 block" {
   _make_ng_dict "$TEST_TMPDIR"
   run bash -c "
@@ -1059,6 +1072,23 @@ $(printf 'い%.0s' {1..60})"
 
     [ \"\${GUARD_CLASS}\" = 'Forbidden' ]
     printf '%s' \"\${MESSAGE}\" | grep -q '100字超文'
+  "
+  [ "$status" -eq 0 ]
+}
+
+@test "block: 100字超文 block message に修正例テンプレが含まれる (S2 2026-07-20)" {
+  _make_ng_dict "$TEST_TMPDIR"
+
+  run bash -c "
+    export HOME='${TEST_TMPDIR}'
+    unset _assert_required_keys_done 2>/dev/null || true
+    # shellcheck disable=SC1090
+    source '${LIB_FILE}'
+
+    GUARD_CLASS='' MESSAGE='' ADDITIONAL_CONTEXT='' TOOL_NAME=''
+    _block_if_ai_jargon \"\$(printf 'あ%.0s' {1..120})。\" 'commit message'
+
+    printf '%s' \"\${MESSAGE}\" | grep -q '修正例'
   "
   [ "$status" -eq 0 ]
 }

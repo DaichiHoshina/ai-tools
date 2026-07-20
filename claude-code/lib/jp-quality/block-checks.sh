@@ -98,7 +98,7 @@ _block_if_ai_jargon() {
   _sent_warn="${_sent_warn%; }"
   # 100字超文のみ block へ昇格 (2026-07-18)。改行 = 文境界修正で trailer / bullet 連結の誤爆源を除去済のため chat 経路と基準を揃えた
   local _struct_block=""
-  (( _SS_LONG > 0 )) && _struct_block="100字超文: ${_SS_LONG}文 (冒頭: ${_SS_LONG_SAMPLE}…) → 句点で 2 文以上に分割する"
+  (( _SS_LONG > 0 )) && _struct_block="100字超文: ${_SS_LONG}文 (冒頭: ${_SS_LONG_SAMPLE}…) → 句点で 2 文以上に分割する (修正例: 「Aを削り、Bを追加した」→「Aを削った。加えて Bを追加した。」)"
   if [[ -n "$_sent_warn" ]]; then
     _struct_warn="${_struct_warn:+${_struct_warn}; }${_sent_warn}"
   fi
@@ -312,7 +312,7 @@ _chat_quality_check() {
   (( _SS_TAIGEN > 1 )) && _cq_struct_block="体言止めbullet ${_SS_TAIGEN}行 (連発。大半の bullet を「〜する/〜した/〜だ」の文で閉じる); "
   (( _SS_TAIGEN == 1 )) && _cq_struct_warn="${_cq_struct_warn}体言止めbullet 1行 (単発は許容。羅列にはしない); "
   (( _SS_ARROW > 0 )) && _cq_struct_block="${_cq_struct_block}矢印チェーン ${_SS_ARROW}行 (矢印列を動詞を持つ文章に展開する); "
-  (( _SS_LONG > 0 )) && _cq_struct_block="${_cq_struct_block}100字超文 ${_SS_LONG}文 (冒頭: ${_SS_LONG_SAMPLE}… 句点で 2 文以上に分割する); "
+  (( _SS_LONG > 0 )) && _cq_struct_block="${_cq_struct_block}100字超文 ${_SS_LONG}文 (冒頭: ${_SS_LONG_SAMPLE}… 句点で 2 文以上に分割する。修正例: 「Aを削り、Bを追加した」→「Aを削った。加えて Bを追加した。」); "
   (( _SS_KANJI_CNT > 0 )) && _cq_struct_warn="${_cq_struct_warn}連続漢字≥5: ${_SS_KANJI_CNT}種 (${_SS_KANJI_SAMPLE}) → 助詞挿入/訓読み開く; "
   (( _SS_TOUTEN > 0 )) && _cq_struct_warn="${_cq_struct_warn}読点≥4の文: ${_SS_TOUTEN}個 → 文分割; "
   (( _SS_REP > 0 )) && _cq_struct_warn="${_cq_struct_warn}同一文末3連続: ${_SS_REP}箇所 → 文末を変える; "
