@@ -227,12 +227,15 @@ if [[ "${JP_QUALITY_INJECT_OFF:-0}" != "1" ]]; then
       done < "${_NG_DICT_PATH}"
     fi
 
-    # chat応答向け: AI定型語 + カタカナ造語を参照 1 行に圧縮 (list 展開は NG-DICTIONARY.md canonical へ委譲)
-    # 1 session 1 回のみ inject する (毎 prompt 固定費 ~170B × 全 turn 再送を削減、内容は session 内で不変)
-    _STYLE_CTX_FLAG="/tmp/claude-style-ctx-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
-    if [[ ! -f "${_STYLE_CTX_FLAG}" ]] && { [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; }; then
+    # AI定型語とカタカナ造語を 1 行の参照に圧縮する。list は NG-DICTIONARY.md へ委譲する。
+    # N=30 turn ごとに再 inject して長 session 150 turn 超の忘却を防ぐ。
+    _STYLE_CTX_TURN_FILE="${TMPDIR:-/tmp}/claude-style-ctx-turn-${_SESSION_ID:-$$}-${_DATE_TODAY:-0}"
+    _STYLE_CTX_TURN="$(cat "${_STYLE_CTX_TURN_FILE}" 2>/dev/null || true)"
+    [[ "${_STYLE_CTX_TURN}" =~ ^[0-9]+$ ]] || _STYLE_CTX_TURN=0
+    _STYLE_CTX_TURN=$((_STYLE_CTX_TURN + 1))
+    printf '%s' "${_STYLE_CTX_TURN}" > "${_STYLE_CTX_TURN_FILE}" 2>/dev/null || true
+    if (( _STYLE_CTX_TURN == 1 || _STYLE_CTX_TURN % 30 == 1 )) && { [[ -n "${_AI_TERMS_LINE}" ]] || [[ -n "${_KATAKANA_LINE}" ]]; }; then
       _AI_TERMS_CTX="[chat応答文体強化] chat 応答で禁止: AI定型語 / カタカナ造語 / 日本語で言える一般語の英語化 (digest→要約 等) / 体言止めの連発 (単発は可)・助詞省略 / 冗長 (結論と根拠だけ書く)。模範: 「実装完了。テスト通過」→「実装した。テストは通過した」/「robust な設計」→「壊れにくい設計」/「まず A を確認し、次に B」→「A を確認してから B を確認する」。canonical: rules/plain-jp.md + guidelines/writing/NG-DICTIONARY.md。"
-      touch "${_STYLE_CTX_FLAG}" 2>/dev/null || true
     fi
 
     # 外向き文書品質: 永続化文書 trigger 時のみ、jargon / 略語 / 断定語を参照 1 行で注入
