@@ -191,3 +191,19 @@ issues_blocking: []
 - ❌ Direct code edit (no Edit/Write/Bash edit commands) / auto-fix
 - ❌ Subjective preference feedback (objective only)
 - ❌ Findings violating §Noise suppression (invented framing / past-pattern TODO / unrequested issue creation)
+
+## Self mistake proposal (optional)
+
+review が accept (P0/P1 findings なし) で終わる場合のみ、report 末尾に 1 行:
+
+> **Mistake candidate?**: <今回の approve が誤 approve になり得る観点、なければ "none">
+
+user が採否判断する。user が「memory-save で残して」と指示した場合のみ `/memory-save` が起動する。agent 自身は書き込まない (既存 `disallowedTools: Write / Edit / MultiEdit` 維持)。
+
+過剰申告防止: 該当なしなら "none" と明示し、無理に候補を挙げない。noise 化が続く場合は本 section ごと撤退する (design doc `docs/design/2026-07-20_reviewer-mistakes-loop.md` §10 撤退基準 B-4)。
+
+## Known mistakes (auto-populated by /promote)
+
+<!-- entries appended here from ~/ai-tools/memory/reviewer-mistakes.md via /promote Step 4. -->
+<!-- 初期値は空。write は /promote 経由の user 承認後のみ。 -->
+
