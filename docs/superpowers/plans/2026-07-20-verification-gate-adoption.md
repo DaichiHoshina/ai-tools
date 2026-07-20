@@ -266,3 +266,15 @@ bash claude-code/sync.sh
 
 - Task 3 の hook 追記が既存 jp-quality-block と重複 warn を出す可能性 → 実発火試験 (Task 4 Step 3) で確認して、二重出力なら片方 suppress する調整を追加 task に切る
 - 効果指標「完了」件数減少が本 gate 効果か他要因 (session 数変動) かの切り分けは、after 計測時に session 数も併記して比率で見る
+
+## 実装差分メモ (2026-07-20 実行時に判明)
+
+plan Task 3 は「stop.sh hook に reminder 追加」で書いたが、実物調査で **既に `lib/jp-quality/block-checks.sh:333` に「完了」文末 block 経路がある** ことが判明した。二重出力を避けるため、reminder 追加ではなく **既存 block message の文言に verification skill 発火指示を織り込む** 形に変更した (block-checks.sh:335 の 1 行 edit)。実装 commit: 585ff15。
+
+## 効果測定
+
+- **before (2026-07-20 13:31 記録)**: jp-quality-block.log 総 line 数 9472、うち「完了」出現 1193 件 (log 全期間の累積)
+- **after (2026-07-27 予定)**: 同 command で再計測し、before との差分を記録する
+- **判定基準**: 「完了」件数が減少 → 効果あり (verification gate が完了宣言を抑制した証拠)。横ばい / 増加 → hook 設計を見直す
+- **副作用監視**: `grep verification-before-completion ~/.claude/logs/jp-quality-block.log` で 1 週間後に確認し、想定外の trigger 発火が起きていないか点検する
+- **計測 command**: `wc -l ~/.claude/logs/jp-quality-block.log; grep -c "完了" ~/.claude/logs/jp-quality-block.log`
