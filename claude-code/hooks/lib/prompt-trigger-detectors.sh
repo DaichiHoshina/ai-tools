@@ -153,7 +153,7 @@ _inject_chat_selfcheck_if_signal() {
   # signal 1: 直前 assistant turn の 100字超文 warn (stop.sh が書く state file)
   local _JPQ_WARN_FILE="/tmp/claude-stop-jpq-warn-${session_id}-${date_today:-0}"
   [[ -f "${_JPQ_WARN_FILE}" ]] || return 1
-  grep -q '100字超文' "${_JPQ_WARN_FILE}" 2>/dev/null || return 1
+  grep -qE '(100字超文|turn締め語文末|括弧詰め込み)' "${_JPQ_WARN_FILE}" 2>/dev/null || return 1
 
   # signal 2: 直近 24h の log にも同種 signal が反復しているか (単発誤爆除外)
   local _LOG="${HOME}/.claude/logs/jp-quality-block.log"
@@ -163,7 +163,7 @@ _inject_chat_selfcheck_if_signal() {
   printf -v _SC_CUTOFF_STR '%(%Y-%m-%dT%H:%M:%S)T' "$(( _SC_NOW - 86400 ))"
   local _SC_RECENT_HITS
   _SC_RECENT_HITS=$(awk -F'|' -v cutoff="${_SC_CUTOFF_STR}" '
-    $0 ~ /100字超文/ && substr($1,1,19) >= cutoff { c++ } END { print c+0 }
+    $0 ~ /(100字超文|turn締め語文末|括弧詰め込み)/ && substr($1,1,19) >= cutoff { c++ } END { print c+0 }
   ' "${_LOG}" 2>/dev/null) || _SC_RECENT_HITS=0
   (( _SC_RECENT_HITS >= 2 )) || return 1
 

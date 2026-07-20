@@ -40,14 +40,28 @@ _write_recent_hits() {
 _write_warn_state_file() {
   local session_id="$1"
   local date_today="$2"
-  local contains_100="$3"  # 1=含む / 0=含まない
+  local contains_100="$3"  # 1=100字超文含む / 0=含まない (体言止め) / 2=turn 締め語 / 3=括弧詰め込み
   local f="/tmp/claude-stop-jpq-warn-${session_id}-${date_today}"
-  if [[ "$contains_100" == "1" ]]; then
-    printf '%s' "▲ chat 文体 warn: structural: 100字超文: 1文 → 文分割" > "$f"
-  else
-    printf '%s' "▲ chat 文体 warn: 体言止めbullet: 2行" > "$f"
-  fi
+  case "$contains_100" in
+    1) printf '%s' "▲ chat 文体 warn: structural: 100字超文: 1文 → 文分割" > "$f" ;;
+    2) printf '%s' "▲ chat 文体 warn: turn締め語文末: 完了 → 事実で締める" > "$f" ;;
+    3) printf '%s' "▲ chat 文体 warn: structural: 括弧詰め込み: 1件 → 文に開く" > "$f" ;;
+    *) printf '%s' "▲ chat 文体 warn: 体言止めbullet: 2行" > "$f" ;;
+  esac
   printf '%s\n' "$f"
+}
+
+# 直近 24h の log に指定 pattern の warn を N 件書く (S1 拡張用 helper)
+_write_recent_hits_pattern() {
+  local n="$1"
+  local pattern="$2"  # 100字超文 / turn締め語文末 / 括弧詰め込み
+  local log="${HOME}/.claude/logs/jp-quality-block.log"
+  local ts
+  printf -v ts '%(%Y-%m-%dT%H:%M:%S%z)T' -1
+  local i
+  for (( i=0; i<n; i++ )); do
+    printf '%s | %s | structural: %s 1文 | warn\n' "$ts" "chat" "$pattern" >> "$log"
+  done
 }
 
 # =============================================================================
@@ -137,4 +151,34 @@ _write_warn_state_file() {
   [ "$status" -eq 0 ]
   [[ "$output" =~ "[chat-selfcheck]" ]]
   rm -f "$flag"
+}
+
+# =============================================================================
+# Case 6 (S1 拡張): turn 締め語文末 (完了) の warn signal でも inject する
+# =============================================================================
+@test "chat-selfcheck: turn 締め語文末 signal (完了) でも inject する" {
+  local sid="selfcheck-bats-kanryo-$$"
+  local today
+  printf -v today '%(%Y%m%d)T' -1
+  _write_warn_state_file "$sid" "$today" 2
+  _write_recent_hits_pattern 2 "turn締め語文末"
+
+  run _inject_chat_selfcheck_if_signal "$sid" "$today"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "[chat-selfcheck]" ]]
+}
+
+# =============================================================================
+# Case 7 (S1 拡張): 括弧詰め込み warn signal でも inject する
+# =============================================================================
+@test "chat-selfcheck: 括弧詰め込み signal でも inject する" {
+  local sid="selfcheck-bats-paren-$$"
+  local today
+  printf -v today '%(%Y%m%d)T' -1
+  _write_warn_state_file "$sid" "$today" 3
+  _write_recent_hits_pattern 2 "括弧詰め込み"
+
+  run _inject_chat_selfcheck_if_signal "$sid" "$today"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "[chat-selfcheck]" ]]
 }
