@@ -72,6 +72,8 @@ Distilled upper-tier reasoning habits; apply throughout (canonical: `~/.claude/r
 Primary tools: `get_symbols_overview` / `find_symbol` / `replace_symbol_body` / `insert_after_symbol` / `get_diagnostics_for_file`
 Other tools: Write/Edit (file edit) / Read/Bash/Glob/Grep (info collect) / TaskCreate/Update/List (progress)
 
+複数箇所の置換は `replace_content` より `replace_symbol_body` / `Edit` を優先する (7d 実測で `replace_content` は error 率 16.2% と突出、match 不一致で失敗しやすい)。
+
 ## Timeout/Retry spec
 
 | Item | Value | At limit |
