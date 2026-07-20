@@ -53,19 +53,19 @@
 
 本 spec 承認後、以下の順で個別 plan を書く (1 phase = 1 plan file、書く時期は user 判断):
 
-- **phase 1 (今回)**: verification-before-completion 導入 → `docs/superpowers/plans/2026-07-20-verification-gate-adoption.md`
-- **phase 2 (後日)**: brainstorming / writing-skills の skill 化検討 → 別 spec + plan
-- **phase 3 (後日)**: mino-\* / react-best-practices の upstream 追従体制 → GitHub fetch script 設計
+- **phase 1 (2026-07-20 実施済)**: verification-before-completion 発火徹底 → `docs/superpowers/plans/2026-07-20-verification-gate-adoption.md`。CLAUDE.md に節追加 + `lib/jp-quality/block-checks.sh` の「完了」文末 block message に skill 発火指示を織り込み
+- **phase 2 (2026-07-20 rejected)**: brainstorming / writing-skills の skill 化検討 → **skip**。理由: superpowers 側で既に稼働中 (skill list に登録済、prompt 冒頭でも参照可能)。ai-tools 側に再実装する追加コストが実効果を上回る
+- **phase 3 (2026-07-20 rejected)**: mino-\* / react-best-practices の upstream 追従体制 → **現状維持**。理由: upstream (GitHub) が plugin 化されておらず submodule / subtree / 定期 fetch のいずれも手動追従コストが残る。ai-tools 側 skill が「非公式再構成」と自己申告済であり、使用頻度が upstream 更新の手動追従コストを正当化するかは未確定。将来 upstream が plugin 化された時点で phase 4 (context7) と同じ手順で再検討する
 - **phase 4 (2026-07-20 実施済)**: context7 公式 plugin 存在確認 & 移行判定 → **MCP 化で置換**。`@upstash/context7-mcp` (v3.2.4) を `claude mcp add --scope user context7` で登録、skill file を curl 手組みから MCP tool 呼び出しに書き換え。Failure Behavior は skill 使用者向け指示として温存。plan: `docs/superpowers/plans/2026-07-20-context7-mcp-migration.md`
-- **phase 5 (2026-07-20 実施済)**: frontend-design の diff 精査と統合判定 → **ai-tools 版に一本化**。plugin 版 (`frontend-design@claude-plugins-official`) を `settings.json:442` で `false` に flip した。理由: 両版が同名 skill として active になっており衝突していた。ai-tools 版は既に tool 制限 / review 除外 / writing 章を customize 済
+- **phase 5 (2026-07-20 実施済)**: frontend-design の diff 精査と統合判定 → **ai-tools 版に一本化**。plugin 版 (`frontend-design@claude-plugins-official`) を `settings.json:442` で `false` に flip した。理由: 両版が同名 skill として active になっており衝突していた。ai-tools 側は既に tool 制限 / review 除外 / writing 章を customize 済
 
-phase 1 を先行する理由: (a) plugin install だけで完結、リスク最小 (b) 効果測定指標 (`~/.claude/logs/jp-quality-block.log` の「完了」件数) が既にある (c) 可逆
+phase 1 を先行した理由: (a) plugin install だけで完結、リスク最小 (b) 効果測定指標 (`~/.claude/logs/jp-quality-block.log` の「完了」件数) が既にある (c) 可逆
 
-## 未確定事項
+## 未確定事項 (2026-07-20 時点)
 
-1. superpowers plugin が既に install 済かどうか (cache 存在 = install 済とは限らない)。phase 1 plan 内で確認
-2. verification-before-completion の trigger が jp-quality hook と競合しないか。plan 内で検証手順化
-3. phase 2-5 の着手時期は未定 (本 spec は棚卸しと phase 1 承認取得までを担う)
+1. **phase 1 効果測定**: 2026-07-27 に `wc -l ~/.claude/logs/jp-quality-block.log; grep -c "完了" ~/.claude/logs/jp-quality-block.log` で after 値を計測する
+2. **phase 4 効果測定**: 2026-07-27 に `claude mcp list | grep context7` で Connected 継続と、skill 発火時の MCP tool call 成功状態を確認する
+3. **phase 5 副作用**: frontend-design 発火時にどちらの skill が呼ばれるか、次 session 起動時に skill list 側で確認する
 
 ## 参照
 
