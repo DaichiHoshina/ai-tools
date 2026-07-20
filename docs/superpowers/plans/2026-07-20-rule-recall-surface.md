@@ -21,6 +21,7 @@
 - TSV の pattern / rule / threshold field 内に literal tab を入れない
 - code comment は最小限 (default 書かない / 上限 2 行 / What 言い換え禁止)
 - 完了宣言前に verification-before-completion skill の gate を通す (bats fresh 実行 → 出力全読 → 主張と一致確認)
+- awk FS で pipe を区切りに使うときは `-F' [|] '` (文字クラス) を使う。`-F' \\| '` は macOS BSD awk で FS が壊れるため使わない
 
 ---
 
@@ -156,7 +157,7 @@ fi
 hit_count=0
 while IFS=$'\t' read -r id pattern rule threshold; do
   [[ -z "$id" || "$id" == \#* ]] && continue
-  count="$(awk -F' \\| ' -v c="$CUTOFF" '$1 >= c { print $3 }' "$LOG_FILE" | grep -c -- "$pattern")"
+  count="$(awk -F' [|] ' -v c="$CUTOFF" '$1 >= c { print $3 }' "$LOG_FILE" | grep -c -- "$pattern")"
   count="${count:-0}"
   if (( count > threshold )); then
     block+="- ${id}: ${count} 件 (${pattern} → ${rule}、閾値 ${threshold})"$'\n'
