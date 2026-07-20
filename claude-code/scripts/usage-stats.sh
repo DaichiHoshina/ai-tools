@@ -34,18 +34,19 @@ LOG_COUNT=$(echo "$LOGS" | grep -c . || true)
 tmp_cmd_used=$(mktemp); tmp_skill_used=$(mktemp)
 trap 'rm -f "$tmp_cmd_used" "$tmp_skill_used"' EXIT
 
-# commands: <command-name>/X</command-name> から X 抽出
-# xargs/grep が no-match で非ゼロ終了するため pipefail 下では || true で吸収
-{ echo "$LOGS" | xargs grep -hoE '<command-name>/[a-zA-Z][a-zA-Z0-9_:-]*' 2>/dev/null || true; } \
-  | sed 's|<command-name>/||' | sort | uniq -c | sort -rn > "$tmp_cmd_used"
-
 # skills: Skill tool_use の .input.skill
-{ echo "$LOGS" | xargs jq -r '
+skill_names="$({ echo "$LOGS" | xargs jq -r '
     select(.type=="assistant")
     | .message.content[]?
     | select(.type=="tool_use" and .name=="Skill")
-    | .input.skill // empty' 2>/dev/null || true; } \
-  | sort | uniq -c | sort -rn > "$tmp_skill_used"
+    | .input.skill // empty' 2>/dev/null || true; })"
+{ printf '%s\n' "$skill_names" | grep -v '^$' || true; } | sort | uniq -c | sort -rn > "$tmp_skill_used"
+
+# commands: tag 抽出だけだと AI の Skill tool 発火分が 0 利用に誤判定されるので両方を合算する
+{ { echo "$LOGS" | xargs grep -hoE '<command-name>/[a-zA-Z][a-zA-Z0-9_:-]*' 2>/dev/null || true; } \
+    | sed 's|<command-name>/||'
+  printf '%s\n' "$skill_names" | grep -v '^$' || true
+} | sort | uniq -c | sort -rn > "$tmp_cmd_used"
 
 # 定義済 commands/skills 一覧 (basename without .md, top-level only)
 defined_cmds=$(find "$CMD_DIR" -maxdepth 1 -name "*.md" -exec basename {} .md \; | sort)
