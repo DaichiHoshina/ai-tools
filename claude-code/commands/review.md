@@ -32,7 +32,7 @@ Stage A findings を JSON list で `reviewer-agent --stage-b` へ渡す (fresh c
 ### Read (Step 0 の前)
 
 1. 対象 repo (org 内の short name) と PR 番号を特定する
-2. `~/ai-tools/memory/pr_<repo>_<number>_review.md` の存在を確認する。あれば Read し、観点別 status table を今回 scope の判断材料に組み込む。`check済` / `user却下` の観点は再提示せず、`保留` / `対応中` の観点を優先して再検証する
+2. `$MEM/pr_<repo>_<number>_review.md` (`MEM=$(bash ~/.claude/scripts/memory-save-helper.sh resolve-dir)`。org repo の cwd なら org 側 memory dir、それ以外は `~/ai-tools/memory/` に解決される) の存在を確認する。あれば Read し、観点別 status table を今回 scope の判断材料に組み込む。`check済` / `user却下` の観点は再提示せず、`保留` / `対応中` の観点を優先して再検証する
 3. なければ新規作成用の template (下記) を用意し、review 完了後の Append で初回 write する
 
 ### Append (Stage B 完了後)
@@ -41,7 +41,7 @@ Stage A findings を JSON list で `reviewer-agent --stage-b` へ渡す (fresh c
 
 ### 命名規約・template
 
-- path: `~/ai-tools/memory/pr_<repo>_<number>_review.md` (`<repo>` は org 内の short name、`<number>` は PR 番号)
+- path: `$MEM/pr_<repo>_<number>_review.md`。`$MEM` は上記 resolve-dir の解決結果で、`<repo>` は org 内の short name、`<number>` は PR 番号だ。org repo の review では org 側 memory dir に置き、product 固有の PR 情報を ai-tools 側に残さない (2026-07-16 org 分離方針)
 - frontmatter:
 
 ```yaml
@@ -61,7 +61,7 @@ metadata:
 
 status 値: `check済` / `user却下` / `保留` / `対応中`。
 
-**MEMORY.md sync は対象外**: `pr_*_review.md` は PR 単位で作成・破棄される一時 state で `/memory-save` の Tier 判定を通らないため、`~/ai-tools/memory/MEMORY.md` へは自動追記しない (index 肥大化を避けるため)。長期知見に昇格させたい内容が出たときだけ手動で `/memory-save` するか 1 行 append する。
+**MEMORY.md sync は対象外**: `pr_*_review.md` は PR 単位で作成・破棄される一時 state で `/memory-save` の Tier 判定を通らないため、`$MEM/MEMORY.md` へは自動追記しない (index 肥大化を避けるため)。長期知見に昇格させたい内容が出たときだけ手動で `/memory-save` するか 1 行 append する。
 
 関連: post-comment 実行時の memory 更新連携は `commands/post-comment.md` `### Step 3.5` を参照。
 
