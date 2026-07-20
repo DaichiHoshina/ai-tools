@@ -67,6 +67,15 @@ Accept approval / rejection / alternate path proposal.
 4. After approval, atomically integrate with `Edit`
 5. For duplicate sections, confirm priority via AskUserQuestion: memory side / existing side / merge
 
+#### Step 4a (optional): CLAUDE.md 系のみ claude-md-improver plugin で監査を挟む
+
+Destination file が CLAUDE.md 系のときのみ `Edit` 適用前に `claude-md-improver` skill を呼ぶ。対象は `~/.claude/CLAUDE.md` / `claude-code/CLAUDE.global.md` / repo 配下 `CLAUDE.md` / `CLAUDE.repo.md` の 4 種類。
+
+- 呼び方: `Skill(claude-md-management:claude-md-improver)` (plugin `claude-md-management@claude-plugins-official` が enabled のとき有効)
+- 出力を読み、統合後に消すべき既存 section があれば Step 4 の diff に反映する
+- plugin 未 enable / skill 呼び出し失敗時は現行の手動監査 flow に戻し、chat に「plugin `fallback`: 手動監査で継続」と 1 行報告する
+- **plugin 委譲しない項目**: Step 2 (proper-noun 辞書判定) / Step 3 (routing 承認) / Step 5 (sync.sh) / Step 6 (memory 削除) は ai-tools 側 SoT で完結する
+
 ### Step 5: Run sync.sh (ai-tools placement only)
 
 ```bash
