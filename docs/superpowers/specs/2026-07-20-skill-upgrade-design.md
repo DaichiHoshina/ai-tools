@@ -56,7 +56,7 @@
 - **phase 1 (今回)**: verification-before-completion 導入 → `docs/superpowers/plans/2026-07-20-verification-gate-adoption.md`
 - **phase 2 (後日)**: brainstorming / writing-skills の skill 化検討 → 別 spec + plan
 - **phase 3 (後日)**: mino-\* / react-best-practices の upstream 追従体制 → GitHub fetch script 設計
-- **phase 4 (後日)**: context7 公式 plugin 存在確認 & 移行判定
+- **phase 4 (2026-07-20 実施済)**: context7 公式 plugin 存在確認 & 移行判定 → **MCP 化で置換**。`@upstash/context7-mcp` (v3.2.4) を `claude mcp add --scope user context7` で登録、skill file を curl 手組みから MCP tool 呼び出しに書き換え。Failure Behavior は skill 使用者向け指示として温存。plan: `docs/superpowers/plans/2026-07-20-context7-mcp-migration.md`
 - **phase 5 (2026-07-20 実施済)**: frontend-design の diff 精査と統合判定 → **ai-tools 版に一本化**。plugin 版 (`frontend-design@claude-plugins-official`) を `settings.json:442` で `false` に flip した。理由: 両版が同名 skill として active になっており衝突していた。ai-tools 版は既に tool 制限 / review 除外 / writing 章を customize 済
 
 phase 1 を先行する理由: (a) plugin install だけで完結、リスク最小 (b) 効果測定指標 (`~/.claude/logs/jp-quality-block.log` の「完了」件数) が既にある (c) 可逆
