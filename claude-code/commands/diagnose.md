@@ -1,4 +1,5 @@
 ---
+keep: on-demand
 allowed-tools: Read, Glob, Grep, Edit, Write, Bash, TaskCreate, TaskUpdate, TaskList, TaskGet, mcp__serena__*, mcp__context7__*
 argument-hint: "<error-or-symptom>"
 description: Debug support — error log analysis, root-cause identification, fix suggestions

@@ -1,4 +1,5 @@
 ---
+keep: on-demand
 allowed-tools: Bash, Read, Grep, Glob, mcp__serena__find_symbol, mcp__serena__find_referencing_symbols, mcp__serena__get_symbols_overview, mcp__serena__find_declaration, mcp__serena__find_implementations
 name: impact-analysis
 description: 変更対象 symbol の fan-in 影響分析 skill。呼び出し元列挙 → 層判定 → DB 4 経路 → 影響表を出す。「影響分析して」で起動。— 層境界の review は clean-architecture-ddd、実装は /dev を使う

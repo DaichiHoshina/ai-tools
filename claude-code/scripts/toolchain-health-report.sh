@@ -42,14 +42,31 @@ unused_skills="$("${SCRIPT_DIR}/skill-eval.sh" --days "${DAYS}" --unused 2>/dev/
 zero_commands="$({ "${SCRIPT_DIR}/usage-stats.sh" --days "${DAYS}" --zero 2>/dev/null || true; } \
   | awk '/^=== Commands ===/{f=1; next} /^=== /{f=0} f && /^  [a-z0-9-]+$/{sub(/^  /,""); print}')"
 
+# 新設から DAYS 日未満の資産は「利用ゼロ」計測が成立しないため候補から外す
+_added_within_days() {
+  local path="$1" added now
+  added="$(git -C "${REPO_ROOT}" log --diff-filter=A --follow --format=%at -- "${path}" 2>/dev/null | tail -1)"
+  [[ -n "${added}" ]] || return 0
+  now="$(date +%s)"
+  (( now - added < DAYS * 86400 ))
+}
+
 _filter_keep() {
+  local kind="$1" name path
   while IFS= read -r name; do
     [[ -n "${name}" ]] || continue
-    if ! grep -qx "${name}" <<< "${keep_list}"; then printf -- '- %s\n' "${name}"; fi
+    grep -qx "${name}" <<< "${keep_list}" && continue
+    if [[ "${kind}" == "skills" ]]; then
+      path="claude-code/skills/${name}/SKILL.md"
+    else
+      path="claude-code/commands/${name}.md"
+    fi
+    _added_within_days "${path}" && continue
+    printf -- '- %s\n' "${name}"
   done
 }
-hit_skills="$(_filter_keep <<< "${unused_skills}")"
-hit_commands="$(_filter_keep <<< "${zero_commands}")"
+hit_skills="$(_filter_keep skills <<< "${unused_skills}")"
+hit_commands="$(_filter_keep commands <<< "${zero_commands}")"
 
 TRIAGE_LOG="${REPO_ROOT}/memory/sleep-triage-log.md"
 adopt=0; triaged=0

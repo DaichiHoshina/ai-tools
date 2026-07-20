@@ -1,4 +1,5 @@
 ---
+keep: on-demand
 allowed-tools: Bash
 name: context7
 description: Fetch latest docs via Context7 API. Required before library API writes, new library adoption, or 6+ month old specs.

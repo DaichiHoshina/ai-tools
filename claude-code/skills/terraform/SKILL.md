@@ -1,4 +1,5 @@
 ---
+keep: on-demand
 allowed-tools: Bash, Read, Glob, Grep
 name: terraform
 description: Terraform IaC: module design, state, security BP. Use for plan/apply & IaC. 「Terraform 書いて」「IaC 直して」で起動。
