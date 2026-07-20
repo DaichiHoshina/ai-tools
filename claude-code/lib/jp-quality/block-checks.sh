@@ -332,7 +332,7 @@ _chat_quality_check() {
   fi
   if [[ -n "$_cq_tail_hits" ]]; then
     _append_jp_quality_log "chat" "turn締め語文末: ${_cq_tail_hits}" "block"
-    _cq_block_detail="${_cq_block_detail:+${_cq_block_detail}; }turn締め語文末: ${_cq_tail_hits} (言い切って終えず、次の行に実際の内容を続けて書く)"
+    _cq_block_detail="${_cq_block_detail:+${_cq_block_detail}; }turn締め語文末: ${_cq_tail_hits} (言い切って終えず、次の行に実際の内容を続けて書く。加えて 'superpowers:verification-before-completion' skill の Iron Law に従い、宣言前に検証 command を実行した evidence を書き込む)"
   fi
   if [[ -n "$_cq_block_detail" ]]; then
     _CHAT_BLOCK_REASON="chat 応答が plain JP 規範に反する: ${_cq_block_detail} — 直前の応答本文だけを規範に沿った開いた日本語に書き直して再送する。source: guidelines/writing/NG-DICTIONARY.md + rules/plain-jp.md"
