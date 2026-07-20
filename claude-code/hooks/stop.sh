@@ -80,6 +80,10 @@ if [[ "${JP_QUALITY_STOP_CHECK:-1}" == "1" && "${_STOP_HOOK_ACTIVE}" != "true" &
   fi
 fi
 
+# shellcheck source=lib/jp-quality-override-detect.sh
+source "${BASH_SOURCE[0]%/*}/lib/jp-quality-override-detect.sh"
+jp_quality_override_detect "$LAST_MSG" || true
+
 # === SQL auto-pbcopy: 最終応答中の最後の ```sql ブロックを clipboard へ ===
 # 末尾改行は bash $() の auto-strip で 1 個消費、pbcopy 不在環境 (Linux/CI) は silent skip
 _SQL_NOTICE=""
