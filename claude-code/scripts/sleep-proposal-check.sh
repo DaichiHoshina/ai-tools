@@ -64,7 +64,9 @@ _check_block() {
   type=$(sed -n 's/^- Type: //p' <<< "${block}" | head -1)
   case "${type}" in
     skill-edit|hook|command)
-      [[ -e "${REPO}/${target}" ]] || _ng "block L${s}: Target が実在しない: ${target}"
+      local tpath="${REPO}/${target}"
+      [[ "${target}" == /* ]] && tpath="${target}"
+      [[ -e "${tpath}" ]] || _ng "block L${s}: Target が実在しない: ${target}"
       ;;
   esac
 }
