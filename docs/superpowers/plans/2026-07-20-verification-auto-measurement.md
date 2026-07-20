@@ -167,7 +167,7 @@ jp-ng-block	禁止語 block hit 件数	f=$HOME/.claude/logs/jp-quality-block.log
 jp-unknown-en-12	unknown-en 今回 12 語の出現数	f=$HOME/.claude/logs/jp-quality-block.log; if [ -f "$f" ]; then awk -v c="$CUTOFF" '$1 >= c' "$f" | grep 'unknown-en:' | grep -oE '(gate|adopt|evidence|drift|triage|maintenance|cost|cap|prose|mask|bullet|green)' | wc -l | tr -d ' '; else echo N/A; fi
 jp-kanryo	「完了」warn 件数	f=$HOME/.claude/logs/jp-quality-block.log; if [ -f "$f" ]; then awk -v c="$CUTOFF" '$1 >= c' "$f" | grep -vE 'structural:|unknown-en:' | grep ' | warn$' | grep -c '完了'; else echo N/A; fi
 session-split-force	force split 件数	f=$HOME/.claude/logs/session-split-warn.log; if [ -f "$f" ]; then awk -v c="$CUTOFF" '$1 >= c' "$f" | grep -c 'level=force'; else echo N/A; fi
-pr-recheck	再度コメントチェック出現数	f=$HOME/.claude/history.jsonl; if [ -f "$f" ]; then cut=$(( $(date -j -f %Y-%m-%d "$CUTOFF" +%s) * 1000 )); jq -r --argjson c "$cut" 'select(.timestamp >= $c) | .display' "$f" | grep -cE '再度コメントチェック|違うコメント'; else echo N/A; fi
+pr-recheck	再度コメントチェック出現数	f=$HOME/.claude/history.jsonl; if [ -f "$f" ]; then cut=$(( $(date -j -f %Y-%m-%dT%H:%M:%S "${CUTOFF}T00:00:00" +%s) * 1000 )); jq -r --argjson c "$cut" 'select(.timestamp >= $c) | .display' "$f" | grep -cE '再度コメントチェック|違うコメント'; else echo N/A; fi
 ```
 
 - [ ] **Step 2: 実 log に対して smoke run し、人力計測と突き合わせる**
