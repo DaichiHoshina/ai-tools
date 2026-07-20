@@ -55,6 +55,13 @@ if [[ ! -x "${REPO_ROOT}/scripts/maintenance-cron-run.sh" ]]; then
   exit 2
 fi
 
+# launchd の bash -lc では ~/.local/bin が PATH に入らないので、install 時点で絶対 path を解決して plist に埋め込む
+CLAUDE_BIN="${CLAUDE_BIN:-$(command -v claude 2>/dev/null || true)}"
+if [[ -z "${CLAUDE_BIN}" || ! -x "${CLAUDE_BIN}" ]]; then
+  echo "ERROR: claude CLI が見つかりません (PATH または CLAUDE_BIN で指定してください)" >&2
+  exit 2
+fi
+
 plist_body() {
   cat <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -67,7 +74,7 @@ plist_body() {
   <array>
     <string>/bin/bash</string>
     <string>-lc</string>
-    <string>cd ${REPO_ROOT} && ./scripts/maintenance-cron-run.sh</string>
+    <string>cd ${REPO_ROOT} &amp;&amp; CLAUDE_BIN=${CLAUDE_BIN} ./scripts/maintenance-cron-run.sh</string>
   </array>
   <key>StartCalendarInterval</key>
   <dict>
