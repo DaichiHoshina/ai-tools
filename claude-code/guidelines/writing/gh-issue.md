@@ -11,6 +11,9 @@
 - template 系 (What / Why / To Do / Acceptance Criteria の 4 節構造) は section 数が多く読みづらい。避ける
 - design doc がある場合は背景末尾に doc path を 1 行 link、issue 本文は doc の anchor 指定で詳細を委譲する
 - **時限マーカー禁止**: 「本 issue で新設」「先週合意した」「#XXX 以降」等、merge / 投稿後の読み手が解決できない時制参照を書かない (canonical: `pr-description.md` `### 時限マーカー禁止`)
+- **共有 issue は非エンジニア読者前提で平易化**: CS / PM / QA が読む可能性のある issue は、エンジニア作業語彙 (mount / listener / helper / template / fetch 等) をそのまま残さず日本語化する。判定基準は「reporter や comment 参加者に非エンジニアが混じっているか」。language / stack 固有の置換辞書は project CLAUDE.md 側で管理する。file path / 属性名 / 関数名 / URL / 数値は原形維持し backtick で括る (「(HTML の書き方)」等の括弧付き補足を初出時に添えてよい)
+- **やること h3 は挙動視点で書く**: コード視点 (「空 URL 時に no-image を直接 :src に指定する」) でなく、読み手に見える挙動 (「画像 URL が空のときは、最初から no-image 画像を入れる」) で書く。CS / PM が完了確認で使う軸に合わせる
+- **実装 PR link を補足冒頭に**: 実装 PR がある issue は `## 補足` の冒頭で `実装 PR: #XXXXX` を link する。関連 issue / 親 issue と同じ扱い
 
 ## Canonical format
 

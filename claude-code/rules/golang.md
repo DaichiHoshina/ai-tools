@@ -27,6 +27,7 @@ paths:
 
 - table-driven tests recommended
 - Helpers call t.Helper()
+- **`t.Parallel()` default**: top-level test / subtest 両方の先頭で入れる。loop で subtest を回すときは range 変数 shadow (`tc := tc`) を忘れない。共有可変 state (global var / DB fixture の直接書換 / 環境変数 / `t.Setenv`) を触る test だけ例外、理由を code comment 1 行で残す。既存 file 修正時に周辺 test が Parallel を使っていないなら合わせる (揃えるだけの drive-by 修正はしない)
 - Flakiness details: `guidelines/languages/go-test-stability.md`
 
 ## Detailed Guidelines
