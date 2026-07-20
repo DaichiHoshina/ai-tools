@@ -6,8 +6,9 @@ set -euo pipefail
 _sf_src="${BASH_SOURCE[0]}"
 [[ "${_sf_src}" == /* ]] || _sf_src="${PWD}/${_sf_src}"
 SCRIPT_DIR="${_sf_src%/*}"
-source "${SCRIPT_DIR}/../lib/hook-utils.sh"
-require_jq
+# shellcheck source=../lib/stop-common.sh
+source "${SCRIPT_DIR}/../lib/stop-common.sh"
+stop_hook_init "${SCRIPT_DIR}"
 
 INPUT=$(cat)
 # StopFailure hook も user turn (API error で session が止まった時) にだけ発火する。

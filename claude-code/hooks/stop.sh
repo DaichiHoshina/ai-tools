@@ -8,10 +8,11 @@ exec 2>>"$HOME/.claude/logs/hook-errors.log"
 _stop_src="${BASH_SOURCE[0]}"
 [[ "${_stop_src}" == /* ]] || _stop_src="${PWD}/${_stop_src}"
 SCRIPT_DIR="${_stop_src%/*}"
-source "${SCRIPT_DIR}/../lib/hook-utils.sh"
+# shellcheck source=../lib/stop-common.sh
+source "${SCRIPT_DIR}/../lib/stop-common.sh"
+stop_hook_init "${SCRIPT_DIR}"
 # shellcheck source=lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
-require_jq
 
 INPUT=$(cat)
 # 通知は「user の入力待ちになった時」だけ鳴らす。send_stop_notification 側で
