@@ -1,0 +1,3 @@
+# id	pattern	rule	threshold
+recall-100char	100字超文	rules/plain-jp.md	100
+recall-kanryo	完了	rules/plain-jp.md	100
