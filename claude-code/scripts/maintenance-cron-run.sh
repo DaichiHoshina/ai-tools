@@ -45,6 +45,10 @@ printf '=== verification-report (%s) ===\n' "$(date '+%F %T')" >> "$log_file"
 "${REPO_ROOT}/scripts/verification-report.sh" >> "$log_file" 2>&1 \
   || printf 'WARN: verification-report failed\n' >> "$log_file"
 
+printf '=== rule-recall-surface (%s) ===\n' "$(date '+%F %T')" >> "$log_file"
+"${REPO_ROOT}/scripts/rule-recall-surface.sh" >> "$log_file" 2>&1 \
+  || printf 'WARN: rule-recall-surface failed\n' >> "$log_file"
+
 # 第 1 月曜のみ月次棚卸しを出す (weekly 月曜実行 × 日付 gate)
 if [[ "$(date +%d | sed 's/^0//')" -le 7 ]]; then
   printf '=== toolchain-health-report (%s) ===\n' "$(date '+%F %T')" >> "$log_file"
