@@ -35,6 +35,8 @@ jq 'select(.timestamp > ((now - 604800) * 1000))' ~/.claude/history.jsonl \
   | grep -E '再度|もう一度|やり直|違う|stop|cancel|wrong'
 ```
 
+> command 実行回数は `/xxx` prefix 一致で数える (会話本文の言及も grep に載り、2026-07-20 pending E では約 2 倍に膨れた)。retry は「同 session かつ 10 分以内の再実行」で数える。
+
 **Serena memory** — `mcp__serena__list_memories` (name + description only); full body loaded on-demand in Phase 2.
 
 **Additional sources** (skip with 1-line note if missing):

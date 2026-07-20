@@ -46,6 +46,15 @@ confirm() {
         fi
     fi
 
+    # 非 TTY で read すると EOF → default n の無言 fail になるため、原因を stderr に残す
+    if [ ! -t 0 ]; then
+        if [ "$default" = "y" ]; then
+            return 0
+        fi
+        echo "非対話実行のため確認できない: ${message} → --yes 等の skip flag を付けて再実行する" >&2
+        return 1
+    fi
+
     if [ "$default" = "y" ]; then
         read -rp "$message [Y/n]: " answer
         answer="${answer:-y}"

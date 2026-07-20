@@ -62,6 +62,7 @@ Plan 保存後、実装への受け渡しを必ず行う。判定 mode を user 
 1. **Next command block を必ず出力**: Step 2 の判定 mode を、plan file path 込みで copy-paste 可能な 1 行にする (例: `/dev --plan ~/.claude/plans/2026-07-05_ai-tools_foo.md` / `/flow N=3 --plan <path>` / `/loop` 判定時は `/loop init <name> "<objective>" --gate "<cmd>"` → `/loop run <name>` の 2 行 / inline 判定時は「このまま実装を指示すれば inline で開始する」の 1 行)
 2. **引き継ぐ context**: Requirements / Phase 分割 / mode 判定根拠 / worktree 判断を plan file に閉じる。実装側は plan を SoT として読み、scope 再調査と mode 再判定をしない
 3. **`--go` flag**: `/plan --go <task>` は plan 出力 + 保存後、そのまま判定 mode で実装を開始する (Next command を自分で発火、user 確認なし)。破壊的操作 (削除 / migration / force 系) を含む Phase のみ実行前確認に戻す
+4. **pending-improvements 消化の同時反映**: task が `memory/pending-improvements.md` の Pending 由来なら、実装完了 turn で該当 entry を Completed へ移す。放置すると実装済 item を後日再設計しかける (2026-07-20 pending B で実績)
 
 ## Output format
 
