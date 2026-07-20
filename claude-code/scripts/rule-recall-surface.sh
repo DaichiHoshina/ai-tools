@@ -30,7 +30,7 @@ fi
 hit_count=0
 while IFS=$'\t' read -r id pattern rule threshold; do
   [[ -z "$id" || "$id" == \#* ]] && continue
-  count="$(awk -v c="$CUTOFF" '$1 >= c' "$LOG_FILE" | grep -c -- "$pattern")"
+  count="$(awk -F' \\| ' -v c="$CUTOFF" '$1 >= c { print $3 }' "$LOG_FILE" | grep -c -- "$pattern")"
   count="${count:-0}"
   if (( count > threshold )); then
     block+="- ${id}: ${count} 件 (${pattern} → ${rule}、閾値 ${threshold})"$'\n'
