@@ -9,11 +9,13 @@ description: Fetch latest docs via Context7 MCP. Required before library API wri
 
 ## Overview
 
-Context7 MCP server 経由で library の最新 docs を取得する skill。training cutoff より新しい API 変更に追従するため、library method 直書き前に発火する。
+Context7 MCP を「いつ使うか」の一般則は harness 側 MCP instruction が session 冒頭に注入する。本 skill は ai-tools 固有の発火条件と hook 連携部分だけを持つ。
 
-MCP server は user scope に登録済み。登録 command: `claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp` (server 実体は `@upstash/context7-mcp`, stdio)。
+**発火条件 (ai-tools 固有)**: library の method / hook / config を直書きする前。`hooks/lib/write-checkers.sh` の `_LIVE_DOC_KEYWORDS` が write-type tool 前に warn を出したら、本 skill を起動して最新 docs を取得してから書く。
 
-Hook 連携: `hooks/lib/write-checkers.sh` の `_LIVE_DOC_KEYWORDS` (25 keyword: `useState` / `axios.create` / `FastAPI(` / `prisma.*.findMany` / `createClient(` / `OpenAI(` 等) が write-type tool 前に warn-only で検出する。warn が出たら本 skill を起動して最新 docs を取得してから書く。
+対象 keyword は 25 件 (`useState` / `axios.create` / `FastAPI(` / `prisma.*.findMany` / `createClient(` / `OpenAI(` 等)。
+
+MCP server 実体は `@upstash/context7-mcp` (stdio, user scope)。未登録なら `claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp` で登録する。
 
 ## Workflow
 
