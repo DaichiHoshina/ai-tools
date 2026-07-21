@@ -7,13 +7,14 @@
 - **抽象化**: diff で読める内容を繰り返さない。変更ファイル名・関数名・変数名の列挙は避ける
 - **WHAT は subject 1 行のみ**: 本文で WHAT を bullet / 段落で繰り返さない。WHAT が複数 file / 複数領域に渡る場合も、subject で抽象化して 1 行に収める
 - **本文 = Why のみ**: 本文を書く場合は Why (動機 / 制約 / 解決対象) を 1-3 行で書く。WHAT 補足 bullet・file list・関数名列挙は禁止
+- **事実のみ**: 経緯 (「指摘 N 対応」「review で〜」「あわせて〜も」) / 意図 (「〜する意図」「〜と考えた」) / 感想を書かない。最終 diff を present-state で説明する
 - **検索可能性**: `git log --grep` で引ける単語を subject に含める
 
 ## 禁止語・避ける表現
 
 | カテゴリ | 例 |
 |---|---|
-| AIワークフロー内部用語 | 「Generated with Claude Code」「AI出力」「AI臭」「Co-Authored-By: Claude」等 (teamに晒さない用語) |
+| AIワークフロー内部用語 | 「Generated with Claude Code」「AI出力」「AI臭」「Co-Authored-By: Claude」(`Fable` / `Opus` / `Sonnet` / `Haiku` 等 model 名 variant を含む全種) 等 (teamに晒さない用語) |
 | 曖昧な抽象 | 「○○の整理」だけで終わる、変更内容が読み取れない要約 |
 | 詳細列挙 | ファイル名・関数名・変数名を箇条書きで並べる、過剰な実装詳細 |
 | 過剰な箇条書き | Why を 1-3 行で書けば足りるところに 5 個以上の bullet を並べる |
@@ -29,6 +30,8 @@
 | `formatter / linter / type 修正` | `lint 違反解消` |
 | `〜の整理` | `〜を背景に〜削除` (なぜを最低1つ) |
 | `session token 累積閾値超過時の通知機構実装` | `session token が 500K 超えたら /clear を推奨する` |
+| `指摘 2 対応。〜を短縮し、〜を切り出した` (review 経緯 + 過去形の作業日記) | `test 名を短縮して意図 comment を分離` (現在形で最終状態) |
+| `Co-Authored-By: Claude Fable 5` (AI marker 全種) | (書かない) |
 
 ## Why を本文 1 行目に書く (必須)
 
@@ -66,6 +69,9 @@ Why: DB クエリが N+1 になっており、ページ応答が 3s を超えて
 | `パフォーマンス改善` のみ | 何が問題だったか不明 |
 | 本文に `- file_a.md 新規` / `- file_b.md: 該当 entry を更新` の bullet 列挙 | WHAT を繰り返しただけ、diff で読める |
 | 本文に「foo.go の Bar 関数を baz に rename」等の関数名列挙 | 同上 |
+| 本文冒頭に `指摘 N 対応` / `1 回目は X だった` / `review 対応` | review 履歴は commit log でなく PR thread に残るもの、事実 (diff) を薄める |
+| `[]int64 → named struct` / `ids[0] → ids.withItemIdentifiers` の rename before/after 列挙 | diff の写経、Why (何が読みにくかったか) が不在 |
+| `〜する意図` / `〜のため` / `あわせて〜も` の意図・副次修正の段落化 | 書き手の解釈と副次修正が主 Why を薄める、副次修正は subject の抽象化か別 commit へ |
 
 ## 本文の構成
 
