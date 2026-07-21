@@ -122,6 +122,21 @@ Check `go.mod` `go` directive for target version before flagging.
 - `go fix ./...` auto-fixes many patterns; RECOMMENDED for bulk detections (1.26)
 - `new(T, val)` new with initial value (1.26)
 
+### Go 1.26 GODEBUG / stdlib strict 化
+
+DoS 対策と post-quantum 対応で 1.26 は既定挙動が厳しくなった。既存 code を 1.26 で回すときは以下を review する。
+
+| GODEBUG | default | 影響 | revert |
+|---|---|---|---|
+| `urlstrictcolons` | `1` | `net/url.Parse` が `http://localhost:1:2` / `http://::1/` を reject。IPv6 は bracket 必須 | `=0` |
+| `urlmaxqueryparams` | `10000` | 上限超で parse fail。1.25.6 / 1.24.12 に backport | `=0` で無制限 |
+| `httpcookiemaxnum` | 制限あり | cookie 過多で reject。1.25.2 / 1.24.8 に backport | 設定値 up |
+| `cryptocustomrand` | `0` | `crypto/*` が `io.Reader` 引数を silently ignore (test で mock rand を渡す実装が passthrough する) | `=1` |
+| `tracebacklabels` | `0` | `=1` で `runtime/pprof` label を goroutine header に含める | `=0` |
+| `tlssecpmlkem` | 新方式 on | TLS 1.3 に PQ 鍵交換 `SecP256r1MLKEM768` / `SecP384r1MLKEM1024` 追加 | 設定 revert |
+
+追加 API: `net.Dialer.DialTCP`/`DialUDP` が `netip.AddrPort` を受ける / `net/http.ClientConn` 追加 / `reflect.Value.Fields()` / `Methods()` が `iter.Seq2` を返す。
+
 ## Best Practices
 
 `defer` for resource cleanup / early return to reduce nesting / concrete types or generics over `any` / nil-check thoroughly.
