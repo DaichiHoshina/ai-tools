@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude.night-caffeinate</string>
+
+    <!-- pmset repeat wakeorpoweron 01:58 とセット運用。wake 直後の 01:59 から
+         04:29 まで system sleep を抑止し、02:03/03:07/03:30/04:11 の夜間 job を
+         定刻発火させる (caffeinate -s は AC 電源時のみ有効) -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/caffeinate</string>
+        <string>-s</string>
+        <string>-t</string>
+        <string>9000</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>1</integer>
+        <key>Minute</key>
+        <integer>59</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/night-caffeinate.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/night-caffeinate.err.log</string>
+</dict>
+</plist>
