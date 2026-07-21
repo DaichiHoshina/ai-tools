@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude.retrospective</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/bash</string>
+        <string>-lc</string>
+        <string>cd "$HOME/ghq/github.com/DaichiHoshina/ai-tools" &amp;&amp; /Users/daichi.hoshina/.local/bin/claude -p "/retrospective を実行して過去 1 週間の session を分析し、skill / config 改善提案を staging する。翌朝 /sleep-review triage で読める形にする。"</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/daichi.hoshina/.local/bin</string>
+        <key>HOME</key>
+        <string>/Users/daichi.hoshina</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>4</integer>
+        <key>Minute</key>
+        <integer>11</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/retrospective.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/retrospective.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

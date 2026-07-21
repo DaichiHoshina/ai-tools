@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude.memory-clean</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/bash</string>
+        <string>-lc</string>
+        <string>cd "$HOME/ghq/github.com/DaichiHoshina/ai-tools" &amp;&amp; /Users/daichi.hoshina/.local/bin/claude -p "/memory-clean --apply を実行して auto-memory の trash / prune / audit を回す。結果を要約 log に残す。"</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/daichi.hoshina/.local/bin</string>
+        <key>HOME</key>
+        <string>/Users/daichi.hoshina</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>7</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/memory-clean.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/memory-clean.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
