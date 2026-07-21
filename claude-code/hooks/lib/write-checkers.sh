@@ -255,6 +255,186 @@ _run_ai_jargon_check() {
   fi
 }
 
+_is_target_project_path() {
+  local _path="$1"
+  local _pat="${CLAUDE_TARGET_PROJECT_PATH_PATTERN:-}"
+  [[ -z "$_pat" ]] && return 1
+  case "$_path" in
+    $_pat) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+_check_target_migration_safety() {
+  local _path="$1"
+  local _content="$2"
+  [[ "$GUARD_CLASS" == "Forbidden" ]] && return 0
+  [[ -z "$_path" || -z "$_content" ]] && return 0
+  [[ "$_path" != *.sql ]] && return 0
+  _is_target_project_path "$_path" || return 0
+  local _warns=""
+  if printf '%s' "$_content" | grep -qiE 'ON DELETE CASCADE'; then
+    _warns="${_warns}CASCADE 削除を検出 → RESTRICT を優先すべき / "
+  fi
+  if [[ "$_path" == *.up.sql || "$_path" == *migration*.sql ]]; then
+    if printf '%s' "$_content" | grep -qiE 'CREATE TABLE'; then
+      if ! printf '%s' "$_content" | grep -qiE 'created_at'; then
+        _warns="${_warns}CREATE TABLE に created_at 欠如 / "
+      fi
+      if ! printf '%s' "$_content" | grep -qiE 'updated_at'; then
+        _warns="${_warns}CREATE TABLE に updated_at 欠如 / "
+      fi
+    fi
+    if [[ "$_path" == *.up.sql ]]; then
+      local _down="${_path%.up.sql}.down.sql"
+      if [[ ! -f "$_down" ]]; then
+        _warns="${_warns}対応する down.sql が存在しない / "
+      fi
+    fi
+  fi
+  [[ -z "$_warns" ]] && return 0
+  local _bn
+  _bn=$(basename "$_path")
+  local _log_dir="$HOME/.claude/logs"
+  mkdir -p "$_log_dir" 2>/dev/null
+  local _log="$_log_dir/review-pattern-warn.log"
+  _rotate_log_if_needed "$_log" 2>/dev/null || true
+  printf '[%s] %s | migration-safety | %s | %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "${SESSION_ID:-unknown}" "$_path" "${_warns%/ }" >> "$_log" 2>/dev/null || true
+  local _warn="▲ migration safety warn: ${_bn} → ${_warns%/ }"
+  if [ -n "$ADDITIONAL_CONTEXT" ]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_warn}"
+  else
+    ADDITIONAL_CONTEXT="${_warn}"
+  fi
+  return 0
+}
+
+_check_edit_churn() {
+  local _session="$1"
+  local _path="$2"
+  [[ -z "$_session" || -z "$_path" ]] && return 0
+  local _state_dir="$HOME/.claude/state"
+  local _state_file="$_state_dir/churn-count-${_session}.tsv"
+  mkdir -p "$_state_dir" 2>/dev/null || return 0
+  local _count=0
+  if [[ -f "$_state_file" ]]; then
+    _count=$(awk -F'\t' -v p="$_path" '$1==p {print $2}' "$_state_file" 2>/dev/null | tail -1)
+    [[ -z "$_count" ]] && _count=0
+  fi
+  _count=$((_count + 1))
+  local _tmp="${_state_file}.tmp.$$"
+  {
+    [[ -f "$_state_file" ]] && awk -F'\t' -v p="$_path" '$1!=p' "$_state_file"
+    printf '%s\t%s\n' "$_path" "$_count"
+  } > "$_tmp" 2>/dev/null && mv "$_tmp" "$_state_file" 2>/dev/null || rm -f "$_tmp" 2>/dev/null
+  if [[ $_count -ge 3 ]]; then
+    local _log_dir="$HOME/.claude/logs"
+    mkdir -p "$_log_dir" 2>/dev/null
+    local _log="$_log_dir/review-pattern-warn.log"
+    _rotate_log_if_needed "$_log" 2>/dev/null || true
+    printf '[%s] %s | churn | %s | %d\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$_session" "$_path" "$_count" >> "$_log" 2>/dev/null || true
+    local _bn
+    _bn=$(basename "$_path")
+    local _warn="▲ churn warn: ${_bn} は本 session で ${_count} 回目の書き換え。差分の意図を確認し、無意味な rename / 有用 comment 削除がないか見直す (log: ~/.claude/logs/review-pattern-warn.log)"
+    if [ -n "$ADDITIONAL_CONTEXT" ]; then
+      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_warn}"
+    else
+      ADDITIONAL_CONTEXT="${_warn}"
+    fi
+  fi
+  return 0
+}
+
+_check_ai_coined_terms() {
+  local _path="$1"
+  local _content="$2"
+  [[ "$GUARD_CLASS" == "Forbidden" ]] && return 0
+  [[ -z "$_path" || -z "$_content" ]] && return 0
+  local _pat="${CLAUDE_AI_COINED_TERMS_PATTERN:-}"
+  [[ -z "$_pat" ]] && return 0
+  _is_target_project_path "$_path" || return 0
+  local _ext="${_path##*.}"
+  local _target=""
+  if [[ "$_ext" == "md" || "$_ext" == "txt" ]]; then
+    _target="$_content"
+  else
+    _target="$(_extract_comment_body_text "$_path" "$_content" 2>/dev/null || true)"
+    [[ -z "$_target" ]] && return 0
+  fi
+  local _hits
+  _hits=$(printf '%s' "$_target" | grep -nE "$_pat" 2>/dev/null | head -5 || true)
+  [[ -z "$_hits" ]] && return 0
+  local _bn
+  _bn=$(basename "$_path")
+  local _msg
+  _msg="◉ AI 造語 block (ファイル: ${_bn}): code review で「AI 生成の造語」と指摘された語を検出した。定義された用語で書き直すか、初出なら定義を添える。検出行:
+${_hits}"
+  {
+    printf '%s\n' "$_msg"
+  } >&2
+  GUARD_CLASS="Forbidden"
+  return 0
+}
+
+_check_target_subtest_parallel() {
+  local _path="$1"
+  local _content="$2"
+  [[ "$GUARD_CLASS" == "Forbidden" ]] && return 0
+  [[ -z "$_path" || -z "$_content" ]] && return 0
+  [[ "$_path" != *_test.go ]] && return 0
+  _is_target_project_path "$_path" || return 0
+  local _missing
+  _missing=$(printf '%s' "$_content" | awk '
+    /t\.Run\(/ { in_run=1; brace=0; has_parallel=0; start=NR; next }
+    in_run && /t\.Parallel\(\)/ { has_parallel=1 }
+    in_run {
+      for (i=1; i<=length($0); i++) {
+        c = substr($0, i, 1)
+        if (c == "{") brace++
+        if (c == "}") { brace--; if (brace == 0) { if (!has_parallel) print start; in_run=0; break } }
+      }
+    }
+  ' 2>/dev/null | head -3)
+  [[ -z "$_missing" ]] && return 0
+  local _bn
+  _bn=$(basename "$_path")
+  local _log_dir="$HOME/.claude/logs"
+  mkdir -p "$_log_dir" 2>/dev/null
+  local _log="$_log_dir/review-pattern-warn.log"
+  _rotate_log_if_needed "$_log" 2>/dev/null || true
+  printf '[%s] %s | subtest-parallel | %s | lines=%s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "${SESSION_ID:-unknown}" "$_path" "$(echo "$_missing" | tr '\n' ',')" >> "$_log" 2>/dev/null || true
+  local _warn="▲ subtest parallel warn: ${_bn} の t.Run( block に t.Parallel() が抜けている行 (${_missing//$'\n'/, })"
+  if [ -n "$ADDITIONAL_CONTEXT" ]; then
+    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_warn}"
+  else
+    ADDITIONAL_CONTEXT="${_warn}"
+  fi
+  return 0
+}
+
+_check_target_sql_null_handwriting() {
+  local _path="$1"
+  local _content="$2"
+  [[ "$GUARD_CLASS" == "Forbidden" ]] && return 0
+  [[ -z "$_path" || -z "$_content" ]] && return 0
+  [[ "$_path" != *.go ]] && return 0
+  _is_target_project_path "$_path" || return 0
+  [[ "$_path" == *_test.go ]] && return 0
+  local _hits
+  _hits=$(printf '%s' "$_content" | grep -nE 'sql\.(Null\[|NullString\b|NullInt64\b|NullInt32\b|NullInt16\b|NullBool\b|NullFloat64\b|NullTime\b|NullByte\b)' 2>/dev/null | head -3 || true)
+  [[ -z "$_hits" ]] && return 0
+  local _bn
+  _bn=$(basename "$_path")
+  local _msg
+  _msg="◉ sql.Null[T] 手書き block (ファイル: ${_bn}): 対象 project の nullable wrapper 経由 API を使う (project 側の canonical 規約を参照する)。検出行:
+${_hits}"
+  {
+    printf '%s\n' "$_msg"
+  } >&2
+  GUARD_CLASS="Forbidden"
+  return 0
+}
+
 _handle_edit_write_tool() {
   local INPUT="$1"
   local TOOL_NAME="$2"
@@ -375,6 +555,26 @@ _handle_edit_write_tool() {
   # EDIT_CONTENT は @tsv 経由で改行が \n にエスケープされるため、渡す前に実改行へ戻す。
   if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
     _run_ai_jargon_check "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
+  fi
+
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+    _check_target_sql_null_handwriting "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
+  fi
+
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+    _check_target_subtest_parallel "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
+  fi
+
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+    _check_ai_coined_terms "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
+  fi
+
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$_EDIT_FILE_PATH" ] && [ -n "$SESSION_ID" ]; then
+    _check_edit_churn "$SESSION_ID" "$_EDIT_FILE_PATH"
+  fi
+
+  if [[ "$GUARD_CLASS" != "Forbidden" ]] && [ -n "$EDIT_CONTENT" ]; then
+    _check_target_migration_safety "$_EDIT_FILE_PATH" "${EDIT_CONTENT//\\n/$'\n'}"
   fi
 
   # comment 体言止め block + comment 量 gate: 新規 comment 行だけを対象にする。

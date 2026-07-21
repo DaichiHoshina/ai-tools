@@ -150,6 +150,35 @@ _handle_bash_tool() {
         fi
       fi
 
+      if [[ "$GUARD_CLASS" != "Forbidden" ]]; then
+        local _CWD_MIG _MIG_TARGET_PAT
+        _CWD_MIG=$(jq -r '.cwd // empty' <<< "$INPUT")
+        [[ -z "$_CWD_MIG" ]] && _CWD_MIG="$PWD"
+        _MIG_TARGET_PAT="${CLAUDE_TARGET_PROJECT_REPO_PATTERN:-}"
+        local _MIG_TOP
+        if [[ -n "$_MIG_TARGET_PAT" ]] && _MIG_TOP=$(git -C "$_CWD_MIG" rev-parse --show-toplevel 2>/dev/null); then
+          case "$_MIG_TOP" in
+            $_MIG_TARGET_PAT)
+              local _MIG_FILES _NON_MIG_FILES
+              _MIG_FILES=$(git -C "$_MIG_TOP" diff --cached --name-only 2>/dev/null | grep -cE '\.(up|down)?\.?sql$|/migrations?/' || true)
+              _NON_MIG_FILES=$(git -C "$_MIG_TOP" diff --cached --name-only 2>/dev/null | grep -vE '\.(up|down)?\.?sql$|/migrations?/' | grep -c . || true)
+              if [[ "$_MIG_FILES" -gt 0 && "$_NON_MIG_FILES" -gt 0 ]]; then
+                local _log_dir="$HOME/.claude/logs"
+                mkdir -p "$_log_dir" 2>/dev/null
+                local _log="$_log_dir/review-pattern-warn.log"
+                printf '[%s] %s | migration-mixed | mig=%d non=%d\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "${SESSION_ID:-unknown}" "$_MIG_FILES" "$_NON_MIG_FILES" >> "$_log" 2>/dev/null || true
+                local _mig_warn="▲ migration 混在 warn: staged に migration ${_MIG_FILES} file と非 migration ${_NON_MIG_FILES} file が混在する。Rolling Update deploy で問題になるため、migration PR を分けることを検討する"
+                if [ -n "$ADDITIONAL_CONTEXT" ]; then
+                  ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_mig_warn}"
+                else
+                  ADDITIONAL_CONTEXT="${_mig_warn}"
+                fi
+              fi
+              ;;
+          esac
+        fi
+      fi
+
       # --amend で inline body オプション (-m/--message/-F/--file) が無い場合:
       # editor 編集で hook は本文取得不可 → warn-only。
       # substring 判定だと --message が -m に誤マッチして warn を抑止するため word-boundary で判定する。

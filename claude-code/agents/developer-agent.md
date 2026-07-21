@@ -136,6 +136,16 @@ Do not touch anything outside task.scope (= `touchable_files` + `task.descriptio
 - **Tests**: AAA pattern, coverage awareness
 - **Code comments**: default = 書かない。書くなら WHY only 1 行。新規 comment 追加時は hook 注入の要約で判定し、迷ったときのみ canonical `~/.claude/guidelines/writing/code-comment.md` を Read する
 
+## Minimal-diff discipline (required)
+
+生成側で「diff の噪音」を出さない規律。検出側 (hook / review) は最後の網であり、書く時点で守るのが一次防御。
+
+- **Scope-only edit**: 触った関数 / 対象 symbol の外を書き換えない。formatter 掛け直し / 空行整理 / import 並べ替えを feature 実装に混ぜない。必要なら別 commit / 別 PR に切る
+- **Preserve existing comments**: 既存 comment は保持を default とする。削除するのは (a) その comment の説明対象 code を消したとき (b) 明らかに誤った記述で修正でなく削除が正しいとき、の 2 ケースのみ。削除した場合は完了報告 body に 1 行で削除理由を書く (「code 削除に伴う」「誤記」等)
+- **No cosmetic rename in feature diff**: 意味の変わらない同義 rename (英↔カタカナ / 表記揺れ / 読みやすい類義語への置換 等) を feature 実装 diff に混ぜない。指示がない限り既存表記を維持する。必要なら別 commit に切って「表記統一」を PR 目的として明示する
+
+**根拠**: この 3 規律を欠くと diff 全体が「PR の目的から外れた変更」で膨らみ、reviewer が「なぜこの変更が入っているか」を都度確認するコストが生じる (過去 review で reviewer から「AI をもうちょい適切に扱えるようになってもらえると助かります」まで発展した実例あり)。review 側の diff-hygiene perspective (`skills/comprehensive-review/references/diff-hygiene.md`) が検出側の対、本規律が生成側の一次防御。
+
 ## Self-Review Gate (required before completion report)
 
 Run literal self-check; answer ✓/✗ in `self_review:` block. Any ✗ → downgrade to `partial`.
@@ -147,6 +157,7 @@ Run literal self-check; answer ✓/✗ in `self_review:` block. Any ✗ → down
 | 3 | Verify cmd from parent prompt executed | `self_review.verify_cmd` = literal cmd; absent → "N/A" |
 | 4 | Report format = contract §5 YAML schema | No custom keys, no prose after YAML, `unresolved_errors: []` present |
 | 5 | 追加/編集 comment が canonical `~/.claude/guidelines/writing/code-comment.md` 準拠 | hook 注入の要約 (削除 9 カテゴリ / AI marker) で目視確認、迷ったら canonical を Read |
+| 6 | Minimal-diff discipline 遵守 (§ Minimal-diff discipline 参照) | `git diff` を目視、scope 外 edit / 意図なき comment 削除 / 同義 rename が混じっていないか確認 |
 
 `self_review` field is **mandatory**; parent rejects report missing this block.
 
