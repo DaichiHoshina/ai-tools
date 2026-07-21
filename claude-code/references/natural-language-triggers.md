@@ -26,11 +26,6 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "問題整理して", "前提整理して", "問題を定義して" | `mino-problem-framing` skill (観測・解釈・問題・候補手段の分離 → Problem Framing Package) |
 | "モデル監査して", "モデル漏れ確認" | `mino-domain-model-completeness` skill (概念・状態・制約・失敗の欠落監査) |
 | "契約に落として", "契約テスト仕様にして" | `mino-design-by-contract` skill (事前/事後/不変条件・失敗保証・契約テスト) |
-| "API 設計", "API 設計して" | `/api-design` (API endpoint design / OpenAPI spec) |
-| "バックエンド", "バックエンド実装" | `/backend-dev` (backend implementation / API development) |
-| "strict mode", "厳格モード" | `/session-mode strict` (for production work) |
-| "fast mode", "高速モード", "プロトタイプモード" | `/session-mode fast` |
-| "normal mode", "通常モード" | `/session-mode normal` |
 | "並列実行で" | `/flow --parallel` (worktree proposal, PO confirmation required) |
 | "Developer 並列で" | `/flow --parallel` (same) |
 | "worktree 分けて" | `/flow --parallel` (same) |

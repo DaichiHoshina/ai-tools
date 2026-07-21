@@ -94,7 +94,4 @@ Use related skills when writing technical docs (API design / backend design) to 
 
 | Writing target | Paired skill |
 |----------------|-------------|
-| REST/gRPC API design, endpoint specs | `/api-design` |
-| Service layer / data access layer / job design | `/backend-dev` |
-| Microservice integration / monorepo structure | `/microservices-monorepo` |
 | Architecture decisions / DDD | `/clean-architecture-ddd` |
