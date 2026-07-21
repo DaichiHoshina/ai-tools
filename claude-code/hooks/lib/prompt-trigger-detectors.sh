@@ -181,7 +181,7 @@ _inject_chat_selfcheck_if_signal() {
   fi
   printf '%s\n' "${_SC_NOW}" > "${_SC_FLAG}" 2>/dev/null || true
 
-  printf '%s\n' "[chat-selfcheck] 送信前に (1) 全文 100 字以内で句点 (2) 「完了 / 解消 / さらに / まず / trigger / canonical / throttle」語なし (3) 体言止め bullet の連発なし (単発は可) の 3 点 self-check せよ"
+  printf '%s\n' "[chat-selfcheck] 送信前に (1) 全文 100 字以内で句点 (2) 「完了 / 解消 / さらに / まず / trigger / canonical / throttle」語なし (3) 体言止め bullet の連発なし (単発は可) の 3 点 self-check せよ (修正例: 「Aを削り、Bを追加した」→「Aを削った。加えて Bを追加した。」)"
   return 0
 }
 
