@@ -72,6 +72,8 @@ if [[ "${JP_QUALITY_STOP_CHECK:-1}" == "1" && "${_STOP_HOOK_ACTIVE}" != "true" &
     [[ "${_JPQ_COUNT}" =~ ^[0-9]+$ ]] || _JPQ_COUNT=0
     if (( _JPQ_COUNT < 5 )); then
       printf '%s' "$(( _JPQ_COUNT + 1 ))" > "${_JPQ_COUNT_FILE}" 2>/dev/null || true
+      printf -v _JPQ_WARN_DATE '%(%Y%m%d)T' -1
+      printf '%s' "▲ chat block: ${_CHAT_BLOCK_REASON}" > "/tmp/claude-stop-jpq-warn-${_STOP_SESSION_ID:-$$}-${_JPQ_WARN_DATE}" 2>/dev/null || true
       jq -n --arg reason "${_CHAT_BLOCK_REASON}" '{decision: "block", reason: $reason}'
       exit 0
     fi

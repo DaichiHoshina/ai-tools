@@ -332,6 +332,9 @@ fi
 
 _AC_BASE="**memory 読込 (条件付き、token 節約)**: 実作業 (編集 / 実装 / 調査 / debug) を開始する時のみ \`~/ai-tools/memory/MEMORY.md\` (3 tool 共有 index) を read し、関連 topic の個別 file を必要時に read する。作業対象 repo が \`~/ghq/github.com/<org>/\` 配下 (linked worktree 含む、origin URL で判定) の場合、\`~/ghq/github.com/<org>/memory/MEMORY.md\` (org 作業 memory index) が存在すればそれも read する。質問応答や軽い確認のみの session では読まない。\`mcp__serena__list_memories\` も同条件 (project は --project-from-cwd で自動 activate 済)\n\n**追加推奨**: コーディング作業を開始する場合、最初の編集前に \`/load-guidelines\` を実行"
 _AC_PREFIX=""
+# turn 締め self-check の 3 点を毎 session 冒頭に再掲する (CLAUDE.md 内の宣言が auto-load 時に埋もれる対策)。
+# 7-21 実測 baseline: block 18 件 / 7 日 (うち今日単日 17 件)、7-28 で再測定して効果評価する。
+_AC_PREFIX+="**[turn 締め self-check]** 送信直前に (a) 最後の 1 文が \`完了\` / \`〜済\` / \`次に\` / \`加えて\` で終わらない (b) 100 字を超えない (c) 矢印チェーンを prose 化した の 3 点を必ず見直す (canonical: rules/plain-jp.md §送信前 4 点)。\n\n"
 if [[ -n "${_WT_OWNER_MSG}" ]]; then
     _AC_PREFIX+="${_WT_OWNER_MSG}"
 fi
