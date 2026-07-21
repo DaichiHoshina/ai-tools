@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude.daily-report</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/bash</string>
+        <string>-lc</string>
+        <string>"$HOME/ghq/github.com/DaichiHoshina/ai-tools/claude-code/launchd/daily-report.sh"</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>10</integer>
+        <key>Minute</key>
+        <integer>7</integer>
+    </dict>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/daichi.hoshina/.local/bin</string>
+        <key>HOME</key>
+        <string>/Users/daichi.hoshina</string>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/daily-report.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/daily-report.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

@@ -231,7 +231,7 @@ function renderJob(j) {
   }));
 
   const details = document.createElement('details');
-  if (j.err_size > 0) details.setAttribute('open', '');
+  details.setAttribute('open', '');
 
   details.appendChild(makeEl('summary', { text: 'log tail (last 30 lines)' }));
   details.appendChild(makeEl('pre', { text: j.log_tail || '(empty)' }));

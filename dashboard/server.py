@@ -16,11 +16,12 @@ from pathlib import Path
 PORT = 8765
 HTML_PATH = Path(__file__).parent / "index.html"
 LAUNCHD_LOG_DIR = Path.home() / ".claude" / "logs" / "launchd"
-LAUNCHD_JOBS = ("sleep-review", "memory-clean", "retrospective")
+LAUNCHD_JOBS = ("sleep-review", "memory-clean", "retrospective", "daily-report")
 LAUNCHD_SCHEDULES = {
     "sleep-review": "毎日 02:03",
     "memory-clean": "毎週日曜 03:07",
     "retrospective": "毎週日曜 04:11",
+    "daily-report": "毎日 10:07 (Slack)",
 }
 
 

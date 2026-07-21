@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
 LOG_DIR="$HOME/.claude/logs/launchd"
 
-JOBS=(sleep-review memory-clean retrospective)
+JOBS=(sleep-review memory-clean retrospective daily-report)
 
 usage() {
     cat <<'EOF'
@@ -17,7 +17,7 @@ usage: deploy.sh {install|uninstall|test|status} [<job>|all]
   test <job>           即時 1 回だけ発火する (launchctl kickstart)
   status               現在の load 状況と log を表示する
 
-  jobs: sleep-review / memory-clean / retrospective
+  jobs: sleep-review / memory-clean / retrospective / daily-report
 EOF
 }
 
