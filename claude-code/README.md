@@ -48,25 +48,35 @@ Full command list: `commands/` directory.
 
 ## Structure
 
-| Directory / File | Content | Details |
-|---|---|---|
-| `commands/` | Slash commands | `commands/*.md` |
-| `skills/` | Skills | `skills/<name>/SKILL.md` |
-| `agents/` | Agents (po/manager/developer etc.) | [agents/README.md](agents/README.md) |
-| `guidelines/` | Guidelines (language/design/infra/ops/quality) | By category |
-| `hooks/` | Event hooks | [hooks/README.md](hooks/README.md) |
-| `templates/` | settings / MCP / workflow templates | [templates/README.md](templates/README.md) |
-| `output-styles/` | Response format definitions | [output-styles/README.md](output-styles/README.md) |
-| `references/` | Detailed references | `references/*.md` |
-| `rules/` | Output rules common to all projects | |
-| `scripts/` | analytics / dashboard / cleanup helpers | |
-| `lib/` | Shell utilities | [lib/README.md](lib/README.md) |
-| `tests/` | Hook / lib tests | [tests/README.md](tests/README.md) |
-| `settings/` | MCP server settings | |
-| `config/` | Shell utility settings | |
-| `githooks/` | Repo git hooks | |
-| `CLAUDE.md` | Global instructions specific to claude-code | |
-| `VERSION` | CLI tracking version (manual update: `/claude-update-fix`) | |
+Load 欄の意味と「新規 file をどこに置くか」の判断基準:
+
+- **auto-load**: 毎 session 冒頭で必ず読まれる。ここに置く条件は「全 project / 全 turn で必要な短い規範」。原則 100 行以内。
+- **on-demand**: 特定 trigger (slash command / 用語 / tech stack 検出 / 明示指定) 時のみ読まれる。domain 別の詳細規範 / 手順書 / trigger 付き rule はここ。
+- **auto-invoke**: user 発話 / event を契機に harness 側から読み込まれる (skill / hook / command)。frontmatter の description が起動 trigger を決める。
+- **manual**: user が `/reload` 等で明示的に呼ぶまで読まれない。
+- **build-time**: sync.sh / install.sh 実行時にだけ参照される。session context には入らない。
+
+| Directory / File | Content | Load | Details |
+|---|---|---|---|
+| `commands/` | Slash commands | auto-invoke (`/name` 発火) | `commands/*.md` |
+| `skills/` | Skills | auto-invoke (description match) | `skills/<name>/SKILL.md` |
+| `agents/` | Agents (po/manager/developer etc.) | auto-invoke (Task tool) | [agents/README.md](agents/README.md) |
+| `guidelines/` | Guidelines (language/design/infra/ops/quality) | on-demand (tech stack / topic trigger) | By category |
+| `hooks/` | Event hooks | auto-invoke (event 発火) | [hooks/README.md](hooks/README.md) |
+| `templates/` | settings / MCP / workflow templates | build-time | [templates/README.md](templates/README.md) |
+| `output-styles/` | Response format definitions | manual (`/output-style` 切替) | [output-styles/README.md](output-styles/README.md) |
+| `references/` | 詳細層 (`references/*.md`) と on-demand rule (`references/on-demand-rules/*.md`) | on-demand (CLAUDE.md / trigger 経由) | `references/*.md` |
+| `rules/` | 全 project 共通の短い規範 (文体 / 質問抑制 / 思考原則 等) | **auto-load** (毎 session 冒頭) | |
+| `scripts/` | analytics / dashboard / cleanup helpers | manual (CLI 実行) | |
+| `lib/` | Shell utilities | build-time (hook / script が source) | [lib/README.md](lib/README.md) |
+| `tests/` | Hook / lib tests | manual (`npm run test:bats`) | [tests/README.md](tests/README.md) |
+| `settings/` | MCP server settings | build-time | |
+| `config/` | Shell utility settings | build-time | |
+| `githooks/` | Repo git hooks | build-time (git 操作契機) | |
+| `CLAUDE.md` | Global instructions specific to claude-code | auto-load | |
+| `VERSION` | CLI tracking version (manual update: `/claude-update-fix`) | build-time | |
+
+新規 file 配置の判断: 全 project 共通の短い規範 → `rules/`、domain 別の詳細 → `guidelines/`、特定 trigger でだけ読ませたい詳細 → `references/on-demand-rules/`、既存 rule / CLAUDE.md の補足詳細 → `references/`。
 
 ## Skills
 

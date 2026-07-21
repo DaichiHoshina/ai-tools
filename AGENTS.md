@@ -12,10 +12,8 @@
 - Config templates: `.mcp.json.example`; local-only files live in `.mcp.json` and `.serena/` (gitignored).
 
 ## Build, Test, and Development Commands
-- `./claude-code/install.sh`: Install Claude Code config into `~/.claude` (creates symlinks, copies templates).
-- `./codex/install.sh`: Install Codex config into `~/.codex` (Level 4 full sync).
-- `./claude-code/sync.sh`: Sync shared resources when updating Claude Code assets.
-- `ls ~/.claude/hooks` or `ls ~/.codex/hooks`: Quick sanity check that hooks were installed.
+- 主要 command (install / sync / test / bench) は [`CLAUDE.repo.md`](CLAUDE.repo.md) の Quick Reference が canonical。ここでは重複させない (drift 防止)。
+- Codex 側は `./codex/install.sh` で `~/.codex` に反映する。sanity check は `ls ~/.claude/hooks` / `ls ~/.codex/hooks`。
 
 ## Coding Style & Naming Conventions
 - Shell scripts are Bash with `set -e`; keep changes minimal and readable.
@@ -23,10 +21,9 @@
 - Prefer ASCII, concise comments, and existing naming patterns (`pre-*.sh`, `session-*.sh`).
 
 ## Testing Guidelines
-- Bats suite: `cd claude-code && npm run test:bats` (unit + integration; requires `bats`).
-- Jest: `cd claude-code && npm test` (statusline etc. JS tests).
-- After hook changes, run the relevant bats files under `claude-code/tests/unit/hooks/` and `claude-code/tests/integration/`.
-- Validate installs by running the installer scripts and confirming expected symlinks.
+- Test runner (bats / jest) の 実行 command は [`CLAUDE.repo.md`](CLAUDE.repo.md) の Quick Reference を参照する。
+- hook 変更後は `claude-code/tests/unit/hooks/` と `claude-code/tests/integration/` の該当 bats を回す。
+- Installer 変更後は install script を実行して symlink が期待通りか確認する。
 
 ## Commit & Pull Request Guidelines
 - Commit history follows Conventional Commits: `feat:`, `fix:`, `refactor:`, `docs:`.
