@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 # PreToolUse Hook - protection-mode 必須チェック
+# bash 4+ が要る (declare -A を lib で使う)。標準 bash 3.2 で起動された場合は自動 exec で切り替える。
+if [[ -z "${_JP_HOOK_BASH_UPGRADED:-}" && "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
+    for _cand in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+        if [[ -x "$_cand" ]]; then
+            export _JP_HOOK_BASH_UPGRADED=1
+            exec "$_cand" "$0" "$@"
+        fi
+    done
+fi
 # 3層分類: Safe/Boundary/Forbidden
 # v2.2.0対応: jq安全出力、パターン検出強化
 

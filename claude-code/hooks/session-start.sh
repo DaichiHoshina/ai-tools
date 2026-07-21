@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+if [[ -z "${_JP_HOOK_BASH_UPGRADED:-}" && "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
+    for _cand in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+        if [[ -x "$_cand" ]]; then
+            export _JP_HOOK_BASH_UPGRADED=1
+            exec "$_cand" "$0" "$@"
+        fi
+    done
+fi
 # SessionStart Hook - protection-mode + guidelines 自動読み込み
 # セッション開始時にSerena memoryリストを確認 + compact-restore読み込み
 # NOTE: Serena有無はチェックしない（compact直後はMCP未初期化の可能性あり）

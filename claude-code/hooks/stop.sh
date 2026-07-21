@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+if [[ -z "${_JP_HOOK_BASH_UPGRADED:-}" && "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
+    for _cand in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+        if [[ -x "$_cand" ]]; then
+            export _JP_HOOK_BASH_UPGRADED=1
+            exec "$_cand" "$0" "$@"
+        fi
+    done
+fi
 # Stop Hook - タスク完了時の通知（macOSバナー + ntfy.sh）
 
 set -euo pipefail
