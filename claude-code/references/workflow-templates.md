@@ -17,6 +17,22 @@ const verdict = await agent('Gate check: ...', { schema: VERDICT_SCHEMA })
 if (verdict == null) { log('WARN: checker null — abort (fail-closed)'); return { aborted: true } }
 ```
 
+## Self-routing の扱い
+
+Claude が graph 自体を毎回書く self-routing (dynamic workflow の常時化 = ultracode) は現状**採用しない**。本 file の 7 template から parent が選ぶ方式が SoT だ。理由と再検討条件は `references/CLAUDE-CODE-OPPORTUNITIES.md` の該当 entry を参照する。
+
+## Router pattern (agent 分類 + code 分岐)
+
+Runtime に downstream 経路を分けたい時は、agent で分類 → JS の `if / switch` で edge を選ぶ (分岐 logic を agent に委ねない)。`/flow` の Task type detection と同 pattern。
+
+```javascript
+const { severity } = await agent(`Classify diff risk:\n${diff}`,
+  { schema: { type: 'object', properties: { severity: { enum: ['low', 'high'] } }, required: ['severity'] } })
+const review = severity === 'high'
+  ? await parallel(FILES.map(f => () => agent(`Audit ${f}`)))
+  : await agent(`Quick review of ${diff}`)
+```
+
 ## 1. review
 
 dimensions → find → adversarially verify pipeline. pipeline default (no barrier); verify fires per finding.
@@ -146,4 +162,30 @@ return {
   dropped: dropped(flat, 'Triage'),
   batchesScanned: args.batches.length,
 }
+```
+
+## 7. loop-until-dry (unknown-size discovery)
+
+事前に総数がわからない発掘 task (bug sweep / issue 発掘 / edge case 洗い出し) で使う。K round 連続で新規ゼロなら停止する。**dedupe 相手は `seen` set (confirmed でなく)**。この点を外すと verifier で却下された finding が毎 round 再発見されて loop が dry しない (詳細: `references/loop-engineering.md` § dedupe vs seen)。
+
+```javascript
+const seen = new Set(); const confirmed = []; let dry = 0
+const key = b => `${b.file}:${b.line}:${b.rule}`
+
+while (dry < 2 && confirmed.length < args.maxFindings) {
+  const round = (await parallel(FINDERS.map(f => () =>
+    agent(f.prompt, { phase: 'Find', schema: BUGS_SCHEMA }))))
+    .filter(Boolean).flatMap(r => r.bugs)
+  const fresh = round.filter(b => !seen.has(key(b)))
+  if (!fresh.length) { dry++; log(`dry round ${dry}/2`); continue }
+  dry = 0
+  fresh.forEach(b => seen.add(key(b)))
+
+  const judged = await parallel(fresh.map(b => () =>
+    parallel(['correctness', 'security', 'repro'].map(lens => () =>
+      agent(`Judge "${b.desc}" via ${lens} — real?`, { phase: 'Verify', schema: VERDICT_SCHEMA })))
+      .then(vs => ({ b, real: vs.filter(Boolean).filter(v => v.real).length >= 2 }))))
+  confirmed.push(...judged.filter(v => v.real).map(v => v.b))
+}
+return { confirmed, seenTotal: seen.size, rejectedTotal: seen.size - confirmed.length }
 ```

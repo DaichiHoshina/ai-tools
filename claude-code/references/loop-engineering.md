@@ -105,6 +105,27 @@ Long-running loops add `VISION.md` or `AGENTS.md` alongside state — state trac
 | **Goal drift** | "Don't do X" disappears at turn 47 via lossy summarization | Standing `VISION.md` / `AGENTS.md` re-read each run; `hooks/post-compact-reload.sh` re-injects after `/compact` |
 | **Self-preferential bias** | Maker grades own homework, always returns "A+" | Separate checker agent; no exposure to maker reasoning chain |
 | **Agentic laziness** | Declares "done enough" at partial completion | `/goal` with objective stop-condition evaluated by fresh model instance |
+| **Non-converging discovery loop** | loop-until-dry で rejected finding が毎 round 復活し dry 判定にならない | dedupe の相手を `seen` set にする (`confirmed` ではない、下記) |
+
+### loop-until-dry: dedupe vs seen (confirmed ではない)
+
+Unknown-size discovery (bug sweep / issue 発掘等) で「K round 連続で新規ゼロ → 停止」にする時、dedupe 相手を confirmed set にすると verifier で却下された finding が毎 round 再発見されて loop が dry しない。**seen (見たもの全部、確定 / 却下 問わず) で dedupe する**のが正解。
+
+```js
+const seen = new Set(); const confirmed = []; let dry = 0;
+while (dry < 2) {
+  const found = (await parallel(FINDERS.map(f => () => agent(f.prompt, { schema: BUGS }))))
+    .filter(Boolean).flatMap(r => r.bugs);
+  const fresh = found.filter(b => !seen.has(key(b)));
+  if (!fresh.length) { dry++; continue; }
+  dry = 0;
+  fresh.forEach(b => seen.add(key(b))); // dedupe 対象は seen、confirmed ではない
+  const judged = await parallel(fresh.map(b => () => verify(b)));
+  confirmed.push(...judged.filter(v => v.real).map(v => v.b));
+}
+```
+
+Template 実装: `references/workflow-templates.md` § 7 loop-until-dry。
 
 ## Comprehension debt and cognitive surrender
 
