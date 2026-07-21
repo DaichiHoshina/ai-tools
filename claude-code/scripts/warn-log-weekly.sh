@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 # warn-log-weekly.sh — hook / review skill が吐く warn log を pattern 別に週次集計する。
 # 詳細: ~/ai-tools/claude-code/scripts/README-warn-log-weekly.md (canonical)。
 

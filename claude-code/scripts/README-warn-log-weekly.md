@@ -28,7 +28,7 @@ log 追加時は `TARGET_LOGS` 配列を編集して反映する。
 ## 実行
 
 - 手動: `bash ~/ai-tools/claude-code/scripts/warn-log-weekly.sh`
-- 週次自動: launchd `~/Library/LaunchAgents/com.daichi.warn-log-weekly.plist` (毎週月曜 10:00)
+- 週次自動: `./scripts/install-warn-log-weekly-cron.sh --enable` で launchd plist (`~/Library/LaunchAgents/com.daichi.warn-log-weekly.plist`) を配置・有効化する (毎週月曜 10:00 実行、cron log は `~/.claude/logs/warn-log-weekly-cron.log`)
 
 ## 判断基準 (定期集計を見た時の対応)
 
