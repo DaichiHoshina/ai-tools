@@ -1099,3 +1099,17 @@ $(printf 'い%.0s' {1..60})"
   [ "$status" -eq 0 ]
   [[ "$output" != *"100字超文"* ]]
 }
+
+@test "sentence-structure: //go:generate directive は 100 字カウントから除外して非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure "//go:generate mockgen -source=./oripa_product.go -destination=./mock/oripa_product_mock.go -package=mock -mock_names=OripaProduct=OripaProductMock"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"100字超文"* ]]
+}
+
+@test "sentence-structure: //nolint directive は 100 字カウントから除外して非検出" {
+  _make_ng_dict "$TEST_TMPDIR"
+  _run_sentence_structure "//nolint:gocyclo,funlen,gocognit // $(printf 'a%.0s' {1..90})"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"100字超文"* ]]
+}
