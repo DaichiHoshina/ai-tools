@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash, Read, Edit, Grep, Glob, AskUserQuestion
-argument-hint: "<memory-file> | --topic <name> | --scan"
+argument-hint: "<memory-file> | --topic <name>"
 description: Semi-automated flow to promote memory knowledge to CLAUDE.md / ai-tools skill / command
 effort: medium
 ---
@@ -19,7 +19,6 @@ Detailed routing criteria & proper-noun dictionary: `~/.claude/references-privat
 |---|---|
 | `<memory_file>` | promote single file (`/memory-save exit` 産の `feedback-<slug>.md` / `project-<slug>.md` もここに渡す) |
 | `--topic <name>` | aggregate-promote multiple files with same topic |
-| `--scan` | scan and show trigger A/B candidates only (no execution) |
 
 ## Flow (Step 1-6)
 

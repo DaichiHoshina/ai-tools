@@ -1,6 +1,6 @@
 ---
 allowed-tools: Task, Bash, Read, Edit, Write, AskUserQuestion, TaskCreate, TaskUpdate, TaskList
-argument-hint: "[--check <cmd>] [--max-iter N] [--timeout DUR] \"<stop-condition>\" <task>"
+argument-hint: "[--check <cmd>] [--max-iter N] \"<stop-condition>\" <task>"
 description: Run agent until objective stop-condition holds, with maker-checker separation (Ralph Wiggum loop guard).
 ---
 
@@ -13,7 +13,7 @@ description: Run agent until objective stop-condition holds, with maker-checker 
 ```
 /goal "<stop-condition>" <task>
 /goal --check "<cmd>" <task>
-/goal --max-iter <n> --timeout <duration> "<stop-condition>" <task>
+/goal --max-iter <n> "<stop-condition>" <task>
 ```
 
 **Examples**:
@@ -55,7 +55,6 @@ All three limits are enforced independently. First hit wins.
 |-------|------|---------|
 | Max iterations | `--max-iter <n>` | 5 |
 | Max tokens | `--max-token <n>` | 100000 |
-| Wall-clock timeout | `--timeout <duration>` | 30m |
 
 Rate limits and user interrupts are **not** hard stops — they are external signals requiring explicit restart.
 

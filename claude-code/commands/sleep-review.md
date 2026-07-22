@@ -1,6 +1,5 @@
 ---
 allowed-tools: Read, Edit, Write, Glob, Bash, AskUserQuestion
-argument-hint: "[--all-reject]"
 description: 夜間 sleep pipeline が staging した改善提案を朝に triage する (adopt / hold / reject)
 ---
 
@@ -32,7 +31,6 @@ description: 夜間 sleep pipeline が staging した改善提案を朝に triag
 
 - hook 編集を adopt する場合は `references/on-demand-rules/measure-before-hook-change.md` の baseline 計測を先に行う
 - config 書き換えは必ず diff 提示と user 承認を経る。無承認 Edit は禁止だ
-- `--all-reject` は全 staged を一括 reject して `.rejected.md` に rename する (滞留掃除用)
 
 ## Related
 

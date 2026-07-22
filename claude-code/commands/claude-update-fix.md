@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestion, mcp__serena__*
-argument-hint: "[--dry-run] [--channel stable|latest|next]"
+argument-hint: "[--dry-run]"
 description: Claude Code update adaptation — detect diffs, auto-apply safe changes, track unimplemented features
 ---
 

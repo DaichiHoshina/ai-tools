@@ -1,7 +1,6 @@
 ---
 allowed-tools: Bash, Read
-argument-hint: "[--ui]"
-description: Analyze Claude Code usage & present insights (--ui launches dashboard)
+description: Analyze Claude Code usage & present insights
 ---
 
 # /analytics - Claude Code usage analysis
@@ -13,7 +12,6 @@ Analyze usage patterns, auto-generate improvement suggestions. Two modes: CLI (t
 | Mode | Launch | Use |
 |------|--------|-----|
 | CLI (default) | `/analytics` | Text summary, suggestions, bot-friendly |
-| UI | `/analytics --ui` | Interactive browser dashboard |
 
 ## CLI mode
 
