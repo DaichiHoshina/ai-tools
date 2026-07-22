@@ -29,7 +29,7 @@ Detect package dependencies across languages/ecosystems, scan CVEs (CVSS basis),
 | `composer.lock` | composer | `composer audit --format json` | `composer update` |
 | `pom.xml` | maven | `mvn org.owasp:dependency-check-maven:check` | manual |
 | `build.gradle*` | gradle | `gradle dependencyCheckAnalyze` | manual |
-| `Dockerfile` | container | `trivy fs .` (run only w/ `--include-container`) | base image bump |
+| `Dockerfile` | container | `trivy fs .` | base image bump |
 
 **yarn v1 vs Berry**: `.yarnrc.yml` or `packageManager: yarn@>=2` in package.json → Berry; else v1.
 
@@ -42,14 +42,8 @@ Detect package dependencies across languages/ecosystems, scan CVEs (CVSS basis),
 | (none) | detect all → audit → report | - |
 | `--severity <level>` | `critical`/`high`/`medium`/`low` threshold (CVSS) | `medium` |
 | `--scope <path>` | scan only specified dir | whole repo |
-| `--ecosystem <name>` | filter to `npm`/`go`/`python` etc | auto-detect all |
-| `--no-dev` | exclude devDependencies | false |
 | `--apply` | auto-update minor/patch only (SemVer) | false |
 | `--pr` | create PR w/ fixes (via `/git-push --pr`) | false |
-| `--report md\|json` | file output format | console only |
-| `--include-container` | run trivy/docker scout (slow) | false |
-| `--offline` | cache only, no network | false |
-| `--no-temp-lock` | skip ecosystems missing lockfile | false |
 
 ## Flow
 

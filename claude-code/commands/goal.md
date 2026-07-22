@@ -54,7 +54,6 @@ All three limits are enforced independently. First hit wins.
 | Limit | Flag | Default |
 |-------|------|---------|
 | Max iterations | `--max-iter <n>` | 5 |
-| Max tokens | `--max-token <n>` | 100000 |
 
 Rate limits and user interrupts are **not** hard stops — they are external signals requiring explicit restart.
 

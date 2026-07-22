@@ -77,8 +77,6 @@ target が `gh-pr-review` かつ `$MEM/pr_<repo>_<number>_review.md` (`MEM=$(bas
 | Arg | Behavior |
 |-----|----------|
 | `--dry-run` | draft + self-check only, don't show post command |
-| `--auto-post <id>` | auto-post to target after self-check pass (gh issue # / Jira key) |
-| `--from-file <path>` | read draft source from file |
 
 ## Fallback
 
@@ -86,7 +84,7 @@ target が `gh-pr-review` かつ `$MEM/pr_<repo>_<number>_review.md` (`MEM=$(bas
 
 ## Guards
 
-- **no auto-execution of post command** (only w/ `--auto-post`)
+- **no auto-execution of post command**
 - long docs (Design Doc / PRD / Notion-scale) → use `/docs` / `/design-doc` (prevent misuse)
 - API limits enforced by caller (GitHub: 65k chars, Slack: 4k, Jira description: 32k)
 

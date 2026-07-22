@@ -102,7 +102,6 @@ created/updated Notion page URL を表示する。
 
 | Option | Description |
 |-----------|------|
-| `--parent <url>` | Notion parent page URL |
 | `--update <url>` | Update existing Notion page (URL) |
 | `--from <md-path>` | Input local md (`/design-doc` output etc.) to Notion |
 | `--dry` | Preview only, no Notion post |

@@ -18,7 +18,6 @@ On `/dev` launch, delegate to `Task(developer-agent)` by default (model canonica
 | (none) | `developer-agent` delegation (default) |
 | `--inline` | parent inline execution (1-symbol fix only) |
 | `--quick` | low-cost model delegation, token-saving priority (short prompt) |
-| `--team` | use `/flow` instead; not supported here |
 
 ## Options
 

@@ -36,7 +36,7 @@ Never feed Step 1 output directly to fix. Always apply 2-stage Self-Review. Deta
 | Type | Policy |
 |------|--------|
 | Critical | fix all (required) |
-| Warning | fix all (`--critical-only` skips) |
+| Warning | fix all |
 
 Delegate Critical/Warning fixes to `Task(developer-agent)` (per `CLAUDE.md` "Auto-Delegation" section). Parent inline implementation forbidden.
 
@@ -82,14 +82,8 @@ commit fix → push branch → create PR.
 | Argument | Behavior |
 |----------|----------|
 | (none) | full pipeline (regression loop included) |
-| `--critical-only` | fix Critical only |
 | `--dry-run` | review only (no fix/push) |
 | `--no-difit` | suppress difit startup |
-| `--no-regression` | skip Step 4 (legacy behavior) |
-| `--max-iterations <N>` | regression loop limit (default 3) |
-| `--from-pr <N>` | restore PR session, review its diff |
-
-With `--from-pr`, Step 0 does context restore like `claude --from-pr <N>`, then review that PR diff.
 
 ## Output Format
 

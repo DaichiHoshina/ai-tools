@@ -84,9 +84,6 @@ Confirm preview URL (dev server) with user. If not running, start with `npm run 
 | Flag | Behavior |
 |---|---|
 | (none) | full 7-phase review |
-| `--url <URL>` | explicit preview URL (default: localhost dev) |
-| `--viewport <px>` | desktop viewport (default 1440) |
-| `--skip-mobile` | Desktop viewport only |
 
 ## Blocker gate (parent executes)
 
