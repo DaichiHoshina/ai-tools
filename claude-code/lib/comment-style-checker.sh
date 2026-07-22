@@ -274,40 +274,8 @@ run_comment_quantity_count() {
   printf '%d' "$_count"
 }
 
-# comment 量 gate: code-comment.md の「default 書かない / 上限 2 行」を機械的に強制する。
-# 新規 comment が 3 行以上なら block、1-2 行なら warn する。
+# comment 量 gate: 行数上限は撤廃 (2026-07-22)。呼び出し側互換のため関数は残す no-op。
+# 品質判定は code-comment.md の「default 書かない / Why not のみ」に一本化する。
 run_comment_quantity_gate_check() {
-  local _file="$1"
-  local _content="$2"
-  [[ "${GUARD_CLASS:-}" == "Forbidden" ]] && return 0
-  [[ -z "$_file" || -z "$_content" ]] && return 0
-  local _count
-  _count="$(run_comment_quantity_count "$_file" "$_content")"
-  [[ "$_count" -eq 0 ]] && return 0
-
-  local _log_dir="${HOME}/.claude/logs"
-  local _log_file="${_log_dir}/comment-quantity-warn.log"
-  mkdir -p "$_log_dir" 2>/dev/null || true
-  TZ=UTC printf -v _ts '%(%Y-%m-%dT%H:%M:%SZ)T' -1
-
-  if [[ "$_count" -ge 3 ]]; then
-    printf '%s\t%s\t%s\t%s\tblock\n' "$_ts" "${SESSION_ID:-unknown}" "$_file" "$_count" >> "$_log_file" 2>/dev/null || true
-    GUARD_CLASS="Forbidden"
-    MESSAGE="${ICON_CRITICAL:-◉} comment 量 block: ${_file} (新規 comment ${_count} 行)"
-    local _ctx="新規 comment ${_count} 行は上限 2 行を超える。default は書かない、書くなら Why not のみ 2 行以内に絞る。canonical: guidelines/writing/code-comment.md"
-    if [[ -n "${ADDITIONAL_CONTEXT:-}" ]]; then
-      ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_ctx}"
-    else
-      ADDITIONAL_CONTEXT="$_ctx"
-    fi
-    return 0
-  fi
-
-  printf '%s\t%s\t%s\t%s\twarn\n' "$_ts" "${SESSION_ID:-unknown}" "$_file" "$_count" >> "$_log_file" 2>/dev/null || true
-  local _warn_msg="${ICON_WARNING:-▲} comment 量 warn: ${_file} (新規 comment ${_count} 行) — Why not のみ残す必要があるか見直す。canonical: guidelines/writing/code-comment.md"
-  if [[ -n "${ADDITIONAL_CONTEXT:-}" ]]; then
-    ADDITIONAL_CONTEXT="${ADDITIONAL_CONTEXT}"$'\n'"${_warn_msg}"
-  else
-    ADDITIONAL_CONTEXT="$_warn_msg"
-  fi
+  return 0
 }
