@@ -77,9 +77,9 @@ _mark_done() {
 }
 
 _tracked_fingerprint() {
+  # HEAD は含めない: pipeline 中に他 session が commit すると HEAD が変わり false positive で reject する。
+  # 保護対象は「maker が tracked file を勝手に触ったか」なので working tree の diff だけで判定する。
   {
-    git -C "${REPO}" rev-parse HEAD 2>/dev/null || echo no-head
-    git -C "${REPO}" status --porcelain
     git -C "${REPO}" diff
     git -C "${REPO}" diff --cached
   } | shasum -a 256 | cut -d' ' -f1
