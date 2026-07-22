@@ -2,6 +2,8 @@
 
 Position and transitions of 6 commands from requirements clarification through implementation and knowledge retention.
 
+全体像 (全 command / skill の配置) は `command-tree.md` が持つ。本 doc は設計フェーズの遷移条件と skip 判断に絞る。
+
 ## Transition diagram
 
 ```

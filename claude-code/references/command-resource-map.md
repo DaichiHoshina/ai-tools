@@ -1,5 +1,7 @@
 # Command × Resource Map
 
+全体像 (全 command / skill の配置) は `command-tree.md` が持つ。本 doc は command ごとの resource 対応表に絞る。
+
 ## Legend
 
 Resource coverage map for the four primary commands (`/dev` `/plan` `/review` `/flow`).

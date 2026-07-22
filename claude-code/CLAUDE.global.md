@@ -12,6 +12,7 @@ chat 出力前に (a) 最終文が 完了/〜済/次に で終わっていない
 
 - 実行 mode 判定 → `/plan` (inline / /dev / /workflow / /flow / /flow --auto / /goal / /loop の 7 択。/workflow は下位 7 template = review / migrate / research / understand / judge-panel / scan / loop-until-dry を持ち、plan Step 2 が template まで直接指定する。/goal = session 内短期 objective gate 限定、/loop = cadence / 無人 / >5 iter の external headless 限定)。plan → 実装は Next command block (`/dev --plan <file>` 等)、`/plan --go` は判定 mode のまま continue。mode 判定のみなら `/mode <task>` (inline / agent 並列の 2 択、判定後そのまま実装)
 - commit + push + PR → `/git-push --pr` (`pushして` でも発火)
+- 全 command / skill の見取り図 (幹 + 3 根の tree) → `references/command-tree.md`
 
 ## Definition File SoT (ai-tools 一元)
 

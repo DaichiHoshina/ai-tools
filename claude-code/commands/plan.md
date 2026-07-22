@@ -24,6 +24,8 @@ Design + language (auto-detect) + project type guidelines. Detail: `references/c
 
 ## Step 2: Execution mode judgment (required)
 
+全体像 (全 command / skill の tree 上の位置): `references/command-tree.md`。
+
 Choose from these options: `inline` / `/dev` / `/workflow <template>` (7 template: review / migrate / research / understand / judge-panel / scan / loop-until-dry) / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"` / `/loop`. `/goal` is orthogonal (iterative objective-gate tasks only; combinable as `/goal --inner /dev` etc.). `/loop` covers cadence / unattended / >5-iteration variants of the same objective-gate tasks (external headless loop).
 
 | Condition | Mode | Why |

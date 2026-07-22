@@ -2,6 +2,8 @@
 
 Only high-frequency patterns are interpreted from natural language. For others, use explicit commands (`/commandname`).
 
+全体像 (全 command / skill の配置) は `command-tree.md` が持つ。本 doc は自然言語 trigger の対応表に絞る。
+
 ## Trigger list
 
 | User input | Command executed |
