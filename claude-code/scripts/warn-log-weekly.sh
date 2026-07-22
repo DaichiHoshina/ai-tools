@@ -18,21 +18,59 @@ TARGET_LOGS=(
   "bundle-violation-warn.log"
 )
 
-count_by_pattern() {
-  local log_path="$1" since="$2" until="$3"
-  [[ -f "$log_path" ]] || { echo "  (log not found)"; return; }
-  awk -F'|' -v since="$since" -v until="$until" '
-    {
+# log ごとに書き出し format が違うため、basename から種別判定して抽出方法を分岐する。
+# 詳細は README-warn-log-weekly.md の集計対象 log 表を参照する。
+log_format() {
+  case "$1" in
+    comment-style-warn.log) echo "tab_file" ;;
+    comment-quantity-warn.log) echo "tab_severity" ;;
+    bundle-violation-warn.log) echo "pipe_nobracket" ;;
+    *) echo "bracket_pipe" ;;
+  esac
+}
+
+_TS_PAT_EXTRACT='
+  function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+  function extract(   f) {
+    if (fmt == "bracket_pipe") {
+      split($0, f, "|")
       ts = substr($0, 2, 10)
+      pat = trim(f[2])
+    } else if (fmt == "tab_file") {
+      split($0, f, "\t")
+      ts = substr(f[1], 1, 10)
+      pat = f[3]
+    } else if (fmt == "tab_severity") {
+      split($0, f, "\t")
+      ts = substr(f[1], 1, 10)
+      pat = f[5]
+    } else if (fmt == "pipe_nobracket") {
+      split($0, f, "|")
+      ts = substr(trim(f[1]), 1, 10)
+      pat = trim(f[3])
+      sub(/=.*/, "", pat)
+    } else {
+      ts = ""
+      pat = "(unknown-format)"
+    }
+  }
+'
+
+count_by_pattern() {
+  local log_path="$1" since="$2" until="$3" fmt="$4"
+  [[ -f "$log_path" ]] || { echo "  (log not found)"; return; }
+  awk -v since="$since" -v until="$until" -v fmt="$fmt" "
+    $_TS_PAT_EXTRACT
+    {
+      extract()
       if (ts >= since && ts < until) {
-        gsub(/^ +| +$/, "", $2)
-        pat = ($2 == "") ? "(no-pattern)" : $2
-        count[pat]++
+        p = (pat == \"\") ? \"(no-pattern)\" : pat
+        count[p]++
         total++
       }
     }
     END {
-      if (total == 0) { print "  (no entries)"; exit }
+      if (total == 0) { print \"  (no entries)\"; exit }
       n = 0
       for (p in count) { arr[n++] = p }
       for (i = 0; i < n; i++) {
@@ -40,22 +78,24 @@ count_by_pattern() {
           if (count[arr[j]] > count[arr[i]]) { t = arr[i]; arr[i] = arr[j]; arr[j] = t }
         }
       }
-      for (i = 0; i < n; i++) { printf "  %-30s %d\n", arr[i], count[arr[i]] }
-      printf "  %-30s %d\n", "(total)", total
+      for (i = 0; i < n; i++) { printf \"  %-30s %d\n\", arr[i], count[arr[i]] }
+      printf \"  %-30s %d\n\", \"(total)\", total
     }
-  ' "$log_path"
+  " "$log_path"
 }
 
 total_delta() {
-  local log_path="$1"
+  local log_path="$1" fmt="$2"
   [[ -f "$log_path" ]] || { echo "0 0"; return; }
   local last this
-  last=$(awk -F'|' -v s="$LAST_WEEK_START" -v u="$THIS_WEEK_START" '
-    { ts = substr($0, 2, 10); if (ts >= s && ts < u) c++ } END { print c+0 }
-  ' "$log_path")
-  this=$(awk -F'|' -v s="$THIS_WEEK_START" '
-    { ts = substr($0, 2, 10); if (ts >= s) c++ } END { print c+0 }
-  ' "$log_path")
+  last=$(awk -v s="$LAST_WEEK_START" -v u="$THIS_WEEK_START" -v fmt="$fmt" "
+    $_TS_PAT_EXTRACT
+    { extract(); if (ts >= s && ts < u) c++ } END { print c+0 }
+  " "$log_path")
+  this=$(awk -v s="$THIS_WEEK_START" -v fmt="$fmt" "
+    $_TS_PAT_EXTRACT
+    { extract(); if (ts >= s) c++ } END { print c+0 }
+  " "$log_path")
   echo "$last $this"
 }
 
@@ -66,13 +106,14 @@ total_delta() {
 
   for log in "${TARGET_LOGS[@]}"; do
     log_path="${LOG_DIR}/${log}"
-    read -r last this < <(total_delta "$log_path")
+    fmt="$(log_format "$log")"
+    read -r last this < <(total_delta "$log_path" "$fmt")
     delta=$((this - last))
     delta_sign=""
     [[ $delta -gt 0 ]] && delta_sign="+"
     echo "## ${log}  (this=${this} / last=${last} / Δ=${delta_sign}${delta})"
     echo "  [this week pattern breakdown]"
-    count_by_pattern "$log_path" "$THIS_WEEK_START" "9999-99-99"
+    count_by_pattern "$log_path" "$THIS_WEEK_START" "9999-99-99" "$fmt"
     echo ""
   done
 
