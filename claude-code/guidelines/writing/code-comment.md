@@ -334,6 +334,41 @@ OK: null の場合のみスキップする
 
 **判断基準**: 単語単独で読み手が「何の」と問い返したくなったら多義。1 語で意味を固定する。
 
+### 略称・外部 doc 前提の代名詞禁止
+
+**code comment 内で「3 識別子」「A 系」「例の flag」等の略称や、DesignDoc / 社内 slack を前提とした代名詞を使わない**。code reader は当該 DesignDoc を読んでいる保証がない。初出は 1 句で具体名に展開する。
+
+| NG | OK |
+|---|---|
+| `3 識別子は size_codes 側だけが持つため、products 側を NULL に落とす。` | `has_size = true のとき inhouse_code / oripa_item_id / oripa_item_code は size_codes だけが持つため、products の同フィールドには NULL を設定する。` |
+| `例の flag が立っていれば skip する。` | `enable_new_pipeline flag が true なら旧経路を skip する。` |
+| `A 系と B 系の判定は DesignDoc 参照。` | `admin API 経由 (A 系) は同期処理、batch 経由 (B 系) は非同期。詳細: <URL>` |
+
+**判断基準**: comment 内の名詞句が「同 repo の別 file を grep すれば意味が特定できる」か。特定できない (外部 doc を要する) 名詞は展開するか URL を添える。
+
+### godoc / 関数コメントと実装内 comment は重複させない
+
+関数直上の godoc で説明した内容を、関数内 comment で繰り返さない。実装内 comment は Why not / 分岐理由に限る (canonical §「残す 3 分類」)。重複した実装内 comment はレビューで削除を促される。
+
+### 独立 directive は隣接シンボルと空行で分離する
+
+`//go:generate` / `//go:build` / `// +build` / linter 抑制 (`//nolint:xxx`) 等の**独立 directive は、直下の関数 / 型定義と意味的に無関係な場合、無関係シンボルの直上に置かない**。位置による関連付けを避けるため 1 行空行を入れる。
+
+例:
+
+```go
+// NG: OrderProduct と無関係な directive が隣接し、関連ありに見える
+//go:generate mockgen -source=oripa_product.go
+type OrderProduct interface { ... }
+
+// OK: 空行分離で無関係を示す
+//go:generate mockgen -source=oripa_product.go
+
+type OrderProduct interface { ... }
+```
+
+**判断基準**: directive の対象が directive 直下のシンボルでない場合は空行を挟む。対象が直下シンボル (例: `//nolint:xxx` が直下 func に効く) なら密着で可。
+
 ---
 
 ## 識別子は用語変更しない (ログ互換性のため)

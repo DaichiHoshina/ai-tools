@@ -247,6 +247,9 @@ _inject_code_comment_rules() {
 - 行数上限は設けない。伝わる最短で止め、行数を埋めるために書き足さない
 - what 言い換え / 開発経緯 / defensive 言い訳 (「念のため」等) / AI marker は禁止
 - 本文は常体で閉じる (〜する / 〜した / 〜だ)。体言止めの連発 (単発は可)・助詞省略・名詞ぶつ切りは禁止
+- 略称・DesignDoc / 社内 slack 前提の代名詞 (「3 識別子」「例の flag」等) 禁止。初出は具体名に展開する
+- godoc / 関数コメントで書いた内容を実装内 comment で繰り返さない
+- //go:generate 等の独立 directive は無関係シンボル直上に置かない (空行分離必須)
 - 既存 comment が理由と挙動を過不足なく説明しているなら短縮しない"
 
   if [[ -n "$ADDITIONAL_CONTEXT" ]]; then
