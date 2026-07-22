@@ -243,7 +243,7 @@ _inject_code_comment_rules() {
 
   local _cc_msg="【code comment 規範】新規 comment を検出した。canonical: guidelines/writing/code-comment.md
 - default = 書かない。書くなら Why not (採らなかった選択肢と理由) のみ。設計根拠 (WHY) は commit log へ
-- 例外 2 つ: 調べても辿り着きにくい外部 / 内部運用 memo (MEMO: prefix 必須) / 公開 API の 1 行 godoc。上限 2 行 は新規作成時の目標
+- 例外 2 つ: 調べても辿り着きにくい外部 / 内部運用 memo (MEMO: prefix 必須) / 公開 API の godoc (godoc は行数制限なし、その他は上限 2 行 目標)
 - what 言い換え / 開発経緯 / defensive 言い訳 (「念のため」等) / AI marker は禁止。書き直しで長くなるならまず削除を検討
 - 本文は常体で閉じる (〜する / 〜した / 〜だ)。体言止めの連発 (単発は可)・助詞省略・名詞ぶつ切りは禁止
 - 既存 comment が理由と挙動を過不足なく説明しているなら短縮しない (2 行超えでも触らない)"
