@@ -1113,3 +1113,11 @@ $(printf 'い%.0s' {1..60})"
   [ "$status" -eq 0 ]
   [[ "$output" != *"100字超文"* ]]
 }
+
+@test "sentence-structure: marker 剥がし後の go:generate 行も 100 字カウントから除外 (comment 抽出経路)" {
+  _make_ng_dict "$TEST_TMPDIR"
+  # _extract_comment_body_text は行頭 // を剥がすため、判定入力は marker なしになる
+  _run_sentence_structure "go:generate mockgen -source=./oripa_product.go -destination=./mock/oripa_product_mock.go -package=mock -mock_names=OripaProduct=OripaProductMock"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"100字超文"* ]]
+}

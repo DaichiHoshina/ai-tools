@@ -113,7 +113,8 @@ for i in range(1, len(labels)):
 # inline code span (`...`) と裸 URL は path/link 由来の長文誤爆源のため、100 字カウントのみ除去してから測る
 # 「 / 」3 個以上の行は辞書・列挙の data 行 (NG-DICTIONARY 等) で散文でないため、100 字判定から除外する
 # 機械 directive (Go `//go:` / lint 抑制 / build tag) は散文でなく分割不能なため 100 字判定から除外する
-_directive_re = re.compile(r"^\s*(?://|#)\s*(go:(generate|build|embed|linkname|nosplit|noinline|noescape|cgo_|name)|\+build|nolint|lint:ignore|eslint-(disable|enable)|shellcheck\s+(disable|source|enable)|noqa|prettier-ignore|@ts-(ignore|expect-error)|SPDX-License-Identifier)")
+# marker (`//` / `#`) は optional: comment 抽出経路 (_extract_comment_body_text) は marker を剥がした後に判定する
+_directive_re = re.compile(r"^\s*(?://|#)?\s*(go:(generate|build|embed|linkname|nosplit|noinline|noescape|cgo_|name)|\+build|nolint|lint:ignore|eslint-(disable|enable)|shellcheck\s+(disable|source|enable)|noqa|prettier-ignore|@ts-(ignore|expect-error)|SPDX-License-Identifier)")
 _long_src = [re.sub(r"`[^`]*`|https?://\S+", "", s) for s in sents if s.count(" / ") < 3 and not _directive_re.search(s)]
 _long_hits = [s.replace("\n", "").replace("\t", " ") for s in _long_src if len(s.replace("\n", "")) >= 100]
 long_cnt = len(_long_hits)
