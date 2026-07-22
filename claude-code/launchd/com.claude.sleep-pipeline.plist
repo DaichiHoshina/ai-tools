@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude.sleep-pipeline</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/bash</string>
+        <string>-lc</string>
+        <string>/Users/daichi.hoshina/ghq/github.com/DaichiHoshina/ai-tools/claude-code/scripts/sleep-cron-run.sh --repo /Users/daichi.hoshina/ghq/github.com/DaichiHoshina/ai-tools</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/daichi.hoshina/.local/bin</string>
+        <key>HOME</key>
+        <string>/Users/daichi.hoshina</string>
+        <key>CLAUDE_BIN</key>
+        <string>/Users/daichi.hoshina/.local/bin/claude</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/sleep-pipeline.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/daichi.hoshina/.claude/logs/launchd/sleep-pipeline.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
