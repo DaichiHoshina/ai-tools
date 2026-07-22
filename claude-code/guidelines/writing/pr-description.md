@@ -176,3 +176,22 @@ NG → OK 例:
 - 1つのsectionに同じ事実が出てきていないか
 - 「ファイル単位」と「観点単位」のsectionが混在していないか
 - 動作確認手順を見て、第三者が再現できるか
+
+## chain PR 情報の末尾フォーマット
+
+PR chain (stacked PR) の親子関係は body 末尾に 1 行で固定する。
+
+```
+chain: <前 PR (merged なら明記)> ← 本 PR (N/M) → <次 PR>
+ref: <DD の URL / issue リンク>
+Related: #<issue>
+```
+
+- 前 PR が merged 済みなら `#XXXX (merged)` と明記する。base が `main` になるだけだと 1/M・2/M の存在が読み取れない
+- 最終 PR は `→ 次 PR` を省略し `(9/9、最終)` と表記する
+
+## doc / コメント追加は実装概要に書かない
+
+- godoc / code comment の追加や修正は PR body の実装概要に書かない。レビュー対象は diff、概要は「何を動かすように直したか」で書く
+- doc 更新が主目的の PR (例: README 更新のみ) は例外
+- 2026-07-17 の PR #37142 で「reader に godoc を足す」bullet が概要に混ざり、user 指示で削除された経緯がある

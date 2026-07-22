@@ -49,6 +49,14 @@ skill / command / rule / hook / loop / cron の新設は、実 session で起き
 9. 判断 (archive 実行 / cap 引き上げ) を人間がしたか
 10. report 自体を含め、この仕組みが新たな未使用資産になっていないか
 
+## 個人 automation の状態確認手段
+
+live-refresh 系 dashboard (数十秒間隔で自動更新する監視画面) は個人 project では default 誰も見ない。作らない、または既にあれば削除候補にする。
+
+**Why**: 2026-07-21 の launchd 化 session で、4 job の live 状態を見るため 15 秒 refresh の Python dashboard を作った。fable 助言「15 秒 refresh は誰も見ない典型」で削除に切り替えた。通知 (Slack) が届けば必要な情報は届き、log が要る時は `tail` で足りる。live 画面は「作った本人が満足する」以外の効用が乏しい。
+
+**How to apply**: 個人 automation の状態確認手段を設計する時、live-refresh dashboard を第一選択にしない。優先順は (1) 失敗時 push 通知 (Slack / ntfy / mail) → (2) 必要時に開く静的 log tail → (3) 実測データが十分溜まった後の週次 summary。live UI が要るのは他人監視や本番運用 SRE 用途で、個人 4 job 監視には過剰。既存の live dashboard は保守 cost 対効果を測って削除判断する。
+
 ## Related
 
 - `scripts/toolchain-health-report.sh` — 月次集計の実行系 (第 1 月曜、maintenance cron 経由)

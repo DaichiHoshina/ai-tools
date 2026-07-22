@@ -166,6 +166,28 @@ parent 側の集計: file:line key で N lens の結果を集約し、2/N 以上
 
 **Max 1 re-fix loop** (prevent infinite loop); re-verify P0 remains → user report (`--auto` stops).
 
+### chain PR / 大 PR 群を review する時の lens 横串 fan-out
+
+chain PR や 5+ PR の一括 review では、reviewer-agent を lens 別に横串 fan-out する。基本 review 1 body/PR に加えて、Go / Vue+TS / Clean Architecture+DDD / CQRS のような観点別 lens を 3-4 body 追加する。各 lens が該当 branch を実 checkout し、`go build` / `go vet` を独立に実行する。1 lens だけだと build 実行が抜けたり誤検出でスルーされたりする可能性がある。複数 lens が独立に踏むことで build blocker (undefined symbol / rename 追従漏れ / import 経路破断) を確実に検知できる。
+
+**fan-out 構成の目安**:
+
+- 基本 review: 1 body / PR (合計 5-8 body)。PR 固有の scope・design 整合・test coverage を見る
+- 追加 lens: 言語 / 設計 / test の観点で 3-4 body。7 PR × 4 lens = 28 は過剰、4 lens が **7 PR 横串で 1 body ずつ**の 4 body 追加が実務上限
+- 総 body 数は 8-12 body。それ以上は agent startup コストと並列度上限 (min(16, cpu-2)) で回収できない
+
+**各 lens agent への prompt に埋め込む項目**:
+
+- 対象 PR 群と base branch 表 (chain の場合は base head 指定)
+- 適用 rule file の絶対 path list (`~/.claude/rules/` と repo 内 `.claude/rules/` 両方)
+- **build 実行の明示指示**: 「該当 branch を実 checkout して `go build ./...` / `go vet ./...` を独立に実行し、build 通過 / 破断を実測せよ」を明記。lens agent は放っておくと diff だけ読んで build を skip する
+- 横串観点で共通 pattern の逸脱を優先指摘、単発 nit より横断的な問題を報告させる
+- 出力 format: PR 別 P0/P1/P2 + 横断的懸念 + 総合判定 (chain 全体)
+
+**重複を許容する**: lens 間で同じ P0 を独立発見しても消さない。3 lens 独立発見なら本物の blocker と判定 (confidence 88+)、1 lens しか見つけないなら false positive 疑い。
+
+**適用実例**: 2026-07-15 snkrdunk サイズ選択 chain admin 2〜7 の 7 PR review。基本 7 + Go / Vue+TS / CA+DDD / CQRS の 4 lens = 11 body 並列で、P0 3 件を 3 lens が独立に build 実測で発見した。
+
 ## Timeout/Retry spec
 
 | Item | Value |

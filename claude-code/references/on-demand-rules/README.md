@@ -31,6 +31,11 @@
 | 外向き長文 doc (記事・DD・RCA) の draft 完成時、`/jp-fix` の長文 review / rewrite 時 | `natural-japanese-lint.md` |
 | `jp-fix` の fork 結果が file 書き換えを permission denied で返した時 | `jp-fix-write-delegates-to-developer-agent.md` |
 | skill / command / hook / cron / loop の新設・archive 判断時、health report 閲覧時 | `toolchain-lifecycle.md` |
+| `/workflow` `/loop` template 設計・fan-out / verifier / loop-until-dry を組む時 | `workflow-loop-design.md` |
+| `mcp__serena__*` tool 発火時、Serena error 発生時 | `serena-pitfalls.md` |
+| `gh api --paginate` / PR review コメント bulk 収集・jq 集計時 | `gh-api-pitfalls.md` |
+| Bash tool から sudo / 外部 clone / node / disk 逼迫 command を発行する時 | `bash-tool-environment.md` |
+| hook script / bats / launchd LaunchAgent を書く時、macOS BSD awk / bash 3.2 制約に触れる時 | `macos-shell-testing-pitfalls.md` |
 
 ## 運用
 
