@@ -40,7 +40,7 @@ Boundary: "fix from error log"=1.5 / "bug root cause"=2 / "feature improvement"=
 ## Options
 
 ```text
---skip-prd / --skip-test / --skip-review / --auto
+--auto
 --sequential  (opt-out: only when parent judges parallelism physically impossible; PO/Manager always required)
 --multi-review  (step 8: 12-lens split fan-out forced. `--auto` auto-ON)
 --until-gate-green "<check-cmd>" [--max-iter <n>]  (step 9 P0 loop: switch stop-condition to objective gate. default max-iter=3. Ralph Wiggum guard; see `references/loop-engineering.md`)

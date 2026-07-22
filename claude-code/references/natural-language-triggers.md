@@ -46,6 +46,12 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "local-docs cleanup", "archive に送って", "不要な doc を整理", "released プロジェクトの cleanup" | `/local-docs-cleanup` (scan released projects, propose archive list, move to ../local-docs-archive/) |
 | "Cursor 設定見直し", "cursor 監査", "cursor review" | `/cursor-review` (settings/rules/memories 3-axis audit) |
 | "Cursor メンテ", "cursor ブラッシュアップ" | `/cursor-review` or read `../cursor/MAINTENANCE.md` |
+| "直列で", "sequential で", "順番に", "並列やめて" | `/flow --sequential` (parent が並列不可と判断した時の opt-out) |
+| "多数決レビュー", "N 人でレビュー", "lens 別レビュー", "厳密レビュー" | `/review --verifier-panel=N` (3 lens 並列 review) |
+| "skill 作って creator skip", "skill quick add" | `/skill-add <name> --skip-creator` (skill-creator agent skip) |
+| "判定だけ", "mode 判定のみ", "判定して実装しない" | `/mode --judge-only <task>` (実装せず判定結果だけ返す) |
+| "staleness だけ", "redundancy だけ", "readability だけ" | `/update-guidelines --only=<axis>` |
+| "TDD で", "test-first で", "テスト先に書いて" | `/test --tdd` (RED-GREEN-REFACTOR cycle 強制) |
 
 ## Not interpreted
 

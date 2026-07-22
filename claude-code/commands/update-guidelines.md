@@ -18,7 +18,6 @@ Inspect `guidelines/` via **3 axes**, auto-apply safe fixes.
 /update-guidelines                      # full scan 3-axis, auto-fix
 /update-guidelines <path>               # single file
 /update-guidelines --dry                # detect, no fix
-/update-guidelines --check-only         # --dry alias
 /update-guidelines --only=staleness     # staleness only
 /update-guidelines --only=redundancy    # redundancy only
 /update-guidelines --only=readability   # AI readability only
