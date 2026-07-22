@@ -27,7 +27,7 @@ Decision guidance:
 - New feature (needs PO) → `/flow`
 - Repo-scale rule-engine sweep → `/workflow scan`
 
-## Templates (6 types)
+## Templates (7 types)
 
 Each template passes script inline to `Workflow` tool. Arguments via `args`. Code examples: `references/workflow-templates.md`.
 
@@ -39,6 +39,7 @@ Each template passes script inline to `Workflow` tool. Arguments via `args`. Cod
 | 4 | understand | parallel map N subsystems (entry / deps / data flow) → return structured |
 | 5 | judge-panel | parallel N design drafts → judge-score → winner + graft runner-up ideas |
 | 6 | scan | directory-batch rule-engine sweep (deterministic) → per-hit agent triage, file:line:rule-id findings at repo scale |
+| 7 | loop-until-dry | 発掘系 (件数不明) — parallel finders → seen set dedupe → verify → K round dry で停止 (`references/loop-engineering.md` § dedupe vs seen) |
 
 ## Invocation spec
 
@@ -46,6 +47,7 @@ User input examples:
 - `/workflow review` (target diff = git diff HEAD~1..HEAD, dimensions = default 3)
 - `/workflow research <topic>` (args.topic = remaining args)
 - `/workflow migrate <pattern> <replacement>` (args.pattern / args.replacement)
+- `/workflow loop-until-dry <task>` (args.task = 発掘対象、args.maxFindings = 上限 default 20)
 
 Parent (Opus) responsibilities:
 1. Select template (match from 6 above)

@@ -24,13 +24,19 @@ Design + language (auto-detect) + project type guidelines. Detail: `references/c
 
 ## Step 2: Execution mode judgment (required)
 
-Choose from 7 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"` / `/loop`. `/goal` is orthogonal (iterative objective-gate tasks only; combinable as `/goal --inner /dev` etc.). `/loop` covers cadence / unattended / >5-iteration variants of the same objective-gate tasks (external headless loop).
+Choose from these options: `inline` / `/dev` / `/workflow <template>` (7 template: review / migrate / research / understand / judge-panel / scan / loop-until-dry) / `/flow N=<n>` / `/flow --auto` / `/goal "<stop>"` / `/loop`. `/goal` is orthogonal (iterative objective-gate tasks only; combinable as `/goal --inner /dev` etc.). `/loop` covers cadence / unattended / >5-iteration variants of the same objective-gate tasks (external headless loop).
 
 | Condition | Mode | Why |
 |------|---------|------|
 | 1 file / 1 symbol / few lines | **inline** (parent Edit direct) | no agent overhead |
 | 1-2 files / single task / cross-file coupling | **`/dev`** (1 developer-agent) | delegate only, no parallel |
-| structured fan-out (review N lens / migrate N files / research / judge-panel) | **`/workflow <template>`** | deterministic script, resumable, no Gate, ≤500 line diff |
+| review N lens 並列 (diff lens 分割 / adversarial verify) | **`/workflow review`** | dimensions → find → verify pipeline |
+| N file 一括 migrate (pattern → replacement) | **`/workflow migrate <pattern> <replacement>`** | discover → transform (worktree isolation) → verify |
+| research (topic を N 角度 fan-out + 出典付き synthesize) | **`/workflow research <topic>`** | angles → deep-read top hits → cited report |
+| N subsystem 一括理解 (entry / deps / data flow map) | **`/workflow understand`** | 並列 map、structured 返却 |
+| 設計案 majority-vote (N 案 draft → judge score → winner + graft) | **`/workflow judge-panel`** | 独立 N draft、多数決 |
+| repo-scale rule sweep (静的 rule → file:line:rule-id 単位で triage) | **`/workflow scan`** | 決定的 rule engine + agent triage |
+| 発掘系 (件数不明) — bug sweep / issue 発掘 / edge case 全数 | **`/workflow loop-until-dry <task>`** | seen set dedupe + K round dry 停止 (`references/loop-engineering.md` § dedupe vs seen) |
 | 3-5 files / high independence / ≥30 lines each / feature impl | **`/flow` N=3-5** | PO/Manager/Dev + 3 Gates, parallel benefit > overhead (60s+) |
 | 6+ files / fully independent / feature impl | **`/flow` N=min(file count, 8)** | cap at 8 (session limit) |
 | above /flow conditions + fully auto (through PR) | **`/flow --auto`** | AskUserQuestion auto-adopt, auto PR, auto lint-test fix 1× |
@@ -47,7 +53,7 @@ Choose from 7 options: `inline` / `/dev` / `/workflow <template>` / `/flow N=<n>
 
 Comparison table canonical: `commands/workflow.md` § /workflow vs /flow.
 
-Decision examples: review **only** → `/workflow review` / review→fix→push auto → `/flow --auto` / migrate N files → `/workflow migrate` / new feature (PO needed) → `/flow` / design majority-vote → `/workflow judge-panel`
+Decision examples: review **only** → `/workflow review` / review→fix→push auto → `/flow --auto` / migrate N files → `/workflow migrate` / new feature (PO needed) → `/flow` / design majority-vote → `/workflow judge-panel` / 発掘系 (件数不明) → `/workflow loop-until-dry`
 
 N formula (/flow): canonical = `references/PARALLEL-PATTERNS.md#critical-path-reduction-formula`。LPT_makespan + overhead(N) と T_i 見積 4 段優先順を canonical 参照する。旧 `max(T_i) + 60s` 簡略式は overhead(N) と桁が異なるため使わない。
 
