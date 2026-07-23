@@ -22,6 +22,7 @@ PR・Issueコメント・Slack・Notion・DesignDoc等、**他者が読む文章
 |---|---|---|
 | [PRINCIPLES.md](PRINCIPLES.md) | 共通文章原則 (4問 / 8指針 / 3変換 / 媒体別構造 / セルフチェック7) | 全ヒト向けdoc着手前 |
 | [auto-knowledge-update.md](auto-knowledge-update.md) | 指摘・指示の自動追記ワークフロー | セッション中の気づき検出時 |
+| [allowed-en-terms.txt](allowed-en-terms.txt) | 英語のまま許容する術語 list | NG 語判定の許容可否確認時 |
 
 ### 適用先別
 

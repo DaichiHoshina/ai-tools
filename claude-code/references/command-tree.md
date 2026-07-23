@@ -83,6 +83,8 @@ config / 環境自体の手入れを担う。
 - `natural-japanese` — 日本語文書の自然さを直し、AI 臭を除く
 - `impact-analysis` — 影響範囲を分析する (「影響分析して」)
 - `issue-dev-flow` — issue 起点の開発 flow を回す (「issueベースで開発」)
+- `chain-pr-update` — stacked PR chain を最新 main へ順に伝播する (「chain 更新」)
+- `pr-review-digest` — 自分の PR への他者レビューを日次集約する (「PR コメント digest」)
 
 ## 詳細 pointer
 

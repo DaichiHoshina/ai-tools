@@ -24,6 +24,7 @@ On-demand index from CLAUDE.md.
 
 | Topic | File |
 |-------|------|
+| Command / skill 全体見取り図 (幹 + 3 根の tree) | `command-tree.md` |
 | Full natural language trigger list | `natural-language-triggers.md` |
 | Review command usage guide | `review-commands.md` |
 | Review mode details (deep / multi aggregation) | `review-modes-advanced.md` |

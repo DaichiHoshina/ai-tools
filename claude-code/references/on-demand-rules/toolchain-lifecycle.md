@@ -31,7 +31,6 @@ skill / command / rule / hook / loop / cron の新設は、実 session で起き
 |---|---|
 | 本規範 + health report | config 資産 (skill / command / hook / cron / loop) の増設 gate と棚卸し |
 | `/memory-clean` | auto-memory (`memory/` 配下) のみ |
-| `cleanup-enforcement` skill | 作業対象 repo の code (unused import / YAGNI) |
 | `/retrospective` | session 分析と改善提案の生成 (棚卸しの実行系ではない) |
 
 棚卸しの実行系は health report 1 本に寄せ、他機構は本 file への参照 link のみ持つ。

@@ -66,8 +66,8 @@ Flow: identify file → fix (Serena MCP) → verify (lint/type) → propose comm
 | `--quick` | skip (save tokens、ただし code-comment canonical のみ Read) |
 | 1-2 files, minor | skip OK (if pattern known、code-comment canonical のみ Read) |
 | new feature, design decision | `load-guidelines` (summary recommended) |
-| UI dev | `ui-skills` recommended |
-| Backend | `backend-dev` recommended |
+| UI dev | `frontend-design` + `baseline-ui` recommended |
+| Backend | `clean-architecture-ddd` recommended |
 
 ```
 load-guidelines skill        # summary only (~2.5K tokens、Skill tool 経由)

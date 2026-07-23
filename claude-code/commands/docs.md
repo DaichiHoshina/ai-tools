@@ -20,7 +20,6 @@ Archive completed work knowledge in Notion. Project-agnostic.
 
 | Type | Keywords | Guideline/skill |
 |------|----------|-----------------|
-| API spec | api, endpoint | Skill(`api-design`) |
 | Incident | incident, outage | Skill(`incident-response`), Skill(`root-cause`) |
 | Recipe | recipe, pattern, tips | `guidelines/writing/strategy.md` (❌/✅ format required) |
 | Runbook | runbook, procedure | `guidelines/common/development-process.md` |
@@ -43,7 +42,6 @@ Load type-matched coordinating guidelines/skills.
 
 - **Incident**: Follow incident-response skill format (classify→impact→cause→prevent-recurrence)
 - **Recipe**: **Must use** ❌/✅ format from strategy.md. Code examples ≤5 lines, tables preferred
-- **API spec**: Follow api-design skill endpoint notation rules
 
 ### Step 3: Analyze code
 

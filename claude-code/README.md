@@ -86,19 +86,19 @@ Most skills are **auto-selected**. No explicit invocation needed. `UserPromptSub
 
 | Category | Skills |
 |---|---|
-| Review | comprehensive-review / uiux-review / ui-skills |
-| Development | backend-dev / react-best-practices / api-design / clean-architecture-ddd / grpc-protobuf |
-| Infrastructure | container-ops / terraform / microservices-monorepo |
-| Utilities | load-guidelines / cleanup-enforcement / session-mode / context7 / data-analysis / techdebt / incident-response / root-cause / architecture-diagram |
+| Review | comprehensive-review / uiux-review / baseline-ui |
+| Development | clean-architecture-ddd / grpc-protobuf / frontend-design / code-comment / mino-* (設計 7 skill) |
+| Infrastructure | container-ops / terraform |
+| Writing | jp-fix / natural-japanese / local-docs / local-docs-cleanup / pr-review-digest |
+| Utilities | load-guidelines / context7 / incident-response / root-cause / impact-analysis / issue-dev-flow / chain-pr-update / sync-to-local |
 
 ### Recommended Combinations
 
 | Scene | Skills |
 |---|---|
 | Full review | `comprehensive-review --focus=all` |
-| Go backend | `backend-dev --lang=go` + `clean-architecture-ddd` + `api-design` |
-| TypeScript backend | `backend-dev --lang=typescript` + `api-design` |
-| React/Next.js | `react-best-practices` + `ui-skills` + `uiux-review` |
+| Backend 設計 | `clean-architecture-ddd` + `grpc-protobuf` |
+| UI 実装 | `frontend-design` + `baseline-ui` + `uiux-review` |
 | Container investigation | `container-ops --mode=troubleshoot` |
 | Incident | `incident-response` + `root-cause` |
 
