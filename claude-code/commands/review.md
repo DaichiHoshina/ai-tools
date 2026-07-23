@@ -93,7 +93,7 @@ material: `git diff --shortstat` / `gh pr diff <PR>` / `gh pr view <PR> --json b
 | `--panel` | 3-lens parallel fan-out (style/security/test-coverage) → integrated by `comprehensive-review` | any | mid×3 |
 | `--codex` | `comprehensive-review` + codex plugin parallel, common findings = Critical | any | mid |
 | `--adversarial` | codex plugin `adversarial-review` (plugin required) | any | mid |
-| `--deep` | pr-review-toolkit 6 agents parallel (5-10min) | any | large |
+| `--deep` | **disabled** (pr-review-toolkit を disable 済、first-ctx 削減のため)。代替: `--panel` + `--codex` | — | — |
 | `--multi` | `comprehensive-review` + codex + code-review + coderabbit parallel → auto-post to PR | required | max |
 
 cloud large: use the CLI subcommand `claude ultrareview` (below). Slash command `/ultrareview` は本 repo に定義しない。
@@ -109,7 +109,7 @@ Via plugin: `node "${CODEX_PLUGIN_ROOT}/scripts/codex-companion.mjs" <review|adv
 ## Flow details (Adversarial / Deep / Multi)
 
 - **Adversarial**: design correctness / assumptions / real-world failure points を challenge する。`--base <ref>` / `--scope auto|working-tree|branch` / `--background` → `/codex:status` `/codex:result <id>`。用途: design review / pre-PR self-challenge。Implementation defects は `/review` default を使う
-- **Deep**: `pr-review-toolkit` 6 agents 並列。**Cost warning**: 数十秒〜数分 × 6 並列。Daily は default を使う
+- **Deep**: **disabled** (pr-review-toolkit を first-ctx 削減のため disable した、2026-07-23)。厚めの review が要る時は `--panel` (3-lens 並列) + `--codex` (別 model の別視点) の組み合わせを使う
 - **Multi**: PR 必須。4 methods 並列 ((a) `comprehensive-review` skill / (b) codex plugin / (c) `/code-review:code-review` / (d) `coderabbit:code-review`) → merge + dedup → `gh pr comment` auto-post。Aggregation: 3+ agree = Critical confirmed。用途: pre-merge / security patch、daily 非推奨
 
 ## Output Format

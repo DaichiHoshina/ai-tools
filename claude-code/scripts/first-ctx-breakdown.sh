@@ -65,15 +65,17 @@ echo "target: $TARGET"
 echo "range:  line 1..${end_line} (最初の assistant turn 直前まで解析する)"
 echo
 
-# 各行を type 別に集計し、count が 2 以上なら重複として note する
+# type 別 count≥2 だけでは serena-hook と session-start の hook_success 2 本のような
+# 別 hook 併走を DUPLICATE 扱いにしてしまう。attachment 内容が byte 一致した時のみ note する。
 awk "NR<=${end_line}" "$TARGET" | jq -r '
   select(.type=="attachment") |
-  [.attachment.type, (.attachment | tostring | length)] | @tsv
-' 2>/dev/null | awk '
-  { c[$1]++; s[$1]+=$2 }
+  [.attachment.type, (.attachment | tostring | length), (.attachment | tostring)] | @tsv
+' 2>/dev/null | awk -F'\t' '
+  { c[$1]++; s[$1]+=$2; seen[$1 SUBSEP $3]++ }
   END {
+    for (key in seen) if (seen[key] >= 2) { split(key, a, SUBSEP); dup[a[1]] += seen[key] - 1 }
     for (k in c) {
-      note = (c[k] >= 2) ? "DUPLICATE (session-start reissue)" : ""
+      note = (dup[k] > 0) ? sprintf("DUPLICATE (%d reissue)", dup[k]) : ""
       printf "%-30s %5d %10d  %s\n", k, c[k], s[k], note
     }
   }
