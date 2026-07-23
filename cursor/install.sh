@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Cursor 設定インストーラ
 # - rules/ → ~/.cursor/rules/ (symlink)
+# - commands/ → ~/.cursor/commands/ (per-file symlink)
 # - 共有 memory → ~/.cursor/memory/ (symlink)
 # settings.json / keybindings.json は symlink しない (機体ごとの個人設定を保護)。
 
@@ -10,6 +11,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 AI_TOOLS_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd -P)"
 SRC_RULES="${SCRIPT_DIR}/rules"
 CURSOR_RULES_DIR="${HOME}/.cursor/rules"
+SRC_COMMANDS="${SCRIPT_DIR}/commands"
+CURSOR_COMMANDS_DIR="${HOME}/.cursor/commands"
 SHARED_MEMORY_SRC="${AI_TOOLS_ROOT}/memory"
 CURSOR_MEMORY_LINK="${HOME}/.cursor/memory"
 
@@ -63,6 +66,24 @@ install_rules() {
   done
 }
 
+install_commands() {
+  # slash command (~/.cursor/commands/*.md) を per-file symlink で配線する。
+  # dir ごと symlink しない (user 自作 command を repo 外に保てるようにするため)。
+  if [[ ! -d "${SRC_COMMANDS}" ]]; then
+    warn "commands/ がありません"
+    return 0
+  fi
+
+  mkdir -p "${CURSOR_COMMANDS_DIR}"
+  local cmd
+  for cmd in "${SRC_COMMANDS}"/*.md; do
+    [[ -f "${cmd}" ]] || continue
+    local base
+    base="$(basename "${cmd}")"
+    link_file "commands/${base}" "${cmd}" "${CURSOR_COMMANDS_DIR}/${base}"
+  done
+}
+
 install_shared_memory() {
   # グローバル共有 memory (~/ai-tools/memory) を ~/.cursor/memory へ symlink する。
   # 全プロジェクトで同じ memory を読めるようにするため。
@@ -95,8 +116,9 @@ main() {
 
   # settings.json / keybindings.json は symlink しない。
   # 機体ごとの個人設定 (テーマ / lineHeight 等) をローカルに保つため
-  # (config.toml と同じ手編集保護方針)。共有するのは rules と memory のみ。
+  # (config.toml と同じ手編集保護方針)。共有するのは rules / commands / memory のみ。
   install_rules
+  install_commands
   install_shared_memory
 
   ok "完了。Cursor を再起動するか Reload Window してください。"

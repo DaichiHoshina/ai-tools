@@ -504,8 +504,44 @@ create_symlinks() {
     done
 
     link_shared_memory
+    link_prompts
 
     print_success "シンボリックリンクの作成完了"
+}
+
+link_prompts() {
+    # custom prompt (~/.codex/prompts/*.md、/memory-save 等の slash command 実体) を
+    # per-file symlink で配線する。dir ごと symlink しない
+    # (user 自作 prompt を repo 外に保てるようにするため)。非対話で冪等。
+    local source_dir="$SCRIPT_DIR/prompts"
+    local target_dir="$CODEX_DIR/prompts"
+
+    if [ ! -d "$source_dir" ]; then
+        return 0
+    fi
+    source_dir="$(cd "$source_dir" && pwd -P)"
+
+    mkdir -p "$target_dir"
+
+    local file name target
+    for file in "$source_dir"/*.md; do
+        [ -f "$file" ] || continue
+        name="$(basename "$file")"
+        target="$target_dir/$name"
+        if [ -L "$target" ]; then
+            if [ "$(readlink "$target")" = "$file" ]; then
+                print_info "prompts/$name は既にリンク済みです"
+                continue
+            fi
+            rm -f "$target"
+        elif [ -e "$target" ]; then
+            local backup="${target}.backup.$(date +%Y%m%d%H%M%S)"
+            mv "$target" "$backup"
+            print_info "prompts/$name をバックアップ: $backup"
+        fi
+        ln -sf "$file" "$target"
+        print_success "作成: prompts/$name"
+    done
 }
 
 link_shared_memory() {

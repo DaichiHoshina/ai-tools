@@ -57,7 +57,7 @@ ls ~/.codex/commands
 
 ghq 配下のどのプロジェクトで各エージェントを起動しても、この global path から同じ memory を読める。3 ツールとも「プロジェクトごとの場所」ではなく「グローバル 1 箇所」を参照するため。
 
-memory の**新規作成・更新は Claude Code 側に一本化**する。Codex / Cursor からは原則読むだけにする。3 ツールが同じ file を同時に書き換えて壊すのを避けるため。
+memory の**書き込みは原則 Claude Code 側に寄せる**。Codex / Cursor からの書き込みは各ツールの `/memory-save` command (Codex: `~/.codex/prompts/memory-save.md` / Cursor: `~/.cursor/commands/memory-save.md`) 経由のみ許可する。helper script (`claude-code/scripts/memory-save-helper.sh`) が保存先と MEMORY.md index を一元処理するため、3 ツールが同じ file を同時に書き換えて壊す衝突を避けられる。command を使わない手動 Write は引き続き禁止する。
 
 symlink は `./codex/install.sh --sync` と `./cursor/install.sh` が張る。`./sync.sh to-local` 実行時に両方が自動で呼ばれる。健全性は `./codex/install.sh --doctor` の「共有 memory の確認」で検査できる。
 

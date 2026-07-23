@@ -2,6 +2,7 @@
 # =============================================================================
 # Integration Tests for cursor/install.sh
 #   - install_shared_memory : ~/.cursor/memory symlink
+#   - install_commands      : ~/.cursor/commands/*.md per-file symlink
 # =============================================================================
 
 setup() {
@@ -16,6 +17,8 @@ setup() {
     echo 'warn() { echo "W: $*"; }'
     echo 'ok() { echo "OK: $*"; }'
     awk '/^install_shared_memory\(\)/,/^}/' "$INSTALL_SH"
+    awk '/^link_file\(\)/,/^}/' "$INSTALL_SH"
+    awk '/^install_commands\(\)/,/^}/' "$INSTALL_SH"
   } > "$HELPER"
 }
 
@@ -68,4 +71,55 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"共有 memory がありません"* ]]
   [ ! -e "${TEST_HOME}/.cursor/memory" ]
+}
+
+# --- install_commands -----------------------------------------------------
+
+_make_commands_source() {
+  local src="${TEST_HOME}/cursor-src/commands"
+  mkdir -p "$src"
+  echo "command body" > "${src}/memory-save.md"
+  echo "${TEST_HOME}/cursor-src"
+}
+
+@test "install_commands: commands/*.md を per-file symlink する" {
+  local script_dir
+  script_dir=$(_make_commands_source)
+
+  run bash -c "
+    source '$HELPER'
+    SRC_COMMANDS='${script_dir}/commands'
+    CURSOR_COMMANDS_DIR='${TEST_HOME}/.cursor/commands'
+    install_commands
+    readlink '${TEST_HOME}/.cursor/commands/memory-save.md'
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"/commands/memory-save.md" ]]
+}
+
+@test "install_commands: 2 回目は既にリンク済みで冪等" {
+  local script_dir
+  script_dir=$(_make_commands_source)
+
+  run bash -c "
+    source '$HELPER'
+    SRC_COMMANDS='${script_dir}/commands'
+    CURSOR_COMMANDS_DIR='${TEST_HOME}/.cursor/commands'
+    install_commands >/dev/null
+    install_commands
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"既にリンク済み"* ]]
+}
+
+@test "install_commands: commands 元が無ければ warning で抜ける" {
+  run bash -c "
+    source '$HELPER'
+    SRC_COMMANDS='${TEST_HOME}/no-src/commands'
+    CURSOR_COMMANDS_DIR='${TEST_HOME}/.cursor/commands'
+    install_commands
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"commands/ がありません"* ]]
+  [ ! -e "${TEST_HOME}/.cursor/commands" ]
 }

@@ -30,6 +30,7 @@ setup() {
     awk '/^sync_managed_block\(\)/,/^}/' "$INSTALL_SH"
     awk '/^doctor_check_shared_memory\(\)/,/^}/' "$INSTALL_SH"
     awk '/^copy_codex_skills\(\)/,/^}/' "$INSTALL_SH"
+    awk '/^link_prompts\(\)/,/^}/' "$INSTALL_SH"
   } > "$HELPER"
 }
 
@@ -212,6 +213,74 @@ EOF
   "
   [ "$status" -eq 0 ]
   [[ "$output" == *"symlink ではありません"* ]]
+}
+
+# --- link_prompts ---------------------------------------------------------
+
+_make_prompts_source() {
+  local script_dir="${TEST_HOME}/codex-src"
+  mkdir -p "${script_dir}/prompts"
+  echo "prompt body" > "${script_dir}/prompts/memory-save.md"
+  echo "${script_dir}"
+}
+
+@test "link_prompts: prompts/*.md を per-file symlink する" {
+  local script_dir
+  script_dir=$(_make_prompts_source)
+
+  run bash -c "
+    source '$HELPER'
+    SCRIPT_DIR='$script_dir'
+    CODEX_DIR='${TEST_HOME}/.codex'
+    link_prompts
+    readlink '${TEST_HOME}/.codex/prompts/memory-save.md'
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"/prompts/memory-save.md" ]]
+}
+
+@test "link_prompts: 2 回目は既にリンク済みで冪等" {
+  local script_dir
+  script_dir=$(_make_prompts_source)
+
+  run bash -c "
+    source '$HELPER'
+    SCRIPT_DIR='$script_dir'
+    CODEX_DIR='${TEST_HOME}/.codex'
+    link_prompts >/dev/null
+    link_prompts
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"既にリンク済み"* ]]
+}
+
+@test "link_prompts: 実体 file が既存なら backup へ退避して link する" {
+  local script_dir
+  script_dir=$(_make_prompts_source)
+  mkdir -p "${TEST_HOME}/.codex/prompts"
+  echo "user local prompt" > "${TEST_HOME}/.codex/prompts/memory-save.md"
+
+  run bash -c "
+    source '$HELPER'
+    SCRIPT_DIR='$script_dir'
+    CODEX_DIR='${TEST_HOME}/.codex'
+    link_prompts
+  "
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"バックアップ"* ]]
+  [ -L "${TEST_HOME}/.codex/prompts/memory-save.md" ]
+  ls "${TEST_HOME}/.codex/prompts/memory-save.md.backup."* >/dev/null
+}
+
+@test "link_prompts: prompts 元が無ければ何もせず抜ける" {
+  run bash -c "
+    source '$HELPER'
+    SCRIPT_DIR='${TEST_HOME}/no-src'
+    CODEX_DIR='${TEST_HOME}/.codex'
+    link_prompts
+  "
+  [ "$status" -eq 0 ]
+  [ ! -e "${TEST_HOME}/.codex/prompts" ]
 }
 
 # --- copy_codex_skills ----------------------------------------------------
