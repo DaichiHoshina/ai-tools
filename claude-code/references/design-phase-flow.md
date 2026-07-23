@@ -12,7 +12,7 @@ Position and transitions of 6 commands from requirements clarification through i
    ├─(1) Design unclear ──→ /brainstorm (Superpowers, interactive refinement)
    │                          │
    │                          ▼
-   │                (1.5) Proposal verify ──→ /verify-proposal (実物突き合わせ + 改善 + reviewer-agent review)
+   │                (1.5) Proposal fact-check ──→ /fact-check (実物突き合わせ + 改善 + reviewer-agent review)
    │                          │
    ▼                          ▼
 [Requirements visible] ←──────┘
@@ -47,7 +47,7 @@ Position and transitions of 6 commands from requirements clarification through i
 | # | Command | Input | Output | Phase |
 |---|---------|------|------|---------|
 | 1 | `/brainstorm` | Vague problem | chat (refined requirements) | Diverge / dialogue |
-| 1.5 | `/verify-proposal` | Proposal / candidate list | chat (verdict table + review) | Reality check |
+| 1.5 | `/fact-check` | Proposal / candidate list | chat (verdict table + review) | Reality check |
 | 2 | `/prd` | Requirements | chat or `--out` md | Requirements definition |
 | 3 | `/design-doc` | PRD (`--prd`) or natural language | `docs/design/<slug>.md` | Design |
 | 4 | `/plan` | Design Doc or pre-designed premise | chat or `~/.claude/plans/*.md` | Impl planning |

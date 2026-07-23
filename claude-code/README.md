@@ -39,7 +39,7 @@ When in doubt, use just these three.
 ### Tier 3 (specialized)
 
 - **Development**: `/test` (`--tdd`) / `/refactor` / `/lint-test`
-- **Design phase**: `/brainstorm`→`/verify-proposal`→`/prd`→`/design-doc`→`/plan` (order: `references/design-phase-flow.md`)
+- **Design phase**: `/brainstorm`→`/fact-check`→`/prd`→`/design-doc`→`/plan` (order: `references/design-phase-flow.md`)
 - **Documentation**: `/docs`
 - **Investigation**: `/analytics` (`--ui`) / `/retrospective` / `/cursor-review`
 - **Utilities**: `/reload` / `/memory-save` / `/memory-clean` / `/onboard` / `/protection-mode` / `/claude-update-fix` / `/serena-update-fix`

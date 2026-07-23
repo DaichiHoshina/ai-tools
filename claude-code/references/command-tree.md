@@ -11,7 +11,7 @@
 要求の曖昧さに応じて入口を選び、下流へ流す。遷移条件の詳細は `design-phase-flow.md` を参照する。
 
 - `/brainstorm` — 発散し、対話で要求を絞る (`--debate` で賛否 2 agent)
-- `/verify-proposal` — 案の主張を grep / wc で実測と突き合わせ、採否を判定する
+- `/fact-check` — 案の主張を grep / wc で実測と突き合わせ、採否を判定する
 - `/grill` — 確定前の設計案を詰問し、前提の穴を出す (read-only)
 - `/prd` — 要件定義 (11-persona review)
 - `/design-doc` — 設計判断を team 共有する doc (12-section)
