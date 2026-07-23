@@ -71,14 +71,14 @@ fi
 # ログ保存
 LOG_DIR="$HOME/.claude/session-logs"
 mkdir -p "$LOG_DIR"
-printf -v _LOG_DATE '%(%Y%m%d)T' -1
+_LOG_DATE=$(date +%Y%m%d)
 LOG_FILE="$LOG_DIR/${_LOG_DATE}.log"
 
 # ローテーション（7日超削除）をバックグラウンドへ
 find "$LOG_DIR" -type f -mtime +7 -delete 2>/dev/null &
 
 # ログ追記
-printf -v _SE_TS '%(%Y-%m-%d %H:%M:%S)T' -1
+_SE_TS=$(date "+%Y-%m-%d %H:%M:%S")
 echo "[${_SE_TS}] $SESSION_ID | $PROJECT_NAME | msg:$TOTAL_MESSAGES | tok:$TOTAL_TOKENS | ${DURATION}s" >> "$LOG_FILE"
 
 # --- Analytics記録をバックグラウンドへ ---

@@ -50,7 +50,7 @@ eval "$(jq -r '@sh "_SS_SESSION_ID=\(.session_id // "") _CWD=\(.cwd // "")"')"
 _SS_SESSION_ID="${_SS_SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-unknown}}"
 _SS_PROJECT=$(basename "${_CWD:-.}")
 # 日付を事前取得してキャッシュ（date fork を hook 起動 1 回に抑える）
-printf -v _SS_DATE_TODAY '%(%Y%m%d)T' -1
+_SS_DATE_TODAY=$(date +%Y%m%d)
 
 # git 状態を 1 回だけ取得してキャッシュ（statusline marker + session title ブロックで再利用）
 # git fork を 2 回 → 1 回に削減:
@@ -222,7 +222,7 @@ if [[ "${_SS_PLUGIN_CACHE_HIT}" == "false" ]]; then
   mkdir -p "$(dirname "${_SS_PLUGIN_CACHE}")"
   printf '%s' "${_SS_PLUGIN_COUNT}" > "${_SS_PLUGIN_CACHE}"
 fi
-TZ=UTC printf -v _SS_TS '%(%Y-%m-%dT%H:%M:%SZ)T' -1
+_SS_TS=$(TZ=UTC date +%Y-%m-%dT%H:%M:%SZ)
 echo "[${_SS_TS}] session_id=${_SS_SESSION_ID} duration_ms=${_SS_DURATION_MS} plugin_count=${_SS_PLUGIN_COUNT}" >> "${_SS_TIMING_LOG}" 2>/dev/null || true
 # 直近 1000 行に切り詰め: 1% 確率で実行 (毎回の wc fork 削減)
 if (( RANDOM % 100 == 0 )); then

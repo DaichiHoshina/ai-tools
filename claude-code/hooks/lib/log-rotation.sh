@@ -26,7 +26,7 @@ _rotate_log_if_needed() {
   local fsize
   fsize=$(portable_stat_size "$log_file")
   [[ "${fsize}" -gt ${_TH_LOG_MAX_BYTES} ]] || return 0
-  local _bak_ts; printf -v _bak_ts '%(%Y%m%d%H%M%S)T' -1
+  local _bak_ts; _bak_ts=$(date +%Y%m%d%H%M%S)
   mv "$log_file" "${log_file}.${_bak_ts}.bak" 2>/dev/null || true
   if [[ "${keep_bak_count}" -gt 0 ]]; then
     local _idx=0 _bak
