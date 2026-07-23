@@ -4,7 +4,7 @@ set -euo pipefail
 
 WEBHOOK_FILE="$HOME/.claude/secrets/slack-webhook"
 LOG_DIR="$HOME/.claude/logs/launchd"
-JOBS=(sleep-review memory-clean retrospective)
+JOBS=(sleep-review memory-clean retrospective pr-review-digest)
 
 # bash 3.2 (macOS 標準) でも動くよう連想配列を使わない
 job_label_ja() {
@@ -12,8 +12,20 @@ job_label_ja() {
         sleep-review) echo "夜間 pipeline (sleep-review)" ;;
         memory-clean) echo "memory 掃除 (memory-clean)" ;;
         retrospective) echo "週次振り返り (retrospective)" ;;
+        pr-review-digest) echo "PR レビュー集約 (pr-review-digest)" ;;
+        daily-report) echo "本 report (daily-report)" ;;
         *) echo "$1" ;;
     esac
+}
+
+# log 名が job 名と一致しない machine local plist もあるため、path は plist から解決する
+plist_path_key() {
+    local job="$1" key="$2" fallback="$3" v=""
+    local plist="$HOME/Library/LaunchAgents/com.claude.$job.plist"
+    if [[ -f "$plist" ]]; then
+        v="$(/usr/libexec/PlistBuddy -c "Print :$key" "$plist" 2>/dev/null || true)"
+    fi
+    if [[ -n "$v" ]]; then echo "$v"; else echo "$fallback"; fi
 }
 
 if [[ ! -f "$WEBHOOK_FILE" ]]; then
@@ -56,8 +68,8 @@ lines+=("")
 
 for job in "${JOBS[@]}"; do
     label="com.claude.$job"
-    log_path="$LOG_DIR/$job.log"
-    err_path="$LOG_DIR/$job.err.log"
+    log_path="$(plist_path_key "$job" StandardOutPath "$LOG_DIR/$job.log")"
+    err_path="$(plist_path_key "$job" StandardErrorPath "$LOG_DIR/$job.err.log")"
     ja_label="$(job_label_ja "$job")"
 
     if launchctl list "$label" &>/dev/null; then
