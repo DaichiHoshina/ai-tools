@@ -51,14 +51,19 @@ extract_summary() {
         echo "(log なし)"
         return
     fi
+    # log は追記式で複数 run が累積するため、最新 run の結論がある末尾から抽出する
     python3 -c "
-import sys
-data = open('$log_path', 'rb').read(1600).decode('utf-8', errors='replace')
-paras = data.split('\n\n', 2)
-head = paras[0] if paras else data
-if len(head) > 400:
-    head = head[:400] + '…'
-print(head)
+import os
+path = '$log_path'
+size = os.path.getsize(path)
+with open(path, 'rb') as f:
+    f.seek(max(0, size - 1600))
+    data = f.read().decode('utf-8', errors='replace').strip()
+paras = [p.strip() for p in data.split('\n\n') if p.strip()]
+tail = '\n\n'.join(paras[-2:]) if paras else data
+if len(tail) > 600:
+    tail = '…' + tail[-600:]
+print(tail)
 "
 }
 
