@@ -10,6 +10,8 @@ SCRIPT_DIR="${_tc_src%/*}"
 source "${SCRIPT_DIR}/../lib/hook-utils.sh"
 # shellcheck source=lib/thresholds.sh
 source "${BASH_SOURCE[0]%/*}/lib/thresholds.sh"
+# shellcheck source=lib/log-rotation.sh
+source "${BASH_SOURCE[0]%/*}/lib/log-rotation.sh"
 
 # Nerd Fonts icon
 # ICON_* は hook-utils.sh で定義済み
@@ -59,6 +61,7 @@ echo "[${TIMESTAMP}] COMPLETED | task_id=${TASK_ID} | subject=${TASK_SUBJECT} | 
 # Task Diary記録（セッション間知識蓄積用）
 DIARY_FILE="${LOG_DIR}/task-diary.log"
 echo "[${TIMESTAMP}] ${TASK_SUBJECT} | by=${TEAMMATE_NAME} team=${TEAM_NAME} cwd=${PROJECT_NAME}" >> "$DIARY_FILE"
+_rotate_log_by_lines_if_needed "$DIARY_FILE"
 
 # 統計情報計算（今日の完了タスク数）
 TZ=UTC printf -v TODAY '%(%Y-%m-%d)T' -1

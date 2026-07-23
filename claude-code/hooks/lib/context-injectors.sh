@@ -189,6 +189,7 @@ ${_replace_hint}
 
   # inject 効果計測用 log (trigger tool / block_terms 数)
   local _SWEEP_LOG="${HOME}/.claude/logs/ng-pre-sweep-inject.log"
+  _rotate_log_if_needed "${_SWEEP_LOG}"
   local _TS_INJ _NTERMS
   printf -v _TS_INJ '%(%Y-%m-%dT%H:%M:%S)T' -1
   _NTERMS=$(awk -F' / ' '{print NF}' <<< "$_block_terms" 2>/dev/null || echo 0)

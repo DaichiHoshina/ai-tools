@@ -4,6 +4,10 @@ if [[ "${_JP_QUALITY_OVERRIDE_DETECT_LOADED:-}" == "1" ]]; then
 fi
 _JP_QUALITY_OVERRIDE_DETECT_LOADED=1
 
+# stop.sh は log-rotation.sh を source しないため、この lib 単独で自己完結させる
+# shellcheck source=./log-rotation.sh
+source "${BASH_SOURCE[0]%/*}/log-rotation.sh"
+
 _JP_OVERRIDE_WINDOW_S="${JP_OVERRIDE_WINDOW_S:-300}"
 _JP_BLOCK_LOG="${_JP_BLOCK_LOG:-${HOME}/.claude/logs/jp-quality-block.log}"
 _JP_OVERRIDE_LOG="${_JP_OVERRIDE_LOG:-${HOME}/.claude/logs/jp-quality-override.log}"
@@ -12,6 +16,7 @@ jp_quality_override_detect() {
   local last_msg="${1:-}"
   [[ -z "$last_msg" ]] && return 0
   [[ ! -f "$_JP_BLOCK_LOG" ]] && return 0
+  _rotate_log_if_needed "$_JP_BLOCK_LOG"
 
   local now cutoff cutoff_iso
   now=$(date +%s)

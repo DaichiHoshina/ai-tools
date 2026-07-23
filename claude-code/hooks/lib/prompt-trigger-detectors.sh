@@ -105,6 +105,7 @@ _inject_commit_ng_top6_if_trigger() {
 
   local _LOG="${HOME}/.claude/logs/jp-quality-block.log"
   [[ -f "${_LOG}" ]] || return 1
+  _rotate_log_if_needed "${_LOG}"
 
   # ISO8601 timestamp は辞書順 = 時系列順。bash 側で cutoff 文字列を 1 回生成し、
   # awk 内で文字列比較するだけにして date fork を完全に排除する。
@@ -131,6 +132,7 @@ _inject_commit_ng_top6_if_trigger() {
 
   # inject 効果計測用 log (誰 trigger / どの hit term / top-N)
   local _SWEEP_LOG="${HOME}/.claude/logs/ng-pre-sweep-inject.log"
+  _rotate_log_if_needed "${_SWEEP_LOG}"
   local _TS_INJ
   printf -v _TS_INJ '%(%Y-%m-%dT%H:%M:%S)T' -1
   printf '%s | user-prompt | trigger=%s | top12=%s\n' "$_TS_INJ" "${t}" "${_TOP}" \
@@ -158,6 +160,7 @@ _inject_chat_selfcheck_if_signal() {
   # signal 2: 直近 24h の log にも同種 signal が反復しているか (単発誤爆除外)
   local _LOG="${HOME}/.claude/logs/jp-quality-block.log"
   [[ -f "${_LOG}" ]] || return 1
+  _rotate_log_if_needed "${_LOG}"
   local _SC_NOW _SC_CUTOFF_STR
   printf -v _SC_NOW '%(%s)T' -1
   printf -v _SC_CUTOFF_STR '%(%Y-%m-%dT%H:%M:%S)T' "$(( _SC_NOW - 86400 ))"
