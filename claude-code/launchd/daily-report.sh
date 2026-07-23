@@ -6,11 +6,15 @@ WEBHOOK_FILE="$HOME/.claude/secrets/slack-webhook"
 LOG_DIR="$HOME/.claude/logs/launchd"
 JOBS=(sleep-review memory-clean retrospective)
 
-declare -A JOB_LABEL_JA=(
-    [sleep-review]="夜間 pipeline (sleep-review)"
-    [memory-clean]="memory 掃除 (memory-clean)"
-    [retrospective]="週次振り返り (retrospective)"
-)
+# bash 3.2 (macOS 標準) でも動くよう連想配列を使わない
+job_label_ja() {
+    case "$1" in
+        sleep-review) echo "夜間 pipeline (sleep-review)" ;;
+        memory-clean) echo "memory 掃除 (memory-clean)" ;;
+        retrospective) echo "週次振り返り (retrospective)" ;;
+        *) echo "$1" ;;
+    esac
+}
 
 if [[ ! -f "$WEBHOOK_FILE" ]]; then
     echo "ERROR: webhook file が見つからない: $WEBHOOK_FILE" >&2
@@ -54,7 +58,7 @@ for job in "${JOBS[@]}"; do
     label="com.claude.$job"
     log_path="$LOG_DIR/$job.log"
     err_path="$LOG_DIR/$job.err.log"
-    ja_label="${JOB_LABEL_JA[$job]:-$job}"
+    ja_label="$(job_label_ja "$job")"
 
     if launchctl list "$label" &>/dev/null; then
         status_line="$(launchctl list "$label" | grep -E '"(PID|LastExitStatus)" =' | tr -d '"' | tr '\n' ' ')"
