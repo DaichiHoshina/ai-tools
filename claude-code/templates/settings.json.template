@@ -165,21 +165,11 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/session-start.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "~/.claude/hooks/serena-hook.sh activate"
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "~/.claude/scripts/memory-dangling-check.sh",

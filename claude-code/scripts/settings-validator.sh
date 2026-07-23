@@ -48,18 +48,21 @@ sync_settings_hooks() {
     local template_hooks
     template_hooks=$(jq '.hooks // {}' "$template" 2>/dev/null)
 
-    # matcher 単位 dedup: template entry が canonical、live 独自 matcher のみ末尾保持。
-    # 同 matcher の live entry は template 値で上書き (古い command の残留 = 2026-06-20 Stop hook 3 重複事故の根治)。
-    # matcher 欠落 (null) entry のみ command 内容も key に含める (matcher なし hook 同士の意図しない dedup を防ぐ)。
+    # matcher 単位で dedup する。template entry を canonical とし、live 独自 matcher のみ末尾保持する。
+    # 同 matcher の live entry は template 値で上書きする (古い command の残留を防ぐ)。
+    # matcher 欠落 (null) entry は command 内容も key に含める。
+    # matcher == "" は claude-code 上 "*" と同義のため normalize して "*" と dedup する。
+    # 2026-07-23 に SessionStart duplicate delta injection を根治する目的で追加した。
     local tmpfile
     tmpfile=$(mktemp)
     if jq --argjson th "$template_hooks" '
+      def norm_matcher: if . == "" then "*" else . end;
       .hooks = (
         (.hooks // {}) as $live_hooks
         | reduce ($th | to_entries[]) as $ev (
             $live_hooks;
             .[$ev.key] = (
-              ($ev.value | map(.matcher)) as $tpl_matchers
+              ($ev.value | map(.matcher | norm_matcher)) as $tpl_matchers
               | ($ev.value | map(select(.matcher == null) | .hooks)) as $tpl_null_hook_sets
               | $ev.value
               + [
@@ -69,7 +72,7 @@ sync_settings_hooks() {
                       if $entry.matcher == null then
                         ($tpl_null_hook_sets | any(. == $entry.hooks) | not)
                       else
-                        ($tpl_matchers | index($entry.matcher) | not)
+                        ($tpl_matchers | index($entry.matcher | norm_matcher) | not)
                       end
                     )
                 ]
