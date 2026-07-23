@@ -29,7 +29,26 @@ User が `/claude-update-fix latest` を明示指定。local CLI = 2.1.207 = `di
 
 ## Channel switch back: latest → stable (2026-07-17, cd071a3)
 
-`/claude-update-fix stable` で TARGET (2.1.205) < VERSION (2.1.211) となり、stable channel 継続方針に合わせ VERSION を 2.1.205 へ手動で戻した (commit cd071a3)。2026-07-18 run で CLI = `dist-tags.stable` = VERSION = 2.1.205 の一致を確認した。
+`/claude-update-fix stable` で TARGET (2.1.205) < VERSION (2.1.211) となり、stable channel 継続方針に合わせ VERSION を 2.1.205 へ手動で戻した (commit cd071a3)。2026-07-18 run で CLI = `dist-tags.stable` = VERSION = 2.1.205 の一致を確認した。2026-07-23 run で `dist-tags.stable` = 2.1.206 に前進し VERSION を 2.1.206 へ bump。
+
+## 2.1.206 (detected 2026-07-23, stable)
+
+Range 2.1.206 が新 stable tag として確定 (2.1.206 = `dist-tags.stable`)。local CLI 既に 2.1.206 一致、VERSION のみ 2.1.205 → 2.1.206 bump。主要変更を評価した結果、config 必須変更・auto-apply 対象 (model ID replace / template 変更 / deprecated 削除) はいずれもなし。
+
+- **`/cd` に directory path suggestion** [2.1.206]: `/add-dir` と挙動を揃えた UX 改善。built-in command、config 変更不要。Info。
+- **`/doctor` の CLAUDE.md trimming check** [2.1.206]: checked-in CLAUDE.md 内で「codebase から派生可能」な記述を減らす提案を built-in `/doctor` が出す。repo の `CLAUDE.md` / `CLAUDE.repo.md` は `/doctor` 対象外 (user global + repo import 経由) だが、次回 project onboarding 時に他 repo で trigger する可能性あり。Track only。
+- **`/commit-push-pr` が `remote.pushDefault` を auto-allow** [2.1.206]: built-in command の push 対象を `origin` に加え `remote.pushDefault` (単一 remote の場合はその remote) にも拡張。repo の `/git-push` は独自実装で built-in と別物、影響なし。Info。
+- **`EnterWorktree` が project 外 worktree で confirmation** [2.1.206]: `.claude/worktrees/` 外 (例: `~/ghq/...` 直下 branch worktree) に入る際 confirmation prompt を出す。`references/on-demand-rules/ai-tools-worktree-flow.md` は `~/ai-tools/worktrees/` 配下運用を想定するが、他 repo の `git worktree add` 経路は project 外 path を使う。confirmation は破壊操作予防として肯定的、config 変更不要。Info。
+- **`/login` gateway 対応** [2.1.206]: Anthropic 運用 public gateway endpoint を `/login` が受理。個人 CLI (直 Anthropic) で対象外。Info。
+- **background agent の post-update upgrade 挙動改善** [2.1.206]: CLI update 直後に background agent を新 version に事前昇格し、次回 attach 時の stale-session upgrade 遅延を回避。repo の `/flow` / `/workflow` / `Task(background=true)` 運用で恩恵大、config 変更不要。Info。
+- **MCP `request_timeout_ms` per-server 反映 fix** [2.1.206]: `--mcp-config` / `.mcp.json` 経由 MCP server で per-server `request_timeout_ms` が fresh session の 60s default に上書きされていた bug の fix。Serena MCP / context7 MCP の起動 timeout 挙動が改善、config 変更不要で恩恵のみ受ける。Info。
+- **`CLAUDE_CODE_EXTRA_BODY` を background worker に伝播** [2.1.206]: `claude agents` / `--bg` background worker が shell 側 `CLAUDE_CODE_EXTRA_BODY` を silently 落としていた bug の fix。個人 CLI で env 未設定、影響なし。Info。
+- **`/code-review` findings 品質改善 (opus-4-8)** [2.1.206]: opus-4-8 全 effort level で built-in `/code-review` の finding 品質を改善。repo の `/review` は独自 `comprehensive-review` skill 実装で built-in と別物、影響なし。将来 built-in `/code-review` を直接叩く時の恩恵はある。Info。
+- **`/model` picker の price mismatch fix / row 配置 fix / 一部 provider の list price 非表示** [2.1.206]: `/model` UI の bugfix 群。個人 CLI (Anthropic 直) で恩恵のみ受ける。Info。
+- **OAuth MCP server 単発 token refresh 失敗後の manual re-auth 要求 fix** [2.1.206]: 1 回の refresh 失敗で再認証を強制していた bug の fix。context7 MCP OAuth 経路の resilience 改善、config 変更不要。Info。
+- **`--permission-prompt-tool` MCP cold start crash fix** [2.1.206]: MCP server 接続完了前に指定した permission-prompt-tool を呼ぶと "MCP tool not found" で crash した bug の fix。repo で `--permission-prompt-tool` 未使用、影響なし。Info。
+- **agents view UI 改善** [2.1.206]: status column が terminal 全幅を使い 64 文字 truncate を廃止、Ctrl+X で完了 session を永続削除、session 重複描画 fix。個人 CLI UX 改善、config 変更不要。Info。
+- **desktop / Windows / `claude rm` / `/remote-control` / `/status` / disused plugin / `/doctor` Homebrew / jump-to-bottom pill / Bedrock `awsCredentialExport` / expired login / `claude --resume/--continue` keyboard input / workflow detail view 左矢印 / fullscreen jump-to-bottom pill などの各種 bugfix** [2.1.206]: 全て harness 内部 / UI bugfix、config 変更不要。Info。
 
 **deferred entries (stable 範囲外、latest 復帰時に再評価)**: 下記 2.1.198–2.1.211 の各 section は latest channel 時の調査結果で、stable channel では fetch range 対象外のため新規 adopt は行わない。section は再評価用に保持し、stable tag が該当 version へ到達した時点で entry のみ stable へ昇格する。
 

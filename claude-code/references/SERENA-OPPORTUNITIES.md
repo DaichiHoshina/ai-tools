@@ -15,6 +15,25 @@ Check when adopted; strikethrough when obsolete (`~~feature~~ (obsolete YYYY-MM-
 
 ---
 
+## v1.6.1 (released 2026-07-21, tracked 2026-07-23)
+
+v1.6.0 → v1.6.1 は LSP / tool 内部 fix と Java/PHP の opt-in ls_specific_settings 追加が中心で、config 必須変更・auto-apply 対象 (tool rename / template arg / user-scope 再登録) はいずれもなし。activated project の `ls_specific_settings: {}` (empty) と整合し、恩恵のみ受ける。`main` の Unreleased 群 (`languages` → `language_servers` rename / Grok context / `python_basedpyright`) は auto-migration 明示のため即対応不要、次 tag で正式対応する。
+
+- [ ] **`ls_specific_settings.java.runtimes`** (v1.6.1, #1478): JDT-LS に追加 JRE/JDK entry (`name` / `path` / optional `default`/`sources`/`javadoc`) を渡し、bundled JDK 21 を超える source/target level の project で `java.lang.Object` 等が resolve できない silent breakage を修正する opt-in key — review at: activated project に Java project なし、trigger 発生時 (Java project activate + JDT-LS `cannot be resolved` 発生) に該当 `.serena/project.yml` へ設定
+- [ ] **`ls_specific_settings["php"].file_filter`** (v1.6.1, #1710): Drupal 等の `.module` / `.install` / `.inc` / `.theme` を PHP source として index させる opt-in、`.phtml` は default 追加済 — review at: PHP project なし、trigger 待ち
+- **LSP file change notifier** (v1.6.1): external file system 変更を language server に通知する明示的 sync 機構を追加。`find_referencing_symbols` 等の stale info bug を修正。activated project 全て自動恩恵、config 変更不要 — Info
+- **rust-analyzer `ContentModified` retry** (v1.6.1, #1724): LSP `-32801` を hard fail せず capability 宣言 method (`textDocument/hover` 等) で retry。windows-latest の flaky test 修正、config 変更不要 — Info
+- **gopls `replace_symbol_body` type/var/const 修正** (v1.6.1): `type Foo` → `type type Foo` になる corruption 修正。Go project で `replace_symbol_body` 使用時の破壊 fix、activated project の Go 系 (`~/ghq/github.com/DaichiHoshina/*`) で自動恩恵、config 変更不要 — Info
+- **`typescript` / `typescript_vts` coverage dir 無視撤廃** (v1.6.1, #1523): 底の `coverage` dirname 一致で `src/routes/coverage/` 等の legitimate source が hide されていた bug 修正。TypeScript activated project (`snkrdunk-*` 等) で symbol tool が対象 dir を見えるように、config 変更不要 — Info
+- **`FileUtils.read_file` LF normalization fallback** (v1.6.1): `charset_normalizer` fallback path が universal-newline を skip して CR を in-memory に持ち込んでいた bug 修正。config 変更不要 — Info
+- **`SymbolBody.get_text` EOF off-by-one fix** (v1.6.1, #1498): LSP range が EOF+1 line, col 0 で終わる whole-line convention の 1 case を正規化。他の out-of-range end は明示 `InvalidTextLocationError` へ、config 変更不要 — Info
+- **`search_for_pattern` end-line fix + overflow snippet stage** (v1.6.1, #1640): match end index を line 変換する時の off-by-one 修正 (`context_lines_after` 整列)、overflow 時に各 match の 1 行目 (full / truncated `...`) を先に emit して bare line number fallback 前に agent が match 特定できる改善。config 変更不要 — Info
+- **`safe_delete` 削除後空行 cleanup** (v1.6.1): 削除後の余剰空行を heuristic で除去。config 変更不要 — Info
+- **`uv tool run` へ切替** (v1.6.1, #1721): uv-based LSP launch を `uv x` (新 CLI) から `uv tool run` に置換し互換性向上。config 変更不要 — Info
+- **Dashboard version staleness indicator** (v1.6.1): 新 Serena version 利用可否を dashboard 上に表示。dashboard 未使用のため恩恵限定、config 変更不要 — Info
+- **Dashboard "Last Execution" empty-state fix** (v1.6.1, #1713): fresh server で "Loading..." 固定する bug 修正。dashboard 未使用、Info
+- **Dependencies bump** (v1.6.1): `mcp` 1.27.0 → 1.28.1、`anthropic` 0.59.0 → 0.117.0。Serena 側依存で config 変更不要、Info
+
 ## v1.6.0 (released 2026-07-16, tracked 2026-07-18)
 
 v1.5.3 → v1.6.0 で、下記の pre-release / post-v1.5.3 として先取り評価済みの項目が正式リリースされた。schema breaking な CONFIG 変更・auto-apply 対象 (tool rename / template arg / user-scope 再登録) はいずれも無く、判定を据え置く。`replace_in_files` は wildcard `mcp__serena__*` 採用の 4 agent (explore / manager / developer / po) で自動有効、新 key (`trusted_project_path_patterns` / `activation_command`) は global config・project.yml に Serena 側 template 生成で反映済みかつ `ls_specific_settings: {}` empty のため影響ゼロ。`main` 冒頭の Unreleased 群 (search_for_pattern / safe_delete 等の bugfix) は次 tag で拾う pre-release、config 影響なし。
