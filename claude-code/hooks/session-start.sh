@@ -175,41 +175,15 @@ if [[ -n "${_CWD:-}" ]] && [[ -d "${_CWD}" ]] && [[ ! -d "${_CWD}/.git" ]]; then
   fi
 fi
 
-# --- linked worktree の owner CLAUDE.md auto-load ---
-# linked worktree (~/ghq/worktrees/<repo>-*) は親 org dir の外にあるため、
-# org 階層 owner CLAUDE.md (~/ghq/github.com/<org>/CLAUDE.md) が
-# directory-based auto-load されない。session 開始時に hook が中身を読み context 注入し、
-# AI の自発判断 / onboarding 経由に依存せず org 規範を効かせる。
-# cache は owner CLAUDE.md の mtime 追従 (org 規範更新を取りこぼさない)。
+# --- linked worktree で owner CLAUDE.md の path を通知する ---
+# linked worktree では親 org dir が worktree の外にあるので owner CLAUDE.md が auto-load されない。
+# 以前は全文 inject して first-ctx を毎回 5-10 KB 消費していたので、2026-07-23 に path 通知だけに切り替えた。
+# owner cache も同時に廃止した。Claude は作業開始時に該当 path を明示 Read して org 規範を反映する。
 _WT_OWNER_MSG=""
 if [[ "${_SS_IS_GIT}" == "true" ]] && [[ -n "${_CWD:-}" ]]; then
   _WT_OWNER_CLAUDE="$(_resolve_worktree_owner_claude_md "${_CWD}" 2>/dev/null || true)"
   if [[ -n "${_WT_OWNER_CLAUDE}" ]] && [[ -f "${_WT_OWNER_CLAUDE}" ]]; then
-    _WT_OWNER_SAFE="${_CWD//\//_}"
-    _WT_OWNER_CACHE="${HOME}/.claude/cache/wt-owner-claude-${_WT_OWNER_SAFE}.cache"
-    _WT_OWNER_CACHE_HIT=false
-    # cache が owner CLAUDE.md より新しければ再読込しない (source mtime 追従)
-    if [[ -f "${_WT_OWNER_CACHE}" ]]; then
-      _WT_OWNER_CACHE_MT=$(stat ${_SS_STAT_FLAG} "${_WT_OWNER_CACHE}" 2>/dev/null || echo 0)
-      _WT_OWNER_SRC_MT=$(stat ${_SS_STAT_FLAG} "${_WT_OWNER_CLAUDE}" 2>/dev/null || echo 0)
-      if [[ ${_WT_OWNER_CACHE_MT} -ge ${_WT_OWNER_SRC_MT} ]]; then
-        _WT_OWNER_MSG=$(<"${_WT_OWNER_CACHE}")
-        _WT_OWNER_CACHE_HIT=true
-      fi
-    fi
-    if [[ "${_WT_OWNER_CACHE_HIT}" == "false" ]]; then
-      # サイズ安全弁: 16KB 超は全文でなく先頭 200 行 + 明示 Read 促進で肥大回避
-      _WT_OWNER_BYTES=$(wc -c < "${_WT_OWNER_CLAUDE}" 2>/dev/null || echo 0)
-      _WT_OWNER_HEAD="${ICON_WARNING} **linked worktree で作業中**: 親 org owner CLAUDE.md (\`${_WT_OWNER_CLAUDE}\`) は親 dir 外のため auto-load されない。以下の org 規範に従うこと。\n\n"
-      if [[ "${_WT_OWNER_BYTES}" -gt 16384 ]]; then
-        _WT_OWNER_BODY="$(head -200 "${_WT_OWNER_CLAUDE}")\n\n(以下省略。全文は上記 path を Read すること)"
-      else
-        _WT_OWNER_BODY="$(<"${_WT_OWNER_CLAUDE}")"
-      fi
-      _WT_OWNER_MSG="${_WT_OWNER_HEAD}---\n${_WT_OWNER_BODY}\n---\n"
-      mkdir -p "$(dirname "${_WT_OWNER_CACHE}")"
-      printf '%s' "${_WT_OWNER_MSG}" > "${_WT_OWNER_CACHE}"
-    fi
+    _WT_OWNER_MSG="${ICON_WARNING} **linked worktree で作業中**: 親 org owner CLAUDE.md \`${_WT_OWNER_CLAUDE}\` は親 dir 外のため auto-load されない。作業開始前に明示 Read して org 規範を反映する。\n"
   fi
 fi
 
