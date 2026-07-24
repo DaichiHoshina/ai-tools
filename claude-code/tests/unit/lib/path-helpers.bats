@@ -55,6 +55,11 @@ setup() {
   [ "$status" -eq 1 ]
 }
 
+@test "_is_memory_path: ~/ghq/<org>/<repo>/memory/ 配下を memory として判定する" {
+  run bash -c "source '$LIB_FILE' && _is_memory_path '$HOME/ghq/github.com/example-org/example-repo/memory/foo.md'"
+  [ "$status" -eq 0 ]
+}
+
 @test "_is_auto_memory_path: projects/*/memory/ 配下を auto-memory と判定する" {
   run bash -c "source '$LIB_FILE' && _is_auto_memory_path '$HOME/.claude/projects/-foo/memory/bar.md'"
   [ "$status" -eq 0 ]

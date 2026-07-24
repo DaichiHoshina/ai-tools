@@ -213,6 +213,7 @@ _is_plans_path() {
 _is_memory_path() {
   local p="$1"
   [[ "$p" == "$HOME/ai-tools/memory/"* ]] && return 0
+  [[ "$p" == "$HOME/ghq/"*"/memory/"* ]] && return 0
   [[ "$p" == "$HOME/.claude/projects/"*"/memory/"* ]] && return 0
   [[ "$p" == "$HOME/.claude/agent-memory/"* ]] && return 0
   [[ "$p" == *"/.serena/memories/"* ]] && return 0
