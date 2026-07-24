@@ -43,6 +43,7 @@ Only high-frequency patterns are interpreted from natural language. For others, 
 | "Slack に投げて", "Slack に送って" | `mcp__claude_ai_Slack__slack_send_message` (confirm channel/DM first) |
 | "Notion に書いて", "Notion メモして" | `mcp__claude_ai_Notion__notion-create-pages` (confirm parent page first) |
 | "PR コメント残して", "レビューコメント残して" | `/post-comment` (PR number/URL required) |
+| "PRコメント読み込んで", "PR読み込んで" | `gh pr view --comments` で最新レビューコメントを取得し、`$MEM/pr_<repo>_<n>_review.md` があれば Read して対応方針を提示する (session 再開時の再指示を定型化) |
 | "local-docs cleanup", "archive に送って", "不要な doc を整理", "released プロジェクトの cleanup" | `/local-docs-cleanup` (scan released projects, propose archive list, move to ../local-docs-archive/) |
 | "Cursor 設定見直し", "cursor 監査", "cursor review" | `/cursor-review` (settings/rules/memories 3-axis audit) |
 | "Cursor メンテ", "cursor ブラッシュアップ" | `/cursor-review` or read `../cursor/MAINTENANCE.md` |
