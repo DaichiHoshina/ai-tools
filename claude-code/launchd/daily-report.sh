@@ -4,12 +4,12 @@ set -euo pipefail
 
 WEBHOOK_FILE="$HOME/.claude/secrets/slack-webhook"
 LOG_DIR="$HOME/.claude/logs/launchd"
-JOBS=(sleep-review memory-clean retrospective pr-review-digest)
+JOBS=(sleep-pipeline memory-clean retrospective pr-review-digest)
 
 # bash 3.2 (macOS 標準) でも動くよう連想配列を使わない
 job_label_ja() {
     case "$1" in
-        sleep-review) echo "夜間 pipeline (sleep-review)" ;;
+        sleep-pipeline) echo "夜間 pipeline (sleep-pipeline)" ;;
         memory-clean) echo "memory 掃除 (memory-clean)" ;;
         retrospective) echo "週次振り返り (retrospective)" ;;
         pr-review-digest) echo "PR レビュー集約 (pr-review-digest)" ;;

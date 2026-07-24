@@ -6,7 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
 LOG_DIR="$HOME/.claude/logs/launchd"
 
-JOBS=(sleep-review sleep-pipeline memory-clean retrospective daily-report night-caffeinate)
+# sleep-review (02:03 claude -p) は sleep-pipeline と二重起動になるため 2026-07-24 に廃止した
+JOBS=(sleep-pipeline memory-clean retrospective daily-report night-caffeinate)
 
 usage() {
     cat <<'EOF'
@@ -17,7 +18,7 @@ usage: deploy.sh {install|uninstall|test|status} [<job>|all]
   test <job>           即時 1 回だけ発火する (launchctl kickstart)
   status               現在の load 状況と log を表示する
 
-  jobs: sleep-review / sleep-pipeline / memory-clean / retrospective / daily-report / night-caffeinate
+  jobs: sleep-pipeline / memory-clean / retrospective / daily-report / night-caffeinate
 
   night-caffeinate は pmset の自動 wake とセットで使う (要 1 回だけ sudo):
     sudo pmset repeat wakeorpoweron MTWRFSU 01:58:00
