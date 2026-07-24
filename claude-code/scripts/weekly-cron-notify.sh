@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 月曜朝の週次 cron 4 本 (07:00-07:45) の結果を 09:00 に集約通知する。
+# 月曜朝の週次 cron 4 本 (07:00-07:45) の結果を 08:50 に集約通知する。
 # 各 log の最終 mtime と最終行を拾って macOS notification + 集約 log を吐く。
 set -euo pipefail
 
